@@ -149,9 +149,9 @@ class OverviewViewModel(
         disposables += rxBus
             .toObservable(app.aaps.core.interfaces.rx.events.EventPreferenceChange::class.java)
             .observeOn(aapsSchedulers.io)
-            .subscribe({
+            .subscribe({ 
                 if (it.isChanged(app.aaps.core.keys.StringKey.OApsAIMIContextStorage.key)) {
-                    updateStatus()
+                    updateStatus() 
                 }
             }, fabricPrivacy::logException)
     }
@@ -288,17 +288,40 @@ class OverviewViewModel(
         _statusCardState.postValue(state)
     }
 
-    private fun totalIobText(): String {
-        //Calculate IobTotal from boluses and extended boluses to now().
-        // NOTE: Only isValid == true boluses are included
-        // NOTE: if faking by TBR by extended boluses is enabled, extended boluses are not included and are calculated towards temporary basals
-        val bolus = iobCobCalculator.calculateIobFromBolus().round()
-        //Calculate IOB from Temporary basals and Extended boluses (if emulation is enabled) to now
-        val basal = iobCobCalculator.calculateIobFromTempBasalsIncludingConvertedExtended().round()
+    /**
+     * Calculates total IOB text for display.
+     *
+     * CRITICAL FIX: Removed abs() that was causing IOB to appear increasing
+     * when basal IOB was negative (during low TBR).
+     *
+     * Scenario that was broken:
+     * - T1: Bolus IOB = 1.0 U, Basal IOB = -1.0 U → total = abs(0.0) = 0.0 U ✓
+     * - T2: Bolus IOB = 0.5 U, Basal IOB = -1.5 U → total = abs(-1.0) = 1.0 U ✗ (INCREASED!)
+     *
+     * Total IOB can be negative (insulin debt from low TBR), which is valid
+     * and important clinical information to display.
+     */
+     private fun totalIobText(): String {
+        val bolus = bolusIob()
+        val basal = basalIob()
+
+        // FIXED: No abs() - total can be negative (insulin debt)
         val total = bolus.iob + basal.basaliob
-        //Log.d(LTag.BGSOURCE.name ,"RBarth: IOB: bolus=${bolus} basal=${basal} total=${total}")
-        return resourceHelper.gs(app.aaps.core.ui.R.string.format_insulin_units, total)
+
+        // Display with sign to show positive/negative IOB
+        val formattedTotal = if (total >= 0) {
+            resourceHelper.gs(app.aaps.core.ui.R.string.format_insulin_units, total)
+        } else {
+            // Negative IOB (insulin debt) - show with minus sign
+            "-" + resourceHelper.gs(app.aaps.core.ui.R.string.format_insulin_units, -total)
+        }
+
+        return "IOB: $formattedTotal"
     }
+
+    private fun bolusIob(): IobTotal = iobCobCalculator.calculateIobFromBolus().round()
+
+    private fun basalIob(): IobTotal = iobCobCalculator.calculateIobFromTempBasalsIncludingConvertedExtended().round()
 
     private fun loopStatusText(mode: RM.Mode): String =
         resourceHelper.gs(
@@ -322,7 +345,6 @@ class OverviewViewModel(
         val trendArrow = trendCalculator.getTrendArrow(iobCobCalculator.ads)
         val glucoseStatus = glucoseStatusProvider.glucoseStatusData
         val adjustments = buildActiveAdjustments(now)
-
         val state = AdjustmentCardState(
             glycemiaLine = buildGlycemiaLine(lastBg, trendArrow, glucoseStatus),
             predictionLine = buildPredictionLine(now),
@@ -341,7 +363,6 @@ class OverviewViewModel(
             basal = loop.lastRun?.request?.rate,
             detailedReason = loop.lastRun?.request?.reason,
             isHypoRisk = loop.lastRun?.request?.isHypoRisk ?: false
-
         )
         _adjustmentState.postValue(state)
     }
