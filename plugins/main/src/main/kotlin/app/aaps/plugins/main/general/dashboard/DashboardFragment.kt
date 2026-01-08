@@ -227,7 +227,7 @@ class DashboardFragment : DaggerFragment() {
 
         binding.statusCard.isClickable = true
         binding.statusCard.isFocusable = true
-        
+
         // Setup Action Listeners (Advisor, Adjust, Prefs, Stats)
         binding.statusCard.setActionListener(object : CircleTopActionListener {
             override fun onAimiAdvisorClicked() {
@@ -313,7 +313,7 @@ class DashboardFragment : DaggerFragment() {
             }
             popup.show()
         }
-        
+
         // 🔍 Setup Auditor badge
         setupAuditorIndicator()
     }
@@ -352,19 +352,19 @@ class DashboardFragment : DaggerFragment() {
     private fun setupAuditorIndicator() {
         try {
             aapsLogger.debug(LTag.CORE, "🔍 [Dashboard] Searching for Auditor badge...")
-            
+
             val container = binding.statusCard.getAuditorContainer()
-            
+
             aapsLogger.debug(LTag.CORE, "✅ [Dashboard] Badge container found!")
-            
+
             auditorIndicator = AuditorStatusIndicator(requireContext())
             container.removeAllViews()
             container.addView(auditorIndicator)
-            
+
             auditorIndicator?.setOnClickListener {
                 aapsLogger.debug(LTag.CORE, "Auditor badge clicked")
             }
-            
+
             auditorStatusLiveData.uiState.observe(viewLifecycleOwner) { uiState ->
                 auditorIndicator?.setState(uiState)
                 if (uiState.shouldNotify) {
@@ -373,9 +373,9 @@ class DashboardFragment : DaggerFragment() {
                 container.visibility = android.view.View.VISIBLE
                 aapsLogger.debug(LTag.CORE, "[Dashboard] Badge state: ${uiState.type}")
             }
-            
+
             auditorStatusLiveData.forceUpdate()
-            
+
         } catch (e: Exception) {
             aapsLogger.error(LTag.CORE, "[Dashboard] Badge setup error: ${e.message}", e)
         }
@@ -411,25 +411,35 @@ class DashboardFragment : DaggerFragment() {
 
     @RequiresApi(Build.VERSION_CODES.CUPCAKE)
     private fun openSensorApp(): Boolean {
-        if (xDripSource.isEnabled()) return openCgmApp("com.eveningoutpost.dexdrip")
-        if (dexcomBoyda.isEnabled()) {
-            dexcomBoyda.dexcomPackages().forEach { if (openCgmApp(it)) return true }
-        }
-        return openModes()
-    }
+        context?.let { ctx ->
 
-    @RequiresApi(Build.VERSION_CODES.CUPCAKE)
-    private fun openCgmApp(packageName: String): Boolean {
-        val context = context ?: return false
-        val packageManager = context.packageManager
-        return try {
-            val intent = packageManager.getLaunchIntentForPackage(packageName) ?: throw ActivityNotFoundException()
-            intent.addCategory(Intent.CATEGORY_LAUNCHER)
-            context.startActivity(intent)
-            true
-        } catch (_: ActivityNotFoundException) {
-            aapsLogger.debug(LTag.CORE, "Error opening CGM app")
-            false
+            val possiblePackages = listOf(
+                "com.eveningoutpost.dexdrip",  // xDrip+
+                "tk.glucodata",                // Juggluco
+                "com.dexcom.g6byod",           // Dexcom G6 BYOD
+                "com.dexcom.g7byod"            // Dexcom G7 BYOD
+            )
+
+            val pm = ctx.packageManager
+
+            for (pkg in possiblePackages) {
+                val intent = pm.getLaunchIntentForPackage(pkg)
+                if (intent != null) {
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP); //experiment with the flags
+                    ctx.startActivity(intent)
+                    aapsLogger.debug(LTag.CORE, "Launched CGM app: $pkg")
+                    return true
+                }
+                else {
+                    aapsLogger.debug(LTag.CORE, "No known CGM app installed.")
+                }
+            }
+            return false
+
+        } ?: run {
+            aapsLogger.debug(LTag.CORE, "Context is null, cannot open sensor app")
+            return false
         }
     }
 
