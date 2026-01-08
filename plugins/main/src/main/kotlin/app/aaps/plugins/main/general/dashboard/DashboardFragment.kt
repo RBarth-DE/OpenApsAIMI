@@ -7,7 +7,6 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.annotation.RequiresApi
 import androidx.fragment.app.viewModels
 import app.aaps.core.interfaces.automation.Automation
 import app.aaps.core.interfaces.configuration.Config
@@ -25,11 +24,8 @@ import app.aaps.core.interfaces.profile.ProfileFunction
 import app.aaps.core.interfaces.profile.ProfileUtil
 import app.aaps.core.interfaces.protection.ProtectionCheck
 import app.aaps.core.interfaces.ui.UiInteraction
-import app.aaps.core.interfaces.source.DexcomBoyda
-import app.aaps.core.interfaces.source.XDripSource
 import app.aaps.core.interfaces.logging.AAPSLogger
 import app.aaps.core.interfaces.logging.LTag
-import app.aaps.core.interfaces.plugin.PluginBase
 import app.aaps.core.interfaces.resources.ResourceHelper
 import app.aaps.core.interfaces.rx.AapsSchedulers
 import app.aaps.core.interfaces.rx.bus.RxBus
@@ -60,14 +56,10 @@ import javax.inject.Inject
 import javax.inject.Provider
 import app.aaps.plugins.main.general.dashboard.views.CircleTopActionListener
 import app.aaps.plugins.aps.openAPSAIMI.advisor.AimiProfileAdvisorActivity
-import android.util.Log
 import app.aaps.plugins.main.general.dashboard.modes.DashboardModesController
-import app.aaps.plugins.main.general.dashboard.modes.DashboardModes
-import app.aaps.plugins.main.general.dashboard.views.DashboardModesView
-import androidx.lifecycle.lifecycleScope
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.Dispatchers
-
+import android.view.MotionEvent
+import android.annotation.SuppressLint
+import android.graphics.Color
 
 class DashboardFragment : DaggerFragment() {
 
@@ -100,6 +92,7 @@ class DashboardFragment : DaggerFragment() {
     @Inject lateinit var auditorStatusLiveData: AuditorStatusLiveData
     @Inject lateinit var auditorNotificationManager: AuditorNotificationManager
     @Inject lateinit var trajectoryGuard: app.aaps.plugins.aps.openAPSAIMI.trajectory.TrajectoryGuard // 🌀 Trajectory Injection
+    @Inject lateinit var activityProvider: app.aaps.plugins.aps.openAPSAIMI.steps.UnifiedActivityProviderMTR
 
     private lateinit var modesController: DashboardModesController
 
@@ -110,50 +103,9 @@ class DashboardFragment : DaggerFragment() {
     private var auditorIndicator: AuditorStatusIndicator? = null
 
 
-    private fun sensor(): Boolean {
-        val ctx = context ?: return false
-
-        // BG source actuellement utilisée dans AAPS
-        val bgSource = activePlugin.activeBgSource as? PluginBase
-
-        // On force en String pour pouvoir utiliser contains(ignoreCase = true)
-        val pluginName = bgSource
-            ?.pluginDescription
-            ?.pluginName
-            ?.toString()
-            .orEmpty()
-
-        return when {
-            pluginName.contains("dexcom", ignoreCase = true) -> {
-                // Essaye d’ouvrir l’appli Dexcom
-                launchPackageIfExists(ctx, "com.dexcom.g6") ||   // à adapter selon ta config
-                    launchPackageIfExists(ctx, "com.dexcom.one") ||  // ex. Dexcom One
-                    openSettings()                                   // fallback
-            }
-            pluginName.contains("xdrip", ignoreCase = true) -> {
-                // Essaye d’ouvrir xDrip
-                launchPackageIfExists(ctx, "com.eveningoutpost.dexdrip") || openSettings()
-            }
-            else -> {
-                // Ni Dexcom ni xDrip détecté → on ouvre les prefs
-                openSettings()
-            }
-        }
-    }
-    private fun launchPackageIfExists(ctx: android.content.Context, packageName: String): Boolean {
-        val pm = ctx.packageManager
-        val intent = pm.getLaunchIntentForPackage(packageName)
-        return if (intent != null) {
-            startActivity(intent)
-            true
-        } else {
-            false
-        }
-    }
-
     private val viewModel: OverviewViewModel by viewModels {
         OverviewViewModel.Factory(
-            requireContext(),
+            requireActivity().application,
             lastBgData,
             trendCalculator,
             iobCobCalculator,
@@ -172,7 +124,8 @@ class DashboardFragment : DaggerFragment() {
             fabricPrivacy,
             preferences,
             overviewData,
-            trajectoryGuard // 🌀 Pass to Factory
+            trajectoryGuard, // 🌀 Pass to Factory
+            activityProvider
         )
     }
 
@@ -218,10 +171,6 @@ class DashboardFragment : DaggerFragment() {
                 }
             }
         }
-        viewModel.graphMessage.observe(viewLifecycleOwner) {
-            binding.glucoseGraph.setUpdateMessage(it)
-            updateGraph()
-        }
 
         binding.adjustmentStatus.setOnClickListener {
             openAdjustmentDetails()
@@ -232,7 +181,7 @@ class DashboardFragment : DaggerFragment() {
                 try {
                     loop.invoke("Dashboard", true)
                 } catch (e: Exception) {
-                    aapsLogger.error(app.aaps.core.interfaces.logging.LTag.APS, "Error invoking loop from dashboard", e)
+                    aapsLogger.error(LTag.APS, "Error invoking loop from dashboard", e)
                 }
             }.start()
         }
@@ -348,12 +297,17 @@ class DashboardFragment : DaggerFragment() {
                 aapsLogger.error(LTag.CORE, "Failed to launch ContextActivity: ${e.message}")
             }
         }
+
+        /*
+         * Glucose Graph
+         */
         binding.glucoseGraph.graph.gridLabelRenderer?.gridColor = resourceHelper.gac(requireContext(), app.aaps.core.ui.R.attr.graphGrid)
-        binding.glucoseGraph.graph.viewport.isScrollable = true
+        binding.glucoseGraph.graph.viewport.isScrollable = false
         binding.glucoseGraph.graph.viewport.isScalable = true
+        binding.glucoseGraph.graph.setBackgroundColor(Color.TRANSPARENT)
 
         val gestureDetector = android.view.GestureDetector(context, object : android.view.GestureDetector.SimpleOnGestureListener() {
-            override fun onDoubleTap(e: android.view.MotionEvent): Boolean {
+            override fun onDoubleTap(e: MotionEvent): Boolean {
                 val nextRange = when (overviewData.rangeToDisplay) {
                     6    -> 9
                     9    -> 12
@@ -365,16 +319,36 @@ class DashboardFragment : DaggerFragment() {
                 return true
             }
 
-            override fun onLongPress(e: android.view.MotionEvent) {
+            override fun onLongPress(e: MotionEvent) {
                 syncGraphRange(6)
             }
         })
 
-        binding.glucoseGraph.graph.setOnTouchListener { v, event ->
-            gestureDetector.onTouchEvent(event)
-            v.parent.requestDisallowInterceptTouchEvent(true)
-            false
+        binding.glucoseGraph.graph.viewport.apply {
+            isScrollable = false          // No Scroll
+            isScalable = true             // Zoom OK
         }
+        binding.glucoseGraph.graph.viewport.setScalable(true)
+        binding.glucoseGraph.graph.viewport.isXAxisBoundsManual = true
+
+        @SuppressLint("ClickableViewAccessibility")
+        binding.glucoseGraph.graph.setOnTouchListener { v, event ->
+
+            // Accessibility
+            if (event.actionMasked == MotionEvent.ACTION_DOWN) {
+                v.performClick()
+            }
+
+            // Evaluate only Tap / LongPress / DoubleTap
+            val handledByGesture = gestureDetector.onTouchEvent(event)
+
+            // IMPORTANT:
+            // - No requestDisallowInterceptTouchEvent
+            // - Do NOT block MOVE events
+            // - Zoom remains internal to GraphView
+            handledByGesture
+        }
+
 
         binding.glucoseGraph.graph.gridLabelRenderer?.reloadStyles()
 
@@ -410,13 +384,13 @@ class DashboardFragment : DaggerFragment() {
             .toObservable(EventPreferenceChange::class.java)
             .observeOn(aapsSchedulers.main)
             .subscribe({ event ->
-                           if (event.isChanged(IntNonKey.RangeToDisplay.key)) {
-                               syncGraphRange(preferences.get(IntNonKey.RangeToDisplay), false)
-                           }
-                           if (event.isChanged(app.aaps.core.keys.StringKey.OApsAIMIContextStorage.key)) {
-                               updateContextBadge()
-                           }
-                       }, fabricPrivacy::logException)
+                if (event.isChanged(IntNonKey.RangeToDisplay.key)) {
+                    syncGraphRange(preferences.get(IntNonKey.RangeToDisplay), false)
+                }
+                if (event.isChanged(app.aaps.core.keys.StringKey.OApsAIMIContextStorage.key)) {
+                    updateContextBadge()
+                }
+            }, fabricPrivacy::logException)
 
         // 🔥 Disabled-State aktualisieren
         val enabledModes = modesController.availableModes()
@@ -449,30 +423,30 @@ class DashboardFragment : DaggerFragment() {
     private fun setupAuditorIndicator() {
         try {
             aapsLogger.debug(LTag.CORE, "🔍 [Dashboard] Searching for Auditor badge...")
-            
+
             val container = binding.statusCard.getAuditorContainer()
-            
+
             aapsLogger.debug(LTag.CORE, "✅ [Dashboard] Badge container found!")
-            
+
             auditorIndicator = AuditorStatusIndicator(requireContext())
             container.removeAllViews()
             container.addView(auditorIndicator)
-            
+
             auditorIndicator?.setOnClickListener {
                 aapsLogger.debug(LTag.CORE, "Auditor badge clicked")
             }
-            
+
             auditorStatusLiveData.uiState.observe(viewLifecycleOwner) { uiState ->
                 auditorIndicator?.setState(uiState)
                 if (uiState.shouldNotify) {
                     auditorNotificationManager.showInsightAvailable(uiState)
                 }
-                container.visibility = android.view.View.VISIBLE
+                container.visibility = View.VISIBLE
                 aapsLogger.debug(LTag.CORE, "[Dashboard] Badge state: ${uiState.type}")
             }
-            
+
             auditorStatusLiveData.forceUpdate()
-            
+
         } catch (e: Exception) {
             aapsLogger.error(LTag.CORE, "[Dashboard] Badge setup error: ${e.message}", e)
         }
@@ -544,15 +518,6 @@ class DashboardFragment : DaggerFragment() {
         startActivity(intent)
         return true
     }
-
-    private fun openSettings(): Boolean {
-        val intent = Intent(requireContext(), uiInteraction.preferencesActivity)
-            .putExtra(UiInteraction.PLUGIN_NAME, resourceHelper.gs(app.aaps.core.ui.R.string.nav_plugin_preferences))
-            .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
-        startActivity(intent)
-        return true
-    }
-
     private fun syncGraphRange(hours: Int, userInitiated: Boolean = true) {
         val clampedHours = when (hours) {
             6, 9, 12, 18, 24 -> hours

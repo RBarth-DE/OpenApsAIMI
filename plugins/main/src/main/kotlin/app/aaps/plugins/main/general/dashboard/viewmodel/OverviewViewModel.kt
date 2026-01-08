@@ -1,6 +1,6 @@
 package app.aaps.plugins.main.general.dashboard.viewmodel
 
-import android.content.Context
+import android.app.Application
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -23,6 +23,7 @@ import app.aaps.core.interfaces.profile.ProfileFunction
 import app.aaps.core.interfaces.profile.ProfileUtil
 import app.aaps.core.interfaces.resources.ResourceHelper
 import app.aaps.core.interfaces.rx.AapsSchedulers
+import app.aaps.plugins.aps.openAPSAIMI.trajectory.TrajectoryGuard // 🌀 Trajectory
 import app.aaps.core.interfaces.rx.bus.RxBus
 import app.aaps.core.interfaces.rx.events.EventBucketedDataCreated
 import app.aaps.core.interfaces.rx.events.EventExtendedBolusChange
@@ -54,9 +55,12 @@ import java.util.concurrent.TimeUnit
 import kotlin.math.abs
 import kotlin.math.max
 import android.graphics.*
+import app.aaps.plugins.aps.openAPSAIMI.steps.UnifiedActivityProviderMTR
+import java.time.LocalDate
+import java.time.ZoneId
 
 class OverviewViewModel(
-    private val context: Context,
+    private val application: Application,
     private val lastBgData: LastBgData,
     private val trendCalculator: TrendCalculator,
     private val iobCobCalculator: IobCobCalculator,
@@ -75,7 +79,8 @@ class OverviewViewModel(
     private val fabricPrivacy: FabricPrivacy,
     private val preferences: Preferences,
     private val overviewData: OverviewData,
-    private val trajectoryGuard: TrajectoryGuard // 🌀 Trajectory Injection
+    private val trajectoryGuard: TrajectoryGuard, // 🌀 Trajectory Injection
+    private val activityProvider: UnifiedActivityProviderMTR
 ) : ViewModel() {
 
     private val disposables = CompositeDisposable()
@@ -185,7 +190,7 @@ class OverviewViewModel(
         val lastBg = lastBgData.lastBg()
         val glucoseText = profileUtil.fromMgdlToStringInUnits(lastBg?.recalculated)
         val trendArrow = trendCalculator.getTrendArrow(iobCobCalculator.ads)?.directionToIcon()
-        val trendDescription = trendCalculator.getTrendDescription(iobCobCalculator.ads) ?: ""
+        val trendDescription = trendCalculator.getTrendDescription(iobCobCalculator.ads)
         val deltaText = glucoseStatusProvider.glucoseStatusData?.shortAvgDelta?.let {
             profileUtil.fromMgdlToSignedStringInUnits(it)
         } ?: resourceHelper.gs(app.aaps.core.ui.R.string.value_unavailable_short)
@@ -217,11 +222,11 @@ class OverviewViewModel(
         val timeAgoSub = dateUtil.minOrSecAgo(resourceHelper, lastBg?.timestamp)
 
         // 2. Reservoir
-        val reservoirText = activePlugin.activePump.reservoirLevel?.let { level ->
+        val reservoirText = activePlugin.activePump.reservoirLevel.let { level ->
             if (level > 0) decimalFormatter.to2Decimal(level) + " IE"
             else null
         }
-        val reservoirColor: Int? = activePlugin.activePump.reservoirLevel?.let { level ->
+        val reservoirColor = activePlugin.activePump.reservoirLevel.let { level ->
             if (level > 30) Color.WHITE
             else Color.YELLOW
         }
@@ -267,21 +272,10 @@ class OverviewViewModel(
         }
 
         // 7. Pump Battery
-
-        val pumpBatteryLevel = activePlugin.activePump.batteryLevel?.toInt()
+        //val pumpBatteryText = activePlugin.activePump.batteryLevel?.let { "$it%" }
         val battTe = persistenceLayer.getLastTherapyRecordUpToNow(TE.Type.PUMP_BATTERY_CHANGE)
-        val pumpBatteryColor =
-            if (
-                pumpBatteryLevel != null &&
-                batteryAgeDays(battTe, now) <= 14 &&
-                pumpBatteryLevel > 25
-            ) {
-                Color.WHITE
-            } else {
-                Color.YELLOW
-            }
         val pumpBatteryText = formatTherapyAge(battTe, now)
-
+        val pumpBatteryColor = if (batteryAgeDays(battTe, now) <= 14) Color.WHITE else Color.YELLOW
 
         // last bolus
         val lastBolusTimeMs: Long? = activePlugin.activePump.lastBolusTime
@@ -292,65 +286,36 @@ class OverviewViewModel(
         val lastBolusAmount = if (lastBolusXMin != "--") activePlugin.activePump.lastBolusAmount.toString() + "IE" else "--"
 
 
-        // 10. Steps & HR
-        var stepsText: String = "--"
-        var hrText: String = "--"
+        // 10. Steps & HR (Unified Provider)
+        // using the Physio Assits -> Step&HR Data Source
+        var stepsText = "--"
+        var hrText = "--"
 
-        try {
-            val now = System.currentTimeMillis()
-            val from = dateUtil.beginOfDay(now) // Start of today (Midnight)
+        val startOfTodayMs = LocalDate.now()
+            .atStartOfDay(ZoneId.systemDefault())
+            .toInstant()
+            .toEpochMilli()
 
-            // Steps (Sum of steps in the last 15m)
-            // Steps (Integration of rolling windows)
-            val stepsList = persistenceLayer.getStepsCountFromTimeToTime(from, now).sortedBy { it.timestamp }
-            var totalSteps = 0.0
-            var lastTimestamp = from
-
-            stepsList.forEach { sc ->
-                if (sc.duration > 0 && sc.steps5min > 0) {
-                    val dt = (sc.timestamp - lastTimestamp).coerceAtLeast(0)
-                    if (dt > 0) {
-                        // Calculate rate (steps per ms)
-                        val rate = sc.steps5min.toDouble() / sc.duration
-                        // Determine meaningful time window (handle overlaps vs gaps)
-                        // If dt < duration (overlap), we integrate over dt.
-                        // If dt >= duration (gap), we integrate over duration (full record) and assume 0 for the gap.
-                        val coveredDuration = java.lang.Math.min(dt, sc.duration)
-
-                        totalSteps += rate * coveredDuration
-                    }
-                }
-                lastTimestamp = java.lang.Math.max(lastTimestamp, sc.timestamp)
-            }
-
-            if (totalSteps > 1) {
-                stepsText = "%.0f".format(totalSteps)
-            } else {
-                if (stepsList.isNotEmpty()) stepsText = "0"
-            }
-
-            // Heart Rate (Average or Last)
-            // Heart Rate (Average or Last)
-            // Fix: Use 3h window + 15min buffer for overlapped records (Garmin), and ensure sorting
-            val hrFrom = now - 3 * 60 * 60 * 1000
-            val hrList = persistenceLayer.getHeartRatesFromTimeToTime(hrFrom - 15 * 60 * 1000, now)
-                .sortedBy { it.timestamp }
-
-            if (hrList.isNotEmpty()) {
-                val lastHr = hrList.lastOrNull()?.beatsPerMinute
-                if (lastHr != null && lastHr > 0) {
-                    hrText = "%.0f".format(lastHr)
-                }
-            }
+        val stepsTotal = activityProvider.getStepsTotalSince(startOfTodayMs)
+        val stepsDelta = activityProvider.getLatestSteps(15 * 60 * 1000L)
 
 
-        } catch (e: Exception) {
-            e.printStackTrace()
+
+        if (stepsTotal != null &&  stepsTotal.steps > 0 ) {
+            stepsText = "${stepsTotal.steps} / +${stepsDelta?.steps ?: 0}"
         }
+
+        val hr = activityProvider.getLatestHeartRate(
+            windowMs = 10 * 60 * 1000L   // HR freshness
+        )
+        if (hr != null && hr.bpm > 0) {
+            hrText = hr.bpm.toInt().toString()
+        }
+        android.util.Log.d("GARMIN", "Dashboard: stepsTotal=$stepsTotal \n stepsDelta=$stepsDelta \n hrText=${hr?.bpm}" )
 
         val state = StatusCardState(
             glucoseText = glucoseText,
-            glucoseColor = lastBgData.lastBgColor(context),
+            glucoseColor = lastBgData.lastBgColor(application),
             trendArrowRes = trendArrow,
             trendDescription = trendDescription,
             deltaText = deltaText,
@@ -496,7 +461,7 @@ class OverviewViewModel(
             adjustments += resourceHelper.gs(R.string.dashboard_adjustment_temp_basal, it.toStringShort(resourceHelper))
         }
         persistenceLayer.getTemporaryTargetActiveAt(now)?.let { target ->
-            val units = profileFunction.getUnits() ?: GlucoseUnit.MGDL
+            val units = profileFunction.getUnits()
             val range = profileUtil.toTargetRangeString(target.lowTarget, target.highTarget, GlucoseUnit.MGDL, units)
             adjustments += resourceHelper.gs(
                 R.string.dashboard_adjustment_temp_target,
@@ -643,7 +608,7 @@ class OverviewViewModel(
             val keyword = modeKeywords.firstOrNull { event.note?.contains(it.token, ignoreCase = true) == true } ?: return@forEach
             val remaining = event.timestamp + event.duration - now
             if (remaining <= 0) return@forEach
-            if (latest == null || event.timestamp > latest!!.first.timestamp) {
+            if (latest == null || event.timestamp > latest.first.timestamp) {
                 latest = event to keyword
             }
         }
@@ -655,12 +620,35 @@ class OverviewViewModel(
         return resourceHelper.gs(R.string.dashboard_adjustment_mode, modeName, remainingText)
     }
 
-    private fun formatTherapyAge(event: TE?, now: Long): String {
+    /*private fun formatTherapyAge(event: TE?, now: Long): String {
         return event?.let {
             val diff = now - it.timestamp
             dateUtil.age(diff, true, resourceHelper).trim()
         } ?: resourceHelper.gs(app.aaps.core.ui.R.string.value_unavailable_short)
+    }*/
+
+    // optimized look. Always <value><unit> <value><unit> without space. Only between two values
+    private fun formatTherapyAge(event: TE?, now: Long): String {
+        if (event == null) {
+            return resourceHelper.gs(app.aaps.core.ui.R.string.value_unavailable_short)
+        }
+
+        val diffMs = now - event.timestamp
+        if (diffMs <= 0) return "0m"
+
+        val totalMinutes = diffMs / 60_000
+        val days = totalMinutes / (60 * 24)
+        val hours = (totalMinutes % (60 * 24)) / 60
+        val minutes = totalMinutes % 60
+
+        val parts = mutableListOf<String>()
+        if (days > 0) parts += "${days}d"
+        if (hours > 0) parts += "${hours}h"
+        if (days == 0L && hours == 0L) parts += "${minutes}m"
+
+        return parts.joinToString(" ")
     }
+
 
     private fun batteryAgeDays(event: TE?, now: Long): Int {
         return event?.let {
@@ -730,7 +718,7 @@ class OverviewViewModel(
 
 
     class Factory(
-        private val context: Context,
+        private val application: Application,
         private val lastBgData: LastBgData,
         private val trendCalculator: TrendCalculator,
         private val iobCobCalculator: IobCobCalculator,
@@ -749,14 +737,15 @@ class OverviewViewModel(
         private val fabricPrivacy: FabricPrivacy,
         private val preferences: Preferences,
         private val overviewData: OverviewData,
-        private val trajectoryGuard: TrajectoryGuard // 🌀 Add to Factory
+        private val trajectoryGuard: TrajectoryGuard, // 🌀 Add to Factory
+        private val activityProvider: UnifiedActivityProviderMTR
     ) : ViewModelProvider.Factory {
 
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
             if (modelClass.isAssignableFrom(OverviewViewModel::class.java)) {
                 @Suppress("UNCHECKED_CAST")
                 return OverviewViewModel(
-                    context.applicationContext,
+                    application,
                     lastBgData,
                     trendCalculator,
                     iobCobCalculator,
@@ -775,7 +764,8 @@ class OverviewViewModel(
                     fabricPrivacy,
                     preferences,
                     overviewData,
-                    trajectoryGuard
+                    trajectoryGuard,
+                    activityProvider
                 ) as T
             }
             throw IllegalArgumentException("Unknown ViewModel class $modelClass")
