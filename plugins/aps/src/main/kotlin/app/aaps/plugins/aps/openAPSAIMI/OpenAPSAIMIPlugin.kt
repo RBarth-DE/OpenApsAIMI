@@ -139,6 +139,8 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
     aapsLogger, rh
 ), APS, PluginConstraints {
 
+    private val dynIsfCache = LongSparseArray<Double>()
+
     override fun onStart() {
         super.onStart()
         AimiUamHandler.clearCache(context)
@@ -211,7 +213,8 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
     }
 
     override fun getAverageIsfMgdl(timestamp: Long, caller: String): Double? {
-        if (dynIsfCache == null || dynIsfCache.size() == 0) {
+        //dynIsfCache is a non-nullable property (it's initialized as LongSparseArray<Double>()), so dynIsfCache == null is always false.
+        if (dynIsfCache.size() == 0) {
             aapsLogger.warn(LTag.APS, "dynIsfCache is null or empty. Unable to calculate average ISF.")
             return profileFunction.getProfile()?.getProfileIsfMgdl() ?: 20.0
         }
@@ -264,8 +267,6 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
         preferenceFragment.findPreference<SwitchPreference>(BooleanKey.ApsSensitivityRaisesTarget.key)?.isVisible = autoSensOrDynIsfSensEnabled
         preferenceFragment.findPreference<AdaptiveIntPreference>(IntKey.ApsUamMaxMinutesOfBasalToLimitSmb.key)?.isVisible = smbEnabled && uamEnabled
     }
-
-    private val dynIsfCache = LongSparseArray<Double>()
 
     // Exemple de fonction pour prédire le delta futur à partir d'un historique récent
     private fun predictedDelta(deltaHistory: List<Double>): Double {
