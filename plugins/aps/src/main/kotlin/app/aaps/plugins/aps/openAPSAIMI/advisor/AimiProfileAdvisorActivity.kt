@@ -28,6 +28,9 @@ import app.aaps.core.keys.interfaces.BooleanPreferenceKey
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancel
 
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancel
+
 /**
  * =============================================================================
  * AIMI PROFILE ADVISOR ACTIVITY

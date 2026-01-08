@@ -29,5 +29,6 @@ enum class LTag(val tag: String, val defaultValue: Boolean = true, val requiresR
     WEAR("WEAR"),
     WIDGET("WIDGET"),
     WORKER("WORKER"),
-    XDRIP("XDRIP")
+    XDRIP("XDRIP"),
+    AICOACH("AICOACH")
 }

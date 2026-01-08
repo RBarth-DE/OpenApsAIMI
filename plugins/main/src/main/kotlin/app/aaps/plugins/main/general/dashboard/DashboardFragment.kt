@@ -56,7 +56,9 @@ import io.reactivex.rxjava3.kotlin.plusAssign
 import dagger.android.support.DaggerFragment
 import javax.inject.Inject
 import javax.inject.Provider
-
+import android.content.pm.PackageManager
+import android.widget.Toast
+import app.aaps.plugins.main.general.dashboard.views.StatusCardView
 class DashboardFragment : DaggerFragment() {
 
     @Inject lateinit var lastBgData: LastBgData
