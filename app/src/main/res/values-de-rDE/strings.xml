@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="nav_preferences_plugin">%1$s-Einstellungen</string>
+    <string name="dashboard_preview_title">Dashboard</string>
     <string name="nav_exit">Schließen</string>
     <string name="delta">Delta</string>
     <string name="save">Speichern</string>
@@ -23,9 +24,39 @@
     <string name="cannula">Kanüle</string>
     <string name="identification_not_set">Identifikation im Dev-Modus nicht gesetzt</string>
     <!-- WEAR OS-->
+    <string name="places_cancel">Abbruch</string>
     <string name="remove_selected_items">Ausgewähltes Objekt löschen</string>
     <string name="count_selected">%1$d ausgewählt</string>
     <string name="sort_label">Sortieren</string>
     <string name="search">Suche</string>
     <string name="simple_mode">Einfacher Modus</string>
+    <string name="set">Setzen</string>
+    <string name="menu_comparator">Vergleichs-Plugin AIMI-SMB</string>
+    <string name="select">Auswählen</string>
+    <string name="comparator_title">Leistungsanalyse</string>
+    <string name="comparator_no_data">Keine Daten verfügbar. Die CSV-Datei wird nach dem ersten Vergleich erstellt.</string>
+    <string name="comparator_summary">Zusammenfassung</string>
+    <string name="comparator_total_entries">Anzahl der Einträge</string>
+    <string name="comparator_avg_rate_diff">Durchschnittliche Basaldifferenz</string>
+    <string name="comparator_avg_smb_diff">Durchschnittliche SMB-Differenz</string>
+    <string name="comparator_agreement">Übereinstimmungsrate</string>
+    <string name="comparator_aimi_win_rate">AIMI aggressiver</string>
+    <string name="comparator_smb_win_rate">SMB aggressiver</string>
+    <string name="comparator_rate_chart_title">Vergleich der Basalraten</string>
+    <string name="comparator_rate_chart_desc">AIMI vs. SMB - Basalraten (U/h)</string>
+    <string name="comparator_smb_chart_title">SMB im Vergleich</string>
+    <string name="comparator_smb_chart_desc">AIMI vs. SMB – Super-Mikrobolus (U)</string>
+    <string name="comparator_safety_title">Sicherheitsanalyse</string>
+    <string name="comparator_variability_score">Variabilitätswert</string>
+    <string name="comparator_hypo_risk">Geschätztes Hypo-Risiko</string>
+    <string name="comparator_clinical_impact_title">Klinische Auswirkungen</string>
+    <string name="comparator_total_insulin_aimi">Gesamtinsulin AIMI</string>
+    <string name="comparator_total_insulin_smb">Gesamtinsulin SMB</string>
+    <string name="comparator_cumulative_diff">Kumulierte Differenz</string>
+    <string name="comparator_critical_moments_title">Kritische Momente</string>
+    <string name="comparator_critical_moment_entry">Eintrag #%1$d - BG: %2$.0f mg/dL, IOB: %3$.1f U</string>
+    <string name="comparator_critical_moment_divergence">Divergenz: Basal %1$s U/h, SMB %2$s U</string>
+    <string name="comparator_recommendation_title">Empfehlung</string>
+    <string name="comparator_recommended_algorithm">Empfohlener Algorithmus: %1$s</string>
+    <string name="comparator_confidence">Vertrauen: %1$s</string>
 </resources>

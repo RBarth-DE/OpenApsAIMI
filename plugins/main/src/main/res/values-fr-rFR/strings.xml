@@ -196,6 +196,7 @@
     <string name="graph_scale_18h">18h</string>
     <string name="graph_scale_24h">24h</string>
     <string name="graph_long_scale_6h">6 heures</string>
+    <string name="graph_long_scale_9h">9 heures</string>
     <string name="graph_long_scale_12h">12 heures</string>
     <string name="graph_long_scale_18h">18 heures</string>
     <string name="graph_long_scale_24h">24 heures</string>

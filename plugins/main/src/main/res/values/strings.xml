@@ -171,7 +171,7 @@
     <string name="dashboard_adjustments_details_title">Adjustments</string>
     <string name="dashboard_adjustments_details_decisions">Loop decisions</string>
     <string name="dashboard_adjustments_details_empty">No active adjustments.</string>
-    <string name="dashboard_nav_settings">Settings</string>
+    <string name="dashboard_nav_settings">CGM App</string>
     <string name="dashboard_adjustments">Active adjustments</string>
     <string name="dashboard_no_adjustments">No active adjustments</string>
     <string name="dashboard_graph_placeholder">Glucose graph placeholder</string>

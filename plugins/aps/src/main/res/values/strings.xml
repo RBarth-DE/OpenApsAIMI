@@ -793,9 +793,9 @@
     <string name="heart_rate">&#160;| HR=%1$s bpm</string>
     <string name="smb_disabled">SMB disabled (!microBolusAllowed)</string>
     <!-- New Bio-Sync strings -->
-    <string name="reason_iob_adjustment_inverted">  • IOB Activity Acceleration: -%1$.1f min\n</string>
-    <string name="reason_bio_sync_stress">  • 🔴 Bio-Sync STRESS (HR %1$d, Steps %2$d) ➝ Peak slowed x1.25\n</string>
-    <string name="reason_bio_sync_flow">  • 🟢 Bio-Sync FLOW (Steps %1$d, HR %2$d) ➝ Peak faster x%3$.2f\n</string>
+    <string name="reason_iob_adjustment_inverted">"  • IOB Activity Acceleration: -%1$.1f min "</string>
+    <string name="reason_bio_sync_stress">"  • 🔴 Bio-Sync STRESS (HR %1$d, Steps %2$d) ➝ Peak slowed x1.25 "</string>
+    <string name="reason_bio_sync_flow">"  • 🟢 Bio-Sync FLOW (Steps %1$d, HR %2$d) ➝ Peak faster x%3$.2f "</string>
     
     <string name="smb_disabled_high_target">SMB disabled due to high temptarget of %1$.0f</string>
     <string name="smb_enabled_always">SMB enabled due to enableSMB_always</string>
@@ -829,7 +829,7 @@
     <string name="safety_sport_smb_zero">🏃‍♂️ Safety sport → SMB=0</string>
     <string name="adjustments_smb">🎛️ Adjustments: %1$.2f → %2$.2f U</string>
     <string name="finalization_smb">🧩 Finalization: %1$.2f → %2$.2f U</string>
-    <string name="limits_smb">🧱 Limits: %1$.2f → %2$.2f U</string>
+    <string name="limits_smb">\\n🧱 Limits: %1$.2f → %2$.2f U</string>
     <string name="no_recent_bg">⚠️ No recent BG — default settings kept</string>
     <string name="autodrive_debug_header">→ Autodrive Debug\n</string>
     <string name="autodrive_bg_trend">  • BG Trend: %1$.2f\n</string>
@@ -960,7 +960,7 @@
     <!-- Meal-mode safety relaxations -->
     <string name="smb_enabled_meal_mode">SMB enabled: meal mode rising (BG %1$s, Δ=%2$.1f, eventual %3$s)</string>
     <string name="reason_meal_high_iob_relaxed">Meal mode rising: IOB %1$.2f &gt; max %2$.2f → SMB damped to %3$d%%.</string>
-    <string name="reason_meal_hold_profile_basal">Meal mode rising: IOB %1$.2f &gt; max %2$.2f → basal kept at profile minimum.\n</string>
+    <string name="reason_meal_hold_profile_basal">"Meal mode rising: IOB %1$.2f &gt; max %2$.2f → basal kept at profile minimum. "</string>
     <string name="reason_insulin_required"> insulin required %1$.2f</string>
     <string name="reason_max_smb">; maxBolus %1$.2f</string>
     <string name="reason_microbolus">Microbolusing %1$.2fU.</string>
@@ -997,7 +997,7 @@
     <string name="honeymoon_small_slope">Honeymoon small slope.</string>
     <string name="honeymoon_meal_slope">Honeymoon meal slope.</string>
     <string name="pregnancy_delta_over_0_adjustment">Pregnancy &amp; Δ&gt;0 → adjustment.</string>
-    <string name="aimi_plateau_high_boost">Boost => Hyper greater than 180 stable bg</string>
+    <string name="aimi_plateau_high_boost">Boost => Hyper greater than 180 stable BG</string>
     <!-- AIMI: Plateau / smart hyperglycemia -->
     <string name="aimi_plateau_prefs">Plateau correction (AIMI)</string>
     <string name="aimi_plateau_prefs_title_menu">Plateau correction settings</string>
@@ -1129,7 +1129,7 @@
     <string name="aimi_adv_score_label">Score: %1$.1f/10</string>
     <string name="aimi_adv_apply_btn">APPLIQUER</string>
     <string name="aimi_adv_apply_dialog_title">Confirmation des Ajustements</string>
-    <string name="aimi_adv_apply_dialog_prefix">L\'Advisor propose les ajustements suivants :\n\n</string>
+    <string name="aimi_adv_apply_dialog_prefix">"L'Advisor propose les ajustements suivants :  "</string>
     <string name="aimi_adv_apply_dialog_confirm">TOUT APPLIQUER</string>
     <string name="aimi_adv_success_msg">%1$d changements appliqués !</string>
     <string name="aimi_adv_no_change_msg">Aucun changement compatible appliqué.</string>
