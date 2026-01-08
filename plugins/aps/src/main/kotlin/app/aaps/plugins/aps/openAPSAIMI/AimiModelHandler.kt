@@ -216,7 +216,8 @@ object AimiUamHandler {
             }
             return try {
                 val mapped = loadModel(file)
-                Interpreter(mapped).also {
+                val options = Interpreter.Options()
+                Interpreter(mapped, options).also {
                     interpreter = it
                     lastLoadOk = true
                     lastLoadError = null

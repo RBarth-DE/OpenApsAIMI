@@ -10,8 +10,6 @@ import android.widget.ScrollView
 import android.widget.Space
 import android.widget.TextView
 import androidx.cardview.widget.CardView
-import androidx.core.content.ContextCompat
-import androidx.core.view.WindowCompat
 import app.aaps.core.interfaces.resources.ResourceHelper
 import app.aaps.core.ui.activities.TranslatedDaggerAppCompatActivity
 import app.aaps.plugins.aps.R
@@ -28,8 +26,6 @@ import app.aaps.core.keys.interfaces.BooleanPreferenceKey
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancel
 
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.cancel
 
 /**
  * =============================================================================

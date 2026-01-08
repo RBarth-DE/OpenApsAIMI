@@ -1,6 +1,5 @@
 package app.aaps.plugins.main.general.dashboard
 
-import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
@@ -56,9 +55,7 @@ import io.reactivex.rxjava3.kotlin.plusAssign
 import dagger.android.support.DaggerFragment
 import javax.inject.Inject
 import javax.inject.Provider
-import android.content.pm.PackageManager
-import android.widget.Toast
-import app.aaps.plugins.main.general.dashboard.views.StatusCardView
+
 class DashboardFragment : DaggerFragment() {
 
     @Inject lateinit var lastBgData: LastBgData
@@ -86,54 +83,12 @@ class DashboardFragment : DaggerFragment() {
     @Inject lateinit var uiInteraction: UiInteraction
     @Inject lateinit var aapsLogger: AAPSLogger
     @Inject lateinit var automation: Automation
-    @Inject lateinit var xDripSource: XDripSource
-    @Inject lateinit var dexcomBoyda: DexcomBoyda
     @Inject lateinit var notificationStore: NotificationStore
 
     private val disposables = CompositeDisposable()
     private var _binding: FragmentDashboardBinding? = null
     private val binding get() = _binding!!
     private var currentRange = 0
-    private fun sensor(): Boolean {
-        val ctx = context ?: return false
-
-        // BG source actuellement utilisée dans AAPS
-        val bgSource = activePlugin.activeBgSource as? PluginBase
-
-        // On force en String pour pouvoir utiliser contains(ignoreCase = true)
-        val pluginName = bgSource
-            ?.pluginDescription
-            ?.pluginName
-            ?.toString()
-            .orEmpty()
-
-        return when {
-            pluginName.contains("dexcom", ignoreCase = true) -> {
-                // Essaye d’ouvrir l’appli Dexcom
-                launchPackageIfExists(ctx, "com.dexcom.g6") ||   // à adapter selon ta config
-                    launchPackageIfExists(ctx, "com.dexcom.one") ||  // ex. Dexcom One
-                    openSettings()                                   // fallback
-            }
-            pluginName.contains("xdrip", ignoreCase = true) -> {
-                // Essaye d’ouvrir xDrip
-                launchPackageIfExists(ctx, "com.eveningoutpost.dexdrip") || openSettings()
-            }
-            else -> {
-                // Ni Dexcom ni xDrip détecté → on ouvre les prefs
-                openSettings()
-            }
-        }
-    }
-    private fun launchPackageIfExists(ctx: android.content.Context, packageName: String): Boolean {
-        val pm = ctx.packageManager
-        val intent = pm.getLaunchIntentForPackage(packageName)
-        return if (intent != null) {
-            startActivity(intent)
-            true
-        } else {
-            false
-        }
-    }
 
     private val viewModel: OverviewViewModel by viewModels {
         OverviewViewModel.Factory(

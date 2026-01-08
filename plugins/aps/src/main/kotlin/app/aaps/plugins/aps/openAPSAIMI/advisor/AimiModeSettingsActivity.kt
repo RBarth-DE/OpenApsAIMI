@@ -29,7 +29,7 @@ import javax.inject.Inject
 import android.os.Handler
 import android.os.Looper
 import android.widget.Switch
-
+import android.view.WindowInsetsController
 
 class AimiModeSettingsActivity : TranslatedDaggerAppCompatActivity() {
 
@@ -67,7 +67,15 @@ class AimiModeSettingsActivity : TranslatedDaggerAppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        window.statusBarColor = darkNavy
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
+            window.insetsController?.setSystemBarsAppearance(
+                WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS,
+                WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS
+            )
+        } else {
+            @Suppress("DEPRECATION")
+            window.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR
+        }
         
         val mainScroll = ScrollView(this).apply {
             layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)

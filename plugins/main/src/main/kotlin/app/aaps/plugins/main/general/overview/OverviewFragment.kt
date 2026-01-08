@@ -5,7 +5,6 @@ import android.app.NotificationManager
 import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.PorterDuff
@@ -562,19 +561,6 @@ class OverviewFragment : DaggerFragment(), View.OnClickListener, OnLongClickList
                     // Check if there is a bolus in progress
                     popupBolusDialogIfRunning(onClick = true)
                 }
-            }
-        }
-    }
-
-    private fun openCgmApp(packageName: String) {
-        context?.let {
-            val packageManager = it.packageManager
-            try {
-                val intent = packageManager.getLaunchIntentForPackage(packageName) ?: throw ActivityNotFoundException()
-                intent.addCategory(Intent.CATEGORY_LAUNCHER)
-                it.startActivity(intent)
-            } catch (_: ActivityNotFoundException) {
-                aapsLogger.debug(LTag.CORE, "Error opening CGM app")
             }
         }
     }
