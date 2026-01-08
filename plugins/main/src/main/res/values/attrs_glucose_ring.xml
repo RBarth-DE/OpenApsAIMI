@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- GlucoseRingView stepped-color configuration (usable in styles) -->
+    <attr name="glucoseRingUseSteppedColors" format="boolean"/>
+
+    <attr name="glucoseRingStep1MaxMgdl" format="float"/>
+    <attr name="glucoseRingStep2MaxMgdl" format="float"/>
+    <attr name="glucoseRingStep3MaxMgdl" format="float"/>
+
+    <attr name="glucoseRingStepColor1" format="color"/>
+    <attr name="glucoseRingStepColor2" format="color"/>
+    <attr name="glucoseRingStepColor3" format="color"/>
+    <attr name="glucoseRingStepColor4" format="color"/>
+</resources>
