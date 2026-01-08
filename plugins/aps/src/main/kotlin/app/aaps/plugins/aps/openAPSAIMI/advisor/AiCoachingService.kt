@@ -29,13 +29,16 @@ class AiCoachingService @Inject constructor() {
     enum class Provider { OPENAI, GEMINI, DEEPSEEK, CLAUDE }
 
     companion object {
-        private const val OPENAI_URL = "https://api.openai.com/v1/chat/completions"
-        private const val OPENAI_MODEL = "gpt-5.2"  // O-series reasoning model
-        
+        //private const val OPENAI_URL = "https://api.openai.com/v1/chat/completions"
+        private const val OPENAI_URL = "https://api.openai.com/v1/responses"
+        //private const val OPENAI_MODEL = "gpt-4o"
+        private const val OPENAI_MODEL =  "gpt-4.1-mini"
+
         // Gemini 2.5 Flash (Latest - Dec 2024)
         private const val GEMINI_MODEL = "gemini-2.5-flash"
         private const val GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/models/$GEMINI_MODEL:generateContent"
-        
+
+
         // DeepSeek Chat (OpenAI-compatible)
         private const val DEEPSEEK_URL = "https://api.deepseek.com/v1/chat/completions"
         private const val DEEPSEEK_MODEL = "deepseek-chat"
@@ -56,7 +59,7 @@ class AiCoachingService @Inject constructor() {
         provider: Provider,
         history: List<app.aaps.plugins.aps.openAPSAIMI.advisor.data.AdvisorHistoryRepository.AdvisorActionLog> = emptyList()
     ): String = withContext(Dispatchers.IO) {
-        if (apiKey.isBlank()) return@withContext "Clé API manquante. Veuillez configurer votre clé ${provider.name}."
+        if (apiKey.isBlank()) return@withContext "API key missing. Please configure your key.  ${provider.name}."
 
         try {
             val prompt = buildPrompt(androidContext, context, report, history)
@@ -70,13 +73,13 @@ class AiCoachingService @Inject constructor() {
 
         } catch (e: Exception) {
             e.printStackTrace()
-            return@withContext "Erreur de connexion (${provider.name}) : ${e.localizedMessage}"
+            return@withContext "Connection error (${provider.name}) : ${e.localizedMessage}"
         }
     }
-    
+
     /**
      * Simple text generation for Context Module.
-     * 
+     *
      * @param prompt Complete prompt (system + user message)
      * @param apiKey API key for the provider
      * @param provider Which LLM provider to use
@@ -87,9 +90,9 @@ class AiCoachingService @Inject constructor() {
         apiKey: String,
         provider: Provider
     ): String = withContext(Dispatchers.IO) {
-        if (apiKey.isBlank()) return@withContext "Clé API manquante."
-        if (prompt.isBlank()) return@withContext "Prompt vide."
-        
+        if (apiKey.isBlank()) return@withContext "API key missing."
+        if (prompt.isBlank()) return@withContext "Sofortiges Video."
+
         try {
             return@withContext when (provider) {
                 Provider.GEMINI -> callGemini(apiKey, prompt)
@@ -99,7 +102,7 @@ class AiCoachingService @Inject constructor() {
             }
         } catch (e: Exception) {
             e.printStackTrace()
-            return@withContext "Erreur: ${e.localizedMessage}"
+            return@withContext "Error: ${e.localizedMessage}"
         }
     }
 
@@ -139,7 +142,7 @@ class AiCoachingService @Inject constructor() {
             val err = StringBuilder()
             var line: String?
             while (reader.readLine().also { line = it } != null) err.append(line)
-            return "Erreur OpenAI ($responseCode): $err"
+            return "Error OpenAI ($responseCode): $err"
         }
     }
 
@@ -198,7 +201,7 @@ class AiCoachingService @Inject constructor() {
             val err = StringBuilder()
             var line: String?
             while (reader.readLine().also { line = it } != null) err.append(line)
-            return "Erreur Gemini ($responseCode): $err"
+            return "Error Gemini ($responseCode): $err"
         }
     }
 
@@ -288,26 +291,41 @@ class AiCoachingService @Inject constructor() {
     }
 
     private fun buildOpenAiJson(prompt: String): JSONObject {
+
         val root = JSONObject()
         root.put("model", OPENAI_MODEL)
-        val messages = JSONArray()
-        // Unified: Prompt contains the full persona and instructions.
-        val usr = JSONObject().put("role", "user").put("content", prompt)
-        messages.put(usr)
-        root.put("messages", messages)
-        // GPT-5 series (o-series) uses max_completion_tokens instead of max_tokens
-        // and doesn't support temperature (uses reasoning.effort instead)
-        root.put("max_completion_tokens", 4096)
-        
+
+        val input = JSONArray()
+        val msg = JSONObject()
+        msg.put("role", "user")
+
+        val content = JSONArray()
+        content.put(
+            JSONObject()
+                .put("type", "input_text")
+                .put("text", prompt)
+        )
+
+        msg.put("content", content)
+        input.put(msg)
+
+        root.put("input", input)
+        root.put("temperature", 0.7)
         return root
     }
 
     private fun parseOpenAiResponse(jsonStr: String): String {
         return try {
             val root = JSONObject(jsonStr)
-            root.getJSONArray("choices").getJSONObject(0).getJSONObject("message").getString("content").trim()
+            val output = root.getJSONArray("output")
+            val content = output
+                .getJSONObject(0)
+                .getJSONArray("content")
+                .getJSONObject(0)
+                .getString("text")
+            content.trim()
         } catch (e: Exception) {
-            "Erreur lecture OpenAI."
+            "OpenAI response parsing error."
         }
     }
 
@@ -319,7 +337,7 @@ class AiCoachingService @Inject constructor() {
             parts.getJSONObject(0).getString("text").trim()
         } catch (e: Exception) {
              // Fallback for safety blocked
-             if (jsonStr.contains("finishReason")) "Contenu bloqué par sécurité Gemini." else "Erreur lecture Gemini."
+             if (jsonStr.contains("finishReason")) "Content blocked by Gemini Security." else "Gemini reading error."
         }
     }
     
@@ -357,7 +375,7 @@ class AiCoachingService @Inject constructor() {
             val err = StringBuilder()
             var line: String?
             while (reader.readLine().also { line = it } != null) err.append(line)
-            return "Erreur DeepSeek ($responseCode): $err"
+            return "Error DeepSeek ($responseCode): $err"
         }
     }
     
@@ -406,7 +424,7 @@ class AiCoachingService @Inject constructor() {
             val err = StringBuilder()
             var line: String?
             while (reader.readLine().also { line = it } != null) err.append(line)
-            return "Erreur Claude ($responseCode): $err"
+            return "Error Claude ($responseCode): $err"
         }
     }
     
@@ -416,7 +434,7 @@ class AiCoachingService @Inject constructor() {
             val content = root.getJSONArray("content")
             content.getJSONObject(0).getString("text").trim()
         } catch (e: Exception) {
-            "Erreur lecture Claude."
+            "Lesefehler Claude."
         }
     }
 }
