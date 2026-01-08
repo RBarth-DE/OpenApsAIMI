@@ -34,7 +34,13 @@ class AdjustmentDetailsActivity : TranslatedDaggerAppCompatActivity() {
         binding.toolbar.title = getString(R.string.dashboard_adjustments_details_title)
         binding.toolbar.setNavigationOnClickListener { onBackPressedDispatcher.onBackPressed() }
 
-        val state = intent.getSerializableExtra(EXTRA_ADJUSTMENT_STATE) as? AdjustmentCardState
+        @Suppress("DEPRECATION")
+        val state: AdjustmentCardState? = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+            intent.getSerializableExtra(EXTRA_ADJUSTMENT_STATE, AdjustmentCardState::class.java)
+        } else {
+            intent.getSerializableExtra(EXTRA_ADJUSTMENT_STATE) as? AdjustmentCardState
+        }
+
         if (state == null) {
             finish()
             return

@@ -5,6 +5,7 @@ import android.app.NotificationManager
 import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.PorterDuff
@@ -487,10 +488,38 @@ class OverviewFragment : DaggerFragment(), View.OnClickListener, OnLongClickList
                 }
 
                 R.id.cgm_button          -> {
-                    if (xDripSource.isEnabled()) openCgmApp("com.eveningoutpost.dexdrip")
-                    else if (dexcomBoyda.isEnabled()) dexcomBoyda.dexcomPackages().forEach { openCgmApp(it) }
-                }
+                    context?.let { ctx ->
 
+                        val possiblePackages = listOf(
+                            "com.eveningoutpost.dexdrip",  // xDrip+
+                            "tk.glucodata",                // Juggluco
+                            "com.dexcom.g6byod",           // Dexcom G6 BYOD
+                            "com.dexcom.g7byod"            // Dexcom G7 BYOD
+                        )
+
+                        val pm = ctx.packageManager
+
+                        for (pkg in possiblePackages) {
+                            val intent = pm.getLaunchIntentForPackage(pkg)
+                            if (intent != null) {
+                                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                                intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP); //experiment with the flags
+                                ctx.startActivity(intent)
+                                aapsLogger.debug(LTag.CORE, "Launched CGM app: $pkg")
+                                //return true
+                            }
+                            else {
+                                aapsLogger.debug(LTag.CORE, "No known CGM app installed.")
+                            }
+                        }
+
+                        //return false
+
+                    } ?: run {
+                        aapsLogger.debug(LTag.CORE, "Context is null, cannot open sensor app")
+                        //return false
+                    }
+                }
                 R.id.calibration_button  -> {
                     if (xDripSource.isEnabled()) {
                         uiInteraction.runCalibrationDialog(childFragmentManager)

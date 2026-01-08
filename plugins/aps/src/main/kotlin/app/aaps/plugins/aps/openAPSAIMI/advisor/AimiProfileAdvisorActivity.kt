@@ -11,6 +11,7 @@ import android.widget.Space
 import android.widget.TextView
 import androidx.cardview.widget.CardView
 import androidx.core.content.ContextCompat
+import androidx.core.view.WindowCompat
 import app.aaps.core.interfaces.resources.ResourceHelper
 import app.aaps.core.ui.activities.TranslatedDaggerAppCompatActivity
 import app.aaps.plugins.aps.R
@@ -26,6 +27,9 @@ import app.aaps.core.keys.interfaces.IntPreferenceKey
 import app.aaps.core.keys.interfaces.BooleanPreferenceKey
 import app.aaps.core.keys.interfaces.PreferenceKey
 import app.aaps.core.keys.interfaces.StringPreferenceKey
+
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancel
 
 /**
  * =============================================================================
@@ -48,7 +52,17 @@ class AimiProfileAdvisorActivity : TranslatedDaggerAppCompatActivity() {
     private lateinit var advisorService: AimiAdvisorService
     private lateinit var historyRepo: app.aaps.plugins.aps.openAPSAIMI.advisor.data.AdvisorHistoryRepository
 
-    
+
+
+    private val scope = CoroutineScope(Dispatchers.Main + Job())
+// Oder verwenden Sie lifecycleScope in Activity/Fragment: private val scope = lifecycleScope
+
+    // Fügen Sie eine Aufräumfunktion hinzu, um den Scope bei Zerstörung zu beenden
+    override fun onDestroy() {
+        super.onDestroy()
+        scope.cancel() // Beendet alle gestarteten Coroutinen, wenn die Activity zerstört wird
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         
@@ -553,19 +567,19 @@ class AimiProfileAdvisorActivity : TranslatedDaggerAppCompatActivity() {
         
         when {
             factor < 0.95 -> {
-                stateText = "PROTECTEUR (x${"%.2f".format(factor)})"
+                stateText = "PROTECTOR (x${"%.2f".format(factor)})"
                 stateColor = Color.parseColor("#F87171") // Red/Orange - Reducing aggression
-                explanation = "Le système a détecté une instabilité/hypo récente et a réduit l'agressivité globale."
+                explanation = "The system detected recent instability/hypo and reduced overall aggressiveness."
             }
             factor > 1.05 -> {
-                stateText = "OFFENSIF (x${"%.2f".format(factor)})"
+                stateText = "OFFENSIVE (x${"%.2f".format(factor)})"
                 stateColor = Color.parseColor("#EF4444") // Red - Increasing aggression
-                explanation = "Le système combat une hyperglycémie persistante ou une résistance détectée."
+                explanation = "The system combats persistent hyperglycemia or detected resistance."
             }
             else -> {
-                stateText = "NEUTRE (x${"%.2f".format(factor)})"
+                stateText = "NEUTRAL (x${"%.2f".format(factor)})"
                 stateColor = Color.parseColor("#4ADE80") // Green
-                explanation = "Le système fonctionne avec ses paramètres de base. Aucune anomalie détectée."
+                explanation = "The system is operating with its default settings. No anomalies detected."
             }
         }
 
@@ -651,14 +665,16 @@ class AimiProfileAdvisorActivity : TranslatedDaggerAppCompatActivity() {
             contentText.text = "$basicAnalysis\n\n⚙️ $placeholder"
         } else {
             lifecycleScope.launch(kotlinx.coroutines.Dispatchers.Main) {
-                try {
-                    val history = withContext(kotlinx.coroutines.Dispatchers.IO) {
-                        historyRepo.getRecentActions(7)
+                scope.launch {
+                    try {
+                        val history = withContext(kotlinx.coroutines.Dispatchers.IO) {
+                            historyRepo.getRecentActions(7)
+                        }
+                        val advice = AiCoachingService().fetchAdvice(this@AimiProfileAdvisorActivity, context, report, activeKey, provider, history)
+                        contentText.text = advice
+                    } catch (e: Exception) {
+                        contentText.text = rh.gs(R.string.aimi_coach_error) + "\n" + e.localizedMessage
                     }
-                    val advice = AiCoachingService().fetchAdvice(this@AimiProfileAdvisorActivity, context, report, activeKey, provider, history)
-                    contentText.text = advice
-                } catch (e: Exception) {
-                    contentText.text = rh.gs(R.string.aimi_coach_error) + "\n" + e.localizedMessage
                 }
             }
         }

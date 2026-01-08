@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Simple style name to avoid missing Widget.Aaps / parent chains -->
+    <style name="GlucoseRingViewStepped">
+        <item name="glucoseRingUseSteppedColors">true</item>
+
+        <!-- Thresholds (mg/dL) -->
+        <item name="glucoseRingStep1MaxMgdl">140</item>
+        <item name="glucoseRingStep2MaxMgdl">180</item>
+        <item name="glucoseRingStep3MaxMgdl">220</item>
+
+        <!-- Colors -->
+        <item name="glucoseRingStepColor1">#00C853</item>
+        <item name="glucoseRingStepColor2">#FFD600</item>
+        <item name="glucoseRingStepColor3">#FF6D00</item>
+        <item name="glucoseRingStepColor4">#D50000</item>
+    </style>
+</resources>

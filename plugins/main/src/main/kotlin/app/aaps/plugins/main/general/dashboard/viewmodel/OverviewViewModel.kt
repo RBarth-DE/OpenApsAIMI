@@ -1,6 +1,7 @@
 package app.aaps.plugins.main.general.dashboard.viewmodel
 
 import android.content.Context
+import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -52,6 +53,7 @@ import io.reactivex.rxjava3.kotlin.plusAssign
 import java.util.concurrent.TimeUnit
 import kotlin.math.abs
 import kotlin.math.max
+import app.aaps.core.interfaces.logging.LTag
 
 class OverviewViewModel(
     private val context: Context,
@@ -147,9 +149,9 @@ class OverviewViewModel(
         disposables += rxBus
             .toObservable(app.aaps.core.interfaces.rx.events.EventPreferenceChange::class.java)
             .observeOn(aapsSchedulers.io)
-            .subscribe({ 
+            .subscribe({
                 if (it.isChanged(app.aaps.core.keys.StringKey.OApsAIMIContextStorage.key)) {
-                    updateStatus() 
+                    updateStatus()
                 }
             }, fabricPrivacy::logException)
     }
@@ -160,7 +162,36 @@ class OverviewViewModel(
         updateGraphMessage()
     }
 
+    private fun getRecentBolusTimeMs(minutes: Int, lastBolusTimeMs: Long?): Long? {
+        val lookbackTime = dateUtil.now() - minutes * 60_000L
+
+        // DB: nimm den neuesten Bolus im Fenster
+        val boluses = persistenceLayer.getBolusesFromTime(lookbackTime, true).blockingGet()
+        val dbLast = boluses
+            .filter { it.amount > 0.3 }
+            .maxOfOrNull { it.timestamp }   // oder createdAt / time / date -> je nach Model
+
+        // Memory-Fallback (nur wenn im Fenster)
+        val memLast = lastBolusTimeMs?.takeIf { it > lookbackTime }
+
+        return dbLast ?: memLast
+    }
+
     private fun updateStatus() {
+
+        val now = dateUtil.now()
+
+        val tbr = processedTbrEbData.getTempBasalIncludingConvertedExtended(now)
+
+        val activityPctText = if (tbr?.isInProgress == true) {
+            val short = tbr.toStringShort(resourceHelper)   // z.B. "150% (0.9U/h)" je nach Build
+            Regex("""(-?\d+(?:[.,]\d+)?)\s*%""").find(short)?.value ?: "--"
+        } else {
+            "100%"
+        }
+        //Log.d(LTag.BGSOURCE.name , "RBarth: TBR inProgress=${tbr?.isInProgress} short=${tbr?.toStringShort(resourceHelper)} activity=$activityPctText")
+
+
         val lastBg = lastBgData.lastBg()
         val glucoseText = profileUtil.fromMgdlToStringInUnits(lastBg?.recalculated)
         val trendArrow = trendCalculator.getTrendArrow(iobCobCalculator.ads)?.directionToIcon()
@@ -175,9 +206,48 @@ class OverviewViewModel(
             ?: resourceHelper.gs(app.aaps.core.ui.R.string.value_unavailable_short)
         val timeAgo = dateUtil.minAgoShort(lastBg?.timestamp)
         val timeAgoLong = dateUtil.minAgoLong(resourceHelper, lastBg?.timestamp)
+        val timeAgoSub = dateUtil.minOrSecAgo(resourceHelper,lastBg?.timestamp)
         val contentDescription =
             resourceHelper.gs(R.string.a11y_blood_glucose) + " " +
                 glucoseText + " " + lastBgData.lastBgDescription() + " " + timeAgoLong
+
+        // --- extra fields for CircleTopStatusView ---
+        val reservoirLevel = activePlugin.activePump.reservoirLevel
+        val reservoirText = if (reservoirLevel > 0)
+            resourceHelper.gs(app.aaps.core.ui.R.string.format_insulin_units, reservoirLevel)
+        else resourceHelper.gs(app.aaps.core.ui.R.string.value_unavailable_short)
+
+        val cannulaEvent = persistenceLayer.getLastTherapyRecordUpToNow(TE.Type.CANNULA_CHANGE)
+        val infusionAgeText = formatTherapyAge(cannulaEvent, now)
+
+        val sensorEvent = persistenceLayer.getLastTherapyRecordUpToNow(TE.Type.SENSOR_CHANGE)
+        val sensorAgeText = formatTherapyAge(sensorEvent, now)
+        val basalRate = loop.lastRun?.request?.rate
+        val basalText = if (basalRate == null || basalRate == -1.0)
+            resourceHelper.gs(app.aaps.core.ui.R.string.value_unavailable_short)
+        else "${decimalFormatter.to2Decimal(basalRate)} U/h"
+
+
+        val lastBolusTimeMs: Long? = activePlugin.activePump.lastBolusTime
+        //show last
+        val lastBolusXMinTmp = getRecentBolusTimeMs(60, lastBolusTimeMs )
+        val lastBolusXMin = lastBolusXMinTmp?.let { dateUtil.timeString(it) } ?: "--"
+        //only show value when in between time window
+        var tmp = "--"
+        if (lastBolusXMin != "--")
+            tmp = activePlugin.activePump.lastBolusAmount.toString() + "IE"
+        val lastBolusAmount = tmp
+
+        val battTe = persistenceLayer.getLastTherapyRecordUpToNow(TE.Type.PUMP_BATTERY_CHANGE)
+        val battText = formatTherapyAge(battTe, now)  // gibt "11d20h" etc.
+
+        val delta = glucoseStatusProvider.glucoseStatusData?.shortAvgDelta?.toFloat() ?: 0f
+        val degreesPerUnit = 4f
+        val maxUnits = 28f
+
+        val clampedUnits = delta.coerceIn(-maxUnits, maxUnits)
+        // Wenn du wirklich bei 28 => 90° enden willst, dann:
+        val noseAngleDeg = (delta * degreesPerUnit).coerceIn(-90f, 90f)
 
 
         val state = StatusCardState(
@@ -200,21 +270,35 @@ class OverviewViewModel(
                 bg = lastBg?.recalculated,
                 delta = glucoseStatusProvider.glucoseStatusData?.delta
             ),
-            isAimiContextActive = preferences.get(app.aaps.core.keys.StringKey.OApsAIMIContextStorage).length > 5
+            isAimiContextActive = preferences.get(app.aaps.core.keys.StringKey.OApsAIMIContextStorage).length > 5,
+
+            reservoirText = reservoirText,
+            infusionAgeText = infusionAgeText,
+            sensorAgeText = sensorAgeText,
+            basalText = basalText,
+            lastUpdateText = lastBolusAmount, //timeAgo,
+            lastSensorValueText = lastBolusXMin, //glucoseText,
+            activityPctText = activityPctText,
+            pumpBatteryText = battText,
+            ringLeftText = timeAgoSub,
+            ringRightText = deltaText,
+            noseAngleDeg = noseAngleDeg,
+            glucoseMgdl = lastBg?.recalculated?.toInt()
         )
         _statusCardState.postValue(state)
     }
 
     private fun totalIobText(): String {
-        val bolus = bolusIob()
-        val basal = basalIob()
-        val total = abs(bolus.iob + basal.basaliob)
-        return "IOB: " + resourceHelper.gs(app.aaps.core.ui.R.string.format_insulin_units, total)
+        //Calculate IobTotal from boluses and extended boluses to now().
+        // NOTE: Only isValid == true boluses are included
+        // NOTE: if faking by TBR by extended boluses is enabled, extended boluses are not included and are calculated towards temporary basals
+        val bolus = iobCobCalculator.calculateIobFromBolus().round()
+        //Calculate IOB from Temporary basals and Extended boluses (if emulation is enabled) to now
+        val basal = iobCobCalculator.calculateIobFromTempBasalsIncludingConvertedExtended().round()
+        val total = bolus.iob + basal.basaliob
+        //Log.d(LTag.BGSOURCE.name ,"RBarth: IOB: bolus=${bolus} basal=${basal} total=${total}")
+        return resourceHelper.gs(app.aaps.core.ui.R.string.format_insulin_units, total)
     }
-
-    private fun bolusIob(): IobTotal = iobCobCalculator.calculateIobFromBolus().round()
-
-    private fun basalIob(): IobTotal = iobCobCalculator.calculateIobFromTempBasalsIncludingConvertedExtended().round()
 
     private fun loopStatusText(mode: RM.Mode): String =
         resourceHelper.gs(
@@ -238,6 +322,7 @@ class OverviewViewModel(
         val trendArrow = trendCalculator.getTrendArrow(iobCobCalculator.ads)
         val glucoseStatus = glucoseStatusProvider.glucoseStatusData
         val adjustments = buildActiveAdjustments(now)
+
         val state = AdjustmentCardState(
             glycemiaLine = buildGlycemiaLine(lastBg, trendArrow, glucoseStatus),
             predictionLine = buildPredictionLine(now),
@@ -256,6 +341,7 @@ class OverviewViewModel(
             basal = loop.lastRun?.request?.rate,
             detailedReason = loop.lastRun?.request?.reason,
             isHypoRisk = loop.lastRun?.request?.isHypoRisk ?: false
+
         )
         _adjustmentState.postValue(state)
     }
@@ -584,7 +670,22 @@ data class StatusCardState(
     val pumpStatusText: String = "",
     val predictionText: String = "",
     val unicornImageRes: Int = R.drawable.unicorn_normal_stable,  // 🦄 Dynamic unicorn image
-    val isAimiContextActive: Boolean = false
+    val isAimiContextActive: Boolean = false,
+    // --- extra fields for CircleTopStatusView ---
+    val reservoirText: String? = null,
+    val infusionAgeText: String? = null,
+    val sensorAgeText: String? = null,
+    val basalText: String? = null,
+    val lastUpdateText: String? = null,
+    val lastSensorValueText: String? = null,
+    val activityPctText: String? = null,
+    val pumpBatteryText: String = "--",
+    // Ring
+    val ringLeftText: String? = null,
+    val ringRightText: String? = null,
+    val noseAngleDeg: Float? = null,
+    val glucoseMgdl: Int? = null
+
 )
 
 data class AdjustmentCardState(

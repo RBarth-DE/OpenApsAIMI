@@ -9,11 +9,12 @@ object Versions {
 
     const val compileSdk = 36
     const val minSdk = 31
-    const val targetSdk = 32
+    const val targetSdk = 32//new 36
     const val wearMinSdk = 30
     const val wearTargetSdk = 30
 
     val javaVersion = JavaVersion.VERSION_21
     val jvmTarget = JvmTarget.JVM_21
+
     const val jacoco = "0.8.11"
 }

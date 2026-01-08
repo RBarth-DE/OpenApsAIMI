@@ -1,8 +1,23 @@
 import org.gradle.kotlin.dsl.android
-import java.io.ByteArrayOutputStream
 import org.gradle.kotlin.dsl.debugImplementation
 import java.text.SimpleDateFormat
 import java.util.Date
+import org.gradle.kotlin.dsl.dependencies
+import org.gradle.kotlin.dsl.project
+
+// Fixes errors in KSP task dependency
+import org.gradle.api.GradleException
+
+/**
+ * Adds a dependency to the 'kapt' configuration.
+ *
+ * @param dependencyNotation notation for the dependency to be added.
+ * @return The dependency.
+ *
+ * @see [DependencyHandler.add]
+ */
+fun DependencyHandler.`kapt`(dependencyNotation: Any): Dependency? =
+    add("kapt", dependencyNotation)
 
 plugins {
     alias(libs.plugins.ksp)
@@ -13,6 +28,8 @@ plugins {
     id("android-app-dependencies")
     id("test-app-dependencies")
     id("jacoco-app-dependencies")
+    kotlin("android")
+    kotlin("kapt")
 }
 
 repositories {
@@ -248,7 +265,9 @@ dependencies {
     implementation(project(":pump:omnipod:dash"))
     implementation(project(":pump:rileylink"))
     implementation(project(":pump:virtual"))
+    implementation(project(":implementation"))
     implementation(project(":workflow"))
+    implementation("androidx.core:core-ktx")
 
     testImplementation(project(":shared:tests"))
     androidTestImplementation(project(":shared:tests"))
@@ -263,8 +282,8 @@ dependencies {
     /* Dagger2 - We are going to use dagger.android which includes
      * support for Activity and fragment injection so we need to include
      * the following dependencies */
-    ksp(libs.com.google.dagger.android.processor)
-    ksp(libs.com.google.dagger.compiler)
+    kapt(libs.com.google.dagger.compiler)
+    kapt(libs.com.google.dagger.android.processor)
 
     // MainApp
     api(libs.com.uber.rxdogtag2.rxdogtag)

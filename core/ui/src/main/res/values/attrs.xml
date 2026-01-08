@@ -226,4 +226,31 @@
     <attr name="crossTargetColor" format="reference|color" />
     <!---Custom button -->
     <attr name="customBtnStyle" format="reference" />
+
+    <declare-styleable name="GlucoseRingView">
+        <!-- Ring color interpolation palette -->
+        <attr name="ringLowColor" format="color" />
+        <attr name="ringHighColor" format="color" />
+        <attr name="ringLowThresholdMgdl" format="integer" />
+        <attr name="ringHighThresholdMgdl" format="integer" />
+
+        <!-- Visual tuning -->
+        <attr name="ringBackgroundColor" format="color" />
+        <attr name="ringTextColor" format="color" />
+        <attr name="ringSubTextColor" format="color" />
+        <attr name="ringStrokeWidth" format="dimension" />
+        <!-- Nose on ring-->
+        <attr name="ringNoseLength" format="dimension" />
+        <attr name="ringNoseWidth"  format="dimension" />
+        <!-- Stepped ring colors (optional; style-configurable) -->
+        <attr name="glucoseRingUseSteppedColors" format="boolean" />
+        <attr name="glucoseRingStep1MaxMgdl" format="float" />
+        <attr name="glucoseRingStep2MaxMgdl" format="float" />
+        <attr name="glucoseRingStep3MaxMgdl" format="float" />
+        <attr name="glucoseRingStepColor1" format="color" />
+        <attr name="glucoseRingStepColor2" format="color" />
+        <attr name="glucoseRingStepColor3" format="color" />
+        <attr name="glucoseRingStepColor4" format="color" />
+
+    </declare-styleable>
 </resources>

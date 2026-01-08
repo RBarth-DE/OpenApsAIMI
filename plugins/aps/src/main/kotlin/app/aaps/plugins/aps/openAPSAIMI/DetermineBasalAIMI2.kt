@@ -673,7 +673,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
     private fun roundBasal(value: Double): Double {
         val safeValue = if (value < 0.0) 0.0 else value
         // Standard rounding to 2 decimals (OpenAPS style 0.00)
-        return Math.round(safeValue * 100.0) / 100.0
+        return kotlin.math.round(safeValue * 100.0) / 100.0
     }
 
 
@@ -1027,14 +1027,14 @@ class DetermineBasalaimiSMB2 @Inject constructor(
     fun round(value: Double, digits: Int): Double {
         if (value.isNaN()) return Double.NaN
         val scale = 10.0.pow(digits.toDouble())
-        return Math.round(value * scale) / scale
+        return kotlin.math.round(value * scale) / scale
     }
 
     private fun Double.withoutZeros(): String = DecimalFormat("0.##").format(this)
     fun round(value: Double): Int {
         if (value.isNaN()) return 0
         val scale = 10.0.pow(2.0)
-        return (Math.round(value * scale) / scale).toInt()
+        return (kotlin.math.round(value * scale) / scale).toInt()
     }
     // Helper for Post-Meal Basal Boost (AIMI 2.0)
     private fun adjustBasalForMealHyper(
@@ -1497,7 +1497,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         val proposedFloat = effectiveProposed.toFloat()
         lastDecisionSource = decisionSource
         lastSmbProposed = effectiveProposed
-        
+        rT.reason.append("RB finalizeAndCapSMB ")
         // Use maxSMB (Preferences) as the hard limit.
         // We use 'maxSMB' instead of 'maxSMBHB' to ensure strict safety unless explicitly handled otherwise.
         // 1. Determine dynamic baseline limit (Normal vs High BG)
@@ -1786,7 +1786,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             consoleLog.add("SMB forced to 0 by critical safety: $critMsg")
             return 0f
         }
-
+        reason?.appendLine("RB SafetyPre: Sport")
         if (isSportSafetyCondition()) {
             if (mealWeights.guardScale > 0.0 && smbToGive > 0f) {
                 val before = smbToGive
@@ -1800,6 +1800,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                 return 0f
             }
         }
+        reason?.appendLine("RB SafetyPre: WCycle")
         val wCycleInfo = ensureWCycleInfo()
         if (wCycleInfo != null) {
             if (wCycleInfo.applied) {
@@ -1829,6 +1830,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                 }
             }
         }
+        reason?.appendLine("RB SafetyPre: Spec. Limit")
         // Ajustements spécifiques
         val beforeAdj = smbToGive
         smbToGive = applySpecificAdjustments(smbToGive)
@@ -1875,6 +1877,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
     }
 
         // Finalisation
+        reason?.appendLine("RB SafetyPre: Finalize")
         val beforeFinalize = smbToGive
         smbToGive = finalizeSmbToGive(smbToGive)
         if (smbToGive != beforeFinalize) {
@@ -1882,17 +1885,38 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             reason?.appendLine(context.getString(R.string.finalization_smb, beforeFinalize, smbToGive))
         }
 
+        reason?.appendLine("RB SafetyPre: Max Limit")
         // Limites max
         val beforeLimits = smbToGive
-        smbToGive = applyMaxLimits(smbToGive)
+        //smbToGive = applyMaxLimits(smbToGive)
+        // 1. Zuerst das maxSMB-Limit anwenden
+        reason?.appendLine("RB applySafetyPrecautions() : " +
+                               "maxSMB: ${"%.2f".format( maxSMB)}" +
+                               "; maxIob: ${"%.2f".format(maxIob)}" +
+                               "; smbToGive: ${"%.2f".format(smbToGive)}" +
+                               "; iob: ${"%.2f".format(iob)}")
+        if (smbToGive > maxSMB.toFloat()) {
+            smbToGive = maxSMB.toFloat()
+        }
+        // 2. Dann das maxIob-Limit anwenden
+        // Wenn iob + der aktuelle resultierende SMB das maxIob Limit überschreitet
+        if (iob + smbToGive > maxIob) {
+            // Berechne, wie viel SMB maximal noch gegeben werden darf
+            smbToGive = maxIob.toFloat() - iob
+        }
+        // 3. Ergebnis darf nie negativ sein (falls maxIob - iob negativ ist)
+        // z.B. wenn iob (10.5) bereits über maxIob (10.3) liegt.
+        if (smbToGive < 0f) 0f else smbToGive
+
         if (smbToGive != beforeLimits) {
             //reason?.appendLine("🧱 Limites: ${"%.2f".format(beforeLimits)} → ${"%.2f".format(smbToGive)} U")
-            reason?.appendLine(context.getString(R.string.limits_smb, beforeLimits, smbToGive))
+            reason?.appendLine( context.getString(R.string.limits_smb, beforeLimits, smbToGive))
         }
         smbToGive = smbToGive.coerceAtLeast(0f)
+        reason?.appendLine("RB SafetyPre: End smbToGive = {$smbToGive}")
         return smbToGive
     }
-    private fun applyMaxLimits(smbToGive: Float): Float {
+    /*private fun applyMaxLimits(smbToGive: Float): Float {
         var result = smbToGive
 
         // Vérifiez d'abord si smbToGive dépasse maxSMB
@@ -1910,7 +1934,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         }
 
         return result
-    }
+    }*/
 
     // Helper to check for recent bolus activity (prevent double dosing)
     private fun hasReceivedRecentBolus(minutes: Int, lastBolusTimeMs: Long): Boolean {
@@ -3357,7 +3381,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         val limit = wCyclePreferences.avgLen()
         if (tracking && info.dayInCycle > limit) {
              if (info.dayInCycle != lastCycleNotificationDay) {
-                 val msg = "⚠️ WCycle: J${info.dayInCycle} > $limit. Retard détecté.\nMettre à jour le 1er jour des règles ?"
+                 val msg = "⚠️ WCycle: J${info.dayInCycle} > $limit. Delay detected.\n Update the first day of your period?"
                  consoleLog.add(msg)
                  uiInteraction.addNotification(
                     app.aaps.core.interfaces.notifications.Notification.HYPO_RISK_ALARM,
@@ -5239,6 +5263,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         // Detailed logging as requested
         val hasPred = predictedBg > 20
         val hyperKicker = (bg > target_bg + 30 && (delta >= 0.3 || shortAvgDelta >= 0.2))
+        rT.reason.appendLine("RB parseNotes() BG=${"%.0f".format(bg)}, Delta=${"%.1f".format(delta)}, IOB=${"%.2f".format(iob)}, HasPred=$hasPred, HyperKicker=$hyperKicker, UAM=${"%.2f".format(modelcal)}, Proposed=${"%.2f".format(this.predictedSMB)}\n")
         consoleLog.add("SMB Decision: BG=${"%.0f".format(bg)}, Delta=${"%.1f".format(delta)}, IOB=${"%.2f".format(iob)}, HasPred=$hasPred, HyperKicker=$hyperKicker, UAM=${"%.2f".format(modelcal)}, Proposed=${"%.2f".format(this.predictedSMB)}")
         val pkpdDiaMinutesOverride: Double? = pkpdRuntime?.params?.diaHrs?.let { it * 60.0 } // PKPD donne des heures → on passe en minutes
         val useLegacyDynamicsdia = pkpdDiaMinutesOverride == null
@@ -5563,7 +5588,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         val remainingCIpeak = remainingCarbs * csf * 5 / 60 / (remainingCATime / 2)
         val slopeFromMaxDeviation = mealData.slopeFromMaxDeviation
         val slopeFromMinDeviation = mealData.slopeFromMinDeviation
-        val slopeFromDeviations = Math.min(slopeFromMaxDeviation, -slopeFromMinDeviation / 3)
+        val slopeFromDeviations =kotlin.math.min(slopeFromMaxDeviation, -slopeFromMinDeviation / 3)
         var ci: Double
         val cid: Double
         // calculate current carb absorption rate, and how long to absorb all carbs
@@ -5573,7 +5598,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             // avoid divide by zero
             cid = 0.0
         } else {
-            cid = min(remainingCATime * 60 / 5 / 2, Math.max(0.0, mealData.mealCOB * csf / ci))
+            cid = min(remainingCATime * 60 / 5 / 2,kotlin.math.max(0.0, mealData.mealCOB * csf / ci))
         }
         // duration (hours) = duration (5m) * 5 / 60 * 2 (to account for linear decay)
         //consoleError.add("Carb Impact: ${ci} mg/dL per 5m; CI Duration: ${round(cid * 5 / 60 * 2, 1)} hours; remaining CI (~2h peak): ${round(remainingCIpeak, 1)} mg/dL per 5m")

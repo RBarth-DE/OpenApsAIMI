@@ -56,7 +56,9 @@ import io.reactivex.rxjava3.kotlin.plusAssign
 import dagger.android.support.DaggerFragment
 import javax.inject.Inject
 import javax.inject.Provider
-
+import android.content.pm.PackageManager
+import android.widget.Toast
+import app.aaps.plugins.main.general.dashboard.views.StatusCardView
 class DashboardFragment : DaggerFragment() {
 
     @Inject lateinit var lastBgData: LastBgData
@@ -221,14 +223,14 @@ class DashboardFragment : DaggerFragment() {
         binding.statusCard.isClickable = true
         binding.statusCard.isFocusable = true
         binding.statusCard.setOnClickListener { openLoopDialog() }
-        binding.statusCard.setOnAimiIconClickListener {
+        /* binding.statusCard.setOnAimiIconClickListener {
             try {
                 val intent = Intent().setClassName(requireContext(), "app.aaps.plugins.aps.openAPSAIMI.context.ui.ContextActivity")
                 startActivity(intent)
             } catch (e: Exception) {
                 aapsLogger.error(LTag.CORE, "Failed to launch ContextActivity: ${e.message}")
             }
-        }
+        }*/
         binding.glucoseGraph.graph.gridLabelRenderer?.gridColor = resourceHelper.gac(requireContext(), app.aaps.core.ui.R.attr.graphGrid)
         binding.glucoseGraph.graph.viewport.isScrollable = true
         binding.glucoseGraph.graph.viewport.isScalable = true
@@ -336,25 +338,35 @@ class DashboardFragment : DaggerFragment() {
 
     @RequiresApi(Build.VERSION_CODES.CUPCAKE)
     private fun openSensorApp(): Boolean {
-        if (xDripSource.isEnabled()) return openCgmApp("com.eveningoutpost.dexdrip")
-        if (dexcomBoyda.isEnabled()) {
-            dexcomBoyda.dexcomPackages().forEach { if (openCgmApp(it)) return true }
-        }
-        return openModes()
-    }
+        context?.let { ctx ->
 
-    @RequiresApi(Build.VERSION_CODES.CUPCAKE)
-    private fun openCgmApp(packageName: String): Boolean {
-        val context = context ?: return false
-        val packageManager = context.packageManager
-        return try {
-            val intent = packageManager.getLaunchIntentForPackage(packageName) ?: throw ActivityNotFoundException()
-            intent.addCategory(Intent.CATEGORY_LAUNCHER)
-            context.startActivity(intent)
-            true
-        } catch (_: ActivityNotFoundException) {
-            aapsLogger.debug(LTag.CORE, "Error opening CGM app")
-            false
+            val possiblePackages = listOf(
+                "com.eveningoutpost.dexdrip",  // xDrip+
+                "tk.glucodata",                // Juggluco
+                "com.dexcom.g6byod",           // Dexcom G6 BYOD
+                "com.dexcom.g7byod"            // Dexcom G7 BYOD
+            )
+
+            val pm = ctx.packageManager
+
+            for (pkg in possiblePackages) {
+                val intent = pm.getLaunchIntentForPackage(pkg)
+                if (intent != null) {
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP); //experiment with the flags
+                    ctx.startActivity(intent)
+                    aapsLogger.debug(LTag.CORE, "Launched CGM app: $pkg")
+                    return true
+                }
+                else {
+                    aapsLogger.debug(LTag.CORE, "No known CGM app installed.")
+                }
+            }
+            return false
+
+        } ?: run {
+            aapsLogger.debug(LTag.CORE, "Context is null, cannot open sensor app")
+            return false
         }
     }
 
@@ -420,6 +432,11 @@ class DashboardFragment : DaggerFragment() {
         graphData.addBgReadings(menuChartSettings[0][CharType.PRE.ordinal], context)
         graphData.addBucketedData()
         graphData.addTreatments(context)
+        graphData.addEps(context, 0.95)
+        if (menuChartSettings[0][OverviewMenus.CharType.TREAT.ordinal])
+            graphData.addTherapyEvents()
+        if (menuChartSettings[0][OverviewMenus.CharType.ACT.ordinal])
+            graphData.addActivity(0.8)
         if ((config.AAPSCLIENT || activePlugin.activePump.pumpDescription.isTempBasalCapable) && menuChartSettings[0][CharType.BAS.ordinal]) {
             graphData.addBasals()
         }

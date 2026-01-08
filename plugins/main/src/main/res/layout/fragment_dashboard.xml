@@ -28,12 +28,20 @@
                 tools:listitem="@layout/overview_notification_item"
                 tools:visibility="visible" />
 
-            <app.aaps.plugins.main.general.dashboard.views.StatusCardView
+<!--            <app.aaps.plugins.main.general.dashboard.views.StatusCardView
                 android:id="@+id/status_card"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="@dimen/dashboard_block_spacing"
                 style="@style/Widget.AAPS.Dashboard.Card" />
+-->
+            <app.aaps.plugins.main.general.dashboard.views.CircleTopStatusView
+                android:id="@+id/status_card"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="@dimen/dashboard_block_spacing"
+                style="@style/Widget.AAPS.Dashboard.Card" />
+
 
             <app.aaps.plugins.main.general.dashboard.views.GlucoseGraphView
                 android:id="@+id/glucose_graph"
@@ -42,6 +50,7 @@
                 android:layout_marginBottom="@dimen/dashboard_block_spacing"
                 style="@style/Widget.AAPS.Dashboard.Card" />
 
+            <!-- Keep adjustment tile below -->
             <app.aaps.plugins.main.general.dashboard.views.AdjustmentStatusView
                 android:id="@+id/adjustment_status"
                 android:layout_width="match_parent"
