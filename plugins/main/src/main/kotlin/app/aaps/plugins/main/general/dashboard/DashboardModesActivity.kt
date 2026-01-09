@@ -78,8 +78,10 @@ class DashboardModesActivity : TranslatedDaggerAppCompatActivity() {
                         this@DashboardModesActivity,
                         resourceHelper.gs(app.aaps.core.ui.R.string.dashboard_run_question, event.title)
                     ) {
-                        handler.post { automation.processEvent(event) }
-                        finish()
+                        handler.post {
+                            automation.processEvent(event)
+                            finish()
+                        }
                     }
                 }
             }

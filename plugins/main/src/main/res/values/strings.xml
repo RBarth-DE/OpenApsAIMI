@@ -404,5 +404,11 @@
     <string name="hypo_risk_notification_title">Hypo Risk</string>
     <string name="hypo_risk_notification_text">Hypo risk detected! Please check your BG.</string>
     <string name="graph_range_updated">Graph range: %1$d hours</string>
+    <!-- Circle Layout Buttons -->
+    <string name="circle_btn_aimi_advisor">Advisor</string>
+    <string name="circle_btn_adjust">Adjust</string>
+    <string name="circle_btn_aimi_pref">Prefs</string>
+    <string name="circle_btn_stats">Stats</string>
+
 </resources>
 

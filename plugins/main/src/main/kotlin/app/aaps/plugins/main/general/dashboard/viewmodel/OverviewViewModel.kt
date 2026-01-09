@@ -316,7 +316,7 @@ class OverviewViewModel(
             "-" + resourceHelper.gs(app.aaps.core.ui.R.string.format_insulin_units, -total)
         }
 
-        return "IOB: $formattedTotal"
+        return formattedTotal
     }
 
     private fun bolusIob(): IobTotal = iobCobCalculator.calculateIobFromBolus().round()

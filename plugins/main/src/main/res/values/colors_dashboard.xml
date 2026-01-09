@@ -8,4 +8,5 @@
     <color name="dashboard_chip_background">#2F3C5C</color>
     <color name="dashboard_chip_border">#4C6AA6</color>
     <color name="dashboard_on_surface">#E7ECFF</color>
+    <color name="dashboard_card_surface">#FFFFFFFF</color>
 </resources>

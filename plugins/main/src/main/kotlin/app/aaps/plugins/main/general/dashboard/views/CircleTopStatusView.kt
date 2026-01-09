@@ -16,6 +16,15 @@ import com.google.android.material.card.MaterialCardView
  * explicit fields from an extended StatusCardState (via reflection) and otherwise
  * falls back to "--".
  */
+
+/** Listener for bottom action chips. Navigation must be handled by the Fragment/Activity. */
+interface CircleTopActionListener {
+    fun onAimiAdvisorClicked()
+    fun onAdjustClicked()
+    fun onAimiPreferencesClicked()
+    fun onStatsClicked()
+}
+
 class CircleTopStatusView @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
@@ -24,28 +33,20 @@ class CircleTopStatusView @JvmOverloads constructor(
 
     private val binding = ComponentCircleTopStatusBinding.inflate(LayoutInflater.from(context), this)
 
-    private var debugNose = false
-    private var lastState: StatusCardState? = null
+    private var actionListener: CircleTopActionListener? = null
+
+    fun setActionListener(listener: CircleTopActionListener?) {
+        actionListener = listener
+    }
 
     init {
-        // Long-press on the ring toggles debug (shows nose angle in the sub text)
-        binding.glucoseRing.setOnLongClickListener {
-            debugNose = !debugNose
-            lastState?.let { update(it) }
-            true
+
+        // Bottom action chips -> delegate to Fragment/Activity
+        try { binding.chipAimiAdvisor.setOnClickListener { actionListener?.onAimiAdvisorClicked() } } catch (_: Throwable) {}
+        try { binding.chipAdjust.setOnClickListener { actionListener?.onAdjustClicked() } } catch (_: Throwable) {}
+        try { binding.chipAimiPref.setOnClickListener { actionListener?.onAimiPreferencesClicked() } } catch (_: Throwable) {}
+        try { binding.chipStat.setOnClickListener { actionListener?.onStatsClicked() } } catch (_: Throwable) {}
         }
-    }
-
-    /** API-compat for DashboardFragment (some branches call this). */
-    /*fun setOnAimiIconClickListener(listener: OnClickListener?) {
-        val icon: View? = try { binding.aimiIcon } catch (_: Throwable) { findViewById(R.id.aimi_icon) }
-        (icon ?: this).setOnClickListener(listener)
-    }
-
-    fun setOnAimiIconLongClickListener(listener: OnLongClickListener?) {
-        val icon: View? = try { binding.aimiIcon } catch (_: Throwable) { findViewById(R.id.aimi_icon) }
-        (icon ?: this).setOnLongClickListener(listener)
-    }*/
 
     fun update(state: StatusCardState) {
         //lastState = state

@@ -1,12 +1,9 @@
 package app.aaps.plugins.main.general.dashboard
-
-import android.content.Intent
-import android.os.Build
+import android.annotation.SuppressLint
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.annotation.RequiresApi
 import androidx.fragment.app.viewModels
 import app.aaps.core.interfaces.automation.Automation
 import app.aaps.core.interfaces.configuration.Config
@@ -24,11 +21,8 @@ import app.aaps.core.interfaces.profile.ProfileFunction
 import app.aaps.core.interfaces.profile.ProfileUtil
 import app.aaps.core.interfaces.protection.ProtectionCheck
 import app.aaps.core.interfaces.ui.UiInteraction
-import app.aaps.core.interfaces.source.DexcomBoyda
-import app.aaps.core.interfaces.source.XDripSource
 import app.aaps.core.interfaces.logging.AAPSLogger
 import app.aaps.core.interfaces.logging.LTag
-import app.aaps.core.interfaces.plugin.PluginBase
 import app.aaps.core.interfaces.resources.ResourceHelper
 import app.aaps.core.interfaces.rx.AapsSchedulers
 import app.aaps.core.interfaces.rx.bus.RxBus
@@ -55,6 +49,7 @@ import io.reactivex.rxjava3.kotlin.plusAssign
 import dagger.android.support.DaggerFragment
 import javax.inject.Inject
 import javax.inject.Provider
+import android.content.Intent
 
 class DashboardFragment : DaggerFragment() {
 
@@ -118,6 +113,7 @@ class DashboardFragment : DaggerFragment() {
         return binding.root
     }
 
+    @SuppressLint("ClickableViewAccessibility")
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         binding.bottomNavigation.selectedItemId = R.id.dashboard_nav_home
@@ -170,7 +166,7 @@ class DashboardFragment : DaggerFragment() {
                 try {
                     loop.invoke("Dashboard", true)
                 } catch (e: Exception) {
-                    aapsLogger.error(app.aaps.core.interfaces.logging.LTag.APS, "Error invoking loop from dashboard", e)
+                    aapsLogger.error(LTag.APS, "Error invoking loop from dashboard", e)
                 }
             }.start()
         }
@@ -178,14 +174,26 @@ class DashboardFragment : DaggerFragment() {
         binding.statusCard.isClickable = true
         binding.statusCard.isFocusable = true
         binding.statusCard.setOnClickListener { openLoopDialog() }
-        /* binding.statusCard.setOnAimiIconClickListener {
-            try {
-                val intent = Intent().setClassName(requireContext(), "app.aaps.plugins.aps.openAPSAIMI.context.ui.ContextActivity")
-                startActivity(intent)
-            } catch (e: Exception) {
-                aapsLogger.error(LTag.CORE, "Failed to launch ContextActivity: ${e.message}")
+
+        // Bottom action chips from CircleTopStatusView
+        binding.statusCard.setActionListener(object : app.aaps.plugins.main.general.dashboard.views.CircleTopActionListener {
+            override fun onAimiAdvisorClicked() {
+                startActivity(Intent(requireContext(), app.aaps.plugins.aps.openAPSAIMI.advisor.AimiProfileAdvisorActivity::class.java))
             }
-        }*/
+
+            override fun onAdjustClicked() {
+                openAdjustmentDetails()
+            }
+
+            override fun onAimiPreferencesClicked() {
+                openAimiPreferences()
+            }
+
+            override fun onStatsClicked() {
+                openStatsSafe()
+            }
+        })
+
         binding.glucoseGraph.graph.gridLabelRenderer?.gridColor = resourceHelper.gac(requireContext(), app.aaps.core.ui.R.attr.graphGrid)
         binding.glucoseGraph.graph.viewport.isScrollable = true
         binding.glucoseGraph.graph.viewport.isScalable = true
@@ -209,10 +217,14 @@ class DashboardFragment : DaggerFragment() {
         })
 
         binding.glucoseGraph.graph.setOnTouchListener { v, event ->
-            gestureDetector.onTouchEvent(event)
+            val result = gestureDetector.onTouchEvent(event)
             v.parent.requestDisallowInterceptTouchEvent(true)
-            false
+            if (event.action == android.view.MotionEvent.ACTION_UP && !result) {
+                v.performClick()
+            }
+            result || event.action == android.view.MotionEvent.ACTION_MOVE
         }
+
         binding.glucoseGraph.graph.gridLabelRenderer?.reloadStyles()
 
         // Setup range selection button
@@ -291,38 +303,32 @@ class DashboardFragment : DaggerFragment() {
         }
     }
 
-    @RequiresApi(Build.VERSION_CODES.CUPCAKE)
+    //@RequiresApi(Build.VERSION_CODES.CUPCAKE)
     private fun openSensorApp(): Boolean {
-        context?.let { ctx ->
+        val ctx = context ?: return false
+        val pm = ctx.packageManager
 
-            val possiblePackages = listOf(
-                "com.eveningoutpost.dexdrip",  // xDrip+
-                "tk.glucodata",                // Juggluco
-                "com.dexcom.g6byod",           // Dexcom G6 BYOD
-                "com.dexcom.g7byod"            // Dexcom G7 BYOD
-            )
+        val possiblePackages = listOf(
+            "com.eveningoutpost.dexdrip",  // xDrip+
+            "tk.glucodata",                // Juggluco
+            "com.dexcom.g6byod",           // Dexcom G6 BYOD
+            "com.dexcom.g7byod"            // Dexcom G7 BYOD
+        )
 
-            val pm = ctx.packageManager
-
-            for (pkg in possiblePackages) {
-                val intent = pm.getLaunchIntentForPackage(pkg)
-                if (intent != null) {
-                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                    intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP); //experiment with the flags
-                    ctx.startActivity(intent)
-                    aapsLogger.debug(LTag.CORE, "Launched CGM app: $pkg")
-                    return true
-                }
-                else {
-                    aapsLogger.debug(LTag.CORE, "No known CGM app installed.")
-                }
+        for (pkg in possiblePackages) {
+            val intent = pm.getLaunchIntentForPackage(pkg)
+            if (intent != null) {
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+                ctx.startActivity(intent)
+                aapsLogger.debug(LTag.CORE, "Launched CGM app: $pkg")
+                return true // Exits the function immediately upon success
             }
-            return false
-
-        } ?: run {
-            aapsLogger.debug(LTag.CORE, "Context is null, cannot open sensor app")
-            return false
         }
+
+        // This code is only reached when the loop has been completed
+        // without finding an installed package.
+        aapsLogger.debug(LTag.CORE, "No known CGM app installed.")
+        return false
     }
 
     private fun openAdjustmentDetails(): Boolean {
@@ -334,11 +340,44 @@ class DashboardFragment : DaggerFragment() {
         return true
     }
 
-    private fun openSettings(): Boolean {
-        val intent = Intent(requireContext(), uiInteraction.preferencesActivity)
-            .putExtra(UiInteraction.PLUGIN_NAME, resourceHelper.gs(app.aaps.core.ui.R.string.nav_plugin_preferences))
-            .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
-        startActivity(intent)
+    private fun openAimiPreferences(): Boolean {
+        // PreferencesActivity expects UiInteraction.PLUGIN_NAME = plugin class simpleName.
+        val pluginName = resolveAimiPluginName() ?: run {
+            aapsLogger.error(LTag.CORE, "AIMI Pref: Plugin name could not be resolved")
+            return false
+        }
+        protectionCheck.queryProtection(requireActivity(), ProtectionCheck.Protection.PREFERENCES, {
+            val intent = Intent(requireContext(), uiInteraction.preferencesActivity)
+                .setAction("info.nightscout.androidaps.MainActivity")
+                .putExtra(UiInteraction.PLUGIN_NAME, pluginName)
+            startActivity(intent)
+        })
+        return true
+    }
+
+    private fun resolveAimiPluginName(): String? {
+
+        val candidates = listOf(
+            "app.aaps.plugins.aps.openAPSAIMI.OpenAPSAIMIPlugin",
+            "app.aaps.plugins.aps.openAPSAIMI.OpenApsAIMIPlugin",
+            "app.aaps.plugins.aps.openAPSAIMI.OpenAPSAIMI",
+            "app.aaps.plugins.aps.openAPSAIMI.OpenApsAIMI",
+            "app.aaps.plugins.aps.openAPSAIMI.AimiPlugin",
+            )
+        for (cn in candidates) {
+            try {
+                val c = Class.forName(cn)
+                return c.simpleName
+            } catch (_: Throwable) { }
+        }
+        // last resort: some builds register the plugin under this name
+        return "OpenAPSAIMIPlugin"
+    }
+
+    private fun openStatsSafe(): Boolean {
+        val candidates = "app.aaps.ui.activities.StatsActivity"
+        val c = Class.forName(candidates)
+        startActivity(Intent(requireContext(), c).setAction("info.nightscout.androidaps.MainActivity"))
         return true
     }
 
@@ -388,9 +427,9 @@ class DashboardFragment : DaggerFragment() {
         graphData.addBucketedData()
         graphData.addTreatments(context)
         graphData.addEps(context, 0.95)
-        if (menuChartSettings[0][OverviewMenus.CharType.TREAT.ordinal])
+        if (menuChartSettings[0][CharType.TREAT.ordinal])
             graphData.addTherapyEvents()
-        if (menuChartSettings[0][OverviewMenus.CharType.ACT.ordinal])
+        if (menuChartSettings[0][CharType.ACT.ordinal])
             graphData.addActivity(0.8)
         if ((config.AAPSCLIENT || activePlugin.activePump.pumpDescription.isTempBasalCapable) && menuChartSettings[0][CharType.BAS.ordinal]) {
             graphData.addBasals()
