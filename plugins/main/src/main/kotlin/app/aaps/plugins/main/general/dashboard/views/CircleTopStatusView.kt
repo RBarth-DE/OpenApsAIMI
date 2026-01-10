@@ -21,6 +21,8 @@ import com.google.android.material.card.MaterialCardView
 interface CircleTopActionListener {
     fun onAimiAdvisorClicked()
     fun onAdjustClicked()
+    fun onAimiContextClicked()
+    fun onAimiFoodClicked()
     fun onAimiPreferencesClicked()
     fun onStatsClicked()
 }
@@ -44,9 +46,11 @@ class CircleTopStatusView @JvmOverloads constructor(
         // Bottom action chips -> delegate to Fragment/Activity
         try { binding.chipAimiAdvisor.setOnClickListener { actionListener?.onAimiAdvisorClicked() } } catch (_: Throwable) {}
         try { binding.chipAdjust.setOnClickListener { actionListener?.onAdjustClicked() } } catch (_: Throwable) {}
+        try { binding.chipContext.setOnClickListener { actionListener?.onAimiContextClicked() } } catch (_: Throwable) {}
+        try { binding.chipFood.setOnClickListener { actionListener?.onAimiFoodClicked() } } catch (_: Throwable) {}
         try { binding.chipAimiPref.setOnClickListener { actionListener?.onAimiPreferencesClicked() } } catch (_: Throwable) {}
         try { binding.chipStat.setOnClickListener { actionListener?.onStatsClicked() } } catch (_: Throwable) {}
-        }
+    }
 
     fun update(state: StatusCardState) {
         //lastState = state

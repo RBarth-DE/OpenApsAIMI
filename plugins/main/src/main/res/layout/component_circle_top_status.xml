@@ -310,7 +310,7 @@
                 android:layout_marginTop="1dp"
                 android:orientation="horizontal"
                 android:gravity="center"
-                android:weightSum="4"
+                android:weightSum="6"
                 app:layout_constraintTop_toBottomOf="@id/glucose_ring"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
@@ -320,105 +320,242 @@
                     android:id="@+id/chip_aimi_advisor"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="4dp"
-                    android:layout_marginEnd="4dp"
+                    android:layout_marginStart="2dp"
+                    android:layout_marginEnd="2dp"
                     android:layout_weight="1"
+
                     android:checkable="false"
                     android:clickable="true"
                     android:focusable="true"
-                    android:minHeight="32dp"
+
                     android:text="@string/circle_btn_aimi_advisor"
                     android:gravity="center"
                     android:textAlignment="center"
-                    app:paddingStart="0dp"
-                    app:paddingEnd="0dp"
 
+                    app:autoSizeTextType="uniform"
+                    app:autoSizeMinTextSize="8sp"
+                    app:autoSizeMaxTextSize="12sp"
+                    app:autoSizeStepGranularity="1sp"
+
+                    app:chipStartPadding="1dp"
+                    app:chipEndPadding="1dp"
+                    app:textStartPadding="1dp"
+                    app:textEndPadding="1dp"
+                    
                     android:elevation="4dp"
+                    android:minWidth="0dp"
+                    app:chipMinTouchTargetSize="0dp"
                     app:chipBackgroundColor="@color/dashboard_chip_background"
                     app:chipStrokeWidth="1.5dp"
                     app:chipStrokeColor="@color/dashboard_chip_border"
-                    android:textColor="@color/dashboard_on_surface"
-                    
+                    app:chipMinHeight="32dp"
                     app:chipCornerRadius="12dp"
-                    android:textAppearance="@style/TextAppearance.MaterialComponents.Caption"/>
+                    android:textColor="@color/dashboard_on_surface"
+                    android:textAppearance="@style/TextAppearance.MaterialComponents.Caption"
+                    
+                    app:chipIconVisible="false"
+                    app:closeIconVisible="false" />
 
                 <com.google.android.material.chip.Chip
                     android:id="@+id/chip_adjust"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="4dp"
-                    android:layout_marginEnd="4dp"
+                    android:layout_marginStart="2dp"
+                    android:layout_marginEnd="2dp"
                     android:layout_weight="1"
+
                     android:checkable="false"
                     android:clickable="true"
                     android:focusable="true"
-                    android:minHeight="32dp"
+
                     android:text="@string/circle_btn_adjust"
                     android:gravity="center"
                     android:textAlignment="center"
-                    app:paddingStart="0dp"
-                    app:paddingEnd="0dp"
 
+                    app:autoSizeTextType="uniform"
+                    app:autoSizeMinTextSize="8sp"
+                    app:autoSizeMaxTextSize="12sp"
+                    app:autoSizeStepGranularity="1sp"
+
+                    app:chipStartPadding="1dp"
+                    app:chipEndPadding="1dp"
+                    app:textStartPadding="1dp"
+                    app:textEndPadding="1dp"
+                    
                     android:elevation="4dp"
+                    android:minWidth="0dp"
+                    app:chipMinTouchTargetSize="0dp"
                     app:chipBackgroundColor="@color/dashboard_chip_background"
                     app:chipStrokeWidth="1.5dp"
                     app:chipStrokeColor="@color/dashboard_chip_border"
-                    android:textColor="@color/dashboard_on_surface"
-                    
+                    app:chipMinHeight="32dp"
                     app:chipCornerRadius="12dp"
-                    android:textAppearance="@style/TextAppearance.MaterialComponents.Caption" />
+                    android:textColor="@color/dashboard_on_surface"
+                    android:textAppearance="@style/TextAppearance.MaterialComponents.Caption"
+                    
+                    app:chipIconVisible="false"
+                    app:closeIconVisible="false" />
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chip_context"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="2dp"
+                    android:layout_marginEnd="2dp"
+                    android:layout_weight="1"
+
+                    android:checkable="false"
+                    android:clickable="true"
+                    android:focusable="true"
+
+                    android:text="@string/circle_btn_context"
+                    android:gravity="center"
+                    android:textAlignment="center"
+
+                    app:autoSizeTextType="uniform"
+                    app:autoSizeMinTextSize="8sp"
+                    app:autoSizeMaxTextSize="12sp"
+                    app:autoSizeStepGranularity="1sp"
+
+                    app:chipStartPadding="1dp"
+                    app:chipEndPadding="1dp"
+                    app:textStartPadding="1dp"
+                    app:textEndPadding="1dp"
+                    
+                    android:elevation="4dp"
+                    android:minWidth="0dp"
+                    app:chipMinTouchTargetSize="0dp"
+                    app:chipBackgroundColor="@color/dashboard_chip_background"
+                    app:chipStrokeWidth="1.5dp"
+                    app:chipStrokeColor="@color/dashboard_chip_border"
+                    app:chipMinHeight="32dp"
+                    app:chipCornerRadius="12dp"
+                    android:textColor="@color/dashboard_on_surface"
+                    android:textAppearance="@style/TextAppearance.MaterialComponents.Caption"
+                    
+                    app:chipIconVisible="false"
+                    app:closeIconVisible="false" />
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chip_food"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="2dp"
+                    android:layout_marginEnd="2dp"
+                    android:layout_weight="1"
+
+                    android:checkable="false"
+                    android:clickable="true"
+                    android:focusable="true"
+
+                    android:text="@string/circle_btn_food"
+                    android:gravity="center"
+                    android:textAlignment="center"
+
+                    app:autoSizeTextType="uniform"
+                    app:autoSizeMinTextSize="8sp"
+                    app:autoSizeMaxTextSize="12sp"
+                    app:autoSizeStepGranularity="1sp"
+
+                    app:chipStartPadding="1dp"
+                    app:chipEndPadding="1dp"
+                    app:textStartPadding="1dp"
+                    app:textEndPadding="1dp"
+                    
+                    android:elevation="4dp"
+                    android:minWidth="0dp"
+                    app:chipMinTouchTargetSize="0dp"
+                    app:chipBackgroundColor="@color/dashboard_chip_background"
+                    app:chipStrokeWidth="1.5dp"
+                    app:chipStrokeColor="@color/dashboard_chip_border"
+                    app:chipMinHeight="32dp"
+                    app:chipCornerRadius="12dp"
+                    android:textColor="@color/dashboard_on_surface"
+                    android:textAppearance="@style/TextAppearance.MaterialComponents.Caption"
+                    
+                    app:chipIconVisible="false"
+                    app:closeIconVisible="false" />
 
                 <com.google.android.material.chip.Chip
                     android:id="@+id/chip_aimi_pref"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="4dp"
-                    android:layout_marginEnd="4dp"
+                    android:layout_marginStart="2dp"
+                    android:layout_marginEnd="2dp"
                     android:layout_weight="1"
+
                     android:checkable="false"
                     android:clickable="true"
                     android:focusable="true"
-                    android:minHeight="32dp"
+
                     android:text="@string/circle_btn_aimi_pref"
                     android:gravity="center"
                     android:textAlignment="center"
-                    app:paddingStart="0dp"
-                    app:paddingEnd="0dp"
 
+                    app:autoSizeTextType="uniform"
+                    app:autoSizeMinTextSize="8sp"
+                    app:autoSizeMaxTextSize="12sp"
+                    app:autoSizeStepGranularity="1sp"
+
+                    app:chipStartPadding="1dp"
+                    app:chipEndPadding="1dp"
+                    app:textStartPadding="1dp"
+                    app:textEndPadding="1dp"
+                    
                     android:elevation="4dp"
+                    android:minWidth="0dp"
+                    app:chipMinTouchTargetSize="0dp"
                     app:chipBackgroundColor="@color/dashboard_chip_background"
                     app:chipStrokeWidth="1.5dp"
                     app:chipStrokeColor="@color/dashboard_chip_border"
-                    android:textColor="@color/dashboard_on_surface"
-                    
+                    app:chipMinHeight="32dp"
                     app:chipCornerRadius="12dp"
-                    android:textAppearance="@style/TextAppearance.MaterialComponents.Caption" />
+                    android:textColor="@color/dashboard_on_surface"
+                    android:textAppearance="@style/TextAppearance.MaterialComponents.Caption"
+                    
+                    app:chipIconVisible="false"
+                    app:closeIconVisible="false" />
 
                 <com.google.android.material.chip.Chip
                     android:id="@+id/chip_stat"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="4dp"
-                    android:layout_marginEnd="4dp"
+                    android:layout_marginStart="2dp"
+                    android:layout_marginEnd="2dp"
                     android:layout_weight="1"
+
                     android:checkable="false"
                     android:clickable="true"
                     android:focusable="true"
-                    android:minHeight="32dp"
+
                     android:text="@string/circle_btn_stats"
                     android:gravity="center"
                     android:textAlignment="center"
-                    app:paddingStart="0dp"
-                    app:paddingEnd="0dp"
 
+                    app:autoSizeTextType="uniform"
+                    app:autoSizeMinTextSize="8sp"
+                    app:autoSizeMaxTextSize="12sp"
+                    app:autoSizeStepGranularity="1sp"
+
+                    app:chipStartPadding="1dp"
+                    app:chipEndPadding="1dp"
+                    app:textStartPadding="1dp"
+                    app:textEndPadding="1dp"
+                    
                     android:elevation="4dp"
+                    android:minWidth="0dp"
+                    app:chipMinTouchTargetSize="0dp"
                     app:chipBackgroundColor="@color/dashboard_chip_background"
                     app:chipStrokeWidth="1.5dp"
                     app:chipStrokeColor="@color/dashboard_chip_border"
-                    android:textColor="@color/dashboard_on_surface"
-                    
+                    app:chipMinHeight="32dp"
                     app:chipCornerRadius="12dp"
-                    android:textAppearance="@style/TextAppearance.MaterialComponents.Caption" />
+                    android:textColor="@color/dashboard_on_surface"
+                    android:textAppearance="@style/TextAppearance.MaterialComponents.Caption"
+                    
+                    app:chipIconVisible="false"
+                    app:closeIconVisible="false" />
+                    
             </LinearLayout>
 
         </androidx.constraintlayout.widget.ConstraintLayout>

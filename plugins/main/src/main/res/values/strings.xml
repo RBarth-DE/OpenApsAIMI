@@ -407,6 +407,8 @@
     <!-- Circle Layout Buttons -->
     <string name="circle_btn_aimi_advisor">Advisor</string>
     <string name="circle_btn_adjust">Adjust</string>
+    <string name="circle_btn_context">Context</string>
+    <string name="circle_btn_food">Food</string>
     <string name="circle_btn_aimi_pref">Prefs</string>
     <string name="circle_btn_stats">Stats</string>
 

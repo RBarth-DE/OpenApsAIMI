@@ -50,6 +50,7 @@ import dagger.android.support.DaggerFragment
 import javax.inject.Inject
 import javax.inject.Provider
 import android.content.Intent
+import java.lang.Class
 
 class DashboardFragment : DaggerFragment() {
 
@@ -191,6 +192,14 @@ class DashboardFragment : DaggerFragment() {
 
             override fun onStatsClicked() {
                 openStatsSafe()
+            }
+
+            override fun onAimiContextClicked() {
+                openAimiContext()
+            }
+
+            override fun onAimiFoodClicked() {
+                openAimiFood()
             }
         })
 
@@ -380,6 +389,29 @@ class DashboardFragment : DaggerFragment() {
         startActivity(Intent(requireContext(), c).setAction("info.nightscout.androidaps.MainActivity"))
         return true
     }
+
+    private fun openAimiContext(): Boolean {
+        try {
+            val intent = Intent().setClassName(requireContext(), "app.aaps.plugins.aps.openAPSAIMI.context.ui.ContextActivity")
+            startActivity(intent)
+        } catch (e: Exception) {
+            aapsLogger.error(LTag.CORE, "Failed to launch ContextActivity: ${e.message}")
+            return false
+        }
+        return true
+    }
+
+    private fun openAimiFood(): Boolean {
+        try {
+            val intent = Intent().setClassName(requireContext(), "app.aaps.plugins.aps.openAPSAIMI.advisor.meal.MealAdvisorActivity")
+            startActivity(intent)
+        } catch (e: Exception) {
+            aapsLogger.error(LTag.CORE, "Failed to launch MealAdvisorActivity: ${e.message}")
+            return false
+        }
+        return true
+    }
+
 
     private fun syncGraphRange(hours: Int, userInitiated: Boolean = true) {
         val clampedHours = when (hours) {
