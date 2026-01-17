@@ -16,9 +16,10 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
             android:text="@string/context_description"
             android:textAppearance="?attr/textAppearanceBodyMedium"
-            android:layout_marginBottom="8dp"/>
+            android:textSize="12sp" />
 
         <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent"
@@ -48,7 +49,8 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="@string/context_btn_ai_parse"/>
+                android:text="@string/context_btn_ai_parse"
+                android:textSize="12sp" />
 
             <Space
                 android:layout_width="8dp"
@@ -59,7 +61,8 @@
                 style="@style/Widget.MaterialComponents.Button.OutlinedButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/context_btn_clear"/>
+                android:text="@string/context_btn_clear"
+                android:textSize="12sp" />
         </LinearLayout>
 
         <ProgressBar
@@ -74,10 +77,11 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:layout_marginBottom="8dp"
             android:text="Quick Presets"
             android:textAppearance="?attr/textAppearanceHeadlineSmall"
-            android:layout_marginTop="16dp"
-            android:layout_marginBottom="8dp"/>
+            android:textSize="12sp" />
 
         <com.google.android.material.chip.ChipGroup
             android:layout_width="match_parent"
@@ -157,14 +161,16 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="@string/context_active_intents"
-                android:textAppearance="?attr/textAppearanceHeadlineSmall"/>
+                android:textAppearance="?attr/textAppearanceHeadlineSmall"
+                android:textSize="12sp" />
 
             <Button
                 android:id="@+id/btnClearAll"
                 style="@style/Widget.MaterialComponents.Button.TextButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/context_btn_clear_all"/>
+                android:text="@string/context_btn_clear_all"
+                android:textSize="12sp" />
         </LinearLayout>
 
         <TextView
@@ -172,6 +178,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="@string/context_empty_state"
+            android:textSize="14sp"
             android:textAlignment="center"
             android:padding="32dp"
             android:textColor="?android:attr/textColorSecondary"
@@ -190,10 +197,11 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:layout_marginBottom="8dp"
             android:text="@string/context_settings_title"
             android:textAppearance="?attr/textAppearanceHeadlineSmall"
-            android:layout_marginTop="24dp"
-            android:layout_marginBottom="8dp"/>
+            android:textSize="12sp" />
 
         <com.google.android.material.switchmaterial.SwitchMaterial
             android:id="@+id/switchContextEnabled"
