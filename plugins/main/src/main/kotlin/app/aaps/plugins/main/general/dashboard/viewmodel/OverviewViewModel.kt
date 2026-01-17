@@ -53,6 +53,7 @@ import io.reactivex.rxjava3.kotlin.plusAssign
 import java.util.concurrent.TimeUnit
 import kotlin.math.abs
 import kotlin.math.max
+import android.graphics.*
 
 class OverviewViewModel(
     private val context: Context,
@@ -149,11 +150,11 @@ class OverviewViewModel(
         disposables += rxBus
             .toObservable(app.aaps.core.interfaces.rx.events.EventPreferenceChange::class.java)
             .observeOn(aapsSchedulers.io)
-            .subscribe({ 
-                if (it.isChanged(app.aaps.core.keys.StringKey.OApsAIMIContextStorage.key)) {
-                    updateStatus() 
-                }
-            }, fabricPrivacy::logException)
+            .subscribe({
+                           if (it.isChanged(app.aaps.core.keys.StringKey.OApsAIMIContextStorage.key)) {
+                               updateStatus()
+                           }
+                       }, fabricPrivacy::logException)
     }
 
     private fun refreshAll() {
@@ -162,7 +163,24 @@ class OverviewViewModel(
         updateGraphMessage()
     }
 
+    private fun getRecentBolusTimeMs(minutes: Int, lastBolusTimeMs: Long?): Long? {
+        val lookbackTime = dateUtil.now() - minutes * 60_000L
+
+        // DB: nimm den neuesten Bolus im Fenster
+        val boluses = persistenceLayer.getBolusesFromTime(lookbackTime, true).blockingGet()
+        val dbLast = boluses
+            .filter { it.amount > 0.3 }
+            .maxOfOrNull { it.timestamp }   // oder createdAt / time / date -> je nach Model
+
+        // Memory-Fallback (nur wenn im Fenster)
+        val memLast = lastBolusTimeMs?.takeIf { it > lookbackTime }
+
+        return dbLast ?: memLast
+    }
+
     private fun updateStatus() {
+        val now = dateUtil.now()
+
         val lastBg = lastBgData.lastBg()
         val glucoseText = profileUtil.fromMgdlToStringInUnits(lastBg?.recalculated)
         val trendArrow = trendCalculator.getTrendArrow(iobCobCalculator.ads)?.directionToIcon()
@@ -175,35 +193,37 @@ class OverviewViewModel(
             .getCobInfo("Dashboard COB")
             .displayText(resourceHelper, decimalFormatter)
             ?: resourceHelper.gs(app.aaps.core.ui.R.string.value_unavailable_short)
-        val timeAgo = dateUtil.minAgoShort(lastBg?.timestamp)
         val timeAgoLong = dateUtil.minAgoLong(resourceHelper, lastBg?.timestamp)
         val contentDescription =
             resourceHelper.gs(R.string.a11y_blood_glucose) + " " +
                 glucoseText + " " + lastBgData.lastBgDescription() + " " + timeAgoLong
 
-
         // ═══════════════════════════════════════════════════════════════
         // Circle-Top Hybrid Dashboard - Calculate all new fields
         // ═══════════════════════════════════════════════════════════════
-        
+
         // 1. Nose angle from delta (for GlucoseRingView pointer)
         val delta = glucoseStatusProvider.glucoseStatusData?.delta ?: 0.0
         val noseAngleDeg = when {
-            delta > 10 -> 45f   // Rapidly rising →45°
-            delta > 5 -> 20f    // Rising →20°
-            delta > 2 -> 10f    // Slightly rising →10°
+            delta > 10  -> 45f   // Rapidly rising →45°
+            delta > 5   -> 20f    // Rising →20°
+            delta > 2   -> 10f    // Slightly rising →10°
             delta < -10 -> -45f // Rapidly falling ↓-45°
-            delta < -5 -> -20f  // Falling ↓-20°
-            delta < -2 -> -10f  // Slightly falling ↓-10°
-            else -> 0f          // Stable →0°
+            delta < -5  -> -20f  // Falling ↓-20°
+            delta < -2  -> -10f  // Slightly falling ↓-10°
+            else        -> 0f          // Stable →0°
         }
-        
+        val timeAgoSub = dateUtil.minOrSecAgo(resourceHelper, lastBg?.timestamp)
+
         // 2. Reservoir
         val reservoirText = activePlugin.activePump.reservoirLevel?.let { level ->
-            if (level > 0) decimalFormatter.to2Decimal(level) + " IE" 
+            if (level > 0) decimalFormatter.to2Decimal(level) + " IE"
             else null
         }
-        
+        val reservoirColor: Int? = activePlugin.activePump.reservoirLevel?.let { level ->
+            if (level > 30) Color.WHITE
+            else Color.YELLOW
+        }
         // 3. Infusion Age (from CarePortal)
         val infusionAgeText = persistenceLayer.getLastTherapyRecordUpToNow(TE.Type.CANNULA_CHANGE)?.let { event ->
             val ageMillis = dateUtil.now() - event.timestamp
@@ -212,53 +232,58 @@ class OverviewViewModel(
             val remainingHours = hours % 24
             if (days > 0) "${days}d ${remainingHours}h" else "${hours}h"
         }
-        
-        // 4. Sensor Age
-        val sensorAgeText = persistenceLayer.getLastTherapyRecordUpToNow(TE.Type.SENSOR_CHANGE)?.let { event ->
+        val infusionAgeColor: Int? = persistenceLayer.getLastTherapyRecordUpToNow(TE.Type.CANNULA_CHANGE)?.let { event ->
             val ageMillis = dateUtil.now() - event.timestamp
             val hours = (ageMillis / (1000 * 60 * 60)).toInt()
             val days = hours / 24
-            val remainingHours = hours % 24
-            if (days > 0) "${days}d ${remainingHours}h" else "${hours}h"
+            if (days < 3) Color.WHITE
+            else Color.YELLOW
         }
-        
+
+        // 4. Sensor Age
+        val sensorEvent = persistenceLayer.getLastTherapyRecordUpToNow(TE.Type.SENSOR_CHANGE)
+        val sensorAgeText = formatTherapyAge(sensorEvent, now)
+        val sensorAgeColor = if (batteryAgeDays(sensorEvent, now) >= 9) Color.YELLOW else Color.WHITE
+
         // 5. Basal (current profile basal rate)
-        val basalText = profileFunction.getProfile()?.let { profile ->
-            val currentBasal = profile.getBasal(dateUtil.now())
-            decimalFormatter.to2Decimal(currentBasal) + " IE"
-        }
-        
-        // 6. Activity % - simplified (TBR percentage)
-        val activityPctText = processedTbrEbData.getTempBasalIncludingConvertedExtended(dateUtil.now())?.takeIf { it.isInProgress }?.let { tbr ->
-            profileFunction.getProfile()?.let { profile ->
-                val currentBasal = profile.getBasal(dateUtil.now())
-                if (currentBasal > 0) {
-                    val pct = ((tbr.rate / currentBasal) * 100 - 100).toInt()
-                    "$pct%"
-                } else "0%"
-            } ?: "0%"
-        } ?: "0%"
-        
-        // 7. Pump Battery
-        val pumpBatteryText = activePlugin.activePump.batteryLevel?.let { "$it%" }
-        
-        // 8. IOB (replacing Last Sensor Value as per user request)
-        val lastSensorValueText = run {
-            val bolus = bolusIob()
-            val basal = basalIob()
-            val total = bolus.iob + basal.basaliob
-            decimalFormatter.to2Decimal(total) + " IE"
-        }
-        
+        val basalRate = loop.lastRun?.request?.rate
+        val basalText = if (basalRate == null || basalRate == -1.0)
+            resourceHelper.gs(app.aaps.core.ui.R.string.value_unavailable_short)
+        else "${decimalFormatter.to2Decimal(basalRate)} U/h"
+
         // 9. TBR Rate
         val tbrRateText = processedTbrEbData.getTempBasalIncludingConvertedExtended(dateUtil.now())?.takeIf { it.isInProgress }?.let { tbr ->
             decimalFormatter.to2Decimal(tbr.rate) + " U/h"
         } ?: "0.00 U/h"
 
+        // 6. Activity % - simplified (TBR percentage)
+        val tbr = processedTbrEbData.getTempBasalIncludingConvertedExtended(now)
+        val activityPctText = if (tbr?.isInProgress == true) {
+            val short = tbr.toStringShort(resourceHelper)   // z.B. "150% (0.9U/h)" je nach Build
+            Regex("""(-?\d+(?:[.,]\d+)?)\s*%""").find(short)?.value ?: "--"
+        } else {
+            "100%"
+        }
+
+        // 7. Pump Battery
+        //val pumpBatteryText = activePlugin.activePump.batteryLevel?.let { "$it%" }
+        val battTe = persistenceLayer.getLastTherapyRecordUpToNow(TE.Type.PUMP_BATTERY_CHANGE)
+        val pumpBatteryText = formatTherapyAge(battTe, now)
+        val pumpBatteryColor = if (batteryAgeDays(battTe, now) <= 14) Color.WHITE else Color.YELLOW
+
+        // last bolus
+        val lastBolusTimeMs: Long? = activePlugin.activePump.lastBolusTime
+        //show last
+        val lastBolusXMinTmp = getRecentBolusTimeMs(300, lastBolusTimeMs)
+        val lastBolusXMin = lastBolusXMinTmp?.let { dateUtil.timeString(it) } ?: "--"
+        //only show value when in between time window
+        val lastBolusAmount = if (lastBolusXMin != "--") activePlugin.activePump.lastBolusAmount.toString() + "IE" else "--"
+
+
         // 10. Steps & HR
         var stepsText: String = "--"
         var hrText: String = "--"
-        
+
         try {
             val now = System.currentTimeMillis()
             val from = dateUtil.beginOfDay(now) // Start of today (Midnight)
@@ -279,7 +304,7 @@ class OverviewViewModel(
                         // If dt < duration (overlap), we integrate over dt.
                         // If dt >= duration (gap), we integrate over duration (full record) and assume 0 for the gap.
                         val coveredDuration = java.lang.Math.min(dt, sc.duration)
-                        
+
                         totalSteps += rate * coveredDuration
                     }
                 }
@@ -289,7 +314,7 @@ class OverviewViewModel(
             if (totalSteps > 1) {
                 stepsText = "%.0f".format(totalSteps)
             } else {
-                 if (stepsList.isNotEmpty()) stepsText = "0"
+                if (stepsList.isNotEmpty()) stepsText = "0"
             }
 
             // Heart Rate (Average or Last)
@@ -298,16 +323,17 @@ class OverviewViewModel(
             val hrFrom = now - 3 * 60 * 60 * 1000
             val hrList = persistenceLayer.getHeartRatesFromTimeToTime(hrFrom - 15 * 60 * 1000, now)
                 .sortedBy { it.timestamp }
-            
+
             if (hrList.isNotEmpty()) {
                 val lastHr = hrList.lastOrNull()?.beatsPerMinute
                 if (lastHr != null && lastHr > 0) {
                     hrText = "%.0f".format(lastHr)
                 }
             }
-        
+
+
         } catch (e: Exception) {
-             e.printStackTrace()
+            e.printStackTrace()
         }
 
         val state = StatusCardState(
@@ -320,8 +346,8 @@ class OverviewViewModel(
             cobText = cobText,
             loopStatusText = loopStatusText(loop.runningMode),
             loopIsRunning = !loop.runningMode.isSuspended(),
-            timeAgo = timeAgo,
-            timeAgoDescription = timeAgoLong,
+            timeAgo = timeAgoSub,
+            timeAgoDescription = lastBolusXMin,
             isGlucoseActual = lastBgData.isActualBg(),
             contentDescription = contentDescription,
             pumpStatusText = buildPumpLine(dateUtil.now()),
@@ -335,44 +361,51 @@ class OverviewViewModel(
             glucoseValue = lastBg?.recalculated,
             targetLow = profileFunction.getProfile()?.getTargetLowMgdl(),
             targetHigh = profileFunction.getProfile()?.getTargetHighMgdl(),
-            
+
             // Circle-Top Hybrid Dashboard fields
             glucoseMgdl = lastBg?.recalculated?.toInt(),
             noseAngleDeg = noseAngleDeg,
+            //left
+            stepsText = stepsText,
             reservoirText = reservoirText,
+            reservoirColor = reservoirColor,
             infusionAgeText = infusionAgeText,
+            infusionAgeColor = infusionAgeColor,
             pumpBatteryText = pumpBatteryText,
+            pumpBatteryColor = pumpBatteryColor,
             sensorAgeText = sensorAgeText,
-            lastSensorValueText = lastSensorValueText,
+            sensorAgeColor = sensorAgeColor,
+            //right
+            hrText = hrText,
+            lastSensorValueText = lastBolusXMin,
+            lastUpdateText = lastBolusAmount,
             activityPctText = activityPctText,
             tbrRateText = tbrRateText,
-            basalText = basalText,
-            stepsText = stepsText,
-            hrText = hrText
+            basalText = basalText
         )
         _statusCardState.postValue(state)
     }
 
     /**
      * Calculates total IOB text for display.
-     * 
+     *
      * CRITICAL FIX: Removed abs() that was causing IOB to appear increasing
      * when basal IOB was negative (during low TBR).
-     * 
+     *
      * Scenario that was broken:
      * - T1: Bolus IOB = 1.0 U, Basal IOB = -1.0 U → total = abs(0.0) = 0.0 U ✓
      * - T2: Bolus IOB = 0.5 U, Basal IOB = -1.5 U → total = abs(-1.0) = 1.0 U ✗ (INCREASED!)
-     * 
+     *
      * Total IOB can be negative (insulin debt from low TBR), which is valid
      * and important clinical information to display.
      */
     private fun totalIobText(): String {
         val bolus = bolusIob()
         val basal = basalIob()
-        
+
         // FIXED: No abs() - total can be negative (insulin debt)
         val total = bolus.iob + basal.basaliob
-        
+
         // Display with sign to show positive/negative IOB
         val formattedTotal = if (total >= 0) {
             resourceHelper.gs(app.aaps.core.ui.R.string.format_insulin_units, total)
@@ -380,8 +413,8 @@ class OverviewViewModel(
             // Negative IOB (insulin debt) - show with minus sign
             "-" + resourceHelper.gs(app.aaps.core.ui.R.string.format_insulin_units, -total)
         }
-        
-        return "IOB: $formattedTotal"
+
+        return formattedTotal
     }
 
     private fun bolusIob(): IobTotal = iobCobCalculator.calculateIobFromBolus().round()
@@ -391,16 +424,16 @@ class OverviewViewModel(
     private fun loopStatusText(mode: RM.Mode): String =
         resourceHelper.gs(
             when (mode) {
-                RM.Mode.SUPER_BOLUS -> app.aaps.core.ui.R.string.superbolus
+                RM.Mode.SUPER_BOLUS       -> app.aaps.core.ui.R.string.superbolus
                 RM.Mode.DISCONNECTED_PUMP -> app.aaps.core.ui.R.string.disconnected
                 RM.Mode.SUSPENDED_BY_PUMP -> app.aaps.core.ui.R.string.pumpsuspended
                 RM.Mode.SUSPENDED_BY_USER -> app.aaps.core.ui.R.string.loopsuspended
-                RM.Mode.SUSPENDED_BY_DST -> app.aaps.core.ui.R.string.loop_suspended_by_dst
-                RM.Mode.CLOSED_LOOP_LGS -> app.aaps.core.ui.R.string.uel_lgs_loop_mode
-                RM.Mode.CLOSED_LOOP -> app.aaps.core.ui.R.string.closedloop
-                RM.Mode.OPEN_LOOP -> app.aaps.core.ui.R.string.openloop
-                RM.Mode.DISABLED_LOOP -> app.aaps.core.ui.R.string.disabled_loop
-                RM.Mode.RESUME -> app.aaps.core.ui.R.string.resumeloop
+                RM.Mode.SUSPENDED_BY_DST  -> app.aaps.core.ui.R.string.loop_suspended_by_dst
+                RM.Mode.CLOSED_LOOP_LGS   -> app.aaps.core.ui.R.string.uel_lgs_loop_mode
+                RM.Mode.CLOSED_LOOP       -> app.aaps.core.ui.R.string.closedloop
+                RM.Mode.OPEN_LOOP         -> app.aaps.core.ui.R.string.openloop
+                RM.Mode.DISABLED_LOOP     -> app.aaps.core.ui.R.string.disabled_loop
+                RM.Mode.RESUME            -> app.aaps.core.ui.R.string.resumeloop
             }
         )
 
@@ -549,10 +582,10 @@ class OverviewViewModel(
     private fun buildSafetyLine(lastBg: InMemoryGlucoseValue?, glucoseStatus: GlucoseStatus?): String {
         val bgValue = lastBg?.recalculated
         val level = when {
-            bgValue == null -> null
+            bgValue == null              -> null
             bgValue < SAFETY_CRITICAL_BG -> resourceHelper.gs(R.string.dashboard_adjustment_safety_level_critical)
-            bgValue < SAFETY_LIMITED_BG -> resourceHelper.gs(R.string.dashboard_adjustment_safety_level_limited)
-            else -> resourceHelper.gs(R.string.dashboard_adjustment_safety_level_normal)
+            bgValue < SAFETY_LIMITED_BG  -> resourceHelper.gs(R.string.dashboard_adjustment_safety_level_limited)
+            else                         -> resourceHelper.gs(R.string.dashboard_adjustment_safety_level_normal)
         }
         if (level == null) return resourceHelper.gs(R.string.dashboard_adjustment_safety_unknown)
         val reasons = mutableListOf<String>()
@@ -564,22 +597,22 @@ class OverviewViewModel(
         }
         glucoseStatus?.shortAvgDelta?.let {
             val trendRes = when {
-                it > 0.5 -> R.string.dashboard_adjustment_trend_rising
+                it > 0.5  -> R.string.dashboard_adjustment_trend_rising
                 it < -0.5 -> R.string.dashboard_adjustment_trend_falling
-                else -> R.string.dashboard_adjustment_trend_stable
+                else      -> R.string.dashboard_adjustment_trend_stable
             }
             reasons += resourceHelper.gs(R.string.dashboard_adjustment_reason_trend, resourceHelper.gs(trendRes))
         }
         if (reasons.isEmpty()) reasons += resourceHelper.gs(R.string.dashboard_adjustment_reason_unknown)
         if (reasons.isEmpty()) reasons += resourceHelper.gs(R.string.dashboard_adjustment_reason_unknown)
-        
+
         val safetyText = reasons.joinToString(", ")
         val finalSafetyText = if (loop.lastRun?.request?.isHypoRisk == true) {
             "<font color='#FF0000'>Hypo Risk!</font> $safetyText"
         } else {
             safetyText
         }
-        
+
         return resourceHelper.gs(R.string.dashboard_adjustment_safety, level, finalSafetyText)
     }
 
@@ -607,6 +640,13 @@ class OverviewViewModel(
             val diff = now - it.timestamp
             dateUtil.age(diff, true, resourceHelper).trim()
         } ?: resourceHelper.gs(app.aaps.core.ui.R.string.value_unavailable_short)
+    }
+
+    private fun batteryAgeDays(event: TE?, now: Long): Int {
+        return event?.let {
+            val diffMillis = now - it.timestamp
+            (diffMillis / TimeUnit.DAYS.toMillis(1)).toInt()
+        } ?: -1
     }
 
     private fun trendSymbol(arrow: TrendArrow?): String = when (arrow) {
@@ -747,12 +787,11 @@ data class StatusCardState(
     val trendArrowRes: Int?,
     val trendDescription: String,
     val deltaText: String,
-    val iobText: String,
+
     val cobText: String,
     val loopStatusText: String,
     val loopIsRunning: Boolean,
-    val timeAgo: String,
-    val timeAgoDescription: String,
+
     val isGlucoseActual: Boolean,
     val contentDescription: String,
     val pumpStatusText: String = "",
@@ -763,20 +802,35 @@ data class StatusCardState(
     val glucoseValue: Double? = null,
     val targetLow: Double? = null,
     val targetHigh: Double? = null,
-    
+    val timeAgo: String,
+    val timeAgoDescription: String,
+
     // Circle-Top Hybrid Dashboard fields
     val glucoseMgdl: Int? = null,
     val noseAngleDeg: Float? = null,
+
+    //left
+    val stepsText: String? = null,
     val reservoirText: String? = null,
+    val reservoirColor: Int? = null,
     val infusionAgeText: String? = null,
+    val infusionAgeColor: Int? = null,
     val pumpBatteryText: String? = null,
+    val pumpBatteryColor: Int? = null,
     val sensorAgeText: String? = null,
+    val sensorAgeColor: Int? = null,
+    //right
+    val hrText: String? = null,
+    //last SMB
+    val lastUpdateText: String? = null,
     val lastSensorValueText: String? = null,
+    //TBR
     val activityPctText: String? = null,
     val tbrRateText: String? = null,
     val basalText: String? = null,
-    val stepsText: String? = null,
-    val hrText: String? = null
+    //IOB
+    val iobText: String
+
 )
 
 data class AdjustmentCardState(

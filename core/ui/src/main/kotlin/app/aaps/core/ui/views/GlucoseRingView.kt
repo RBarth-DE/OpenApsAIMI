@@ -4,10 +4,12 @@ import android.content.Context
 import android.graphics.*
 import android.util.AttributeSet
 import android.view.View
+import androidx.core.graphics.toColorInt
 import kotlin.math.cos
 import kotlin.math.min
 import kotlin.math.sin
 import app.aaps.core.ui.R
+
 
 /**
  * GlucoseRingView - Cercle avec "nose pointer" (feature/circle-top)
@@ -30,15 +32,15 @@ class GlucoseRingView @JvmOverloads constructor(
     private var mainTextColor: Int = Color.WHITE
     private var subTextColor: Int = Color.WHITE
 
-    private var useSteppedColors: Boolean = true
-    private var step1MaxMgdl: Float = 100f
-    private var step2MaxMgdl: Float = 160f
-    private var step3MaxMgdl: Float = 220f
+    //private var useSteppedColors: Boolean = true
+    private var step1MaxMgdl: Float = 130f // BG <= step1MaxMgdl -> stepColor1 (green)
+    private var step2MaxMgdl: Float = 180f // BG <= step2MaxMgdl -> stepColor2 (yellow)
+    private var step3MaxMgdl: Float = 220f // BG <= step1MaxMgd3 -> stepColor3 (orange)
 
-    private var stepColor1: Int = Color.parseColor("#00C853") // green
-    private var stepColor2: Int = Color.parseColor("#FFD600") // yellow
-    private var stepColor3: Int = Color.parseColor("#FF6D00") // orange
-    private var stepColor4: Int = Color.parseColor("#D50000") // red
+    private var stepColor1: Int = "#00C853".toColorInt() // green
+    private var stepColor2: Int = "#FFD600".toColorInt() // yellow
+    private var stepColor3: Int = "#FF6D00".toColorInt() // orange
+    private var stepColor4: Int = "#D50000".toColorInt() // red
 
     private var mainTextBold: Boolean = true
 
@@ -85,8 +87,6 @@ class GlucoseRingView @JvmOverloads constructor(
             noseLengthPx = a.getDimension(R.styleable.GlucoseRingView_ringNoseLength, noseLengthPx)
             noseWidthPx = a.getDimension(R.styleable.GlucoseRingView_ringNoseWidth, noseWidthPx)
 
-            // Stepped colors (optional)
-            useSteppedColors = a.getBoolean(R.styleable.GlucoseRingView_glucoseRingUseSteppedColors, useSteppedColors)
             step1MaxMgdl = a.getFloat(R.styleable.GlucoseRingView_glucoseRingStep1MaxMgdl, step1MaxMgdl)
             step2MaxMgdl = a.getFloat(R.styleable.GlucoseRingView_glucoseRingStep2MaxMgdl, step2MaxMgdl)
             step3MaxMgdl = a.getFloat(R.styleable.GlucoseRingView_glucoseRingStep3MaxMgdl, step3MaxMgdl)
@@ -109,7 +109,6 @@ class GlucoseRingView @JvmOverloads constructor(
         subLeftText: String,
         subRightText: String,
         noseAngleDeg: Float?,
-        overrideColor: Int? = null
     ) {
         this.bgMgdl = bgMgdl
         this.mainText = mainText
@@ -117,22 +116,13 @@ class GlucoseRingView @JvmOverloads constructor(
         this.subRightText = subRightText
         this.noseAngleDeg = noseAngleDeg
 
-        currentRingColor = overrideColor ?: computeRingColor(bgMgdl)
+        currentRingColor = computeRingColor(bgMgdl)
 
         invalidate()
     }
 
     private fun computeRingColor(bgMgdl: Int?): Int {
         val v = bgMgdl ?: return Color.GRAY
-        if (!useSteppedColors) {
-            // Fallback to simple color mapping if not using stepped colors
-            return when {
-                v < 70 -> stepColor4  // Red (low)
-                v <= 180 -> stepColor1 // Green (in range)
-                else -> stepColor3    // Orange (high)
-            }
-        }
-
         val vf = v.toFloat()
         // WARNING: This logic paints <100 as Step1 (Color1). If Color1 is Green, Hypo is Green.
         // The overrideColor (passed from AAPS logic) fixes this.
