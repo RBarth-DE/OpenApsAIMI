@@ -1,11 +1,11 @@
 package app.aaps.plugins.main.general.dashboard.views
 
 import android.content.Context
+import android.graphics.Color
 import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.view.View
 import android.widget.FrameLayout
-import android.widget.ImageView
 import app.aaps.plugins.main.databinding.ComponentCircleTopStatusHybridBinding
 
 /**
@@ -44,10 +44,10 @@ class CircleTopDashboardView @JvmOverloads constructor(
             // Helper function to safely get property value
             fun <T> getProp(name: String): T? {
                 return try {
-                    val getter = stateClass.getMethod("get${name.capitalize()}")
+                    val getter = stateClass.getMethod("get${name.replaceFirstChar { it.uppercase(java.util.Locale.ROOT) }}")
                     @Suppress("UNCHECKED_CAST")
                     getter.invoke(state) as? T
-                } catch (e: Exception) {
+                } catch (_: Exception) {
                     null
                 }
             }
@@ -62,39 +62,37 @@ class CircleTopDashboardView @JvmOverloads constructor(
                     subLeftText = getProp<String>("timeAgo") ?: "",
                     subRightText = getProp<String>("deltaText") ?: "",
                     noseAngleDeg = getProp<Float>("noseAngleDeg"),
-                    overrideColor = getProp<Int>("glucoseColor")
                 )
             }
 
             // ═══════════════════════════════════════════════════════════════
             // 2. Left Column Metrics
             // ═══════════════════════════════════════════════════════════════
+            binding.stepsText.text = getProp<String>("stepsText") ?: "--"
             binding.reservoirChip.text = getProp<String>("reservoirText") ?: "--"
+            binding.reservoirChip.setTextColor( getProp<Int>("reservoirColor") ?: Color.WHITE )
             binding.infusionAgeText.text = getProp<String>("infusionAgeText") ?: "--"
+            binding.infusionAgeText.setTextColor( getProp<Int>("infusionAgeColor") ?: Color.WHITE )
             binding.pumpBatteryText.text = getProp<String>("pumpBatteryText") ?: "--"
+            binding.pumpBatteryText.setTextColor( getProp<Int>("pumpBatteryColor") ?: Color.WHITE )
             binding.sensorAgeText.text = getProp<String>("sensorAgeText") ?: "--"
+            binding.sensorAgeText.setTextColor( getProp<Int>("sensorAgeColor") ?: Color.WHITE )
 
             // ═══════════════════════════════════════════════════════════════
             // 3. Right Column Metrics
             // ═══════════════════════════════════════════════════════════════
-            binding.lastSensorValueText.text = getProp<String>("lastSensorValueText") ?: "--"
-            binding.activityText.text = getProp<String>("activityPctText") ?: "0%"
-            binding.tbrRateText.text = getProp<String>("tbrRateText") ?: "0.00 U/h"
-            binding.basalText.text = getProp<String>("basalText") ?: "--"
-
-
-
-            // ═══════════════════════════════════════════════════════════════
-            // 5. Loop Status & New Metrics (Steps/HR)
-            // ═══════════════════════════════════════════════════════════════
             binding.loopStatus.text = getProp<String>("loopStatusText") ?: "Closed Loop"
-            
-            // Steps & HR
-            binding.stepsText.text = getProp<String>("stepsText") ?: "--"
             binding.hrText.text = getProp<String>("hrText") ?: "--"
-            
+            //last SMB
+            binding.lastUpdateText.text = getProp<String>("lastUpdateText") ?: "--"
+            binding.lastSensorValueText.text = getProp<String>("lastSensorValueText") ?: "--"
+            // TBR
+            binding.activityPctText.text = getProp<String>("activityPctText") ?: "--"
+            //binding.tbrRateText.text = getProp<String>("tbrRateText") ?: "0.00 U/h"
+            binding.basalText.text = getProp<String>("basalText") ?: "0.00 U/h"
+            //IOB
+            binding.iobText.text = getProp<String>("iobText") ?: "--"
 
-            
         } catch (e: Exception) {
             // Fallback: Log error but don't crash
             e.printStackTrace()
@@ -107,6 +105,8 @@ class CircleTopDashboardView @JvmOverloads constructor(
     fun setActionListener(listener: CircleTopActionListener) {
         binding.chipAimiAdvisor.setOnClickListener { listener.onAimiAdvisorClicked() }
         binding.chipAdjust.setOnClickListener { listener.onAdjustClicked() }
+        binding.chipContext.setOnClickListener { listener.onAimiContextClicked() }
+        binding.chipFood.setOnClickListener { listener.onAimiFoodClicked() }
         binding.chipAimiPref.setOnClickListener { listener.onAimiPreferencesClicked() }
         binding.chipStat.setOnClickListener { listener.onStatsClicked() }
     }
@@ -135,4 +135,6 @@ interface CircleTopActionListener {
     fun onAdjustClicked()
     fun onAimiPreferencesClicked()
     fun onStatsClicked()
+    fun onAimiContextClicked()
+    fun onAimiFoodClicked()
 }

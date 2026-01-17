@@ -1,6 +1,5 @@
 package app.aaps.plugins.main.general.dashboard
 
-import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
@@ -242,20 +241,61 @@ class DashboardFragment : DaggerFragment() {
             }
             override fun onAdjustClicked() { openAdjustmentDetails() }
             override fun onAimiPreferencesClicked() {
-                try {
-                    val intent = Intent(requireContext(), app.aaps.plugins.aps.openAPSAIMI.advisor.meal.MealAdvisorActivity::class.java)
-                    startActivity(intent)
-                } catch (e: Exception) {
-                    aapsLogger.error(LTag.CORE, "Failed to launch Meal Advisor: ${e.message}")
+                // PreferencesActivity expects UiInteraction.PLUGIN_NAME = plugin class simpleName.
+                val pluginName = resolveAimiPluginName() ?: run {
+                    aapsLogger.error(LTag.CORE, "AIMI Pref: Plugin name could not be resolved")
                 }
+                protectionCheck.queryProtection(requireActivity(), ProtectionCheck.Protection.PREFERENCES, {
+                    val intent = Intent(requireContext(), uiInteraction.preferencesActivity)
+                        .setAction("info.nightscout.androidaps.MainActivity")
+                        .putExtra(UiInteraction.PLUGIN_NAME, pluginName as String)
+                    startActivity(intent)
+                })
             }
             override fun onStatsClicked() {
+                try {
+                    val c = Class.forName("app.aaps.ui.activities.StatsActivity")
+                    startActivity(Intent(requireContext(), c).setAction("info.nightscout.androidaps.MainActivity"))
+                } catch (e: Exception) {
+                    aapsLogger.error(LTag.CORE, "Failed to launch ContextActivity: ${e.message}")
+                }
+            }
+
+            override fun onAimiFoodClicked() {
+                try {
+                    val intent = Intent().setClassName(requireContext(), "app.aaps.plugins.aps.openAPSAIMI.advisor.meal.MealAdvisorActivity")
+                    startActivity(intent)
+                } catch (e: Exception) {
+                    aapsLogger.error(LTag.CORE, "Failed to launch MealAdvisorActivity: ${e.message}")
+                }
+            }
+
+            override fun onAimiContextClicked() {
                 try {
                     val intent = Intent().setClassName(requireContext(), "app.aaps.plugins.aps.openAPSAIMI.context.ui.ContextActivity")
                     startActivity(intent)
                 } catch (e: Exception) {
                     aapsLogger.error(LTag.CORE, "Failed to launch ContextActivity: ${e.message}")
                 }
+            }
+
+            private fun resolveAimiPluginName(): String? {
+
+                val candidates = listOf(
+                    "app.aaps.plugins.aps.openAPSAIMI.OpenAPSAIMIPlugin",
+                    "app.aaps.plugins.aps.openAPSAIMI.OpenApsAIMIPlugin",
+                    "app.aaps.plugins.aps.openAPSAIMI.OpenAPSAIMI",
+                    "app.aaps.plugins.aps.openAPSAIMI.OpenApsAIMI",
+                    "app.aaps.plugins.aps.openAPSAIMI.AimiPlugin",
+                )
+                for (cn in candidates) {
+                    try {
+                        val c = Class.forName(cn)
+                        return c.simpleName
+                    } catch (_: Throwable) { }
+                }
+                // last resort: some builds register the plugin under this name
+                return "OpenAPSAIMIPlugin"
             }
         })
 
@@ -299,6 +339,7 @@ class DashboardFragment : DaggerFragment() {
             v.parent.requestDisallowInterceptTouchEvent(true)
             false
         }
+
         binding.glucoseGraph.graph.gridLabelRenderer?.reloadStyles()
 
         // Setup range selection button
@@ -425,39 +466,35 @@ class DashboardFragment : DaggerFragment() {
         }
     }
 
-    @RequiresApi(Build.VERSION_CODES.CUPCAKE)
     private fun openSensorApp(): Boolean {
-        context?.let { ctx ->
-
-            val possiblePackages = listOf(
-                "com.eveningoutpost.dexdrip",  // xDrip+
-                "tk.glucodata",                // Juggluco
-                "com.dexcom.g6byod",           // Dexcom G6 BYOD
-                "com.dexcom.g7byod"            // Dexcom G7 BYOD
-            )
-
-            val pm = ctx.packageManager
-
-            for (pkg in possiblePackages) {
-                val intent = pm.getLaunchIntentForPackage(pkg)
-                if (intent != null) {
-                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                    intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP); //experiment with the flags
-                    ctx.startActivity(intent)
-                    aapsLogger.debug(LTag.CORE, "Launched CGM app: $pkg")
-                    return true
-                }
-                else {
-                    aapsLogger.debug(LTag.CORE, "No known CGM app installed.")
-                }
-            }
-            return false
-
-        } ?: run {
+        val ctx = context ?: run {
             aapsLogger.debug(LTag.CORE, "Context is null, cannot open sensor app")
             return false
         }
+
+        val possiblePackages = listOf(
+            "com.eveningoutpost.dexdrip",
+            "tk.glucodata",
+            "com.dexcom.g6byod",
+            "com.dexcom.g7byod"
+        )
+
+        val pm = ctx.packageManager
+
+        for (pkg in possiblePackages) {
+            val intent = pm.getLaunchIntentForPackage(pkg)
+            if (intent != null) {
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP)
+                ctx.startActivity(intent)
+                aapsLogger.debug(LTag.CORE, "Launched CGM app: $pkg")
+                return true
+            }
+        }
+        aapsLogger.debug(LTag.CORE, "No known CGM app installed.")
+        return false
     }
+
 
     private fun openAdjustmentDetails(): Boolean {
         val context = context ?: return false
@@ -524,6 +561,11 @@ class DashboardFragment : DaggerFragment() {
         if ((config.AAPSCLIENT || activePlugin.activePump.pumpDescription.isTempBasalCapable) && menuChartSettings[0][CharType.BAS.ordinal]) {
             graphData.addBasals()
         }
+        graphData.addEps(context, 0.95)
+        if (menuChartSettings[0][CharType.TREAT.ordinal])
+            graphData.addTherapyEvents()
+        if (menuChartSettings[0][CharType.ACT.ordinal])
+            graphData.addActivity(0.8)
         graphData.addTargetLine()
         graphData.addRunningModes()
         graphData.addNowLine(now)
