@@ -57,6 +57,12 @@
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="@dimen/dashboard_block_spacing"/>
 
+            <app.aaps.plugins.main.general.dashboard.views.DashboardModesView
+                android:id="@+id/modes_view"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                style="@style/Widget.AAPS.Dashboard.Card"/>
+
             <app.aaps.plugins.main.general.dashboard.views.AdjustmentStatusView
                 android:id="@+id/adjustment_status"
                 android:layout_width="match_parent"
