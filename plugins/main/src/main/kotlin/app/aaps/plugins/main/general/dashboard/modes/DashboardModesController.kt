@@ -5,27 +5,19 @@ import app.aaps.core.interfaces.automation.Automation
 import app.aaps.core.interfaces.automation.AutomationEvent
 import app.aaps.core.interfaces.resources.ResourceHelper
 import app.aaps.core.ui.dialogs.OKDialog
-
+import app.aaps.plugins.main.R
 import androidx.fragment.app.FragmentActivity
-
-import app.aaps.core.interfaces.rx.bus.RxBus
-import app.aaps.core.interfaces.rx.events.EventNewHistoryData
-import app.aaps.core.interfaces.rx.AapsSchedulers
 
 class DashboardModesController(
     private val activity: FragmentActivity,
     private val automation: Automation,
-    private val resourceHelper: ResourceHelper,
-    private val rxBus: RxBus,
-    private val aapsSchedulers: AapsSchedulers
+    private val resourceHelper: ResourceHelper
 ) {
-    fun availableModes(): Set<DashboardModes> =
-        automation.userEvents()
-            .filter { it.isEnabled && it.canRun() }
-            .mapNotNull { mapEventToMode(it) }
-            .toSet()
 
-    fun runModeWithConfirmation(mode: DashboardModes) {
+    fun runModeWithConfirmation(
+        mode: DashboardModes,
+        onConfirmed: (AutomationEvent) -> Unit
+    ) {
         val event = mapModeToEvent(mode) ?: return
 
         OKDialog.showConfirmation(
@@ -33,56 +25,66 @@ class DashboardModesController(
             resourceHelper.gs(
                 app.aaps.core.ui.R.string.dashboard_run_question,
                 event.title
-            )
-        ) {
-            aapsSchedulers.io.scheduleDirect {
-                automation.processEvent(event)
-
-                aapsSchedulers.main.scheduleDirect {
-                    rxBus.send(EventNewHistoryData(0L, false))
-                }
+            ),
+            Runnable {
+                onConfirmed(event)
             }
-        }
+        )
     }
 
-    fun runEventWithConfirmation(event: AutomationEvent) {
+    fun runEventWithConfirmation(
+        event: AutomationEvent,
+        onConfirmed: () -> Unit
+    ) {
         OKDialog.showConfirmation(
             activity,
             resourceHelper.gs(
                 app.aaps.core.ui.R.string.dashboard_run_question,
                 event.title
-            )
-        ) {
-            aapsSchedulers.io.scheduleDirect {
-                automation.processEvent(event)
+            ),
+            Runnable {
+                onConfirmed()
+            }
+        )
+    }
 
-                aapsSchedulers.main.scheduleDirect {
-                    rxBus.send(EventNewHistoryData(0L, false))
-                }
+
+    fun availableModes(): Set<DashboardModes> {
+        return automation.userEvents()
+            .filter { it.isEnabled && it.canRun() }
+            .mapNotNull { mapEventToMode(it) }
+            .toSet()
+    }
+
+    private fun mapModeToEvent(mode: DashboardModes): AutomationEvent? {
+        return automation.userEvents().firstOrNull { event ->
+            when (mode) {
+                DashboardModes.BIG -> event.title.startsWith("Big")
+                DashboardModes.MED -> event.title.startsWith("Med")
+                DashboardModes.SMALL -> event.title.startsWith("Small")
+                DashboardModes.SNACK1 -> event.title.startsWith("Snack1")
+                DashboardModes.SNACK2 -> event.title.startsWith("Snack2")
+                DashboardModes.SPORT -> event.title.startsWith("Sport")
+                DashboardModes.HYPO -> event.title.startsWith("Hypo")
+                DashboardModes.BEER -> event.title.startsWith("Bier")
+                DashboardModes.STOP -> event.title.startsWith("Stop")
+                DashboardModes.UNKNOWN -> false
             }
         }
-
     }
 
-    fun mapEventToMode(event: AutomationEvent): DashboardModes? {
-        val title = event.title.lowercase()
-        return when {
-            title.startsWith("big") -> DashboardModes.BIG
-            title.startsWith("med") -> DashboardModes.MED
-            title.startsWith("small") -> DashboardModes.SMALL
-            title.startsWith("snack1") -> DashboardModes.SNACK1
-            title.startsWith("snack2") -> DashboardModes.SNACK2
-            title.startsWith("sport") -> DashboardModes.SPORT
-            title.startsWith("hypo") -> DashboardModes.HYPO
-            title.startsWith("bier") -> DashboardModes.BEER
-            title.startsWith("stop") -> DashboardModes.STOP
+
+    private fun mapEventToMode(event: AutomationEvent): DashboardModes? =
+        when {
+            event.title.startsWith("Big") -> DashboardModes.BIG
+            event.title.startsWith("Med") -> DashboardModes.MED
+            event.title.startsWith("Small") -> DashboardModes.SMALL
+            event.title.startsWith("Snack1") -> DashboardModes.SNACK1
+            event.title.startsWith("Snack2") -> DashboardModes.SNACK2
+            event.title.startsWith("Sport") -> DashboardModes.SPORT
+            event.title.startsWith("Hypo") -> DashboardModes.HYPO
+            event.title.startsWith("Bier") -> DashboardModes.BEER
+            event.title.startsWith("Stop") -> DashboardModes.STOP
             else -> null
         }
-    }
-
-    fun mapModeToEvent(mode: DashboardModes): AutomationEvent? =
-        automation.userEvents().firstOrNull {
-            mapEventToMode(it) == mode
-        }
 }
-
