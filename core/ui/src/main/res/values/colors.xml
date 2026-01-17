@@ -393,4 +393,10 @@
     <color name="smb_color">#2196F3</color>
     <color name="recommendation_bg">#1A2196F3</color>
 
+    <color name="mode_button_ripple">#33FFFFFF</color>
+    <color name="mode_active">#FFD54F</color> <!-- gelb -->
+    <color name="mode_inactive">#40FFFFFF</color>
+    <color name="dashboard_chip_background_pressed">#FFD54F</color>
+    <color name="dashboard_chip_background_active">#FFD54F</color>
+
 </resources>
