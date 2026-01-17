@@ -1,22 +1,21 @@
 package app.aaps.plugins.main.general.dashboard
 
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
-import android.view.ViewGroup
-import android.widget.LinearLayout
-import android.content.Intent
 import android.view.MenuItem
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.core.view.isVisible
 import app.aaps.core.interfaces.automation.Automation
 import app.aaps.core.interfaces.resources.ResourceHelper
 import app.aaps.core.ui.activities.TranslatedDaggerAppCompatActivity
-import app.aaps.core.ui.dialogs.OKDialog
+
 import app.aaps.plugins.main.R
 import app.aaps.plugins.main.databinding.ActivityDashboardModesBinding
+import app.aaps.plugins.main.general.dashboard.modes.DashboardModesController
 import com.google.android.material.button.MaterialButton
 import javax.inject.Inject
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.Dispatchers
 
 class DashboardModesActivity : TranslatedDaggerAppCompatActivity() {
 
@@ -24,72 +23,52 @@ class DashboardModesActivity : TranslatedDaggerAppCompatActivity() {
     @Inject lateinit var resourceHelper: ResourceHelper
 
     private lateinit var binding: ActivityDashboardModesBinding
-    private val handler = Handler(Looper.getMainLooper())
+    private lateinit var modeController: DashboardModesController
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityDashboardModesBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        modeController = DashboardModesController( this, automation, resourceHelper)
+
+/*
         binding.toolbar.title = resourceHelper.gs(R.string.dashboard_nav_modes)
         binding.toolbar.setNavigationOnClickListener { onBackPressedDispatcher.onBackPressed() }
 
-        // Add AIMI Modes Settings button
         val settingsItem = binding.toolbar.menu.add(0, 1, 0, "Settings")
         settingsItem.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS)
-        settingsItem.setIcon(app.aaps.core.ui.R.drawable.ic_settings)
-        
-        binding.toolbar.setOnMenuItemClickListener { item ->
-            if (item.itemId == 1) {
-                try {
-                    val intent = Intent().setClassName(this, "app.aaps.plugins.aps.openAPSAIMI.advisor.AimiModeSettingsActivity")
-                    startActivity(intent)
-                } catch (e: Exception) {
-                    e.printStackTrace()
-                }
-                true
-            } else {
-                false
-            }
-        }
+        settingsItem.setIcon(app.aaps.core.ui.R.drawable.ic_settings)*/
     }
 
     override fun onResume() {
         super.onResume()
         renderActions()
     }
-
     private fun renderActions() {
         val actions = automation.userEvents().filter { it.isEnabled && it.canRun() }
         binding.modesEmpty.isVisible = actions.isEmpty()
         binding.actionsContainer.removeAllViews()
-        val spacing = resources.getDimensionPixelSize(R.dimen.dashboard_chip_spacing)
+
         actions.forEach { event ->
-            val icon = AppCompatResources.getDrawable(
+            val button = MaterialButton(
                 this,
-                event.firstActionIcon() ?: app.aaps.core.ui.R.drawable.ic_user_options_24dp
-            )
-            val button = MaterialButton(this, null, com.google.android.material.R.attr.materialButtonOutlinedStyle).apply {
+                null,
+                com.google.android.material.R.attr.materialButtonOutlinedStyle
+            ).apply {
                 text = event.title
-                iconGravity = MaterialButton.ICON_GRAVITY_TEXT_START
-                iconPadding = spacing
                 setOnClickListener {
-                    OKDialog.showConfirmation(
-                        this@DashboardModesActivity,
-                        resourceHelper.gs(app.aaps.core.ui.R.string.dashboard_run_question, event.title)
-                    ) {
-                        handler.post { automation.processEvent(event) }
+                    modeController.runEventWithConfirmation(event) {
+                        lifecycleScope.launch(Dispatchers.IO) {
+                            automation.processEvent(event)
+                        }
                         finish()
                     }
                 }
             }
-            icon?.mutate()?.setTint(resourceHelper.gac(this, app.aaps.core.ui.R.attr.userOptionColor))
-            button.icon = icon
-            val params = LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT
-            ).apply { bottomMargin = spacing }
-            binding.actionsContainer.addView(button, params)
+
+            binding.actionsContainer.addView(button)
         }
     }
+
 }

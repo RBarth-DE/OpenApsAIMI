@@ -59,6 +59,14 @@ import javax.inject.Inject
 import javax.inject.Provider
 import app.aaps.plugins.main.general.dashboard.views.CircleTopActionListener
 import app.aaps.plugins.aps.openAPSAIMI.advisor.AimiProfileAdvisorActivity
+import android.util.Log
+import app.aaps.plugins.main.general.dashboard.modes.DashboardModesController
+import app.aaps.plugins.main.general.dashboard.modes.DashboardModes
+import app.aaps.plugins.main.general.dashboard.views.DashboardModesView
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.Dispatchers
+
 
 class DashboardFragment : DaggerFragment() {
 
@@ -87,17 +95,19 @@ class DashboardFragment : DaggerFragment() {
     @Inject lateinit var uiInteraction: UiInteraction
     @Inject lateinit var aapsLogger: AAPSLogger
     @Inject lateinit var automation: Automation
-    @Inject lateinit var xDripSource: XDripSource
-    @Inject lateinit var dexcomBoyda: DexcomBoyda
     @Inject lateinit var notificationUiBinder: NotificationUiBinder
     @Inject lateinit var auditorStatusLiveData: AuditorStatusLiveData
     @Inject lateinit var auditorNotificationManager: AuditorNotificationManager
+
+    private lateinit var modesController: DashboardModesController
 
     private val disposables = CompositeDisposable()
     private var _binding: FragmentDashboardBinding? = null
     private val binding get() = _binding!!
     private var currentRange = 0
     private var auditorIndicator: AuditorStatusIndicator? = null
+
+
     private fun sensor(): Boolean {
         val ctx = context ?: return false
 
@@ -205,10 +215,6 @@ class DashboardFragment : DaggerFragment() {
                 }
             }
         }
-        viewModel.graphMessage.observe(viewLifecycleOwner) {
-            binding.glucoseGraph.setUpdateMessage(it)
-            updateGraph()
-        }
 
         binding.adjustmentStatus.setOnClickListener {
             openAdjustmentDetails()
@@ -224,8 +230,33 @@ class DashboardFragment : DaggerFragment() {
             }.start()
         }
 
+        //new DashboardModeView
+
+
+        modesController = DashboardModesController(
+            requireActivity(),
+            automation,
+            resourceHelper
+        )
+
+        binding.modesView.setOnModesClickListener { mode ->
+            modesController.runModeWithConfirmation(mode) { event ->
+                viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
+                    automation.processEvent(event)
+                }
+            }
+
+        }
+
+
+        viewModel.graphMessage.observe(viewLifecycleOwner) {
+            binding.glucoseGraph.setUpdateMessage(it)
+            updateGraph()
+        }
+
         binding.statusCard.isClickable = true
         binding.statusCard.isFocusable = true
+
 
         // Setup Action Listeners (Advisor, Adjust, Prefs, Stats)
         binding.statusCard.setActionListener(object : CircleTopActionListener {
@@ -375,6 +406,10 @@ class DashboardFragment : DaggerFragment() {
                     syncGraphRange(preferences.get(IntNonKey.RangeToDisplay), false)
                 }
             }, fabricPrivacy::logException)
+
+        // 🔥 Disabled-State aktualisieren
+        val enabledModes = modesController.availableModes()
+        binding.modesView.setEnabledModes(enabledModes)
     }
 
     override fun onPause() {

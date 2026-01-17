@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+
+    android:padding="15dp"
+    android:background="@drawable/dashboard_card_surface"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <!-- Buttons -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btn_big"
+        app:autoSizeTextType="uniform"
+        app:autoSizeMinTextSize="6sp"
+        app:autoSizeMaxTextSize="13sp"
+        style="@style/Widget.AAPS.Dashboard.ModeButton"
+        android:text="@string/circle_mode_big"/>
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btn_med"
+        app:autoSizeTextType="uniform"
+        app:autoSizeMinTextSize="6sp"
+        app:autoSizeMaxTextSize="13sp"
+        style="@style/Widget.AAPS.Dashboard.ModeButton"
+        android:text="@string/circle_mode_med"/>
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btn_small"
+        app:autoSizeTextType="uniform"
+        app:autoSizeMinTextSize="6sp"
+        app:autoSizeMaxTextSize="13sp"
+        style="@style/Widget.AAPS.Dashboard.ModeButton"
+        android:text="@string/circle_mode_small"/>
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btn_snack1"
+        app:autoSizeTextType="uniform"
+        app:autoSizeMinTextSize="6sp"
+        app:autoSizeMaxTextSize="13sp"
+        style="@style/Widget.AAPS.Dashboard.ModeButton"
+        android:text="@string/circle_mode_snack1"/>
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btn_snack2"
+        app:autoSizeTextType="uniform"
+        app:autoSizeMinTextSize="6sp"
+        app:autoSizeMaxTextSize="13sp"
+        style="@style/Widget.AAPS.Dashboard.ModeButton"
+        android:text="@string/circle_mode_snack2"/>
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btn_sport"
+        app:autoSizeTextType="uniform"
+        app:autoSizeMinTextSize="6sp"
+        app:autoSizeMaxTextSize="13sp"
+        style="@style/Widget.AAPS.Dashboard.ModeButton"
+        android:text="@string/circle_mode_sport"/>
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btn_hypo"
+        app:autoSizeTextType="uniform"
+        app:autoSizeMinTextSize="6sp"
+        app:autoSizeMaxTextSize="13sp"
+        style="@style/Widget.AAPS.Dashboard.ModeButton"
+        android:text="@string/circle_mode_hypo"/>
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btn_beer"
+        app:autoSizeTextType="uniform"
+        app:autoSizeMinTextSize="6sp"
+        app:autoSizeMaxTextSize="13sp"
+        style="@style/Widget.AAPS.Dashboard.ModeButton"
+        android:text="@string/circle_mode_beer"/>
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btn_stop"
+        app:autoSizeTextType="uniform"
+        app:autoSizeMinTextSize="6sp"
+        app:autoSizeMaxTextSize="13sp"
+        style="@style/Widget.AAPS.Dashboard.ModeButton"
+        android:text="@string/circle_mode_stop"/>
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btn_unknown"
+        app:autoSizeTextType="uniform"
+        app:autoSizeMinTextSize="6sp"
+        app:autoSizeMaxTextSize="13sp"
+        style="@style/Widget.AAPS.Dashboard.ModeButton"
+        android:text="@string/circle_mode_unknown"/>
+
+    <!-- Flow Layout -->
+    <androidx.constraintlayout.helper.widget.Flow
+        android:id="@+id/modes_flow"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+
+        app:flow_wrapMode="aligned"
+        app:flow_maxElementsWrap="5"
+        app:flow_horizontalStyle="spread"
+        app:flow_horizontalGap="6dp"
+        app:flow_verticalGap="6dp"
+
+        app:constraint_referenced_ids="
+            btn_big,
+            btn_med,
+            btn_small,
+            btn_snack1,
+            btn_snack2,
+            btn_sport,
+            btn_hypo,
+            btn_beer,
+            btn_stop,
+            btn_unknown"/>
+</androidx.constraintlayout.widget.ConstraintLayout>
