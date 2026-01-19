@@ -11,6 +11,7 @@ import android.widget.Space
 import android.widget.TextView
 import androidx.cardview.widget.CardView
 import androidx.core.content.ContextCompat
+import androidx.core.view.WindowCompat
 import app.aaps.core.interfaces.resources.ResourceHelper
 import app.aaps.core.ui.activities.TranslatedDaggerAppCompatActivity
 import app.aaps.plugins.aps.R
@@ -417,7 +418,7 @@ class AimiProfileAdvisorActivity : TranslatedDaggerAppCompatActivity() {
         }
         row1.addView(createMetricCard("TIR (70-180)", "${(metrics.tir70_180 * 100).roundToInt()}%", Color.parseColor("#4ADE80"), cardColor), paramHalf())
         row1.addView(Space(this).apply { layoutParams = LinearLayout.LayoutParams(24, 0) })
-        row1.addView(createMetricCard("TDD MOYEN", "${metrics.tdd.roundToInt()} U", Color.parseColor("#60A5FA"), cardColor), paramHalf())
+        row1.addView(createMetricCard("TDD AVERAGE", "${metrics.tdd.roundToInt()} U", Color.parseColor("#60A5FA"), cardColor), paramHalf())
         
         // Row 2
         val row2 = LinearLayout(this).apply {
@@ -718,19 +719,19 @@ class AimiProfileAdvisorActivity : TranslatedDaggerAppCompatActivity() {
         
         when {
             factor < 0.95 -> {
-                stateText = "PROTECTEUR (x${"%.2f".format(factor)})"
+                stateText = "PROTECTOR (x${"%.2f".format(factor)})"
                 stateColor = Color.parseColor("#F87171") // Red/Orange - Reducing aggression
-                explanation = "Le système a détecté une instabilité/hypo récente et a réduit l'agressivité globale."
+                explanation = "The system detected recent instability/hypo and reduced overall aggressiveness."
             }
             factor > 1.05 -> {
-                stateText = "OFFENSIF (x${"%.2f".format(factor)})"
+                stateText = "OFFENSIVE (x${"%.2f".format(factor)})"
                 stateColor = Color.parseColor("#EF4444") // Red - Increasing aggression
-                explanation = "Le système combat une hyperglycémie persistante ou une résistance détectée."
+                explanation = "The system combats persistent hyperglycemia or detected resistance."
             }
             else -> {
-                stateText = "NEUTRE (x${"%.2f".format(factor)})"
+                stateText = "NEUTRAL (x${"%.2f".format(factor)})"
                 stateColor = Color.parseColor("#4ADE80") // Green
-                explanation = "Le système fonctionne avec ses paramètres de base. Aucune anomalie détectée."
+                explanation = "The system is operating with its default settings. No anomalies detected."
             }
         }
 
@@ -835,7 +836,7 @@ class AimiProfileAdvisorActivity : TranslatedDaggerAppCompatActivity() {
             .format(java.util.Date(report.generatedAt))
         
         return TextView(this).apply {
-            text = "Généré le $time • OpenAPS AIMI"
+            text = "Generated on $time • OpenAPS AIMI"
             textSize = 12f
             setTextColor(Color.parseColor("#475569")) // Slate 600
             gravity = Gravity.CENTER

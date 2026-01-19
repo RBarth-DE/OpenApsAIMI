@@ -17,6 +17,7 @@
     <!--     Activities-->
     <string name="activity_monitor">Aktivitätsmonitor</string>
     <string name="do_you_want_reset_stats">Willst Du die Aktivitätsstatistik zurücksetzen?</string>
+    <string name="do_you_want_recalculate_tdd_stats">Möchten Sie die TDD-Statistiken neu berechnen?</string>
     <string name="statistics">Statistiken</string>
     <string name="calculation_in_progress">Kalkulation wird gerade durchgeführt</string>
     <string name="invalid_age">Ungültige Altersangabe</string>
@@ -124,5 +125,9 @@
     <string name="quickwizard_settings">QuickWizard-Einstellungen</string>
     <string name="overview_edit_quickwizard_valid">Gültigkeit:</string>
     <string name="a11y_drag_and_drop_handle">Drag and Drop Handle</string>
+    <string name="site_management_description">Hier legen Sie fest, ob Sie die Pumpen- oder die CGM-Stelle oder beide verwalten möchten. Diese Einstellung wird verwendet, um bei jeder neu erkannten Eingabe automatisch das Dialogfeld zur Stellenverwaltung anzuzeigen.</string>
+    <string name="select_site">Klick unten, um Standort auswählen</string>
+    <string name="record_site_change">Standort aufzeichnen</string>
+    <string name="record_site_location">Standort: %1$s</string>
     <!--    Widget-->
 </resources>

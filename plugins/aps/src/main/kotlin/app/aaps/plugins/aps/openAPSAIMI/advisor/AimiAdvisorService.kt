@@ -409,7 +409,7 @@ class AimiAdvisorService {
                             keyName = "Lunch Factor",
                             oldValue = prefs.lunchFactor,
                             newValue = newValue,
-                            explanation = "Augmenter l'agressivité au déjeuner (+0.1)"
+                            explanation = "Increase aggressiveness at lunchtime (+0.1)"
                         )
                     )
                  )
