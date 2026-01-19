@@ -94,16 +94,6 @@
         android:id="@+id/modes_flow"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-
-        app:flow_wrapMode="aligned"
-        app:flow_maxElementsWrap="5"
-        app:flow_horizontalStyle="spread"
-        app:flow_horizontalGap="6dp"
-        app:flow_verticalGap="6dp"
-
         app:constraint_referenced_ids="
             btn_big,
             btn_med,
@@ -114,5 +104,15 @@
             btn_hypo,
             btn_beer,
             btn_stop,
-            btn_unknown"/>
+            btn_unknown"
+        app:flow_horizontalGap="6dp"
+        app:flow_horizontalStyle="spread"
+
+        app:flow_maxElementsWrap="5"
+        app:flow_verticalGap="6dp"
+        app:flow_wrapMode="aligned"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+
+        app:layout_constraintTop_toTopOf="parent" />
 </androidx.constraintlayout.widget.ConstraintLayout>
