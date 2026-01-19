@@ -20,20 +20,15 @@ class DashboardModesView @JvmOverloads constructor(
         ComponentDashboardModesBinding.inflate(LayoutInflater.from(context), this, true)
 
     private var listener: ((DashboardModes) -> Unit)? = null
-    private var activeMode: DashboardModes? = null
 
     init {
         orientation = VERTICAL
-
-        bind(binding.btnBig, DashboardModes.BIG)
-        bind(binding.btnMed, DashboardModes.MED)
-        bind(binding.btnSmall, DashboardModes.SMALL)
-        bind(binding.btnSnack1, DashboardModes.SNACK1)
-        bind(binding.btnSnack2, DashboardModes.SNACK2)
-        bind(binding.btnSport, DashboardModes.SPORT)
-        bind(binding.btnHypo, DashboardModes.HYPO)
-        bind(binding.btnBeer, DashboardModes.BEER)
-        bind(binding.btnStop, DashboardModes.STOP)
+        allButtons().forEach { (mode, button) ->
+            button.setOnClickListener {
+                setActiveMode(mode)
+                listener?.invoke(mode)
+            }
+        }
     }
 
     fun setOnModesClickListener(l: (DashboardModes) -> Unit) {
@@ -42,34 +37,18 @@ class DashboardModesView @JvmOverloads constructor(
 
     fun setEnabledModes(enabled: Set<DashboardModes>) {
         allButtons().forEach { (mode, button) ->
-            button.isEnabled = mode in enabled
+            button.isEnabled = enabled.contains(mode)
             button.alpha = if (button.isEnabled) 1f else 0.35f
         }
     }
 
-    private fun bind(button: MaterialButton, mode: DashboardModes) {
-        button.setOnClickListener {
-            setActiveMode(mode)
-            listener?.invoke(mode)
+    fun setActiveMode(mode: DashboardModes?) {
+        allButtons().forEach { (m, button) ->
+            button.isActivated = (m == mode)
+            button.alpha = if (m == mode) 1f else 0.6f
         }
     }
 
-    private fun setActiveMode(mode: DashboardModes) {
-        activeMode = mode
-        updateActiveUi()
-
-        // optional: Active-State nach 2s zurück
-        postDelayed({
-                        activeMode = null
-                        updateActiveUi()
-                    }, 2000)
-    }
-
-    private fun updateActiveUi() {
-        allButtons().forEach { (mode, button) ->
-            button.isActivated = (mode == activeMode)
-        }
-    }
 
     private fun allButtons(): Map<DashboardModes, MaterialButton> = mapOf(
         DashboardModes.BIG to binding.btnBig,
@@ -81,6 +60,10 @@ class DashboardModesView @JvmOverloads constructor(
         DashboardModes.HYPO to binding.btnHypo,
         DashboardModes.BEER to binding.btnBeer,
         DashboardModes.STOP to binding.btnStop
-    )
+    ).also { map ->
+        map.forEach { (mode, btn) ->
+            btn.setOnClickListener { listener?.invoke(mode) }
+        }
+    }
 }
 

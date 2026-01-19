@@ -23,7 +23,6 @@ import app.aaps.core.interfaces.profile.ProfileFunction
 import app.aaps.core.interfaces.profile.ProfileUtil
 import app.aaps.core.interfaces.resources.ResourceHelper
 import app.aaps.core.interfaces.rx.AapsSchedulers
-import app.aaps.plugins.aps.openAPSAIMI.trajectory.TrajectoryGuard // 🌀 Trajectory
 import app.aaps.core.interfaces.rx.bus.RxBus
 import app.aaps.core.interfaces.rx.events.EventBucketedDataCreated
 import app.aaps.core.interfaces.rx.events.EventExtendedBolusChange
@@ -268,10 +267,21 @@ class OverviewViewModel(
         }
 
         // 7. Pump Battery
-        //val pumpBatteryText = activePlugin.activePump.batteryLevel?.let { "$it%" }
+
+        val pumpBatteryLevel = activePlugin.activePump.batteryLevel?.toInt()
         val battTe = persistenceLayer.getLastTherapyRecordUpToNow(TE.Type.PUMP_BATTERY_CHANGE)
+        val pumpBatteryColor =
+            if (
+                pumpBatteryLevel != null &&
+                batteryAgeDays(battTe, now) <= 14 &&
+                pumpBatteryLevel > 25
+            ) {
+                Color.WHITE
+            } else {
+                Color.YELLOW
+            }
         val pumpBatteryText = formatTherapyAge(battTe, now)
-        val pumpBatteryColor = if (batteryAgeDays(battTe, now) <= 14) Color.WHITE else Color.YELLOW
+
 
         // last bolus
         val lastBolusTimeMs: Long? = activePlugin.activePump.lastBolusTime
@@ -464,8 +474,8 @@ class OverviewViewModel(
             detailedReason = loop.lastRun?.request?.reason,
             isHypoRisk = loop.lastRun?.request?.isHypoRisk ?: false,
             // 🌀 Trajectory Visualization
-            trajectoryTitle = trajectoryGuard.getLastAnalysis()?.let { 
-                "${it.classification.emoji()} ${it.classification.name}" 
+            trajectoryTitle = trajectoryGuard.getLastAnalysis()?.let {
+                "${it.classification.emoji()} ${it.classification.name}"
             },
             trajectoryAscii = trajectoryGuard.getLastAnalysis()?.classification?.asciiArt(),
             trajectoryMetrics = trajectoryGuard.getLastAnalysis()?.metrics?.let {

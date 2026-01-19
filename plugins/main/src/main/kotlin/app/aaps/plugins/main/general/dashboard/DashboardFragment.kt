@@ -233,23 +233,23 @@ class DashboardFragment : DaggerFragment() {
         }
 
         //new DashboardModeView
-
-
         modesController = DashboardModesController(
             requireActivity(),
             automation,
-            resourceHelper
+            resourceHelper,
+            rxBus,
+            aapsSchedulers
         )
 
         binding.modesView.setOnModesClickListener { mode ->
-            modesController.runModeWithConfirmation(mode) { event ->
-                viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
-                    automation.processEvent(event)
-                }
-            }
-
+            modesController.runModeWithConfirmation(mode)
         }
 
+        binding.modesView.setEnabledModes(
+            modesController.availableModes()
+        )
+
+        //END modes stuff
 
         viewModel.graphMessage.observe(viewLifecycleOwner) {
             binding.glucoseGraph.setUpdateMessage(it)
