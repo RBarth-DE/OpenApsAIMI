@@ -144,7 +144,7 @@ class UnifiedReactivityLearner @Inject constructor(
                 }
             
             if (bgReadings.isEmpty() || bgReadings.size < 12) {
-                log.warn(LTag.APS, "UnifiedReactivityLearner: Pas assez de données BG (${bgReadings.size})")
+                log.warn(LTag.APS, "UnifiedReactivityLearner: Not enough BG data (${bgReadings.size})")
                 return null
             }
             
@@ -210,7 +210,7 @@ class UnifiedReactivityLearner @Inject constructor(
             return performance
             
         } catch (e: Exception) {
-            log.error(LTag.APS, "UnifiedReactivityLearner: Erreur analyse 24h", e)
+            log.error(LTag.APS, "UnifiedReactivityLearner: Analysis error 24h", e)
             return null
         }
     }
@@ -248,7 +248,7 @@ class UnifiedReactivityLearner @Inject constructor(
             when {
                 perf.tir_above_250 > 20 -> {  // Hyper sévère prolongée
                     adjustment *= 1.30
-                    reasons.add("Hyper sévère >250: ${perf.tir_above_250.toInt()}% → factor × 1.30")
+                    reasons.add("Extremely severe >250: ${perf.tir_above_250.toInt()}% → factor × 1.30")
                 }
                 perf.tir_above_180 > 50 -> {  // Plus de la moitié en hyper
                     adjustment *= 1.25
@@ -272,7 +272,7 @@ class UnifiedReactivityLearner @Inject constructor(
         // 🟢 PRIORITÉ 3 : Oscillations (stabilité glycémique)
         if (perf.cv_percent > 40 || perf.crossing_count > 10) {
             adjustment *= 0.93  // Légère réduction pour amortir
-            reasons.add("Variabilité élevée (CV=${perf.cv_percent.toInt()}%, Crossings=${perf.crossing_count}) → factor × 0.93")
+            reasons.add("High variability (CV=${perf.cv_percent.toInt()}%, Crossings=${perf.crossing_count}) → factor × 0.93")
         }
         
         // 🎯 Convergence vers 1.0 si performance optimale
@@ -290,7 +290,7 @@ class UnifiedReactivityLearner @Inject constructor(
             targetFactor = 1.0
             val decayAlpha = 0.05
             globalFactor = (targetFactor * decayAlpha + globalFactor * (1 - decayAlpha))
-            reasons.add("Performance optimale → convergence vers 1.0")
+            reasons.add("Optimal performance → convergence towards 1.0")
         } else {
             // 🎯 Adaptive Learning Rate based on glycemic context
             // IMPROVEMENT: Adjust learning speed based on situation severity
@@ -308,7 +308,7 @@ class UnifiedReactivityLearner @Inject constructor(
         }
         
         val reasonsStr = reasons.joinToString(", ")
-        log.info(LTag.APS, "UnifiedReactivityLearner: Nouveau globalFactor = ${"%.3f".format(globalFactor)} | $reasonsStr")
+        log.info(LTag.APS, "UnifiedReactivityLearner: New globalFactor = ${"%.3f".format(globalFactor)} | $reasonsStr")
         
         // 📊 Capture snapshot for rT display
         val now = dateUtil.now()

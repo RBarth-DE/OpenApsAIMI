@@ -87,6 +87,7 @@
     <string name="removerecord">Eintrag löschen</string>
     <string name="loopisdisabled">Loop ist deaktiviert.</string>
     <string name="alarm">Alarm</string>
+    <string name="exportsettings">Export-Einstellungen</string>
     <string name="disableloop">Loop deaktivieren</string>
     <string name="resumeloop">Loop fortsetzen</string>
     <string name="suspendloop">Loop pausieren</string>
@@ -101,6 +102,7 @@
     <string name="name_short">Name:</string>
     <string name="time">Zeit</string>
     <string name="ns_wifi_ssids">WLAN SSID</string>
+    <string name="loading">Wird geladen…</string>
     <string name="notes_label">Notizen</string>
     <string name="remove_button">Löschen</string>
     <string name="add_new">Neu hinzufügen</string>
@@ -108,7 +110,9 @@
     <string name="wrong_pump_data">Daten kommen von einer anderen Pumpe. Wechsle den Pumpentreiber.</string>
     <string name="bg_label">BZ</string>
     <string name="calibration">Kalibrierung</string>
-    <string name="alarminxmin">Alarm in %1$d Min.</string>
+    <string name="concentration_confirmation">Können Sie bitte die Insulinkonzentration in Ihrer Pumpe bestätigen?</string>
+    <string name="alarminxmin">- Die vorherige Insulinkonzentration betrug: U%1$d</string>
+    <string name="treatmentdeliveryerror">- Die neue Insulinkonzentration beträgt: U%2$d.</string>
     <string name="bolus_reminder">Bolus-Erinnerung</string>
     <string name="duration_label">Dauer</string>
     <string name="shortgramm">g</string>
@@ -148,13 +152,16 @@
     <string name="bolus_iob_label">Bolus-IOB</string>
     <string name="treatments_wizard_basaliob_label">Basal-IOB</string>
     <string name="invalid">Ungültig</string>
-    <string name="login">Login</string>
+    <string name="login">Anmelden</string>
+    <string name="logout">Abmelden</string>
     <string name="prime_fill">Nadelwechsel/Füllen</string>
+    <string name="site_rotation">Standort Rotation</string>
     <string name="overview_insulin_label">Insulin</string>
     <string name="stoptemptarget">Temporäres Ziel (TT) stoppen</string>
     <string name="closedloop">Closed Loop</string>
     <string name="openloop">Open Loop</string>
     <string name="lowglucosesuspend">Unterbrechung bei niedrigem BZ (LGS)</string>
+    <string name="mode_reverted">Modus zurückgesetzt</string>
     <string name="dia">DIA</string>
     <string name="ic_short">IC</string>
     <string name="isf_short">ISF</string>
@@ -165,6 +172,7 @@
     <string name="loopstatus_targets">ZIELE:</string>
     <string name="loopstatus_OAPS_result">OAPS ERGEBNIS:</string>
     <!--    Protection-->
+    <string name="location_permission_not_granted">Standortberechtigung nicht erteilt. In den Android-Einstellungen zulassen.</string>
     <string name="wrongpassword">Falsches Passwort</string>
     <string name="wrongpin">Falsche PIN</string>
     <string name="passwords_dont_match">Die Passwörter stimmen nicht überein.</string>
@@ -194,15 +202,18 @@
     <string name="careportal_bgcheck">BZ-Test</string>
     <string name="careportal_mbg">Manueller BZ oder Kalibrierung</string>
     <string name="careportal_announcement">Ankündigung</string>
+    <string name="careportal_settings_export">Einstellungen exportieren</string>
     <string name="careportal_note">Notiz</string>
     <string name="careportal_question">Frage</string>
     <string name="careportal_exercise">Bewegung</string>
     <string name="careportal_announcement_message">Ankündigung : %1$s</string>
+    <string name="careportal_settings_export_message">Einstellungen exportieren: %1$s</string>
     <string name="careportal_note_message">Hinweis : %1$s</string>
     <string name="careportal_question_message">Frage : %1$s</string>
     <string name="careportal_exercise_message">Bewegung : %1$s</string>
     <string name="careportal_pump_site_change">Pumpenkatheter-Wechsel</string>
     <string name="cgm_sensor_insert">CGM-Sensor gesetzt</string>
+    <string name="careportal_cgm_site_management">CGM-Standorte</string>
     <string name="careportal_cgmsensorstart">CGM-Sensor Start</string>
     <string name="careportal_cgm_sensor_stop">CGM-Sensor-Stopp</string>
     <string name="careportal_dad_alert">D.A.D. Warnung</string>
@@ -218,6 +229,7 @@
     <string name="careportal_openapsoffline">OpenAPS offline</string>
     <string name="pump_battery_change">Pumpenbatterie-Wechsel</string>
     <string name="temporary_target">Temporäres Ziel</string>
+    <string name="dashboard_run_question">%1$s ausführen?</string>
     <string name="careportal_temporarytargetvalue">Temporärer Zielwert</string>
     <string name="careportal_temporarytargetcancel">Temporäres Ziel abbrechen</string>
     <string name="boluswizard">Bolus-Rechner</string>
@@ -291,6 +303,7 @@
     <string name="uel_cancel_extended_bolus">VERLÄNGERTEN BOLUS ABBRECHEN</string>
     <string name="uel_cancel_tt">TEMP. ZIEL ABBRECHEN</string>
     <string name="uel_careportal">CAREPORTAL</string>
+    <string name="uel_sensor_location">SENSOR-STANDORT</string>
     <string name="uel_site_change">KANÜLENWECHSEL</string>
     <string name="uel_reservoir_change">RESERVOIRWECHSEL</string>
     <string name="uel_calibration">KALIBRIERUNG</string>
@@ -554,5 +567,33 @@
     <!--    DecimalFormatterImpl -->
     <string name="format_insulin_units1">%1$.1f IE</string>
     <string name="format_insulin_units">%1$.2f IE</string>
+    <string name="ins_concentration_confirmed">Insulin U%1$d bestätigt</string>
+    <string name="ins_concentration_unchanged">Insulin U%1$d bestätigt, Zielinsulinkonzentration U%2$d wurde abgebrochen</string>
+    <string name="concentration">Insulinkonzentration</string>
+    <string name="concentration_title">Aus Sicherheitsgründen sollten Sie bei jedem Reservoirwechsel die Insulinkonzentration in Ihrer Pumpe überprüfen, um den geschlossenen Regelkreis zu aktivieren:</string>
+    <string name="concentration_title2">- Die vorherige Insulinkonzentration betrug: U%1$d</string>
+    <string name="concentration_not_confirmed">Dies ist ein Sicherheitsparameter, der zu einer Unter- oder Überdosierung führen kann!</string>
+    <string name="pump_disconnected">Pumpe getrennt</string>
+    <string name="pump_suspended">Pumpe ausgesetzt</string>
+    <string name="nav_export">Export-Einstellungen</string>
+    <string name="careportal_pump_site_management">Pumpen-Standorte</string>
+    <string name="running_mode">Betriebsmodus</string>
+    <string name="location_front_right_upper_chest">Rechte Brustseite</string>
+    <string name="location_front_left_upper_chest">Linke Brustseite</string>
+    <string name="location_side_right_upper_arm">Oberer rechter Außenarm</string>
+    <string name="location_side_left_upper_arm">Oberer linker Außenarm</string>
+    <string name="location_back_right_upper_arm">Oberer rechter hinterer Arm</string>
+    <string name="location_back_left_upper_arm">Oberer linker hinterer Arm</string>
+    <string name="location_side_right_upper_abdomen">Oberer rechter äußerer Bauchbereich</string>
+    <string name="location_side_left_upper_abdomen">Oberer linker äußerer Bauchbereich</string>
+    <string name="location_side_right_lower_abdomen">Unterer rechter Bauchbereich</string>
+    <string name="location_side_left_lower_abdomen">Unterer lnker Bauchbereich</string>
+    <string name="location_front_right_upper_abdomen">Oberer rechter Bauchbereich</string>
+    <string name="location_front_left_upper_abdomen">Oberer linker Bauchbereich</string>
+    <string name="location_front_right_lower_abdomen">Unterer rechter Bauchbereich</string>
+    <string name="location_front_left_lower_abdomen">Unterer linker Bauchbereich</string>
+    <string name="location_back_right_buttock">Rechtes Gesäß</string>
+    <string name="location_back_left_buttock">Linkes Gesäß</string>
+    <string name="uel_loop_resumed">LOOP FORTGESETZT</string>
     <!--    Playback-->
 </resources>

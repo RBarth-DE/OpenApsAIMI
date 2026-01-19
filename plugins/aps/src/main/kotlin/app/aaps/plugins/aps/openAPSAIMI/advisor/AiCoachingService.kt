@@ -54,7 +54,7 @@ class AiCoachingService @Inject constructor() {
         provider: Provider,
         history: List<app.aaps.plugins.aps.openAPSAIMI.advisor.data.AdvisorHistoryRepository.AdvisorActionLog> = emptyList()
     ): String = withContext(Dispatchers.IO) {
-        if (apiKey.isBlank()) return@withContext "Clé API manquante. Veuillez configurer votre clé ${provider.name}."
+        if (apiKey.isBlank()) return@withContext "API key missing. Please configure your key. ${provider.name}."
 
         try {
             val prompt = buildPrompt(androidContext, context, report, history)
@@ -68,7 +68,7 @@ class AiCoachingService @Inject constructor() {
 
         } catch (e: Exception) {
             e.printStackTrace()
-            return@withContext "Erreur de connexion (${provider.name}) : ${e.localizedMessage}"
+            return@withContext "Connection error (${provider.name}) : ${e.localizedMessage}"
         }
     }
     
@@ -86,8 +86,8 @@ class AiCoachingService @Inject constructor() {
         apiKey: String,
         provider: Provider
     ): String = withContext(Dispatchers.IO) {
-        if (apiKey.isBlank()) return@withContext "Clé API manquante."
-        if (prompt.isBlank()) return@withContext "Prompt vide."
+        if (apiKey.isBlank()) return@withContext "API key missing."
+        if (prompt.isBlank()) return@withContext "Prompt empty."
         
         try {
             return@withContext when (provider) {
@@ -98,7 +98,7 @@ class AiCoachingService @Inject constructor() {
             }
         } catch (e: Exception) {
             e.printStackTrace()
-            return@withContext "Erreur: ${e.localizedMessage}"
+            return@withContext "Error: ${e.localizedMessage}"
         }
     }
 
@@ -138,7 +138,7 @@ class AiCoachingService @Inject constructor() {
             val err = StringBuilder()
             var line: String?
             while (reader.readLine().also { line = it } != null) err.append(line)
-            return "Erreur OpenAI ($responseCode): $err"
+            return "Error OpenAI ($responseCode): $err"
         }
     }
 
@@ -330,7 +330,7 @@ class AiCoachingService @Inject constructor() {
             val root = JSONObject(jsonStr)
             root.getJSONArray("choices").getJSONObject(0).getJSONObject("message").getString("content").trim()
         } catch (e: Exception) {
-            "Erreur lecture OpenAI."
+            "Reading error OpenAI."
         }
     }
 
@@ -342,7 +342,7 @@ class AiCoachingService @Inject constructor() {
             parts.getJSONObject(0).getString("text").trim()
         } catch (e: Exception) {
              // Fallback for safety blocked
-             if (jsonStr.contains("finishReason")) "Contenu bloqué par sécurité Gemini." else "Erreur lecture Gemini."
+             if (jsonStr.contains("finishReason")) "Content blocked by Gemini Security." else "Reading error Gemini."
         }
     }
     
@@ -380,7 +380,7 @@ class AiCoachingService @Inject constructor() {
             val err = StringBuilder()
             var line: String?
             while (reader.readLine().also { line = it } != null) err.append(line)
-            return "Erreur DeepSeek ($responseCode): $err"
+            return "Error DeepSeek ($responseCode): $err"
         }
     }
     
@@ -429,7 +429,7 @@ class AiCoachingService @Inject constructor() {
             val err = StringBuilder()
             var line: String?
             while (reader.readLine().also { line = it } != null) err.append(line)
-            return "Erreur Claude ($responseCode): $err"
+            return "Error Claude ($responseCode): $err"
         }
     }
     
@@ -439,7 +439,7 @@ class AiCoachingService @Inject constructor() {
             val content = root.getJSONArray("content")
             content.getJSONObject(0).getString("text").trim()
         } catch (e: Exception) {
-            "Erreur lecture Claude."
+            "Reading error Claude."
         }
     }
 }

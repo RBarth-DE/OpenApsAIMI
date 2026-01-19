@@ -575,7 +575,7 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
             // On récupère la glycémie et le delta actuel
             val currentBG = glucoseStatusProvider.glucoseStatusData?.glucose
             if (currentBG == null) {
-                aapsLogger.error(LTag.APS, "Données de glycémie indisponibles, impossibilité de calculer l'ISF adaptatif.")
+                aapsLogger.error(LTag.APS, "Blood glucose data unavailable, unable to calculate adaptive ISF.")
                 return
             }
             val currentDelta = glucoseStatusProvider.glucoseStatusData?.delta
