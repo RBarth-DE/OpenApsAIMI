@@ -73,8 +73,7 @@ class OverviewViewModel(
     private val rxBus: RxBus,
     private val aapsSchedulers: AapsSchedulers,
     private val fabricPrivacy: FabricPrivacy,
-    private val preferences: Preferences,
-    private val overviewData: OverviewData
+    private val preferences: Preferences
 ) : ViewModel() {
 
     private val disposables = CompositeDisposable()
@@ -266,10 +265,21 @@ class OverviewViewModel(
         }
 
         // 7. Pump Battery
-        //val pumpBatteryText = activePlugin.activePump.batteryLevel?.let { "$it%" }
+
+        val pumpBatteryLevel = activePlugin.activePump.batteryLevel?.toInt()
         val battTe = persistenceLayer.getLastTherapyRecordUpToNow(TE.Type.PUMP_BATTERY_CHANGE)
+        val pumpBatteryColor =
+            if (
+                pumpBatteryLevel != null &&
+                batteryAgeDays(battTe, now) <= 14 &&
+                pumpBatteryLevel > 25
+            ) {
+                Color.WHITE
+            } else {
+                Color.YELLOW
+            }
         val pumpBatteryText = formatTherapyAge(battTe, now)
-        val pumpBatteryColor = if (batteryAgeDays(battTe, now) <= 14) Color.WHITE else Color.YELLOW
+
 
         // last bolus
         val lastBolusTimeMs: Long? = activePlugin.activePump.lastBolusTime
@@ -727,8 +737,7 @@ class OverviewViewModel(
         private val rxBus: RxBus,
         private val aapsSchedulers: AapsSchedulers,
         private val fabricPrivacy: FabricPrivacy,
-        private val preferences: Preferences,
-        private val overviewData: OverviewData
+        private val preferences: Preferences
     ) : ViewModelProvider.Factory {
 
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
@@ -752,8 +761,7 @@ class OverviewViewModel(
                     rxBus,
                     aapsSchedulers,
                     fabricPrivacy,
-                    preferences,
-                    overviewData
+                    preferences
                 ) as T
             }
             throw IllegalArgumentException("Unknown ViewModel class $modelClass")

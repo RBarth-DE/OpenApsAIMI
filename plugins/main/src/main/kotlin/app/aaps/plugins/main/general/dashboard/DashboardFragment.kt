@@ -63,10 +63,6 @@ import android.util.Log
 import app.aaps.plugins.main.general.dashboard.modes.DashboardModesController
 import app.aaps.plugins.main.general.dashboard.modes.DashboardModes
 import app.aaps.plugins.main.general.dashboard.views.DashboardModesView
-import androidx.lifecycle.lifecycleScope
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.Dispatchers
-
 
 class DashboardFragment : DaggerFragment() {
 
@@ -89,6 +85,7 @@ class DashboardFragment : DaggerFragment() {
     @Inject lateinit var fabricPrivacy: FabricPrivacy
     @Inject lateinit var overviewData: OverviewData
     @Inject lateinit var overviewMenus: OverviewMenus
+
     @Inject lateinit var graphDataProvider: Provider<GraphData>
     @Inject lateinit var config: Config
     @Inject lateinit var protectionCheck: ProtectionCheck
@@ -168,8 +165,7 @@ class DashboardFragment : DaggerFragment() {
             rxBus,
             aapsSchedulers,
             fabricPrivacy,
-            preferences,
-            overviewData
+            preferences
         )
     }
 
@@ -231,23 +227,23 @@ class DashboardFragment : DaggerFragment() {
         }
 
         //new DashboardModeView
-
-
         modesController = DashboardModesController(
             requireActivity(),
             automation,
-            resourceHelper
+            resourceHelper,
+            rxBus,
+            aapsSchedulers
         )
 
         binding.modesView.setOnModesClickListener { mode ->
-            modesController.runModeWithConfirmation(mode) { event ->
-                viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
-                    automation.processEvent(event)
-                }
-            }
-
+            modesController.runModeWithConfirmation(mode)
         }
 
+        binding.modesView.setEnabledModes(
+            modesController.availableModes()
+        )
+
+        //END modes stuff
 
         viewModel.graphMessage.observe(viewLifecycleOwner) {
             binding.glucoseGraph.setUpdateMessage(it)

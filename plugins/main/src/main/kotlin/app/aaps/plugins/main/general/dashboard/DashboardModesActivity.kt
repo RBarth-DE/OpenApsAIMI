@@ -13,9 +13,7 @@ import app.aaps.plugins.main.databinding.ActivityDashboardModesBinding
 import app.aaps.plugins.main.general.dashboard.modes.DashboardModesController
 import com.google.android.material.button.MaterialButton
 import javax.inject.Inject
-import androidx.lifecycle.lifecycleScope
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.Dispatchers
+
 
 class DashboardModesActivity : TranslatedDaggerAppCompatActivity() {
 
@@ -30,15 +28,12 @@ class DashboardModesActivity : TranslatedDaggerAppCompatActivity() {
         binding = ActivityDashboardModesBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        modeController = DashboardModesController( this, automation, resourceHelper)
-
-/*
         binding.toolbar.title = resourceHelper.gs(R.string.dashboard_nav_modes)
         binding.toolbar.setNavigationOnClickListener { onBackPressedDispatcher.onBackPressed() }
 
         val settingsItem = binding.toolbar.menu.add(0, 1, 0, "Settings")
         settingsItem.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS)
-        settingsItem.setIcon(app.aaps.core.ui.R.drawable.ic_settings)*/
+        settingsItem.setIcon(app.aaps.core.ui.R.drawable.ic_settings)
     }
 
     override fun onResume() {
@@ -58,15 +53,10 @@ class DashboardModesActivity : TranslatedDaggerAppCompatActivity() {
             ).apply {
                 text = event.title
                 setOnClickListener {
-                    modeController.runEventWithConfirmation(event) {
-                        lifecycleScope.launch(Dispatchers.IO) {
-                            automation.processEvent(event)
-                        }
-                        finish()
-                    }
+                    modeController.runEventWithConfirmation(event)
+                    finish()
                 }
             }
-
             binding.actionsContainer.addView(button)
         }
     }

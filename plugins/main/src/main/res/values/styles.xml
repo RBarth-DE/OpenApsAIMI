@@ -3,21 +3,34 @@
 
     <style name="Widget.AAPS.Dashboard.ModeButton" parent="Widget.MaterialComponents.Button.OutlinedButton">
         <item name="android:minHeight">32dp</item>
-        <item name="android:insetTop">0dp</item>
-        <item name="android:insetBottom">0dp</item>
 
         <item name="android:textColor">@color/dashboard_on_surface</item>
-        <item name="strokeColor">@color/dashboard_on_surface</item>
-        <item name="strokeWidth">1.2dp</item>
+        <item name="strokeColor">@color/dashboard_chip_border</item>
+        <item name="rippleColor">@color/dashboard_on_surface</item>
+        <item name="strokeWidth">1.5dp</item>
 
         <item name="android:backgroundTint">@android:color/transparent</item>
 
-        <item name="rippleColor">@color/dashboard_on_surface</item>
-
         <item name="android:layout_width">0dp</item>
         <item name="android:layout_weight">1</item>
+
         <item name="android:layout_height">32dp</item>
         <item name="android:stateListAnimator">@null</item>
+
+        <item name="android:insetTop">0dp</item>
+        <item name="android:insetBottom">0dp</item>
+        <item name="android:insetLeft">0dp</item>
+        <item name="android:insetRight">0dp</item>
+
+        <item name="android:paddingStart">8dp</item>
+        <item name="android:paddingEnd">8dp</item>
+        <item name="android:paddingTop">4dp</item>
+        <item name="android:paddingBottom">4dp</item>
+
+        <item name="shapeAppearanceOverlay">
+            @style/ShapeAppearance.AAPS.RoundedButton
+        </item>
+
     </style>
 
     <style name="ModeButton.Active" parent="Widget.AAPS.Dashboard.ModeButton">
@@ -28,6 +41,11 @@
     <style name="ModeButton.Inactive" parent="Widget.AAPS.Dashboard.ModeButton">
         <item name="strokeColor">@color/mode_inactive</item>
         <item name="strokeWidth">1dp</item>
+    </style>
+
+    <style name="ShapeAppearance.AAPS.RoundedButton" parent="">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">12dp</item>
     </style>
 
 </resources>
