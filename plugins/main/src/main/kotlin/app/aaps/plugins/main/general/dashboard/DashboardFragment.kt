@@ -63,6 +63,10 @@ import android.util.Log
 import app.aaps.plugins.main.general.dashboard.modes.DashboardModesController
 import app.aaps.plugins.main.general.dashboard.modes.DashboardModes
 import app.aaps.plugins.main.general.dashboard.views.DashboardModesView
+import android.view.MotionEvent
+import android.annotation.SuppressLint
+import android.graphics.Color
+
 
 class DashboardFragment : DaggerFragment() {
 
@@ -337,9 +341,14 @@ class DashboardFragment : DaggerFragment() {
                 aapsLogger.error(LTag.CORE, "Failed to launch ContextActivity: ${e.message}")
             }
         }
+
+        /*
+         * Glucose Graph
+         */
         binding.glucoseGraph.graph.gridLabelRenderer?.gridColor = resourceHelper.gac(requireContext(), app.aaps.core.ui.R.attr.graphGrid)
-        binding.glucoseGraph.graph.viewport.isScrollable = true
+        binding.glucoseGraph.graph.viewport.isScrollable = false
         binding.glucoseGraph.graph.viewport.isScalable = true
+        binding.glucoseGraph.graph.setBackgroundColor(Color.TRANSPARENT)
 
         val gestureDetector = android.view.GestureDetector(context, object : android.view.GestureDetector.SimpleOnGestureListener() {
             override fun onDoubleTap(e: android.view.MotionEvent): Boolean {
@@ -359,11 +368,31 @@ class DashboardFragment : DaggerFragment() {
             }
         })
 
-        binding.glucoseGraph.graph.setOnTouchListener { v, event ->
-            gestureDetector.onTouchEvent(event)
-            v.parent.requestDisallowInterceptTouchEvent(true)
-            false
+        binding.glucoseGraph.graph.viewport.apply {
+            isScrollable = false          // No Scroll
+            isScalable = true             // Zoom OK
         }
+        binding.glucoseGraph.graph.viewport.setScalable(true)
+        binding.glucoseGraph.graph.viewport.isXAxisBoundsManual = true
+
+        @SuppressLint("ClickableViewAccessibility")
+        binding.glucoseGraph.graph.setOnTouchListener { v, event ->
+
+            // Accessibility
+            if (event.actionMasked == MotionEvent.ACTION_DOWN) {
+                v.performClick()
+            }
+
+            // Evaluate only Tap / LongPress / DoubleTap
+            val handledByGesture = gestureDetector.onTouchEvent(event)
+
+            // IMPORTANT:
+            // - No requestDisallowInterceptTouchEvent
+            // - Do NOT block MOVE events
+            // - Zoom remains internal to GraphView
+            handledByGesture
+        }
+
 
         binding.glucoseGraph.graph.gridLabelRenderer?.reloadStyles()
 
