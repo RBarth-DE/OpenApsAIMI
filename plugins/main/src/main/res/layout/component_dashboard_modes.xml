@@ -3,7 +3,7 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
 
-    android:padding="15dp"
+    android:padding="16dp"
     android:background="@drawable/dashboard_card_surface"
     android:layout_width="match_parent"
     android:layout_height="wrap_content">
