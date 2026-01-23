@@ -17,7 +17,8 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="@dimen/dashboard_block_spacing">
+            android:padding="16dp"
+            android:clipToOutline="true">
 
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/overview_notifications"
@@ -32,28 +33,38 @@
                 android:id="@+id/status_card"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="@dimen/dashboard_block_spacing"
-                style="@style/Widget.AAPS.Dashboard.Card" />
+                android:layout_marginBottom="@dimen/dashboard_block_spacing" />
 
-            <app.aaps.plugins.main.general.dashboard.views.GlucoseGraphView
-                android:id="@+id/glucose_graph"
+            <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="300dp"
+                android:layout_height="wrap_content"
                 android:layout_marginBottom="@dimen/dashboard_block_spacing"
-                style="@style/Widget.AAPS.Dashboard.Card" />
+                android:background="@drawable/dashboard_card_surface"
+                android:padding="0dp"
+                android:clipToOutline="true"> 
+                
+                <app.aaps.plugins.main.general.dashboard.views.GlucoseGraphView
+                    android:id="@+id/glucose_graph"
+                    android:layout_width="match_parent"
+                    android:layout_height="260dp" 
+                    android:background="@android:color/transparent"/>
+
+            </LinearLayout>
 
             <app.aaps.plugins.main.general.dashboard.views.DashboardModesView
                 android:id="@+id/modes_view"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                style="@style/Widget.AAPS.Dashboard.Card"/>
+                android:layout_marginBottom="@dimen/dashboard_block_spacing"/>
 
             <app.aaps.plugins.main.general.dashboard.views.AdjustmentStatusView
                 android:id="@+id/adjustment_status"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="@dimen/dashboard_block_spacing"
-                style="@style/Widget.AAPS.Dashboard.Card" />
+                android:layout_marginBottom="@dimen/dashboard_block_spacing" 
+                android:background="@android:color/transparent"
+                android:elevation="0dp" 
+                android:outlineProvider="background" />
 
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>

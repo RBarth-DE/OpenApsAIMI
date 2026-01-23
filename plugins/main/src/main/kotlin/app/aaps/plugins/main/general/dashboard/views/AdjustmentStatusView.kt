@@ -12,6 +12,8 @@ import androidx.core.widget.TextViewCompat
 import com.google.android.material.card.MaterialCardView
 import app.aaps.plugins.main.databinding.ComponentAdjustmentStatusBinding
 import app.aaps.plugins.main.general.dashboard.viewmodel.AdjustmentCardState
+import android.graphics.Color
+import android.view.ViewOutlineProvider
 
 class AdjustmentStatusView @JvmOverloads constructor(
     context: Context,
@@ -19,6 +21,11 @@ class AdjustmentStatusView @JvmOverloads constructor(
     defStyleAttr: Int = 0
 ) : MaterialCardView(context, attrs, defStyleAttr) {
 
+    init {
+        // Erzwingt, dass die View sich selbst an den Ecken beschneidet
+        clipToOutline = true
+        setBackgroundColor(Color.TRANSPARENT)
+    }
     private val binding = ComponentAdjustmentStatusBinding.inflate(LayoutInflater.from(context), this)
 
     fun setOnRunLoopClickListener(listener: OnClickListener) {
@@ -51,11 +58,14 @@ class AdjustmentStatusView @JvmOverloads constructor(
                 background = AppCompatResources.getDrawable(context, app.aaps.plugins.main.R.drawable.dashboard_chip_background)
                 setPadding(chipHorizontalPadding, chipVerticalPadding, chipHorizontalPadding, chipVerticalPadding)
                 TextViewCompat.setTextAppearance(this, com.google.android.material.R.style.TextAppearance_MaterialComponents_Body2)
+                this.outlineProvider = ViewOutlineProvider.BACKGROUND
             }
             val params = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply {
                 bottomMargin = chipSpacing
             }
             binding.adjustmentContainer.addView(textView, params)
+            binding.adjustmentContainer.setBackgroundColor(Color.TRANSPARENT)
         }
+        binding.adjustmentContainer.setBackgroundColor(Color.TRANSPARENT)
     }
 }

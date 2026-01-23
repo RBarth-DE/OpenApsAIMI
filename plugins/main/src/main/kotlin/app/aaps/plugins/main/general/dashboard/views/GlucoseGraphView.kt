@@ -14,6 +14,11 @@ class GlucoseGraphView @JvmOverloads constructor(
     defStyleAttr: Int = 0
 ) : MaterialCardView(context, attrs, defStyleAttr) {
 
+    override fun performClick(): Boolean {
+        super.performClick()
+        // Hier kannst du zusätzliche Logik einbauen, falls nötig
+        return true
+    }
     private val binding = ViewGlucoseGraphPlaceholderBinding.inflate(LayoutInflater.from(context), this, true)
 
     val graph: GraphView get() = binding.graphView

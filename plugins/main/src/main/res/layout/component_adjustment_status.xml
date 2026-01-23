@@ -3,19 +3,13 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <LinearLayout
+        android:id="@+id/adjustment_main_layout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@drawable/dashboard_card_surface"
+        android:clipToOutline="true"
         android:orientation="vertical"
         android:padding="16dp">
-
-<!--        <TextView-->
-<!--            android:id="@+id/adjustment_title"-->
-<!--            android:layout_width="wrap_content"-->
-<!--            android:layout_height="wrap_content"-->
-<!--            android:text="@string/dashboard_adjustments"-->
-<!--            android:textAppearance="@style/TextAppearance.MaterialComponents.Subtitle1"-->
-<!--            android:textColor="@color/dashboard_on_surface" />-->
 
         <TextView
             android:id="@+id/glycemia_line"
