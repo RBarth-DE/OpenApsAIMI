@@ -1,5 +1,6 @@
 package app.aaps.plugins.main.general.dashboard
 
+import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
@@ -214,6 +215,10 @@ class DashboardFragment : DaggerFragment() {
                     showHypoRiskDialog()
                 }
             }
+        }
+        viewModel.graphMessage.observe(viewLifecycleOwner) {
+            binding.glucoseGraph.setUpdateMessage(it)
+            updateGraph()
         }
 
         binding.adjustmentStatus.setOnClickListener {
@@ -467,19 +472,19 @@ class DashboardFragment : DaggerFragment() {
     private fun setupAuditorIndicator() {
         try {
             aapsLogger.debug(LTag.CORE, "🔍 [Dashboard] Searching for Auditor badge...")
-
+            
             val container = binding.statusCard.getAuditorContainer()
-
+            
             aapsLogger.debug(LTag.CORE, "✅ [Dashboard] Badge container found!")
-
+            
             auditorIndicator = AuditorStatusIndicator(requireContext())
             container.removeAllViews()
             container.addView(auditorIndicator)
-
+            
             auditorIndicator?.setOnClickListener {
                 aapsLogger.debug(LTag.CORE, "Auditor badge clicked")
             }
-
+            
             auditorStatusLiveData.uiState.observe(viewLifecycleOwner) { uiState ->
                 auditorIndicator?.setState(uiState)
                 if (uiState.shouldNotify) {
@@ -488,9 +493,9 @@ class DashboardFragment : DaggerFragment() {
                 container.visibility = android.view.View.VISIBLE
                 aapsLogger.debug(LTag.CORE, "[Dashboard] Badge state: ${uiState.type}")
             }
-
+            
             auditorStatusLiveData.forceUpdate()
-
+            
         } catch (e: Exception) {
             aapsLogger.error(LTag.CORE, "[Dashboard] Badge setup error: ${e.message}", e)
         }
