@@ -428,13 +428,13 @@ class DashboardFragment : DaggerFragment() {
             .toObservable(EventPreferenceChange::class.java)
             .observeOn(aapsSchedulers.main)
             .subscribe({ event ->
-                if (event.isChanged(IntNonKey.RangeToDisplay.key)) {
-                    syncGraphRange(preferences.get(IntNonKey.RangeToDisplay), false)
-                }
-                if (event.isChanged(app.aaps.core.keys.StringKey.OApsAIMIContextStorage.key)) {
-                    updateContextBadge()
-                }
-            }, fabricPrivacy::logException)
+                           if (event.isChanged(IntNonKey.RangeToDisplay.key)) {
+                               syncGraphRange(preferences.get(IntNonKey.RangeToDisplay), false)
+                           }
+                           if (event.isChanged(app.aaps.core.keys.StringKey.OApsAIMIContextStorage.key)) {
+                               updateContextBadge()
+                           }
+                       }, fabricPrivacy::logException)
 
         // 🔥 Disabled-State aktualisieren
         val enabledModes = modesController.availableModes()
