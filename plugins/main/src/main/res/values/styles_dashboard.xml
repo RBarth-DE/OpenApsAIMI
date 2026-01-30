@@ -18,4 +18,3 @@
         <item name="cornerSizeBottomLeft">@dimen/dashboard_card_corner_small</item>
     </style>
 </resources>
-

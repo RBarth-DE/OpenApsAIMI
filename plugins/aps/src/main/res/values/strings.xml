@@ -287,8 +287,8 @@
     <string name="countsteps_watch_summary">This option enables step counting by receiving data from the watch instead of the phone.</string>
 
     <string name="pref_aimi_steps_source_title">Steps &amp; Heart Rate Data Source</string>
-    <string name="pref_aimi_steps_source_wear">Prefer Watch (Direct)</string>
-    <string name="pref_aimi_steps_source_auto">Auto (Watch → Health Connect)</string>
+    <string name="pref_aimi_steps_source_wear">Prefer Wear OS (Direct)</string>
+    <string name="pref_aimi_steps_source_auto">Auto (Wear OS → Health Connect)</string>
     <string name="pref_aimi_steps_source_hc">Health Connect Only</string>
     <string name="pref_aimi_steps_source_disabled">Disabled</string>
     <string name="oaps_aimi_weight_summary">Weight in kg to calculate basal</string>

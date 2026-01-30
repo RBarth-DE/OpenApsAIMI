@@ -36,7 +36,7 @@ import app.aaps.core.interfaces.constraints.ConstraintsChecker
 import app.aaps.core.interfaces.constraints.PluginConstraints
 import app.aaps.core.interfaces.db.PersistenceLayer
 import app.aaps.core.interfaces.db.ProcessedTbrEbData
-import app.aaps.core.interfaces.iob.GlucoseStatusProvider
+import app.aaps.core.interfaces.insulin.ConcentrationHelper
 import app.aaps.core.interfaces.iob.IobCobCalculator
 import app.aaps.core.interfaces.logging.AAPSLogger
 import app.aaps.core.interfaces.logging.LTag
@@ -96,6 +96,8 @@ import javax.inject.Inject
 import javax.inject.Provider
 import javax.inject.Singleton
 import kotlin.math.abs
+import app.aaps.plugins.aps.openAPSAIMI.GlucoseStatusCalculatorAimi
+
 
 @Singleton
 class LoopPlugin @Inject constructor(
@@ -120,10 +122,11 @@ class LoopPlugin @Inject constructor(
     private val persistenceLayer: PersistenceLayer,
     private val runningConfiguration: RunningConfiguration,
     private val uiInteraction: UiInteraction,
-    private val processedDeviceStatusData: ProcessedDeviceStatusData,
-    private val glucoseStatusProvider: GlucoseStatusProvider,
     private val pumpEnactResultProvider: Provider<PumpEnactResult>,
-    private val pumpStatusProvider: PumpStatusProvider,
+    private val processedDeviceStatusData: ProcessedDeviceStatusData,
+    private val ch: ConcentrationHelper,
+    private val glucoseStatusCalculatorAimi: GlucoseStatusCalculatorAimi,
+    private val pumpStatusProvider: PumpStatusProvider
 ) : PluginBase(
     PluginDescription()
         .mainType(PluginType.LOOP)
@@ -159,26 +162,7 @@ class LoopPlugin @Inject constructor(
         // Démarrage du déclenchement périodique
         startPeriodicLoop()
     }
-    /*private fun startPeriodicLoop() {
-        // On récupère la valeur ApsMaxSmbFrequency en minutes
-        val freqMinutes = preferences.get(IntKey.ApsMaxSmbFrequency).toLong()
-        // On convertit en millisecondes
-        val freqMs = T.mins(freqMinutes).msecs()
 
-        // Définition du Runnable qui relancera votre loop, puis se replanifiera
-        val periodicRunnable = object : Runnable {
-            override fun run() {
-                // On relance le loop
-                invoke("PeriodicApsMaxSmbFrequency", true)
-
-                // On reprogramme le prochain run dans freqMs
-                handler?.postDelayed(this, freqMs)
-            }
-        }
-
-        // On lance la première fois maintenant
-        handler?.postDelayed(periodicRunnable, freqMs)
-    }*/
     private fun startPeriodicLoop() {
     // Récupère l'intervalle (en minutes) pour la planification
     val freqMinutes = preferences.get(IntKey.ApsMaxSmbFrequency).toLong()
@@ -190,7 +174,7 @@ class LoopPlugin @Inject constructor(
             val autodrive = preferences.get(BooleanKey.OApsAIMIautoDrive)
 
             // 2) Récupère la glycémie (ajustez le code si la variable/méthode diffère)
-            val currentBG = glucoseStatusProvider.glucoseStatusData?.glucose
+            val currentBG = glucoseStatusCalculatorAimi.compute(false).gs?.glucose
 
             // 3) Condition : autodrive activé ET glycémie disponible >= 120
             if (autodrive && currentBG != null && currentBG >= 130.0) {
@@ -833,7 +817,7 @@ class LoopPlugin @Inject constructor(
         aapsLogger.debug(LTag.APS, "applyAPSRequest: $request")
         val now = System.currentTimeMillis()
         val activeTemp = processedTbrEbData.getTempBasalIncludingConvertedExtended(now)
-        if (request.rate == 0.0 && request.duration == 0 || abs(request.rate - pump.baseBasalRate) < pump.pumpDescription.basalStep) {
+        if (request.rate == 0.0 && request.duration == 0 || abs(request.rate - ch.fromPump(pump.baseBasalRate)) < ch.fromPump(pump.pumpDescription.basalStep)) {
             if (activeTemp != null) {
                 aapsLogger.debug(LTag.APS, "applyAPSRequest: cancelTempBasal()")
                 uel.log(Action.CANCEL_TEMP_BASAL, Sources.Loop)
@@ -887,7 +871,7 @@ class LoopPlugin @Inject constructor(
                         now,
                         profile
                     )
-                ) < pump.pumpDescription.basalStep
+                ) < ch.fromPump(pump.pumpDescription.basalStep)
             ) {
                 aapsLogger.debug(LTag.APS, "applyAPSRequest: Temp basal set correctly")
                 callback?.result(

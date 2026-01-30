@@ -91,6 +91,42 @@ android {
             manifestPlaceholders["appIcon"] = "@mipmap/ic_blueowl"
         }
     }
+    // -------------------------------------------------------------------------
+    // Configuration de signature (release)
+    // -------------------------------------------------------------------------
+    signingConfigs {
+        // On peut l'appeler "release" ou un autre nom
+        create("release") {
+            // Seule storeFile attend un File
+            storeFile = file(System.getenv("KEYSTORE_FILE") ?: "dummy.jks")
+            // Les autres sont des Strings
+            storePassword = System.getenv("KEYSTORE_PASSWORD") ?: "dummy"
+            keyAlias = System.getenv("KEY_ALIAS") ?: "dummy"
+            keyPassword = System.getenv("KEY_PASSWORD") ?: "dummy"
+        }
+    }
+    // -------------------------------------------------------------------------
+    // Build Types
+    // -------------------------------------------------------------------------
+    buildTypes {
+        getByName("release") {
+            // Active ou non le minify
+            // minifyEnabled true
+            // shrinkResources true
+            // Associe la config "release"
+            signingConfig = signingConfigs.getByName("release")
+            // minifyEnabled =false
+            //shrinkResources =false
+            //proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+        getByName("debug") {
+            enableUnitTestCoverage = true
+            // Disable androidTest coverage, since it performs offline coverage
+            // instrumentation and that causes online (JavaAgent) instrumentation
+            // to fail in this project.
+            enableAndroidTestCoverage = false
+        }
+    }
     buildFeatures {
         buildConfig = true
     }

@@ -3977,14 +3977,6 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         }
         
         // 🏥 Log detailed physio status (Always visible - never null)
-        val physioLog = physioAdapter.getDetailedLogString()
-        if (physioLog != null) {
-             consoleLog.add(physioLog)
-        }
-        
-        // 🏥 Log detailed physio status (Visible in Script Debug)
-        // We use consoleError temporarily to ensure high visibility in the UI log list
-        // logic mirrors existing Trajectory visualization
         try {
              val physioLog = physioAdapter.getDetailedLogString()
              consoleError.add(physioLog)

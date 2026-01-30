@@ -88,7 +88,7 @@ class AiCoachingService @Inject constructor() {
     ): String = withContext(Dispatchers.IO) {
         if (apiKey.isBlank()) return@withContext "API key missing."
         if (prompt.isBlank()) return@withContext "Prompt empty."
-        
+
         try {
             return@withContext when (provider) {
                 Provider.GEMINI -> callGemini(context, apiKey, prompt)

@@ -598,6 +598,9 @@ class ApexPumpPlugin @Inject constructor(
         override fun isTempCancel(isTempCancel: Boolean): PumpEnactResult = apply { this.isTempCancel = isTempCancel }
         override fun bolusDelivered(bolusDelivered: Double): PumpEnactResult = apply { this.bolusDelivered = bolusDelivered }
         override fun queued(queued: Boolean): PumpEnactResult = apply { this.queued = queued }
-
+        override fun fromPump(concentration: Double): PumpEnactResult = apply {
+            this.bolusDelivered *= concentration
+            this.absolute *= concentration
+        }
     }
 }

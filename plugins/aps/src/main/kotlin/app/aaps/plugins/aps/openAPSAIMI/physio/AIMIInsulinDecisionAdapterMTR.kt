@@ -369,8 +369,6 @@ class AIMIInsulinDecisionAdapterMTR @Inject constructor(
         )
     }
 
-
-
     /**
      * Returns a detailed formatted log string for user visibility (UI Status)
      * Replaces the old diagnostic log with a Snapshot summary

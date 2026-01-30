@@ -63,6 +63,7 @@ open class DanaRTestBase : TestBaseWithProfile() {
                 it.pumpSync = pumpSync
                 it.danaHistoryRecordDao = danaHistoryRecordDao
                 it.uiInteraction = uiInteraction
+                it.ch = ch
             }
         }
     }

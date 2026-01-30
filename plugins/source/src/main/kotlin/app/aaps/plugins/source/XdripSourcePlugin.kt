@@ -16,6 +16,7 @@ import app.aaps.core.data.ue.Sources
 import app.aaps.core.interfaces.db.PersistenceLayer
 import app.aaps.core.interfaces.logging.AAPSLogger
 import app.aaps.core.interfaces.logging.LTag
+import app.aaps.core.interfaces.logging.UserEntryLogger
 import app.aaps.core.interfaces.plugin.PluginDescription
 import app.aaps.core.interfaces.receivers.Intents
 import app.aaps.core.interfaces.resources.ResourceHelper
@@ -52,6 +53,7 @@ class XdripSourcePlugin @Inject constructor(
     @VisibleForTesting
     var advancedFiltering = false
     override var sensorBatteryLevel = -1
+
     override fun advancedFilteringSupported(): Boolean = advancedFiltering
 
     @VisibleForTesting
@@ -80,6 +82,7 @@ class XdripSourcePlugin @Inject constructor(
         @Inject lateinit var preferences: Preferences
         @Inject lateinit var dateUtil: DateUtil
         @Inject lateinit var dataWorkerStorage: DataWorkerStorage
+        @Inject lateinit var uel: UserEntryLogger
         private val xdripOM = preferences.get(BooleanKey.OApsxdriponeminute)
         fun getSensorStartTime(bundle: Bundle): Long? {
             val now = dateUtil.now()

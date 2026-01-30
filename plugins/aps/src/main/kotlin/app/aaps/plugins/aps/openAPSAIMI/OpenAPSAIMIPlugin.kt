@@ -601,7 +601,7 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
             // On récupère la glycémie et le delta actuel
             val currentBG = glucoseStatusProvider.glucoseStatusData?.glucose
             if (currentBG == null) {
-                aapsLogger.error(LTag.APS, "Blood glucose data unavailable, unable to calculate adaptive ISF.")
+                aapsLogger.error(LTag.APS, "Données de glycémie indisponibles, impossibilité de calculer l'ISF adaptatif.")
                 return
             }
             val currentDelta = glucoseStatusProvider.glucoseStatusData?.delta
@@ -1545,15 +1545,6 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
                         intentKey = IntentKey.OApsAIMIProfileAdvisor,
                         intent = Intent(context, app.aaps.plugins.aps.openAPSAIMI.advisor.AimiProfileAdvisorActivity::class.java),
                         summary = R.string.aimi_advisor_summary
-                    )
-                )
-                // Meal Advisor
-                addPreference(
-                    AdaptiveIntentPreference(
-                        ctx = context,
-                        intentKey = IntentKey.OApsAIMIMealAdvisor,
-                        intent = Intent(context, app.aaps.plugins.aps.openAPSAIMI.advisor.meal.MealAdvisorActivity::class.java),
-                        title = R.string.aimi_meal_advisor_title
                     )
                 )
                 
