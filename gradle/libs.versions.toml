@@ -3,11 +3,12 @@
 gradlePlugin = "8.13.2"
 googleServices = "4.4.4"
 kotlin = "2.2.21"
+ksp = "2.3.4"
 wearable = "2.9.0"
 room = "2.8.4"
 dagger = "2.57.2"
 mockito = "5.21.0"
-junit = "6.0.1"
+junit = "6.0.2"
 okhttp = "5.3.2"
 retrofit = "3.0.0"
 kotlinx-serialization = "1.9.0"
@@ -27,7 +28,7 @@ materialPullRefresh = "1.2.0"
 android-library = { id = "com.android.library" }
 klint = { id = "org.jlleitschuh.gradle.ktlint", version = "14.0.1" }
 moduleDependencyGraph = { id = "com.savvasdalkitsis.module-dependency-graph", version = "0.12" }
-ksp = { id = "com.google.devtools.ksp", version = "2.3.4" }
+ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 android-test = { id = "com.android.test", version.ref = "gradlePlugin" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
@@ -163,7 +164,7 @@ com-github-kenglxn-qrgen-android = { group = "com.github.kenglxn.QRGen", name = 
 com-github-rtchagas-pingplacepicker = { group = "com.github.rtchagas", name = "pingplacepicker", version = "3.0.1" }
 io-socket-client = { group = "io.socket", name = "socket.io-client", version = "2.1.2" }
 io-kotlintest-runner-junit5 = { group = "io.kotlintest", name = "kotlintest-runner-junit5", version = "3.4.2" }
-com-polidea-rxandroidble3 = { group = "com.polidea.rxandroidble3", name = "rxandroidble", version = "1.19.0" }
+com-polidea-rxandroidble3 = { group = "com.polidea.rxandroidble3", name = "rxandroidble", version = "1.19.1" }
 com-jakewharton-rx3-replaying-share = { group = "com.jakewharton.rx3", name = "replaying-share", version = "3.0.0" }
 commons-codec = { group = "commons-codec", name = "commons-codec", version = "1.20.0" }
 com-github-guepardoapps-kulid = { group = "com.github.guepardoapps", name = "kulid", version = "2.0.0.0" }

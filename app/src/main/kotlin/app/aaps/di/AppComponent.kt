@@ -44,11 +44,13 @@ import dagger.android.AndroidInjector
 import app.aaps.pump.common.di.RileyLinkModule
 import info.nightscout.pump.combov2.di.ComboV2Module
 import javax.inject.Singleton
+import dagger.android.support.AndroidSupportInjectionModule
 
 @Singleton
 @Component(
     modules = [
         AndroidInjectionModule::class,
+        AndroidSupportInjectionModule::class,
         AppModule::class,
         PluginsListModule::class,
         ActivitiesModule::class,
