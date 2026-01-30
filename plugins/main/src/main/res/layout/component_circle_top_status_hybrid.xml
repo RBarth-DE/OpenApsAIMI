@@ -49,13 +49,11 @@
                 android:id="@+id/aimi_context_indicator"
                 android:layout_width="28dp"
                 android:layout_height="28dp"
-                android:layout_marginStart="8dp"
-                android:layout_marginTop="8dp"
                 android:contentDescription="@string/aimi_context"
                 android:elevation="20dp"
                 android:visibility="gone"
-                app:layout_constraintStart_toStartOf="@id/glucose_ring"
-                app:layout_constraintTop_toTopOf="@id/glucose_ring"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
                 app:srcCompat="@drawable/ic_graduation"
                 app:tint="?android:attr/textColorPrimary" />
 
@@ -64,11 +62,10 @@
                 android:id="@+id/aimi_auditor_indicator_container"
                 android:layout_width="24dp"
                 android:layout_height="24dp"
-                android:layout_marginTop="8dp"
-                android:layout_marginEnd="8dp"
                 android:elevation="20dp"
-                app:layout_constraintEnd_toEndOf="@id/glucose_ring"
-                app:layout_constraintTop_toTopOf="@id/glucose_ring" />
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
 
             <!-- Loop Status (Top-Right, outside circle) -->
             <LinearLayout
