@@ -672,7 +672,7 @@ class OverviewViewModel(
      * 🦄 Selects the appropriate AIMICO unicorn image based on BG and delta.
      * Matches AIMICO watchface behavior:
      * - Normal: Blue unicorn with sunglasses and "AIMI" logo
-     * - Alert: Worried expression with stress notes  
+     * - Alert: Worried expression with stress notes
      * - Hypo: Holding orange juice box
      */
     /**
