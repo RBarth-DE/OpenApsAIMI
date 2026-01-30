@@ -3,6 +3,7 @@ package app.aaps.plugins.main.general.dashboard
 import android.os.Bundle
 import android.view.MenuItem
 import androidx.core.view.isVisible
+import android.content.Intent
 import app.aaps.core.interfaces.automation.Automation
 import app.aaps.core.interfaces.resources.ResourceHelper
 import app.aaps.core.ui.activities.TranslatedDaggerAppCompatActivity
@@ -33,6 +34,20 @@ class DashboardModesActivity : TranslatedDaggerAppCompatActivity() {
         val settingsItem = binding.toolbar.menu.add(0, 1, 0, "Settings")
         settingsItem.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS)
         settingsItem.setIcon(app.aaps.core.ui.R.drawable.ic_settings)
+
+        binding.toolbar.setOnMenuItemClickListener { item ->
+            if (item.itemId == 1) {
+                try {
+                    val intent = Intent().setClassName(this, "app.aaps.plugins.aps.openAPSAIMI.advisor.AimiModeSettingsActivity")
+                    startActivity(intent)
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
+                true
+            } else {
+                false
+            }
+        }
     }
 
     override fun onResume() {
