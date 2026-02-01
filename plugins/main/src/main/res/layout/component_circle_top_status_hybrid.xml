@@ -24,8 +24,8 @@
             <!-- Context Badge (Top-Left of Circle, like × on photo) -->
             <app.aaps.core.ui.views.GlucoseRingView
                 android:id="@+id/glucose_ring"
-                android:layout_width="149dp"
-                android:layout_height="149dp"
+                android:layout_width="140dp"
+                android:layout_height="140dp"
                 android:elevation="3dp"
                 app:glucoseRingStep1MaxMgdl="130"
                 app:glucoseRingStep2MaxMgdl="180"
@@ -130,7 +130,10 @@
                         android:text="--"
                         android:textColor="#AAFFFFFF"
                         android:textAppearance="@style/TextAppearance.MaterialComponents.Caption"
-                        android:textStyle="bold" />
+                        android:textStyle="bold"
+                        android:maxLines="1"
+                        android:singleLine="true"
+                        android:ellipsize="end"/>
                 </LinearLayout>
 
                 <!-- Reservoir -->
