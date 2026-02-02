@@ -324,6 +324,11 @@ class DetermineBasalaimiSMB2 @Inject constructor(
     
     // 🌸 Endometriosis Adjuster (Lazy init manually since not in graph yet or use manual passing)
     private val endoAdjuster by lazy { app.aaps.plugins.aps.openAPSAIMI.wcycle.EndometriosisAdjuster(preferences, aapsLogger) }
+    
+    // 🏥 Inflammation Adjuster (New Refactor - Decoupled from WCycle)
+    private val inflammationAdjuster by lazy { 
+        app.aaps.plugins.aps.openAPSAIMI.inflammatory.InflammationAdjuster(wCyclePreferences) 
+    }
 
     // ❌ OLD reactivityLearner removed - UnifiedReactivityLearner is now the only one
     init {
@@ -4050,6 +4055,21 @@ class DetermineBasalaimiSMB2 @Inject constructor(
              consoleLog.add("🏥 PHYSIO APPLIED: MaxSMB=${"%.2f".format(this.maxSMB)} MaxBasal=${"%.2f".format(profile.max_daily_basal)}")
         }
 
+        // 5.5) 🏥 Inflammatory / Autoimmune Adjustments (Always applied, independent of WCycle)
+        val inflamResult = inflammationAdjuster.getAdjustments()
+        if (inflamResult.basalMultiplier != 1.0 || inflamResult.smbMultiplier != 1.0) {
+             // Apply to limits and current basal
+             // Note: Multipliers are cumulative with Physio
+             profile.current_basal = profile.current_basal * inflamResult.basalMultiplier
+             profile.max_daily_basal = profile.max_daily_basal * inflamResult.basalMultiplier
+             
+             val prevMaxSMB = this.maxSMB
+             this.maxSMB = (this.maxSMB * inflamResult.smbMultiplier).coerceAtLeast(0.1)
+             this.maxSMBHB = (this.maxSMBHB * inflamResult.smbMultiplier).coerceAtLeast(0.1)
+             
+             consoleLog.add("${inflamResult.reason} -> Basal×${"%.2f".format(inflamResult.basalMultiplier)} SMB: ${"%.2f".format(prevMaxSMB)}->${"%.2f".format(this.maxSMB)}U")
+        }
+
         val reasonAimi = StringBuilder()
         var windowSinceDoseInt = 0
         var carbsActiveForPkpd = 0.0
@@ -4913,18 +4933,22 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                   setTempBasal(advisorRes.tbrUph, advisorRes.tbrMin ?: 30, profile, rT, currenttemp, overrideSafetyLimits = true)
              }
              
-             // 2. Logic Split: Direct Send (User) vs Standard Safety (Background)
+             // 2. Logic Split: Direct Send vs Standard Safety
              val bolusIntent = (advisorRes.bolusU ?: 0.0).toDouble()
-             if (isExplicitAdvisorRun && bolusIntent > 0) {
-                  // A. DIRECT SEND (User Triggered "Snap&Go")
-                  // Bypass standard safety limiting to ensure full delivery of the user-validated amount.
-                  // This mimics 'prebolusHC' behavior to solve the 3.12U clipping issue.
+             
+             // 🚀 DIRECT SEND for ALL Meal Advisor results
+             // We trust the Meal Advisor's internal logic (Refractory 45m + Min Carb Coverage)
+             // to determine necessity. We bypass finalizeAndCapSMB to avoid arbitrary MaxSMB/MaxIOB clipping.
+             if (bolusIntent > 0) {
+                  // A. DIRECT SEND (User Triggered "Snap&Go" OR Standard Meal Advisor)
                   
                   // 🔒 Hardware Cap (Ultima Ratio)
                   val safeIntent = kotlin.math.min(bolusIntent, 30.0)
                   rT.units = safeIntent
                   rT.reason.append(advisorRes.reason)
-                  consoleLog.add("🍱 MEAL_ADVISOR_DIRECT_SEND Pushed=${"%.2f".format(safeIntent)}U (Limits Bypassed)")
+                  
+                  val triggerType = if (isExplicitAdvisorRun) "Explicit" else "Auto"
+                  consoleLog.add("🍱 MEAL_ADVISOR_DIRECT_SEND ($triggerType) Pushed=${"%.2f".format(safeIntent)}U (Limits Bypassed)")
                   
                   // 🕒 Update Internal Timer IMMEDIATELY to prevent double-bolus during DB lag
                   if (safeIntent > 0) {
@@ -4932,11 +4956,6 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                        lastSmbCapped = safeIntent
                        lastSmbFinal = safeIntent
                   }
-             } else if (bolusIntent > 0) {
-                  // B. STANDARD SAFETY (Background / Loop)
-                  // Use standard finalization which includes Refractory, MaxIOB, and MaxSMB checks.
-                  // This protects against loop issues if the Advisor runs in background.
-                  finalizeAndCapSMB(rT, bolusIntent, advisorRes.reason, mealData, threshold, false, advisorRes.source)
              } else {
                   // Zero bolus (but maybe TBR was set)
                   rT.reason.append(advisorRes.reason)
@@ -5741,6 +5760,29 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         )
         val pkpdDiaMinutesOverride: Double? = pkpdRuntime?.params?.diaHrs?.let { it * 60.0 } // PKPD donne des heures → on passe en minutes
         val useLegacyDynamicsdia = pkpdDiaMinutesOverride == null
+        // ═══════════════════════════════════════════════════════════════════════════
+        // 🛡️ BASAL-FIRST POLICY GATE (Single Source of Truth)
+        // ═══════════════════════════════════════════════════════════════════════════
+        val learnerFactor = safeReactivityFactor // Already computed: unifiedReactivityLearner + Physio
+        val isFragileBg = bg < 110.0 && delta < 0.0
+        val isLearnerPrudent = learnerFactor < 0.75
+        
+        // Gate: Activate Basal-First if Learner is Prudent OR BG is Fragile
+        // EXCEPTION: Explicit Meal Advisor / OneShot overrides (User manual intent)
+        val basalFirstActive = (isLearnerPrudent || isFragileBg) && !isMealAdvisorOneShot
+        
+        if (basalFirstActive) {
+            // FORCE limits to 0.0 -> Disables SMB effectively
+            this.maxSMB = 0.0
+            this.maxSMBHB = 0.0
+            
+            // Log for transparency
+            val reason = if (isLearnerPrudent) "Learner Prudence (Factor=${"%.2f".format(learnerFactor)})" else "Fragile BG (<110 & falling)"
+            consoleLog.add("🛡️ BASAL-FIRST ACTIVE: $reason -> SMB DISABLED (MaxSMB=0)")
+            rT.reason.append(" [Basal-First: SMB OFF]")
+        }
+        // ═══════════════════════════════════════════════════════════════════════════
+
         val smbExecution = SmbInstructionExecutor.execute(
             SmbInstructionExecutor.Input(
                 context = context,
