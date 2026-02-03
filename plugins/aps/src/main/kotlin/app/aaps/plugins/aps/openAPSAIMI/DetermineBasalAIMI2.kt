@@ -3765,6 +3765,16 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         // 🚀 MEAL ADVISOR: Check explicitly for Trigger (Snap&Go)
         // We read it here to pass it to the specific logic, bypassing refractory checks.
         val isExplicitAdvisorRun = preferences.get(BooleanKey.OApsAIMIMealAdvisorTrigger)
+        
+        // 🛠️ MTR FIX: Hydrate COB from Prefs if DB is too slow
+        // If Trigger is active, we MUST see the carbs to unlock aggression.
+        if (isExplicitAdvisorRun) {
+            val fallbackCarbs = preferences.get(DoubleKey.OApsAIMILastEstimatedCarbs)
+            if (mealData.mealCOB < 0.1 && fallbackCarbs > 0) {
+                 mealData.mealCOB = fallbackCarbs // Force injection for this cycle
+                 consoleLog.add("⚡ COB HYDRATION: Injected ${fallbackCarbs.toInt()}g from Advisor Prefs (DB latency bypass)")
+            }
+        }
 
         // 🕵️ COMPARATOR: Capture Original Profile to avoid Bias
         // AIMI modifies the profile (activity, pregnancy, autosens) in-flight.
@@ -5747,8 +5757,15 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         val isMealAdvisorOneShot = preferences.get(BooleanKey.OApsAIMIMealAdvisorTrigger)
         if (isMealAdvisorOneShot) {
              preferences.put(BooleanKey.OApsAIMIMealAdvisorTrigger, false)
-             consoleLog.add("🚀 MEAL ADVISOR ONE-SHOT: Forcing Aggression (SMB+TBR)")
-             rT.reason.append("🚀 Advisor Trigger: Force Action. ")
+             
+             // 🔓 SAFETY BYPASS: Temporarily lift MaxSMB limits to allow full Advisor Bolus
+             // We use a reasonably high cap (e.g. 30U) to avoid infinite unchecked bolus, 
+             // but enough to cover almost any meal.
+             this.maxSMB = Math.max(this.maxSMB, 30.0) 
+             this.maxSMBHB = Math.max(this.maxSMBHB, 30.0)
+             
+             consoleLog.add("🚀 MEAL ADVISOR ONE-SHOT: Forcing Aggression. MaxSMB raised to 30U.")
+             rT.reason.append("🚀 Advisor Trigger: MaxSMB Bypass Active. ")
         }
 
         consoleLog.add(
@@ -5766,10 +5783,15 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         val learnerFactor = safeReactivityFactor // Already computed: unifiedReactivityLearner + Physio
         val isFragileBg = bg < 110.0 && delta < 0.0
         val isLearnerPrudent = learnerFactor < 0.75
-        
-        // Gate: Activate Basal-First if Learner is Prudent OR BG is Fragile
-        // EXCEPTION: Explicit Meal Advisor / OneShot overrides (User manual intent)
-        val basalFirstActive = (isLearnerPrudent || isFragileBg) && !isMealAdvisorOneShot
+        val basalFirstMealActive = mealData.mealCOB > 0.1 // 🍕 Digestion active?
+        val basalFirstHeavyMeal = mealData.mealCOB > 20.0 // 🍔 Heavy Meal?
+
+        // Gate: Activate Basal-First if:
+        // A) Learner is Prudent AND NO Meal is active
+        // OR
+        // B) BG is Fragile AND NO Heavy Meal is active (User rule: COB > 20 -> Priority to Insulin)
+        // EXCEPTION: Explicit Meal Advisor / OneShot overrides
+        val basalFirstActive = ((isLearnerPrudent && !basalFirstMealActive) || (isFragileBg && !basalFirstHeavyMeal)) && !isMealAdvisorOneShot
         
         if (basalFirstActive) {
             // FORCE limits to 0.0 -> Disables SMB effectively
@@ -5777,9 +5799,20 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             this.maxSMBHB = 0.0
             
             // Log for transparency
-            val reason = if (isLearnerPrudent) "Learner Prudence (Factor=${"%.2f".format(learnerFactor)})" else "Fragile BG (<110 & falling)"
+            val reason = when {
+                isFragileBg -> "Fragile BG (<110 & falling)"
+                isLearnerPrudent -> "Learner Prudence (Factor=${"%.2f".format(learnerFactor)})"
+                else -> "Unknown Safety Trigger"
+            }
             consoleLog.add("🛡️ BASAL-FIRST ACTIVE: $reason -> SMB DISABLED (MaxSMB=0)")
             rT.reason.append(" [Basal-First: SMB OFF]")
+        } else {
+             if (isLearnerPrudent && basalFirstMealActive) {
+                 consoleLog.add("🍕 MEAL EXEMPTION: Learner is Prudent but Meal Active (COB=${"%.1f".format(mealData.mealCOB)}g) -> SMB Allowed.")
+             }
+             if (isFragileBg && basalFirstHeavyMeal) {
+                 consoleLog.add("🍔 HEAVY MEAL EXEMPTION: Fragile BG but COB > 20g (COB=${"%.1f".format(mealData.mealCOB)}g) -> SMB Allowed.")
+             }
         }
         // ═══════════════════════════════════════════════════════════════════════════
 
