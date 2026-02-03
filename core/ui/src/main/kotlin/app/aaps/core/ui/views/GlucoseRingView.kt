@@ -166,7 +166,7 @@ class GlucoseRingView @JvmOverloads constructor(
         mainTextPaint.isFakeBoldText = mainTextBold
         mainTextPaint.textSize = radius * 0.7f //0.6 to 0.7 to make it bigger
 
-        val mainY = cy - (mainTextPaint.descent() + mainTextPaint.ascent()) / 2f - dp(16f) // push BG higher (more gap to subtext)
+        val mainY = cy - (mainTextPaint.descent() + mainTextPaint.ascent()) / 2f - dp(12f) // push BG higher (more gap to subtext)
         canvas.drawText(mainText, cx, mainY, mainTextPaint)
 
         // sub texts
