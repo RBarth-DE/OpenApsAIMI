@@ -10,7 +10,7 @@
 
     <!-- Buttons -->
     <com.google.android.material.button.MaterialButton
-        android:id="@+id/btn_big"
+        android:id="@+id/btn0"
         app:autoSizeTextType="uniform"
         app:autoSizeMinTextSize="6sp"
         app:autoSizeMaxTextSize="13sp"
@@ -18,7 +18,7 @@
         android:text="@string/circle_mode_big"/>
 
     <com.google.android.material.button.MaterialButton
-        android:id="@+id/btn_med"
+        android:id="@+id/btn1"
         app:autoSizeTextType="uniform"
         app:autoSizeMinTextSize="6sp"
         app:autoSizeMaxTextSize="13sp"
@@ -26,7 +26,7 @@
         android:text="@string/circle_mode_med"/>
 
     <com.google.android.material.button.MaterialButton
-        android:id="@+id/btn_small"
+        android:id="@+id/btn2"
         app:autoSizeTextType="uniform"
         app:autoSizeMinTextSize="6sp"
         app:autoSizeMaxTextSize="13sp"
@@ -34,7 +34,7 @@
         android:text="@string/circle_mode_small"/>
 
     <com.google.android.material.button.MaterialButton
-        android:id="@+id/btn_snack1"
+        android:id="@+id/btn3"
         app:autoSizeTextType="uniform"
         app:autoSizeMinTextSize="6sp"
         app:autoSizeMaxTextSize="13sp"
@@ -42,7 +42,7 @@
         android:text="@string/circle_mode_snack1"/>
 
     <com.google.android.material.button.MaterialButton
-        android:id="@+id/btn_snack2"
+        android:id="@+id/btn4"
         app:autoSizeTextType="uniform"
         app:autoSizeMinTextSize="6sp"
         app:autoSizeMaxTextSize="13sp"
@@ -50,7 +50,7 @@
         android:text="@string/circle_mode_snack2"/>
 
     <com.google.android.material.button.MaterialButton
-        android:id="@+id/btn_sport"
+        android:id="@+id/btn5"
         app:autoSizeTextType="uniform"
         app:autoSizeMinTextSize="6sp"
         app:autoSizeMaxTextSize="13sp"
@@ -58,7 +58,7 @@
         android:text="@string/circle_mode_sport"/>
 
     <com.google.android.material.button.MaterialButton
-        android:id="@+id/btn_hypo"
+        android:id="@+id/btn6"
         app:autoSizeTextType="uniform"
         app:autoSizeMinTextSize="6sp"
         app:autoSizeMaxTextSize="13sp"
@@ -66,7 +66,7 @@
         android:text="@string/circle_mode_hypo"/>
 
     <com.google.android.material.button.MaterialButton
-        android:id="@+id/btn_beer"
+        android:id="@+id/btn7"
         app:autoSizeTextType="uniform"
         app:autoSizeMinTextSize="6sp"
         app:autoSizeMaxTextSize="13sp"
@@ -74,7 +74,7 @@
         android:text="@string/circle_mode_beer"/>
 
     <com.google.android.material.button.MaterialButton
-        android:id="@+id/btn_stop"
+        android:id="@+id/btn8"
         app:autoSizeTextType="uniform"
         app:autoSizeMinTextSize="6sp"
         app:autoSizeMaxTextSize="13sp"
@@ -82,7 +82,7 @@
         android:text="@string/circle_mode_stop"/>
 
     <com.google.android.material.button.MaterialButton
-        android:id="@+id/btn_unknown"
+        android:id="@+id/btn9"
         app:autoSizeTextType="uniform"
         app:autoSizeMinTextSize="6sp"
         app:autoSizeMaxTextSize="13sp"
@@ -95,16 +95,16 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         app:constraint_referenced_ids="
-            btn_big,
-            btn_med,
-            btn_small,
-            btn_snack1,
-            btn_snack2,
-            btn_sport,
-            btn_hypo,
-            btn_beer,
-            btn_stop,
-            btn_unknown"
+            btn0,
+            btn1,
+            btn2,
+            btn3,
+            btn4,
+            btn5,
+            btn6,
+            btn7,
+            btn8,
+            btn9"
         app:flow_horizontalGap="6dp"
         app:flow_horizontalStyle="spread"
 

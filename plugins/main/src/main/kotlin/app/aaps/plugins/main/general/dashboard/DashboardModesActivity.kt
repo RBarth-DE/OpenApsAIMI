@@ -13,18 +13,30 @@ import app.aaps.plugins.main.databinding.ActivityDashboardModesBinding
 import app.aaps.plugins.main.general.dashboard.modes.DashboardModesController
 import com.google.android.material.button.MaterialButton
 import javax.inject.Inject
-
+import app.aaps.core.interfaces.rx.AapsSchedulers
+import app.aaps.core.interfaces.rx.bus.RxBus
 
 class DashboardModesActivity : TranslatedDaggerAppCompatActivity() {
 
     @Inject lateinit var automation: Automation
     @Inject lateinit var resourceHelper: ResourceHelper
-
+    @Inject lateinit var rxBus: RxBus
+    @Inject lateinit var aapsSchedulers: AapsSchedulers
     private lateinit var binding: ActivityDashboardModesBinding
     private lateinit var modeController: DashboardModesController
 
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        modeController = DashboardModesController(
+            this,
+            automation,
+            resourceHelper,
+            rxBus,
+            aapsSchedulers
+        )
+
         binding = ActivityDashboardModesBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
@@ -48,6 +60,7 @@ class DashboardModesActivity : TranslatedDaggerAppCompatActivity() {
                 false
             }
         }
+        renderActions()
     }
 
     override fun onResume() {
@@ -67,8 +80,9 @@ class DashboardModesActivity : TranslatedDaggerAppCompatActivity() {
             ).apply {
                 text = event.title
                 setOnClickListener {
-                    modeController.runEventWithConfirmation(event)
-                    finish()
+                    modeController.runEventWithConfirmation(event) {
+                        finish()
+                    }
                 }
             }
             binding.actionsContainer.addView(button)

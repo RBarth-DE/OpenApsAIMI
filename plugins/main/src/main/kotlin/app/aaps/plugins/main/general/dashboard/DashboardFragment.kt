@@ -1,14 +1,13 @@
 package app.aaps.plugins.main.general.dashboard
 
-import android.content.ActivityNotFoundException
 import android.content.Intent
-import android.os.Build
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.viewModels
 import app.aaps.core.interfaces.automation.Automation
+import app.aaps.core.interfaces.automation.AutomationEvent
 import app.aaps.core.interfaces.configuration.Config
 import app.aaps.core.interfaces.aps.Loop
 import app.aaps.core.interfaces.db.PersistenceLayer
@@ -61,6 +60,7 @@ import android.view.MotionEvent
 import android.annotation.SuppressLint
 import android.graphics.Color
 
+
 class DashboardFragment : DaggerFragment() {
 
     @Inject lateinit var lastBgData: LastBgData
@@ -95,6 +95,7 @@ class DashboardFragment : DaggerFragment() {
     @Inject lateinit var activityProvider: app.aaps.plugins.aps.openAPSAIMI.steps.UnifiedActivityProviderMTR
 
     private lateinit var modesController: DashboardModesController
+    private var availableAutomationEvents: List<AutomationEvent> = emptyList()
 
     private val disposables = CompositeDisposable()
     private var _binding: FragmentDashboardBinding? = null
@@ -195,14 +196,7 @@ class DashboardFragment : DaggerFragment() {
             aapsSchedulers
         )
 
-        binding.modesView.setOnModesClickListener { mode ->
-            modesController.runModeWithConfirmation(mode)
-        }
-
-        binding.modesView.setEnabledModes(
-            modesController.availableModes()
-        )
-
+        bindModes()
         //END modes stuff
 
         viewModel.graphMessage.observe(viewLifecycleOwner) {
@@ -371,10 +365,32 @@ class DashboardFragment : DaggerFragment() {
         setupAuditorIndicator()
     }
 
+    private fun bindModes() {
+        availableAutomationEvents =
+            automation.userEvents()
+                .filter { it.isEnabled && it.canRun() }
+                .take(10)
+
+        binding.modesView.setButtons(
+            availableAutomationEvents.map { it.title }
+        )
+
+        binding.modesView.setOnButtonClickListener { index ->
+            aapsLogger.debug(LTag.CORE,"RBarth: bindModes called by button press")
+            val event = availableAutomationEvents.getOrNull(index) ?: return@setOnButtonClickListener
+            modesController.runEventWithConfirmation(event)
+        }
+
+    }
+
     override fun onResume() {
         super.onResume()
         updateContextBadge()
         viewModel.start()
+
+        //bind / refresh mode buttons in case of a background change
+        bindModes()
+
         notificationUiBinder.bind(
             overviewBus = activePlugin.activeOverview.overviewBus,
             notificationsView = binding.overviewNotifications,
@@ -392,9 +408,6 @@ class DashboardFragment : DaggerFragment() {
                            }
                        }, fabricPrivacy::logException)
 
-        // 🔥 Disabled-State aktualisieren
-        val enabledModes = modesController.availableModes()
-        binding.modesView.setEnabledModes(enabledModes)
     }
 
     private fun updateContextBadge() {
