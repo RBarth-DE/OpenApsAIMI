@@ -87,9 +87,8 @@ class CircleTopDashboardView @JvmOverloads constructor(
             binding.lastUpdateText.text = getProp<String>("lastUpdateText") ?: "--"
             binding.lastSensorValueText.text = getProp<String>("lastSensorValueText") ?: "--"
             // TBR
-            binding.activityPctText.text = getProp<String>("activityPctText") ?: "--"
-            //binding.tbrRateText.text = getProp<String>("tbrRateText") ?: "0.00 U/h"
-            binding.basalText.text = getProp<String>("basalText") ?: "0.00 U/h"
+            binding.basalPctText.text = getProp<String>("basalPctText") ?: "--"
+            binding.basalText.text = getProp<String>("basalText") ?: "--"
             //IOB
             binding.iobText.text = getProp<String>("iobText") ?: "--"
 

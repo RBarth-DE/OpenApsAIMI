@@ -58,6 +58,7 @@ import android.graphics.*
 import app.aaps.plugins.aps.openAPSAIMI.steps.UnifiedActivityProviderMTR
 import java.time.LocalDate
 import java.time.ZoneId
+import app.aaps.core.utils.MidnightUtils
 
 class OverviewViewModel(
     private val application: Application,
@@ -194,7 +195,7 @@ class OverviewViewModel(
         val deltaText = glucoseStatusProvider.glucoseStatusData?.shortAvgDelta?.let {
             profileUtil.fromMgdlToSignedStringInUnits(it)
         } ?: resourceHelper.gs(app.aaps.core.ui.R.string.value_unavailable_short)
-        val iobText = totalIobText()
+
         val cobText = iobCobCalculator
             .getCobInfo("Dashboard COB")
             .displayText(resourceHelper, decimalFormatter)
@@ -208,7 +209,7 @@ class OverviewViewModel(
         // Circle-Top Hybrid Dashboard - Calculate all new fields
         // ═══════════════════════════════════════════════════════════════
 
-        // 1. Nose angle from delta (for GlucoseRingView pointer)
+        // 0. Nose angle from delta (for GlucoseRingView pointer)
         val delta = glucoseStatusProvider.glucoseStatusData?.delta ?: 0.0
         val noseAngleDeg = when {
             delta > 10  -> 45f   // Rapidly rising →45°
@@ -221,16 +222,33 @@ class OverviewViewModel(
         }
         val timeAgoSub = dateUtil.minOrSecAgo(resourceHelper, lastBg?.timestamp)
 
-        // 2. Reservoir
+        /*******************************
+         *  LEFT Side of ring
+         */
+        // L1.Steps
+        var stepsText = "--"
+        val startOfTodayMs = LocalDate.now()
+            .atStartOfDay(ZoneId.systemDefault())
+            .toInstant()
+            .toEpochMilli()
+        val stepsTotal = activityProvider.getStepsTotalSince(startOfTodayMs)
+        val stepsDelta = activityProvider.getLatestSteps(15 * 60 * 1000L)
+        if (stepsTotal != null &&  stepsTotal.steps > 0 ) {
+            stepsText = "${stepsTotal.steps} / +${stepsDelta?.steps ?: 0}"
+        }
+
+        // L2. Reservoir
         val reservoirText = activePlugin.activePump.reservoirLevel.let { level ->
-            if (level > 0) decimalFormatter.to2Decimal(level) + " IE"
+            if (level > 0) decimalFormatter.to2Decimal(level) + "IE"
             else null
         }
+
         val reservoirColor = activePlugin.activePump.reservoirLevel.let { level ->
             if (level > 30) Color.WHITE
             else Color.YELLOW
         }
-        // 3. Infusion Age (from CarePortal)
+
+        // L3. Infusion Age (from CarePortal)
         val infusionAgeText = persistenceLayer.getLastTherapyRecordUpToNow(TE.Type.CANNULA_CHANGE)?.let { event ->
             val ageMillis = dateUtil.now() - event.timestamp
             val hours = (ageMillis / (1000 * 60 * 60)).toInt()
@@ -238,6 +256,7 @@ class OverviewViewModel(
             val remainingHours = hours % 24
             if (days > 0) "${days}d ${remainingHours}h" else "${hours}h"
         }
+
         val infusionAgeColor: Int? = persistenceLayer.getLastTherapyRecordUpToNow(TE.Type.CANNULA_CHANGE)?.let { event ->
             val ageMillis = dateUtil.now() - event.timestamp
             val hours = (ageMillis / (1000 * 60 * 60)).toInt()
@@ -245,72 +264,52 @@ class OverviewViewModel(
             if (days < 3) Color.WHITE
             else Color.YELLOW
         }
-
-        // 4. Sensor Age
-        val sensorEvent = persistenceLayer.getLastTherapyRecordUpToNow(TE.Type.SENSOR_CHANGE)
-        val sensorAgeText = formatTherapyAge(sensorEvent, now)
-        val sensorAgeColor = if (batteryAgeDays(sensorEvent, now) >= 9) Color.YELLOW else Color.WHITE
-
-        // 5. Basal (current profile basal rate)
-        val basalRate = loop.lastRun?.request?.rate
-        val basalText = if (basalRate == null || basalRate == -1.0)
-            resourceHelper.gs(app.aaps.core.ui.R.string.value_unavailable_short)
-        else "${decimalFormatter.to2Decimal(basalRate)} U/h"
-
-        // 9. TBR Rate
-        val tbrRateText = processedTbrEbData.getTempBasalIncludingConvertedExtended(dateUtil.now())?.takeIf { it.isInProgress }?.let { tbr ->
-            decimalFormatter.to2Decimal(tbr.rate) + " U/h"
-        } ?: "0.00 U/h"
-
-        // 6. Activity % - simplified (TBR percentage)
-        val tbr = processedTbrEbData.getTempBasalIncludingConvertedExtended(now)
-        val activityPctText = if (tbr?.isInProgress == true) {
-            val short = tbr.toStringShort(resourceHelper)   // z.B. "150% (0.9U/h)" je nach Build
-            Regex("""(-?\d+(?:[.,]\d+)?)\s*%""").find(short)?.value ?: "--"
-        } else {
-            "100%"
-        }
-
-        // 7. Pump Battery
-        //val pumpBatteryText = activePlugin.activePump.batteryLevel?.let { "$it%" }
+        // L4. Pump Battery
         val battTe = persistenceLayer.getLastTherapyRecordUpToNow(TE.Type.PUMP_BATTERY_CHANGE)
         val pumpBatteryText = formatTherapyAge(battTe, now)
+
         val pumpBatteryColor = if (batteryAgeDays(battTe, now) <= 14) Color.WHITE else Color.YELLOW
 
-        // last bolus
-        val lastBolusTimeMs: Long? = activePlugin.activePump.lastBolusTime
-        //show last
-        val lastBolusXMinTmp = getRecentBolusTimeMs(300, lastBolusTimeMs)
-        val lastBolusXMin = lastBolusXMinTmp?.let { dateUtil.timeString(it) } ?: "--"
-        //only show value when in between time window
-        val lastBolusAmount = if (lastBolusXMin != "--") activePlugin.activePump.lastBolusAmount.toString() + "IE" else "--"
+        // L5. Sensor Age
+        val sensorEvent = persistenceLayer.getLastTherapyRecordUpToNow(TE.Type.SENSOR_CHANGE)
+        val sensorAgeText = formatTherapyAge(sensorEvent, now)
 
+        val sensorAgeColor = if (batteryAgeDays(sensorEvent, now) >= 9) Color.YELLOW else Color.WHITE
 
-        // 10. Steps & HR (Unified Provider)
-        // using the Physio Assits -> Step&HR Data Source
-        var stepsText = "--"
+        /*******************************
+         *  RIGHT Side of ring
+         */
+        // R1 HR
         var hrText = "--"
-
-        val startOfTodayMs = LocalDate.now()
-            .atStartOfDay(ZoneId.systemDefault())
-            .toInstant()
-            .toEpochMilli()
-
-        val stepsTotal = activityProvider.getStepsTotalSince(startOfTodayMs)
-        val stepsDelta = activityProvider.getLatestSteps(15 * 60 * 1000L)
-
-
-
-        if (stepsTotal != null &&  stepsTotal.steps > 0 ) {
-            stepsText = "${stepsTotal.steps} / +${stepsDelta?.steps ?: 0}"
-        }
-
-        val hr = activityProvider.getLatestHeartRate(
-            windowMs = 10 * 60 * 1000L   // HR freshness
-        )
+        val hr = activityProvider.getLatestHeartRate( windowMs = 10 * 60 * 1000L )
         if (hr != null && hr.bpm > 0) {
             hrText = hr.bpm.toInt().toString()
         }
+
+        // R2 last bolus in IE and time
+
+        val lastBolusMs = activePlugin.activePump.lastBolusTime ?: 0L
+        val seconds = MidnightUtils.secondsFromMidnight(lastBolusMs)
+        val lastBolusXMin = if (seconds > 0) dateUtil.formatHHMM(seconds) else "--:--"
+
+        val lastBolusAmount = if (seconds > 0) activePlugin.activePump.lastBolusAmount.toString() + "IE" else "--"
+
+        // R3 Basal in % and value
+        // we could also use activePlugin.activePump.baseBasalRate , but pump does not deliver percentage.
+        // To be sure it is synced, we take both from the current loop.
+        val basalRate = loop.lastRun?.request?.rate
+        val basalText = if (basalRate == null || basalRate == -1.0) resourceHelper.gs(app.aaps.core.ui.R.string.value_unavailable_short)
+        else "${decimalFormatter.to2Decimal(basalRate)}U/h"
+
+        val basalPctValue = loop.lastRun?.request?.percent
+        val basalPctText = if (basalPctValue == null )  resourceHelper.gs(app.aaps.core.ui.R.string.value_unavailable_short)
+        else "$basalPctValue%"
+
+        // R4 IOB
+        val iobText = totalIobText()
+
+
+        // debug line: Garmin delivery.
         android.util.Log.d("GARMIN", "Dashboard: stepsTotal=$stepsTotal \n stepsDelta=$stepsDelta \n hrText=${hr?.bpm}" )
 
         val state = StatusCardState(
@@ -319,7 +318,6 @@ class OverviewViewModel(
             trendArrowRes = trendArrow,
             trendDescription = trendDescription,
             deltaText = deltaText,
-            iobText = iobText,
             cobText = cobText,
             loopStatusText = loopStatusText(loop.runningMode),
             loopIsRunning = !loop.runningMode.isSuspended(),
@@ -356,9 +354,9 @@ class OverviewViewModel(
             hrText = hrText,
             lastSensorValueText = lastBolusXMin,
             lastUpdateText = lastBolusAmount,
-            activityPctText = activityPctText,
-            tbrRateText = tbrRateText,
-            basalText = basalText
+            basalPctText = basalPctText,
+            basalText = basalText,
+            iobText = iobText
         )
         _statusCardState.postValue(state)
     }
@@ -837,12 +835,10 @@ data class StatusCardState(
     val lastUpdateText: String? = null,
     val lastSensorValueText: String? = null,
     //TBR
-    val activityPctText: String? = null,
-    val tbrRateText: String? = null,
+    val basalPctText: String? = null,
     val basalText: String? = null,
     //IOB
     val iobText: String
-
 )
 
 data class AdjustmentCardState(
