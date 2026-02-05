@@ -182,20 +182,20 @@ object PerformanceScorer {
                 val tirDiff = aimiKpi.tir70_180 - smbKpi.tir70_180
                 val hypoDiff = smbKpi.timeBelow70 - aimiKpi.timeBelow70
                 when {
-                    tirDiff > 5 && hypoDiff > 1 -> "AIMI recommandé: +${f0(tirDiff)}% TIR et moins d'hypos"
-                    tirDiff > 5 -> "AIMI recommandé: meilleur contrôle (+${f0(tirDiff)}% TIR)"
-                    hypoDiff > 1 -> "AIMI recommandé: moins d'hypos (-${f1(hypoDiff)}%)"
-                    else -> "AIMI légèrement supérieur"
+                    tirDiff > 5 && hypoDiff > 1 -> "AIMI recommended: +${f0(tirDiff)}% TIR and fewer hypos"
+                    tirDiff > 5 -> "AIMI recommended: better control (+${f0(tirDiff)}% TIR)"
+                    hypoDiff > 1 -> "AIMI recommended: fewer hypos (-${f1(hypoDiff)}%)"
+                    else -> "AIMI slightly higher"
                 }
             }
             AlgorithmType.OPENAPS_SMB -> {
                 val tirDiff = smbKpi.tir70_180 - aimiKpi.tir70_180
                 when {
-                    tirDiff > 5 -> "SMB classique recommandé: meilleur TIR"
-                    else -> "SMB classique légèrement supérieur"
+                    tirDiff > 5 -> "SMB Recommended classic: best TIR"
+                    else -> "SMB slightly superior classic"
                 }
             }
-            null -> "Performance équivalente entre les deux algorithmes"
+            null -> "Performance equivalent between the two algorithms"
         }
         
         return AlgorithmsComparison(

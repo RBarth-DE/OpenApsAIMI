@@ -96,8 +96,8 @@ class ComparatorActivity : DaggerAppCompatActivityWithResult() {
         binding.avgRateDiffValue.text = String.format(Locale.US, "%.2f U/h", stats.avgRateDiff)
         binding.avgSmbDiffValue.text = String.format(Locale.US, "%.2f U", stats.avgSmbDiff)
         binding.agreementRateValue.text = String.format(Locale.US, "%.1f%%", stats.agreementRate)
-        binding.aimiWinRateValue.text = String.format(Locale.US, "%.1f%% (Activité)", stats.aimiWinRate)
-        binding.smbWinRateValue.text = String.format(Locale.US, "%.1f%% (Activité)", stats.smbWinRate)
+        binding.aimiWinRateValue.text = String.format(Locale.US, "%.1f%% (Activity)", stats.aimiWinRate)
+        binding.smbWinRateValue.text = String.format(Locale.US, "%.1f%% (Activity)", stats.smbWinRate)
     }
 
     private fun displayAnalytics() {
@@ -123,9 +123,9 @@ class ComparatorActivity : DaggerAppCompatActivityWithResult() {
         binding.totalInsulinSmbValue.text = String.format(Locale.US, "%.1f U", impact.totalInsulinSmb)
         
         val diffText = if (impact.cumulativeDiff > 0) {
-            String.format(Locale.US, "+%.1f U (AIMI plus agressif)", impact.cumulativeDiff)
+            String.format(Locale.US, "+%.1f U (AIMI more aggressive)", impact.cumulativeDiff)
         } else {
-            String.format(Locale.US, "%.1f U (SMB plus agressif)", impact.cumulativeDiff)
+            String.format(Locale.US, "%.1f U (SMB more aggressive)", impact.cumulativeDiff)
         }
         binding.cumulativeDiffValue.text = diffText
     }

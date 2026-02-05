@@ -196,9 +196,9 @@ class ComparisonCsvParser {
         val variabilityScore = ((smbVariability / (aimiVariability + 0.1)) * 50).coerceIn(0.0, 100.0)
         
         val variabilityLabel = when {
-            variabilityScore < 30 -> "Faible"
-            variabilityScore < 60 -> "Modéré"
-            else -> "Élevé"
+            variabilityScore < 30 -> "Low"
+            variabilityScore < 60 -> "Moderate"
+            else -> "High"
         }
 
         // Estimate hypo risk based on aggressive low basal decisions
@@ -208,9 +208,9 @@ class ComparisonCsvParser {
         val hypoRiskPercent = (aggressiveLowCount.toDouble() / entries.size) * 100
 
         val estimatedHypoRisk = when {
-            hypoRiskPercent < 20 -> "Faible"
-            hypoRiskPercent < 40 -> "Modéré"
-            else -> "Élevé"
+            hypoRiskPercent < 20 -> "Low"
+            hypoRiskPercent < 40 -> "Moderate"
+            else -> "High"
         }
 
         return SafetyMetrics(
@@ -346,36 +346,36 @@ class ComparisonCsvParser {
         }
 
         val preferredAlgorithm = when {
-            stats.agreementRate > 70 -> "Équivalent"
+            stats.agreementRate > 70 -> "Equivalent"
             impact.cumulativeDiff > 2.0 -> "SMB" // AIMI delivered significantly more
             impact.cumulativeDiff < -2.0 && safety.variabilityScore < 50 -> "AIMI" // SMB more aggressive but stable
             impact.cumulativeDiff < -2.0 && safety.variabilityScore >= 50 -> "AIMI" // SMB more aggressive and variable
-            else -> "Équivalent"
+            else -> "Equivalent"
         }
 
         val reason = when (preferredAlgorithm) {
             "AIMI" -> {
                 if (aggressivenessRatio > 2.0) {
-                    "SMB ${String.format("%.1f", aggressivenessRatio)}x plus agressif avec variabilité ${safety.variabilityLabel.lowercase()}"
+                    "SMB ${String.format("%.1f", aggressivenessRatio)}x more aggressive with variability ${safety.variabilityLabel.lowercase()}"
                 } else {
-                    "Approche plus conservatrice avec variabilité ${safety.variabilityLabel.lowercase()}"
+                    "More conservative approach with variability ${safety.variabilityLabel.lowercase()}"
                 }
             }
-            "SMB" -> "Plus réactif aux variations glycémiques"
-            else -> "Les deux algorithmes montrent des performances similaires (${String.format("%.1f", stats.agreementRate)}% d'accord)"
+            "SMB" -> "More responsive to blood sugar fluctuations"
+            else -> "Both algorithms show similar performance. (${String.format("%.1f", stats.agreementRate)}% okay)"
         }
 
         val confidenceLevel = when {
-            stats.totalEntries < 10 -> "Faible"
-            stats.totalEntries < 30 -> "Modérée"
-            else -> "Élevée"
+            stats.totalEntries < 10 -> "Low"
+            stats.totalEntries < 30 -> "Moderate"
+            else -> "High"
         }
 
         val safetyNote = when {
-            safety.estimatedHypoRisk == "Élevé" -> "⚠️ Surveillance accrue recommandée"
-            safety.variabilityScore > 70 -> "⚠️ Variabilité importante détectée"
-            impact.cumulativeDiff < -5.0 -> "⚠️ Grande différence d'insuline totale"
-            else -> "Profil de sécurité acceptable"
+            safety.estimatedHypoRisk == "High" -> "⚠️ Increased monitoring recommended"
+            safety.variabilityScore > 70 -> "⚠️ Significant variability detected"
+            impact.cumulativeDiff < -5.0 -> "⚠️ Large difference in total insulin"
+            else -> "Acceptable safety profile"
         }
 
         return Recommendation(
