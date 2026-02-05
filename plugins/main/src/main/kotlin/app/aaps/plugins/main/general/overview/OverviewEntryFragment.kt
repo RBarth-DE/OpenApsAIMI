@@ -17,6 +17,11 @@ import dagger.android.support.DaggerFragment
 import io.reactivex.rxjava3.disposables.CompositeDisposable
 import io.reactivex.rxjava3.kotlin.plusAssign
 import javax.inject.Inject
+import android.util.Log
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.launch
+import androidx.lifecycle.repeatOnLifecycle
 
 class OverviewEntryFragment : DaggerFragment() {
 
@@ -37,18 +42,15 @@ class OverviewEntryFragment : DaggerFragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        currentTag = childFragmentManager.findFragmentById(binding.overviewEntryContainer.id)?.tag
-        showSelectedOverview()
-    }
+        currentTag = childFragmentManager
+            .findFragmentById(binding.overviewEntryContainer.id)
+            ?.tag
 
-    override fun onStart() {
-        super.onStart()
-        disposable += rxBus
-            .toObservable(EventPreferenceChange::class.java)
-            .observeOn(aapsSchedulers.main)
-            .subscribe({
-                           if (it.isChanged(BooleanKey.OverviewUseDashboardLayout.key)) showSelectedOverview()
-                       }, fabricPrivacy::logException)
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.RESUMED) {
+                showSelectedOverview()
+            }
+        }
     }
 
     override fun onStop() {
@@ -56,23 +58,50 @@ class OverviewEntryFragment : DaggerFragment() {
         super.onStop()
     }
 
+    override fun onResume() {
+        super.onResume()
+        showSelectedOverview()
+    }
+
     override fun onDestroyView() {
-        _binding = null
         super.onDestroyView()
+        disposable.clear()
+        _binding = null
     }
 
     private fun showSelectedOverview() {
-        val binding = _binding ?: return
+
+        val b = _binding ?: return
+        if (!isAdded || view == null) {
+            Log.d("OverviewEntryFragment", "ABORT: isAdded == $isAdded || view == null")
+            return
+        }
+        val container = b.overviewEntryContainer
+        if (container.parent == null) {
+            Log.d("OverviewEntryFragment", "ABORT: container.parent == null")
+            return
+        }
+
+
         val useDashboard = preferences.get(BooleanKey.OverviewUseDashboardLayout)
         val newTag = if (useDashboard) DASHBOARD_TAG else OVERVIEW_TAG
-        if (newTag == currentTag && childFragmentManager.findFragmentByTag(newTag) != null) return
+        if (newTag == currentTag && childFragmentManager.findFragmentByTag(newTag) != null) {
+            Log.d("OverviewEntryFragment", "Fragment $currentTag is already active or childFragmentManager not found")
+            return
+        }
 
         val fragment = if (useDashboard) DashboardFragment() else OverviewFragment()
-        childFragmentManager.commit {
-            setReorderingAllowed(true)
-            replace(binding.overviewEntryContainer.id, fragment, newTag)
+        try {
+            childFragmentManager.commit {
+                setReorderingAllowed(true)
+                // Use the ID directly from the container object
+                replace(container.id, fragment, newTag)
+            }
+            currentTag = newTag
+            Log.d("OverviewEntryFragment", "Successfully replaced by $newTag")
+        } catch (e: Exception) {
+            Log.e("OverviewEntryFragment", "CRASH prevented: ${e.message}")
         }
-        currentTag = newTag
     }
 
     companion object {

@@ -230,7 +230,7 @@ class MainActivity : DaggerAppCompatActivityWithResult() {
 
                     R.id.nav_about              -> {
                         var message = "Build: ${config.BUILD_VERSION}\n"
-                        message += "Flavor: ${BuildConfig.FLAVOR}${BuildConfig.BUILD_TYPE}\n"
+                        message += "Flavor: ${config.FLAVOR}${config.BUILD_TYPE}\n"
                         message += "${rh.gs(app.aaps.plugins.configuration.R.string.configbuilder_nightscoutversion_label)} ${activePlugin.activeNsClient?.detectedNsVersion() ?: rh.gs(app.aaps.plugins.main.R.string.not_available_full)}"
                         if (config.isEngineeringMode()) message += "\n${rh.gs(app.aaps.plugins.configuration.R.string.engineering_mode_enabled)}"
                         if (config.isUnfinishedMode()) message += "\nUnfinished mode enabled"
@@ -439,7 +439,14 @@ class MainActivity : DaggerAppCompatActivityWithResult() {
                     }
                 }
             }
-        binding.mainPager.adapter = pageAdapter
+
+        // And when assigning to the ViewPager:
+        binding.mainPager.apply {
+            adapter = pageAdapter
+            // Prevents the ViewPager from attempting to "save" fragments that have an invalid ID
+            isSaveEnabled = false
+        }
+        //binding.mainPager.adapter = pageAdapter
         binding.mainPager.offscreenPageLimit = 8 // This may cause more memory consumption
 
         // Tabs
@@ -494,6 +501,8 @@ class MainActivity : DaggerAppCompatActivityWithResult() {
                 val plugin = tabPageAdapter.getPluginAt(binding.mainPager.currentItem)
                 this.menu?.findItem(R.id.nav_plugin_preferences)?.title = rh.gs(R.string.nav_preferences_plugin, plugin.name)
                 pluginPreferencesMenuItem?.isEnabled = plugin.preferencesId != PluginDescription.PREFERENCE_NONE
+                // Disable automatic state recovery, which causes the "No view found" crash on restarts
+                binding.mainPager.isSaveEnabled = false
             }
         }
         if (pluginPreferencesMenuItem?.isEnabled == false) {
@@ -572,7 +581,7 @@ class MainActivity : DaggerAppCompatActivityWithResult() {
         fabricPrivacy.setUserProperty("Mode", config.APPLICATION_ID + "-" + closedLoopEnabled)
         fabricPrivacy.setUserProperty("Language", preferences.getIfExists(StringKey.GeneralLanguage) ?: Locale.getDefault().language)
         fabricPrivacy.setUserProperty("Version", config.VERSION_NAME)
-        fabricPrivacy.setUserProperty("HEAD", BuildConfig.HEAD)
+        fabricPrivacy.setUserProperty("HEAD", config.HEAD)
         fabricPrivacy.setUserProperty("Remote", remote)
         val hashes: List<String> = signatureVerifierPlugin.shortHashes()
         if (hashes.isNotEmpty()) fabricPrivacy.setUserProperty("Hash", hashes[0])
@@ -584,7 +593,7 @@ class MainActivity : DaggerAppCompatActivityWithResult() {
         activePlugin.activeSensitivity.let { fabricPrivacy.setUserProperty("Sensitivity", it::class.java.simpleName) }
         activePlugin.activeInsulin.let { fabricPrivacy.setUserProperty("Insulin", it::class.java.simpleName) }
         // Add to crash log too
-        FirebaseCrashlytics.getInstance().setCustomKey("HEAD", BuildConfig.HEAD)
+        FirebaseCrashlytics.getInstance().setCustomKey("HEAD", config.HEAD)
         FirebaseCrashlytics.getInstance().setCustomKey("Version", config.VERSION_NAME)
         FirebaseCrashlytics.getInstance().setCustomKey("BuildType", config.BUILD_TYPE)
         FirebaseCrashlytics.getInstance().setCustomKey("BuildFlavor", config.FLAVOR)

@@ -59,7 +59,7 @@ import app.aaps.plugins.main.general.dashboard.modes.DashboardModesController
 import android.view.MotionEvent
 import android.annotation.SuppressLint
 import android.graphics.Color
-
+import android.util.Log
 
 class DashboardFragment : DaggerFragment() {
 
@@ -137,6 +137,8 @@ class DashboardFragment : DaggerFragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        _binding = FragmentDashboardBinding.bind(view)
+
         binding.bottomNavigation.selectedItemId = R.id.dashboard_nav_home
         binding.bottomNavigation.setOnItemSelectedListener { item ->
             when (item.itemId) {
@@ -383,8 +385,19 @@ class DashboardFragment : DaggerFragment() {
 
     }
 
+    override fun onStart() {
+        super.onStart()
+        Log.d("DashboardFragment", "onStart")
+    }
+
+    override fun onStop() {
+        super.onStop()
+        disposables.clear()
+    }
+
     override fun onResume() {
         super.onResume()
+        Log.d("DashboardFragment", "onResume")
         updateContextBadge()
         viewModel.start()
 
@@ -579,11 +592,34 @@ class DashboardFragment : DaggerFragment() {
         if ((config.AAPSCLIENT || activePlugin.activePump.pumpDescription.isTempBasalCapable) && menuChartSettings[0][CharType.BAS.ordinal]) {
             graphData.addBasals()
         }
+
+        //added treatments (sport, meal,... + restarts)
         graphData.addEps(context, 0.95)
         if (menuChartSettings[0][CharType.TREAT.ordinal])
             graphData.addTherapyEvents()
+        // add predictions
         if (menuChartSettings[0][CharType.ACT.ordinal])
             graphData.addActivity(0.8)
+        // adding HR and Steps based on menu settings
+        val g = 0
+        if (menuChartSettings.size > g + 1) {
+            val settings = menuChartSettings[g + 1]
+            // Add heart rate (HR) if enabled in the menu
+            if (settings[CharType.HR.ordinal]) {
+                graphData.addHeartRate(false, 0.8)
+                Log.d("Dashboard", "HR added to graph")
+            }
+            // Add steps (STEPS) if enabled in the menu2
+            if (settings[CharType.STEPS.ordinal]) {
+                graphData.addSteps(false, 0.8)
+                Log.d("Dashboard", "Steps added to graph")
+            }
+        }
+        else
+        {
+            Log.d("Dashboard", "menuChartSettings.size = ${menuChartSettings.size} ")
+        }
+
         graphData.addTargetLine()
         graphData.addRunningModes()
         graphData.addNowLine(now)

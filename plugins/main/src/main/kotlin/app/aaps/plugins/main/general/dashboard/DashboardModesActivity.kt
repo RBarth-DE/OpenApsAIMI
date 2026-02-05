@@ -81,7 +81,12 @@ class DashboardModesActivity : TranslatedDaggerAppCompatActivity() {
                 text = event.title
                 setOnClickListener {
                     modeController.runEventWithConfirmation(event) {
-                        finish()
+                        // In the Activity instead of directly using finish(), we give the system 150ms.
+                        window.decorView.postDelayed({
+                            if (!isFinishing && !isDestroyed) {
+                                finish()
+                            }
+                        }, 150) // A short delay of 150ms gives the launcher time to correctly detect the task status.
                     }
                 }
             }
@@ -89,4 +94,9 @@ class DashboardModesActivity : TranslatedDaggerAppCompatActivity() {
         }
     }
 
+    override fun finish() {
+        // Prevent fragments from performing further operations
+        supportFragmentManager.executePendingTransactions()
+        super.finish()
+    }
 }
