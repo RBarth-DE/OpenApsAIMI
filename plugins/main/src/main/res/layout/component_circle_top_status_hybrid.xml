@@ -130,10 +130,7 @@
                         android:text="--"
                         android:textColor="#AAFFFFFF"
                         android:textAppearance="@style/TextAppearance.MaterialComponents.Caption"
-                        android:textStyle="bold"
-                        android:maxLines="1"
-                        android:singleLine="true"
-                        android:ellipsize="end"/>
+                        android:textStyle="bold" />
                 </LinearLayout>
 
                 <!-- Reservoir -->
