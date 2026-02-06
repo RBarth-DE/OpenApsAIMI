@@ -1302,7 +1302,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         if (blockLgs) {
             rT.reason.append(context.getString(R.string.lgs_triggered, "%.0f".format(bg), "%.0f".format(hypoGuard)))
             rT.duration = maxOf(duration, 30)
-            rT.rate = 0.0
+            rT.rate = ketoProtection(0.0, profile, rT)
             return rT
         }
         val isLgsEnabled = profile.lgsThreshold != null && profile.lgsThreshold!! > 0
@@ -1323,7 +1323,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                 )
             )
             rT.duration = duration
-            rT.rate = rate
+            rT.rate = ketoProtection(rate, profile, rT)
             return rT
         }
 
@@ -1416,7 +1416,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
 
         rT.reason.append(context.getString(R.string.temp_basal_pose, "%.2f".format(rate), duration))
         rT.duration = duration
-        rT.rate = rate
+        rT.rate = ketoProtection(rate, profile, rT)
         return rT
     }
 
@@ -6173,7 +6173,8 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         
         // Apply basal boost if calculated (OVERLAY - don't block SMB)
         if (basalBoostApplied && rate != null) {
-            rT.rate = rate.coerceAtLeast(0.0)
+            val tmp_rate = rate.coerceAtLeast(0.0)
+            rT.rate = ketoProtection(tmp_rate, profile, rT)
             rT.deliverAt = deliverAt
             rT.duration = 30
             consoleLog.add("BOOST_BASAL_APPLIED source=${basalBoostSource ?: "Unknown"} rate=${"%.2f".format(Locale.US, rate)}U/h")
@@ -7624,6 +7625,23 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                  consoleLog.add("⚡ COB HYDRATION: Injected ${fallbackCarbs.toInt()}g from Advisor Prefs (DB latency bypass)")
             }
         }
+    }
+
+    // mod Ketoacidosis Protection
+    private fun ketoProtection(_proposedRate: Double, profile: OapsProfileAimi, rT: RT): Double {
+        aapsLogger.info(LTag.APS, "ketoProtection IN: _proposedRate=$_proposedRate ")
+        val baseBasalRate = profile.current_basal
+        var proposedRate = _proposedRate
+        val protectionRate : Double = profile.ketoacidosisProtectionBasal.toDouble() * 0.01
+        val cutOff : Double = roundBasal(baseBasalRate * protectionRate)
+        aapsLogger.info(LTag.APS, "ketoProtection cutOff: $cutOff")
+        if (profile.ketoacidosisProtection && proposedRate < cutOff) {
+            proposedRate = cutOff
+            rT.reason.append("\nKetoacidosis prot. from $_proposedRate -> $proposedRate U/h.")
+            aapsLogger.info(LTag.APS, "ketoProtection sets tbr from $_proposedRate to $proposedRate U/h")
+        }
+        aapsLogger.info(LTag.APS, "ketoProtection OUT: proposedRate=$proposedRate ")
+        return proposedRate
     }
 
 }

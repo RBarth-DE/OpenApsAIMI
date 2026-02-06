@@ -58,5 +58,8 @@ data class OapsProfileAimi(
     var futureActivity: Double,
     var sensorLagActivity: Double,
     var historicActivity: Double,
-    var currentActivity: Double
+    var currentActivity: Double,
+    // Ketoacidosis Protection
+    var ketoacidosisProtectionBasal: Int = 20,
+    var ketoacidosisProtection: Boolean = false
 )

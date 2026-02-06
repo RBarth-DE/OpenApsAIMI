@@ -813,7 +813,9 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
                 futureActivity = futureActivity,
                 sensorLagActivity = sensorLagActivity,
                 historicActivity = historicActivity,
-                currentActivity = currentActivity
+                currentActivity = currentActivity,
+                ketoacidosisProtection = preferences.get(BooleanKey.ApsKetoacidosisProtection),
+                ketoacidosisProtectionBasal = preferences.get(IntKey.ApsKetoacidosisProtectionBasal)
             )
 
             val microBolusAllowed = constraintsChecker.isSMBModeEnabled(ConstraintObject(tempBasalFallback.not(), aapsLogger)).also { inputConstraints.copyReasons(it) }.value()
@@ -1480,6 +1482,14 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
                             title = R.string.wcycle_clamp_max_title
                         )
                     )
+                })
+
+                // Keto Protection
+                addPreference(preferenceManager.createPreferenceScreen(context).apply {
+                    key = "Ketoacidosis_Protection"
+                    title = rh.gs(R.string.ketoacidosis_protection_title)
+                    addPreference(AdaptiveSwitchPreference(ctx = context, booleanKey = BooleanKey.ApsKetoacidosisProtection, summary = R.string.ketoacidosis_protection_summary, title = R.string.ketoacidosis_protection_title))
+                    addPreference(AdaptiveIntPreference(ctx=context, intKey = IntKey.ApsKetoacidosisProtectionBasal, dialogMessage = R.string.ketoacidosis_protection_basal_summary, title = R.string.ketoacidosis_protection_basal_title))
                 })
 
                 // 🏥 Autoimmune / Inflammatory Diseases (Decoupled from WCycle)

@@ -756,6 +756,7 @@
     <!--    AIMI START TRANSLATION AIMI TABLE PLUGIN - FILE DeterminebasalAIMI.kt -->
 
     <string name="bg_drop_high">BG high drop (%1$.1f mg/dL/h), strong reduction;</string>
+    <string name="bg_drop_high_warning">Moderater Abfall unter 110 (%1$.1f mg/dL/h), Basal um 50 % reduziert;</string>
     <string name="bg_rapid_rise">Rapid rise detected (delta %1$.0f mg/dL), applying emergency mode; </string>
     <string name="bg_combined_delta_weak">Combined delta very weak (%1$.2f), reduction x0.6; </string>
     <string name="bg_combined_delta_moderate">Combined delta moderate (%1$.2f), reduction x0.8; </string>
@@ -1076,6 +1077,10 @@
     <string name="oaps_aimi_kicker_maxmin_title">Maximale Kicker-Dauer (min)</string>
     <string name="oaps_aimi_kicker_maxmin_summary">Gesamtmaximalzeit unter „Kicker“-Intensivierung.</string>
     <string name="oaps_aimi_zero_resume_min_title">Verzögerung vor Mikro-Wiederaufnahme (min)</string>
+    <string name="ketoacidosis_protection_title">Ketoazidose-Schutz</string>
+    <string name="ketoacidosis_protection_summary">Aktiviert einen kleinen Sicherheits-TBR anstelle einer niedrigen Temperatur, um das Risiko einer Ketoazidose zu verringern.</string>
+    <string name="ketoacidosis_protection_basal_title">Sicherheits-TBR in [%]</string>
+    <string name="ketoacidosis_protection_basal_summary">Standard: 20</string>
     <string name="count_steps_watch">Schritte Uhr</string>
     <string name="aimi_adv_generated_footer">Erstellt am %1$s • OpenAPS AIMI</string>
     <string name="aimi_advisor_model_title">AI-Modell auswählen</string>
@@ -1147,8 +1152,11 @@
     <string name="context_preset_cardio">🏃 Cardio</string>
     <string name="context_btn_clear">Löschen</string>
     <string name="context_preset_strength">💪 Stärke</string>
+    <string name="context_preset_yoga">"🧘 Yoga "</string>
+    <string name="context_preset_sport">⚽ Sport</string>
     <string name="context_preset_walking">🚶 Gehen</string>
     <string name="context_preset_sick">🤒 Krank</string>
+    <string name="context_preset_stress">😰 Stress</string>
     <string name="context_preset_meal_risk">🍕 Mahlzeitenrisiko</string>
     <string name="context_preset_alcohol">🍷 Alkohol</string>
     <string name="context_preset_travel">✈️ Reisen</string>
@@ -1203,4 +1211,5 @@
     <string name="endo_smb_dampen_summary">Faktor zur Reduzierung von SMBs während der Abfackelung, um eine Stapelung zu verhindern (Standardwert 0,7x).</string>
     <string name="endo_flare_duration_title">Flare-Dauer (Stunden)</string>
     <string name="endo_flare_duration_summary">Wie lange bleibt der Blinkmodus aktiv, wenn er aktiviert wird?</string>
+    <string name="bg_drop_high_critical">KRITISCHER Abfall unter 85 (%1$.1f mg/dL/h), BASAL STOP;</string>
 </resources>

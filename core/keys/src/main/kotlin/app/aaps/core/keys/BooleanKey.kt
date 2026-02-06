@@ -153,4 +153,7 @@ enum class BooleanKey(
     AimiEndometriosisHormonalSuppression("aimi_endo_suppression", false),
     AimiEndometriosisPainFlare("aimi_endo_flare", false),
     OApsAIMIMealAdvisorTrigger("aimi_meal_advisor_trigger", false), // Trigger for one-shot MAX-SMB bypass
+
+    //Ketoacidosis Protection
+    ApsKetoacidosisProtection("ketoacidosis_protection", false, defaultedBySM = true),
 }

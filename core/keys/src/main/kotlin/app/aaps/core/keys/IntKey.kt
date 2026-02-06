@@ -103,4 +103,6 @@ enum class IntKey(
     // 🌸 Endometriosis & Cycle Management (MTR)
     AimiEndometriosisFlareDuration("aimi_endo_flare_duration", 4, 1, 24),
 
+    // Ketoacidosis Protection
+    ApsKetoacidosisProtectionBasal("ketoacidosis_protection_basal", 20,10, 40, defaultedBySM = true),
 }

@@ -1277,11 +1277,12 @@
     <string name="endo_smb_dampen_summary">Factor to reduce SMBs during flare to prevent stacking (Default 0.7x).</string>
     <string name="endo_flare_duration_title">Flare Duration (hours)</string>
     <string name="endo_flare_duration_summary">How long the flare mode stays active when toggled.</string>
-    
 
-    
-
-    
-
+    // Ketoacidosis Protection
+    <string name="ketoacidosis_protection_title">Ketoacidosis Protection</string>
+    <string name="ketoacidosis_protection_summary">Enables a small safety TBR instead of low temp to reduce the ketoacidosis risk.</string>
+    <string name="ketoacidosis_protection_basal_title">Quantity of the safety TBR [%]</string>
+    <string name="ketoacidosis_protection_basal_summary">Default: 20</string>
+    <string name="count_steps_watch">Steps Watch</string>
 
 </resources>
