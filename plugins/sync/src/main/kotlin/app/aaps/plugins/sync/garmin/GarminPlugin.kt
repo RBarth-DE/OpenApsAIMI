@@ -592,10 +592,28 @@ class GarminPlugin @Inject constructor(
         val now = System.currentTimeMillis()
         val lastTotal = sp.getInt(PREF_GARMIN_LAST_STEPS, -1)
 
+        val start = Instant.ofEpochMilli(now - 5 * 60_000)
+        val end = Instant.ofEpochMilli(now)
+        val none = 0
+
         // First ever value → store baseline only
         if (lastTotal < 0) {
             sp.putInt(PREF_GARMIN_LAST_STEPS, totalSteps)
             sp.putLong(PREF_GARMIN_LAST_TS, now)
+
+            // also store initial update
+            loopHub.storeStepsCount(
+                start,
+                end,
+                totalSteps,
+                none,
+                none,
+                none,
+                none,
+                none,
+                device
+            )
+
             aapsLogger.info(LTag.GARMIN, "[GarminHTTP] baseline steps=$totalSteps")
             return
         }
@@ -617,10 +635,6 @@ class GarminPlugin @Inject constructor(
             }
             return
         }
-
-        val start = Instant.ofEpochMilli(now - 5 * 60_000)
-        val end = Instant.ofEpochMilli(now)
-        val none = 0
 
         loopHub.storeStepsCount(
             start,
