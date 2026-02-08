@@ -830,7 +830,9 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
                 historicActivity = historicActivity,
                 currentActivity = currentActivity,
                 ketoacidosisProtection = preferences.get(BooleanKey.ApsKetoacidosisProtection),
-                ketoacidosisProtectionBasal = preferences.get(IntKey.ApsKetoacidosisProtectionBasal)
+                ketoacidosisProtectionBasal = preferences.get(IntKey.ApsKetoacidosisProtectionBasal),
+                ketoacidosisProtectionBG = preferences.get(DoubleKey.ApsKetoacidosisProtectionBG),
+                ketoacidosisProtectionDelta = preferences.get(DoubleKey.ApsKetoacidosisProtectionDelta)
             )
 
             val microBolusAllowed = constraintsChecker.isSMBModeEnabled(ConstraintObject(tempBasalFallback.not(), aapsLogger)).also { inputConstraints.copyReasons(it) }.value()
@@ -1510,8 +1512,26 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
                 addPreference(preferenceManager.createPreferenceScreen(context).apply {
                     key = "Ketoacidosis_Protection"
                     title = rh.gs(R.string.ketoacidosis_protection_title)
-                    addPreference(AdaptiveSwitchPreference(ctx = context, booleanKey = BooleanKey.ApsKetoacidosisProtection, summary = R.string.ketoacidosis_protection_summary, title = R.string.ketoacidosis_protection_title))
-                    addPreference(AdaptiveIntPreference(ctx=context, intKey = IntKey.ApsKetoacidosisProtectionBasal, dialogMessage = R.string.ketoacidosis_protection_basal_summary, title = R.string.ketoacidosis_protection_basal_title))
+                    addPreference(AdaptiveSwitchPreference(
+                        ctx = context,
+                        booleanKey = BooleanKey.ApsKetoacidosisProtection,
+                        summary = R.string.ketoacidosis_protection_summary,
+                        title = R.string.ketoacidosis_protection_title))
+                    addPreference(AdaptiveIntPreference(
+                        ctx=context,
+                        intKey = IntKey.ApsKetoacidosisProtectionBasal,
+                        dialogMessage = R.string.ketoacidosis_protection_basal_summary,
+                        title = R.string.ketoacidosis_protection_basal_title))
+                    addPreference(AdaptiveDoublePreference(
+                        ctx=context,
+                        doubleKey = DoubleKey.ApsKetoacidosisProtectionBG,
+                        dialogMessage = R.string.ketoacidosis_protection_bg_summary,
+                        title = R.string.ketoacidosis_protection_bg_title))
+                    addPreference(AdaptiveDoublePreference(
+                        ctx=context,
+                        doubleKey = DoubleKey.ApsKetoacidosisProtectionDelta,
+                        dialogMessage = R.string.ketoacidosis_protection_delta_summary,
+                        title = R.string.ketoacidosis_protection_delta_title))
                 })
 
                 // 🏥 Autoimmune / Inflammatory Diseases (Decoupled from WCycle)

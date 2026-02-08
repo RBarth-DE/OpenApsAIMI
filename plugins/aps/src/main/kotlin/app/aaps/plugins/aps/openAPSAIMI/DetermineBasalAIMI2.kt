@@ -1302,7 +1302,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         if (blockLgs) {
             rT.reason.append(context.getString(R.string.lgs_triggered, "%.0f".format(bg), "%.0f".format(hypoGuard)))
             rT.duration = maxOf(duration, 30)
-            rT.rate = ketoProtection(0.0, profile, rT)
+            rT.rate = ketoProtection(0.0, profile, rT, 1)
             return rT
         }
         val isLgsEnabled = profile.lgsThreshold != null && profile.lgsThreshold!! > 0
@@ -1323,7 +1323,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                 )
             )
             rT.duration = duration
-            rT.rate = ketoProtection(rate, profile, rT)
+            rT.rate = ketoProtection(rate, profile, rT, 2)
             return rT
         }
 
@@ -1416,7 +1416,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
 
         rT.reason.append(context.getString(R.string.temp_basal_pose, "%.2f".format(rate), duration))
         rT.duration = duration
-        rT.rate = ketoProtection(rate, profile, rT)
+        rT.rate = ketoProtection(rate, profile, rT, 3)
         return rT
     }
 
@@ -4748,6 +4748,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             val pbolusM = preferences.get(DoubleKey.OApsAIMIMealPrebolus)
             
             // 🚀 TBR: Apply if runtime < 30 min
+            rT.rate = ketoProtection(rT.rate!!, profile, rT, 4)
             if (mealruntime < 30 * 60) {
                 setTempBasal(modeTbrLimit, 30, profile, rT, currenttemp, overrideSafetyLimits = true    )
                 consoleLog.add("🍱 LEGACY_TBR_MEAL rate=${"%.2f".format(modeTbrLimit)}U/h duration=30m")
@@ -4763,9 +4764,10 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             val pbolusbfast = preferences.get(DoubleKey.OApsAIMIBFPrebolus)
             
             // 🚀 TBR: Apply if runtime < 30 min
+            rT.rate = ketoProtection(rT.rate!!, profile, rT , 5)
             if (bfastruntime < 30 * 60) {
                 setTempBasal(modeTbrLimit, 30, profile, rT, currenttemp, overrideSafetyLimits = true)
- consoleLog.add("🍱 LEGACY_TBR_BFAST rate=${"%.2f".format(modeTbrLimit)}U/h duration=30m")
+                consoleLog.add("🍱 LEGACY_TBR_BFAST rate=${"%.2f".format(modeTbrLimit)}U/h duration=30m")
             }
             
             rT.units = pbolusbfast
@@ -4778,6 +4780,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             val pbolusbfast2 = preferences.get(DoubleKey.OApsAIMIBFPrebolus2)
             
             // 🚀 TBR: Apply if runtime < 30 min
+            rT.rate = ketoProtection(rT.rate!!, profile, rT, 6)
             if (bfastruntime < 30 * 60) {
                 setTempBasal(modeTbrLimit, 30, profile, rT, currenttemp, overrideSafetyLimits = true)
                 consoleLog.add("🍱 LEGACY_TBR_BFAST rate=${"%.2f".format(modeTbrLimit)}U/h duration=30m")
@@ -4793,6 +4796,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             val pbolusLunch = preferences.get(DoubleKey.OApsAIMILunchPrebolus)
             
             // 🚀 TBR: Apply if runtime < 30 min
+            rT.rate = ketoProtection(rT.rate!!, profile, rT, 7)
             if (lunchruntime < 30 * 60) {
                 setTempBasal(modeTbrLimit, 30, profile, rT, currenttemp, overrideSafetyLimits = true)
                 consoleLog.add("🍱 LEGACY_TBR_LUNCH rate=${"%.2f".format(modeTbrLimit)}U/h duration=30m")
@@ -4808,6 +4812,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             val pbolusLunch2 = preferences.get(DoubleKey.OApsAIMILunchPrebolus2)
             
             // 🚀 TBR: Apply if runtime < 30 min
+            rT.rate = ketoProtection(rT.rate!!, profile, rT , 8)
             if (lunchruntime < 30 * 60) {
                 setTempBasal(modeTbrLimit, 30, profile, rT, currenttemp, overrideSafetyLimits = true)
                 consoleLog.add("🍱 LEGACY_TBR_LUNCH rate=${"%.2f".format(modeTbrLimit)}U/h duration=30m")
@@ -4823,6 +4828,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             val pbolusDinner = preferences.get(DoubleKey.OApsAIMIDinnerPrebolus)
             
             // 🚀 TBR: Apply if runtime < 30 min
+            rT.rate = ketoProtection(rT.rate!!, profile, rT, 9)
             if (dinnerruntime < 30 * 60) {
                 setTempBasal(modeTbrLimit, 30, profile, rT, currenttemp, overrideSafetyLimits = true)
                 consoleLog.add("🍱 LEGACY_TBR_DINNER rate=${"%.2f".format(modeTbrLimit)}U/h duration=30m")
@@ -4838,6 +4844,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             val pbolusDinner2 = preferences.get(DoubleKey.OApsAIMIDinnerPrebolus2)
             
             // 🚀 TBR: Apply if runtime < 30 min
+            rT.rate = ketoProtection(rT.rate!!, profile, rT,10)
             if (dinnerruntime < 30 * 60) {
                 setTempBasal(modeTbrLimit, 30, profile, rT, currenttemp, overrideSafetyLimits = true)
                 consoleLog.add("🍱 LEGACY_TBR_DINNER rate=${"%.2f".format(modeTbrLimit)}U/h duration=30m")
@@ -4853,6 +4860,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             val pbolusHC = preferences.get(DoubleKey.OApsAIMIHighCarbPrebolus)
             
             // 🚀 TBR: Apply if runtime < 30 min
+            rT.rate = ketoProtection(rT.rate!!, profile, rT,11)
             if (highCarbrunTime < 30 * 60) {
                 setTempBasal(modeTbrLimit, 30, profile, rT, currenttemp, overrideSafetyLimits = true)
                 consoleLog.add("🍱 LEGACY_TBR_HIGHCARB rate=${"%.2f".format(modeTbrLimit)}U/h duration=30m")
@@ -4865,6 +4873,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         }
         if (isHighCarb2ModeCondition()) {
             val pbolusHC = preferences.get(DoubleKey.OApsAIMIHighCarbPrebolus2)
+            rT.rate = ketoProtection(rT.rate!!, profile, rT,12)
             if (highCarbrunTime < 30 * 60) {
                 setTempBasal(modeTbrLimit, 30, profile, rT, currenttemp, overrideSafetyLimits = true)
                 consoleLog.add("🍱 LEGACY_TBR_HIGHCARB rate=${"%.2f".format(modeTbrLimit)}U/h duration=30m")
@@ -4879,6 +4888,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             val pbolussnack = preferences.get(DoubleKey.OApsAIMISnackPrebolus)
             
             // 🚀 TBR: Apply if runtime < 30 min
+            rT.rate = ketoProtection(rT.rate!!, profile, rT,13)
             if (snackrunTime < 30 * 60) {
                 setTempBasal(modeTbrLimit, 30, profile, rT, currenttemp, overrideSafetyLimits = false)
                 consoleLog.add("🍱 LEGACY_TBR_SNACK rate=${"%.2f".format(modeTbrLimit)}U/h duration=30m")
@@ -4918,8 +4928,9 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             // Block all boluses
             rT.insulinReq = 0.0
             rT.reason.append(" | ⚠ Safety Halt: ${safetyRes.reason}")
+            rT.rate = ketoProtection(rT.rate!!, profile, rT,14)
             lastDecisionSource = safetyRes.source
-            logDecisionFinal("SAFETY", rT, bg, delta)
+            logDecisionFinal("SAFETY", rT,  rT.rate, delta)
             return rT
         }
 
@@ -4965,7 +4976,8 @@ class DetermineBasalaimiSMB2 @Inject constructor(
              
              // Add Status Log (User Request)
              rT.reason.appendLine(context.getString(R.string.autodrive_status, if (autodrive) "✔" else "✘", "Meal Advisor"))
-             logDecisionFinal("MEAL_ADVISOR", rT, bg, delta)
+             rT.rate = ketoProtection(rT.rate !!, profile, rT,15)
+             logDecisionFinal("MEAL_ADVISOR", rT,  rT.rate, delta)
              return rT // 🛑 HARD RETURN to ensure no other logic overrides this
         }
 
@@ -4983,8 +4995,9 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             rT.reason.append("🛑 Hard Brake: Falling Fast & Decelerating -> Zero Basal\n")
             // Force 0% for 30m
             setTempBasal(0.0, 30, profile, rT, currenttemp, overrideSafetyLimits = true)
+            rT.rate = ketoProtection(rT.rate !!, profile, rT,16)
             lastSafetySource = "HardBrake" 
-            logDecisionFinal("HARD_BRAKE", rT, bg, delta)
+            logDecisionFinal("HARD_BRAKE", rT, rT.rate, delta)
             return rT
         }
         // -----------------------------------------------------
@@ -5018,8 +5031,9 @@ class DetermineBasalaimiSMB2 @Inject constructor(
              
              if (effectiveBolus > 0.05 || effectiveDuration > 0) {
                  lastAutodriveActionTime = System.currentTimeMillis() // 🟢 Update Strict Cooldown
+                 rT.rate = ketoProtection(rT.rate !!, profile, rT,17)
                  consoleLog.add("AUTODRIVE_APPLIED intent=${intentBolus} actual=$effectiveBolus")
-                 logDecisionFinal("AUTODRIVE", rT, bg, delta)
+                 logDecisionFinal("AUTODRIVE", rT, rT.rate, delta)
                  return rT
              } else {
                  consoleLog.add("AUTODRIVE_NOOP_FALLBACK reason=CappedToZero")
@@ -5038,8 +5052,9 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         val isCompression = isCompressionProtectionCondition(delta.toFloat(), reason)
         
         if (isCompression) {
-             // Hard Stop on Sensor Error
-             logDecisionFinal("COMPRESSION", rT, bg, delta)
+            // Hard Stop on Sensor Error
+            rT.rate = ketoProtection(rT.rate!!, profile, rT,18)
+            logDecisionFinal("COMPRESSION", rT, rT.rate, delta)
              return rT
         }
         
@@ -5060,7 +5075,8 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             consoleLog.add("AD_EARLY_TBR_TRIGGER rate=0.0 duration=0 reason=DriftTerminator_Tap") // Actually a bolus tap, not TBR, but fits "Early Action" category
             consoleLog.add("AD_SMALL_PREBOLUS_TRIGGER amount=$terminatortap reason=DriftTerminator")
             finalizeAndCapSMB(rT, terminatortap, reason.toString(), mealData, threshold, decisionSource = "DriftTerminator")
-            logDecisionFinal("DRIFT_TERMINATOR", rT, bg, delta)
+            rT.rate = ketoProtection(rT.rate!!, profile, rT,19)
+            logDecisionFinal("DRIFT_TERMINATOR", rT, rT.rate, delta)
             return rT
         }
         
@@ -6174,7 +6190,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         // Apply basal boost if calculated (OVERLAY - don't block SMB)
         if (basalBoostApplied && rate != null) {
             val tmp_rate = rate.coerceAtLeast(0.0)
-            rT.rate = ketoProtection(tmp_rate, profile, rT)
+            rT.rate = ketoProtection(tmp_rate, profile, rT,20)
             rT.deliverAt = deliverAt
             rT.duration = 30
             consoleLog.add("BOOST_BASAL_APPLIED source=${basalBoostSource ?: "Unknown"} rate=${"%.2f".format(Locale.US, rate)}U/h")
@@ -6497,7 +6513,8 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                 flatBGsDetected = flatBGsDetected,
                 dynIsfMode = dynIsfMode
             )
-            logDecisionFinal("MAX_IOB", finalResult, bg, delta)
+            rT.rate = ketoProtection(rT.rate!!, profile, rT,21)
+            logDecisionFinal("MAX_IOB", finalResult, rT.rate, delta)
             return finalResult
         } else {
             var insulinReq = smbToGive.toDouble()
@@ -7147,6 +7164,9 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                     }
                 }
             )
+
+            // final keto check.
+            rT.rate = ketoProtection(rT.rate!!, profile, rT,22)
             
             // Populate Outcome
             // Populate Outcome
@@ -7628,19 +7648,33 @@ class DetermineBasalaimiSMB2 @Inject constructor(
     }
 
     // mod Ketoacidosis Protection
-    private fun ketoProtection(_proposedRate: Double, profile: OapsProfileAimi, rT: RT): Double {
-        aapsLogger.info(LTag.APS, "ketoProtection IN: _proposedRate=$_proposedRate ")
-        val baseBasalRate = profile.current_basal
+    private fun ketoProtection(_proposedRate: Double, profile: OapsProfileAimi, rT: RT, count: Int): Double {
+        aapsLogger.info(LTag.APS, "ketoProtection IN: _proposedRate=$_proposedRate $count")
         var proposedRate = _proposedRate
-        val protectionRate : Double = profile.ketoacidosisProtectionBasal.toDouble() * 0.01
-        val cutOff : Double = roundBasal(baseBasalRate * protectionRate)
-        aapsLogger.info(LTag.APS, "ketoProtection cutOff: $cutOff")
-        if (profile.ketoacidosisProtection && proposedRate < cutOff) {
-            proposedRate = cutOff
-            rT.reason.append("\nKetoacidosis prot. from $_proposedRate -> $proposedRate U/h.")
-            aapsLogger.info(LTag.APS, "ketoProtection sets tbr from $_proposedRate to $proposedRate U/h")
+
+        if (bg <= profile.ketoacidosisProtectionBG ||
+            delta <= profile.ketoacidosisProtectionDelta ||
+            shortAvgDelta <= profile.ketoacidosisProtectionDelta  ||
+            longAvgDelta <= profile.ketoacidosisProtectionDelta )
+        {
+            aapsLogger.info(
+                LTag.APS,
+                "ketoProtection: BG=$bg < 85 or significant drop → delta=$delta, shortAvgDelta=$shortAvgDelta, longAvgDelta=$longAvgDelta, return $proposedRate ($count)"
+            )
+            rT.reason.append("\nKETO sec $proposedRate U/h.($count)")
         }
-        aapsLogger.info(LTag.APS, "ketoProtection OUT: proposedRate=$proposedRate ")
+        else {
+            val baseBasalRate = profile.current_basal
+            val protectionRate: Double = profile.ketoacidosisProtectionBasal.toDouble() * 0.01
+            val cutOff: Double = roundBasal(baseBasalRate * protectionRate)
+            aapsLogger.info(LTag.APS, "ketoProtection cutOff: $cutOff")
+            if (profile.ketoacidosisProtection && proposedRate < cutOff) {
+                proposedRate = cutOff
+                rT.reason.append("\nKETO from $_proposedRate -> $proposedRate U/h. ($count)")
+                aapsLogger.info(LTag.APS, "ketoProtection sets tbr from $_proposedRate to $proposedRate U/h ($count)")
+            }
+        }
+        aapsLogger.info(LTag.APS, "ketoProtection OUT: proposedRate=$proposedRate ($count)")
         return proposedRate
     }
 

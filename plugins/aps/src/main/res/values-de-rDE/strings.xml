@@ -1078,9 +1078,10 @@
     <string name="oaps_aimi_kicker_maxmin_summary">Gesamtmaximalzeit unter „Kicker“-Intensivierung.</string>
     <string name="oaps_aimi_zero_resume_min_title">Verzögerung vor Mikro-Wiederaufnahme (min)</string>
     <string name="ketoacidosis_protection_title">Ketoazidose-Schutz</string>
-    <string name="ketoacidosis_protection_summary">Aktiviert einen kleinen Sicherheits-TBR anstelle einer niedrigen Temperatur, um das Risiko einer Ketoazidose zu verringern.</string>
+    <string name="ketoacidosis_protection_summary">Aktiviert eine kleine Sicherheits-TBR anstelle von null TBR, um das Risiko einer Ketoazidose zu verringern.</string>
     <string name="ketoacidosis_protection_basal_title">Sicherheits-TBR in [%]</string>
     <string name="ketoacidosis_protection_basal_summary">Standard: 20</string>
+    <string name="ketoacidosis_protection_delta_summary">Standard: 10</string>
     <string name="count_steps_watch">Schritte Uhr</string>
     <string name="aimi_adv_generated_footer">Erstellt am %1$s • OpenAPS AIMI</string>
     <string name="aimi_advisor_model_title">AI-Modell auswählen</string>
@@ -1212,4 +1213,7 @@
     <string name="endo_flare_duration_title">Flare-Dauer (Stunden)</string>
     <string name="endo_flare_duration_summary">Wie lange bleibt der Blinkmodus aktiv, wenn er aktiviert wird?</string>
     <string name="bg_drop_high_critical">KRITISCHER Abfall unter 85 (%1$.1f mg/dL/h), BASAL STOP;</string>
+    <string name="ketoacidosis_protection_bg_title">"Sicherheits BG-Wert stop Keto "</string>
+    <string name="ketoacidosis_protection_bg_summary">Standard: 80</string>
+    <string name="ketoacidosis_protection_delta_title">"Sicherheits Delta-Wert stop Keto "</string>
 </resources>

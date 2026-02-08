@@ -152,4 +152,7 @@ enum class DoubleKey(
     AimiEndometriosisBasalMult("aimi_endo_basal_mult", 1.3, 1.0, 2.0),
     AimiEndometriosisSmbDampen("aimi_endo_smb_dampen", 0.7, 0.0, 1.0),
 
+    // Ketoacidosis Protection
+    ApsKetoacidosisProtectionBG("ketoacidosis_protection_bg", 80.0,50.0, 120.0, defaultedBySM = true),
+    ApsKetoacidosisProtectionDelta("ketoacidosis_protection_delta", -10.0,-30.0, 0.0, defaultedBySM = true)
 }
