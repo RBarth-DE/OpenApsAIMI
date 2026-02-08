@@ -589,11 +589,16 @@ class GarminPlugin @Inject constructor(
     fun ingestHttpTotalSteps(uri: URI, totalSteps: Int) {
         val device = getQueryParameter(uri, "device")
 
-        val now = System.currentTimeMillis()
+        //val now = System.currentTimeMillis()
         val lastTotal = sp.getInt(PREF_GARMIN_LAST_STEPS, -1)
 
-        val start = Instant.ofEpochMilli(now - 5 * 60_000)
-        val end = Instant.ofEpochMilli(now)
+        val now = clock.instant().epochSecond
+        aapsLogger.warn(LTag.GARMIN, "HTTP steps without timestamps. Using fallback: now-5min to now")
+        val samplingStart = now - 300
+        val samplingEnd = now
+
+        //val start = Instant.ofEpochMilli(now - 5 * 60_000)
+        //val end = Instant.ofEpochMilli(now)
         val none = 0
 
         // First ever value → store baseline only
@@ -603,8 +608,8 @@ class GarminPlugin @Inject constructor(
 
             // also store initial update
             loopHub.storeStepsCount(
-                start,
-                end,
+                Instant.ofEpochSecond(samplingStart),
+                Instant.ofEpochSecond(samplingEnd),
                 totalSteps,
                 none,
                 none,
@@ -637,8 +642,8 @@ class GarminPlugin @Inject constructor(
         }
 
         loopHub.storeStepsCount(
-            start,
-            end,
+            Instant.ofEpochSecond(samplingStart),
+            Instant.ofEpochSecond(samplingEnd),
             delta,
             none,
             none,
@@ -650,7 +655,7 @@ class GarminPlugin @Inject constructor(
 
         aapsLogger.info(
             LTag.GARMIN,
-            "[GarminHTTP] steps delta=$delta (${start} → ${end}) Total: $totalSteps"
+            "[GarminHTTP] steps delta=$delta (${Instant.ofEpochSecond(samplingStart)} → ${Instant.ofEpochSecond(samplingEnd)}) Total: $totalSteps"
         )
 
         sp.putInt(PREF_GARMIN_LAST_STEPS, totalSteps)

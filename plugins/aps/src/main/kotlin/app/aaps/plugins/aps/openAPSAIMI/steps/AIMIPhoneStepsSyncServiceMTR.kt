@@ -119,7 +119,7 @@ class AIMIPhoneStepsSyncServiceMTR @Inject constructor(
                             { _ ->
                                 aapsLogger.debug(
                                     LTag.APS,
-                                    "[$TAG] ✅ Synced: $steps5 steps (5min), 15min=$steps15, 30min=$steps30"
+                                    "[$TAG] ✅ Steps stored Phone Sync $sc: $steps5 steps (5min), 15min=$steps15, 30min=$steps30"
                                 )
                             },
                             { error ->

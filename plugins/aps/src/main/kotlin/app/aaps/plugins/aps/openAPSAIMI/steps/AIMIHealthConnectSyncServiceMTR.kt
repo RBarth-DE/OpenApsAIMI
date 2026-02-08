@@ -213,7 +213,7 @@ class AIMIHealthConnectSyncServiceMTR @Inject constructor(
                         { 
                             aapsLogger.info(
                                 LTag.APS,
-                                "[$TAG] ✅ Synced HC steps: 5min=${stepsData.steps5min}, 30min=${stepsData.steps30min}. Source=$SOURCE_DEVICE"
+                                "[$TAG] ✅ Steps stored  HC steps: 5min=${stepsData.steps5min}, 30min=${stepsData.steps30min}. Source=$SOURCE_DEVICE"
                             )
                         },
                         { error ->

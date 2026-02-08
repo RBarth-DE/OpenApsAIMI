@@ -182,7 +182,7 @@ class GarminHealthSync @Inject constructor(
                     { id ->
                         aapsLogger.info(
                             LTag.GARMIN,
-                            "✅ Inserted StepsCount: ${steps.toInt()} steps, " +
+                            "✅ Steps stored GHS: ${steps.toInt()} steps, " +
                             "timestamp=${Instant.ofEpochMilli(timestamp)}, " +
                             "device=$device, id=$id"
                         )
