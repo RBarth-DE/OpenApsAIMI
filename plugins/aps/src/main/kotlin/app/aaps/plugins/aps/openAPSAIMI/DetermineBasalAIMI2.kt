@@ -4945,7 +4945,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             rT.reason.append(" | ⚠ Safety Halt: ${safetyRes.reason}")
             rT.rate = ketoProtection(rT.rate!!, profile, rT,14)
             lastDecisionSource = safetyRes.source
-            logDecisionFinal("SAFETY", rT,  rT.rate, delta)
+            logDecisionFinal("SAFETY", rT, bg, delta)
             return rT
         }
 
@@ -4992,7 +4992,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
              // Add Status Log (User Request)
              rT.reason.appendLine(context.getString(R.string.autodrive_status, if (autodrive) "✔" else "✘", "Meal Advisor"))
              rT.rate = ketoProtection(rT.rate !!, profile, rT,15)
-             logDecisionFinal("MEAL_ADVISOR", rT,  rT.rate, delta)
+             logDecisionFinal("MEAL_ADVISOR", rT,  bg, delta)
              return rT // 🛑 HARD RETURN to ensure no other logic overrides this
         }
 
@@ -5012,7 +5012,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             setTempBasal(0.0, 30, profile, rT, currenttemp, overrideSafetyLimits = true)
             rT.rate = ketoProtection(rT.rate !!, profile, rT,16)
             lastSafetySource = "HardBrake" 
-            logDecisionFinal("HARD_BRAKE", rT, rT.rate, delta)
+            logDecisionFinal("HARD_BRAKE", rT, bg, delta)
             return rT
         }
         // -----------------------------------------------------
@@ -5048,7 +5048,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                  lastAutodriveActionTime = System.currentTimeMillis() // 🟢 Update Strict Cooldown
                  rT.rate = ketoProtection(rT.rate !!, profile, rT,17)
                  consoleLog.add("AUTODRIVE_APPLIED intent=${intentBolus} actual=$effectiveBolus")
-                 logDecisionFinal("AUTODRIVE", rT, rT.rate, delta)
+                 logDecisionFinal("AUTODRIVE", rT, bg, delta)
                  return rT
              } else {
                  consoleLog.add("AUTODRIVE_NOOP_FALLBACK reason=CappedToZero")
@@ -5069,7 +5069,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         if (isCompression) {
             // Hard Stop on Sensor Error
             rT.rate = ketoProtection(rT.rate!!, profile, rT,18)
-            logDecisionFinal("COMPRESSION", rT, rT.rate, delta)
+            logDecisionFinal("COMPRESSION", rT, bg, delta)
              return rT
         }
         
@@ -5091,7 +5091,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             consoleLog.add("AD_SMALL_PREBOLUS_TRIGGER amount=$terminatortap reason=DriftTerminator")
             finalizeAndCapSMB(rT, terminatortap, reason.toString(), mealData, threshold, decisionSource = "DriftTerminator")
             rT.rate = ketoProtection(rT.rate!!, profile, rT,19)
-            logDecisionFinal("DRIFT_TERMINATOR", rT, rT.rate, delta)
+            logDecisionFinal("DRIFT_TERMINATOR", rT, bg, delta)
             return rT
         }
         
@@ -6536,7 +6536,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                 dynIsfMode = dynIsfMode
             )
             rT.rate = ketoProtection(rT.rate!!, profile, rT,21)
-            logDecisionFinal("MAX_IOB", finalResult, rT.rate, delta)
+            logDecisionFinal("MAX_IOB", finalResult, bg, delta)
             return finalResult
         } else {
             var insulinReq = smbToGive.toDouble()
@@ -7680,16 +7680,17 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         aapsLogger.info(LTag.APS, "ketoProtection IN: _proposedRate=$_proposedRate $count")
         var proposedRate = _proposedRate
 
-        if (bg <= profile.ketoacidosisProtectionBG ||
+        if (iob > 0.0 ||
+            bg <= profile.ketoacidosisProtectionBG ||
             delta <= profile.ketoacidosisProtectionDelta ||
             shortAvgDelta <= profile.ketoacidosisProtectionDelta  ||
             longAvgDelta <= profile.ketoacidosisProtectionDelta )
         {
             aapsLogger.info(
                 LTag.APS,
-                "ketoProtection: BG=$bg < 85 or significant drop → delta=$delta, shortAvgDelta=$shortAvgDelta, longAvgDelta=$longAvgDelta, return $proposedRate ($count)"
+                "ketoProtection: IOB=$iob BG=$bg < 85 or significant drop → delta=$delta, shortAvgDelta=$shortAvgDelta, longAvgDelta=$longAvgDelta, return $proposedRate ($count)"
             )
-            rT.reason.append("\nKETO sec $proposedRate U/h.($count)")
+            rT.reason.append("\nKETO keep $proposedRate U/h.($count)")
         }
         else {
             val baseBasalRate = profile.current_basal
