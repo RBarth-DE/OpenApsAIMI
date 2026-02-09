@@ -106,9 +106,13 @@
                 app:layout_constraintBottom_toBottomOf="@id/glucose_ring"
                 app:layout_constraintEnd_toStartOf="@id/glucose_ring"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="@id/glucose_ring">
+                app:layout_constraintTop_toTopOf="@id/glucose_ring"
+                android:paddingStart="6dp"
+                app:layout_constraintWidth_percent="0.3">
 
-                <!-- STEPS (First Item) -->
+
+
+        <!-- STEPS (First Item) -->
                 <LinearLayout
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -127,10 +131,13 @@
                         android:id="@+id/steps_text"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
+                        android:layout_weight="1"
                         android:text="--"
                         android:textColor="#AAFFFFFF"
                         android:textAppearance="@style/TextAppearance.MaterialComponents.Caption"
-                        android:textStyle="bold" />
+                        android:textStyle="bold"
+                        android:singleLine="true"
+                        android:ellipsize="none" />
                 </LinearLayout>
 
                 <!-- Reservoir -->
@@ -146,12 +153,15 @@
                         android:layout_height="18dp"
                         android:layout_marginEnd="6dp"
                         app:srcCompat="@drawable/ic_cp_age_insulin"
-                        app:tint="@color/dashboard_on_surface" />
+                        app:tint="@color/dashboard_on_surface"
+                        android:singleLine="true"
+                        android:ellipsize="none" />
 
                     <TextView
                         android:id="@+id/reservoir_chip"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
+                        android:layout_weight="1"
                         android:text="--"
                         android:textAppearance="@style/TextAppearance.MaterialComponents.Caption"
                         android:textColor="@color/dashboard_on_surface" />
@@ -255,13 +265,6 @@
                     android:gravity="center_vertical"
                     android:orientation="horizontal">
 
-                    <ImageView
-                        android:layout_width="12dp"
-                        android:layout_height="12dp"
-                        android:layout_marginEnd="6dp"
-                        app:srcCompat="@drawable/ic_cp_heart_rate"
-                        app:tint="#ED1B24" />
-
                     <TextView
                         android:id="@+id/hr_text"
                         android:layout_width="wrap_content"
@@ -270,6 +273,13 @@
                         android:textColor="#AAFFFFFF"
                         android:textAppearance="@style/TextAppearance.MaterialComponents.Caption"
                         android:textStyle="bold" />
+
+                    <ImageView
+                        android:layout_width="12dp"
+                        android:layout_height="12dp"
+                        android:layout_marginStart="6dp"
+                        app:srcCompat="@drawable/ic_cp_heart_rate"
+                        app:tint="#ED1B24" />
                 </LinearLayout>
 
                 <!-- Last SMB -->
@@ -280,18 +290,12 @@
                     android:gravity="center_vertical"
                     android:orientation="horizontal">
 
-                    <ImageView
-                        android:layout_width="18dp"
-                        android:layout_height="18dp"
-                        android:layout_marginEnd="6dp"
-                        app:srcCompat="@drawable/ic_dashboard_droplet"
-                        app:tint="@color/dashboard_on_surface" />
-
+                    <!-- Testo a sinistra -->
                     <LinearLayout
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:gravity="end"
-                        android:orientation="vertical">
+                        android:orientation="vertical"
+                        android:gravity="start">
 
                         <TextView
                             android:id="@+id/last_update_text"
@@ -309,29 +313,30 @@
                             android:textAppearance="@style/TextAppearance.MaterialComponents.Caption"
                             android:textColor="@color/dashboard_on_surface" />
 
-
                     </LinearLayout>
+
+
+                    <ImageView
+                        android:layout_width="18dp"
+                        android:layout_height="18dp"
+                        android:layout_marginStart="6dp"
+                        app:srcCompat="@drawable/ic_dashboard_droplet"
+                        app:tint="@color/dashboard_on_surface" />
+
                 </LinearLayout>
                 <!-- TBR Rate -->
                 <LinearLayout
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="6dp"
-                    android:gravity="center_vertical"
+                    android:gravity="end"
                     android:orientation="horizontal">
-
-                    <ImageView
-                        android:layout_width="18dp"
-                        android:layout_height="18dp"
-                        android:layout_marginEnd="6dp"
-                        app:srcCompat="@drawable/ic_dashboard_wave"
-                        app:tint="@color/dashboard_on_surface" />
 
                     <LinearLayout
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:gravity="end"
-                        android:orientation="vertical">
+                        android:orientation="vertical"
+                        android:gravity="start">
 
                         <TextView
                             android:id="@+id/basalPctText"
@@ -350,6 +355,14 @@
                             android:textColor="@color/dashboard_on_surface" />
 
                     </LinearLayout>
+
+                    <ImageView
+                        android:layout_width="18dp"
+                        android:layout_height="18dp"
+                        android:layout_marginStart="6dp"
+                        app:srcCompat="@drawable/ic_dashboard_wave"
+                        app:tint="@color/dashboard_on_surface" />
+
                 </LinearLayout>
 
                 <!-- iob -->
@@ -359,13 +372,6 @@
                     android:gravity="center_vertical"
                     android:orientation="horizontal">
 
-                    <ImageView
-                        android:layout_width="18dp"
-                        android:layout_height="18dp"
-                        android:layout_marginEnd="6dp"
-                        app:srcCompat="@drawable/ic_dashboard_iob"
-                        app:tint="@color/dashboard_on_surface" />
-
                     <TextView
                         android:id="@+id/iob_text"
                         android:layout_width="wrap_content"
@@ -373,6 +379,13 @@
                         android:text="--"
                         android:textAppearance="@style/TextAppearance.MaterialComponents.Caption"
                         android:textColor="@color/dashboard_on_surface" />
+
+                    <ImageView
+                        android:layout_width="18dp"
+                        android:layout_height="18dp"
+                        android:layout_marginStart="6dp"
+                        app:srcCompat="@drawable/ic_dashboard_iob"
+                        app:tint="@color/dashboard_on_surface" />
                 </LinearLayout>
             </LinearLayout>
 
