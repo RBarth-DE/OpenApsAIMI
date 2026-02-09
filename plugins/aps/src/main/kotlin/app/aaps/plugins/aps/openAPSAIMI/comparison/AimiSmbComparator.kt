@@ -97,13 +97,22 @@ class AimiSmbComparator @Inject constructor(
             virtualReservoir.pruneOldData(currentTime - 6 * 60 * 60 * 1000L)
 
             // 2. Calculate Virtual IOB
-            val smbIobArray = virtualIobCalculator.calculateIobArrayForSMB(
-                profileSmb, // Use mapped profile
-                autosens,
-                profileAimi.exercise_mode,
-                profileAimi.half_basal_exercise_target,
-                profileAimi.high_temptarget_raises_sensitivity || profileAimi.low_temptarget_lowers_sensitivity // isTempTarget
-            )
+            val smbIobArray = virtualIobCalculator
+                .calculateIobArrayForSMB(
+                    profileSmb, // Use mapped profile
+                    autosens,
+                    profileAimi.exercise_mode,
+                    profileAimi.half_basal_exercise_target,
+                    profileAimi.high_temptarget_raises_sensitivity || profileAimi.low_temptarget_lowers_sensitivity // isTempTarget
+                )
+                .map { iob ->
+                    if (iob.iobWithZeroTemp == null) {
+                        iob.copy(
+                            iobWithZeroTemp = iob.copy()
+                        )
+                    } else iob
+                }
+                .toTypedArray()
             
             aapsLogger.debug(
                 LTag.APS,

@@ -17,6 +17,13 @@ import kotlinx.serialization.builtins.ArraySerializer
 import kotlinx.serialization.json.Json
 import javax.inject.Provider
 
+
+private val SafeJson = Json {
+    ignoreUnknownKeys = true
+    isLenient = true // Often helpful when dealing with "messy" DB strings
+    encodeDefaults = true
+}
+
 /**
  * Sanitize JSON strings to remove problematic Unicode characters
  * that can cause deserialization crashes (especially arrows and math symbols).
@@ -48,52 +55,52 @@ fun app.aaps.database.entities.APSResult.fromDb(apsResultProvider: Provider<APSR
     when (algorithm) {
         app.aaps.database.entities.APSResult.Algorithm.AMA,
         app.aaps.database.entities.APSResult.Algorithm.SMB -> {
-            apsResultProvider.get().with(Json.decodeFromString(this.resultJson)).also { result ->
+            apsResultProvider.get().with(SafeJson.decodeFromString(this.resultJson)).also { result ->
                 result.date = this.timestamp
                 result.glucoseStatus = try {
                     // Si AIMI a son propre GlucoseStatus, remplace GlucoseStatusSMB ci-dessous
-                    this.glucoseStatusJson?.let { Json.decodeFromString<GlucoseStatusSMB>(it) }
+                    this.glucoseStatusJson?.let { SafeJson.decodeFromString<GlucoseStatusSMB>(it) }
                 } catch (_: Exception) {
                     null
                 }
-                result.currentTemp = this.currentTempJson?.let { Json.decodeFromString(CurrentTemp.serializer(), it) }
-                result.iobData = this.iobDataJson?.let { Json.decodeFromString(ArraySerializer(IobTotal.serializer()), it) }
-                result.oapsProfile = this.profileJson?.let { Json.decodeFromString(OapsProfile.serializer(), it) }
-                result.mealData = this.mealDataJson?.let { Json.decodeFromString(MealData.serializer(), it) }
-                result.autosensResult = this.autosensDataJson?.let { Json.decodeFromString(AutosensResult.serializer(), it) }
+                result.currentTemp = this.currentTempJson?.let { SafeJson.decodeFromString(CurrentTemp.serializer(), it) }
+                result.iobData = this.iobDataJson?.let { SafeJson.decodeFromString(ArraySerializer(IobTotal.serializer()), it) }
+                result.oapsProfile = this.profileJson?.let { SafeJson.decodeFromString(OapsProfile.serializer(), it) }
+                result.mealData = this.mealDataJson?.let { SafeJson.decodeFromString(MealData.serializer(), it) }
+                result.autosensResult = this.autosensDataJson?.let { SafeJson.decodeFromString(AutosensResult.serializer(), it) }
             }
         }
 
         app.aaps.database.entities.APSResult.Algorithm.AUTO_ISF -> {
-            apsResultProvider.get().with(Json.decodeFromString(this.resultJson)).also { result ->
+            apsResultProvider.get().with(SafeJson.decodeFromString(this.resultJson)).also { result ->
                 result.date = this.timestamp
                 result.glucoseStatus = try {
-                    this.glucoseStatusJson?.let { Json.decodeFromString<GlucoseStatusAutoIsf>(it) }
+                    this.glucoseStatusJson?.let { SafeJson.decodeFromString<GlucoseStatusAutoIsf>(it) }
                 } catch (_: Exception) {
                     null
                 }
-                result.currentTemp = this.currentTempJson?.let { Json.decodeFromString(CurrentTemp.serializer(), it) }
-                result.iobData = this.iobDataJson?.let { Json.decodeFromString(ArraySerializer(IobTotal.serializer()), it) }
-                result.oapsProfileAutoIsf = this.profileJson?.let { Json.decodeFromString(OapsProfileAutoIsf.serializer(), it) }
-                result.mealData = this.mealDataJson?.let { Json.decodeFromString(MealData.serializer(), it) }
-                result.autosensResult = this.autosensDataJson?.let { Json.decodeFromString(AutosensResult.serializer(), it) }
+                result.currentTemp = this.currentTempJson?.let { SafeJson.decodeFromString(CurrentTemp.serializer(), it) }
+                result.iobData = this.iobDataJson?.let { SafeJson.decodeFromString(ArraySerializer(IobTotal.serializer()), it) }
+                result.oapsProfileAutoIsf = this.profileJson?.let { SafeJson.decodeFromString(OapsProfileAutoIsf.serializer(), it) }
+                result.mealData = this.mealDataJson?.let { SafeJson.decodeFromString(MealData.serializer(), it) }
+                result.autosensResult = this.autosensDataJson?.let { SafeJson.decodeFromString(AutosensResult.serializer(), it) }
             }
         }
 
         app.aaps.database.entities.APSResult.Algorithm.AIMI -> {
-            apsResultProvider.get().with(Json.decodeFromString(sanitizeJson(this.resultJson))).also { result ->
+            apsResultProvider.get().with(SafeJson.decodeFromString(sanitizeJson(this.resultJson))).also { result ->
                 result.date = this.timestamp
                 result.glucoseStatus = try {
                     // Si AIMI a un GlucoseStatus spécifique, remplace par Json.decodeFromString<GlucoseStatusAimi>(it)
-                    this.glucoseStatusJson?.let { Json.decodeFromString<GlucoseStatusSMB>(it) }
+                    this.glucoseStatusJson?.let { SafeJson.decodeFromString<GlucoseStatusSMB>(it) }
                 } catch (_: Exception) {
                     null
                 }
-                result.currentTemp = this.currentTempJson?.let { Json.decodeFromString(CurrentTemp.serializer(), it) }
-                result.iobData = this.iobDataJson?.let { Json.decodeFromString(ArraySerializer(IobTotal.serializer()), it) }
-                result.oapsProfileAimi = this.profileJson?.let { Json.decodeFromString(OapsProfileAimi.serializer(), it) }
-                result.mealData = this.mealDataJson?.let { Json.decodeFromString(MealData.serializer(), it) }
-                result.autosensResult = this.autosensDataJson?.let { Json.decodeFromString(AutosensResult.serializer(), it) }
+                result.currentTemp = this.currentTempJson?.let { SafeJson.decodeFromString(CurrentTemp.serializer(), it) }
+                result.iobData = this.iobDataJson?.let { SafeJson.decodeFromString(ArraySerializer(IobTotal.serializer()), it) }
+                result.oapsProfileAimi = this.profileJson?.let { SafeJson.decodeFromString(OapsProfileAimi.serializer(), it) }
+                result.mealData = this.mealDataJson?.let { SafeJson.decodeFromString(MealData.serializer(), it) }
+                result.autosensResult = this.autosensDataJson?.let { SafeJson.decodeFromString(AutosensResult.serializer(), it) }
             }
         }
 
@@ -109,13 +116,13 @@ fun APSResult.toDb(): app.aaps.database.entities.APSResult =
                 timestamp = this.date,
                 algorithm = this.algorithm.toDb(),
                 // Si AIMI a son propre GlucoseStatus, ceci ne sera pas utilisé pour AIMI
-                glucoseStatusJson = this.glucoseStatus?.let { Json.encodeToString(GlucoseStatusSMB.serializer(), it as GlucoseStatusSMB) },
-                currentTempJson = this.currentTemp?.let { Json.encodeToString(CurrentTemp.serializer(), it) },
-                iobDataJson = this.iobData?.let { Json.encodeToString(ArraySerializer(IobTotal.serializer()), it) },
-                profileJson = this.oapsProfile?.let { Json.encodeToString(OapsProfile.serializer(), it) },
-                mealDataJson = this.mealData?.let { Json.encodeToString(MealData.serializer(), it) },
-                autosensDataJson = this.autosensResult?.let { Json.encodeToString(AutosensResult.serializer(), it) },
-                resultJson = Json.encodeToString(RT.serializer(), this.rawData() as RT)
+                glucoseStatusJson = this.glucoseStatus?.let { SafeJson.encodeToString(GlucoseStatusSMB.serializer(), it as GlucoseStatusSMB) },
+                currentTempJson = this.currentTemp?.let { SafeJson.encodeToString(CurrentTemp.serializer(), it) },
+                iobDataJson = this.iobData?.let { SafeJson.encodeToString(ArraySerializer(IobTotal.serializer()), it) },
+                profileJson = this.oapsProfile?.let { SafeJson.encodeToString(OapsProfile.serializer(), it) },
+                mealDataJson = this.mealData?.let { SafeJson.encodeToString(MealData.serializer(), it) },
+                autosensDataJson = this.autosensResult?.let { SafeJson.encodeToString(AutosensResult.serializer(), it) },
+                resultJson = SafeJson.encodeToString(RT.serializer(), this.rawData() as RT)
             )
         }
 
@@ -123,13 +130,13 @@ fun APSResult.toDb(): app.aaps.database.entities.APSResult =
             app.aaps.database.entities.APSResult(
                 timestamp = this.date,
                 algorithm = this.algorithm.toDb(),
-                glucoseStatusJson = this.glucoseStatus?.let { Json.encodeToString(GlucoseStatusAutoIsf.serializer(), it as GlucoseStatusAutoIsf) },
-                currentTempJson = this.currentTemp?.let { Json.encodeToString(CurrentTemp.serializer(), it) },
-                iobDataJson = this.iobData?.let { Json.encodeToString(ArraySerializer(IobTotal.serializer()), it) },
-                profileJson = this.oapsProfileAutoIsf?.let { Json.encodeToString(OapsProfileAutoIsf.serializer(), it) },
-                mealDataJson = this.mealData?.let { Json.encodeToString(MealData.serializer(), it) },
-                autosensDataJson = this.autosensResult?.let { Json.encodeToString(AutosensResult.serializer(), it) },
-                resultJson = Json.encodeToString(RT.serializer(), this.rawData() as RT)
+                glucoseStatusJson = this.glucoseStatus?.let { SafeJson.encodeToString(GlucoseStatusAutoIsf.serializer(), it as GlucoseStatusAutoIsf) },
+                currentTempJson = this.currentTemp?.let { SafeJson.encodeToString(CurrentTemp.serializer(), it) },
+                iobDataJson = this.iobData?.let { SafeJson.encodeToString(ArraySerializer(IobTotal.serializer()), it) },
+                profileJson = this.oapsProfileAutoIsf?.let { SafeJson.encodeToString(OapsProfileAutoIsf.serializer(), it) },
+                mealDataJson = this.mealData?.let { SafeJson.encodeToString(MealData.serializer(), it) },
+                autosensDataJson = this.autosensResult?.let { SafeJson.encodeToString(AutosensResult.serializer(), it) },
+                resultJson = SafeJson.encodeToString(RT.serializer(), this.rawData() as RT)
             )
         }
 
@@ -138,13 +145,13 @@ fun APSResult.toDb(): app.aaps.database.entities.APSResult =
                 timestamp = this.date,
                 algorithm = this.algorithm.toDb(),
                 // Remplacer GlucoseStatusSMB par GlucoseStatusAimi si tu en as un
-                glucoseStatusJson = this.glucoseStatus?.let { Json.encodeToString(GlucoseStatusAIMI.serializer(), it as GlucoseStatusAIMI) },
-                currentTempJson = this.currentTemp?.let { Json.encodeToString(CurrentTemp.serializer(), it) },
-                iobDataJson = this.iobData?.let { Json.encodeToString(ArraySerializer(IobTotal.serializer()), it) },
-                profileJson = this.oapsProfileAimi?.let { Json.encodeToString(OapsProfileAimi.serializer(), it) },
-                mealDataJson = this.mealData?.let { Json.encodeToString(MealData.serializer(), it) },
-                autosensDataJson = this.autosensResult?.let { Json.encodeToString(AutosensResult.serializer(), it) },
-                resultJson = Json.encodeToString(RT.serializer(), this.rawData() as RT)
+                glucoseStatusJson = this.glucoseStatus?.let { SafeJson.encodeToString(GlucoseStatusAIMI.serializer(), it as GlucoseStatusAIMI) },
+                currentTempJson = this.currentTemp?.let { SafeJson.encodeToString(CurrentTemp.serializer(), it) },
+                iobDataJson = this.iobData?.let { SafeJson.encodeToString(ArraySerializer(IobTotal.serializer()), it) },
+                profileJson = this.oapsProfileAimi?.let { SafeJson.encodeToString(OapsProfileAimi.serializer(), it) },
+                mealDataJson = this.mealData?.let { SafeJson.encodeToString(MealData.serializer(), it) },
+                autosensDataJson = this.autosensResult?.let { SafeJson.encodeToString(AutosensResult.serializer(), it) },
+                resultJson = SafeJson.encodeToString(RT.serializer(), this.rawData() as RT)
             )
         }
 
