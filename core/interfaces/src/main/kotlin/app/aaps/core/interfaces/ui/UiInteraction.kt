@@ -54,7 +54,7 @@ interface UiInteraction {
     fun updateWidget(context: Context, from: String)
 
     fun runWizardDialog(fragmentManager: FragmentManager, carbs: Int? = null, name: String? = null)
-    fun runLoopDialog(fragmentManager: FragmentManager, showOkCancel: Int)
+    fun runLoopDialog(fragmentManager: FragmentManager, showOkCancel: Boolean)
     fun runProfileSwitchDialog(fragmentManager: FragmentManager, profileName: String? = null)
     fun runTempBasalDialog(fragmentManager: FragmentManager)
     fun runTreatmentDialog(fragmentManager: FragmentManager)

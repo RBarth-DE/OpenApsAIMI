@@ -501,7 +501,7 @@ class DashboardFragment : DaggerFragment() {
     private fun openLoopDialog() {
         activity?.let { activity ->
             protectionCheck.queryProtection(activity, ProtectionCheck.Protection.BOLUS, UIRunnable {
-                if (isAdded) uiInteraction.runLoopDialog(childFragmentManager, 1)
+                if (isAdded) uiInteraction.runLoopDialog(childFragmentManager, true)
             })
         }
     }

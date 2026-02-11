@@ -97,9 +97,9 @@ class UiInteractionImpl @Inject constructor(
 
     }
 
-    override fun runLoopDialog(fragmentManager: FragmentManager, showOkCancel: Int) {
+    override fun runLoopDialog(fragmentManager: FragmentManager, showOkCancel: Boolean) {
         LoopDialog()
-            .also { it.arguments = Bundle().also { bundle -> bundle.putInt("showOkCancel", showOkCancel) } }
+            .also { it.arguments = Bundle().also { bundle -> bundle.putBoolean("showOkCancel", showOkCancel) } }
             .show(fragmentManager, "LoopDialog")
     }
 

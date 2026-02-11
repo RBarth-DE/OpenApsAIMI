@@ -682,7 +682,7 @@ class OverviewFragment : DaggerFragment(), View.OnClickListener, OnLongClickList
 
                 R.id.aps_mode, R.id.loop_indicator, R.id.loop_status -> {
                     protectionCheck.queryProtection(activity, ProtectionCheck.Protection.BOLUS, UIRunnable {
-                        if (isAdded) uiInteraction.runLoopDialog(childFragmentManager, 1)
+                        if (isAdded) uiInteraction.runLoopDialog(childFragmentManager, true)
                     })
                 }
 
@@ -717,7 +717,7 @@ class OverviewFragment : DaggerFragment(), View.OnClickListener, OnLongClickList
             R.id.aps_mode, R.id.loop_indicator, R.id.loop_status -> {
                 activity?.let { activity ->
                     protectionCheck.queryProtection(activity, ProtectionCheck.Protection.BOLUS, UIRunnable {
-                        uiInteraction.runLoopDialog(childFragmentManager, 0)
+                        uiInteraction.runLoopDialog(childFragmentManager, false)
                     })
                 }
             }
