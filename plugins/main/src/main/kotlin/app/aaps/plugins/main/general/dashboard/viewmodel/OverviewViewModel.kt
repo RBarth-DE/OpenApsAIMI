@@ -317,7 +317,18 @@ class OverviewViewModel(
                     tbr.convertedToAbsolute(dateUtil.now(), it)
                 })
         }
-        // R4 IOB
+        else
+        {
+            //fallback: use current loop
+            val basalPctValue = loop.lastRun?.request?.percent
+            basalPctText = if (basalPctValue == null || basalPctValue < 0 ) resourceHelper.gs(app.aaps.core.ui.R.string.value_unavailable_short)
+                            else "$basalPctValue%"
+
+            val basalRate = loop.lastRun?.request?.rate
+            basalText = if (basalRate == null || basalRate == -1.0) resourceHelper.gs(app.aaps.core.ui.R.string.value_unavailable_short)
+                        else resourceHelper.gs( app.aaps.core.ui.R.string.format_insulin_units, basalRate )
+        }
+        // R4 IOB (basal + bolus IOB)
         val iobText = totalIobText()
 
         val state = StatusCardState(
