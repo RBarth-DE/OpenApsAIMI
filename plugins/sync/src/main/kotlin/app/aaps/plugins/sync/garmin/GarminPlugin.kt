@@ -556,6 +556,7 @@ class GarminPlugin @Inject constructor(
         if (!hasData) {
             //Fix Garmin sending only "steps=xxx"
             val totalSteps = getQueryParameter(uri, "steps")?.toIntOrNull() ?: -1
+            aapsLogger.debug(LTag.GARMIN, "Garmin Swissalpine workarround. Receioved steps $totalSteps")
             if (totalSteps >= 0 ) {
                 ingestHttpTotalSteps(uri, totalSteps)
                 return
@@ -629,18 +630,48 @@ class GarminPlugin @Inject constructor(
         // We remove the 3000 upper limit because during a long run (e.g. 1h without sync), 
         // the delta can easily exceed 3000 steps.
         if (delta <= 0) {
+            // this case is reached in the morning on first sync.
+            // 06:19:31.848 [worker34759] I/GARMIN: [GarminPlugin.requestHandler$lambda$0():314]: get from /127.0.0.1:57440 resp , req: /sgv.json?brief_mode=true&count=24&steps=165&hr=77&hrStart=1770786871&hrEnd=1770787171&device=Garmin-Watchface
+            // 06:19:31.850 [worker34759] W/GARMIN: [GarminPlugin.ingestHttpTotalSteps():634]: [GarminHTTP] invalid step delta=-17341 (total=165 last=17506) => must be > 0
             aapsLogger.warn(
                 LTag.GARMIN,
-                "[GarminHTTP] invalid step delta=$delta (total=$totalSteps last=$lastTotal) => must be > 0"
+                "[GarminHTTP] negative / 0 step delta=$delta (total=$totalSteps last=$lastTotal)"
             )
             // If delta is 0 or negative (device reset?), we just update the last known value to sync up
-            if (totalSteps > 0) {
+            if (totalSteps > 0 && delta == 0) {
                 sp.putInt(PREF_GARMIN_LAST_STEPS, totalSteps)
                 sp.putLong(PREF_GARMIN_LAST_TS, now)
+            }
+            else
+            {
+                aapsLogger.warn(
+                    LTag.GARMIN,
+                    "[GarminHTTP] takeover initial total=$totalSteps "
+                )
+                sp.putInt(PREF_GARMIN_LAST_STEPS, totalSteps)
+                sp.putLong(PREF_GARMIN_LAST_TS, now)
+                loopHub.storeStepsCount(
+                    Instant.ofEpochSecond(samplingStart),
+                    Instant.ofEpochSecond(samplingEnd),
+                    totalSteps,
+                    none,
+                    none,
+                    none,
+                    none,
+                    none,
+                    device
+                )
             }
             return
         }
 
+        aapsLogger.info(
+            LTag.GARMIN,
+            "[GarminHTTP] steps delta=$delta (${Instant.ofEpochSecond(samplingStart)} → ${Instant.ofEpochSecond(samplingEnd)}) Total: $totalSteps"
+        )
+
+        sp.putInt(PREF_GARMIN_LAST_STEPS, totalSteps)
+        sp.putLong(PREF_GARMIN_LAST_TS, now)
         loopHub.storeStepsCount(
             Instant.ofEpochSecond(samplingStart),
             Instant.ofEpochSecond(samplingEnd),
@@ -652,14 +683,6 @@ class GarminPlugin @Inject constructor(
             none,
             device
         )
-
-        aapsLogger.info(
-            LTag.GARMIN,
-            "[GarminHTTP] steps delta=$delta (${Instant.ofEpochSecond(samplingStart)} → ${Instant.ofEpochSecond(samplingEnd)}) Total: $totalSteps"
-        )
-
-        sp.putInt(PREF_GARMIN_LAST_STEPS, totalSteps)
-        sp.putLong(PREF_GARMIN_LAST_TS, now)
     }
 
     private fun receiveSteps(
