@@ -1281,12 +1281,11 @@
     // Ketoacidosis Protection
     <string name="ketoacidosis_protection_title">Ketoacidosis Protection</string>
     <string name="ketoacidosis_protection_summary">Enables a small safety TBR instead of 0 TBR to reduce the ketoacidosis risk.</string>
+    <string name="ketoacidosis_protection_strategy_title">Variable strategy?</string>
+    <string name="ketoacidosis_protection_strategy_summary">If activated the small safety TBR kicks in when IOB is in negative range as if no basal insulin has been delivered for half hour. If deactivated every Zero Temp is replaced with the small TBR.</string>
     <string name="ketoacidosis_protection_basal_title">Quantity of the safety TBR [%]</string>
-    <string name="ketoacidosis_protection_basal_summary">Default: 20</string>
-    <string name="ketoacidosis_protection_bg_title">Savety BG stop</string>
-    <string name="ketoacidosis_protection_bg_summary">Default: 80</string>
-    <string name="ketoacidosis_protection_delta_title">Savety Delta stop</string>
-    <string name="ketoacidosis_protection_delta_summary">Default: 10</string>
+    <string name="ketoacidosis_protection_basal_summary">Default: 10</string>
+
     <string name="count_steps_watch">Steps Watch</string>
 
 </resources>

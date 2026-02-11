@@ -60,9 +60,9 @@ data class OapsProfileAimi(
     var historicActivity: Double,
     var currentActivity: Double,
     // Ketoacidosis Protection
-    var ketoacidosisProtectionBasal: Int = 20,
     var ketoacidosisProtection: Boolean = false,
-    var ketoacidosisProtectionBG: Double = 85.0,
-    var ketoacidosisProtectionDelta: Double = 10.0
+    var ketoacidosisProtectionStrategy : Boolean = false,
+    var ketoacidosisProtectionBasal: Int = 10,
+    val ketoacidosisProtectionIob: Double = 0.0
 
 )

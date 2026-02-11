@@ -1299,13 +1299,23 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         forceExact: Boolean = false
     ): RT {
         // 0) LGS kill-switch (sans récursion)
+
+        val pumpDesc = activePlugin.activePump.pumpDescription
+        val pumpCaps = PumpCaps(
+            basalStep = if (pumpDesc.basalStep > 0) pumpDesc.basalStep else 0.05,
+            bolusStep = if (pumpDesc.bolusStep > 0) pumpDesc.bolusStep else 0.05,
+            minDurationMin = 30,
+            maxBasal = profile.max_basal,
+            maxSmb = 3.0
+        )
+
         val lgsPref = profile.lgsThreshold
         val hypoGuard = computeHypoThreshold(minBg = profile.min_bg, lgsThreshold = lgsPref)
         val blockLgs = isBelowHypoThreshold(bg, predictedBg.toDouble(), eventualBG, hypoGuard, delta.toDouble())
         if (blockLgs) {
             rT.reason.append(context.getString(R.string.lgs_triggered, "%.0f".format(bg), "%.0f".format(hypoGuard)))
             rT.duration = maxOf(duration, 30)
-            rT.rate = ketoProtection(0.0, profile, rT)
+            rT.rate = ketoProtection(0.0, profile, rT, pumpCaps )
             return rT
         }
         val isLgsEnabled = profile.lgsThreshold != null && profile.lgsThreshold!! > 0
@@ -1326,7 +1336,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                 )
             )
             rT.duration = duration
-            rT.rate = ketoProtection(rate, profile, rT)
+            rT.rate = ketoProtection(rate, profile, rT, pumpCaps)
             return rT
         }
 
@@ -1419,7 +1429,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
 
         rT.reason.append(context.getString(R.string.temp_basal_pose, "%.2f".format(rate), duration))
         rT.duration = duration
-        rT.rate = ketoProtection(rate, profile, rT)
+        rT.rate = ketoProtection(rate, profile, rT, pumpCaps)
         return rT
     }
 
@@ -3838,7 +3848,17 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             consoleLog.add("🤰 Error in Gestation logic: ${e.message}")
             e.printStackTrace()
         }
-        
+
+        // Dynamic Pump Capabilities
+        val pumpDesc = activePlugin.activePump.pumpDescription
+        val pumpCaps = PumpCaps(
+            basalStep = if (pumpDesc.basalStep > 0) pumpDesc.basalStep else 0.05,
+            bolusStep = if (pumpDesc.bolusStep > 0) pumpDesc.bolusStep else 0.05,
+            minDurationMin = 30,
+            maxBasal = profile.max_basal,
+            maxSmb = 3.0
+        )
+
         // 🏥 AIMI DECISION CONTEXT INITIALIZATION (For Medical Transparency)
         val decisionCtx = AimiDecisionContext(
             event_id = "evt_${currentTime}",
@@ -4954,11 +4974,6 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             }
             // Block all boluses
             rT.insulinReq = 0.0
-            if (rT.rate != null) {
-                rT.rate = ketoProtection(rT.rate!!, profile, rT)
-            } else {
-                aapsLogger.info(LTag.APS, "AIMI: ketoProtection skipped (rate=null)")
-            }
             rT.reason.append(" | ⚠ Safety Halt: ${safetyRes.reason}")
             lastDecisionSource = safetyRes.source
             logDecisionFinal("SAFETY", rT, bg, delta)
@@ -5007,11 +5022,6 @@ class DetermineBasalaimiSMB2 @Inject constructor(
              
              // Add Status Log (User Request)
              rT.reason.appendLine(context.getString(R.string.autodrive_status, if (autodrive) "✔" else "✘", "Meal Advisor"))
-             if (rT.rate != null) {
-                 rT.rate = ketoProtection(rT.rate!!, profile, rT)
-             } else {
-                 aapsLogger.info(LTag.APS, "AIMI: ketoProtection skipped (rate=null)")
-             }
              logDecisionFinal("MEAL_ADVISOR", rT,  bg, delta)
              return rT // 🛑 HARD RETURN to ensure no other logic overrides this
         }
@@ -5030,12 +5040,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             rT.reason.append("🛑 Hard Brake: Falling Fast & Decelerating -> Zero Basal\n")
             // Force 0% for 30m
             setTempBasal(0.0, 30, profile, rT, currenttemp, overrideSafetyLimits = true)
-            if (rT.rate != null) {
-                rT.rate = ketoProtection(rT.rate!!, profile, rT)
-            } else {
-                aapsLogger.info(LTag.APS, "AIMI: ketoProtection skipped (rate=null)")
-            }
-            lastSafetySource = "HardBrake" 
+            lastSafetySource = "HardBrake"
             logDecisionFinal("HARD_BRAKE", rT, bg, delta)
             return rT
         }
@@ -5071,7 +5076,8 @@ class DetermineBasalaimiSMB2 @Inject constructor(
              if (effectiveBolus > 0.05 || effectiveDuration > 0) {
                  lastAutodriveActionTime = System.currentTimeMillis() // 🟢 Update Strict Cooldown
                  if (rT.rate != null) {
-                     rT.rate = ketoProtection(rT.rate!!, profile, rT)
+                     aapsLogger.debug( LTag.APS, "Keto(4): Do I need keto here?? rate would be ${rT.rate}")
+                     //rT.rate = ketoProtection(rT.rate!!, profile, rT, pumpCaps )
                  } else {
                      aapsLogger.info(LTag.APS, "AIMI: ketoProtection skipped (rate=null)")
                  }
@@ -5096,11 +5102,6 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         
         if (isCompression) {
             // Hard Stop on Sensor Error
-            if (rT.rate != null) {
-                rT.rate = ketoProtection(rT.rate!!, profile, rT)
-            } else {
-                aapsLogger.info(LTag.APS, "AIMI: ketoProtection skipped (rate=null)")
-            }
             logDecisionFinal("COMPRESSION", rT, bg, delta)
              return rT
         }
@@ -5134,7 +5135,8 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             consoleLog.add("AD_SMALL_PREBOLUS_TRIGGER amount=$terminatortap reason=DriftTerminator")
             finalizeAndCapSMB(rT, terminatortap, reason.toString(), mealData, threshold, decisionSource = "DriftTerminator")
             if (rT.rate != null) {
-                rT.rate = ketoProtection(rT.rate!!, profile, rT)
+                aapsLogger.debug( LTag.APS, "Keto(5): Do I need keto here?? rate would be ${rT.rate}")
+                //rT.rate = ketoProtection(rT.rate!!, profile, rT, pumpCaps )
             } else {
                 aapsLogger.info(LTag.APS, "AIMI: ketoProtection skipped (rate=null)")
             }
@@ -5167,15 +5169,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         // TODO eliminate
         val deliverAt = currentTime
 
-        // Dynamic Pump Capabilities
-        val pumpDesc = activePlugin.activePump.pumpDescription
-        val pumpCaps = PumpCaps(
-            basalStep = if (pumpDesc.basalStep > 0) pumpDesc.basalStep else 0.05,
-            bolusStep = if (pumpDesc.bolusStep > 0) pumpDesc.bolusStep else 0.05,
-            minDurationMin = 30,
-            maxBasal = profile.max_basal,
-            maxSmb = 3.0
-        )
+
         val profile_current_basal = pumpCapabilityValidator.validateBasal(profile.current_basal, pumpCaps)
         var basal: Double
 
@@ -6291,8 +6285,8 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         
         // Apply basal boost if calculated (OVERLAY - don't block SMB)
         if (basalBoostApplied && rate != null) {
-            val tmp_rate = rate.coerceAtLeast(0.0)
-            rT.rate = ketoProtection(tmp_rate, profile, rT)
+            val tmprate = rate.coerceAtLeast(0.0)
+            rT.rate = ketoProtection(tmprate, profile, rT, pumpCaps )
             rT.deliverAt = deliverAt
             rT.duration = 30
             consoleLog.add("BOOST_BASAL_APPLIED source=${basalBoostSource ?: "Unknown"} rate=${"%.2f".format(Locale.US, rate)}U/h")
@@ -6616,7 +6610,8 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                 dynIsfMode = dynIsfMode
             )
             if (rT.rate != null) {
-                rT.rate = ketoProtection(rT.rate!!, profile, rT)
+                aapsLogger.debug( LTag.APS, "Keto(6): Do I need keto here?? rate would be ${rT.rate}")
+                //rT.rate = ketoProtection(rT.rate!!, profile, rT, pumpCaps)
             } else {
                 aapsLogger.info(LTag.APS, "AIMI: ketoProtection skipped (rate=null)")
             }
@@ -7271,13 +7266,6 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                 }
             )
 
-            // final keto check.
-            if (rT.rate != null) {
-                rT.rate = ketoProtection(rT.rate!!, profile, rT)
-            } else {
-                aapsLogger.info(LTag.APS, "AIMI: ketoProtection skipped (rate=null)")
-            }
-            
             // Populate Outcome
             // Populate Outcome
             decisionCtx.outcome = AimiDecisionContext.Outcome(
@@ -7763,40 +7751,33 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         }
     }
 
-    // mod Ketoacidosis Protection
-    private fun ketoProtection(_proposedRate: Double, profile: OapsProfileAimi, rT: RT): Double {
-        aapsLogger.info(LTag.APS, "ketoProtection IN: _proposedRate=$_proposedRate")
+    /* *************************************************************
+     *  Ketoacidosis Protection
+     *  Checks tbr and keep at least a minimum active to prevent Ketoacidosis
+     *
+     *  Additional: Respects Pump capabilities for TBR.
+     ****************************************************************/
+    private fun ketoProtection(_proposedRate: Double, profile: OapsProfileAimi, rT: RT, pumpCaps : PumpCaps): Double {
+        aapsLogger.info(LTag.APS, "ketoProtection IN: _proposedRate=${"%.2f".format(_proposedRate)}")
 
-        val iobBolTotal = iobCobCalculator.calculateIobFromBolus().round()
-        val iobBasTotal = iobCobCalculator.calculateIobFromTempBasalsIncludingConvertedExtended().round()
-        val myIOB = round((iobBolTotal.iob + iobBasTotal.basaliob) * 100.0) / 100.0
-        var proposedRate = _proposedRate
+        var proposedRate : Double = _proposedRate
+        val protectionRate : Double = profile.ketoacidosisProtectionBasal.toDouble() * 0.01
+        val cutOff : Double = roundBasal(profile.current_basal * protectionRate)
 
-        //security deactivation and handling settings switches. IOB is hardcoded
-        if (myIOB > 0.0 ||
-            bg <= profile.ketoacidosisProtectionBG ||
-            delta <= profile.ketoacidosisProtectionDelta ||
-            shortAvgDelta <= profile.ketoacidosisProtectionDelta  ||
-            longAvgDelta <= profile.ketoacidosisProtectionDelta )
-        {
-            aapsLogger.info(
-                LTag.APS,
-                "ketoProtection: IOB=$myIOB > 0 or BG=$bg < 85 or significant drop → delta=$delta, shortAvgDelta=$shortAvgDelta, longAvgDelta=$longAvgDelta, return $proposedRate"
-            )
-            rT.reason.append("\nKETO keep $proposedRate U/h.")
-        }
-        else {
-            val baseBasalRate = profile.current_basal
-            val protectionRate: Double = profile.ketoacidosisProtectionBasal.toDouble() * 0.01
-            val cutOff: Double = roundBasal(baseBasalRate * protectionRate)
-            aapsLogger.info(LTag.APS, "ketoProtection cutOff: $cutOff")
-            if (profile.ketoacidosisProtection && proposedRate < cutOff) {
-                proposedRate = cutOff
-                rT.reason.append("\nKETO from $_proposedRate -> $proposedRate U/h.")
-                aapsLogger.info(LTag.APS, "ketoProtection sets tbr from $_proposedRate to $proposedRate U/h")
+        if (profile.ketoacidosisProtection && proposedRate < cutOff) {
+            // original : if (profile.ketoacidosisProtectionStrategy && profile.ketoacidosisProtectionIob < (0 - profile.current_basal) ) {
+            // but (0 - profile.current_basal) will happen seldom to never. Reduce to IOB < (0 - profile.current_basal/2)
+            if (profile.ketoacidosisProtectionStrategy && profile.ketoacidosisProtectionIob < (0 - profile.current_basal/2) ) {
+                proposedRate = pumpCapabilityValidator.validateBasal(cutOff , pumpCaps)
+                rT.reason.append("\nKetoacidosis protection sets temp basal to " + round(proposedRate,2) +" U/h.")
+                aapsLogger.info(LTag.APS, "Ketoacidosis protection sets temp basal to " + round(proposedRate,2) + "fsteps U/h")
+            } else if (!profile.ketoacidosisProtectionStrategy) {
+                proposedRate = pumpCapabilityValidator.validateBasal(cutOff , pumpCaps)
+                rT.reason.append("\nKetoacidosis protection sets temp basal to " + round(proposedRate,2) + " U/h")
+                aapsLogger.info(LTag.APS, "Ketoacidosis protection sets temp basal to  " + round(proposedRate,2) + " U/h")
             }
         }
-        aapsLogger.info(LTag.APS, $$"ketoProtection OUT: proposedRate=$$proposedRate")
+        aapsLogger.info(LTag.APS, "ketoProtection OUT: proposedRate=${"%.2f".format(proposedRate)} cutOff=$cutOff IOB = ${profile.ketoacidosisProtectionIob} Basal = ${profile.current_basal}" )
         return proposedRate
     }
 
