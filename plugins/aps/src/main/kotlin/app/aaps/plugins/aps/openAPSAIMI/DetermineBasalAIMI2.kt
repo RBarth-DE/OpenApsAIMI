@@ -5859,7 +5859,13 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         // ═══════════════════════════════════════════════════════════════════════════
         val learnerFactor = safeReactivityFactor // Already computed: unifiedReactivityLearner + Physio
         val isFragileBg = bg < 110.0 && delta < 0.0
-        val isLearnerPrudent = learnerFactor < 0.75
+
+        // 🛡️ Autosens Override for Prudent Learner
+        // If system detects high resistance (>1.2), we should NOT be prudent even if Learner says so.
+        // We need aggressiveness to break the resistance.
+        val autosensResistance = autosens_data.ratio > 1.2
+        val isLearnerPrudent = learnerFactor < 0.75 && !autosensResistance
+
         val basalFirstMealActive = mealData.mealCOB > 0.1 // 🍕 Digestion active?
         val basalFirstHeavyMeal = mealData.mealCOB > 20.0 // 🍔 Heavy Meal?
 
@@ -5868,7 +5874,17 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         // OR
         // B) BG is Fragile AND NO Heavy Meal is active (User rule: COB > 20 -> Priority to Insulin)
         // EXCEPTION: Explicit Meal Advisor / OneShot overrides
-        val basalFirstActive = ((isLearnerPrudent && !basalFirstMealActive) || (isFragileBg && !basalFirstHeavyMeal)) && !isMealAdvisorOneShot
+        // 📈 Persistent Rise (Updated): Use combinedDelta for noise immunity
+        // combinedDelta blends current delta with short-term prediction.
+        val isPersistentRise = bg > target_bg && combinedDelta >= 0.3f
+
+        // Gate: Activate Basal-First if:
+        // A) Learner is Prudent AND NO Meal is active AND NO Persistent Rise
+        //    (Safety prevents over-reaction if flat/stable, but allows fighting a real rise)
+        // OR
+        // B) BG is Fragile AND NO Heavy Meal is active (User rule: COB > 20 -> Priority to Insulin)
+        // EXCEPTION: Explicit Meal Advisor / OneShot overrides
+        val basalFirstActive = ((isLearnerPrudent && !basalFirstMealActive && !isPersistentRise) || (isFragileBg && !basalFirstHeavyMeal)) && !isMealAdvisorOneShot
         
         if (basalFirstActive) {
             // FORCE limits to 0.0 -> Disables SMB effectively
@@ -5884,8 +5900,14 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             consoleLog.add("🛡️ BASAL-FIRST ACTIVE: $reason -> SMB DISABLED (MaxSMB=0)")
             rT.reason.append(" [Basal-First: SMB OFF]")
         } else {
+             if (autosensResistance && learnerFactor < 0.75) {
+                  consoleLog.add("⚡ RESISTANCE EXEMPTION: Autosens Ratio ${"%.2f".format(autosens_data.ratio)} > 1.2 -> Prudent Learner Overridden.")
+             }
              if (isLearnerPrudent && basalFirstMealActive) {
                  consoleLog.add("🍕 MEAL EXEMPTION: Learner is Prudent but Meal Active (COB=${"%.1f".format(mealData.mealCOB)}g) -> SMB Allowed.")
+             }
+             if (isLearnerPrudent && isPersistentRise) {
+                 consoleLog.add("📈 RISE EXEMPTION: Learner is Prudent but CombinedDelta=${"%.1f".format(combinedDelta)} indicates rise > Target -> SMB Allowed.")
              }
              if (isFragileBg && basalFirstHeavyMeal) {
                  consoleLog.add("🍔 HEAVY MEAL EXEMPTION: Fragile BG but COB > 20g (COB=${"%.1f".format(mealData.mealCOB)}g) -> SMB Allowed.")
@@ -6217,6 +6239,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                 } else null
             }
             
+
             // 🔥 General Hyper Kicker (Non-Meal)
             // Catch-all for late rises outside specific meal windows
             // 🚀 FCL 13.0: Harmonized Rocket Start (Delta > 5.0) to match Meal/Hypo logic.
@@ -6236,6 +6259,16 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                 if (boostedRate > profile_current_basal * 1.1) {
                     calculateRate(basal, profile_current_basal, boostedRate/profile_current_basal, "Global Hyper Kicker (Active)", currenttemp, rT, overrideSafety = true)
                 } else null
+            }
+            
+            // 🛡️ PRUDENT LEARNER COMPENSATION (Basal First Fallback)
+            // If SMB is blocked due to uncertainty (Prudent) but BG is high, use Safe TBR.
+            // Exclude FragileBG (falling) cases.
+            basalFirstActive && !isFragileBg && bg > target_bg -> {
+                 val maxBasalPref = preferences.get(DoubleKey.autodriveMaxBasal)
+                 val safeMax = if (maxBasalPref > 0.1) maxBasalPref else profile.max_basal
+                 // Moderate boost (140%) to gently bring it down without SMB spikes
+                 calculateRate(basal, safeMax, 1.4, "Prudent Compensation (SMB blocked)", currenttemp, rT)
             }
 
             // Fix: Clamp delta multiplier to 0.0 to prevent negative basal (delta is Float)
