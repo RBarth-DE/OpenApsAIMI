@@ -380,13 +380,14 @@ class GarminPlugin @Inject constructor(
 
     // mod Bolus and temp target
     private fun getQueryParameter(
-        uri: URI, name: String,
+        uri: URI,
+        @Suppress("SameParameterValue") name: String,
         @Suppress("SameParameterValue") defaultValue: Int
     ): Int {
         val value = getQueryParameter(uri, name)
         return try {
             if (value.isNullOrEmpty()) defaultValue else value.toInt()
-        } catch (e: NumberFormatException) {
+        } catch (_: NumberFormatException) {
             aapsLogger.error(LTag.GARMIN, "invalid $name value '$value'")
             defaultValue
         }
@@ -399,7 +400,7 @@ class GarminPlugin @Inject constructor(
         val value = getQueryParameter(uri, name)
         return try {
             if (value.isNullOrEmpty()) defaultValue else value.toDouble()
-        } catch (e: NumberFormatException) {
+        } catch (_: NumberFormatException) {
             aapsLogger.error(LTag.GARMIN, "invalid $name value '$value'")
             defaultValue
         }
@@ -502,20 +503,18 @@ class GarminPlugin @Inject constructor(
         
         aapsLogger.info(LTag.GARMIN, "Steps: 5=$steps5, 10=$steps10, 15=$steps15, 30=$steps30, 60=$steps60, 180=$steps180")
         
-        if (hasData) {
-            receiveSteps(
-                Instant.ofEpochSecond(samplingStartSec),
-                Instant.ofEpochSecond(samplingEndSec),
-                steps5,
-                steps10,
-                steps15,
-                steps30,
-                steps60,
-                steps180,
-                device,
-                test,
-            )
-        }
+        receiveSteps(
+            Instant.ofEpochSecond(samplingStartSec),
+            Instant.ofEpochSecond(samplingEndSec),
+            steps5,
+            steps10,
+            steps15,
+            steps30,
+            steps60,
+            steps180,
+            device,
+            test,
+        )
     }
 
     @VisibleForTesting
@@ -558,7 +557,7 @@ class GarminPlugin @Inject constructor(
             val totalSteps = getQueryParameter(uri, "steps")?.toIntOrNull() ?: -1
             aapsLogger.debug(LTag.GARMIN, "Garmin Swissalpine workarround. Receioved steps $totalSteps")
             if (totalSteps >= 0 ) {
-                ingestHttpTotalSteps(uri, totalSteps)
+                ingestHttpTotalSteps(uri, totalSteps, samplingStart, samplingEnd)
                 return
             }
 
@@ -568,58 +567,31 @@ class GarminPlugin @Inject constructor(
         
         aapsLogger.info(LTag.GARMIN, "HTTP Steps: 5=$steps5, 10=$steps10, 15=$steps15, 30=$steps30, 60=$steps60, 180=$steps180")
         
-        if (hasData) {
-            receiveSteps(
-                Instant.ofEpochSecond(samplingStart),
-                Instant.ofEpochSecond(samplingEnd),
-                steps5,
-                steps10,
-                steps15,
-                steps30,
-                steps60,
-                steps180,
-                device,
-                test,
-            )
-        } else {
-             // Low-level debug only to avoid spamming if watchface sends empty heartbeat
-             // aapsLogger.debug(LTag.GARMIN, "Received steps timestamp but all buckets are 0/missing")
-        }
+        receiveSteps(
+            Instant.ofEpochSecond(samplingStart),
+            Instant.ofEpochSecond(samplingEnd),
+            steps5,
+            steps10,
+            steps15,
+            steps30,
+            steps60,
+            steps180,
+            device,
+            test,
+        )
     }
 
-    fun ingestHttpTotalSteps(uri: URI, totalSteps: Int) {
+    private fun ingestHttpTotalSteps(uri: URI, totalSteps: Int, samplingStart: Long, samplingEnd: Long) {
         val device = getQueryParameter(uri, "device")
-
-        //val now = System.currentTimeMillis()
-        val lastTotal = sp.getInt(PREF_GARMIN_LAST_STEPS, -1)
-
-        val now = clock.instant().epochSecond
-        aapsLogger.warn(LTag.GARMIN, "HTTP steps without timestamps. Using fallback: now-5min to now")
-        val samplingStart = now - 300
-        val samplingEnd = now
-
-        //val start = Instant.ofEpochMilli(now - 5 * 60_000)
-        //val end = Instant.ofEpochMilli(now)
         val none = 0
+
+        val now = System.currentTimeMillis()
+        val lastTotal = sp.getInt(PREF_GARMIN_LAST_STEPS, -1)
 
         // First ever value → store baseline only
         if (lastTotal < 0) {
             sp.putInt(PREF_GARMIN_LAST_STEPS, totalSteps)
             sp.putLong(PREF_GARMIN_LAST_TS, now)
-
-            // also store initial update
-            loopHub.storeStepsCount(
-                Instant.ofEpochSecond(samplingStart),
-                Instant.ofEpochSecond(samplingEnd),
-                totalSteps,
-                none,
-                none,
-                none,
-                none,
-                none,
-                device
-            )
-
             aapsLogger.info(LTag.GARMIN, "[GarminHTTP] baseline steps=$totalSteps")
             return
         }
@@ -627,7 +599,7 @@ class GarminPlugin @Inject constructor(
         val delta = totalSteps - lastTotal
 
         // Guard rails: Only strict check is that delta must be positive.
-        // We remove the 3000 upper limit because during a long run (e.g. 1h without sync), 
+        // We remove the 3000 upper limit because during a long run (e.g. 1h without sync),
         // the delta can easily exceed 3000 steps.
         if (delta <= 0) {
             // this case is reached in the morning on first sync.
@@ -637,7 +609,6 @@ class GarminPlugin @Inject constructor(
                 LTag.GARMIN,
                 "[GarminHTTP] negative / 0 step delta=$delta (total=$totalSteps last=$lastTotal)"
             )
-            // If delta is 0 or negative (device reset?), we just update the last known value to sync up
             if (totalSteps > 0 && delta == 0) {
                 sp.putInt(PREF_GARMIN_LAST_STEPS, totalSteps)
                 sp.putLong(PREF_GARMIN_LAST_TS, now)
@@ -815,7 +786,12 @@ class GarminPlugin @Inject constructor(
                     GlucoseUnit.MMOL -> jo.addProperty("units_hint", "mmol")
                 }
                 jo.addProperty("iob", loopHub.insulinOnboard + loopHub.insulinBasalOnboard)
-                jo.addProperty("tbr", loopHub.temporaryBasalPercent )
+                loopHub.temporaryBasal.also {
+                    if (!it.isNaN()) {
+                        val temporaryBasalRateInPercent = (it * 100.0).toInt()
+                        jo.addProperty("tbr", temporaryBasalRateInPercent)
+                    }
+                }
                 jo.addProperty("cob", loopHub.carbsOnboard)
             }
             joa.add(jo)
