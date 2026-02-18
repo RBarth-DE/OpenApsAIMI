@@ -156,5 +156,8 @@ enum class BooleanKey(
 
     //Ketoacidosis Protection
     ApsKetoacidosisProtection("ketoacidosis_protection", false, defaultedBySM = true),
-    ApsKetoacidosisProtectionStrategy("ketoacidosis_protection_strategy", false, defaultedBySM = true)
+    ApsKetoacidosisProtectionStrategy("ketoacidosis_protection_strategy", false, defaultedBySM = true),
+
+    // 🌀 Adaptive Kernel Bank (Cosine Gate)
+    AimiCosineGateEnabled("aimi_cosine_gate_enabled", true)
 }

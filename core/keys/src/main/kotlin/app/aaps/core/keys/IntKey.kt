@@ -105,4 +105,7 @@ enum class IntKey(
 
     // Ketoacidosis Protection
     ApsKetoacidosisProtectionBasal("ketoacidosis_protection_basal", 20,10, 40, defaultedBySM = true),
+    // 🌀 Adaptive Kernel Bank (Cosine Gate)
+    AimiCosineGateMaxPeakShift("aimi_cosine_gate_max_shift", 15, 0, 60),
+
 }

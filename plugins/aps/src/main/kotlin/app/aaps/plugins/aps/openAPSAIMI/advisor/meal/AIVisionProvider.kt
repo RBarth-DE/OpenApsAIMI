@@ -11,11 +11,12 @@ interface AIVisionProvider {
     /**
      * Estimate food macros from image bitmap
      * @param bitmap The food image
+     * @param userDescription Optional text description from user
      * @param apiKey The API key for this provider
      * @return EstimationResult with food data
      * @throws Exception on API errors
      */
-    suspend fun estimateFromImage(bitmap: Bitmap, apiKey: String): EstimationResult
+    suspend fun estimateFromImage(bitmap: Bitmap, userDescription: String, apiKey: String): EstimationResult
     
     /**
      * Provider display name (e.g., "OpenAI GPT-4o")
@@ -63,8 +64,10 @@ Your goal is to provide **precise, safety-focused** macronutrient estimation fro
   5. **Glycemic Impact**: Assess GI and absorption speed (fiber/fat content).
 
 ## CRITICAL RULES
-1. **Safety First**: If uncertain (e.g., sauce content, hidden ingredients), provide a **Range** (min/max) and lean towards safety in the 'estimate'.
-2. **Hidden Sugars**: Flag sauces, glazes, or dressings that usually contain hidden carbs.
+1. **Safety First (Hypoglycemia Prevention)**: Your priority is avoiding dangerous insulin overdoes.
+   - If uncertain about volume or ingredients, your `estimate` MUST lean towards the **LOWER** end of the likely range.
+   - Use the `max` field to capture the uncertainty, but keep the primary `estimate` conservative.
+2. **Hidden Sugars**: Flag sauces/glazes in `rationale` but do not agressively pad the carb count unless visible evidence exists.
 3. **Chain of Thought**: You MUST reason step-by-step in the `rationale` field before finalizing numbers.
    - *Example:* "Burger bun appears to be brioche (higher fat/sugar). Patty size approx 150g raw weight..."
 4. **JSON Only**: Output strict JSON. No markdown fencing if possible, no preamble.
