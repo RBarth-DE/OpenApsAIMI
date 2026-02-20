@@ -289,36 +289,91 @@ class MyPreferenceFragment : PreferenceFragmentCompat(), OnSharedPreferenceChang
 
     private fun updatePrefSummary(pref: Preference?) {
         pref ?: return
-        val keyDefinition = pref.key?.let { preferences.getIfExists(it) }
-        when (keyDefinition) {
-            is IntPreferenceKey,
-            is DoublePreferenceKey -> {
-                if (pref is EditTextPreference && pref.text != null) pref.summary = pref.text
-                if (pref is ListPreference) pref.summary = pref.entry
-            }
 
-            is StringPreferenceKey -> {
-                val value = preferences.get(keyDefinition)
-                when {
-                    // We use Preference and custom editor instead of EditTextPreference
-                    // to hash password while it is saved and never have to show it, even hashed
-                    (keyDefinition.isPin || keyDefinition.isPassword) && value.isNotEmpty() -> pref.summary = "******"
-                    keyDefinition.isPin                                                     -> pref.summary = rh.gs(app.aaps.core.ui.R.string.pin_not_set)
-                    keyDefinition.isPassword                                                -> pref.summary = rh.gs(app.aaps.core.ui.R.string.password_not_set)
-                    pref is EditTextPreference && value.isNotEmpty()                        -> pref.summary = value
-                    pref is ListPreference                                                  -> pref.summary = pref.entry
+        val keyDefinition = pref.key?.let { preferences.getIfExists(it) }
+
+        when (pref) {
+
+            is ListPreference -> {
+                if (pref.summaryProvider == null) {
+                    pref.summaryProvider =
+                        ListPreference.SimpleSummaryProvider.getInstance()
                 }
             }
 
+            is EditTextPreference -> {
+
+                if (keyDefinition is StringPreferenceKey) {
+
+                    val value = preferences.get(keyDefinition)
+
+                    when {
+                        (keyDefinition.isPin || keyDefinition.isPassword) && value.isNotEmpty() ->
+                            pref.summary = "******"
+
+                        keyDefinition.isPin ->
+                            pref.summary = rh.gs(app.aaps.core.ui.R.string.pin_not_set)
+
+                        keyDefinition.isPassword ->
+                            pref.summary = rh.gs(app.aaps.core.ui.R.string.password_not_set)
+
+                        else -> {
+                            if (pref.summaryProvider == null) {
+                                pref.summaryProvider =
+                                    EditTextPreference.SimpleSummaryProvider.getInstance()
+                            }
+                        }
+                    }
+
+                } else {
+                    if (pref.summaryProvider == null) {
+                        pref.summaryProvider =
+                            EditTextPreference.SimpleSummaryProvider.getInstance()
+                    }
+                }
+            }
+
+            else -> {
+
+                if (pref.summaryProvider != null) return
+
+                when (keyDefinition) {
+
+                    is IntPreferenceKey -> {
+                        pref.summary = preferences.get(keyDefinition).toString()
+                    }
+
+                    is DoublePreferenceKey -> {
+                        pref.summary = preferences.get(keyDefinition).toString()
+                    }
+
+                    is StringPreferenceKey -> {
+                        val value = preferences.get(keyDefinition)
+                        if (value.isNotEmpty())
+                            pref.summary = value
+                    }
+                }
+            }
         }
-        for (plugin in activePlugin.getPluginsList()) pref.key?.let { plugin.updatePreferenceSummary(pref) }
+
+        pref.key?.let { key ->
+            activePlugin.getPluginsList()
+                .forEach { it.updatePreferenceSummary(pref) }
+        }
     }
 
     private fun initSummary(p: Preference?, isSinglePreference: Boolean) {
-        p?.isIconSpaceReserved = false // remove extra spacing on left after migration to androidx
-        // expand single plugin preference by default
-        if (p is PreferenceScreen && isSinglePreference && p.size > 0 && p.getPreference(0) is PreferenceCategory)
-            (p.getPreference(0) as PreferenceCategory).initialExpandedChildrenCount = Int.MAX_VALUE
+        p?.isIconSpaceReserved = false
+
+        if (p is PreferenceScreen &&
+            isSinglePreference &&
+            p.preferenceCount > 0 &&
+            p.getPreference(0) is PreferenceCategory
+        ) {
+            (p.getPreference(0) as PreferenceCategory)
+                .initialExpandedChildrenCount = Int.MAX_VALUE
+        }
+
         if (p is PreferenceGroup) {
             for (i in 0 until p.preferenceCount) {
                 initSummary(p.getPreference(i), isSinglePreference)

@@ -41,7 +41,6 @@ import app.aaps.core.interfaces.ui.UiInteraction
 import app.aaps.plugins.aps.openAPSAIMI.utils.AimiStorageHelper
 import app.aaps.plugins.aps.openAPSAIMI.model.Constants
 import app.aaps.core.data.model.HR
-import app.aaps.core.objects.extensions.round
 import app.aaps.plugins.aps.openAPSAIMI.model.DecisionResult
 import app.aaps.plugins.aps.openAPSAIMI.model.LoopContext
 import app.aaps.plugins.aps.openAPSAIMI.model.PumpCaps
@@ -328,6 +327,12 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         app.aaps.plugins.aps.openAPSAIMI.inflammatory.InflammationAdjuster(wCyclePreferences) 
     }
 
+    // 🦋 Thyroid (Basedow) Module
+    private val thyroidPreferences by lazy { app.aaps.plugins.aps.openAPSAIMI.physio.thyroid.ThyroidPreferences(preferences) }
+    private val thyroidStateEstimator = app.aaps.plugins.aps.openAPSAIMI.physio.thyroid.ThyroidStateEstimator()
+    private val thyroidEffectModel = app.aaps.plugins.aps.openAPSAIMI.physio.thyroid.ThyroidEffectModel()
+    private val thyroidSafetyGates = app.aaps.plugins.aps.openAPSAIMI.physio.thyroid.ThyroidSafetyGates()
+
     // ❌ OLD reactivityLearner removed - UnifiedReactivityLearner is now the only one
     init {
         // Branche l’historique basal (TBR) sur la persistence réelle
@@ -473,6 +478,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
     private var lastEventualBgSnapshot: Double = 0.0
     private var lastSmbProposed: Double = 0.0
     private var lastSmbCapped: Double = 0.0
+    private var currentThyroidEffects = app.aaps.plugins.aps.openAPSAIMI.physio.thyroid.ThyroidEffects()
     private var lastSmbFinal: Double = 0.0
     private var lastAutodriveState: AutodriveState = AutodriveState.IDLE
     private var internalLastSmbMillis: Long = 0L // Local Atomic Timestamp for Safety
@@ -1296,23 +1302,13 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         forceExact: Boolean = false
     ): RT {
         // 0) LGS kill-switch (sans récursion)
-
-        val pumpDesc = activePlugin.activePump.pumpDescription
-        val pumpCaps = PumpCaps(
-            basalStep = if (pumpDesc.basalStep > 0) pumpDesc.basalStep else 0.05,
-            bolusStep = if (pumpDesc.bolusStep > 0) pumpDesc.bolusStep else 0.05,
-            minDurationMin = 30,
-            maxBasal = profile.max_basal,
-            maxSmb = 3.0
-        )
-
         val lgsPref = profile.lgsThreshold
         val hypoGuard = computeHypoThreshold(minBg = profile.min_bg, lgsThreshold = lgsPref)
         val blockLgs = isBelowHypoThreshold(bg, predictedBg.toDouble(), eventualBG, hypoGuard, delta.toDouble())
         if (blockLgs) {
             rT.reason.append(context.getString(R.string.lgs_triggered, "%.0f".format(bg), "%.0f".format(hypoGuard)))
             rT.duration = maxOf(duration, 30)
-            rT.rate = ketoProtection(0.0, profile, rT, pumpCaps )
+            rT.rate = 0.0
             return rT
         }
         val isLgsEnabled = profile.lgsThreshold != null && profile.lgsThreshold!! > 0
@@ -1333,7 +1329,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                 )
             )
             rT.duration = duration
-            rT.rate = ketoProtection(rate, profile, rT, pumpCaps)
+            rT.rate = rate
             return rT
         }
 
@@ -1426,7 +1422,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
 
         rT.reason.append(context.getString(R.string.temp_basal_pose, "%.2f".format(rate), duration))
         rT.duration = duration
-        rT.rate = ketoProtection(rate, profile, rT, pumpCaps)
+        rT.rate = rate
         return rT
     }
 
@@ -1672,6 +1668,30 @@ class DetermineBasalaimiSMB2 @Inject constructor(
          val refractoryBlocked = sinceBolus < refractoryWindow && !isExplicitUserAction
          var gatedUnits = safetyCappedUnits
          var absorptionFactor = 1.0
+
+         // 🦋 THYROID NORMALIZING SAFETY GATE
+         if (this.currentThyroidEffects.status == app.aaps.plugins.aps.openAPSAIMI.physio.thyroid.ThyroidStatus.NORMALIZING) {
+             val inputs = thyroidPreferences.inputsFlow.value
+             val gatedEffects = thyroidSafetyGates.applyGates(
+                 inputs = inputs,
+                 effects = this.currentThyroidEffects,
+                 currentBg = bg,
+                 bgDelta = delta.toDouble(),
+                 currentIob = iob.toDouble()
+             )
+             if (gatedEffects.blockSmb) {
+                 gatedUnits = 0f
+                 consoleLog.add("🦋 THYROID_GUARD: SMB Blocked (Normalizing Phase risk)")
+                 rT.reason.append("🦋 Thyroid Guard: Blocked. ")
+             } else if (gatedEffects.smbCapUnits != null) {
+                 val cap = gatedEffects.smbCapUnits!!.toFloat()
+                 if (gatedUnits > cap) {
+                     consoleLog.add("🦋 THYROID_GUARD: SMB Capped to ${cap} (was $gatedUnits)")
+                     rT.reason.append("🦋 Thyroid Guard: Cap ${cap}U. ")
+                     gatedUnits = cap
+                 }
+             }
+         }
 
          if (refractoryBlocked) {
              gatedUnits = 0f
@@ -3853,15 +3873,50 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             e.printStackTrace()
         }
 
-        // Dynamic Pump Capabilities
-        val pumpDesc = activePlugin.activePump.pumpDescription
-        val pumpCaps = PumpCaps(
-            basalStep = if (pumpDesc.basalStep > 0) pumpDesc.basalStep else 0.05,
-            bolusStep = if (pumpDesc.bolusStep > 0) pumpDesc.bolusStep else 0.05,
-            minDurationMin = 30,
-            maxBasal = profile.max_basal,
-            maxSmb = 3.0
-        )
+        // 🦋 Thyroid (Basedow) Module Integration
+        this.currentThyroidEffects = app.aaps.plugins.aps.openAPSAIMI.physio.thyroid.ThyroidEffects()
+        try {
+            thyroidPreferences.update()
+            val thyroidInputs = thyroidPreferences.inputsFlow.value
+            if (thyroidInputs.isEnabled) {
+                thyroidStateEstimator.updateState(thyroidInputs)
+                val status = thyroidStateEstimator.currentState.value
+                val confidence = thyroidStateEstimator.confidence.value
+                currentThyroidEffects = thyroidEffectModel.calculateEffects(status, confidence)
+
+                // Safety Gates evaluated later during SMB cap, but logging effects here
+                val logMsg = app.aaps.plugins.aps.openAPSAIMI.physio.thyroid.ThyroidDiagnosticsLogger.formatDecisionLog(
+                    inputs = thyroidInputs,
+                    status = status,
+                    effects = currentThyroidEffects,
+                    confidence = confidence,
+                    direction = "INIT",
+                    reason = ""
+                )
+                if (logMsg.isNotBlank()) consoleLog.add("🦋 $logMsg")
+
+                // Apply Profile Multipliers (In-Flight Mutation similar to Gestation)
+                if (currentThyroidEffects.diaMultiplier != 1.0) {
+                     profile.dia *= currentThyroidEffects.diaMultiplier
+                }
+                if (currentThyroidEffects.egpMultiplier != 1.0) {
+                     profile.current_basal *= currentThyroidEffects.egpMultiplier
+                }
+                if (currentThyroidEffects.carbRateMultiplier != 1.0) {
+                     // Normally CR modification isn't directly 'carb rate', but we can lower Carbohydrate Ratio
+                     // so that carbs require MORE insulin or absorb faster. Actually, Carb Rate in typical
+                     // OAPS is handled in MealAdvisor or PKPD directly. We'll modify sens for now
+                     // as a proxy for the ISF multiplier.
+                }
+                if (currentThyroidEffects.isfMultiplier != 1.0) {
+                     profile.sens *= currentThyroidEffects.isfMultiplier
+                     profile.variable_sens *= currentThyroidEffects.isfMultiplier
+                }
+            }
+        } catch (e: Exception) {
+            consoleLog.add("🦋 Error in Thyroid logic: ${e.message}")
+            e.printStackTrace()
+        }
 
         // 🏥 AIMI DECISION CONTEXT INITIALIZATION (For Medical Transparency)
         val decisionCtx = AimiDecisionContext(
@@ -4830,7 +4885,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             // 🚀 TBR: Apply if runtime < 30 min
             if (bfastruntime < 30 * 60) {
                 setTempBasal(modeTbrLimit, 30, profile, rT, currenttemp, overrideSafetyLimits = true)
-                consoleLog.add("🍱 LEGACY_TBR_BFAST rate=${"%.2f".format(modeTbrLimit)}U/h duration=30m")
+ consoleLog.add("🍱 LEGACY_TBR_BFAST rate=${"%.2f".format(modeTbrLimit)}U/h duration=30m")
             }
             
             rT.units = pbolusbfast
@@ -5030,7 +5085,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
              
              // Add Status Log (User Request)
              rT.reason.appendLine(context.getString(R.string.autodrive_status, if (autodrive) "✔" else "✘", "Meal Advisor"))
-             logDecisionFinal("MEAL_ADVISOR", rT,  bg, delta)
+             logDecisionFinal("MEAL_ADVISOR", rT, bg, delta)
              return rT // 🛑 HARD RETURN to ensure no other logic overrides this
         }
 
@@ -5048,7 +5103,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             rT.reason.append("🛑 Hard Brake: Falling Fast & Decelerating -> Zero Basal\n")
             // Force 0% for 30m
             setTempBasal(0.0, 30, profile, rT, currenttemp, overrideSafetyLimits = true)
-            lastSafetySource = "HardBrake"
+            lastSafetySource = "HardBrake" 
             logDecisionFinal("HARD_BRAKE", rT, bg, delta)
             return rT
         }
@@ -5083,12 +5138,6 @@ class DetermineBasalaimiSMB2 @Inject constructor(
              
              if (effectiveBolus > 0.05 || effectiveDuration > 0) {
                  lastAutodriveActionTime = System.currentTimeMillis() // 🟢 Update Strict Cooldown
-                 if (rT.rate != null) {
-                     aapsLogger.debug( LTag.APS, "Keto(4): Do I need keto here?? rate would be ${rT.rate}")
-                     //rT.rate = ketoProtection(rT.rate!!, profile, rT, pumpCaps )
-                 } else {
-                     aapsLogger.info(LTag.APS, "AIMI: ketoProtection skipped (rate=null)")
-                 }
                  consoleLog.add("AUTODRIVE_APPLIED intent=${intentBolus} actual=$effectiveBolus")
                  logDecisionFinal("AUTODRIVE", rT, bg, delta)
                  return rT
@@ -5109,8 +5158,8 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         val isCompression = isCompressionProtectionCondition(delta.toFloat(), reason)
         
         if (isCompression) {
-            // Hard Stop on Sensor Error
-            logDecisionFinal("COMPRESSION", rT, bg, delta)
+             // Hard Stop on Sensor Error
+             logDecisionFinal("COMPRESSION", rT, bg, delta)
              return rT
         }
         
@@ -5142,12 +5191,6 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             consoleLog.add("AD_EARLY_TBR_TRIGGER rate=0.0 duration=0 reason=DriftTerminator_Tap") // Actually a bolus tap, not TBR, but fits "Early Action" category
             consoleLog.add("AD_SMALL_PREBOLUS_TRIGGER amount=$terminatortap reason=DriftTerminator")
             finalizeAndCapSMB(rT, terminatortap, reason.toString(), mealData, threshold, decisionSource = "DriftTerminator")
-            if (rT.rate != null) {
-                aapsLogger.debug( LTag.APS, "Keto(5): Do I need keto here?? rate would be ${rT.rate}")
-                //rT.rate = ketoProtection(rT.rate!!, profile, rT, pumpCaps )
-            } else {
-                aapsLogger.info(LTag.APS, "AIMI: ketoProtection skipped (rate=null)")
-            }
             logDecisionFinal("DRIFT_TERMINATOR", rT, bg, delta)
             return rT
         }
@@ -5177,7 +5220,15 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         // TODO eliminate
         val deliverAt = currentTime
 
-
+        // Dynamic Pump Capabilities
+        val pumpDesc = activePlugin.activePump.pumpDescription
+        val pumpCaps = PumpCaps(
+            basalStep = if (pumpDesc.basalStep > 0) pumpDesc.basalStep else 0.05,
+            bolusStep = if (pumpDesc.bolusStep > 0) pumpDesc.bolusStep else 0.05,
+            minDurationMin = 30,
+            maxBasal = profile.max_basal,
+            maxSmb = 3.0
+        )
         val profile_current_basal = pumpCapabilityValidator.validateBasal(profile.current_basal, pumpCaps)
         var basal: Double
 
@@ -6293,8 +6344,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         
         // Apply basal boost if calculated (OVERLAY - don't block SMB)
         if (basalBoostApplied && rate != null) {
-            val tmprate = rate.coerceAtLeast(0.0)
-            rT.rate = ketoProtection(tmprate, profile, rT, pumpCaps )
+            rT.rate = rate.coerceAtLeast(0.0)
             rT.deliverAt = deliverAt
             rT.duration = 30
             consoleLog.add("BOOST_BASAL_APPLIED source=${basalBoostSource ?: "Unknown"} rate=${"%.2f".format(Locale.US, rate)}U/h")
@@ -6617,12 +6667,6 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                 flatBGsDetected = flatBGsDetected,
                 dynIsfMode = dynIsfMode
             )
-            if (rT.rate != null) {
-                aapsLogger.debug( LTag.APS, "Keto(6): Do I need keto here?? rate would be ${rT.rate}")
-                //rT.rate = ketoProtection(rT.rate!!, profile, rT, pumpCaps)
-            } else {
-                aapsLogger.info(LTag.APS, "AIMI: ketoProtection skipped (rate=null)")
-            }
             logDecisionFinal("MAX_IOB", finalResult, bg, delta)
             return finalResult
         } else {
@@ -7273,7 +7317,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                     }
                 }
             )
-
+            
             // Populate Outcome
             // Populate Outcome
             decisionCtx.outcome = AimiDecisionContext.Outcome(
@@ -7757,36 +7801,6 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                  consoleLog.add("⚡ COB HYDRATION: Injected ${fallbackCarbs.toInt()}g from Advisor Prefs (DB latency bypass)")
             }
         }
-    }
-
-    /* *************************************************************
-     *  Ketoacidosis Protection
-     *  Checks tbr and keep at least a minimum active to prevent Ketoacidosis
-     *
-     *  Additional: Respects Pump capabilities for TBR.
-     ****************************************************************/
-    private fun ketoProtection(_proposedRate: Double, profile: OapsProfileAimi, rT: RT, pumpCaps : PumpCaps): Double {
-        aapsLogger.info(LTag.APS, "ketoProtection IN: _proposedRate=${"%.2f".format(_proposedRate)}")
-
-        var proposedRate : Double = _proposedRate
-        val protectionRate : Double = profile.ketoacidosisProtectionBasal.toDouble() * 0.01
-        val cutOff : Double = roundBasal(profile.current_basal * protectionRate)
-
-        if (profile.ketoacidosisProtection && proposedRate < cutOff) {
-            // original : if (profile.ketoacidosisProtectionStrategy && profile.ketoacidosisProtectionIob < (0 - profile.current_basal) ) {
-            // but (0 - profile.current_basal) will happen seldom to never. Reduce to IOB < (0 - profile.current_basal/2)
-            if (profile.ketoacidosisProtectionStrategy && profile.ketoacidosisProtectionIob < (0 - profile.current_basal/2) ) {
-                proposedRate = pumpCapabilityValidator.validateBasal(cutOff , pumpCaps)
-                rT.reason.append("\nKetoacidosis protection sets temp basal to " + round(proposedRate,2) +" U/h.")
-                aapsLogger.info(LTag.APS, "Ketoacidosis protection sets temp basal to " + round(proposedRate,2) + "fsteps U/h")
-            } else if (!profile.ketoacidosisProtectionStrategy) {
-                proposedRate = pumpCapabilityValidator.validateBasal(cutOff , pumpCaps)
-                rT.reason.append("\nKetoacidosis protection sets temp basal to " + round(proposedRate,2) + " U/h")
-                aapsLogger.info(LTag.APS, "Ketoacidosis protection sets temp basal to  " + round(proposedRate,2) + " U/h")
-            }
-        }
-        aapsLogger.info(LTag.APS, "ketoProtection OUT: proposedRate=${"%.2f".format(proposedRate)} cutOff=$cutOff IOB = ${profile.ketoacidosisProtectionIob} Basal = ${profile.current_basal}" )
-        return proposedRate
     }
 
 }
