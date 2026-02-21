@@ -1612,7 +1612,7 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
                             title = R.string.oaps_aimi_thyroid_enabled_title
                         )
                     )
-                    
+
                     val modeEntries = context.resources.getStringArray(R.array.oaps_aimi_thyroid_mode_entries).map { it as CharSequence }.toTypedArray()
                     val modeValues = context.resources.getStringArray(R.array.oaps_aimi_thyroid_mode_values).map { it as CharSequence }.toTypedArray()
                     addPreference(
@@ -1636,7 +1636,7 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
                             entryValues = statusValues
                         ).apply { summaryProvider = androidx.preference.ListPreference.SimpleSummaryProvider.getInstance() }
                     )
-                    
+
                     addPreference(PreferenceCategory(context).apply {
                         title = "Medical Context & Safety" // TODO: Add string resource
                     })
@@ -1664,11 +1664,11 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
                             entryValues = guardValues
                         ).apply { summaryProvider = androidx.preference.ListPreference.SimpleSummaryProvider.getInstance() }
                     )
-                    
+
                     addPreference(PreferenceCategory(context).apply {
                         title = "Diagnostics" // TODO: Add string resource
                     })
-                    
+
                     addPreference(
                         AdaptiveSwitchPreference(
                             ctx = context,
