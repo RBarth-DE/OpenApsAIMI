@@ -46,6 +46,7 @@ import javax.inject.Singleton
 import kotlin.concurrent.withLock
 import kotlin.math.roundToInt
 import app.aaps.core.interfaces.sharedPreferences.SP
+import java.util.Locale
 
 /** Support communication with Garmin devices.
  *
@@ -786,12 +787,19 @@ class GarminPlugin @Inject constructor(
                     GlucoseUnit.MMOL -> jo.addProperty("units_hint", "mmol")
                 }
                 jo.addProperty("iob", loopHub.insulinOnboard + loopHub.insulinBasalOnboard)
-                loopHub.temporaryBasal.also {
-                    if (!it.isNaN()) {
-                        val temporaryBasalRateInPercent = (it * 100.0).toInt()
-                        jo.addProperty("tbr", temporaryBasalRateInPercent)
-                    }
-                }
+                // TBR as value instead of %
+                val profile = loopHub.currentProfile
+                val basal = profile?.getBasal() ?: 0.0
+                val tbrFactor = loopHub.temporaryBasal
+
+                val safeTbrFactor = if (tbrFactor.isFinite() && !tbrFactor.isNaN()) tbrFactor else 0.0  // isFinite already excludes NaN, so you could shorten to: if (tbrFactor.isFinite()) tbrFactor else 0.0
+
+                val curBasalAsValue = basal * safeTbrFactor
+                val tbrPercent = (safeTbrFactor * 100.0).toInt()   // or roundToInt()
+
+                val result = String.format(Locale.US, "%.1f/%d", curBasalAsValue, tbrPercent)
+                jo.addProperty("tbr", result)
+
                 jo.addProperty("cob", loopHub.carbsOnboard)
             }
             joa.add(jo)
