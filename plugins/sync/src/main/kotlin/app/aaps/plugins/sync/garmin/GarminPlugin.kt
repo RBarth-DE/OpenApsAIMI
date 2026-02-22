@@ -750,8 +750,9 @@ class GarminPlugin @Inject constructor(
     @VisibleForTesting
     fun onSgv(uri: URI): CharSequence {
         receiveHeartRate(uri)
-        val count = getQueryParameter(uri, "count", 24L)
-            .toInt().coerceAtMost(1000).coerceAtLeast(1)
+        //reduced data to transmit. Not sure if it helps anything. default would be 24 and max 1000. Not sure what watch should do with that.
+        val count = getQueryParameter(uri, "count", 10L)
+            .toInt().coerceAtMost(20).coerceAtLeast(1)
         val briefMode = getQueryParameter(uri, "brief_mode", false)
 
         // Guess a start time to get [count+1] readings. This is a heuristic that only works if we get readings
@@ -787,7 +788,7 @@ class GarminPlugin @Inject constructor(
                     GlucoseUnit.MMOL -> jo.addProperty("units_hint", "mmol")
                 }
                 jo.addProperty("iob", loopHub.insulinOnboard + loopHub.insulinBasalOnboard)
-                // TBR as value instead of %
+                // TBR as "value/%"
                 val profile = loopHub.currentProfile
                 val basal = profile?.getBasal() ?: 0.0
                 val tbrFactor = loopHub.temporaryBasal
@@ -796,10 +797,12 @@ class GarminPlugin @Inject constructor(
 
                 val curBasalAsValue = basal * safeTbrFactor
                 val tbrPercent = (safeTbrFactor * 100.0).toInt()   // or roundToInt()
-
-                val result = String.format(Locale.US, "%.1f/%d", curBasalAsValue, tbrPercent)
-                jo.addProperty("tbr", result)
-
+                if (curBasalAsValue != 0.0 || tbrPercent != 0 ) {
+                    jo.addProperty("tbr", String.format(Locale.US, "%.1f/%d", curBasalAsValue, tbrPercent))
+                }
+                else {
+                    jo.addProperty("tbr", "0")
+                }
                 jo.addProperty("cob", loopHub.carbsOnboard)
             }
             joa.add(jo)
@@ -816,6 +819,7 @@ class GarminPlugin @Inject constructor(
             title = rh.gs(R.string.garmin)
             initialExpandedChildrenCount = 0
             addPreference(AdaptiveSwitchPreference(ctx = context, booleanKey = GarminBooleanKey.LocalHttpServer, title = R.string.garmin_local_http_server))
+            addPreference(AdaptiveSwitchPreference(ctx = context, booleanKey = GarminBooleanKey.GarminSendSmoothedData, title = R.string.garmin_send_smoothed_data_title, summary = R.string.garmin_send_smoothed_data_summary))
             addPreference(AdaptiveIntPreference(ctx = context, intKey = GarminIntKey.LocalHttpPort, title = R.string.garmin_local_http_server_port))
             addPreference(
                 AdaptiveStringPreference(

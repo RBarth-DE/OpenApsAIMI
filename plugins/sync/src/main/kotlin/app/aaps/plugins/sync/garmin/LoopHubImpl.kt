@@ -30,6 +30,7 @@ import app.aaps.core.keys.StringKey
 import app.aaps.core.keys.UnitDoubleKey
 import app.aaps.core.keys.interfaces.Preferences
 import app.aaps.core.objects.extensions.convertedToPercent
+import app.aaps.plugins.sync.garmin.keys.GarminBooleanKey
 import io.reactivex.rxjava3.disposables.CompositeDisposable
 import io.reactivex.rxjava3.kotlin.plusAssign
 import java.time.Clock
@@ -141,9 +142,25 @@ class LoopHubImpl @Inject constructor(
     }
 
     /** Retrieves the glucose values starting at from. */
-    override fun getGlucoseValues(from: Instant, ascending: Boolean): List<GV> {
+    /*override fun getGlucoseValues(from: Instant, ascending: Boolean): List<GV> {
         return persistenceLayer.getBgReadingsDataFromTime(from.toEpochMilli(), ascending)
             .blockingGet()
+    }*/
+
+    override fun getGlucoseValues(from: Instant, ascending: Boolean): List<GV> {
+        if (!preferences.get(GarminBooleanKey.GarminSendSmoothedData)) {
+            return persistenceLayer.getBgReadingsDataFromTime(from.toEpochMilli(), ascending)
+                .blockingGet()
+        } else {
+            val glucose: List<GV> = persistenceLayer.getBgReadingsDataFromTime(from.toEpochMilli(), ascending)
+                .blockingGet()
+            for (i in glucose.indices) {
+                iobCobCalculator.ads.bucketedData?.get(i)?.let {
+                    glucose[i].value = it.recalculated
+                }
+            }
+            return glucose
+        }
     }
 
     /** Notifies the system that carbs were eaten and stores the value. */
