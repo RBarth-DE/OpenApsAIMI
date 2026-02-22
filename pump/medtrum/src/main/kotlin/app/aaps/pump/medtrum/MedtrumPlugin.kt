@@ -205,14 +205,28 @@ class MedtrumPlugin @Inject constructor(
         val unreachableAlertSetting = preferenceFragment.findPreference<SwitchPreference>(BooleanKey.AlertPumpUnreachable.key)
         val unreachableThresholdSetting = preferenceFragment.findPreference<AdaptiveIntPreference>(IntKey.AlertsPumpUnreachableThreshold.key)
 
-        unreachableAlertSetting?.apply {
+        /*unreachableAlertSetting?.apply {
             isSelectable = false
             summary = rh.gs(R.string.enable_pump_unreachable_alert_summary)
+        }*/
+        unreachableAlertSetting?.apply {
+            isSelectable = false
+            summaryProvider = null
+            setSummaryProvider {
+                rh.gs(R.string.enable_pump_unreachable_alert_summary)
+            }
         }
 
-        unreachableThresholdSetting?.apply {
+        /*unreachableThresholdSetting?.apply {
             val currentValue = text
             summary = "${rh.gs(R.string.pump_unreachable_threshold_minutes_summary)}\n${currentValue}"
+        }*/
+        unreachableThresholdSetting?.apply {
+            summaryProvider = null
+            setSummaryProvider { pref ->
+                val value = (pref as AdaptiveIntPreference).text
+                "${rh.gs(R.string.pump_unreachable_threshold_minutes_summary)}\n$value"
+            }
         }
     }
 
