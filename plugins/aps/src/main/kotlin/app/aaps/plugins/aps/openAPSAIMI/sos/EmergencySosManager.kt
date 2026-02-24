@@ -1,0 +1,213 @@
+package app.aaps.plugins.aps.openAPSAIMI.sos
+
+import android.Manifest
+import android.annotation.SuppressLint
+import android.content.Context
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.location.Location
+import android.location.LocationManager
+import android.net.Uri
+import android.os.Build
+import android.telephony.SmsManager
+import android.util.Log
+import androidx.core.content.ContextCompat
+import app.aaps.core.keys.BooleanKey
+import app.aaps.core.keys.IntKey
+import app.aaps.core.keys.StringKey
+import app.aaps.core.keys.interfaces.Preferences
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+
+/**
+ * 🚨 AIMI Emergency SOS Manager Advanced (Robuste / Stateless)
+ *
+ * - Premier SOS (SMS) envoyé au bout de 30 minutes de BG < seuil.
+ * - Ré-évaluation toutes les 5 minutes (via la boucle principale d'AAPS).
+ * - SMS et Appels alternés toutes les 15 minutes si le BG reste bas.
+ * - État persisté dans SharedPreferences pour résister au "Doze Mode" d'Android.
+ *
+ * @author MTR & Lyra AI
+ */
+object EmergencySosManager {
+
+    private const val TAG = "AIMI_SOS_Manager"
+    private const val SOS_PREFS = "aimi_sos_advanced_prefs"
+    
+    private const val KEY_FIRST_BELOW_THRESHOLD_TIME = "first_below_threshold_time"
+    private const val KEY_LAST_ACTION_TIME = "last_action_time"
+    private const val KEY_LAST_ACTION_WAS_SMS = "last_action_was_sms"
+
+    private const val OBSERVATION_WINDOW_MS = 30 * 60 * 1000L // 30 minutes for first SOS
+    private const val FOLLOWUP_INTERVAL_MS = 15 * 60 * 1000L   // 15 minutes between SMS/call after first SOS
+
+    fun evaluateSosCondition(
+        bg: Double,
+        delta: Double,
+        iob: Double,
+        context: Context,
+        preferences: Preferences
+    ) {
+        val appContext = context.applicationContext
+
+        // 1. Feature disabled or invalid settings
+        val isSosEnabled = preferences.get(BooleanKey.AimiEmergencySosEnable)
+        val threshold = preferences.get(IntKey.AimiEmergencySosThreshold)
+        val phoneNumber = preferences.get(StringKey.AimiEmergencySosPhone).trim()
+
+        val prefs = appContext.getSharedPreferences(SOS_PREFS, Context.MODE_PRIVATE)
+
+        if (!isSosEnabled || phoneNumber.isEmpty() || !hasRequiredPermissions(appContext)) {
+            resetSosState(prefs)
+            return
+        }
+
+        val now = System.currentTimeMillis()
+
+        // 2. BG Recovered -> Reset everything
+        if (bg > threshold || bg <= 10.0) {
+            if (prefs.getLong(KEY_FIRST_BELOW_THRESHOLD_TIME, 0L) != 0L) {
+                Log.w(TAG, "🟢 BG ($bg) recovered above threshold ($threshold). Ending SOS tracking.")
+                resetSosState(prefs)
+            }
+            return
+        }
+
+        // 3. BG is BELOW threshold. Track the time.
+        var firstBelowTime = prefs.getLong(KEY_FIRST_BELOW_THRESHOLD_TIME, 0L)
+        if (firstBelowTime == 0L) {
+            // This is the first time we drop below threshold
+            Log.w(TAG, "⚠️ BG dropped below threshold ($bg < $threshold). Starting 30 min trend monitoring...")
+            with(prefs.edit()) {
+                putLong(KEY_FIRST_BELOW_THRESHOLD_TIME, now)
+                apply()
+            }
+            firstBelowTime = now
+        }
+
+        // 4. Have we waited long enough for the first action? (30 mins)
+        if (now - firstBelowTime < OBSERVATION_WINDOW_MS) {
+            val remain = (OBSERVATION_WINDOW_MS - (now - firstBelowTime)) / 60000
+            Log.d(TAG, "SOS Monitoring: BG still low. $remain minutes remaining before first alert.")
+            return
+        }
+
+        // 5. Ready for Action! Check if we need to act based on 15 min interval
+        val lastActionTime = prefs.getLong(KEY_LAST_ACTION_TIME, 0L)
+        
+        // If it's the very first action (lastActionTime == 0) OR 15 mins have passed
+        if (lastActionTime == 0L || now - lastActionTime >= FOLLOWUP_INTERVAL_MS) {
+            
+            val lastActionWasSms = prefs.getBoolean(KEY_LAST_ACTION_WAS_SMS, false)
+            
+            // If very first action OR last action was Call -> Send SMS
+            if (lastActionTime == 0L || !lastActionWasSms) {
+                Log.w(TAG, "🚨 Sending SOS SMS (BG: $bg)")
+                CoroutineScope(Dispatchers.IO).launch {
+                    try {
+                        val location = fetchLocation(appContext)
+                        sendSms(appContext, phoneNumber, bg, delta, iob, location)
+                    } catch (e: Exception) {
+                        Log.e(TAG, "Failed SMS send in background", e)
+                    }
+                }
+                
+                with(prefs.edit()) {
+                    putLong(KEY_LAST_ACTION_TIME, now)
+                    putBoolean(KEY_LAST_ACTION_WAS_SMS, true)
+                    apply()
+                }
+            } else {
+                // Last action was SMS -> Make a Call
+                Log.w(TAG, "🚨 Initiating SOS Call (BG: $bg)")
+                makeCall(appContext, phoneNumber)
+                
+                with(prefs.edit()) {
+                    putLong(KEY_LAST_ACTION_TIME, now)
+                    putBoolean(KEY_LAST_ACTION_WAS_SMS, false)
+                    apply()
+                }
+            }
+        } else {
+             val remain = (FOLLOWUP_INTERVAL_MS - (now - lastActionTime)) / 60000
+             Log.d(TAG, "SOS Active. Next escalation in $remain minutes.")
+        }
+    }
+
+    private fun resetSosState(prefs: android.content.SharedPreferences) {
+        with(prefs.edit()) {
+            putLong(KEY_FIRST_BELOW_THRESHOLD_TIME, 0L)
+            putLong(KEY_LAST_ACTION_TIME, 0L)
+            putBoolean(KEY_LAST_ACTION_WAS_SMS, false)
+            apply()
+        }
+    }
+
+    private fun hasRequiredPermissions(context: Context): Boolean {
+        val sms = ContextCompat.checkSelfPermission(context, Manifest.permission.SEND_SMS) == PackageManager.PERMISSION_GRANTED
+        val call = ContextCompat.checkSelfPermission(context, Manifest.permission.CALL_PHONE) == PackageManager.PERMISSION_GRANTED
+        val locFine = ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
+        var bgLoc = true
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            bgLoc = ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_BACKGROUND_LOCATION) == PackageManager.PERMISSION_GRANTED
+        }
+        return sms && call && locFine && bgLoc
+    }
+
+    @SuppressLint("MissingPermission")
+    private fun fetchLocation(context: Context): Location? {
+        return try {
+            val locationManager = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
+            var location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER)
+            if (location == null) location = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER)
+            if (location == null) location = locationManager.getLastKnownLocation(LocationManager.PASSIVE_PROVIDER)
+            location
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to fetch GPS location", e)
+            null
+        }
+    }
+
+    private fun sendSms(context: Context, phone: String, bg: Double, delta: Double, iob: Double, location: Location?) {
+        val locationString = location?.let { "https://maps.google.com/?q=${it.latitude},${it.longitude}" } ?: "Position indisponible"
+        val message = """
+            🚨 SOS HYPO SÉVÈRE 🚨
+            BG: ${bg.toInt()} mg/dL
+            Tendance: ${String.format("%.1f", delta)}
+            IOB: ${String.format("%.2f", iob)}U
+            Position: $locationString
+        """.trimIndent()
+        try {
+            val smsManager = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                context.getSystemService(SmsManager::class.java)
+            } else {
+                @Suppress("DEPRECATION")
+                SmsManager.getDefault()
+            }
+            val parts = smsManager?.divideMessage(message)
+            if (parts != null && parts.size > 1) {
+                smsManager.sendMultipartTextMessage(phone, null, parts, null, null)
+            } else {
+                smsManager?.sendTextMessage(phone, null, message, null, null)
+            }
+            Log.w(TAG, "✅ SMS sent successfully to $phone")
+        } catch (e: Exception) {
+            Log.e(TAG, "❌ SMS sending failed", e)
+        }
+    }
+
+    private fun makeCall(context: Context, phone: String) {
+        try {
+            val intent = Intent(Intent.ACTION_CALL).apply {
+                data = Uri.parse("tel:$phone")
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                putExtra("android.phone.extra.forceSpeaker", true) // attempt speakerphone
+            }
+            context.startActivity(intent)
+            Log.w(TAG, "📞 Call attempted to $phone")
+        } catch (e: Exception) {
+            Log.e(TAG, "❌ Call failed", e)
+        }
+    }
+}

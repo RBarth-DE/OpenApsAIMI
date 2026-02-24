@@ -399,6 +399,17 @@
     <string name="unified_reactivity_title">Unified Reactivity Learner</string>
     <string name="unified_reactivity_summary">Analyzes TIR/CV%/Hypo every 6h to adapt reactivity (0.6-1.5). Replaces time-bucket reactivity. Exports to CSV in Documents/AAPS.</string>
     
+    <!-- 🚨 Emergency SOS (Hypo) Module -->
+    <string name="aimi_sos_title">🚨 Emergency SOS (Hypo)</string>
+    <string name="aimi_sos_enable_title">Enable Emergency SOS</string>
+    <string name="aimi_sos_enable_summary">Automatically send an SMS with your location and BG if a severe hypo occurs.</string>
+    <string name="aimi_sos_phone_title">Emergency Contact Number</string>
+    <string name="aimi_sos_phone_summary">Phone number to send the SMS to (include country code e.g. +33...).</string>
+    <string name="aimi_sos_threshold_title">Critical Hypo Threshold</string>
+    <string name="aimi_sos_threshold_summary">BG below which the SOS will be triggered (mg/dL).</string>
+    <string name="aimi_sos_permissions_title">📍 Grant SMS, Call &amp; Location Permissions</string>
+    <string name="aimi_sos_permissions_summary">Tap to authorize AAPS to send SMS, make calls, and access background location for emergencies.</string>>
+
     <!-- 🦋 Thyroid Module -->
     <string name="oaps_aimi_thyroid_title">🦋 Hyperthyroidism (Basedow) Module</string>
     <string name="oaps_aimi_thyroid_enabled_title">Enable Thyroid Module</string>
@@ -1344,6 +1355,7 @@
     <string name="endo_smb_dampen_summary">Factor to reduce SMBs during flare to prevent stacking (Default 0.7x).</string>
     <string name="endo_flare_duration_title">Flare Duration (hours)</string>
     <string name="endo_flare_duration_summary">How long the flare mode stays active when toggled.</string>
+    
 
     // Ketoacidosis Protection
     <string name="ketoacidosis_protection_title">Ketoacidosis Protection</string>
@@ -1354,5 +1366,9 @@
     <string name="ketoacidosis_protection_basal_summary">Default: 10</string>
 
     <string name="count_steps_watch">Steps Watch</string>
+
+    <!-- T3c Brittle Mode -->
+    <string name="aimi_t3c_brittle_mode_title">T3c / Brittle Diabetes Mode</string>
+    <string name="aimi_t3c_brittle_mode_summary">Prioritize TBR over SMB. Disables SMB boost from ISF Fusion, and imposes strict Basal-First behavior on persistent rises.</string>
 
 </resources>

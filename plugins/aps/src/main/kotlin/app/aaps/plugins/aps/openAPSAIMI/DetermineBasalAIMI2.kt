@@ -487,6 +487,8 @@ class DetermineBasalaimiSMB2 @Inject constructor(
     private var currentThyroidEffects = app.aaps.plugins.aps.openAPSAIMI.physio.thyroid.ThyroidEffects()
     private var lastSmbFinal: Double = 0.0
     private var lastAutodriveState: AutodriveState = AutodriveState.IDLE
+    fun isAutodriveEngaged(): Boolean = lastAutodriveState == AutodriveState.ENGAGED
+
     private var internalLastSmbMillis: Long = 0L // Local Atomic Timestamp for Safety
     private val nightGrowthResistanceMode = NightGrowthResistanceMode()
     private val ngrTimeFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern("HH:mm")
@@ -3999,13 +4001,24 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         val basalFirstMealActive = mealData.mealCOB > 0.1
         val basalFirstHeavyMeal  = mealData.mealCOB > 20.0
         val isPersistentRise = bg > targetBg && combinedDelta >= 0.3f
-        val basalFirstActive = ((isLearnerPrudent && !basalFirstMealActive && !isPersistentRise)
-            || (isFragileBg && !basalFirstHeavyMeal)) && !isMealAdvisorOneShot
+        
+        val isT3cBrittleMode = preferences.get(BooleanKey.OApsAIMIT3cBrittleMode)
+        
+        val basalFirstActive = if (isT3cBrittleMode) {
+            // T3c Brittle Mode: Strict Basal-First logic. 
+            // Disables routine SMBs in favor of TBR, unless it's a heavy meal or explicitly requested.
+            (!basalFirstHeavyMeal) && !isMealAdvisorOneShot
+        } else {
+            ((isLearnerPrudent && !basalFirstMealActive && !isPersistentRise)
+                || (isFragileBg && !basalFirstHeavyMeal)) && !isMealAdvisorOneShot
+        }
+        
         this.cachedBasalFirstActive = basalFirstActive
         this.cachedIsFragileBg = isFragileBg
         if (basalFirstActive) {
             this.maxSMB = 0.0; this.maxSMBHB = 0.0
             val reason = when {
+                isT3cBrittleMode -> "T3c Brittle Diabetes Mode (Strict Basal-First)"
                 isFragileBg    -> "Fragile BG (<110 & falling)"
                 isLearnerPrudent -> "Learner Prudence (Factor=${"%.2f".format(learnerFactor)})"
                 else -> "Unknown Safety Trigger"
@@ -7226,6 +7239,15 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             } catch (e: Exception) {
                 consoleError.add("Failed to save AIMI Decision JSON: ${e.message}")
             }
+            
+            // 🚨 Trigger Emergency SOS logic if necessary
+            app.aaps.plugins.aps.openAPSAIMI.sos.EmergencySosManager.evaluateSosCondition(
+                bg = bg,
+                delta = delta.toDouble(),
+                iob = iob_data_array.firstOrNull()?.iob ?: 0.0,
+                context = context,
+                preferences = this.preferences
+            )
             
             return finalResult
         }

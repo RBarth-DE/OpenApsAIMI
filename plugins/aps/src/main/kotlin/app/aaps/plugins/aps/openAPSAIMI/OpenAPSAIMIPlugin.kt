@@ -999,16 +999,11 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
 
         val hour = Calendar.getInstance()[Calendar.HOUR_OF_DAY]
         val night = hour <= 7
+        val isAutodriveEnabled = preferences.get(BooleanKey.OApsAIMIautoDrive)
         val smb = glucoseStatusCalculatorAimi.getGlucoseStatusData(false) ?: return absoluteRate
-        val feats = glucoseStatusCalculatorAimi.getAimiFeatures(false)
-        val accel = feats?.accel ?: 0.0
-        val isEarlyAutodrive = !night && !isMealMode && !isSportMode &&
-            smb.glucose > 110 &&
-            detectMealOnset(
-                smb.delta.toFloat(),
-                predictedDelta(getRecentDeltas()).toFloat(),
-                accel.toFloat()
-            )
+
+        val isEarlyAutodrive = !night && !isMealMode && !isSportMode && isAutodriveEnabled &&
+            determineBasalaimiSMB2.isAutodriveEngaged()
 
         val isSpecialMode = isMealMode || isEarlyAutodrive
 
@@ -1200,6 +1195,59 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
                     )
                 })
 
+                // 🚨 Emergency SOS (Hypo) Section
+                addPreference(preferenceManager.createPreferenceScreen(context).apply {
+                    key = "AIMI_EMERGENCY_SOS"
+                    title = rh.gs(R.string.aimi_sos_title)
+
+                    addPreference(
+                        AdaptiveSwitchPreference(
+                            ctx = context,
+                            booleanKey = BooleanKey.AimiEmergencySosEnable,
+                            title = R.string.aimi_sos_enable_title,
+                            summary = R.string.aimi_sos_enable_summary
+                        )
+                    )
+
+                    addPreference(
+                        app.aaps.core.validators.preferences.AdaptiveStringPreference(
+                            ctx = context,
+                            stringKey = app.aaps.core.keys.StringKey.AimiEmergencySosPhone,
+                            title = R.string.aimi_sos_phone_title,
+                            dialogMessage = R.string.aimi_sos_phone_summary
+                        )
+                    )
+
+                    addPreference(
+                        app.aaps.core.validators.preferences.AdaptiveIntPreference(
+                            ctx = context,
+                            intKey = app.aaps.core.keys.IntKey.AimiEmergencySosThreshold,
+                            title = R.string.aimi_sos_threshold_title,
+                            dialogMessage = R.string.aimi_sos_threshold_summary
+                        )
+                    )
+
+                    // 📍 Permissions Button
+                    addPreference(androidx.preference.Preference(context).apply {
+                        key = "aimi_sos_permissions"
+                        title = rh.gs(R.string.aimi_sos_permissions_title)
+                        summary = rh.gs(R.string.aimi_sos_permissions_summary)
+                        setOnPreferenceClickListener {
+                            try {
+                                val intent = Intent(
+                                    context,
+                                    app.aaps.plugins.aps.openAPSAIMI.sos.AIMIEmergencySosPermissionActivityMTR::class.java
+                                )
+                                context.startActivity(intent)
+                                true
+                            } catch (e: Exception) {
+                                android.util.Log.e("OpenAPSAIMIPlugin", "Failed to launch SOS permissions", e)
+                                false
+                            }
+                        }
+                    })
+                })
+
                 // 🏥 Physiological Assistant Section
                 addPreference(preferenceManager.createPreferenceScreen(context).apply {
                     key = "AIMI_PHYSIO"
@@ -1376,6 +1424,14 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
                             doubleKey = DoubleKey.OApsAIMIPkpdMaxPeakChangePerDayMin,
                             dialogMessage = R.string.oaps_aimi_pkpd_max_peak_delta_summary,
                             title = R.string.oaps_aimi_pkpd_max_peak_delta_title
+                        )
+                    )
+                    addPreference(
+                        AdaptiveSwitchPreference(
+                            ctx = context,
+                            booleanKey = BooleanKey.OApsAIMIT3cBrittleMode,
+                            title = R.string.aimi_t3c_brittle_mode_title,
+                            summary = R.string.aimi_t3c_brittle_mode_summary
                         )
                     )
                     addPreference(
