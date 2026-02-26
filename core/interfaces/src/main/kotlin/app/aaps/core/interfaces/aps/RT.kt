@@ -116,15 +116,17 @@ data class RT(
         
         override val descriptor: SerialDescriptor = 
             kotlinx.serialization.descriptors.listSerialDescriptor<String>()
-        
+
         override fun serialize(encoder: Encoder, value: MutableList<String>?) {
             if (value == null) {
                 encoder.encodeNull()
                 return
             }
-            
+
+            // ---- FIX: defensive snapshot ----
+            val snapshot: List<String> = value.toList()
             // Sanitize each log entry before serialization
-            val sanitized = value.map { entry ->
+            val sanitized = snapshot.map { entry ->
                 entry
                     // Remove all non-ASCII characters (emojis, unicode, etc.)
                     .replace(Regex("[^\\x20-\\x7E]"), "")
