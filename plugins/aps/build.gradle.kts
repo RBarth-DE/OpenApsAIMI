@@ -47,4 +47,7 @@ dependencies {
 
     testImplementation("io.mockk:mockk:1.13.8")
     ksp(libs.com.google.dagger.android.processor)
+    
+    // 📺 Jitsi Screen Share: no SDK needed — handled via Android Intent deep-link
+    // The app opens meet.jit.si room via browser or the Jitsi Meet app if installed.
 }

@@ -27,6 +27,8 @@ import app.aaps.core.keys.interfaces.IntPreferenceKey
 import app.aaps.core.keys.interfaces.BooleanPreferenceKey
 import app.aaps.core.keys.interfaces.PreferenceKey
 import app.aaps.core.keys.interfaces.StringPreferenceKey
+import android.content.Intent
+
 
 /**
  * =============================================================================
@@ -50,6 +52,7 @@ class AimiProfileAdvisorActivity : TranslatedDaggerAppCompatActivity() {
     private lateinit var advisorService: AimiAdvisorService
     private lateinit var historyRepo: app.aaps.plugins.aps.openAPSAIMI.advisor.data.AdvisorHistoryRepository
 
+
     
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -66,6 +69,9 @@ class AimiProfileAdvisorActivity : TranslatedDaggerAppCompatActivity() {
         )
         historyRepo = app.aaps.plugins.aps.openAPSAIMI.advisor.data.AdvisorHistoryRepository(this)
         title = rh.gs(R.string.aimi_advisor_title)
+        
+
+
         
         // Dark Navy Background
         val bgColor = Color.parseColor("#10141C") 
@@ -204,6 +210,8 @@ class AimiProfileAdvisorActivity : TranslatedDaggerAppCompatActivity() {
                 }
             }
             addView(supportBtn)
+
+
 
             // Settings Button (Gear)
             val settingsBtn = TextView(this@AimiProfileAdvisorActivity).apply {

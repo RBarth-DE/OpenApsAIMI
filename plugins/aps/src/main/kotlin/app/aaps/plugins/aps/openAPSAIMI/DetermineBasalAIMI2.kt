@@ -3836,11 +3836,11 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                         val factorBasal = mult["basal"] ?: 1.0
                         val factorISF = mult["isf"] ?: 1.0
                         val factorCR = mult["cr"] ?: 1.0
-
+                        
                         val oldBasal = profile.current_basal
                         val oldISF = profile.sens
                         val oldCR = profile.carb_ratio
-
+                        
                         profile.current_basal *= factorBasal
                         profile.sens *= factorISF
                         profile.carb_ratio *= factorCR
@@ -3873,7 +3873,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                 val status = thyroidStateEstimator.currentState.value
                 val confidence = thyroidStateEstimator.confidence.value
                 currentThyroidEffects = thyroidEffectModel.calculateEffects(status, confidence)
-
+                
                 val logMsg = app.aaps.plugins.aps.openAPSAIMI.physio.thyroid.ThyroidDiagnosticsLogger.formatDecisionLog(
                     inputs = thyroidInputs,
                     status = status,
@@ -4002,23 +4002,14 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         val basalFirstHeavyMeal  = mealData.mealCOB > 20.0
         val isPersistentRise = bg > targetBg && combinedDelta >= 0.3f
         
-        val isT3cBrittleMode = preferences.get(BooleanKey.OApsAIMIT3cBrittleMode)
-        
-        val basalFirstActive = if (isT3cBrittleMode) {
-            // T3c Brittle Mode: Strict Basal-First logic. 
-            // Disables routine SMBs in favor of TBR, unless it's a heavy meal or explicitly requested.
-            (!basalFirstHeavyMeal) && !isMealAdvisorOneShot
-        } else {
-            ((isLearnerPrudent && !basalFirstMealActive && !isPersistentRise)
+        val basalFirstActive = ((isLearnerPrudent && !basalFirstMealActive && !isPersistentRise)
                 || (isFragileBg && !basalFirstHeavyMeal)) && !isMealAdvisorOneShot
-        }
         
         this.cachedBasalFirstActive = basalFirstActive
         this.cachedIsFragileBg = isFragileBg
         if (basalFirstActive) {
             this.maxSMB = 0.0; this.maxSMBHB = 0.0
             val reason = when {
-                isT3cBrittleMode -> "T3c Brittle Diabetes Mode (Strict Basal-First)"
                 isFragileBg    -> "Fragile BG (<110 & falling)"
                 isLearnerPrudent -> "Learner Prudence (Factor=${"%.2f".format(learnerFactor)})"
                 else -> "Unknown Safety Trigger"
@@ -4294,10 +4285,10 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                     timeSinceLastBolus = if (lastBolusAgeMinutes.isFinite()) lastBolusAgeMinutes.toInt() else 120,
                     cobNow = cob.toDouble()
                 )
-
+                
                 val stableOrbit = app.aaps.plugins.aps.openAPSAIMI.trajectory.StableOrbit.fromProfile(targetBg, profile.current_basal)
                 val traj = trajectoryGuard.analyzeTrajectory(trajectoryHistory, stableOrbit)
-
+                
                 if (traj == null) {
                     consoleLog.add("🌀 Trajectory: ⏳ Warming up (${trajectoryHistory.size}/4 states, need 20min)")
                     rT.trajectoryEnabled = false
@@ -4305,18 +4296,18 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                     val analysis = traj
                     val statusEmoji = analysis.classification.emoji()
                     val typeDesc = analysis.classification.description()
-
+                    
                     consoleLog.add("🌀 Trajectory: $statusEmoji $typeDesc | κ=${"%.2f".format(analysis.metrics.curvature)} conv=${"%.1f".format(analysis.metrics.convergenceVelocity)} health=${"%.0f".format(analysis.metrics.healthScore*100)}%")
-
+                    
                     val artLines = analysis.classification.asciiArt().split("\n")
                     artLines.forEach { line -> consoleLog.add("  $line") }
-
+                    
                     consoleLog.add("  📊 Metrics: Coherence=${"%.2f".format(analysis.metrics.coherence)} Energy=${"%.1f".format(analysis.metrics.energyBalance)}U Openness=${"%.2f".format(analysis.metrics.openness)}")
-
+                    
                     val mod = analysis.modulation
                     if (mod.isSignificant()) {
                         consoleLog.add("  🎛 Modulation: SMB×${"%.2f".format(mod.smbDamping)} Int×${"%.2f".format(mod.intervalStretch)} (${mod.reason})")
-
+                        
                         if (kotlin.math.abs(mod.smbDamping - 1.0) > 0.05) {
                             val orig = maxSMB
                             maxSMB *= mod.smbDamping; maxSMBHB *= mod.smbDamping
@@ -4333,18 +4324,18 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                             consoleLog.add("    → MaxIOB: ${"%.2f".format(orig)}U → ${"%.2f".format(maxIob)}U")
                         }
                     }
-
+                    
                     analysis.warnings.filter { it.severity >= app.aaps.plugins.aps.openAPSAIMI.trajectory.WarningSeverity.HIGH }.forEach { w ->
                         consoleLog.add("  🚨 ${w.severity.emoji()} ${w.message}")
                         if (w.severity == app.aaps.plugins.aps.openAPSAIMI.trajectory.WarningSeverity.CRITICAL) {
                             try { uiInteraction.addNotification(w.type.hashCode(), w.message, 2) } catch (e: Exception) {}
                         }
                     }
-
+                    
                     analysis.predictedConvergenceTime?.let {
                         consoleLog.add("  ⏱ Est. convergence: ${it}min")
                     }
-
+                    
                     rT.trajectoryEnabled = true
                     rT.trajectoryType = analysis.classification.name
                     rT.trajectoryCurvature = analysis.metrics.curvature
@@ -4376,7 +4367,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
     ): RT {
         consoleError.clear()
         consoleLog.clear()
-
+        
         if (extraDebug.isNotEmpty()) {
              // Append to log history AND consoleError for "Script Debug" visibility
              consoleLog.add(extraDebug)
@@ -4394,13 +4385,13 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         // AIMI modifies the profile (activity, pregnancy, autosens) in-flight.
         // We want the comparator to run against the RAW profile.
         val originalProfile = profile.copy()
-
+        
         // 🤰 Gestational Autopilot Integration
         applyGestationalAutopilot(profile)
 
         // 🦋 Thyroid (Basedow) Module Integration
         applyThyroidModule(profile)
-
+        
         // 🏥 AIMI DECISION CONTEXT INITIALIZATION (For Medical Transparency)
         val decisionCtx = AimiDecisionContext(
             event_id = "evt_${currentTime}",
@@ -4872,6 +4863,28 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         this.decceleratingDown = if (delta < 0 && (delta > shortAvgDelta || delta > longAvgDelta)) 1 else 0
         this.stable = if (delta > -3 && delta < 3 && shortAvgDelta > -3 && shortAvgDelta < 3 && longAvgDelta > -3 && longAvgDelta < 3) 1 else 0
         val nightbis = hourOfDay <= 7
+
+        // 🛡️ T3C BRITTLE MODE BRANCH (Moved here to capture `therapy` variables for Prebolus)
+        // If the user has no pancreas and relies solely on basal shifts, we skip ALL
+        // standard Autodrive/SMB/Meal logic and use the dedicated execution method.
+        if (preferences.get(BooleanKey.OApsAIMIT3cBrittleMode)) {
+            consoleLog.add("⚡ T3c Brittle Mode Active: Bypassing standard AIMI algorithm.")
+
+            // 🍱 Inject Legacy Meal Prebolus Support for T3c
+            // This safely calculates `rT.units` using Meal Mode buttons without applying full loop logic.
+            // Any TBR (rT.rate) mutated by this call will be safely overwritten in executeT3cBrittleMode.
+            applyLegacyMealModes(profile, rT, currenttemp, profile.max_basal.toDouble())
+
+            return executeT3cBrittleMode(
+                bg = glucose_status.glucose,
+                delta = glucose_status.delta.toFloat(),
+                profile = profile,
+                currenttemp = currenttemp,
+                iob = iob_data_array.firstOrNull() ?: IobTotal(System.currentTimeMillis()),
+                targetBg = originalProfile.target_bg,
+                rT = rT
+            )
+        }
         val modesCondition = (!mealTime || mealruntime > 30) && (!lunchTime || lunchruntime > 30) && (!bfastTime || bfastruntime > 30) && (!dinnerTime || dinnerruntime > 30) && !sportTime && (!snackTime || snackrunTime > 30) && (!highCarbTime || highCarbrunTime > 30) && !sleepTime && !lowCarbTime
         val pbolusAS: Double = preferences.get(DoubleKey.OApsAIMIautodrivesmallPrebolus)
         val pbolusA: Double = preferences.get(DoubleKey.OApsAIMIautodrivePrebolus)
@@ -7737,6 +7750,63 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         }
         aapsLogger.info(LTag.APS, "ketoProtection OUT: proposedRate=${"%.2f".format(proposedRate)} cutOff=$cutOff IOB = ${profile.ketoacidosisProtectionIob} Basal = ${profile.current_basal}" )
         return proposedRate
+    }
+
+    // =========================================================================================
+    // 🛡️ T3C BRITTLE MODE (Strict Basal-First Isolation)
+    // =========================================================================================
+    private fun executeT3cBrittleMode(
+        bg: Double, delta: Float, profile: OapsProfileAimi,
+        currenttemp: CurrentTemp, iob: IobTotal, targetBg: Double, rT: RT
+    ): RT {
+        rT.reason = StringBuilder("")
+        rT.deliverAt = System.currentTimeMillis()
+
+        // 1. Force Max SMB to 0.0 (Absolute Safety for Pancreas-less algorithm)
+        val maxSMB = 0.0
+        // We DO NOT wipe `rT.units` here to preserve any Prebolus injected by `applyLegacyMealModes`.
+
+        val localLog = StringBuilder("🛡️ T3c Mode: ")
+
+        // 2. Base TBR Calculation
+        val baseBasal = profile.current_basal
+        val maxBasal = profile.max_basal.toDouble()
+        val bgToTarget = bg - targetBg
+
+        // 3. Simple Dynamic Proportional Modulation
+        var suggestedRate = baseBasal
+
+        if (bgToTarget > 0 && delta > 0.5f) {
+            // Rising BG: Accelerate Basal proportionally to the rise velocity
+            val aggression = (delta / 2.0).coerceIn(1.0, 3.0)
+            suggestedRate = baseBasal * aggression
+            localLog.append("Rising (Δ+$delta). Increasing Basal x${String.format("%.1f", aggression)}. ")
+        } else if (bg < targetBg || delta < -1.0f) {
+            // Falling BG or below target: Hard panic cut
+            suggestedRate = 0.0
+            localLog.append("Falling/Low (Δ$delta). Suspending Basal. ")
+        } else {
+            // Stable cruise
+            suggestedRate = baseBasal
+            localLog.append("Stable. Normal Basal. ")
+        }
+
+        val safeRate = suggestedRate.coerceIn(0.0, maxBasal)
+
+        // 4. Apply Action
+        if (currenttemp.rate != safeRate) {
+            rT.rate = safeRate
+            rT.duration = 30
+            rT.reason.append(localLog.toString() + "Req TBR: ${String.format("%.2f", safeRate)}U/h (SMB Disabled)")
+        } else {
+            rT.rate = currenttemp.rate
+            rT.duration = currenttemp.duration
+            rT.reason.append(localLog.toString() + "Maintaining TBR: ${String.format("%.2f", currenttemp.rate)}U/h")
+        }
+
+        consoleLog.add(rT.reason.toString())
+
+        return rT
     }
 
 }

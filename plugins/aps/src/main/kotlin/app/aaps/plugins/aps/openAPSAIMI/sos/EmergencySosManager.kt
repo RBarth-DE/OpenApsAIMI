@@ -57,8 +57,12 @@ object EmergencySosManager {
         val phoneNumber = preferences.get(StringKey.AimiEmergencySosPhone).trim()
 
         val prefs = appContext.getSharedPreferences(SOS_PREFS, Context.MODE_PRIVATE)
+        
+        val canSms = ContextCompat.checkSelfPermission(appContext, Manifest.permission.SEND_SMS) == PackageManager.PERMISSION_GRANTED
+        val canCall = ContextCompat.checkSelfPermission(appContext, Manifest.permission.CALL_PHONE) == PackageManager.PERMISSION_GRANTED
 
-        if (!isSosEnabled || phoneNumber.isEmpty() || !hasRequiredPermissions(appContext)) {
+        // Require at least one action permission, else the feature is virtually disabled
+        if (!isSosEnabled || phoneNumber.isEmpty() || (!canSms && !canCall)) {
             resetSosState(prefs)
             return
         }
@@ -87,10 +91,18 @@ object EmergencySosManager {
         }
 
         // 4. Have we waited long enough for the first action? (30 mins)
-        if (now - firstBelowTime < OBSERVATION_WINDOW_MS) {
+        // [FIX] User Request: Skip the 30-min window if BG just dropped below threshold and is actively falling.
+        val isFirstAction = prefs.getLong(KEY_LAST_ACTION_TIME, 0L) == 0L
+        val forceImmediateTrigger = isFirstAction && delta < 0.0
+        
+        if (!forceImmediateTrigger && now - firstBelowTime < OBSERVATION_WINDOW_MS) {
             val remain = (OBSERVATION_WINDOW_MS - (now - firstBelowTime)) / 60000
             Log.d(TAG, "SOS Monitoring: BG still low. $remain minutes remaining before first alert.")
             return
+        }
+
+        if (forceImmediateTrigger) {
+             Log.w(TAG, "🚨 SOS IMMEDIATE TRIGGER: BG ($bg) crossed threshold ($threshold) while falling (Δ$delta). Bypassing 30-min window.")
         }
 
         // 5. Ready for Action! Check if we need to act based on 15 min interval
@@ -101,8 +113,16 @@ object EmergencySosManager {
             
             val lastActionWasSms = prefs.getBoolean(KEY_LAST_ACTION_WAS_SMS, false)
             
-            // If very first action OR last action was Call -> Send SMS
-            if (lastActionTime == 0L || !lastActionWasSms) {
+            // Intelligent Alternation Logic based on permissions
+            val shouldSendSms = canSms && (lastActionTime == 0L || !lastActionWasSms || !canCall)
+            val shouldMakeCall = canCall && (!shouldSendSms || (lastActionTime > 0L && lastActionWasSms && !canSms)) // Fallback if SMS forced above but caller desired. Simple logic: If SMS is slated but we want to alternate...
+            
+            // To be precise: We want SMS if (first time OR it's SMS turn OR we can't call). We want Call if (it's Call turn and we can Call) OR (we can't SMS and we can Call).
+            val doSmsNow = canSms && (lastActionTime == 0L || !lastActionWasSms || !canCall)
+            // If doSmsNow is false, we must do Call (because we know at least one permission exists). 
+            val doCallNow = !doSmsNow // By elimination, since at least one of canSms/canCall is true.
+            
+            if (doSmsNow) {
                 Log.w(TAG, "🚨 Sending SOS SMS (BG: $bg)")
                 CoroutineScope(Dispatchers.IO).launch {
                     try {
@@ -118,7 +138,7 @@ object EmergencySosManager {
                     putBoolean(KEY_LAST_ACTION_WAS_SMS, true)
                     apply()
                 }
-            } else {
+            } else if (doCallNow) {
                 // Last action was SMS -> Make a Call
                 Log.w(TAG, "🚨 Initiating SOS Call (BG: $bg)")
                 makeCall(appContext, phoneNumber)
@@ -142,17 +162,6 @@ object EmergencySosManager {
             putBoolean(KEY_LAST_ACTION_WAS_SMS, false)
             apply()
         }
-    }
-
-    private fun hasRequiredPermissions(context: Context): Boolean {
-        val sms = ContextCompat.checkSelfPermission(context, Manifest.permission.SEND_SMS) == PackageManager.PERMISSION_GRANTED
-        val call = ContextCompat.checkSelfPermission(context, Manifest.permission.CALL_PHONE) == PackageManager.PERMISSION_GRANTED
-        val locFine = ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
-        var bgLoc = true
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            bgLoc = ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_BACKGROUND_LOCATION) == PackageManager.PERMISSION_GRANTED
-        }
-        return sms && call && locFine && bgLoc
     }
 
     @SuppressLint("MissingPermission")
