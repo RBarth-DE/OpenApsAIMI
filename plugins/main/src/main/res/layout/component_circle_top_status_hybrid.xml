@@ -39,7 +39,7 @@
                 app:layout_constraintHorizontal_bias="0.502"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintVertical_bias="0.326"
+                app:layout_constraintVertical_bias="0.15"
                 app:ringBackgroundColor="@android:color/transparent"
                 app:ringStrokeWidth="5dp"
                 app:ringSubTextColor="?android:attr/textColorSecondary"
@@ -390,20 +390,108 @@
             </LinearLayout>
 
             <!-- ═══════════════════════════════════════════════════ -->
+            <!-- TIR BAR (24H)                                       -->
+            <!-- ═══════════════════════════════════════════════════ -->
+            <LinearLayout
+                android:id="@+id/tir_container"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:layout_constraintTop_toBottomOf="@id/glucose_ring"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                android:orientation="vertical"
+                android:layout_marginTop="0dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginBottom="4dp">
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="TIME IN RANGE — 24H"
+                        android:textSize="10sp"
+                        android:textAllCaps="true"
+                        android:letterSpacing="0.1"
+                        android:textColor="#88FFFFFF" />
+                    <TextView
+                        android:id="@+id/tir_stats_text"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Avg -- • A1C --"
+                        android:textSize="10sp"
+                        android:textColor="#FFFFFF" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="8dp"
+                    android:orientation="horizontal"
+                    android:background="#22FFFFFF">
+                    <View
+                        android:id="@+id/tir_very_low_bar"
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="0.01"
+                        android:background="#D50000" />
+                    <View
+                        android:id="@+id/tir_low_bar"
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="0.04"
+                        android:background="#FF6D00" />
+                    <View
+                        android:id="@+id/tir_in_range_bar"
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="0.75"
+                        android:background="#00C853" />
+                    <View
+                        android:id="@+id/tir_high_bar"
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="0.15"
+                        android:background="#FFD600" />
+                    <View
+                        android:id="@+id/tir_very_high_bar"
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="0.05"
+                        android:background="#D50000" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginTop="2dp"
+                    android:baselineAligned="false">
+                    <!-- Percentage Labels -->
+                    <TextView android:id="@+id/tir_very_low_label" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="0.05" android:text="" android:textSize="9sp" android:textColor="#D50000" android:gravity="start"/>
+                    <TextView android:id="@+id/tir_low_label" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="0.2" android:text="" android:textSize="9sp" android:textColor="#FF6D00" android:gravity="start"/>
+                    <TextView android:id="@+id/tir_in_range_label" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="0.5" android:text="" android:textSize="9sp" android:textColor="#00C853" android:gravity="center"/>
+                    <TextView android:id="@+id/tir_high_label" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="0.2" android:text="" android:textSize="9sp" android:textColor="#FFD600" android:gravity="end"/>
+                    <TextView android:id="@+id/tir_very_high_label" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="0.05" android:text="" android:textSize="9sp" android:textColor="#D50000" android:gravity="end"/>
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- ═══════════════════════════════════════════════════ -->
             <!-- BOTTOM ROW: Action Chips                            -->
             <!-- ═══════════════════════════════════════════════════ -->
             <LinearLayout
                 android:id="@+id/bottom_action_row"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="1dp"
+                android:layout_marginTop="6dp"
                 android:gravity="center"
                 android:orientation="horizontal"
                 android:weightSum="6"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/glucose_ring">
+                app:layout_constraintTop_toBottomOf="@id/tir_container">
 
                 <com.google.android.material.chip.Chip
                     android:id="@+id/chip_aimi_advisor"

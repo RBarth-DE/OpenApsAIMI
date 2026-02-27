@@ -1,6 +1,7 @@
 package app.aaps.plugins.main.general.dashboard.viewmodel
 
 import android.app.Application
+import android.graphics.*
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -10,20 +11,21 @@ import app.aaps.core.data.model.GlucoseUnit
 import app.aaps.core.data.model.RM
 import app.aaps.core.data.model.TE
 import app.aaps.core.data.model.TrendArrow
+import app.aaps.core.data.time.T
+import app.aaps.core.interfaces.aps.GlucoseStatus
 import app.aaps.core.interfaces.aps.IobTotal
 import app.aaps.core.interfaces.aps.Loop
-import app.aaps.core.interfaces.aps.GlucoseStatus
 import app.aaps.core.interfaces.db.PersistenceLayer
 import app.aaps.core.interfaces.db.ProcessedTbrEbData
-import app.aaps.core.interfaces.iob.IobCobCalculator
 import app.aaps.core.interfaces.iob.GlucoseStatusProvider
+import app.aaps.core.interfaces.iob.IobCobCalculator
 import app.aaps.core.interfaces.overview.LastBgData
+import app.aaps.core.interfaces.overview.OverviewData
 import app.aaps.core.interfaces.plugin.ActivePlugin
 import app.aaps.core.interfaces.profile.ProfileFunction
 import app.aaps.core.interfaces.profile.ProfileUtil
 import app.aaps.core.interfaces.resources.ResourceHelper
 import app.aaps.core.interfaces.rx.AapsSchedulers
-import app.aaps.plugins.aps.openAPSAIMI.trajectory.TrajectoryGuard // 🌀 Trajectory
 import app.aaps.core.interfaces.rx.bus.RxBus
 import app.aaps.core.interfaces.rx.events.EventBucketedDataCreated
 import app.aaps.core.interfaces.rx.events.EventExtendedBolusChange
@@ -39,27 +41,20 @@ import app.aaps.core.interfaces.utils.TrendCalculator
 import app.aaps.core.interfaces.utils.fabric.FabricPrivacy
 import app.aaps.core.keys.IntKey
 import app.aaps.core.keys.interfaces.Preferences
-import app.aaps.core.data.time.T
-import app.aaps.core.objects.extensions.directionToIcon
-import app.aaps.core.objects.extensions.displayText
-import java.io.Serializable
-import app.aaps.core.objects.extensions.round
-import app.aaps.core.objects.extensions.isInProgress
-import app.aaps.core.objects.extensions.toStringFull
-import app.aaps.core.objects.extensions.toStringShort
-import app.aaps.core.interfaces.overview.OverviewData
+import app.aaps.core.objects.extensions.*
+import app.aaps.core.utils.MidnightUtils
+import app.aaps.plugins.aps.openAPSAIMI.steps.UnifiedActivityProviderMTR
+import app.aaps.plugins.aps.openAPSAIMI.trajectory.TrajectoryGuard
 import app.aaps.plugins.main.R
 import io.reactivex.rxjava3.disposables.CompositeDisposable
 import io.reactivex.rxjava3.kotlin.plusAssign
+import java.io.Serializable
+import java.time.LocalDate
+import java.time.ZoneId
 import java.util.concurrent.TimeUnit
 import kotlin.math.abs
 import kotlin.math.max
-import android.graphics.*
-import app.aaps.plugins.aps.openAPSAIMI.steps.UnifiedActivityProviderMTR
-import java.time.LocalDate
-import java.time.ZoneId
-import app.aaps.core.utils.MidnightUtils
-import app.aaps.core.objects.extensions.*
+import kotlin.math.sqrt
 
 class OverviewViewModel(
     private val application: Application,
@@ -331,6 +326,50 @@ class OverviewViewModel(
         // R4 IOB (basal + bolus IOB)
         val iobText = totalIobText()
 
+        // 11. 24H Clinical Stats (TIR, CV, A1C)
+        var tirVeryLow: Double? = null
+        var tirLow: Double? = null
+        var tirTarget: Double? = null
+        var tirHigh: Double? = null
+        var tirVeryHigh: Double? = null
+        var avgBgMgdl: Double? = null
+        var bgCv: Double? = null
+        var a1c: Double? = null
+
+        try {
+            val now = System.currentTimeMillis()
+            //val from = dateUtil.beginOfDay(now) // Start of today (Midnight)
+            // --- 24H CLINICAL STATS COMPUTATION ---
+            val from24h = now - 24 * 60 * 60 * 1000
+            val bgs24h = persistenceLayer.getBgReadingsDataFromTimeToTime(from24h, now, true)
+
+            if (bgs24h.isNotEmpty()) {
+                val values = bgs24h.map { it.value }
+                val count = values.size.toDouble()
+
+                tirVeryLow = (values.count { it < 54.0 } / count) * 100.0
+                tirLow = (values.count { it in 54.0..69.99 } / count) * 100.0
+                tirTarget = (values.count { it in 70.0..180.0 } / count) * 100.0
+                tirHigh = (values.count { it in 180.01..250.0 } / count) * 100.0
+                tirVeryHigh = (values.count { it > 250.0 } / count) * 100.0
+
+                val mean = values.average()
+                avgBgMgdl = mean
+
+                val variance = values.map { (it - mean) * (it - mean) }.average()
+                val stdDev = sqrt(variance)
+
+                if (mean > 0) {
+                    bgCv = (stdDev / mean) * 100.0
+                }
+
+                // GMI / Estimated A1C Formula: (mean + 46.7) / 28.7
+                a1c = (mean + 46.7) / 28.7
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+
         val state = StatusCardState(
             glucoseText = glucoseText,
             glucoseColor = lastBgData.lastBgColor(application),
@@ -375,7 +414,16 @@ class OverviewViewModel(
             lastUpdateText = lastBolusAmount,
             basalPctText = basalPctText,
             basalText = basalText,
-            iobText = iobText
+            iobText = iobText,
+            // 24H TIR Clinical Stats
+            tirVeryLow = tirVeryLow,
+            tirLow = tirLow,
+            tirTarget = tirTarget,
+            tirHigh = tirHigh,
+            tirVeryHigh = tirVeryHigh,
+            avgBgMgdl = avgBgMgdl,
+            bgCv = bgCv,
+            a1c = a1c
         )
         _statusCardState.postValue(state)
     }
@@ -857,7 +905,16 @@ data class StatusCardState(
     val basalPctText: String? = null,
     val basalText: String? = null,
     //IOB
-    val iobText: String
+    val iobText: String,
+    // 24H TIR Clinical Stats
+    val tirVeryLow: Double? = null,
+    val tirLow: Double? = null,
+    val tirTarget: Double? = null,
+    val tirHigh: Double? = null,
+    val tirVeryHigh: Double? = null,
+    val avgBgMgdl: Double? = null,
+    val bgCv: Double? = null,
+    val a1c: Double? = null
 )
 
 data class AdjustmentCardState(
