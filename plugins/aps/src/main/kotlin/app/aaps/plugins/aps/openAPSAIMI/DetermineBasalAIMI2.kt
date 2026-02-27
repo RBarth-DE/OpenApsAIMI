@@ -4418,6 +4418,16 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         if (extraDebug.isNotEmpty()) {
              rT.reason.append("$extraDebug\n")
         }
+
+        // 🚨 GLOBAL SAFETY: Trigger Emergency SOS early (Avoids T3c / Cruise Mode Bypass)
+        app.aaps.plugins.aps.openAPSAIMI.sos.EmergencySosManager.evaluateSosCondition(
+            bg = glucose_status.glucose,
+            delta = glucose_status.delta,
+            iob = iob_data_array.firstOrNull()?.iob ?: 0.0,
+            context = context,
+            preferences = this.preferences,
+            nowMs = dateUtil.now()
+        )
         
         // 🛡️ Log health status of storage and learners (NOW with rT)
         logLearnersHealth(rT)
@@ -7259,15 +7269,6 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             } catch (e: Exception) {
                 consoleError.add("Failed to save AIMI Decision JSON: ${e.message}")
             }
-            
-            // 🚨 Trigger Emergency SOS logic if necessary
-            app.aaps.plugins.aps.openAPSAIMI.sos.EmergencySosManager.evaluateSosCondition(
-                bg = bg,
-                delta = delta.toDouble(),
-                iob = iob_data_array.firstOrNull()?.iob ?: 0.0,
-                context = context,
-                preferences = this.preferences
-            )
             
             return finalResult
         }
