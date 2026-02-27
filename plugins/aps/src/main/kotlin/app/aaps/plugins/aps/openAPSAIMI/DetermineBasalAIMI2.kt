@@ -7789,7 +7789,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         val maxBasal = profile.max_basal.toDouble()
 
         // 🧠 Predictive PI Controller — 1000% scale, predictedBg as error term
-        val decision = DynamicBasalController.computeT3c(
+        val computedRate = DynamicBasalController.computeT3c(
             bg = bg,
             targetBg = targetBg,
             delta = delta,
@@ -7812,15 +7812,15 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             maxSmb = 3.0
         )
 
-        val safeRate = decision.rate.coerceIn(0.0, maxBasal)
+        val safeRate = computedRate.coerceIn(0.0, maxBasal)
 
         //rT.rate = safeRate
         rT.rate = ketoProtection(safeRate, profile, rT, pumpCaps )
-        rT.duration = decision.durationMin
-        rT.reason.append("🛡️T3c | SMB=0 | ").append(decision.reason)
+        rT.duration = 30
+        rT.reason.append("🛡️T3c | SMB=0 | PI Rate: ${"%.2f".format(safeRate)}U/h")
 
         consoleLog.add(rT.reason.toString())
-        
+
         return rT
     }
 

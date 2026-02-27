@@ -131,4 +131,121 @@ class DynamicBasalController @Inject constructor(
             isBraking = isBraking
         )
     }
+
+    enum class Mode {
+        STANDARD, AGGRESSIVE, CONSERVATIVE
+    }
+
+    data class Input(
+        val bg: Double,
+        val targetBg: Double,
+        val delta: Double,
+        val shortAvgDelta: Double,
+        val longAvgDelta: Double,
+        val iob: Double,
+        val maxIob: Double,
+        val profileBasal: Double,
+        val variableSensitivity: Double,
+        val duraISFminutes: Double,
+        val predictedBgOverride: Double?,
+        val mode: Mode
+    )
+
+    data class Decision(
+        val rate: Double,
+        val durationMin: Int,
+        val reason: String
+    )
+
+    companion object {
+        /**
+         * Main compute function called by BasalDecisionEngine.
+         * For now, it delegates back to a simplified instance/companion calculation
+         * or provides a robust fallback logic using the same math.
+         */
+        fun compute(input: Input): Decision {
+            // Replicate the logic simply to satisfy the interface for the general engine fallback.
+            // Using similar math to `calculateDynamicRate` without injecting the logger for this static path.
+            val proportionalError = input.bg - input.targetBg
+            val velocity = input.delta * 0.8 + input.shortAvgDelta * 0.2
+            
+            // Braking
+            if ((input.bg < input.targetBg && velocity < -1.0) || (input.bg <= 90.0 && velocity < -2.0)) {
+                return Decision(0.0, 30, "PI-Brake: Fast Drop")
+            }
+
+            // P-D simplistic map for fallback
+            var multiplier = 1.0 + (proportionalError * 0.05) + (velocity * 12.0 * 0.15)
+            
+            // Scale and constrain
+            multiplier = multiplier.coerceIn(0.0, 10.0)
+            
+            // Adjust for High IOB vs Max IOB
+            if (input.iob > input.maxIob) {
+                multiplier *= 0.5 // Throttle if massive IOB exists
+            }
+
+            val finalRate = input.profileBasal * multiplier
+            return Decision(
+                rate = finalRate,
+                durationMin = 30,
+                reason = "PI-Fallback: P=%.1f D=%.1f Mult=%.2fx".format(proportionalError, velocity, multiplier)
+            )
+        }
+
+        /**
+         * Dedicated T3c Brittle Mode calculation.
+         * T3c patients have zero endogenous insulin and glucagon, leading to extreme brittleness.
+         * This function provides a pure proportional-derivative TBR (Temporary Basal Rate)
+         * escalation without delivering micro-boluses (which are blocked by maxSMB=0.0 upstream).
+         */
+        fun computeT3c(
+            bg: Double,
+            targetBg: Double,
+            delta: Float,
+            shortAvgDelta: Double,
+            longAvgDelta: Double,
+            iob: Double,
+            maxIob: Double,
+            profileBasal: Double,
+            isf: Double,
+            duraISFminutes: Double,
+            eventualBg: Double?
+        ): Double {
+            // If BG is dangerously low or dropping fast, immediately cut basal to 0%
+            if (bg < 80.0 || (bg < targetBg && delta < -1.0)) {
+                return 0.0
+            }
+
+            // If we have too much insulin on board relative to our max, throttle back
+            if (iob > maxIob * 1.5) {
+               return profileBasal * 0.1 // 10% basal
+            }
+
+            val currentError = bg - targetBg
+            val futureError = (eventualBg ?: bg) - targetBg
+
+            // Base Multiplier from Proportional Distance
+            var multiplier = 1.0
+            
+            if (currentError > 0) {
+                 // For every 30mg/dL above target, we add +100% to the basal rate
+                 multiplier += (currentError / 30.0) 
+            } else if (currentError < 0) {
+                 // For every 15mg/dL below target, we halve the basal rate
+                 multiplier *= exp(currentError / 15.0)
+            }
+
+            // Derivative modifier (Velocity)
+            val velocity = delta * 0.7 + shortAvgDelta * 0.3
+            if (velocity > 1.0) {
+                 multiplier *= 1.5 // Climbing fast, aggressive boost
+            } else if (velocity < -1.0) {
+                 multiplier *= 0.5 // Falling fast, aggressive braking
+            }
+
+            // Cap at 1000% (10x) for extreme safety ceilings, though maxSafe will limit it later
+            return (profileBasal * multiplier).coerceIn(0.0, profileBasal * 10.0)
+        }
+    }
 }
