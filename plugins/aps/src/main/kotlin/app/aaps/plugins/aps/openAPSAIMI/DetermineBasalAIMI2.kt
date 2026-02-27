@@ -7817,6 +7817,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         rT.reason.append("🛡️T3c | SMB=0 | ").append(decision.reason)
 
         consoleLog.add(rT.reason.toString())
+        
         return rT
     }
 
