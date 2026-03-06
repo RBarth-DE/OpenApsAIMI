@@ -60,6 +60,8 @@ import android.view.MotionEvent
 import android.annotation.SuppressLint
 import android.graphics.Color
 import android.util.Log
+import app.aaps.core.ui.dialogs.OKDialog
+import app.aaps.plugins.aps.openAPSAIMI.advisor.auditor.model.AuditorUIState
 
 class DashboardFragment : DaggerFragment() {
 
@@ -460,6 +462,7 @@ class DashboardFragment : DaggerFragment() {
 
             auditorIndicator?.setOnClickListener {
                 aapsLogger.debug(LTag.CORE, "Auditor badge clicked")
+                handleAuditorClick()
             }
 
             auditorStatusLiveData.uiState.observe(viewLifecycleOwner) { uiState ->
@@ -475,6 +478,52 @@ class DashboardFragment : DaggerFragment() {
 
         } catch (e: Exception) {
             aapsLogger.error(LTag.CORE, "[Dashboard] Badge setup error: ${e.message}", e)
+        }
+    }
+
+    private fun handleAuditorClick() {
+        val state = auditorIndicator?.getCurrentState() ?: return
+
+        when (state.type) {
+            AuditorUIState.StateType.READY,
+            AuditorUIState.StateType.WARNING -> {
+                // Mark as read
+                auditorStatusLiveData.markAsRead()
+                auditorNotificationManager.cancelNotification()
+
+                // TODO: Open AuditorVerdictActivity when implemented
+                // For now, show dialog with status
+                activity?.let { activity ->
+                    OKDialog.show(activity,
+                                  "Auditor Insight",
+                                  state.statusMessage)
+                }
+            }
+
+            AuditorUIState.StateType.PROCESSING -> {
+                activity?.let { activity ->
+                    OKDialog.show(activity,
+                                  "Auditor",
+                                  "Analysis in progress, please wait...")
+                }
+            }
+
+            AuditorUIState.StateType.ERROR -> {
+                activity?.let { activity ->
+                    OKDialog.show(activity,
+                                  resourceHelper.gs(app.aaps.core.ui.R.string.error),
+                                  state.statusMessage)
+                }
+            }
+
+            else -> {
+                // IDLE - show info
+                activity?.let { activity ->
+                    OKDialog.show(activity,
+                                  "Auditor",
+                                  "Auditor will activate at next trigger")
+                }
+            }
         }
     }
 
