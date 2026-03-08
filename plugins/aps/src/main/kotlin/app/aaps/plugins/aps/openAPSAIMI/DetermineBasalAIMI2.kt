@@ -5320,20 +5320,20 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         // 🧠 AUTODRIVE V3 MULTI-VARIABLES INJECTION (The "Super-iLet" implementation)
         // ====================================================================================
         val isAutodriveActive = preferences.get(app.aaps.core.keys.BooleanKey.OApsAIMIautoDriveActive)
-
+        
         if (isAutodriveActive) {
             aapsLogger.debug(app.aaps.core.interfaces.logging.LTag.APS, "🚦 [AUTODRIVE V3] Intercepting Control Loop...")
-
+            
             // ISF must be approximated because we haven't reached the end of the function where variable_sens might receive last updates
-            // (But on this branch, dynamicIsfMgDl logic might be needed before Priority 4. Actually rT.variable_sens is evaluated later?
+            // (But on this branch, dynamicIsfMgDl logic might be needed before Priority 4. Actually rT.variable_sens is evaluated later? 
             // Wait, looking at the code around 5300, rT.variable_sens might not be completely finalized.
             // But we will use the best available variableSensitivity and shortAvgDeltaAdj)
             val adState = app.aaps.plugins.aps.openAPSAIMI.autodrive.models.AutoDriveState(
                 bg = glucose_status.glucose,
-                bgVelocity = shortAvgDeltaAdj.toDouble(), // Delta compensé G6
+                bgVelocity = shortAvgDeltaAdj.toDouble(), // Delta compensé G6 
                 iob = iob_data_array.firstOrNull()?.iob ?: 0.0,
                 cob = mealData.mealCOB,
-                estimatedSI = (variableSensitivity.toDouble() / 10000.0),
+                estimatedSI = (variableSensitivity.toDouble() / 10000.0), 
                 estimatedRa = 0.0,
                 patientWeightKg = preferences.get(app.aaps.core.keys.DoubleKey.OApsAIMIweight),
                 physiologicalStressMask = doubleArrayOf(),
@@ -5348,13 +5348,13 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                 consoleLog.add("🤖 SENSOR_AWARE: One+/G7 Detected -> Fast Sensor, Real-Time Maths Engaged.")
             }
 
-            autodriveEngine.setShadowMode(false)
-            autodriveEngine.setIsActive(true)
-
+            autodriveEngine.setShadowMode(false) 
+            autodriveEngine.setIsActive(true) 
+            
             val adCommand = autodriveEngine.tick(adState, profile.current_basal)
-
+            
             if (adCommand != null && adCommand.isSafe) {
-
+                
                 val v3TbrRate = adCommand.temporaryBasalRate
                 if (v3TbrRate != null && v3TbrRate > 0) {
                     setTempBasal(v3TbrRate, 30, profile, rT, currenttemp, overrideSafetyLimits = true)
@@ -5396,7 +5396,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         val mealRising = cob > 0.5 || mealTime || lunchTime || dinnerTime || bfastTime || snackTime
         val contextFactor = if (rT.contextEnabled && rT.contextIntentCount > 0) rT.contextModulation.toFloat() else 1.0f
         val contextPrefersBasal = (maxSMB == 0.0 && rT.contextEnabled && rT.contextIntentCount > 0)
-
+        
         val autoRes = tryAutodrive(
             bg, delta, shortAvgDeltaAdj.toFloat(), profile, lastBolusTimeMs ?: 0L, predictedBg, mealData.slopeFromMinDeviation, targetBg, reason,
             preferences.get(BooleanKey.OApsAIMIautoDrive),
@@ -7905,7 +7905,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         if (contextPrefersBasal) {
             return DecisionResult.Fallthrough("AIMI Context: SMB constraint active (Basal Pref)")
         }
-
+        
         val autodriveBG = preferences.get(IntKey.OApsAIMIAutodriveBG)
         
         // 🛡️ GATE R1: Strict BG Threshold (Raised from 100 to 120 for safety)
@@ -7949,7 +7949,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         var amount = 0.0
         var stateReason = ""
         val contextLog = if (contextFactor < 1.0f) " [Ctx ×${"%.2f".format(contextFactor)}]" else ""
-
+        
         // Confirmed: strong rise — use G6-adjusted delta for correct tier selection
         if (bg >= 120.0 && effectiveDelta >= 5.0 && shortAvgDelta >= 3.0) {
              amount = modulatedAmountLarge
@@ -8057,7 +8057,8 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         // rT.units is preserved for pre-bolus from applyLegacyMealModes
 
         val baseBasal = profile.current_basal
-        val maxBasal = profile.max_basal.toDouble()
+        // Removed the maxBasal restrictor for T3c because T3c NEEDS the 1000% capability
+        // to act as a proper bolus replacement. It will be safely capped at 10x inside the compute function.
 
         // 🧠 Predictive PI Controller — 1000% scale, predictedBg as error term
         val computedRate = DynamicBasalController.computeT3c(
@@ -8083,7 +8084,8 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             maxSmb = 3.0
         )
 
-        val safeRate = computedRate.coerceIn(0.0, maxBasal)
+        // Safety cap applied from inside computeT3c, simply fallback to absolute upper bounds
+        val safeRate = computedRate.coerceIn(0.0, baseBasal * 10.0)
 
         //rT.rate = safeRate
         rT.rate = ketoProtection(safeRate, profile, rT, pumpCaps )
