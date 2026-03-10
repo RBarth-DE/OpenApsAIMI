@@ -5,6 +5,8 @@ import java.util.Date
 import org.gradle.kotlin.dsl.dependencies
 import org.gradle.kotlin.dsl.project
 
+import java.util.Properties
+
 // Fixes errors in KSP task dependency
 import org.gradle.api.GradleException
 
@@ -20,6 +22,12 @@ plugins {
     id("jacoco-app-dependencies")
 
 }
+
+val keystoreProps = Properties().apply {
+    load(rootProject.file("keystore.properties").inputStream())
+}
+
+
 
 repositories {
     mavenCentral()
@@ -120,6 +128,15 @@ android {
         // For Dagger injected instrumentation tests in app module
         testInstrumentationRunner = "app.aaps.runners.InjectedTestRunner"
     }
+    
+    signingConfigs {
+        create("release") {
+            storeFile = file(keystoreProps["storeFile"] as String)
+            storePassword = keystoreProps["storePassword"] as String
+            keyAlias = keystoreProps["keyAlias"] as String
+            keyPassword = keystoreProps["keyPassword"] as String
+        }
+    }
 
     flavorDimensions.add("standard")
     productFlavors {
@@ -158,20 +175,6 @@ android {
         }
     }
 
-    // -------------------------------------------------------------------------
-    // Configuration de signature (release)
-    // -------------------------------------------------------------------------
-    signingConfigs {
-        // On peut l'appeler "release" ou un autre nom
-        create("release") {
-            // Seule storeFile attend un File
-            storeFile = file(System.getenv("KEYSTORE_FILE") ?: "dummy.jks")
-            // Les autres sont des Strings
-            storePassword = System.getenv("KEYSTORE_PASSWORD") ?: "dummy"
-            keyAlias = System.getenv("KEY_ALIAS") ?: "dummy"
-            keyPassword = System.getenv("KEY_PASSWORD") ?: "dummy"
-        }
-    }
 
     // -------------------------------------------------------------------------
     // Build Types
