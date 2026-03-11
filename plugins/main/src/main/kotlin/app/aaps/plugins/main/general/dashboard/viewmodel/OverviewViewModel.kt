@@ -293,14 +293,6 @@ class OverviewViewModel(
         // R3 Basal in % and value
         // we could also use activePlugin.activePump.baseBasalRate , but pump does not deliver percentage.
         // To be sure it is synced, we take both from the current loop.
-        /*val basalRate = loop.lastRun?.request?.rate
-        val basalText = if (basalRate == null || basalRate == -1.0) resourceHelper.gs(app.aaps.core.ui.R.string.value_unavailable_short)
-        else "${decimalFormatter.to2Decimal(basalRate)}U/h"
-
-        val basalPctValue = loop.lastRun?.request?.percent
-        val basalPctText = if (basalPctValue == null )  resourceHelper.gs(app.aaps.core.ui.R.string.value_unavailable_short)
-        else "$basalPctValue%"
-        */
         val tbr = processedTbrEbData.getTempBasalIncludingConvertedExtended(dateUtil.now())
         var basalPctText = resourceHelper.gs(app.aaps.core.ui.R.string.value_unavailable_short)
         var basalText = resourceHelper.gs(app.aaps.core.ui.R.string.value_unavailable_short)
