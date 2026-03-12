@@ -34,5 +34,6 @@ wear/full/
 /buildSrc/.kotlin
 .claude/settings.local.json
 .claude/CLAUDE_COMMANDS.md
+.aider*
 keystore.properties
 
