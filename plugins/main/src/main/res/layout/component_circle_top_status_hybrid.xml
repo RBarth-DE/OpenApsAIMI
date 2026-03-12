@@ -34,12 +34,12 @@
                 app:glucoseRingStepColor2="#FFD600"
                 app:glucoseRingStepColor3="#FF6D00"
                 app:glucoseRingStepColor4="#D50000"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintHorizontal_bias="0.502"
+                app:layout_constraintTop_toBottomOf="@id/aimiInsightsContainer"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintVertical_bias="0.15"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintHorizontal_bias="0.502"
+                app:layout_constraintVertical_bias="0.05"
                 app:ringBackgroundColor="@android:color/transparent"
                 app:ringStrokeWidth="5dp"
                 app:ringSubTextColor="?android:attr/textColorSecondary"
@@ -66,6 +66,47 @@
                 app:srcCompat="@drawable/ic_graduation"
                 app:tint="?android:attr/textColorPrimary" />
 
+            <!-- ═══════════════════════════════════════════════════ -->
+            <!-- AIMI INSIGHTS (T3c, Manoeuvre, AI Factor)           -->
+            <!-- ═══════════════════════════════════════════════════ -->
+            <LinearLayout
+                android:id="@+id/aimiInsightsContainer"
+                android:background="@null"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginStart="8dp"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintStart_toEndOf="@id/aimi_auditor_indicator_container">
+
+                <TextView
+                    android:id="@+id/insight_t3c"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="🎯 --"
+                    android:textSize="11sp"
+                    android:textColor="@color/dashboard_on_surface"
+                    android:layout_marginEnd="12dp" />
+
+                <TextView
+                    android:id="@+id/insight_manoeuvre"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="🌀 --"
+                    android:textSize="11sp"
+                    android:textColor="@color/dashboard_on_surface"
+                    android:layout_marginEnd="12dp" />
+
+                <TextView
+                    android:id="@+id/insight_factor"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="⚡ x1.0"
+                    android:textSize="11sp"
+                    android:textColor="@color/dashboard_on_surface" />
+
+            </LinearLayout>
 
             <!-- Loop Status (Top-Right, outside circle) -->
             <LinearLayout

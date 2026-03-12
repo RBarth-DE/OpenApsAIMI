@@ -26,6 +26,8 @@ import app.aaps.core.interfaces.profile.ProfileFunction
 import app.aaps.core.interfaces.profile.ProfileUtil
 import app.aaps.core.interfaces.resources.ResourceHelper
 import app.aaps.core.interfaces.rx.AapsSchedulers
+import app.aaps.plugins.aps.openAPSAIMI.trajectory.TrajectoryGuard // 🌀 Trajectory
+import app.aaps.plugins.aps.openAPSAIMI.autodrive.AutodriveEngine // 🧠 Engine
 import app.aaps.core.interfaces.rx.bus.RxBus
 import app.aaps.core.interfaces.rx.events.EventBucketedDataCreated
 import app.aaps.core.interfaces.rx.events.EventExtendedBolusChange
@@ -44,7 +46,6 @@ import app.aaps.core.keys.interfaces.Preferences
 import app.aaps.core.objects.extensions.*
 import app.aaps.core.utils.MidnightUtils
 import app.aaps.plugins.aps.openAPSAIMI.steps.UnifiedActivityProviderMTR
-import app.aaps.plugins.aps.openAPSAIMI.trajectory.TrajectoryGuard
 import app.aaps.plugins.main.R
 import io.reactivex.rxjava3.disposables.CompositeDisposable
 import io.reactivex.rxjava3.kotlin.plusAssign
@@ -77,7 +78,8 @@ class OverviewViewModel(
     private val preferences: Preferences,
     private val overviewData: OverviewData,
     private val trajectoryGuard: TrajectoryGuard, // 🌀 Trajectory Injection
-    private val activityProvider: UnifiedActivityProviderMTR
+    private val activityProvider: UnifiedActivityProviderMTR, // 🌀 Trajectory Injection
+    private val autodriveEngine: AutodriveEngine // 🧠 Engine Injection
 ) : ViewModel() {
 
     private val disposables = CompositeDisposable()
@@ -362,6 +364,18 @@ class OverviewViewModel(
             e.printStackTrace()
         }
 
+        // 12. AIMI Insights (Autodrive V3)
+        val t3cMinutes = trajectoryGuard.getLastAnalysis()?.predictedConvergenceTime ?: -1
+        val insightT3c = if (t3cMinutes > 0) "🎯 ${t3cMinutes}m" else "🎯 --"
+
+        val classification = trajectoryGuard.getLastAnalysis()?.classification
+        val insightManoeuvre = classification?.let { "${it.emoji()} ${it.name}" } ?: "🌀 --"
+
+        val factor = autodriveEngine.getAttentionMultiplier()
+        val insightFactor = "⚡ x${decimalFormatter.to1Decimal(factor)}"
+
+        val healthScore = autodriveEngine.getHealthScore()
+
         val state = StatusCardState(
             glucoseText = glucoseText,
             glucoseColor = lastBgData.lastBgColor(application),
@@ -415,7 +429,13 @@ class OverviewViewModel(
             tirVeryHigh = tirVeryHigh,
             avgBgMgdl = avgBgMgdl,
             bgCv = bgCv,
-            a1c = a1c
+            a1c = a1c,
+
+            // AIMI Insights
+            insightT3c = insightT3c,
+            insightManoeuvre = insightManoeuvre,
+            insightFactor = insightFactor,
+            aimiHealthScore = healthScore
         )
         _statusCardState.postValue(state)
     }
@@ -795,7 +815,8 @@ class OverviewViewModel(
         private val preferences: Preferences,
         private val overviewData: OverviewData,
         private val trajectoryGuard: TrajectoryGuard, // 🌀 Add to Factory
-        private val activityProvider: UnifiedActivityProviderMTR
+        private val activityProvider: UnifiedActivityProviderMTR, // 🌀 Add to Factory
+        private val autodriveEngine: AutodriveEngine // 🧠 Add to Factory
     ) : ViewModelProvider.Factory {
 
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
@@ -822,7 +843,8 @@ class OverviewViewModel(
                     preferences,
                     overviewData,
                     trajectoryGuard,
-                    activityProvider
+                    activityProvider,
+                    autodriveEngine
                 ) as T
             }
             throw IllegalArgumentException("Unknown ViewModel class $modelClass")
@@ -906,7 +928,13 @@ data class StatusCardState(
     val tirVeryHigh: Double? = null,
     val avgBgMgdl: Double? = null,
     val bgCv: Double? = null,
-    val a1c: Double? = null
+    val a1c: Double? = null,
+
+    // AIMI Insights
+    val insightT3c: String? = null,
+    val insightManoeuvre: String? = null,
+    val insightFactor: String? = null,
+    val aimiHealthScore: Double? = null
 )
 
 data class AdjustmentCardState(

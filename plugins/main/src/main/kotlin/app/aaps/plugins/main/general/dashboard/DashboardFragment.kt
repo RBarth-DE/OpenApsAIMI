@@ -94,6 +94,7 @@ class DashboardFragment : DaggerFragment() {
     @Inject lateinit var auditorStatusLiveData: AuditorStatusLiveData
     @Inject lateinit var auditorNotificationManager: AuditorNotificationManager
     @Inject lateinit var trajectoryGuard: app.aaps.plugins.aps.openAPSAIMI.trajectory.TrajectoryGuard // 🌀 Trajectory Injection
+    @Inject lateinit var autodriveEngine: app.aaps.plugins.aps.openAPSAIMI.autodrive.AutodriveEngine // 🧠 Engine Injection
     @Inject lateinit var activityProvider: app.aaps.plugins.aps.openAPSAIMI.steps.UnifiedActivityProviderMTR
 
     private lateinit var modesController: DashboardModesController
@@ -128,7 +129,8 @@ class DashboardFragment : DaggerFragment() {
             preferences,
             overviewData,
             trajectoryGuard, // 🌀 Pass to Factory
-            activityProvider
+            activityProvider,
+            autodriveEngine // 🧠 Pass to Factory
         )
     }
 
@@ -166,7 +168,6 @@ class DashboardFragment : DaggerFragment() {
         binding.overviewNotifications.layoutManager = LinearLayoutManager(context)
 
         syncGraphRange(preferences.get(IntNonKey.RangeToDisplay), false)
-
         viewModel.statusCardState.observe(viewLifecycleOwner) { binding.statusCard.updateWithState(it) }
         viewModel.adjustmentState.observe(viewLifecycleOwner) { state ->
             state?.let {

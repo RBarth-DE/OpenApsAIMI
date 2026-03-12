@@ -9,8 +9,8 @@ import kotlin.math.cos
 import kotlin.math.min
 import kotlin.math.sin
 import app.aaps.core.ui.R
-
-
+import android.animation.ArgbEvaluator
+import android.util.Log
 /**
  * GlucoseRingView - Cercle avec "nose pointer" (feature/circle-top)
  * 
@@ -32,15 +32,23 @@ class GlucoseRingView @JvmOverloads constructor(
     private var mainTextColor: Int = Color.WHITE
     private var subTextColor: Int = Color.WHITE
 
-    //private var useSteppedColors: Boolean = true
-    private var step1MaxMgdl: Float = 130f // BG <= step1MaxMgdl -> stepColor1 (green)
-    private var step2MaxMgdl: Float = 180f // BG <= step2MaxMgdl -> stepColor2 (yellow)
-    private var step3MaxMgdl: Float = 220f // BG <= step1MaxMgd3 -> stepColor3 (orange)
+    private var step1MaxMgdl: Float = 70f   // <= 70  -> bright green (very low warning)
+    private var step2MaxMgdl: Float = 100f  // <= 100 -> green
+    private var step3MaxMgdl: Float = 130f  // <= 130 -> lime green
+    private var step4MaxMgdl: Float = 155f  // <= 155 -> yellow-green
+    private var step5MaxMgdl: Float = 180f  // <= 180 -> yellow
+    private var step6MaxMgdl: Float = 200f  // <= 200 -> amber
+    private var step7MaxMgdl: Float = 220f  // <= 220 -> orange
+    // >  220 -> red
 
-    private var stepColor1: Int = "#00C853".toColorInt() // green
-    private var stepColor2: Int = "#FFD600".toColorInt() // yellow
-    private var stepColor3: Int = "#FF6D00".toColorInt() // orange
-    private var stepColor4: Int = "#D50000".toColorInt() // red
+    private var stepColor1: Int = "#00E676".toColorInt() // bright green
+    private var stepColor2: Int = "#00C853".toColorInt() // green
+    private var stepColor3: Int = "#76FF03".toColorInt() // lime green
+    private var stepColor4: Int = "#C6FF00".toColorInt() // yellow-green
+    private var stepColor5: Int = "#FFD600".toColorInt() // yellow
+    private var stepColor6: Int = "#FFAB00".toColorInt() // amber
+    private var stepColor7: Int = "#FF6D00".toColorInt() // orange
+    private var stepColor8: Int = "#D50000".toColorInt() // red
 
     private var mainTextBold: Boolean = true
 
@@ -73,6 +81,8 @@ class GlucoseRingView @JvmOverloads constructor(
     private val subTextPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         textAlign = Paint.Align.LEFT
     }
+
+    private var pumpConnected: Boolean = true
 
     init {
         // Read custom attrs if available
@@ -122,15 +132,21 @@ class GlucoseRingView @JvmOverloads constructor(
     }
 
     private fun computeRingColor(bgMgdl: Int?): Int {
+        //Log.d("GlucoseRing", "computeRingColor called with: $bgMgdl")
         val v = bgMgdl ?: return Color.GRAY
-        val vf = v.toFloat()
-        // WARNING: This logic paints <100 as Step1 (Color1). If Color1 is Green, Hypo is Green.
-        // The overrideColor (passed from AAPS logic) fixes this.
         return when {
-            vf <= step1MaxMgdl -> stepColor1
-            vf <= step2MaxMgdl -> stepColor2
-            vf <= step3MaxMgdl -> stepColor3
-            else -> stepColor4
+            v < 70  -> "#D50000".toColorInt()
+            v < 100 -> "#00C853".toColorInt()
+            v <= 160 -> ArgbEvaluator().evaluate(
+                ((v - 100f) / 60f),
+                "#00C853".toColorInt(),
+                "#FFD600".toColorInt()
+            ) as Int
+            else -> ArgbEvaluator().evaluate(
+                ((v - 160f) / 60f).coerceIn(0f, 1f),
+                "#FFD600".toColorInt(),
+                "#D50000".toColorInt()
+            ) as Int
         }
     }
 
@@ -156,6 +172,8 @@ class GlucoseRingView @JvmOverloads constructor(
         // ring
         ringPaint.strokeWidth = strokeWidthPx
         ringPaint.color = currentRingColor
+        //Log.d("GlucoseRing", "onDraw called with: $currentRingColor")
+        //Log.d("GlucoseRing", "Drawing ring with color: #${Integer.toHexString(currentRingColor and 0xFFFFFFFF.toInt())}")
         canvas.drawCircle(cx, cy, radius, ringPaint)
 
         // nose

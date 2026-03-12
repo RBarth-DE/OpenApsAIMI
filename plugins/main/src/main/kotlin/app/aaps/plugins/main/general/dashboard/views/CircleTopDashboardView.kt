@@ -7,6 +7,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.widget.FrameLayout
 import android.widget.ImageView
+import androidx.viewbinding.ViewBinding
 import app.aaps.plugins.main.databinding.ComponentCircleTopStatusHybridBinding
 import java.util.Locale
 
@@ -53,7 +54,6 @@ class CircleTopDashboardView @JvmOverloads constructor(
                     null
                 }
             }
-            
             // ═══════════════════════════════════════════════════════════════
             // 1. GlucoseRingView (Center Circle)
             // ═══════════════════════════════════════════════════════════════
@@ -131,6 +131,22 @@ class CircleTopDashboardView @JvmOverloads constructor(
             updateBar(binding.tirInRangeBar, binding.tirInRangeLabel, tr)
             updateBar(binding.tirHighBar, binding.tirHighLabel, h)
             updateBar(binding.tirVeryHighBar, binding.tirVeryHighLabel, vh)
+
+            // ═══════════════════════════════════════════════════════════════
+            // 6. AIMI Insights
+            // ═══════════════════════════════════════════════════════════════
+            binding.insightT3c.text = getProp<String>("insightT3c") ?: "🎯 --"
+            binding.insightManoeuvre.text = getProp<String>("insightManoeuvre") ?: "🌀 --"
+            binding.insightFactor.text = getProp<String>("insightFactor") ?: "⚡ x1.0"
+
+            // Adjust container style based on health score (confidence)
+            val health = getProp<Double>("aimiHealthScore") ?: 1.0
+            if (health < 0.8) {
+                binding.aimiInsightsContainer.setBackgroundResource(app.aaps.plugins.main.R.drawable.dashboard_chip_background_warning)
+            } else {
+                //binding.aimiInsightsContainer.setBackgroundResource(app.aaps.plugins.main.R.drawable.dashboard_chip_background)
+                binding.aimiInsightsContainer.background = null  // no background when healthy
+            }
 
         } catch (e: Exception) {
             // Fallback: Log error but don't crash

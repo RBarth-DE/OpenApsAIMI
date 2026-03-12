@@ -9,7 +9,6 @@ plugins {
 
 android {
     namespace = "app.aaps.plugins.main"
-    // Add this block to enable View Binding
     buildFeatures {
         viewBinding = true
     }
