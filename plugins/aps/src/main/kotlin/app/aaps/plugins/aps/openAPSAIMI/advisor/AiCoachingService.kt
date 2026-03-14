@@ -41,7 +41,21 @@ class AiCoachingService @Inject constructor() {
         
         // Claude Haiku (Fast & Cheap)
         private const val CLAUDE_URL = "https://api.anthropic.com/v1/messages"
-        private const val CLAUDE_MODEL = "claude-3-haiku-20240307"
+        /* For this use case, I would definitely recommend Sonnet over Haiku.
+        The reason: You’ve combined two challenging tasks:
+        Meal image recognition — Haiku is significantly weaker here, identifies foods less accurately,
+        and estimates carbohydrates less precisely
+        Glucose data analysis — interpreting trends, IOB, TDD, and predictions requires real reasoning ability
+        Haiku is good for simple, quick tasks — but if the meal recognition is wrong, the entire bolus recommendation is based on incorrect carb values. This is not a place to cut corners.
+
+        Opus would be overkill and expensive.
+
+        Recommendation: */
+        private const val CLAUDE_MODEL = "claude-sonnet-4-6"
+        /*The exact API string is claude-sonnet-4-6. This is the current Sonnet, significantly more intelligent than Haiku,
+        and the right choice for this combination of vision and medical reasoning.*/
+
+        //private const val CLAUDE_MODEL = "claude-haiku-4-5-20251001"
     }
 
     /**

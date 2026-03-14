@@ -145,12 +145,12 @@ class IobCobOref1Worker(
                         val initialIndex = autosensDataTable.indexOfKey(hourAgoData.time)
                         aapsLogger.debug(LTag.AUTOSENS) { ">>>>> bucketed_data.size()=" + bucketedData.size + " i=" + i + " hourAgoData=" + hourAgoData.toString() }
                         var past = 1
-//                        try {
                         while (past < 12) {
-                            val ad = autosensDataTable.valueAt(initialIndex + past)
+                            val idx = initialIndex + past
+                            if (idx >= autosensDataTable.size()) break  // ← add this
+                            val ad = autosensDataTable.valueAt(idx)
                             if (ad == null) break
                             aapsLogger.debug(LTag.AUTOSENS) { ">>>>> past=$past ad=$ad" }
-                            // Fixed intentional NPE crash to prevent silent WorkManager failure 
                             val deviationSlope = (ad.avgDeviation - avgDeviation) / (ad.time - bgTime) * 1000 * 60 * 5
                             if (ad.avgDeviation > maxDeviation) {
                                 slopeFromMaxDeviation = min(0.0, deviationSlope)
