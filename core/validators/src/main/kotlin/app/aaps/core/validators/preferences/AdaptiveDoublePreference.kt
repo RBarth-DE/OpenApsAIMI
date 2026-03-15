@@ -56,7 +56,6 @@ class AdaptiveDoublePreference(
             isVisible = false; isEnabled = false
         }
         preferenceKey.dependency?.let {
-            dependency = it.key
             if (!preferences.get(it))
                 isVisible = false
         }
@@ -78,6 +77,11 @@ class AdaptiveDoublePreference(
 
     override fun onAttached() {
         super.onAttached()
+        // Dependency HIER setzen — onAttached() wird aufgerufen nachdem die Preference
+        // in die Hierarchy eingehängt wurde, PreferenceManager ist garantiert vorhanden.
+        preferenceKey.dependency?.let {
+            dependency = it.key
+        }
         if (preferenceKey.hideParentScreenIfHidden) {
             parent?.isVisible = isVisible
             parent?.isEnabled = isEnabled

@@ -6,6 +6,7 @@ import androidx.annotation.StringRes
 import androidx.preference.SwitchPreference
 import app.aaps.core.interfaces.configuration.Config
 import app.aaps.core.keys.interfaces.BooleanPreferenceKey
+import app.aaps.core.keys.interfaces.DoublePreferenceKey
 import app.aaps.core.keys.interfaces.Preferences
 import dagger.android.HasAndroidInjector
 import javax.inject.Inject
@@ -24,6 +25,8 @@ class AdaptiveSwitchPreference(
     // Inflater constructor
     constructor(context: Context, attrs: AttributeSet?) : this(context, attrs, booleanKey = null, title = null)
 
+    private val preferenceKey: BooleanPreferenceKey
+
     init {
         (context.applicationContext as HasAndroidInjector).androidInjector().inject(this)
 
@@ -31,7 +34,7 @@ class AdaptiveSwitchPreference(
         summary?.let { setSummary(it) }
         title?.let { this.title = context.getString(it) }
 
-        val preferenceKey = booleanKey ?: preferences.get(key) as BooleanPreferenceKey
+        preferenceKey = booleanKey ?: preferences.get(key) as BooleanPreferenceKey
         if (preferences.simpleMode && preferenceKey.defaultedBySM) isVisible = false
         if (preferences.apsMode && !preferenceKey.showInApsMode) {
             isVisible = false; isEnabled = false
@@ -46,7 +49,6 @@ class AdaptiveSwitchPreference(
             isVisible = false; isEnabled = false
         }
         preferenceKey.dependency?.let {
-            dependency = it.key
             if (!preferences.get(it))
                 isVisible = false
         }
@@ -62,6 +64,9 @@ class AdaptiveSwitchPreference(
 
     override fun onAttached() {
         super.onAttached()
+        preferenceKey.dependency?.let {
+            dependency = it.key
+        }
         // PreferenceScreen is final so we cannot extend and modify behavior
         val preferenceKey = preferences.get(key) as BooleanPreferenceKey
         if (preferenceKey.hideParentScreenIfHidden) {
