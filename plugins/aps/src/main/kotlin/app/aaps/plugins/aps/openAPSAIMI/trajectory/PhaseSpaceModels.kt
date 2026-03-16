@@ -4,6 +4,7 @@ import app.aaps.plugins.aps.openAPSAIMI.pkpd.ActivityStage
 import kotlin.math.abs
 import kotlin.math.pow
 import kotlin.math.sqrt
+import app.aaps.plugins.aps.R
 
 /**
  * Phase-Space Trajectory Models for PKPD Control
@@ -161,14 +162,26 @@ enum class TrajectoryType {
     /**
      * User-friendly description
      */
-    fun description(): String = when (this) {
-        OPEN_DIVERGING -> "Trajectory diverging - BG not controlled"
-        SLOW_DRIFT -> "Slow drift away from target"
-        CLOSING_CONVERGING -> "Trajectory closing - returning to target"
-        TIGHT_SPIRAL -> "Trajectory compressed - over-correction risk"
-        STABLE_ORBIT -> "Stable orbit maintained"
-        HOVERING -> "Hovering stable but off-target"
-        UNCERTAIN -> "Trajectory unclear - need more data"
+    fun description(context: android.content.Context? = null): String = when {
+        // Returns localized trajectory description from Android resources
+        context != null -> when (this) {
+            OPEN_DIVERGING     -> context.getString(R.string.aimi_trajectory_open_diverging_desc)
+            SLOW_DRIFT         -> context.getString(R.string.aimi_trajectory_slow_drift_desc)
+            CLOSING_CONVERGING -> context.getString(R.string.aimi_trajectory_closing_converging_desc)
+            TIGHT_SPIRAL       -> context.getString(R.string.aimi_trajectory_tight_spiral_desc)
+            STABLE_ORBIT       -> context.getString(R.string.aimi_trajectory_stable_orbit_desc)
+            HOVERING           -> context.getString(R.string.aimi_trajectory_hovering_desc)
+            UNCERTAIN          -> context.getString(R.string.aimi_trajectory_uncertain_desc)
+        }
+        else -> when (this) {
+            OPEN_DIVERGING -> "Trajectory diverging - BG not controlled"
+            SLOW_DRIFT -> "Slow drift away from target"
+            CLOSING_CONVERGING -> "Trajectory closing - returning to target"
+            TIGHT_SPIRAL -> "Trajectory compressed - over-correction risk"
+            STABLE_ORBIT -> "Stable orbit maintained"
+            HOVERING -> "Hovering stable but off-target"
+            UNCERTAIN -> "Trajectory unclear - need more data"
+        }
     }
     
     /**
@@ -286,10 +299,10 @@ data class TrajectoryAnalysis(
     /**
      * Format for console logging (compact, info-rich)
      */
-    fun toConsoleLog(): List<String> {
+    fun toConsoleLog(context: android.content.Context): List<String> {
         val log = mutableListOf<String>()
         log.add("🌀 TRAJECTORY ANALYSIS")
-        log.add("  Type: ${classification.emoji()} ${classification.description()}")
+        log.add("  Type: ${classification.emoji()} ${classification.description(context)}")
         log.add("  Metrics:")
         log.add("    Curvature: %.3f %s".format(metrics.curvature, if (metrics.isTightSpiral) "⚠️ HIGH" else ""))
         log.add("    Convergence: %+.3f mg/dL/min %s".format(

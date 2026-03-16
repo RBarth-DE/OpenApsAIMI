@@ -4387,7 +4387,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                 } else {
                     val analysis = traj
                     val statusEmoji = analysis.classification.emoji()
-                    val typeDesc = analysis.classification.description()
+                    val typeDesc = analysis.classification.description( context )
                     
                     consoleLog.add("🌀 Trajectory: $statusEmoji $typeDesc | κ=${"%.2f".format(analysis.metrics.curvature)} conv=${"%.1f".format(analysis.metrics.convergenceVelocity)} health=${"%.0f".format(analysis.metrics.healthScore*100)}%")
                     

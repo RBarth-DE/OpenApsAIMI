@@ -1213,5 +1213,12 @@
     <string name="endo_smb_dampen_summary">Faktor zur Reduzierung von SMBs während der Abfackelung, um eine Stapelung zu verhindern (Standardwert 0,7x).</string>
     <string name="endo_flare_duration_title">Flare-Dauer (Stunden)</string>
     <string name="endo_flare_duration_summary">Wie lange bleibt der Blinkmodus aktiv, wenn er aktiviert wird?</string>
-    <string name="bg_drop_high_critical">KRITISCHER Abfall unter 85 (%1$.1f mg/dL/h), BASAL STOP;</string>
+    <string name="bg_drop_high_critical">KRITISCHER ABFALL (%1$.1f mg/dL/h) – Basal gestoppt</string>
+    <string name="aimi_trajectory_open_diverging_desc">ABWEICHUNG – BZ außer Kontrolle</string>
+    <string name="aimi_trajectory_slow_drift_desc">DRIFT – BZ driftet langsam ab</string>
+    <string name="aimi_trajectory_closing_converging_desc">RÜCKKEHR – BZ kehrt zum Ziel zurück</string>
+    <string name="aimi_trajectory_tight_spiral_desc">ÜBERKORRETUR – Hypogefahr durch Stacking</string>
+    <string name="aimi_trajectory_stable_orbit_desc">STABIL – BZ im Zielbereich</string>
+    <string name="aimi_trajectory_hovering_desc">STAGNATION – BZ stagniert zu hoch</string>
+    <string name="aimi_trajectory_uncertain_desc">UNKLAR – Zu wenig Daten</string>
 </resources>
