@@ -115,7 +115,7 @@ class AdaptiveDoublePreference(
         text = try {
             getPersistedFloat(preferenceKey.defaultValue.toFloat()).toString()
         } catch (_: Exception) {
-            getPersistedString(defaultValue?.toString())
+            getPersistedString(defaultValue as String?)
         }
     }
 

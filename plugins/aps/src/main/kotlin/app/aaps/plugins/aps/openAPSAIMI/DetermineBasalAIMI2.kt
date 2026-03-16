@@ -319,6 +319,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
     @Inject lateinit var comparator: AimiSmbComparator
     @Inject lateinit var basalLearner: app.aaps.plugins.aps.openAPSAIMI.learning.BasalLearner
     @Inject lateinit var unifiedReactivityLearner: app.aaps.plugins.aps.openAPSAIMI.learning.UnifiedReactivityLearner
+    @Inject lateinit var basalNeuralLearner: app.aaps.plugins.aps.openAPSAIMI.learning.BasalNeuralLearner
     @Inject lateinit var storageHelper: AimiStorageHelper  // 🛡️ Restored StorageHelper
     
     // Helper to safely access learner (handles potential early access before injection)
@@ -510,6 +511,9 @@ class DetermineBasalaimiSMB2 @Inject constructor(
     private var currentThyroidEffects = app.aaps.plugins.aps.openAPSAIMI.physio.thyroid.ThyroidEffects()
     private var lastSmbFinal: Double = 0.0
     private var lastAutodriveState: AutodriveState = AutodriveState.IDLE
+    private var duraISFminutes: Double = 0.0
+    private var duraISFaverage: Double = 0.0
+    private var iobNet: Double = 0.0 // Corrected IOB for learning
     fun isAutodriveEngaged(): Boolean = lastAutodriveState == AutodriveState.ENGAGED
 
     private var internalLastSmbMillis: Long = 0L // Local Atomic Timestamp for Safety
@@ -4508,6 +4512,14 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         // 🤰 Gestational Autopilot Integration
         applyGestationalAutopilot(profile)
 
+        // 🧬 Physiological Summary for Neural Adapters
+        this.duraISFminutes = glucose_status.duraISFminutes
+        this.duraISFaverage = glucose_status.duraISFaverage
+        val iobObj = iob_data_array.firstOrNull() ?: IobTotal(currentTime)
+        this.iobNet = iobObj.iob
+        val accel = glucose_status.bgAcceleration ?: 0.0
+        this.bgacc = accel
+
         // 🦋 Thyroid (Basedow) Module Integration
         applyThyroidModule(profile)
         
@@ -5105,9 +5117,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                 variableSensitivity = variableSensitivity.toDouble(),
                 maxIob = maxIob,
                 eventualBg = this.eventualBG.coerceAtLeast(40.0),
-                rT = rT,
-                activationThreshold = preferences.get(DoubleKey.OApsAIMIT3cActivationThreshold),
-                aggressiveness = preferences.get(DoubleKey.OApsAIMIT3cAggressiveness)
+                rT = rT
             )
         }
         val modesCondition = (!mealTime || mealruntime > 30) && (!lunchTime || lunchruntime > 30) && (!bfastTime || bfastruntime > 30) && (!dinnerTime || dinnerruntime > 30) && !sportTime && (!snackTime || snackrunTime > 30) && (!highCarbTime || highCarbrunTime > 30) && !sleepTime && !lowCarbTime
@@ -6686,6 +6696,23 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         if (basalBoostApplied && rate != null) {
             val tmprate = rate.coerceAtLeast(0.0)
             rT.rate = ketoProtection(tmprate, profile, rT, pumpCaps )
+
+            // 🛡️ Universal Adaptive Basal Scaling
+            if (preferences.get(BooleanKey.OApsAIMIT3cAdaptiveBasalEnabled)) {
+                val adaptiveMult = basalNeuralLearner.getUniversalBasalMultiplier(
+                    bg = bg,
+                    basal = rate ?: 0.0,
+                    accel = accel,
+                    duraMin = duraISFminutes,
+                    duraAvg = duraISFaverage,
+                    iob = iobObj.iob
+                )
+                if (adaptiveMult != 1.0) {
+                    val originalRate = rT.rate ?: 0.0
+                    rT.rate = ketoProtection(originalRate * adaptiveMult , profile, rT, pumpCaps )
+                    rT.reason.append(" | 🛡️AdaptiveBasal: ${"%.2f".format(adaptiveMult)}x (${originalRate.toFixed2()}->${(rT.rate ?: 0.0).toFixed2()}U/h)")
+                }
+            }
             rT.deliverAt = deliverAt
             rT.duration = 30
             consoleLog.add("BOOST_BASAL_APPLIED source=${basalBoostSource ?: "Unknown"} rate=${"%.2f".format(Locale.US, rate)}U/h")
@@ -7667,7 +7694,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             } catch (e: Exception) {
                 consoleError.add("Failed to save AIMI Decision JSON: ${e.message}")
             }
-            
+
             return finalResult
         }
     }
@@ -7886,6 +7913,18 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         val tdd24h = tddCalculator.calculateDaily(-24, 0)?.totalAmount ?: 30.0
         val activityThreshold = (tdd24h / 24.0) * 0.15
         
+        // 🧬 Unified Learning Update (Centralized)
+        basalNeuralLearner.updateLearning(
+            bgBefore = bgValue,
+            bgAfter = eventual,
+            basalDelivered = tbr,
+            targetBg = targetBg.toDouble(),
+            accel = bgacc,
+            duraISFminutes = duraISFminutes,
+            duraISFaverage = duraISFaverage,
+            iob = iobNet
+        )
+
         val tickLine =
             "TICK ts=${System.currentTimeMillis()} bg=${bgValue.roundToInt()} d=${"%.1f".format(deltaValue)} iob=${"%.2f".format(iob)} act=${"%.3f".format(iobActivityNow)} th=${"%.3f".format(activityThreshold)} " +
                 "cob=${"%.1f".format(cob)} mode=$modeLabel autodriveState=$lastAutodriveState pred=$predChunk " +
@@ -8243,9 +8282,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         variableSensitivity: Double,
         maxIob: Double,
         eventualBg: Double,
-        rT: RT,
-        activationThreshold: Double,
-        aggressiveness: Double
+        rT: RT
     ): RT {
         rT.reason = StringBuilder("")
         rT.deliverAt = System.currentTimeMillis()
@@ -8255,6 +8292,17 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         val baseBasal = profile.current_basal
         // Removed the maxBasal restrictor for T3c because T3c NEEDS the 1000% capability
         // to act as a proper bolus replacement. It will be safely capped at 10x inside the compute function.
+
+        // Fetch T3C Preferences
+        val activationThreshold = preferences.get(DoubleKey.OApsAIMIT3cActivationThreshold)
+        val aggressiveness = basalNeuralLearner.getT3cAdaptiveFactor(
+            bg = bg,
+            basal = baseBasal,
+            accel = accel,
+            duraMin = duraISFminutes,
+            duraAvg = duraISFaverage,
+            iob = iob.iob
+        )
 
         // 🧠 Predictive PI Controller — 1000% scale, predictedBg as error term
         val computedRate = DynamicBasalController.computeT3c(
@@ -8290,7 +8338,19 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         //rT.rate = safeRate
         rT.rate = ketoProtection(safeRate, profile, rT, pumpCaps )
         rT.duration = 30
-        rT.reason.append("🛡️T3c | SMB=0 | PI Rate: ${"%.2f".format(safeRate)}U/h")
+        rT.reason.append("🛡️T3c | Thresh: ${activationThreshold.toInt()} | Agg: ${"%.1f".format(aggressiveness)} | PI: ${"%.2f".format(safeRate)}U/h")
+
+        // 🧬 Adaptive Learning Update
+        basalNeuralLearner.updateLearning(
+            bgBefore = bg,
+            bgAfter = eventualBg, // Using eventualBg as a proxy for the post-correction state in this tick
+            basalDelivered = safeRate,
+            targetBg = targetBg,
+            accel = accel,
+            duraISFminutes = duraISFminutes,
+            duraISFaverage = duraISFaverage,
+            iob = iob.iob
+        )
 
         consoleLog.add(rT.reason.toString())
 

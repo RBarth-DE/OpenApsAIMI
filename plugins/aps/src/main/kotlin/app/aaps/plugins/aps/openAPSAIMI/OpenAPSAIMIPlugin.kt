@@ -215,7 +215,6 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
         try {
             val externalDir = java.io.File(android.os.Environment.getExternalStorageDirectory().absolutePath + "/Documents/AAPS")
             app.aaps.plugins.aps.openAPSAIMI.ml.AimiSmbTrainer.loadModel(externalDir)
-            app.aaps.plugins.aps.openAPSAIMI.learning.T3cNeuralLearner.loadModel(externalDir)
             aapsLogger.info(LTag.APS, "✅ AimiSmbTrainer: model load requested (async)")
         } catch (e: Exception) {
             aapsLogger.error(LTag.APS, "❌ AimiSmbTrainer: failed to request model load", e)
@@ -1176,21 +1175,20 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
                     title = rh.gs(R.string.aimi_prefs_ai_title) // "🤖 Assistant AI"
 
                     // Provider Selection
-                    addPreference(
-                        AdaptiveListPreference(
-                            ctx = context,
-                            stringKey = StringKey.AimiAdvisorProvider,
-                            title = R.string.aimi_prefs_provider_title,
-                            entries = arrayOf(
-                                rh.gs(R.string.aimi_prefs_provider_openai),
-                                rh.gs(R.string.aimi_prefs_provider_gemini),
-                                rh.gs(R.string.aimi_prefs_provider_deepseek),
-                                rh.gs(R.string.aimi_prefs_provider_claude)
-                            ),
-                            entryValues = arrayOf("OPENAI", "GEMINI", "DEEPSEEK", "CLAUDE")
-                        ).apply {
-                            dialogTitle = rh.gs(R.string.aimi_prefs_provider_dialog_title)
-                        })
+                    addPreference(AdaptiveListPreference(
+                        ctx = context,
+                        stringKey = StringKey.AimiAdvisorProvider,
+                        title = R.string.aimi_prefs_provider_title,
+                        entries = arrayOf(
+                            rh.gs(R.string.aimi_prefs_provider_openai),
+                            rh.gs(R.string.aimi_prefs_provider_gemini),
+                            rh.gs(R.string.aimi_prefs_provider_deepseek),
+                            rh.gs(R.string.aimi_prefs_provider_claude)
+                        ),
+                        entryValues = arrayOf("OPENAI", "GEMINI", "DEEPSEEK", "CLAUDE")
+                    ).apply {
+                        dialogTitle = rh.gs(R.string.aimi_prefs_provider_dialog_title)
+                    })
 
                     // OpenAI Key
                     addPreference(
@@ -1211,7 +1209,7 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
                             title = R.string.aimi_prefs_gemini_key_title
                         )
                     )
-
+                    
                     // DeepSeek Key
                     addPreference(
                         AdaptiveStringPreference(
@@ -1221,7 +1219,7 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
                             title = R.string.aimi_prefs_deepseek_key_title
                         )
                     )
-
+                    
                     // Claude Key
                     addPreference(
                         AdaptiveStringPreference(
@@ -1299,7 +1297,7 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
                             summary = R.string.aimi_physio_enable_summary
                         )
                     )
-
+                    
                     // 🔐 Health Connect Permissions Button
                     addPreference(androidx.preference.Preference(context).apply {
                         key = "aimi_physio_hc_permissions"
@@ -1384,104 +1382,314 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
                         )
                     )
                 })
-                addPreference(AdaptiveSwitchPreference(ctx = context, booleanKey = BooleanKey.OApsAIMIMLtraining, title = R.string.oaps_aimi_enableMlTraining_title))
-                addPreference(AdaptiveDoublePreference(ctx = context, doubleKey = DoubleKey.OApsAIMIMaxSMB, dialogMessage = R.string.openapsaimi_maxsmb_summary, title = R.string.openapsaimi_maxsmb_title))
-                addPreference(AdaptiveDoublePreference(ctx = context, doubleKey = DoubleKey.OApsAIMIHighBGMaxSMB, dialogMessage = R.string.openapsaimi_highBG_maxsmb_summary, title = R.string.openapsaimi_highBG_maxsmb_title))
-                addPreference(AdaptiveDoublePreference(ctx = context, doubleKey = DoubleKey.OApsAIMIweight, dialogMessage = R.string.oaps_aimi_weight_summary, title = R.string.oaps_aimi_weight_title))
-                addPreference(AdaptiveDoublePreference(ctx = context, doubleKey = DoubleKey.OApsAIMICHO, dialogMessage = R.string.oaps_aimi_cho_summary, title = R.string.oaps_aimi_cho_title))
-                addPreference(AdaptiveDoublePreference(ctx = context, doubleKey = DoubleKey.OApsAIMITDD7, dialogMessage = R.string.oaps_aimi_tdd7_summary, title = R.string.oaps_aimi_tdd7_title))
-                addPreference(AdaptiveDoublePreference(ctx = context, doubleKey = DoubleKey.OApsAIMITDD7, dialogMessage = R.string.oaps_aimi_tdd7_summary, title = R.string.oaps_aimi_tdd7_title))
-
-// ─── PKPD ────────────────────────────────────────────────────────────────────
-// WICHTIG: Screen zuerst in die Haupthierarchie einhängen, DANN befüllen.
-// Sonst schlägt Dependency-Lookup in AdaptiveDoublePreference fehl (IllegalStateException).
-                val pkpdScreen = preferenceManager.createPreferenceScreen(context).apply {
+            addPreference(AdaptiveSwitchPreference(ctx = context, booleanKey = BooleanKey.OApsAIMIMLtraining, title = R.string.oaps_aimi_enableMlTraining_title))
+            addPreference(AdaptiveDoublePreference(ctx = context, doubleKey = DoubleKey.OApsAIMIMaxSMB, dialogMessage = R.string.openapsaimi_maxsmb_summary, title = R.string.openapsaimi_maxsmb_title))
+            addPreference(AdaptiveDoublePreference(ctx = context, doubleKey = DoubleKey.OApsAIMIHighBGMaxSMB, dialogMessage = R.string.openapsaimi_highBG_maxsmb_summary, title = R.string.openapsaimi_highBG_maxsmb_title))
+            addPreference(AdaptiveDoublePreference(ctx = context, doubleKey = DoubleKey.OApsAIMIweight, dialogMessage = R.string.oaps_aimi_weight_summary, title = R.string.oaps_aimi_weight_title))
+            addPreference(AdaptiveDoublePreference(ctx = context, doubleKey = DoubleKey.OApsAIMICHO, dialogMessage = R.string.oaps_aimi_cho_summary, title = R.string.oaps_aimi_cho_title))
+            addPreference(AdaptiveDoublePreference(ctx = context, doubleKey = DoubleKey.OApsAIMITDD7, dialogMessage = R.string.oaps_aimi_tdd7_summary, title = R.string.oaps_aimi_tdd7_title))
+                addPreference(preferenceManager.createPreferenceScreen(context).apply {
                     key = "AIMI_PKPD"
                     title = rh.gs(R.string.oaps_aimi_pkpd_section_title)
-                }
-                addPreference(pkpdScreen)
+                    addPreference(
+                        AdaptiveSwitchPreference(
+                            ctx = context,
+                            booleanKey = BooleanKey.OApsAIMIPkpdEnabled,
+                            summary = R.string.oaps_aimi_pkpd_enabled_summary,
+                            title = R.string.oaps_aimi_pkpd_enabled_title
+                        )
+                    )
+                    addPreference(
+                        AdaptiveDoublePreference(
+                            ctx = context,
+                            doubleKey = DoubleKey.OApsAIMIPkpdInitialDiaH,
+                            dialogMessage = R.string.oaps_aimi_pkpd_initial_dia_summary,
+                            title = R.string.oaps_aimi_pkpd_initial_dia_title
+                        )
+                    )
+                    addPreference(
+                        AdaptiveDoublePreference(
+                            ctx = context,
+                            doubleKey = DoubleKey.OApsAIMIPkpdInitialPeakMin,
+                            dialogMessage = R.string.oaps_aimi_pkpd_initial_peak_summary,
+                            title = R.string.oaps_aimi_pkpd_initial_peak_title
+                        )
+                    )
+                    addPreference(
+                        AdaptiveDoublePreference(
+                            ctx = context,
+                            doubleKey = DoubleKey.OApsAIMIPkpdBoundsDiaMinH,
+                            dialogMessage = R.string.oaps_aimi_pkpd_dia_min_summary,
+                            title = R.string.oaps_aimi_pkpd_dia_min_title
+                        )
+                    )
+                    addPreference(
+                        AdaptiveDoublePreference(
+                            ctx = context,
+                            doubleKey = DoubleKey.OApsAIMIPkpdBoundsDiaMaxH,
+                            dialogMessage = R.string.oaps_aimi_pkpd_dia_max_summary,
+                            title = R.string.oaps_aimi_pkpd_dia_max_title
+                        )
+                    )
+                    addPreference(
+                        AdaptiveDoublePreference(
+                            ctx = context,
+                            doubleKey = DoubleKey.OApsAIMIPkpdBoundsPeakMinMin,
+                            dialogMessage = R.string.oaps_aimi_pkpd_peak_min_summary,
+                            title = R.string.oaps_aimi_pkpd_peak_min_title
+                        )
+                    )
+                    addPreference(
+                        AdaptiveDoublePreference(
+                            ctx = context,
+                            doubleKey = DoubleKey.OApsAIMIPkpdBoundsPeakMinMax,
+                            dialogMessage = R.string.oaps_aimi_pkpd_peak_max_summary,
+                            title = R.string.oaps_aimi_pkpd_peak_max_title
+                        )
+                    )
+                    addPreference(
+                        AdaptiveDoublePreference(
+                            ctx = context,
+                            doubleKey = DoubleKey.OApsAIMIPkpdMaxDiaChangePerDayH,
+                            dialogMessage = R.string.oaps_aimi_pkpd_max_dia_delta_summary,
+                            title = R.string.oaps_aimi_pkpd_max_dia_delta_title
+                        )
+                    )
+                    addPreference(
+                        AdaptiveDoublePreference(
+                            ctx = context,
+                            doubleKey = DoubleKey.OApsAIMIPkpdMaxPeakChangePerDayMin,
+                            dialogMessage = R.string.oaps_aimi_pkpd_max_peak_delta_summary,
+                            title = R.string.oaps_aimi_pkpd_max_peak_delta_title
+                        )
+                    )
+                    addPreference(
+                        AdaptiveDoublePreference(
+                            ctx = context,
+                            doubleKey = DoubleKey.OApsAIMIIsfFusionMinFactor,
+                            dialogMessage = R.string.oaps_aimi_isf_fusion_min_summary,
+                            title = R.string.oaps_aimi_isf_fusion_min_title
+                        )
+                    )
+                    addPreference(
+                        AdaptiveDoublePreference(
+                            ctx = context,
+                            doubleKey = DoubleKey.OApsAIMIIsfFusionMaxFactor,
+                            dialogMessage = R.string.oaps_aimi_isf_fusion_max_summary,
+                            title = R.string.oaps_aimi_isf_fusion_max_title
+                        )
+                    )
+                    addPreference(
+                        AdaptiveDoublePreference(
+                            ctx = context,
+                            doubleKey = DoubleKey.OApsAIMIIsfFusionMaxChangePerTick,
+                            dialogMessage = R.string.oaps_aimi_isf_fusion_slope_summary,
+                            title = R.string.oaps_aimi_isf_fusion_slope_title
+                        )
+                    )
+                    addPreference(
+                        AdaptiveDoublePreference(
+                            ctx = context,
+                            doubleKey = DoubleKey.OApsAIMISmbTailThreshold,
+                            dialogMessage = R.string.oaps_aimi_smb_tail_threshold_summary,
+                            title = R.string.oaps_aimi_smb_tail_threshold_title
+                        )
+                    )
+                    addPreference(
+                        AdaptiveDoublePreference(
+                            ctx = context,
+                            doubleKey = DoubleKey.OApsAIMISmbTailDamping,
+                            dialogMessage = R.string.oaps_aimi_smb_tail_damping_summary,
+                            title = R.string.oaps_aimi_smb_tail_damping_title
+                        )
+                    )
+                    addPreference(
+                        AdaptiveDoublePreference(
+                            ctx = context,
+                            doubleKey = DoubleKey.OApsAIMISmbExerciseDamping,
+                            dialogMessage = R.string.oaps_aimi_smb_exercise_damping_summary,
+                            title = R.string.oaps_aimi_smb_exercise_damping_title
+                        )
+                    )
+                    addPreference(
+                        AdaptiveDoublePreference(
+                            ctx = context,
+                            doubleKey = DoubleKey.OApsAIMISmbLateFatDamping,
+                            dialogMessage = R.string.oaps_aimi_smb_late_fat_damping_summary,
+                            title = R.string.oaps_aimi_smb_late_fat_damping_title
+                        )
+                    )
+                })
 
-                val catPkpd = PreferenceCategory(context).apply {
-                    key = "cat_pkpd_tuning"
-                    title = rh.gs(R.string.aimi_category_pkpd_tuning)
-                }
-                pkpdScreen.addPreference(catPkpd)
-                catPkpd.addPreference(AdaptiveSwitchPreference(ctx = context, booleanKey = BooleanKey.OApsAIMIPkpdEnabled, summary = R.string.oaps_aimi_pkpd_enabled_summary, title = R.string.oaps_aimi_pkpd_enabled_title))
-                catPkpd.addPreference(AdaptiveDoublePreference(ctx = context, doubleKey = DoubleKey.OApsAIMIPkpdInitialDiaH, dialogMessage = R.string.oaps_aimi_pkpd_initial_dia_summary, title = R.string.oaps_aimi_pkpd_initial_dia_title))
-                catPkpd.addPreference(AdaptiveDoublePreference(ctx = context, doubleKey = DoubleKey.OApsAIMIPkpdInitialPeakMin, dialogMessage = R.string.oaps_aimi_pkpd_initial_peak_summary, title = R.string.oaps_aimi_pkpd_initial_peak_title))
-                catPkpd.addPreference(AdaptiveDoublePreference(ctx = context, doubleKey = DoubleKey.OApsAIMIPkpdBoundsDiaMinH, dialogMessage = R.string.oaps_aimi_pkpd_dia_min_summary, title = R.string.oaps_aimi_pkpd_dia_min_title))
-                catPkpd.addPreference(AdaptiveDoublePreference(ctx = context, doubleKey = DoubleKey.OApsAIMIPkpdBoundsDiaMaxH, dialogMessage = R.string.oaps_aimi_pkpd_dia_max_summary, title = R.string.oaps_aimi_pkpd_dia_max_title))
-                catPkpd.addPreference(AdaptiveDoublePreference(ctx = context, doubleKey = DoubleKey.OApsAIMIPkpdBoundsPeakMinMin, dialogMessage = R.string.oaps_aimi_pkpd_peak_min_summary, title = R.string.oaps_aimi_pkpd_peak_min_title))
-                catPkpd.addPreference(AdaptiveDoublePreference(ctx = context, doubleKey = DoubleKey.OApsAIMIPkpdBoundsPeakMinMax, dialogMessage = R.string.oaps_aimi_pkpd_peak_max_summary, title = R.string.oaps_aimi_pkpd_peak_max_title))
-                catPkpd.addPreference(AdaptiveDoublePreference(ctx = context, doubleKey = DoubleKey.OApsAIMIPkpdMaxDiaChangePerDayH, dialogMessage = R.string.oaps_aimi_pkpd_max_dia_delta_summary, title = R.string.oaps_aimi_pkpd_max_dia_delta_title))
-                catPkpd.addPreference(AdaptiveDoublePreference(ctx = context, doubleKey = DoubleKey.OApsAIMIPkpdMaxPeakChangePerDayMin, dialogMessage = R.string.oaps_aimi_pkpd_max_peak_delta_summary, title = R.string.oaps_aimi_pkpd_max_peak_delta_title))
+                // 🛡️ Universal Adaptive Basal Section
+                addPreference(preferenceManager.createPreferenceScreen(context).apply {
+                    key = "AIMI_ADAPTIVE_BASAL"
+                    title = rh.gs(R.string.oaps_aimi_adaptive_basal_title)
+                    addPreference(PreferenceCategory(context).apply {
+                        title = rh.gs(R.string.oaps_aimi_adaptive_basal_title)
+                    })
+                    addPreference(
+                        AdaptiveSwitchPreference(
+                            ctx = context,
+                            booleanKey = BooleanKey.OApsAIMIT3cAdaptiveBasalEnabled,
+                            title = R.string.oaps_aimi_adaptive_basal_title,
+                            summary = R.string.oaps_aimi_adaptive_basal_summary
+                        )
+                    )
+                    addPreference(
+                        AdaptiveDoublePreference(
+                            ctx = context,
+                            doubleKey = DoubleKey.OApsAIMIAdaptiveBasalMaxScaling,
+                            dialogMessage = R.string.oaps_aimi_adaptive_basal_max_scaling_summary,
+                            title = R.string.oaps_aimi_adaptive_basal_max_scaling_title
+                        )
+                    )
+                })
 
-                val catBrittle = PreferenceCategory(context).apply {
-                    key = "cat_t3c_brittle"
-                    title = rh.gs(R.string.aimi_t3c_brittle_mode_title)
-                }
-                pkpdScreen.addPreference(catBrittle)
-                catBrittle.addPreference(AdaptiveSwitchPreference(ctx = context, booleanKey = BooleanKey.OApsAIMIT3cBrittleMode, summary = R.string.aimi_t3c_brittle_mode_summary, title = R.string.aimi_t3c_brittle_mode_title))
-                catBrittle.addPreference(
-                    AdaptiveDoublePreference(ctx = context, doubleKey = DoubleKey.OApsAIMIT3cActivationThreshold, title = R.string.aimi_t3c_activation_threshold_title)
-                        .apply { setSummary(R.string.aimi_t3c_activation_threshold_summary) }
-                )
-                catBrittle.addPreference(
-                    AdaptiveDoublePreference(ctx = context, doubleKey = DoubleKey.OApsAIMIT3cAggressiveness, title = R.string.aimi_t3c_aggressiveness_title)
-                        .apply { setSummary(R.string.aimi_t3c_aggressiveness_summary) }
-                )
+                // 🏥 T3c / Brittle Diabetes Section
+                addPreference(preferenceManager.createPreferenceScreen(context).apply {
+                    key = "AIMI_T3C"
+                    title = rh.gs(R.string.aimi_t3c_settings_title)
+                    addPreference(PreferenceCategory(context).apply {
+                        title = rh.gs(R.string.aimi_t3c_brittle_mode_title)
+                    })
+                    addPreference(
+                        AdaptiveSwitchPreference(
+                            ctx = context,
+                            booleanKey = BooleanKey.OApsAIMIT3cBrittleMode,
+                            title = R.string.aimi_t3c_brittle_mode_title,
+                            summary = R.string.aimi_t3c_brittle_mode_summary
+                        )
+                    )
+                    addPreference(
+                        AdaptiveDoublePreference(
+                            ctx = context,
+                            doubleKey = DoubleKey.OApsAIMIT3cActivationThreshold,
+                            title = R.string.aimi_t3c_activation_threshold_title,
+                            dialogMessage = R.string.aimi_t3c_activation_threshold_summary
+                        )
+                    )
+                    addPreference(
+                        AdaptiveDoublePreference(
+                            ctx = context,
+                            doubleKey = DoubleKey.OApsAIMIT3cAggressiveness,
+                            title = R.string.aimi_t3c_aggressiveness_title,
+                            dialogMessage = R.string.aimi_t3c_aggressiveness_summary
+                        )
+                    )
+                })
 
-                val catIsf = PreferenceCategory(context).apply {
-                    key = "cat_isf_fusion"
-                    title = rh.gs(R.string.aimi_category_isf_fusion_title)
-                }
-                pkpdScreen.addPreference(catIsf)
-                catIsf.addPreference(AdaptiveDoublePreference(ctx = context, doubleKey = DoubleKey.OApsAIMIIsfFusionMinFactor, dialogMessage = R.string.oaps_aimi_isf_fusion_min_summary, title = R.string.oaps_aimi_isf_fusion_min_title))
-                catIsf.addPreference(AdaptiveDoublePreference(ctx = context, doubleKey = DoubleKey.OApsAIMIIsfFusionMaxFactor, dialogMessage = R.string.oaps_aimi_isf_fusion_max_summary, title = R.string.oaps_aimi_isf_fusion_max_title))
-                catIsf.addPreference(AdaptiveDoublePreference(ctx = context, doubleKey = DoubleKey.OApsAIMIIsfFusionMaxChangePerTick, dialogMessage = R.string.oaps_aimi_isf_fusion_slope_summary, title = R.string.oaps_aimi_isf_fusion_slope_title))
-                catIsf.addPreference(AdaptiveDoublePreference(ctx = context, doubleKey = DoubleKey.OApsAIMISmbTailThreshold, dialogMessage = R.string.oaps_aimi_smb_tail_threshold_summary, title = R.string.oaps_aimi_smb_tail_threshold_title))
-                catIsf.addPreference(AdaptiveDoublePreference(ctx = context, doubleKey = DoubleKey.OApsAIMISmbTailDamping, dialogMessage = R.string.oaps_aimi_smb_tail_damping_summary, title = R.string.oaps_aimi_smb_tail_damping_title))
-                catIsf.addPreference(AdaptiveDoublePreference(ctx = context, doubleKey = DoubleKey.OApsAIMISmbExerciseDamping, dialogMessage = R.string.oaps_aimi_smb_exercise_damping_summary, title = R.string.oaps_aimi_smb_exercise_damping_title))
-                catIsf.addPreference(AdaptiveDoublePreference(ctx = context, doubleKey = DoubleKey.OApsAIMISmbLateFatDamping, dialogMessage = R.string.oaps_aimi_smb_late_fat_damping_summary, title = R.string.oaps_aimi_smb_late_fat_damping_title))
-
-// ─── Trajectory Guard ────────────────────────────────────────────────────────
-                val trajectoryScreen = preferenceManager.createPreferenceScreen(context).apply {
+                // 🌀 Phase-Space Trajectory Control
+                addPreference(preferenceManager.createPreferenceScreen(context).apply {
                     key = "AIMI_Trajectory"
                     title = "🌀 Trajectory Guard"  // TODO: Add string resource
-                }
-                addPreference(trajectoryScreen)
-                trajectoryScreen.addPreference(PreferenceCategory(context).apply { key = "cat_trajectory"; title = "Phase-Space Control Settings" })
-                trajectoryScreen.addPreference(AdaptiveSwitchPreference(ctx = context, booleanKey = BooleanKey.OApsAIMITrajectoryGuardEnabled, title = R.string.oaps_aimi_trajectory_enabled_title, summary = R.string.oaps_aimi_trajectory_enabled_summary))
-
+                    
+                    addPreference(PreferenceCategory(context).apply {
+                        title = "Phase-Space Control Settings"  // TODO: Add string resource
+                    })
+                    
+                    addPreference(
+                        AdaptiveSwitchPreference(
+                            ctx = context,
+                            booleanKey = BooleanKey.OApsAIMITrajectoryGuardEnabled,
+                            title = R.string.oaps_aimi_trajectory_enabled_title,
+                            summary = R.string.oaps_aimi_trajectory_enabled_summary
+                        )
+                    )
+                })
+                
+                // addPreference(AdaptiveSwitchPreference(ctx = context, booleanKey = BooleanKey.OApsAIMIEnableStepsFromWatch, title = R.string.countsteps_watch_title))
                 addPreference(AdaptiveSwitchPreference(ctx = context, booleanKey = BooleanKey.OApsxdriponeminute, title = R.string.Enable_xdripOM_title))
-
                 addPreference(PreferenceCategory(context).apply {
-                    key = "cat_user_modes"
                     title = rh.gs(R.string.user_modes_preferences_title_menu)
                 })
 
-// ─── Women Cycle ─────────────────────────────────────────────────────────────
-                val womenCycleScreen = preferenceManager.createPreferenceScreen(context).apply {
+                addPreference(preferenceManager.createPreferenceScreen(context).apply {
                     key = "Women_Cycle"
                     title = rh.gs(R.string.wcycle_preferences)
-                }
-                addPreference(womenCycleScreen)
-                womenCycleScreen.addPreference(PreferenceCategory(context).apply { key = "cat_wcycle"; title = rh.gs(R.string.wcycle_preferences_title_menu) })
-                womenCycleScreen.addPreference(AdaptiveSwitchPreference(ctx = context, booleanKey = BooleanKey.OApsAIMIwcycle, title = R.string.wcycle_enable_title, summary = R.string.wcycle_enable_summary))
-                val trackingEntries = context.resources.getStringArray(R.array.wcycle_tracking_entries).map { it as CharSequence }.toTypedArray()
-                val trackingValues  = context.resources.getStringArray(R.array.wcycle_tracking_values).map  { it as CharSequence }.toTypedArray()
-                womenCycleScreen.addPreference(AdaptiveListPreference(ctx = context, stringKey = StringKey.OApsAIMIWCycleTrackingMode, title = R.string.wcycle_tracking_mode_title, entries = trackingEntries, entryValues = trackingValues))
-                val contraceptiveEntries = context.resources.getStringArray(R.array.wcycle_contraceptive_entries).map { it as CharSequence }.toTypedArray()
-                val contraceptiveValues  = context.resources.getStringArray(R.array.wcycle_contraceptive_values).map  { it as CharSequence }.toTypedArray()
-                womenCycleScreen.addPreference(AdaptiveListPreference(ctx = context, stringKey = StringKey.OApsAIMIWCycleContraceptive, title = R.string.wcycle_contraceptive_title, entries = contraceptiveEntries, entryValues = contraceptiveValues))
-                womenCycleScreen.addPreference(AdaptiveDoublePreference(ctx = context, doubleKey = DoubleKey.OApsAIMIwcycledateday, dialogMessage = R.string.wcycle_start_dom_title, title = R.string.wcycle_start_dom_title))
-                womenCycleScreen.addPreference(AdaptiveIntPreference(ctx = context, intKey = IntKey.OApsAIMIWCycleAvgLength, dialogMessage = R.string.wcycle_avg_len_title, title = R.string.wcycle_avg_len_title))
-                womenCycleScreen.addPreference(AdaptiveSwitchPreference(ctx = context, booleanKey = BooleanKey.OApsAIMIWCycleShadow, title = R.string.wcycle_shadow_title))
-                womenCycleScreen.addPreference(AdaptiveSwitchPreference(ctx = context, booleanKey = BooleanKey.OApsAIMIWCycleRequireConfirm, title = R.string.wcycle_confirm_title))
-                womenCycleScreen.addPreference(AdaptiveDoublePreference(ctx = context, doubleKey = DoubleKey.OApsAIMIWCycleClampMin, dialogMessage = R.string.wcycle_clamp_min_title, title = R.string.wcycle_clamp_min_title))
-                womenCycleScreen.addPreference(AdaptiveDoublePreference(ctx = context, doubleKey = DoubleKey.OApsAIMIWCycleClampMax, dialogMessage = R.string.wcycle_clamp_max_title, title = R.string.wcycle_clamp_max_title))
+                    addPreference(PreferenceCategory(context).apply {
+                        title = rh.gs(R.string.wcycle_preferences_title_menu)
+                    })
+                    addPreference(
+                        AdaptiveSwitchPreference(
+                            ctx = context,
+                            booleanKey = BooleanKey.OApsAIMIwcycle,
+                            title = R.string.wcycle_enable_title,
+                            summary = R.string.wcycle_enable_summary
+                        )
+                    )
+                    val trackingEntries = context.resources.getStringArray(R.array.wcycle_tracking_entries).map { it as CharSequence }.toTypedArray()
+                    val trackingValues = context.resources.getStringArray(R.array.wcycle_tracking_values).map { it as CharSequence }.toTypedArray()
+                    addPreference(
+                        AdaptiveListPreference(
+                            ctx = context,
+                            stringKey = StringKey.OApsAIMIWCycleTrackingMode,
+                            title = R.string.wcycle_tracking_mode_title,
+                            entries = trackingEntries,
+                            entryValues = trackingValues
+                        )
+                    )
+                    val contraceptiveEntries = context.resources.getStringArray(R.array.wcycle_contraceptive_entries).map { it as CharSequence }.toTypedArray()
+                    val contraceptiveValues = context.resources.getStringArray(R.array.wcycle_contraceptive_values).map { it as CharSequence }.toTypedArray()
+                    addPreference(
+                        AdaptiveListPreference(
+                            ctx = context,
+                            stringKey = StringKey.OApsAIMIWCycleContraceptive,
+                            title = R.string.wcycle_contraceptive_title,
+                            entries = contraceptiveEntries,
+                            entryValues = contraceptiveValues
+                        )
+                    )
 
-// ─── Ketoacidosis Protection ──────────────────────────────────────────────────
+                    addPreference(
+                        AdaptiveDoublePreference(
+                            ctx = context,
+                            doubleKey = DoubleKey.OApsAIMIwcycledateday,
+                            dialogMessage = R.string.wcycle_start_dom_title,
+                            title = R.string.wcycle_start_dom_title
+                        )
+                    )
+                    addPreference(
+                        AdaptiveIntPreference(
+                            ctx = context,
+                            intKey = IntKey.OApsAIMIWCycleAvgLength,
+                            dialogMessage = R.string.wcycle_avg_len_title,
+                            title = R.string.wcycle_avg_len_title
+                        )
+                    )
+                    addPreference(
+                        AdaptiveSwitchPreference(
+                            ctx = context,
+                            booleanKey = BooleanKey.OApsAIMIWCycleShadow,
+                            title = R.string.wcycle_shadow_title
+                        )
+                    )
+                    addPreference(
+                        AdaptiveSwitchPreference(
+                            ctx = context,
+                            booleanKey = BooleanKey.OApsAIMIWCycleRequireConfirm,
+                            title = R.string.wcycle_confirm_title
+                        )
+                    )
+                    addPreference(
+                        AdaptiveDoublePreference(
+                            ctx = context,
+                            doubleKey = DoubleKey.OApsAIMIWCycleClampMin,
+                            dialogMessage = R.string.wcycle_clamp_min_title,
+                            title = R.string.wcycle_clamp_min_title
+                        )
+                    )
+                    addPreference(
+                        AdaptiveDoublePreference(
+                            ctx = context,
+                            doubleKey = DoubleKey.OApsAIMIWCycleClampMax,
+                            dialogMessage = R.string.wcycle_clamp_max_title,
+                            title = R.string.wcycle_clamp_max_title
+                        )
+                    )
+                })
+
+                // ─── Ketoacidosis Protection ──────────────────────────────────────────────────
                 val ketoScreen = preferenceManager.createPreferenceScreen(context).apply {
                     key = "Ketoacidosis_Protection"
                     title = rh.gs(R.string.ketoacidosis_protection_title)
@@ -1491,43 +1699,123 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
                 ketoScreen.addPreference(AdaptiveSwitchPreference(ctx = context, booleanKey = BooleanKey.ApsKetoacidosisProtectionStrategy, summary = R.string.ketoacidosis_protection_strategy_summary, title = R.string.ketoacidosis_protection_strategy_title))
                 ketoScreen.addPreference(AdaptiveIntPreference(ctx = context, intKey = IntKey.ApsKetoacidosisProtectionBasal, dialogMessage = R.string.ketoacidosis_protection_basal_summary, title = R.string.ketoacidosis_protection_basal_title))
 
-// ─── Inflammatory / Autoimmune Diseases ──────────────────────────────────────
-                val inflammatoryScreen = preferenceManager.createPreferenceScreen(context).apply {
+
+                // 🏥 Autoimmune / Inflammatory Diseases (Decoupled from WCycle)
+                addPreference(preferenceManager.createPreferenceScreen(context).apply {
                     key = "Inflammatory_Diseases"
                     title = "Inflammatory / Autoimmune Diseases"
-                }
-                addPreference(inflammatoryScreen)
-                inflammatoryScreen.addPreference(PreferenceCategory(context).apply { key = "cat_inflammatory"; title = "Settings" })
-                val thyroidEntries = context.resources.getStringArray(R.array.wcycle_thyroid_entries).map { it as CharSequence }.toTypedArray()
-                val thyroidValues  = context.resources.getStringArray(R.array.wcycle_thyroid_values).map  { it as CharSequence }.toTypedArray()
-                val verneuilEntries = context.resources.getStringArray(R.array.wcycle_verneuil_entries).map { it as CharSequence }.toTypedArray()
-                val verneuilValues  = context.resources.getStringArray(R.array.wcycle_verneuil_values).map  { it as CharSequence }.toTypedArray()
-                inflammatoryScreen.addPreference(AdaptiveListPreference(ctx = context, stringKey = StringKey.OApsAIMIWCycleThyroid, title = R.string.wcycle_thyroid_title, entries = thyroidEntries, entryValues = thyroidValues))
-                inflammatoryScreen.addPreference(AdaptiveListPreference(ctx = context, stringKey = StringKey.OApsAIMIWCycleVerneuil, title = R.string.wcycle_verneuil_title, entries = verneuilEntries, entryValues = verneuilValues))
+                    
+                    addPreference(PreferenceCategory(context).apply {
+                        title = "Settings"
+                    })
+                    
+                    val thyroidEntries = context.resources.getStringArray(R.array.wcycle_thyroid_entries).map { it as CharSequence }.toTypedArray()
+                    val thyroidValues = context.resources.getStringArray(R.array.wcycle_thyroid_values).map { it as CharSequence }.toTypedArray()
+                    addPreference(
+                        AdaptiveListPreference(
+                            ctx = context,
+                            stringKey = StringKey.OApsAIMIWCycleThyroid,
+                            title = R.string.wcycle_thyroid_title,
+                            entries = thyroidEntries,
+                            entryValues = thyroidValues
+                        )
+                    )
+                    val verneuilEntries = context.resources.getStringArray(R.array.wcycle_verneuil_entries).map { it as CharSequence }.toTypedArray()
+                    val verneuilValues = context.resources.getStringArray(R.array.wcycle_verneuil_values).map { it as CharSequence }.toTypedArray()
+                    addPreference(
+                        AdaptiveListPreference(
+                            ctx = context,
+                            stringKey = StringKey.OApsAIMIWCycleVerneuil,
+                            title = R.string.wcycle_verneuil_title,
+                            entries = verneuilEntries,
+                            entryValues = verneuilValues
+                        )
+                    )
+                })
 
-// ─── Thyroid Module ───────────────────────────────────────────────────────────
-                val thyroidScreen = preferenceManager.createPreferenceScreen(context).apply {
+                // 🦋 Thyroid (Basedow) Module
+                addPreference(preferenceManager.createPreferenceScreen(context).apply {
                     key = "Thyroid_Module"
                     title = rh.gs(R.string.oaps_aimi_thyroid_title)
-                }
-                addPreference(thyroidScreen)
-                thyroidScreen.addPreference(PreferenceCategory(context).apply { key = "cat_thyroid_core"; title = "Core Settings" })
-                thyroidScreen.addPreference(AdaptiveSwitchPreference(ctx = context, booleanKey = BooleanKey.OApsAIMIThyroidEnabled, summary = R.string.oaps_aimi_thyroid_enabled_summary, title = R.string.oaps_aimi_thyroid_enabled_title))
-                val thyroidModeEntries   = context.resources.getStringArray(R.array.oaps_aimi_thyroid_mode_entries).map   { it as CharSequence }.toTypedArray()
-                val thyroidModeValues    = context.resources.getStringArray(R.array.oaps_aimi_thyroid_mode_values).map    { it as CharSequence }.toTypedArray()
-                val thyroidStatusEntries = context.resources.getStringArray(R.array.oaps_aimi_thyroid_status_entries).map { it as CharSequence }.toTypedArray()
-                val thyroidStatusValues  = context.resources.getStringArray(R.array.oaps_aimi_thyroid_status_values).map  { it as CharSequence }.toTypedArray()
-                thyroidScreen.addPreference(AdaptiveListPreference(ctx = context, stringKey = StringKey.OApsAIMIThyroidMode, title = R.string.oaps_aimi_thyroid_mode_title, entries = thyroidModeEntries, entryValues = thyroidModeValues).apply { summaryProvider = androidx.preference.ListPreference.SimpleSummaryProvider.getInstance() })
-                thyroidScreen.addPreference(AdaptiveListPreference(ctx = context, stringKey = StringKey.OApsAIMIThyroidManualStatus, title = R.string.oaps_aimi_thyroid_manual_status_title, entries = thyroidStatusEntries, entryValues = thyroidStatusValues).apply { summaryProvider = androidx.preference.ListPreference.SimpleSummaryProvider.getInstance() })
-                thyroidScreen.addPreference(PreferenceCategory(context).apply { key = "cat_thyroid_medical"; title = "Medical Context & Safety" })
-                val thyroidPhaseEntries = context.resources.getStringArray(R.array.oaps_aimi_thyroid_phase_entries).map { it as CharSequence }.toTypedArray()
-                val thyroidPhaseValues  = context.resources.getStringArray(R.array.oaps_aimi_thyroid_phase_values).map  { it as CharSequence }.toTypedArray()
-                val thyroidGuardEntries = context.resources.getStringArray(R.array.oaps_aimi_thyroid_guard_entries).map { it as CharSequence }.toTypedArray()
-                val thyroidGuardValues  = context.resources.getStringArray(R.array.oaps_aimi_thyroid_guard_values).map  { it as CharSequence }.toTypedArray()
-                thyroidScreen.addPreference(AdaptiveListPreference(ctx = context, stringKey = StringKey.OApsAIMIThyroidTreatmentPhase, title = R.string.oaps_aimi_thyroid_treatment_phase_title, entries = thyroidPhaseEntries, entryValues = thyroidPhaseValues).apply { summaryProvider = androidx.preference.ListPreference.SimpleSummaryProvider.getInstance() })
-                thyroidScreen.addPreference(AdaptiveListPreference(ctx = context, stringKey = StringKey.OApsAIMIThyroidGuardLevel, title = R.string.oaps_aimi_thyroid_guard_level_title, entries = thyroidGuardEntries, entryValues = thyroidGuardValues).apply { summaryProvider = androidx.preference.ListPreference.SimpleSummaryProvider.getInstance() })
-                thyroidScreen.addPreference(PreferenceCategory(context).apply { key = "cat_thyroid_diag"; title = "Diagnostics" })
-                thyroidScreen.addPreference(AdaptiveSwitchPreference(ctx = context, booleanKey = BooleanKey.OApsAIMIThyroidLogVerbosity, summary = R.string.oaps_aimi_thyroid_log_verbosity_summary, title = R.string.oaps_aimi_thyroid_log_verbosity_title))
+
+                    addPreference(PreferenceCategory(context).apply {
+                        title = "Core Settings" // TODO: Add string resource
+                    })
+
+                    addPreference(
+                        AdaptiveSwitchPreference(
+                            ctx = context,
+                            booleanKey = BooleanKey.OApsAIMIThyroidEnabled,
+                            summary = R.string.oaps_aimi_thyroid_enabled_summary,
+                            title = R.string.oaps_aimi_thyroid_enabled_title
+                        )
+                    )
+                    
+                    val modeEntries = context.resources.getStringArray(R.array.oaps_aimi_thyroid_mode_entries).map { it as CharSequence }.toTypedArray()
+                    val modeValues = context.resources.getStringArray(R.array.oaps_aimi_thyroid_mode_values).map { it as CharSequence }.toTypedArray()
+                    addPreference(
+                        AdaptiveListPreference(
+                            ctx = context,
+                            stringKey = StringKey.OApsAIMIThyroidMode,
+                            title = R.string.oaps_aimi_thyroid_mode_title,
+                            entries = modeEntries,
+                            entryValues = modeValues
+                        )
+                    )
+
+                    val statusEntries = context.resources.getStringArray(R.array.oaps_aimi_thyroid_status_entries).map { it as CharSequence }.toTypedArray()
+                    val statusValues = context.resources.getStringArray(R.array.oaps_aimi_thyroid_status_values).map { it as CharSequence }.toTypedArray()
+                    addPreference(
+                        AdaptiveListPreference(
+                            ctx = context,
+                            stringKey = StringKey.OApsAIMIThyroidManualStatus,
+                            title = R.string.oaps_aimi_thyroid_manual_status_title,
+                            entries = statusEntries,
+                            entryValues = statusValues
+                        )
+                    )
+                    
+                    addPreference(PreferenceCategory(context).apply {
+                        title = "Medical Context & Safety" // TODO: Add string resource
+                    })
+
+                    val phaseEntries = context.resources.getStringArray(R.array.oaps_aimi_thyroid_phase_entries).map { it as CharSequence }.toTypedArray()
+                    val phaseValues = context.resources.getStringArray(R.array.oaps_aimi_thyroid_phase_values).map { it as CharSequence }.toTypedArray()
+                    addPreference(
+                        AdaptiveListPreference(
+                            ctx = context,
+                            stringKey = StringKey.OApsAIMIThyroidTreatmentPhase,
+                            title = R.string.oaps_aimi_thyroid_treatment_phase_title,
+                            entries = phaseEntries,
+                            entryValues = phaseValues
+                        )
+                    )
+
+                    val guardEntries = context.resources.getStringArray(R.array.oaps_aimi_thyroid_guard_entries).map { it as CharSequence }.toTypedArray()
+                    val guardValues = context.resources.getStringArray(R.array.oaps_aimi_thyroid_guard_values).map { it as CharSequence }.toTypedArray()
+                    addPreference(
+                        AdaptiveListPreference(
+                            ctx = context,
+                            stringKey = StringKey.OApsAIMIThyroidGuardLevel,
+                            title = R.string.oaps_aimi_thyroid_guard_level_title,
+                            entries = guardEntries,
+                            entryValues = guardValues
+                        )
+                    )
+                    
+                    addPreference(PreferenceCategory(context).apply {
+                        title = "Diagnostics" // TODO: Add string resource
+                    })
+                    
+                    addPreference(
+                        AdaptiveSwitchPreference(
+                            ctx = context,
+                            booleanKey = BooleanKey.OApsAIMIThyroidLogVerbosity,
+                            summary = R.string.oaps_aimi_thyroid_log_verbosity_summary,
+                            title = R.string.oaps_aimi_thyroid_log_verbosity_title
+                        )
+                    )
+                })
 
                 addPreference(AdaptiveSwitchPreference(ctx = context, booleanKey = BooleanKey.OApsAIMIpregnancy, title = R.string.OApsAIMI_Enable_pregnancy))
                 addPreference(
@@ -1540,67 +1828,224 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
                             testType = EditTextValidator.TEST_REGEXP,
                             customRegexp = "^\\d{4}-\\d{2}-\\d{2}$",
                             emptyAllowed = true,
-                            testErrorString = context.getString(R.string.error_invalid_date_format)
+                            testErrorString = context.getString(R.string.error_invalid_date_format) // Reuse generic error or TODO
                         )
-                    ).apply { dialogMessage = "Format: YYYY-MM-DD" }
+                    ).apply {
+                         dialogMessage = "Format: YYYY-MM-DD"
+                    }
                 )
                 addPreference(AdaptiveSwitchPreference(ctx = context, booleanKey = BooleanKey.OApsAIMIhoneymoon, title = R.string.OApsAIMI_Enable_honeymoon))
                 addPreference(AdaptiveSwitchPreference(ctx = context, booleanKey = BooleanKey.OApsAIMInight, title = R.string.OApsAIMI_Enable_night_title))
-
-// ─── Learners ─────────────────────────────────────────────────────────────────
+                
+                // 🎯 Learners Section
                 addPreference(PreferenceCategory(context).apply {
-                    key = "cat_learners"
                     title = rh.gs(R.string.oaps_aimi_learners_title)
                 })
-                addPreference(AdaptiveSwitchPreference(ctx = context, booleanKey = BooleanKey.OApsAIMIUnifiedReactivityEnabled, title = R.string.unified_reactivity_title, summary = R.string.unified_reactivity_summary))
+                addPreference(
+                    AdaptiveSwitchPreference(
+                        ctx = context,
+                        booleanKey = BooleanKey.OApsAIMIUnifiedReactivityEnabled,
+                        title = R.string.unified_reactivity_title,
+                        summary = R.string.unified_reactivity_summary
+                    )
+                )
+                
+                /* // 🔧 Tools & Analysis Section
+                addPreference(PreferenceCategory(context).apply {
+                    title = rh.gs(R.string.aimi_advisor_section)
+                })
+                addPreference(AdaptiveIntentPreference(
+                        ctx = context,
+                        intentKey = IntentKey.OApsAIMIProfileAdvisor,
+                        intent = Intent(context, app.aaps.plugins.aps.openAPSAIMI.advisor.AimiProfileAdvisorActivity::class.java),
+                        summary = R.string.aimi_advisor_summary
+                    )
+                )
+                
+                // 🎯 Context Module
+                addPreference(AdaptiveIntentPreference(
+                        ctx = context,
+                        intentKey = IntentKey.OApsAIMIContext,
+                        intent = Intent(context, app.aaps.plugins.aps.openAPSAIMI.context.ui.ContextActivity::class.java),
+                        summary = R.string.context_description
+                    )
+                ) */
 
-// ─── Endometriosis ────────────────────────────────────────────────────────────
-                val endoScreen = preferenceManager.createPreferenceScreen(context).apply {
+                // 🌸 Endometriosis & Cycle Management Section (MTR)
+                addPreference(preferenceManager.createPreferenceScreen(context).apply {
                     key = "AIMI_ENDO"
                     title = rh.gs(R.string.endo_preferences_title)
-                }
-                addPreference(endoScreen)
-                endoScreen.addPreference(AdaptiveSwitchPreference(ctx = context, booleanKey = BooleanKey.AimiEndometriosisEnable, title = R.string.endo_enable_title, summary = R.string.endo_enable_summary))
-                endoScreen.addPreference(AdaptiveSwitchPreference(ctx = context, booleanKey = BooleanKey.AimiEndometriosisPainFlare, title = R.string.endo_flare_title, summary = R.string.endo_flare_summary))
-                endoScreen.addPreference(AdaptiveIntPreference(ctx = context, intKey = IntKey.AimiEndometriosisFlareDuration, title = R.string.endo_flare_duration_title, summary = R.string.endo_flare_duration_summary))
-                endoScreen.addPreference(AdaptiveDoublePreference(ctx = context, doubleKey = DoubleKey.AimiEndometriosisBasalMult, title = R.string.endo_basal_mult_title, dialogMessage = R.string.endo_basal_mult_summary))
-                endoScreen.addPreference(AdaptiveDoublePreference(ctx = context, doubleKey = DoubleKey.AimiEndometriosisSmbDampen, title = R.string.endo_smb_dampen_title, dialogMessage = R.string.endo_smb_dampen_summary))
+                    
+                    addPreference(
+                        AdaptiveSwitchPreference(
+                            ctx = context,
+                            booleanKey = BooleanKey.AimiEndometriosisEnable,
+                            title = R.string.endo_enable_title,
+                            summary = R.string.endo_enable_summary
+                        )
+                    )
 
-// ─── AI Decision Auditor ──────────────────────────────────────────────────────
-                val auditorScreen = preferenceManager.createPreferenceScreen(context).apply {
+                    addPreference(
+                        AdaptiveSwitchPreference(
+                            ctx = context,
+                            booleanKey = BooleanKey.AimiEndometriosisPainFlare,
+                            title = R.string.endo_flare_title,
+                            summary = R.string.endo_flare_summary
+                        )
+                    )
+                    addPreference(
+                        AdaptiveIntPreference(
+                            ctx = context,
+                            intKey = IntKey.AimiEndometriosisFlareDuration,
+                            title = R.string.endo_flare_duration_title,
+                            summary = R.string.endo_flare_duration_summary
+                        )
+                    )
+                    addPreference(
+                        AdaptiveDoublePreference(
+                            ctx = context,
+                            doubleKey = DoubleKey.AimiEndometriosisBasalMult,
+                            title = R.string.endo_basal_mult_title,
+                            dialogMessage = R.string.endo_basal_mult_summary
+                        )
+                    )
+                    addPreference(
+                        AdaptiveDoublePreference(
+                            ctx = context,
+                            doubleKey = DoubleKey.AimiEndometriosisSmbDampen,
+                            title = R.string.endo_smb_dampen_title,
+                            dialogMessage = R.string.endo_smb_dampen_summary
+                        )
+                    )
+                })
+                
+                
+                // 🧠 AI Decision Auditor Section
+                addPreference(preferenceManager.createPreferenceScreen(context).apply {
                     key = "AIMI_AI_Auditor"
                     title = "🧠 AI Decision Auditor"  // TODO: Add string resource
-                }
-                addPreference(auditorScreen)
-                auditorScreen.addPreference(PreferenceCategory(context).apply { key = "cat_auditor_main"; title = "Second Brain Settings" })
-                auditorScreen.addPreference(AdaptiveSwitchPreference(ctx = context, booleanKey = BooleanKey.AimiAuditorEnabled, title = R.string.aimi_auditor_enabled_title, summary = R.string.aimi_auditor_enabled_summary))
-                auditorScreen.addPreference(AdaptiveListPreference(
-                    ctx = context,
-                    stringKey = StringKey.AimiAuditorMode,
-                    title = R.string.aimi_auditor_mode_title,
-                    entries     = arrayOf("Audit Only (Log verdicts)", "Soft Modulation (Apply if confident)", "High Risk Only (Apply only with risk flags)"),
-                    entryValues = arrayOf("AUDIT_ONLY", "SOFT_MODULATION", "HIGH_RISK_ONLY")
-                ).apply {
-                    dialogTitle = "AI Auditor Mode"
-                    summary     = "How the AI auditor should affect decisions"
+                    
+                    addPreference(PreferenceCategory(context).apply {
+                        title = "Second Brain Settings"  // TODO: Add string resource
+                    })
+                    
+                    // Enable/Disable AI Auditor
+                    addPreference(
+                        AdaptiveSwitchPreference(
+                            ctx = context,
+                            booleanKey = BooleanKey.AimiAuditorEnabled,
+                            title = R.string.aimi_auditor_enabled_title,
+                            summary = R.string.aimi_auditor_enabled_summary
+                        )
+                    )
+                    
+                    // Auditor Mode Selection
+                    addPreference(AdaptiveListPreference(
+                        ctx = context,
+                        stringKey = StringKey.AimiAuditorMode,
+                        title = R.string.aimi_auditor_mode_title,
+                        entries = arrayOf(
+                            "Audit Only (Log verdicts)",
+                            "Soft Modulation (Apply if confident)",
+                            "High Risk Only (Apply only with risk flags)"
+                        ),  // TODO: Add string resources
+                        entryValues = arrayOf("AUDIT_ONLY", "SOFT_MODULATION", "HIGH_RISK_ONLY")
+                    ).apply {
+                        dialogTitle = "AI Auditor Mode"  // TODO: Add string resource
+                        summary = "How the AI auditor should affect decisions"  // TODO: Add string resource
+                    })
+                    
+                    addPreference(PreferenceCategory(context).apply {
+                        title = "Rate Limiting & Performance"  // TODO: Add string resource
+                    })
+                    
+                    // Max Audits Per Hour
+                    addPreference(
+                        AdaptiveIntPreference(
+                            ctx = context,
+                            intKey = IntKey.AimiAuditorMaxPerHour,
+                            dialogMessage = R.string.aimi_auditor_max_per_hour_summary,
+                            title = R.string.aimi_auditor_max_per_hour_title
+                        )
+                    )
+                    
+                    // API Timeout
+                    addPreference(
+                        AdaptiveIntPreference(
+                            ctx = context,
+                            intKey = IntKey.AimiAuditorTimeoutSeconds,
+                            dialogMessage = R.string.aimi_auditor_timeout_summary,
+                            title = R.string.aimi_auditor_timeout_title
+                        )
+                    )
+                    
+                    addPreference(PreferenceCategory(context).apply {
+                        title = "Decision Criteria"  // TODO: Add string resource
+                    })
+                    
+                    // Minimum Confidence
+                    addPreference(
+                        AdaptiveIntPreference(
+                            ctx = context,
+                            intKey = IntKey.AimiAuditorMinConfidence,
+                            dialogMessage = R.string.aimi_auditor_min_confidence_summary,
+                            title = R.string.aimi_auditor_min_confidence_title
+                        )
+                    )
                 })
-                auditorScreen.addPreference(PreferenceCategory(context).apply { key = "cat_auditor_rate"; title = "Rate Limiting & Performance" })
-                auditorScreen.addPreference(AdaptiveIntPreference(ctx = context, intKey = IntKey.AimiAuditorMaxPerHour, dialogMessage = R.string.aimi_auditor_max_per_hour_summary, title = R.string.aimi_auditor_max_per_hour_title))
-                auditorScreen.addPreference(AdaptiveIntPreference(ctx = context, intKey = IntKey.AimiAuditorTimeoutSeconds, dialogMessage = R.string.aimi_auditor_timeout_summary, title = R.string.aimi_auditor_timeout_title))
-                auditorScreen.addPreference(PreferenceCategory(context).apply { key = "cat_auditor_crit"; title = "Decision Criteria" })
-                auditorScreen.addPreference(AdaptiveIntPreference(ctx = context, intKey = IntKey.AimiAuditorMinConfidence, dialogMessage = R.string.aimi_auditor_min_confidence_summary, title = R.string.aimi_auditor_min_confidence_title))
 
-// ─── Night Growth ─────────────────────────────────────────────────────────────
                 addPreference(PreferenceCategory(context).apply {
-                    key = "cat_ngr"
                     title = rh.gs(R.string.oaps_aimi_ngr_title)
                 })
-                addPreference(AdaptiveSwitchPreference(ctx = context, booleanKey = BooleanKey.OApsAIMINightGrowthEnabled, summary = R.string.oaps_aimi_ngr_enabled_summary, title = R.string.oaps_aimi_ngr_enabled_title))
-                addPreference(AdaptiveIntPreference(ctx = context, intKey = IntKey.OApsAIMINightGrowthAgeYears, dialogMessage = R.string.oaps_aimi_ngr_age_summary, title = R.string.oaps_aimi_ngr_age_title))
-                val hhmmValidator = DefaultEditTextValidator.Parameters(testType = EditTextValidator.TEST_REGEXP, customRegexp = "^(?:[01]\\d|2[0-3]):[0-5]\\d$")
-                addPreference(AdaptiveStringPreference(ctx = context, stringKey = StringKey.OApsAIMINightGrowthStart, dialogMessage = R.string.oaps_aimi_ngr_night_start_summary, summary = R.string.oaps_aimi_ngr_night_start_summary, title = R.string.oaps_aimi_ngr_night_start_title, validatorParams = hhmmValidator))
-                addPreference(AdaptiveStringPreference(ctx = context, stringKey = StringKey.OApsAIMINightGrowthEnd, dialogMessage = R.string.oaps_aimi_ngr_night_end_summary, summary = R.string.oaps_aimi_ngr_night_end_summary, title = R.string.oaps_aimi_ngr_night_end_title, validatorParams = hhmmValidator))
-                addPreference(AdaptiveDoublePreference(ctx = context, doubleKey = DoubleKey.OApsAIMINightGrowthMaxIobExtra, dialogMessage = R.string.oaps_aimi_ngr_max_iob_summary, title = R.string.oaps_aimi_ngr_max_iob_title))
+                addPreference(
+                    AdaptiveSwitchPreference(
+                        ctx = context,
+                        booleanKey = BooleanKey.OApsAIMINightGrowthEnabled,
+                        summary = R.string.oaps_aimi_ngr_enabled_summary,
+                        title = R.string.oaps_aimi_ngr_enabled_title
+                    )
+                )
+                addPreference(
+                    AdaptiveIntPreference(
+                        ctx = context,
+                        intKey = IntKey.OApsAIMINightGrowthAgeYears,
+                        dialogMessage = R.string.oaps_aimi_ngr_age_summary,
+                        title = R.string.oaps_aimi_ngr_age_title
+                    )
+                )
+                val hhmmValidator = DefaultEditTextValidator.Parameters(
+                    testType = EditTextValidator.TEST_REGEXP,
+                    customRegexp = "^(?:[01]\\d|2[0-3]):[0-5]\\d$"
+                )
+                addPreference(
+                    AdaptiveStringPreference(
+                        ctx = context,
+                        stringKey = StringKey.OApsAIMINightGrowthStart,
+                        dialogMessage = R.string.oaps_aimi_ngr_night_start_summary,
+                        summary = R.string.oaps_aimi_ngr_night_start_summary,
+                        title = R.string.oaps_aimi_ngr_night_start_title,
+                        validatorParams = hhmmValidator
+                    )
+                )
+                addPreference(
+                    AdaptiveStringPreference(
+                        ctx = context,
+                        stringKey = StringKey.OApsAIMINightGrowthEnd,
+                        dialogMessage = R.string.oaps_aimi_ngr_night_end_summary,
+                        summary = R.string.oaps_aimi_ngr_night_end_summary,
+                        title = R.string.oaps_aimi_ngr_night_end_title,
+                        validatorParams = hhmmValidator
+                    )
+                )
+                addPreference(
+                    AdaptiveDoublePreference(
+                        ctx = context,
+                        doubleKey = DoubleKey.OApsAIMINightGrowthMaxIobExtra,
+                        dialogMessage = R.string.oaps_aimi_ngr_max_iob_summary,
+                        title = R.string.oaps_aimi_ngr_max_iob_title
+                    )
+                )
+
             })
 
             // addPreference(preferenceManager.createPreferenceScreen(context).apply {

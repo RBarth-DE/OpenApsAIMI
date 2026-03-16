@@ -1366,19 +1366,21 @@
     <string name="ketoacidosis_protection_basal_title">Quantity of the safety TBR [%]</string>
     <string name="ketoacidosis_protection_basal_summary">Default: 10</string>
 
-    <string name="count_steps_watch">Steps Watch</string>
+    
 
     <!-- T3c Brittle Mode -->
     <string name="aimi_t3c_brittle_mode_title">T3c / Brittle Diabetes Mode</string>
     <string name="aimi_t3c_brittle_mode_summary">Prioritize TBR over SMB. Disables SMB boost from ISF Fusion, and imposes strict Basal-First behavior on persistent rises.</string>
-    <string name="aimi_t3c_activation_threshold_title">T3C Activation Threshold</string>
-    <string name="aimi_t3c_activation_threshold_summary">Correction begins above this BG level (Default: 130 mg/dL).</string>
-    <string name="aimi_t3c_aggressiveness_title">T3C Aggressiveness</string>
-    <string name="aimi_t3c_aggressiveness_summary">Scaling factor for correction intensity (Default: 1.0).</string>
+    <string name="aimi_t3c_activation_threshold_title">T3C Activation Threshold (mg/dL)</string>
+    <string name="aimi_t3c_activation_threshold_summary">Corrections will engage above this level (Default: 130)</string>
+    <string name="aimi_t3c_aggressiveness_title">T3C Correction Aggressiveness</string>
+    <string name="aimi_t3c_aggressiveness_summary">Scales the intensity of basal adjustments (Default: 1.0)</string>
+    <string name="aimi_t3c_settings_title">T3C Brittle Mode Settings</string>
 
-    <!-- UI Categories -->
-    <string name="aimi_category_pkpd_tuning">Adaptive PK/PD Optimization</string>
-    <string name="aimi_category_isf_fusion_title">ISF Fusion &amp; SMB Adjustments</string>
+    <string name="oaps_aimi_adaptive_basal_title">Universal Adaptive Basal</string>
+    <string name="oaps_aimi_adaptive_basal_summary">Automatically scale standard basal rates based on neural insights (for all users).</string>
+    <string name="oaps_aimi_adaptive_basal_max_scaling_title">Max Adaptive Scaling</string>
+    <string name="oaps_aimi_adaptive_basal_max_scaling_summary">Maximum multiplier allowed for adaptive basal scaling (e.g. 1.5x).</string>
 
     <!-- Trajectory -->
     <string name="aimi_trajectory_open_diverging_desc">DIVERGING - BG not controlled</string>
