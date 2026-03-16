@@ -161,7 +161,9 @@ class AIMIPhysioContextStoreMTR @Inject constructor(
         // Check age
         val age = (System.currentTimeMillis() - lastUpdate) / 1000
         if (age > VALIDITY_MS / 1000) {
-            aapsLogger.debug(LTag.APS, "[$TAG] Context too old (${age / 3600}h)")
+            // Only log at debug level — this fires every loop cycle when context is stale
+            // The important message already appeared at restore time
+            aapsLogger.debug(LTag.APS, "[$TAG] Context too old (${age / 3600}h), skipping")
             return@read null
         }
         
@@ -339,7 +341,14 @@ class AIMIPhysioContextStoreMTR @Inject constructor(
             
             val age = (System.currentTimeMillis() - lastUpdate) / (60 * 60 * 1000)
             
-            if (lastContextUnsafe != null) {
+            // Don't restore context that's way beyond validity window — avoids
+            // "Context too old (1070h)" spam on every loop cycle after a long gap.
+            if (lastContextUnsafe != null && age > VALIDITY_HOURS * 2) {
+                aapsLogger.info(LTag.APS, "[$TAG] Restored context discarded — too old (${age}h > ${VALIDITY_HOURS * 2}h), will refresh on next PhysioManager run")
+                lastContextUnsafe = null
+                lastUpdate = 0
+                lastRunOutcome = PhysioPipelineOutcome.NEVER_RUN
+            } else if (lastContextUnsafe != null) {
                 aapsLogger.info(
                     LTag.APS,
                     "[$TAG] ✅ Context restored (outcome=$lastRunOutcome, state=${lastContextUnsafe?.state}, age=${age}h)"

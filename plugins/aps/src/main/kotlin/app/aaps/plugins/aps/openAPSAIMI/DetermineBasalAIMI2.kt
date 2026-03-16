@@ -5506,8 +5506,8 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                     physiologicalStressMask = doubleArrayOf(),
                     isNight = hourOfDay >= 23 || hourOfDay < 6,
                     hour = hourOfDay,
-                    steps = snapshot.stepsLast15m,
-                    hr = snapshot.hrNow,
+                    steps = if (rtActivity.stepsToday > 0) rtActivity.stepsToday else snapshot.stepsLast15m,
+                    hr    = if (rtActivity.heartRate > 0) rtActivity.heartRate else snapshot.hrNow,
                     rhr = snapshot.rhrResting,
                     sourceSensor = glucose_status.sourceSensor,
                     maxIOB = this.maxIob,
@@ -5530,8 +5530,8 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                 profileBasal = profile.current_basal,
                 lgsThreshold = min(90.0, threshold.toDouble()),
                 hour = hourOfDay,
-                steps = snapshot.stepsLast15m,
-                hr = snapshot.hrNow,
+                steps = if (rtActivity.stepsToday > 0) rtActivity.stepsToday else snapshot.stepsLast15m,
+                hr    = if (rtActivity.heartRate > 0) rtActivity.heartRate else snapshot.hrNow,
                 rhr = snapshot.rhrResting
             )
             

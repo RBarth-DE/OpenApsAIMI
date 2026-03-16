@@ -22,6 +22,7 @@ import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.math.sqrt
+import app.aaps.plugins.aps.openAPSAIMI.steps.UnifiedActivityProviderMTR
 
 /**
  * 🏥 AIMI Physiological Data Repository - MTR Implementation
@@ -43,15 +44,16 @@ import kotlin.math.sqrt
 @Singleton
 class AIMIPhysioDataRepositoryMTR @Inject constructor(
     private val context: Context,
-    private val aapsLogger: AAPSLogger
+    private val aapsLogger: AAPSLogger,
+    private val unifiedActivityProvider: UnifiedActivityProviderMTR  // neu
 ) {
     
     companion object {
         private const val TAG = "PhysioRepository"
         private const val CACHE_TTL_MS = 30 * 60 * 1000L // 30 minutes
         private const val API_TIMEOUT_MS = 10_000L // 10 seconds
-        private const val MORNING_WINDOW_START = 2 // 2 AM (Widened)
-        private const val MORNING_WINDOW_END = 11 // 11 AM (Widened)
+        // private const val MORNING_WINDOW_START = 2 // 2 AM (Widened)
+        // private const val MORNING_WINDOW_END = 11 // 11 AM (Widened)
     }
     
     private val healthConnectClient: HealthConnectClient? by lazy {
@@ -348,7 +350,19 @@ class AIMIPhysioDataRepositoryMTR @Inject constructor(
      * Fetches the most recent Heart Rate sample (Real-Time check)
      * Lookback window: 1 hour
      */
+
     fun fetchLastHeartRate(): Int {
+        // First UnifiedProvider (Garmin/Wear/HC)
+        val result = unifiedActivityProvider.getLatestHeartRate(3600_000L) // 1h Window
+        if (result != null) {
+            aapsLogger.debug(LTag.APS, "[$TAG] fetchLastHeartRate: ${result.bpm}bpm (source=${result.source})")
+            return result.bpm.toInt()
+        }
+        // HC Fallback bleibt wie bisher
+        return fetchLastHeartRateFromHC()
+    }
+
+    fun fetchLastHeartRateFromHC(): Int {
         val client = healthConnectClient ?: return 0
         return try {
             runBlocking {
@@ -462,14 +476,104 @@ class AIMIPhysioDataRepositoryMTR @Inject constructor(
     // STEPS DATA
     // ═══════════════════════════════════════════════════════════════════════
 
+    fun fetchRecentSteps(windowMinutes: Int = 15): Int {
+        val safeMins = windowMinutes.coerceAtLeast(1)
+        val windowMs = safeMins * 60 * 1000L
+        val cacheKey = "recentSteps_${safeMins}min"
+
+        // Cache check (60s TTL für Real-time)
+        val cached = cache[cacheKey]
+        if (cached != null && cached.isValid()) {
+            aapsLogger.debug(LTag.APS, "[$TAG] fetchRecentSteps: cache hit → ${cached.data}")
+            return (cached.data ?: 0 ) as Int
+        }
+
+        // UnifiedActivityProvider nutzen → Garmin > Wear > Phone > HC
+        val result = unifiedActivityProvider.getLatestSteps(windowMs)
+
+        val steps = result?.steps ?: run {
+            aapsLogger.debug(LTag.APS, "[$TAG] fetchRecentSteps: no data from UnifiedProvider, trying HC fallback")
+            fetchRecentStepsFromHC(safeMins)  // HC als letzter Fallback
+        }
+
+        val nowMs = System.currentTimeMillis()
+        cache[cacheKey] = CachedData(steps, nowMs, expiresAt = nowMs + 60_000L)
+
+        aapsLogger.info(LTag.APS, "[$TAG] ✅ fetchRecentSteps: steps=$steps over last $safeMins min" +
+            " (source=${result?.source ?: "HC-fallback"})")
+        return steps
+    }
+
+    /**
+     * Fetches steps count for the last [windowMinutes] minutes.
+     * Designed for real-time activity detection in the loop (e.g. steps15).
+     * Uses Health Connect aggregation with a short time window.
+     *
+     * @param windowMinutes  Look-back window in minutes (default: 15)
+     * @return Step count as Int, or 0 on error / unsupported mode
+     */
+    fun fetchRecentStepsFromHC(windowMinutes: Int = 15): Int {
+        val safeMins = windowMinutes.coerceAtLeast(1)
+        val cacheKey = "recentSteps_hc_${safeMins}min"
+
+        // Check preference first
+        val mode = UnifiedActivityProviderMTR.getMode(context)
+        if (mode == UnifiedActivityProviderMTR.MODE_DISABLED) return 0
+
+        // Fix:
+        val cached = cache[cacheKey]
+        if (cached != null && cached.isValid()) {
+            aapsLogger.debug(LTag.APS, "[$TAG] fetchRecentSteps: cache hit ($safeMins min) → ${cached.data}")
+            return (cached.data ?: 0) as Int
+        }
+
+        val client = healthConnectClient ?: return 0
+
+        return try {
+            runBlocking {
+                withTimeout(API_TIMEOUT_MS) {
+                    withContext(Dispatchers.IO) {
+                        val now = Instant.now()
+                        val startTime = now.minusSeconds((safeMins * 60).toLong())
+
+                        val response = client.aggregate(
+                            AggregateRequest(
+                                metrics = setOf(StepsRecord.COUNT_TOTAL),
+                                timeRangeFilter = TimeRangeFilter.between(startTime, now)
+                            )
+                        )
+
+                        val steps = (response[StepsRecord.COUNT_TOTAL] ?: 0L).toInt()
+
+                        val now2 = System.currentTimeMillis()
+                        cache[cacheKey] = CachedData(steps, now2, expiresAt = now2 + 60_000L)  // 60s TTL
+
+                        aapsLogger.info(LTag.APS, "[$TAG] ✅ fetchRecentSteps: steps=$steps over last $safeMins min")
+                        steps
+                    }
+                }
+            }
+        } catch (e: IllegalArgumentException) {
+            aapsLogger.warn(LTag.APS, "[$TAG] fetchRecentSteps: invalid time range – ${e.message}")
+            0
+        } catch (e: kotlinx.coroutines.TimeoutCancellationException) {
+            aapsLogger.warn(LTag.APS, "[$TAG] fetchRecentSteps: timeout after ${API_TIMEOUT_MS}ms")
+            0
+        } catch (e: Exception) {
+            aapsLogger.error(LTag.APS, "[$TAG] fetchRecentSteps: unexpected error – ${e.message}")
+            0
+        }
+    }
+
     /**
      * Fetches steps for last 7 days (daily totals)
      */
     fun fetchStepsData(daysBack: Int = 7): Int {
+        aapsLogger.debug(LTag.APS, "[$TAG] fetchStepsData called from ${Thread.currentThread().name}")
         // Check preference first
-        val mode = app.aaps.plugins.aps.openAPSAIMI.steps.UnifiedActivityProviderMTR.getMode(context)
-        if (mode == app.aaps.plugins.aps.openAPSAIMI.steps.UnifiedActivityProviderMTR.MODE_PREFER_WEAR || 
-            mode == app.aaps.plugins.aps.openAPSAIMI.steps.UnifiedActivityProviderMTR.MODE_DISABLED) {
+        val mode = UnifiedActivityProviderMTR.getMode(context)
+        if (mode == UnifiedActivityProviderMTR.MODE_PREFER_WEAR ||
+            mode == UnifiedActivityProviderMTR.MODE_DISABLED) {
             // Steps handled by Wear/Plugin directly, or disabled
             return 0
         }
@@ -488,19 +592,20 @@ class AIMIPhysioDataRepositoryMTR @Inject constructor(
                 withTimeout(API_TIMEOUT_MS) {
                     withContext(Dispatchers.IO) {
                         val now = Instant.now()
-                        val startTime = now.minusSeconds((daysBack * 24 * 60 * 60).toLong())
-                        
+
+                        // Guard: daysBack muss mindestens 1 sein
+                        val safeDaysBack = daysBack.coerceAtLeast(1)
+                        val startTime = now.minusSeconds((safeDaysBack * 24 * 60 * 60).toLong())
+
                         val response = client.aggregate(
                             AggregateRequest(
                                 metrics = setOf(StepsRecord.COUNT_TOTAL),
                                 timeRangeFilter = TimeRangeFilter.between(startTime, now)
                             )
                         )
-                        
+
                         val totalSteps = response[StepsRecord.COUNT_TOTAL] ?: 0L
-                        
-                        // Average daily steps
-                        val avgSteps = if (daysBack > 0) (totalSteps / daysBack).toInt() else 0
+                        val avgSteps = (totalSteps / safeDaysBack).toInt()
                         
                         cache[cacheKey] = CachedData(avgSteps, System.currentTimeMillis())
                         
@@ -509,8 +614,21 @@ class AIMIPhysioDataRepositoryMTR @Inject constructor(
                     }
                 }
             }
+        } catch (e: SecurityException) {
+            // Health Connect permission not granted — expected, not an error
+            aapsLogger.debug(LTag.APS, "[$TAG] Steps aggregation skipped: HC permission not granted")
+            0
+        } catch (e: kotlinx.coroutines.TimeoutCancellationException) {
+            aapsLogger.debug(LTag.APS, "[$TAG] Steps aggregation timeout — HC unavailable")
+            0
         } catch (e: Exception) {
-            aapsLogger.warn(LTag.APS, "[$TAG] Steps aggregation failed", e)
+            aapsLogger.warn(LTag.APS, "[$TAG] Steps aggregation failed: ${e.javaClass.simpleName}: ${e.message}")
+            // Stack trace explizit ausgeben
+            e.stackTrace.take(5).forEach {
+                aapsLogger.warn(LTag.APS, "[$TAG]   at $it")
+            }
+            aapsLogger.warn(LTag.APS, "[$TAG] Steps aggregation EXCEPTION: ${e.javaClass.canonicalName}: ${e.message}")
+            e.cause?.let { aapsLogger.warn(LTag.APS, "[$TAG] Caused by: ${it.javaClass.canonicalName}: ${it.message}") }
             0
         }
     }

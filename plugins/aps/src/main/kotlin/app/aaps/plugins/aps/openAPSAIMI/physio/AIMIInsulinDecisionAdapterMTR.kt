@@ -108,7 +108,7 @@ class AIMIInsulinDecisionAdapterMTR @Inject constructor(
             )
             return PhysioMultipliersMTR.NEUTRAL
         }
-        
+
         // Safety Check 2: Recent hypoglycemia
         if (hasRecentHypoglycemia(recentHypoTimestamp)) {
             aapsLogger.warn(LTag.APS, "[$TAG] ⚠️ Recent hypoglycemia detected - skipping modulation")
@@ -133,7 +133,11 @@ class AIMIInsulinDecisionAdapterMTR @Inject constructor(
              // Silently ignore low confidence
             return PhysioMultipliersMTR.NEUTRAL
         }
-        
+
+        // ✅ Retrieve RT values directly – overwrite outdated snapshot values
+        val rtSteps = dataRepository.fetchRecentSteps(15)
+        val rtHR    = dataRepository.fetchLastHeartRate()
+
         // 1. Calculate raw multipliers (Semantic + Tactical)
         val rawMultipliers = calculateRawMultipliers(snapshot, physioContext, currentBG, currentDelta)
         
@@ -141,16 +145,16 @@ class AIMIInsulinDecisionAdapterMTR @Inject constructor(
         // This gate determines if the current physiological state is "relevant" enough
         // to justify trajectory-based modulation. 
         val gateInput = GateInput(
-            bgCurrent = currentBG,
-            bgDelta = currentDelta ?: 0.0,
-            iob = iob,
-            cob = cob,
-            stepCount15m = snapshot.stepsLast15m,
-            hrCurrent = snapshot.hrNow,
-            hrvCurrent = snapshot.hrvRmssd,
-            sleepState = snapshot.sleepDebtMinutes > 0, 
-            physioState = physioContext.state,
-            dataQuality = snapshot.confidence
+            bgCurrent    = currentBG,
+            bgDelta      = currentDelta ?: 0.0,
+            iob          = iob,
+            cob          = cob,
+            stepCount15m = rtSteps,
+            hrCurrent    = if (rtHR > 0) rtHR else snapshot.hrNow,
+            hrvCurrent   = snapshot.hrvRmssd,
+            sleepState   = snapshot.sleepDebtMinutes > 0,
+            physioState  = physioContext.state,
+            dataQuality  = snapshot.confidence
         )
         
         val gateOutcome = relevanceGate.compute(gateInput)
@@ -186,8 +190,8 @@ class AIMIInsulinDecisionAdapterMTR @Inject constructor(
         
         if (!cappedMultipliers.isNeutral()) {
             // Log core physio
-            val coreLog = "🏥 PHYSIO ctx: State=${physioContext.state} (${(physioContext.confidence*100).toInt()}%) | " + 
-                         "steps15=${snapshot.stepsLast15m}, hr=${snapshot.hrNow} " +
+            val coreLog = "🏥 PHYSIO ctx: State=${physioContext.state} (${(physioContext.confidence*100).toInt()}%) | " +
+                         "steps15=$rtSteps, hr=${if (rtHR > 0) rtHR else snapshot.hrNow} " +
                          "-> ${cappedMultipliers.appliedCaps} -> ISF x${cappedMultipliers.isfFactor.format(2)}, SMB x${cappedMultipliers.smbFactor.format(2)}"
             aapsLogger.info(LTag.APS, coreLog)
             
@@ -370,7 +374,8 @@ class AIMIInsulinDecisionAdapterMTR @Inject constructor(
      */
     fun getRealTimeActivity(): RealTimeActivity {
          // Graceful fallback if repo fail (returns 0)
-         val steps = dataRepository.fetchStepsData(0) 
+         //val steps = dataRepository.fetchStepsData(0)
+         val steps = dataRepository.fetchRecentSteps(windowMinutes = 15)
          val hr = dataRepository.fetchLastHeartRate()
          return RealTimeActivity(steps, hr)
     }

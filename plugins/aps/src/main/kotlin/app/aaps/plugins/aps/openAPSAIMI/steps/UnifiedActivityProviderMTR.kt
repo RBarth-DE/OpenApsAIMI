@@ -63,41 +63,39 @@ class UnifiedActivityProviderMTR @Inject constructor(
         
         val now = System.currentTimeMillis()
         val start = now - windowMs
-        
-        try {
-            // Fetch all records in window
-            // Note: getStepsCountFromTimeToTime returns list ordered by ?? Usually time.
-            // We'll sort descending to be safe.
+
+        return try {
             val records = persistenceLayer.getStepsCountFromTimeToTime(start, now)
                 .sortedByDescending { it.timestamp }
-                
+
             if (records.isEmpty()) return null
-            
-            // Separate by source
-            val wearRecord = records.firstOrNull { isWearDevice(it.device) }
-            val hcRecord = records.firstOrNull { it.device == SOURCE_HC }
+
+            val wearRecord  = records.firstOrNull { isWearDevice(it.device) }
+            val hcRecord    = records.firstOrNull { it.device == SOURCE_HC }
             val phoneRecord = records.firstOrNull { it.device == SOURCE_PHONE }
-            
-            return when (mode) {
-                MODE_PREFER_WEAR -> {
-                    // Strict Wear OS preference (no fallback to HC/Phone)
-                    wearRecord?.let { toStepsResult(it) }
-                }
-                MODE_HEALTH_CONNECT_ONLY -> {
-                    hcRecord?.let { toStepsResult(it) }
-                }
-                MODE_AUTO_FALLBACK -> {
-                    // Priority: Wear > HC > Phone
-                    wearRecord?.let { toStepsResult(it) } 
-                        ?: hcRecord?.let { toStepsResult(it) }
-                        ?: phoneRecord?.let { toStepsResult(it) }
-                }
+
+            when (mode) {
+                MODE_PREFER_WEAR         -> wearRecord?.let { toStepsResult(it) }
+                MODE_HEALTH_CONNECT_ONLY -> hcRecord?.let { toStepsResult(it) }
+                MODE_AUTO_FALLBACK       -> wearRecord?.let { toStepsResult(it) }
+                    ?: hcRecord?.let { toStepsResult(it) }
+                    ?: phoneRecord?.let { toStepsResult(it) }
                 else -> null
             }
-            
+
+        } catch (e: RuntimeException) {
+            // blockingGet() auf RxJava-Thread wirft RuntimeException(InterruptedException)
+            // Thread-Interrupt-Flag wiederherstellen
+            if (e.cause is InterruptedException) {
+                Thread.currentThread().interrupt()
+                aapsLogger.debug(LTag.APS, "[$TAG] getLatestSteps: skipped (thread interrupted)")
+            } else {
+                aapsLogger.error(LTag.APS, "[$TAG] Error fetching steps", e)
+            }
+            null
         } catch (e: Exception) {
             aapsLogger.error(LTag.APS, "[$TAG] Error fetching steps", e)
-            return null
+            null
         }
     }
 
