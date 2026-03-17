@@ -6,10 +6,11 @@ import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.view.View
 import android.widget.FrameLayout
-import android.widget.ImageView
 import androidx.viewbinding.ViewBinding
 import app.aaps.plugins.main.databinding.ComponentCircleTopStatusHybridBinding
 import java.util.Locale
+import java.util.TimeZone
+
 
 /**
  * CircleTopDashboardView - Modern Circle-Top Hybrid Dashboard
@@ -97,12 +98,16 @@ class CircleTopDashboardView @JvmOverloads constructor(
             // ═══════════════════════════════════════════════════════════════
             // 4. TIR Bar (24H)
             // ═══════════════════════════════════════════════════════════════
-            val avg = getProp<Double>("avgBgMgdl")
-            val a1c = getProp<Double>("a1c")
-            if (avg != null && a1c != null) {
-                binding.tirStatsText.text = String.format(Locale.US, "Avg %.0f • A1C %.1f%%", avg, a1c)
+            val currentTime = System.currentTimeMillis()
+            val startOfDay = currentTime / (1000 * 3600 * 24) * (1000 * 3600 * 24) - TimeZone.getDefault().getOffset(currentTime)
+            val endOfDay = startOfDay + (1000 * 3600 * 24)
+
+            val avg = getProp<Double>("avgBgMgdl") ?: Double.NaN
+            val a1c = getProp<Double>("a1c") ?: Double.NaN
+            if (!avg.isNaN() && !a1c.isNaN()) {
+                binding.tirStatsText.text = String.format("Auj: Avg %.0f • A1C %.1f%%", avg, a1c)
             } else {
-                binding.tirStatsText.text = "Avg -- • A1C --"
+                binding.tirStatsText.text = "Auj: Avg -- • A1C --"
             }
 
             val vl = getProp<Double>("tirVeryLow") ?: 0.0
@@ -178,7 +183,6 @@ class CircleTopDashboardView @JvmOverloads constructor(
     
     /** Get Loop indicator (icon updated by DashboardFragment) */
     fun getLoopIndicator(): View = binding.loopIndicator
-    
 
 }
 

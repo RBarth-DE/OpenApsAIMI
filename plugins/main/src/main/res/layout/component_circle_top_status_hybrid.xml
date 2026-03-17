@@ -439,9 +439,9 @@
                 </LinearLayout>
             </LinearLayout>
 
-            <!-- ═══════════════════════════════════════════════════ -->
-            <!-- TIR BAR (24H)                                       -->
-            <!-- ═══════════════════════════════════════════════════ -->
+        <!-- ═══════════════════════════════════════════════════ -->
+        <!-- TIR BAR (24H)                                       -->
+        <!-- ═══════════════════════════════════════════════════ -->
             <LinearLayout
                 android:id="@+id/tir_container"
                 android:layout_width="match_parent"
@@ -451,31 +451,29 @@
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/glucose_ring">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
+            
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginBottom="4dp">
+                <TextView
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_marginBottom="4dp"
-                    android:orientation="horizontal">
-
-                    <TextView
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:letterSpacing="0.1"
-                        android:text="TIME IN RANGE — 24H"
-                        android:textAllCaps="true"
-                        android:textColor="#88FFFFFF"
-                        android:textSize="10sp" />
-
-                    <TextView
-                        android:id="@+id/tir_stats_text"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Avg -- • A1C --"
-                        android:textColor="#FFFFFF"
-                        android:textSize="10sp" />
-                </LinearLayout>
+                    android:layout_weight="1"
+                    android:text="TIME IN RANGE — 24H"
+                    android:textSize="10sp"
+                    android:textAllCaps="true"
+                    android:letterSpacing="0.1"
+                    android:textColor="#88FFFFFF" />
+                <TextView
+                    android:id="@+id/tir_stats_text"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Avg -- • A1C --"
+                    android:textSize="10sp"
+                    android:textColor="#FFFFFF" />
+            </LinearLayout>
 
                 <LinearLayout
                     android:layout_width="match_parent"
