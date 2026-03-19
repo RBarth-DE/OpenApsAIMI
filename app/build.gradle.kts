@@ -6,7 +6,7 @@ import org.gradle.kotlin.dsl.dependencies
 import org.gradle.kotlin.dsl.project
 
 import java.util.Properties
-
+import com.android.build.gradle.internal.api.BaseVariantOutputImpl
 // Fixes errors in KSP task dependency
 import org.gradle.api.GradleException
 
@@ -135,6 +135,15 @@ android {
             storePassword = keystoreProps["storePassword"] as String
             keyAlias = keystoreProps["keyAlias"] as String
             keyPassword = keystoreProps["keyPassword"] as String
+        }
+    }
+
+    applicationVariants.all {
+        outputs.all {
+            val timestamp = SimpleDateFormat("yyyyMMdd-HHmm").format(Date())
+            val flavorPart = if (flavorName.isNullOrBlank()) "" else "$flavorName-"
+            (this as BaseVariantOutputImpl).outputFileName =
+                "app-${flavorPart}${buildType.name}-$timestamp.apk"
         }
     }
 

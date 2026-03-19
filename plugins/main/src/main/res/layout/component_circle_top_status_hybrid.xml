@@ -35,7 +35,7 @@
                     android:id="@+id/insight_t3c"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginEnd="12dp"
+                    android:layout_marginEnd="6dp"
                     android:text="🎯 --"
                     android:textColor="@color/dashboard_on_surface"
                     android:textSize="10sp" />
@@ -44,7 +44,7 @@
                     android:id="@+id/insight_manoeuvre"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginEnd="12dp"
+                    android:layout_marginEnd="6dp"
                     android:text="🌀 --"
                     android:textColor="@color/dashboard_on_surface"
                     android:textSize="10sp" />
@@ -53,7 +53,17 @@
                     android:id="@+id/insight_factor"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:layout_marginEnd="6dp"
                     android:text="⚡ x1.0"
+                    android:textColor="@color/dashboard_on_surface"
+                    android:textSize="10sp" />
+
+                <TextView
+                    android:id="@+id/insight_health"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="6dp"
+                    android:text="🩺 --"
                     android:textColor="@color/dashboard_on_surface"
                     android:textSize="10sp" />
             </LinearLayout>
@@ -66,7 +76,7 @@
                 android:id="@+id/indicator_row"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="2dp"
+                android:layout_marginTop="3dp"
                 android:layout_marginBottom="-2dp"
                 android:gravity="center_vertical"
                 android:orientation="horizontal"
@@ -137,6 +147,7 @@
                 android:id="@+id/glucose_ring"
                 android:layout_width="140dp"
                 android:layout_height="140dp"
+                android:layout_marginTop="-3dp"
                 android:elevation="3dp"
                 app:glucoseRingStep1MaxMgdl="130"
                 app:glucoseRingStep2MaxMgdl="180"
@@ -456,12 +467,13 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
+                android:layout_marginTop="-2dp"
                 android:layout_marginBottom="4dp">
                 <TextView
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="TIME IN RANGE — 24H"
+                    android:text="TIR — TODAY"
                     android:textSize="10sp"
                     android:textAllCaps="true"
                     android:letterSpacing="0.1"

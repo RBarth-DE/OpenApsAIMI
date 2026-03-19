@@ -58,15 +58,15 @@ class CircleTopDashboardView @JvmOverloads constructor(
             // ═══════════════════════════════════════════════════════════════
             // 1. GlucoseRingView (Center Circle)
             // ═══════════════════════════════════════════════════════════════
-            getProp<Int>("glucoseMgdl")?.let { bgMgdl ->
-                binding.glucoseRing.update(
-                    bgMgdl = bgMgdl,
-                    mainText = getProp<String>("glucoseText") ?: "--",
-                    subLeftText = getProp<String>("timeAgo") ?: "",
-                    subRightText = getProp<String>("deltaText") ?: "",
-                    noseAngleDeg = getProp<Float>("noseAngleDeg"),
-                )
-            }
+            val bgMgdl = getProp<Int>("glucoseMgdl")
+            binding.glucoseRing.update(
+                bgMgdl = bgMgdl ?: 0,
+                mainText = getProp<String>("glucoseText") ?: "--",
+                subLeftText = getProp<String>("timeAgo") ?: "",
+                subRightText = getProp<String>("deltaText") ?: "",
+                noseAngleDeg = getProp<Float>("noseAngleDeg"),
+            )
+
 
             // ═══════════════════════════════════════════════════════════════
             // 2. Left Column Metrics
@@ -98,16 +98,16 @@ class CircleTopDashboardView @JvmOverloads constructor(
             // ═══════════════════════════════════════════════════════════════
             // 4. TIR Bar (24H)
             // ═══════════════════════════════════════════════════════════════
-            val currentTime = System.currentTimeMillis()
-            val startOfDay = currentTime / (1000 * 3600 * 24) * (1000 * 3600 * 24) - TimeZone.getDefault().getOffset(currentTime)
-            val endOfDay = startOfDay + (1000 * 3600 * 24)
+            // val currentTime = System.currentTimeMillis()
+            // val startOfDay = currentTime / (1000 * 3600 * 24) * (1000 * 3600 * 24) - TimeZone.getDefault().getOffset(currentTime)
+            // val endOfDay = startOfDay + (1000 * 3600 * 24)
 
             val avg = getProp<Double>("avgBgMgdl") ?: Double.NaN
             val a1c = getProp<Double>("a1c") ?: Double.NaN
             if (!avg.isNaN() && !a1c.isNaN()) {
-                binding.tirStatsText.text = String.format("Auj: Avg %.0f • A1C %.1f%%", avg, a1c)
+                binding.tirStatsText.text = String.format(Locale.US,"Avg %.0f • A1C %.1f%%", avg, a1c)
             } else {
-                binding.tirStatsText.text = "Auj: Avg -- • A1C --"
+                binding.tirStatsText.text = "Avg -- • A1C --"
             }
 
             val vl = getProp<Double>("tirVeryLow") ?: 0.0
@@ -143,15 +143,15 @@ class CircleTopDashboardView @JvmOverloads constructor(
             binding.insightT3c.text = getProp<String>("insightT3c") ?: "🎯 --"
             binding.insightManoeuvre.text = getProp<String>("insightManoeuvre") ?: "🌀 --"
             binding.insightFactor.text = getProp<String>("insightFactor") ?: "⚡ x1.0"
+            val health = getProp<Double>("aimiHealthScore")
+            binding.insightHealth.text = health?.let { "🩺 %.0f%%".format(it) } ?: "🩺 --"
 
             // Adjust container style based on health score (confidence)
-            val health = getProp<Double>("aimiHealthScore") ?: 1.0
-            if (health < 0.8) {
+            if (health != null && health < 80.0) {
                 binding.aimiInsightsContainer.setBackgroundResource(app.aaps.plugins.main.R.drawable.dashboard_chip_background_warning)
             } else {
-                //binding.aimiInsightsContainer.setBackgroundResource(app.aaps.plugins.main.R.drawable.dashboard_chip_background)
-                binding.aimiInsightsContainer.background = null  // no background when healthy
-            }
+                binding.aimiInsightsContainer.background = null
+            }   
 
         } catch (e: Exception) {
             // Fallback: Log error but don't crash

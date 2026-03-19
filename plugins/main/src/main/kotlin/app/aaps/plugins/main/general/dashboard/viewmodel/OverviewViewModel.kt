@@ -381,7 +381,14 @@ class OverviewViewModel(
         val relevance = rt?.trajectoryRelevanceScore ?: 0.0
         val insightFactor = "⚡ x${decimalFormatter.to1Decimal(relevance)}"
 
-        val healthScore = rt?.trajectoryHealth?.toDouble()?.div(100.0) ?: autodriveEngine.getHealthScore()
+        // Both sources normalised to 0-100 %:
+        //   trajectoryHealth  → already Int 0-100 (stored as healthScore*100 in DetermineBasalAIMI2)
+        //   autodriveEngine   → Double 0.0-1.0  → multiply by 100
+        val healthScore: Double =
+            rt?.trajectoryHealth
+                ?.toDouble()
+                ?: autodriveEngine.getHealthScore()
+                    .times(100.0)
 
         val state = StatusCardState(
             glucoseText = glucoseText,
