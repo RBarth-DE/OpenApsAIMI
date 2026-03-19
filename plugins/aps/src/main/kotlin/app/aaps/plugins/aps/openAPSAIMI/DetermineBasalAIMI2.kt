@@ -342,7 +342,10 @@ class DetermineBasalaimiSMB2 @Inject constructor(
     
     // 🌸 Endometriosis Adjuster (Lazy init manually since not in graph yet or use manual passing)
     private val endoAdjuster by lazy { app.aaps.plugins.aps.openAPSAIMI.wcycle.EndometriosisAdjuster(preferences, aapsLogger) }
-    
+
+    // 🔄 Persistent RT object — survives between cycles (Singleton)
+    private var persistentRT: RT? = null
+
     // 🏥 Inflammation Adjuster (New Refactor - Decoupled from WCycle)
     private val inflammationAdjuster by lazy { 
         app.aaps.plugins.aps.openAPSAIMI.inflammatory.InflammationAdjuster(wCyclePreferences) 
@@ -4564,15 +4567,24 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                 iob_u = iob_data_array.firstOrNull()?.iob ?: 0.0 // Taking first element (Net IOB usually)
             )
         )
-        
-        var rT = RT(
+
+        val rT = persistentRT ?: RT(
             algorithm = APSResult.Algorithm.AIMI,
             runningDynamicIsf = dynIsfMode,
             timestamp = currentTime,
             consoleLog = consoleLog,
             consoleError = consoleError
-        )
-        
+        ).also { persistentRT = it }
+
+        // always update Cycle-spezifische fields
+        rT.timestamp = currentTime
+        rT.consoleLog = consoleLog
+        rT.consoleError = consoleError
+        rT.runningDynamicIsf = dynIsfMode
+        rT.reason.clear()
+        rT.insulinReq = 0.0
+
+
         if (extraDebug.isNotEmpty()) {
              rT.reason.append("$extraDebug\n")
         }
@@ -4678,7 +4690,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         }
 
         val gs = pack.gs!!
-        val f  = pack.features
+        val aimiBgFeatures  = pack.features
 
 // Construit un GlucoseStatusAIMI complet (plus de 0.0 par défaut)
         val glucoseStatus = glucose_status ?: GlucoseStatusAIMI(
@@ -4690,16 +4702,16 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             date = gs.date,
 
             // === valeurs issues de f (si présentes) ===
-            duraISFminutes = f?.stable5pctMinutes ?: 0.0,
-            duraISFaverage = f?.stable5pctAverage ?: 0.0,
-            parabolaMinutes = f?.parabolaMinutes ?: 0.0,
-            deltaPl = f?.delta5Prev ?: 0.0,
-            deltaPn = f?.delta5Next ?: 0.0,
-            bgAcceleration = f?.accel ?: 0.0,
-            a0 = f?.a0 ?: 0.0,
-            a1 = f?.a1 ?: 0.0,
-            a2 = f?.a2 ?: 0.0,
-            corrSqu = f?.corrR2 ?: 0.0
+            duraISFminutes = aimiBgFeatures?.stable5pctMinutes ?: 0.0,
+            duraISFaverage = aimiBgFeatures?.stable5pctAverage ?: 0.0,
+            parabolaMinutes = aimiBgFeatures?.parabolaMinutes ?: 0.0,
+            deltaPl = aimiBgFeatures?.delta5Prev ?: 0.0,
+            deltaPn = aimiBgFeatures?.delta5Next ?: 0.0,
+            bgAcceleration = aimiBgFeatures?.accel ?: 0.0,
+            a0 = aimiBgFeatures?.a0 ?: 0.0,
+            a1 = aimiBgFeatures?.a1 ?: 0.0,
+            a2 = aimiBgFeatures?.a2 ?: 0.0,
+            corrSqu = aimiBgFeatures?.corrR2 ?: 0.0
         )
         ensurePredictionFallback(rT, glucoseStatus.glucose)
         
@@ -5043,7 +5055,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         this.delta = glucoseStatus.delta.toFloat()
         this.shortAvgDelta = glucoseStatus.shortAvgDelta.toFloat()
         this.longAvgDelta = glucoseStatus.longAvgDelta.toFloat()
-        val bgAcceleration = glucoseStatus.bgAcceleration ?: 0f
+        val bgAcceleration: Float = (glucoseStatus.bgAcceleration ?: 0.0).toFloat()
         this.bgacc = bgAcceleration.toDouble()
         val therapy = Therapy(persistenceLayer).also {
             it.updateStatesBasedOnTherapyEvents()
@@ -5702,12 +5714,6 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             consoleLog.add("AD_EARLY_TBR_TRIGGER rate=0.0 duration=0 reason=DriftTerminator_Tap") // Actually a bolus tap, not TBR, but fits "Early Action" category
             consoleLog.add("AD_SMALL_PREBOLUS_TRIGGER amount=$terminatortap reason=DriftTerminator")
             finalizeAndCapSMB(rT, terminatortap, reason.toString(), mealData, threshold, decisionSource = "DriftTerminator")
-            if (rT.rate != null) {
-                aapsLogger.debug( LTag.APS, "Keto(5): Do I need keto here?? rate would be ${rT.rate}")
-                //rT.rate = ketoProtection(rT.rate!!, profile, rT, pumpCaps )
-            } else {
-                aapsLogger.info(LTag.APS, "AIMI: ketoProtection skipped (rate=null)")
-            }
             logDecisionFinal("DRIFT_TERMINATOR", rT, bg, delta)
             return rT
         }
@@ -5906,7 +5912,8 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         } else {
             round(glucoseStatus.delta).toString()
         }
-        val minDelta = min(glucoseStatus.delta, glucoseStatus.shortAvgDelta)
+        val minDelta: Float = min(glucoseStatus.delta.toFloat(), glucoseStatus.shortAvgDelta.toFloat())
+
         val minAvgDelta = min(glucoseStatus.shortAvgDelta, glucoseStatus.longAvgDelta)
         // val maxDelta = max(glucoseStatus.delta, max(glucoseStatus.shortAvgDelta, glucoseStatus.longAvgDelta))
         // MOVED (FCL 11.0): Logic hoisted to top of determine_basal
@@ -6569,32 +6576,17 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         if (smbToGive < beforeCap) {
             rT.reason.append(" | 🛡️ Cap: ${"%.2f".format(beforeCap)} → ${"%.2f".format(smbToGive)}")
         }
-        val savedReason = rT.reason.toString()
-        // 🔮 FCL 11.0: Preserve Predictions across reset
-        val savedPredBGs = rT.predBGs
 
-        rT = RT(
-            algorithm = APSResult.Algorithm.AIMI,
-            runningDynamicIsf = dynIsfMode,
-            timestamp = currentTime,
-            bg = bg,
-            tick = tick,
-            eventualBG = eventualBG,
-            //targetBG = target_bg,
-            targetBG = "%.0f".format(target_bg).toDouble(),
-            insulinReq = 0.0,
-            deliverAt = deliverAt, // The time at which the microbolus should be delivered
-            //sensitivityRatio = sensitivityRatio, // autosens ratio (fraction of normal basal)
-            sensitivityRatio = "%.0f".format(sensitivityRatio).toDouble(),
-            consoleLog = consoleLog,
-            consoleError = consoleError,
-            //variable_sens = variableSensitivity.toDouble()
-            variable_sens = "%.0f".format(variableSensitivity.toDouble()).toDouble()
-        )
-        // 🔮 FCL 11.0: Restore preserved Predictions
-        rT.predBGs = savedPredBGs ?: rT.predBGs
+        rT.bg = bg
+        rT.tick = tick
+        rT.eventualBG = eventualBG
+        rT.targetBG = target_bg
+        rT.insulinReq = 0.0
+        rT.deliverAt = deliverAt
+        rT.sensitivityRatio = sensitivityRatio
+        rT.variable_sens = variableSensitivity.toDouble()
         ensurePredictionFallback(rT, bg)
-        rT.reason.append(savedReason)
+        // Trajectory, predBGs, reason — all is automatically saved
 
         // ====================================================================================
 
@@ -6712,6 +6704,142 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             // REMOVED: return rT (continue to SMB calculation)
         }
         // ================================================================
+
+        // 🧬 Adaptive Basal & SMB — extracted to avoid D8 VerifyError
+        return runAdaptiveBasalAndSmb(
+            rT                  = rT,
+            profile             = profile,
+            mealData            = mealData,
+            currenttemp         = currenttemp,
+            currentTime         = currentTime,
+            microBolusAllowed   = microBolusAllowed,
+            dynIsfMode          = dynIsfMode,
+            autosens_data       = autosens_data,
+            glucose_status      = glucose_status,
+            iob_data_array      = iob_data_array,
+            flatBGsDetected     = flatBGsDetected,
+            accel               = accel,
+            activeModeName      = activeModeName,
+            autodrive           = autodrive,
+            basal               = basal,
+            basalBoostApplied   = basalBoostApplied,
+            basalBoostSource    = basalBoostSource,
+            baseSensitivity     = baseSensitivity,
+            bgAcceleration      = bgAcceleration,
+            bgi                 = bgi,
+            combinedDelta       = combinedDelta,
+            decisionCtx         = decisionCtx,
+            deviation           = deviation,
+            featuresCombinedDelta = aimiBgFeatures?.combinedDelta,
+            glucoseStatus       = glucoseStatus,
+            honeymoon           = honeymoon,
+            iob_data            = iob_data,
+            maxIobLimit         = maxIobLimit,
+            max_bg              = max_bg,
+            minBg               = minBg,
+            minDelta            = minDelta,
+            modesCondition      = modesCondition,
+            ngrConfig           = ngrConfig,
+            nightbis            = nightbis,
+            originalProfile     = originalProfile,
+            pkpdRuntime         = pkpdRuntime,
+            pregnancyEnable     = pregnancyEnable,
+            profile_current_basal = profile_current_basal,
+            proposedUnits       = proposedUnits,
+            pumpCaps            = pumpCaps,
+            rate                = rate,
+            reasonAimi          = reasonAimi,
+            sens                = sens,
+            sensitivityRatio    = sensitivityRatio,
+            sixAMHour           = sixAMHour,
+            smbToGive           = smbToGive,
+            systemTime          = systemTime,
+            target_bg           = target_bg,
+            tdd24Hrs            = tdd24Hrs,
+            tdd7Days            = tdd7Days,
+            tdd7P               = tdd7P,
+            therapy             = therapy,
+            threshold           = threshold,
+            timenow             = timenow,
+            tp                  = tp,
+            windowSinceDoseInt  = windowSinceDoseInt
+        )
+    } // 🛑 END OF determine_basal
+
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // 🧬 Extracted from determine_basal to stay under D8 64 KB bytecode limit
+    // ═══════════════════════════════════════════════════════════════════════
+    @SuppressLint("DefaultLocale")
+    private fun runAdaptiveBasalAndSmb(
+        rT: RT,
+        profile: OapsProfileAimi,
+        mealData: MealData,
+        currenttemp: CurrentTemp,
+        currentTime: Long,
+        microBolusAllowed: Boolean,
+        dynIsfMode: Boolean,
+        autosens_data: AutosensResult,
+        glucose_status: GlucoseStatusAIMI,
+        iob_data_array: Array<IobTotal>,
+        flatBGsDetected: Boolean,
+        accel: Double,
+        activeModeName: String,
+        autodrive: Boolean,
+        basal: Double,
+        basalBoostApplied: Boolean,
+        basalBoostSource: String?,
+        baseSensitivity: Double,
+        bgAcceleration: Float,
+        bgi: Double,
+        combinedDelta: Float,
+        decisionCtx: AimiDecisionContext,
+        deviation: Int,
+        featuresCombinedDelta: Double?,
+        glucoseStatus: GlucoseStatusAIMI,
+        honeymoon: Boolean,
+        iob_data: IobTotal,
+        maxIobLimit: Double,
+        max_bg: Double,
+        minBg: Double,
+        minDelta: Float,
+        modesCondition: Boolean,
+        ngrConfig: NGRConfig,
+        nightbis: Boolean,
+        originalProfile: OapsProfileAimi,
+        pkpdRuntime: PkPdRuntime?,
+        pregnancyEnable: Boolean,
+        profile_current_basal: Double,
+        proposedUnits: Float,
+        pumpCaps: PumpCaps,
+        rate: Double?,
+        reasonAimi: StringBuilder,
+        sens: Double,
+        sensitivityRatio: Double,
+        sixAMHour: Int,
+        smbToGive: Float,
+        systemTime: Long,
+        target_bg: Double,
+        tdd24Hrs: Float,
+        tdd7Days: Double,
+        tdd7P: Double,
+        therapy: Therapy,
+        threshold: Double,
+        timenow: Int,
+        tp: Double,
+        windowSinceDoseInt: Int
+    ): RT {
+        // Mutable locals (params are val, reassigned inside)
+        var maxIobLimit = maxIobLimit
+        var basal = basal
+        var smbToGive = smbToGive
+        var target_bg = target_bg
+        var sens = sens
+        var sensitivityRatio = sensitivityRatio
+        var deviation = deviation
+        var pkpdRuntime = pkpdRuntime
+        var tdd24Hrs = tdd24Hrs
+        var tdd7Days = tdd7Days
 
         // 🧬 Truly Universal Adaptive Basal Scaling
         // Applied to either the Boosted rate or the Profile rate if no boost active.
@@ -7052,12 +7180,6 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                 flatBGsDetected = flatBGsDetected,
                 dynIsfMode = dynIsfMode
             )
-            if (rT.rate != null) {
-                aapsLogger.debug( LTag.APS, "Keto(6): Do I need keto here?? rate would be ${rT.rate}")
-                //rT.rate = ketoProtection(rT.rate!!, profile, rT, pumpCaps)
-            } else {
-                aapsLogger.info(LTag.APS, "AIMI: ketoProtection skipped (rate=null)")
-            }
             logDecisionFinal("MAX_IOB", finalResult, bg, delta)
             return finalResult
         } else {
@@ -7213,7 +7335,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                 autodrive = autodrive,
                 currentTemp = currenttemp,
                 glucoseStatus = glucoseStatus,
-                featuresCombinedDelta = f?.combinedDelta,
+                featuresCombinedDelta = featuresCombinedDelta,
                 smbToGive = smbToGive.toDouble(),
                 zeroSinceMin = zeroSinceMin,
                 minutesSinceLastChange = minutesSinceLastChange,
@@ -7713,7 +7835,8 @@ class DetermineBasalaimiSMB2 @Inject constructor(
 
             return finalResult
         }
-    }
+        return rT
+    }// end runAdaptiveBasalAndSmb
 
     /**
      * Applies a safety floor to the basal rate to prevent unnecessary cutoffs (0 U/h)
