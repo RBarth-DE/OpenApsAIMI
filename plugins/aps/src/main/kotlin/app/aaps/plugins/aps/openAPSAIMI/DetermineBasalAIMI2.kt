@@ -343,10 +343,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
     
     // 🌸 Endometriosis Adjuster (Lazy init manually since not in graph yet or use manual passing)
     private val endoAdjuster by lazy { app.aaps.plugins.aps.openAPSAIMI.wcycle.EndometriosisAdjuster(preferences, aapsLogger) }
-
-    // 🔄 Persistent RT object — survives between cycles (Singleton)
-    private var persistentRT: RT? = null
-
+    
     // 🏥 Inflammation Adjuster (New Refactor - Decoupled from WCycle)
     private val inflammationAdjuster by lazy { 
         app.aaps.plugins.aps.openAPSAIMI.inflammatory.InflammationAdjuster(wCyclePreferences) 
@@ -4096,19 +4093,26 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         }
     }
 
-    private fun applyLegacyMealModes(profile: OapsProfileAimi, rT: RT, currenttemp: CurrentTemp, modeTbrLimit: Double): RT? {
+
+    private fun applyLegacyMealModes(
+        profile: OapsProfileAimi,
+        rT: RT,
+        currenttemp: CurrentTemp,
+        modeTbrLimit: Double
+    ): RT? {
         fun rbf(key: DoubleKey) = preferences.get(key)
         
         // 🛡️ ONE-SHOT PREBOLUS GUARD (MTR Safety Patch)
         // Ensure pre-boluses are not fired repeatedly every tick.
         // Requires 15min lockout or 0.0 value.
         val lockoutWindowMs = 15 * 60 * 1000L
-        val isLockedOut = (System.currentTimeMillis() - internalLastSmbMillis) < lockoutWindowMs
+        val now = dateUtil.now()
+        val isLockedOut = (now - internalLastSmbMillis) < lockoutWindowMs
 
         // 🛡️ IOB SAFETY GUARD
         // Do not allow meal preboluses if IOB is already high.
         // 🔒 Respect the USER'S maxIob setting. No hardcoded limits.
-        val iobGuard = iob > this.maxIob
+        val iobGuard = iob >= this.maxIob
 
         // ─────────────────────────────────────────────────────────────────────
         // 📈 PROGRESSIVE MEAL TBR — active en permanence pendant le mode repas
@@ -4146,85 +4150,195 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         }
 
 
-        if (isMealModeCondition() && !isLockedOut && !iobGuard) {
+        if (isMealModeCondition() ) {
             progressiveMealTBR(mealruntime)
-            rT.units = rbf(DoubleKey.OApsAIMIMealPrebolus)
-            rT.reason.append(context.getString(R.string.manual_meal_prebolus, rT.units))
-            consoleLog.add("🍱 LEGACY_MODE_MEAL P1=${"%.2f".format(rT.units ?: 0.0)}U")
-            internalLastSmbMillis = dateUtil.now()
-            return rT
+            if (!isLockedOut && !iobGuard) {
+                val requested = rbf(DoubleKey.OApsAIMIMealPrebolus)
+                val iobSpace = (this.maxIob - iob).coerceAtLeast(0.0)
+                val capped = min(requested, iobSpace)
+
+                if (capped <= 0.0) {
+                    consoleLog.add("🍱 LEGACY_MODE_MEAL BLOCKED: MaxIOB reached")
+                    return null
+                }
+
+                rT.units = capped
+                rT.reason.append(context.getString(R.string.manual_meal_prebolus, rT.units))
+                consoleLog.add("🍱 LEGACY_MODE_MEAL P1=${"%.2f".format(rT.units ?: 0.0)}U")
+                internalLastSmbMillis = dateUtil.now()
+                return rT
+            }
         }
-        if (isbfastModeCondition() && !isLockedOut && !iobGuard) {
+        if (isbfastModeCondition()) {
             progressiveMealTBR(bfastruntime)
-            rT.units = rbf(DoubleKey.OApsAIMIBFPrebolus)
-            rT.reason.append(context.getString(R.string.reason_prebolus_bfast1, rT.units))
-            consoleLog.add("🍱 LEGACY_MODE_BFAST P1=${"%.2f".format(rT.units ?: 0.0)}U")
-            internalLastSmbMillis = dateUtil.now()
-            return rT
+            if (!isLockedOut && !iobGuard) {
+                val requested = rbf(DoubleKey.OApsAIMIBFPrebolus)
+                val iobSpace = (this.maxIob - iob).coerceAtLeast(0.0)
+                val capped = min(requested, iobSpace)
+
+                if (capped <= 0.0) {
+                    consoleLog.add("🍱 LEGACY_MODE_BFAST_1 BLOCKED: MaxIOB reached")
+                    return null
+                }
+
+                rT.units = capped
+                rT.reason.append(context.getString(R.string.reason_prebolus_bfast1, rT.units))
+                consoleLog.add("🍱 LEGACY_MODE_BFAST P1=${"%.2f".format(rT.units ?: 0.0)}U")
+                internalLastSmbMillis = dateUtil.now()
+                return rT
+            }
         }
-        if (isbfast2ModeCondition() && !isLockedOut && !iobGuard) {
+        if (isbfast2ModeCondition()) {
             progressiveMealTBR(bfastruntime)
-            rT.units = rbf(DoubleKey.OApsAIMIBFPrebolus2)
-            rT.reason.append(context.getString(R.string.reason_prebolus_bfast2, rT.units))
-            consoleLog.add("🍱 LEGACY_MODE_BFAST P2=${"%.2f".format(rT.units ?: 0.0)}U")
-            internalLastSmbMillis = dateUtil.now()
-            return rT
+            if ( !isLockedOut && !iobGuard ) {
+                val requested = rbf(DoubleKey.OApsAIMIBFPrebolus2)
+                val iobSpace = (this.maxIob - iob).coerceAtLeast(0.0)
+                val capped = min(requested, iobSpace)
+
+                if (capped <= 0.0) {
+                    consoleLog.add("🍱 LEGACY_MODE_BFAST_2 BLOCKED: MaxIOB reached")
+                    return null
+                }
+
+                rT.units = capped
+                rT.reason.append(context.getString(R.string.reason_prebolus_bfast2, rT.units))
+                consoleLog.add("🍱 LEGACY_MODE_BFAST P2=${"%.2f".format(rT.units ?: 0.0)}U")
+                internalLastSmbMillis = dateUtil.now()
+                return rT
+            }
         }
-        if (isLunchModeCondition() && !isLockedOut && !iobGuard) {
+        if (isLunchModeCondition()) {
             progressiveMealTBR(lunchruntime)
-            rT.units = rbf(DoubleKey.OApsAIMILunchPrebolus)
-            rT.reason.append(context.getString(R.string.reason_prebolus_lunch1, rT.units))
-            consoleLog.add("🍱 LEGACY_MODE_LUNCH P1=${"%.2f".format(rT.units ?: 0.0)}U")
-            internalLastSmbMillis = dateUtil.now()
-            return rT
+            if ( !isLockedOut && !iobGuard) {
+                val requested = rbf(DoubleKey.OApsAIMILunchPrebolus)
+                val iobSpace = (this.maxIob - iob).coerceAtLeast(0.0)
+                val capped = min(requested, iobSpace)
+
+                if (capped <= 0.0) {
+                    consoleLog.add("🍱 LEGACY_MODE_LUNCH_1 BLOCKED: MaxIOB reached")
+                    return null
+                }
+
+                rT.units = capped
+                rT.reason.append(context.getString(R.string.reason_prebolus_lunch1, rT.units))
+                consoleLog.add("🍱 LEGACY_MODE_LUNCH P1=${"%.2f".format(rT.units ?: 0.0)}U")
+                internalLastSmbMillis = dateUtil.now()
+                return rT
+            }
         }
-        if (isLunch2ModeCondition() && !isLockedOut && !iobGuard) {
+        if (isLunch2ModeCondition()) {
             progressiveMealTBR(lunchruntime)
-            rT.units = rbf(DoubleKey.OApsAIMILunchPrebolus2)
-            rT.reason.append(context.getString(R.string.reason_prebolus_lunch2, rT.units))
-            consoleLog.add("🍱 LEGACY_MODE_LUNCH P2=${"%.2f".format(rT.units ?: 0.0)}U")
-            internalLastSmbMillis = dateUtil.now()
-            return rT
+            if ( !isLockedOut && !iobGuard) {
+                val requested = rbf(DoubleKey.OApsAIMILunchPrebolus2)
+                val iobSpace = (this.maxIob - iob).coerceAtLeast(0.0)
+                val capped = min(requested, iobSpace)
+
+                if (capped <= 0.0) {
+                    consoleLog.add("🍱 LEGACY_MODE_LUNCH_2 BLOCKED: MaxIOB reached")
+                    return null
+                }
+
+                rT.units = capped
+                rT.reason.append(context.getString(R.string.reason_prebolus_lunch2, rT.units))
+                consoleLog.add("🍱 LEGACY_MODE_LUNCH P2=${"%.2f".format(rT.units ?: 0.0)}U")
+                internalLastSmbMillis = dateUtil.now()
+                return rT
+            }
         }
-        if (isDinnerModeCondition() && !isLockedOut && !iobGuard) {
+        if (isDinnerModeCondition()) {
             progressiveMealTBR(dinnerruntime)
-            rT.units = rbf(DoubleKey.OApsAIMIDinnerPrebolus)
-            rT.reason.append(context.getString(R.string.reason_prebolus_dinner1, rT.units))
-            consoleLog.add("🍱 LEGACY_MODE_DINNER P1=${"%.2f".format(rT.units ?: 0.0)}U")
-            internalLastSmbMillis = dateUtil.now()
-            return rT
+            if ( !isLockedOut && !iobGuard) {
+                val requested = rbf(DoubleKey.OApsAIMIDinnerPrebolus)
+                val iobSpace = (this.maxIob - iob).coerceAtLeast(0.0)
+                val capped = min(requested, iobSpace)
+
+                if (capped <= 0.0) {
+                    consoleLog.add("🍱 LEGACY_MODE_DINNER_1 BLOCKED: MaxIOB reached")
+                    return null
+                }
+
+                rT.units = capped
+                rT.reason.append(context.getString(R.string.reason_prebolus_dinner1, rT.units))
+                consoleLog.add("🍱 LEGACY_MODE_DINNER P1=${"%.2f".format(rT.units ?: 0.0)}U")
+                internalLastSmbMillis = dateUtil.now()
+                return rT
+            }
         }
-        if (isDinner2ModeCondition() && !isLockedOut && !iobGuard) {
+        if (isDinner2ModeCondition()) {
             progressiveMealTBR(dinnerruntime)
-            rT.units = rbf(DoubleKey.OApsAIMIDinnerPrebolus2)
-            rT.reason.append(context.getString(R.string.reason_prebolus_dinner2, rT.units))
-            consoleLog.add("🍱 LEGACY_MODE_DINNER P2=${"%.2f".format(rT.units ?: 0.0)}U")
-            internalLastSmbMillis = dateUtil.now()
-            return rT
+            if ( !isLockedOut && !iobGuard) {
+                val requested = rbf(DoubleKey.OApsAIMIDinnerPrebolus2)
+                val iobSpace = (this.maxIob - iob).coerceAtLeast(0.0)
+                val capped = min(requested, iobSpace)
+
+                if (capped <= 0.0) {
+                    consoleLog.add("🍱 LEGACY_MODE_DINNER_2 BLOCKED: MaxIOB reached")
+                    return null
+                }
+
+                rT.units = capped
+                rT.reason.append(context.getString(R.string.reason_prebolus_dinner2, rT.units))
+                consoleLog.add("🍱 LEGACY_MODE_DINNER P2=${"%.2f".format(rT.units ?: 0.0)}U")
+                internalLastSmbMillis = dateUtil.now()
+                return rT
+            }
         }
-        if (isHighCarbModeCondition() && !isLockedOut && !iobGuard) {
+        if (isHighCarbModeCondition()) {
             progressiveMealTBR(highCarbrunTime)
-            rT.units = rbf(DoubleKey.OApsAIMIHighCarbPrebolus)
-            rT.reason.append(context.getString(R.string.reason_prebolus_highcarb, rT.units))
-            consoleLog.add("🍱 LEGACY_MODE_HIGHCARB P1=${"%.2f".format(rT.units ?: 0.0)}U")
-            internalLastSmbMillis = dateUtil.now()
-            return rT
+            if ( !isLockedOut && !iobGuard) {
+                val requested = rbf(DoubleKey.OApsAIMIHighCarbPrebolus)
+                val iobSpace = (this.maxIob - iob).coerceAtLeast(0.0)
+                val capped = min(requested, iobSpace)
+
+                if (capped <= 0.0) {
+                    consoleLog.add("🍱 LEGACY_MODE_HICA_1 BLOCKED: MaxIOB reached")
+                    return null
+                }
+
+                rT.units = capped
+                rT.reason.append(context.getString(R.string.reason_prebolus_highcarb, rT.units))
+                consoleLog.add("🍱 LEGACY_MODE_HIGHCARB P1=${"%.2f".format(rT.units ?: 0.0)}U")
+                internalLastSmbMillis = dateUtil.now()
+                return rT
+            }
         }
-        if (isHighCarb2ModeCondition() && !isLockedOut && !iobGuard) {
+        if (isHighCarb2ModeCondition()) {
             progressiveMealTBR(highCarbrunTime)
-            rT.units = rbf(DoubleKey.OApsAIMIHighCarbPrebolus2)
-            rT.reason.append(context.getString(R.string.reason_prebolus_highcarb, rT.units))
-            consoleLog.add("🍱 LEGACY_MODE_HIGHCARB P2=${"%.2f".format(rT.units ?: 0.0)}U")
-            internalLastSmbMillis = dateUtil.now()
-            return rT
+            if ( !isLockedOut && !iobGuard) {
+                val requested = rbf(DoubleKey.OApsAIMIHighCarbPrebolus2)
+                val iobSpace = (this.maxIob - iob).coerceAtLeast(0.0)
+                val capped = min(requested, iobSpace)
+
+                if (capped <= 0.0) {
+                    consoleLog.add("🍱 LEGACY_MODE_HICA_2 BLOCKED: MaxIOB reached")
+                    return null
+                }
+
+                rT.units = capped
+                rT.reason.append(context.getString(R.string.reason_prebolus_highcarb, rT.units))
+                consoleLog.add("🍱 LEGACY_MODE_HIGHCARB P2=${"%.2f".format(rT.units ?: 0.0)}U")
+                internalLastSmbMillis = dateUtil.now()
+                return rT
+            }
         }
-        if (issnackModeCondition() && !isLockedOut && !iobGuard) {
+        if (issnackModeCondition()) {
             progressiveMealTBR(snackrunTime, overrideSafety = false)
-            rT.units = rbf(DoubleKey.OApsAIMISnackPrebolus)
-            rT.reason.append(context.getString(R.string.reason_prebolus_snack, rT.units))
-            consoleLog.add("🍱 LEGACY_MODE_SNACK P1=${"%.2f".format(rT.units ?: 0.0)}U")
-            internalLastSmbMillis = dateUtil.now()
-            return rT
+            if ( !isLockedOut && !iobGuard) {
+                val requested = rbf(DoubleKey.OApsAIMISnackPrebolus)
+                val iobSpace = (this.maxIob - iob).coerceAtLeast(0.0)
+                val capped = min(requested, iobSpace)
+
+                if (capped <= 0.0) {
+                    consoleLog.add("🍱 LEGACY_MODE_SNACK BLOCKED: MaxIOB reached")
+                    return null
+                }
+
+                rT.units = capped
+                rT.reason.append(context.getString(R.string.reason_prebolus_snack, rT.units))
+                consoleLog.add("🍱 LEGACY_MODE_SNACK P1=${"%.2f".format(rT.units ?: 0.0)}U")
+                internalLastSmbMillis = dateUtil.now()
+                return rT
+            }
         }
         return null
     }
@@ -4530,9 +4644,10 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         microBolusAllowed: Boolean, currentTime: Long, flatBGsDetected: Boolean, dynIsfMode: Boolean, uiInteraction: UiInteraction,
         extraDebug: String = "" // 🌀 Extensible Debug Channel (e.g. Cosine Gate)
     ): RT {
+
         consoleError = mutableListOf()
-    consoleLog = mutableListOf()
-        
+        consoleLog = mutableListOf()
+
         if (extraDebug.isNotEmpty()) {
              // Append to log history AND consoleError for "Script Debug" visibility
              consoleLog.add(extraDebug)
@@ -4606,24 +4721,15 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                 iob_u = iob_data_array.firstOrNull()?.iob ?: 0.0 // Taking first element (Net IOB usually)
             )
         )
-
-        val rT = persistentRT ?: RT(
+        
+        var rT = RT(
             algorithm = APSResult.Algorithm.AIMI,
             runningDynamicIsf = dynIsfMode,
             timestamp = currentTime,
             consoleLog = consoleLog,
             consoleError = consoleError
-        ).also { persistentRT = it }
-
-        // always update Cycle-spezifische fields
-        rT.timestamp = currentTime
-        rT.consoleLog = consoleLog
-        rT.consoleError = consoleError
-        rT.runningDynamicIsf = dynIsfMode
-        rT.reason.clear()
-        rT.insulinReq = 0.0
-
-
+        )
+        
         if (extraDebug.isNotEmpty()) {
              rT.reason.append("$extraDebug\n")
         }
@@ -5182,7 +5288,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
 
             // 3. Absolute IOB Guard (Safety Floor)
             // 🔒 Respect the USER'S maxIob setting. No hardcoded limits.
-            val iobSafetyBlock = iob > maxIob
+            val iobSafetyBlock = iob >= maxIob
 
             if (recentBolusCount < 2 && !internalBlock && !iobSafetyBlock) {
                 // 🍱 Legacy Meal Prebolus Support for T3c (Already handled by top-level call above)
@@ -6702,17 +6808,32 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         if (smbToGive < beforeCap) {
             rT.reason.append(" | 🛡️ Cap: ${"%.2f".format(beforeCap)} → ${"%.2f".format(smbToGive)}")
         }
+        val savedReason = rT.reason.toString()
+        // 🔮 FCL 11.0: Preserve Predictions across reset
+        val savedPredBGs = rT.predBGs
 
-        rT.bg = bg
-        rT.tick = tick
-        rT.eventualBG = eventualBG
-        rT.targetBG = target_bg
-        rT.insulinReq = 0.0
-        rT.deliverAt = deliverAt
-        rT.sensitivityRatio = sensitivityRatio
-        rT.variable_sens = variableSensitivity.toDouble()
+        rT = RT(
+            algorithm = APSResult.Algorithm.AIMI,
+            runningDynamicIsf = dynIsfMode,
+            timestamp = currentTime,
+            bg = bg,
+            tick = tick,
+            eventualBG = eventualBG,
+            //targetBG = target_bg,
+            targetBG = "%.0f".format(target_bg).toDouble(),
+            insulinReq = 0.0,
+            deliverAt = deliverAt, // The time at which the microbolus should be delivered
+            //sensitivityRatio = sensitivityRatio, // autosens ratio (fraction of normal basal)
+            sensitivityRatio = "%.0f".format(sensitivityRatio).toDouble(),
+            consoleLog = consoleLog,
+            consoleError = consoleError,
+            //variable_sens = variableSensitivity.toDouble()
+            variable_sens = "%.0f".format(variableSensitivity.toDouble()).toDouble()
+        )
+        // 🔮 FCL 11.0: Restore preserved Predictions
+        rT.predBGs = savedPredBGs ?: rT.predBGs
         ensurePredictionFallback(rT, bg)
-        // Trajectory, predBGs, reason — all is automatically saved
+        rT.reason.append(savedReason)
 
         // ====================================================================================
 
@@ -8192,7 +8313,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             duraISFaverage = duraISFaverage,
             iob = iobNet
         )
-
+        
         val tickLine =
             "TICK ts=${System.currentTimeMillis()} bg=${bgValue.roundToInt()} d=${"%.1f".format(Locale.US, deltaValue)} iob=${"%.2f".format(Locale.US, iob)} act=${"%.3f".format(Locale.US, iobActivityNow)} th=${"%.3f".format(Locale.US, activityThreshold)} " +
                 "cob=${"%.1f".format(Locale.US, cob)} mode=$modeLabel autodriveState=$lastAutodriveState pred=$predChunk " +
@@ -8621,7 +8742,6 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         )
 
         consoleLog.add(rT.reason.toString())
-
         return rT
     }
 }
