@@ -4096,6 +4096,17 @@ class DetermineBasalaimiSMB2 @Inject constructor(
 
     private fun applyLegacyMealModes(profile: OapsProfileAimi, rT: RT, currenttemp: CurrentTemp, modeTbrLimit: Double): RT? {
         fun rbf(key: DoubleKey) = preferences.get(key)
+        
+        // 🛡️ ONE-SHOT PREBOLUS GUARD (MTR Safety Patch)
+        // Ensure pre-boluses are not fired repeatedly every tick.
+        // Requires 15min lockout or 0.0 value.
+        val lockoutWindowMs = 15 * 60 * 1000L
+        val isLockedOut = (System.currentTimeMillis() - internalLastSmbMillis) < lockoutWindowMs
+
+        // 🛡️ IOB SAFETY GUARD
+        // Do not allow meal preboluses if IOB is already high.
+        // 🔒 Respect the USER'S maxIob setting. No hardcoded limits.
+        val iobGuard = iob > this.maxIob
 
         // ─────────────────────────────────────────────────────────────────────
         // 📈 PROGRESSIVE MEAL TBR — active en permanence pendant le mode repas
@@ -4133,49 +4144,49 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         }
 
 
-        if (isMealModeCondition()) {
+        if (isMealModeCondition() && !isLockedOut && !iobGuard) {
             progressiveMealTBR(mealruntime)
             rT.units = rbf(DoubleKey.OApsAIMIMealPrebolus)
             rT.reason.append(context.getString(R.string.manual_meal_prebolus, rT.units))
             consoleLog.add("🍱 LEGACY_MODE_MEAL P1=${"%.2f".format(rT.units)}U")
             return rT
         }
-        if (isbfastModeCondition()) {
+        if (isbfastModeCondition() && !isLockedOut && !iobGuard) {
             progressiveMealTBR(bfastruntime)
             rT.units = rbf(DoubleKey.OApsAIMIBFPrebolus)
             rT.reason.append(context.getString(R.string.reason_prebolus_bfast1, rT.units))
             consoleLog.add("🍱 LEGACY_MODE_BFAST P1=${"%.2f".format(rT.units)}U")
             return rT
         }
-        if (isbfast2ModeCondition()) {
+        if (isbfast2ModeCondition() && !isLockedOut && !iobGuard) {
             progressiveMealTBR(bfastruntime)
             rT.units = rbf(DoubleKey.OApsAIMIBFPrebolus2)
             rT.reason.append(context.getString(R.string.reason_prebolus_bfast2, rT.units))
             consoleLog.add("🍱 LEGACY_MODE_BFAST P2=${"%.2f".format(rT.units)}U")
             return rT
         }
-        if (isLunchModeCondition()) {
+        if (isLunchModeCondition() && !isLockedOut && !iobGuard) {
             progressiveMealTBR(lunchruntime)
             rT.units = rbf(DoubleKey.OApsAIMILunchPrebolus)
             rT.reason.append(context.getString(R.string.reason_prebolus_lunch1, rT.units))
             consoleLog.add("🍱 LEGACY_MODE_LUNCH P1=${"%.2f".format(rT.units)}U")
             return rT
         }
-        if (isLunch2ModeCondition()) {
+        if (isLunch2ModeCondition() && !isLockedOut && !iobGuard) {
             progressiveMealTBR(lunchruntime)
             rT.units = rbf(DoubleKey.OApsAIMILunchPrebolus2)
             rT.reason.append(context.getString(R.string.reason_prebolus_lunch2, rT.units))
             consoleLog.add("🍱 LEGACY_MODE_LUNCH P2=${"%.2f".format(rT.units)}U")
             return rT
         }
-        if (isDinnerModeCondition()) {
+        if (isDinnerModeCondition() && !isLockedOut && !iobGuard) {
             progressiveMealTBR(dinnerruntime)
             rT.units = rbf(DoubleKey.OApsAIMIDinnerPrebolus)
             rT.reason.append(context.getString(R.string.reason_prebolus_dinner1, rT.units))
             consoleLog.add("🍱 LEGACY_MODE_DINNER P1=${"%.2f".format(rT.units)}U")
             return rT
         }
-        if (isDinner2ModeCondition()) {
+        if (isDinner2ModeCondition() && !isLockedOut && !iobGuard) {
             progressiveMealTBR(dinnerruntime)
             rT.units = rbf(DoubleKey.OApsAIMIDinnerPrebolus2)
             rT.reason.append(context.getString(R.string.reason_prebolus_dinner2, rT.units))
@@ -4202,6 +4213,9 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             rT.reason.append(context.getString(R.string.reason_prebolus_snack, rT.units))
             consoleLog.add("🍱 LEGACY_MODE_SNACK P1=${"%.2f".format(rT.units)}U")
             return rT
+        }
+        if (rT.units != null && rT.units!! > 0.0) {
+            internalLastSmbMillis = System.currentTimeMillis()
         }
         return null
     }
@@ -4431,9 +4445,15 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                             consoleLog.add("    → Interval: ${orig}min → ${intervalsmb}min")
                         }
                         if (kotlin.math.abs(mod.safetyMarginExpand - 1.0) > 0.05) {
-                            val orig = maxIob
-                            maxIob *= mod.safetyMarginExpand
-                            consoleLog.add("    → MaxIOB: ${"%.2f".format(orig)}U → ${"%.2f".format(maxIob)}U")
+                            val origLimit = preferences.get(app.aaps.core.keys.DoubleKey.ApsSmbMaxIob)
+                            val floor = if (delta > 0.3) origLimit * 0.5 else 0.0
+                            val candidate = maxIob * mod.safetyMarginExpand
+                            val beforeMod = maxIob
+                            maxIob = max(candidate, floor)
+                            
+                            if (maxIob < beforeMod) {
+                                consoleLog.add("    → MaxIOB Modulation: ${"%.2f".format(beforeMod)}U → ${"%.2f".format(maxIob)}U (Floor=${"%.2f".format(floor)}U)")
+                            }
                         }
                     } else if (relevanceScore <= 0.4) {
                         consoleLog.add("  ⏸ Modulation Gated (Relevance ${"%.2f".format(relevanceScore)} <= 0.4)")
@@ -4446,7 +4466,6 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                             try { uiInteraction.addNotification(w.type.hashCode(), w.message, 2) } catch (e: Exception) {}
                         }
                     }
-                    
                     analysis.predictedConvergenceTime?.let {
                         consoleLog.add("  ⏱ Est. convergence: ${it}min")
                     }
@@ -4531,6 +4550,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         this.duraISFaverage = glucose_status.duraISFaverage
         val iobObj = iob_data_array.firstOrNull() ?: IobTotal(currentTime)
         this.iobNet = iobObj.iob
+        this.iob = iobObj.iob.toFloat() // 🛡️ Early Initialization for Safety Guards
         val accel = glucose_status.bgAcceleration ?: 0.0
         this.bgacc = accel
 
@@ -4936,7 +4956,11 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         }
         val autodrive = preferences.get(BooleanKey.OApsAIMIautoDrive)
         val isAutodriveV3 = preferences.get(BooleanKey.OApsAIMIautoDriveActive)
-        val autodriveDisplay = if (autodrive || isAutodriveV3) "✔" else "✘"
+        val autodriveDisplay = when {
+            isAutodriveV3 -> "✔V3"
+            autodrive -> "✔V2"
+            else -> "✘"
+        }
 
         val calendarInstance = Calendar.getInstance()
         this.hourOfDay = calendarInstance[Calendar.HOUR_OF_DAY]
@@ -5110,26 +5134,88 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         if (preferences.get(BooleanKey.OApsAIMIT3cBrittleMode)) {
             consoleLog.add("⚡ T3c Brittle Mode Active: Bypassing standard AIMI algorithm.")
             
-            // 🛡️ T3c Pre-bolus Cap: max 2 SMBs within 20 minutes
-            // Without this cap, a 3rd meal-mode cycle can deliver an extra SMB that tips the patient
-            // into hypoglycemia — they have no glucagon to recover.
+            // 🛡️ T3c Pre-bolus Safety Guard
+            // Without robust one-shot guards, lag in database persistence can cause a 24U+ runaway (4U every 5min).
+            // We now use a triple-layer safety net:
+            // 1. Database History (including manual boluses)
+            // 2. Internal Memory (last suggested SMB time - lag-free)
+            // 3. Absolute IOB Cap (Emergency fallback)
+
             val t3cCapWindowMs = 20 * 60 * 1000L
             val t3cCapCutoff   = System.currentTimeMillis() - t3cCapWindowMs
-            val recentSmbCount = persistenceLayer
+            
+            // 1. Check Database (Harden: count ALL bolus types, not just SMB)
+            val recentBolusCount = persistenceLayer
                 .getBolusesFromTime(t3cCapCutoff, true)
                 .blockingGet()
-                .count { it.type == BS.Type.SMB }
+                .count { it.type == BS.Type.SMB || it.type == BS.Type.NORMAL }
 
-            if (recentSmbCount < 2) {
+            // 2. Check Internal Memory (Ensures 1 tick = 1 dose max even if DB is slow)
+            val timeSinceInternalSmbMs = System.currentTimeMillis() - internalLastSmbMillis
+            val internalBlock = timeSinceInternalSmbMs < t3cCapWindowMs
+
+            // 3. Absolute IOB Guard (Safety Floor)
+            // 🔒 Respect the USER'S maxIob setting. No hardcoded limits.
+            val iobSafetyBlock = iob > maxIob
+
+            if (recentBolusCount < 2 && !internalBlock && !iobSafetyBlock) {
                 // 🍱 Inject Legacy Meal Prebolus Support for T3c
-                // This safely calculates `rT.units` using Meal Mode buttons without applying full loop logic.
-                // Any TBR (rT.rate) mutated by this call will be safely overwritten in executeT3cBrittleMode.
                 applyLegacyMealModes(profile, rT, currenttemp, profile.max_basal.toDouble())
-                consoleLog.add("🍱 T3c pre-bolus allowed (recentSMB=$recentSmbCount < 2)")
+                // internalLastSmbMillis is now updated inside applyLegacyMealModes.
             } else {
-                consoleLog.add("🛡️ T3c pre-bolus CAP: $recentSmbCount SMBs in last 20min — skipping applyLegacyMealModes")
+                val reason = when {
+                    iobSafetyBlock -> "IOB_LIMIT (${"%.2f".format(iob)}U > MaxIOB)"
+                    internalBlock -> "INTERNAL_LOCKOUT (${timeSinceInternalSmbMs/60000}m < 20m)"
+                    else -> "DB_CAP ($recentBolusCount boluses in 20min)"
+                }
+                consoleLog.add("🛡️ T3c pre-bolus BLOCKED: $reason — skipping applyLegacyMealModes")
             }
-            
+
+            // ── Fix #2: T3c DataLake Shadow Tick ───────────────────────────────────────
+            // Autodrive V3 is bypassed in T3c mode, but we still want the ML model to
+            // accumulate training data on high-resistance episodes. We run a Shadow-only
+            // tick (no commands issued) so the DataLake and OnlineLearner stay calibrated.
+            if (autodriveEngine != null) {
+                try {
+                    val snapshot = physioAdapter.getLatestSnapshot()
+                    val t3cShadowState = app.aaps.plugins.aps.openAPSAIMI.autodrive.models.AutoDriveState.createSafe(
+                        bg = glucose_status.glucose,
+                        bgVelocity = (shortAvgDeltaAdj.toDouble() / 5.0),
+                        iob = iob_data_array.firstOrNull()?.iob ?: 0.0,
+                        cob = mealData.mealCOB,
+                        estimatedSI = (variableSensitivity.toDouble() / 10000.0),
+                        patientWeightKg = preferences.get(app.aaps.core.keys.DoubleKey.OApsAIMIweight),
+                        physiologicalStressMask = doubleArrayOf(),
+                        isNight = hourOfDay >= 23 || hourOfDay < 6,
+                        hour = hourOfDay,
+                        steps = snapshot.stepsLast15m,
+                        hr = snapshot.hrNow,
+                        rhr = snapshot.rhrResting,
+                        sourceSensor = glucose_status.sourceSensor,
+                        maxIOB = this.maxIob,
+                        maxSMB = this.maxSMB,
+                        highBgMaxSMB = this.maxSMBHB
+                    )
+                    autodriveEngine.setShadowMode(true)
+                    autodriveEngine.setIsActive(false)
+                    autodriveEngine.tick(
+                        currentState = t3cShadowState,
+                        profileBasal = profile.current_basal,
+                        profileIsf = profile.sens,
+                        lgsThreshold = minOf(90.0, (profile.lgsThreshold?.toDouble() ?: 70.0).coerceAtLeast(70.0)),
+                        hour = hourOfDay,
+                        steps = snapshot.stepsLast15m,
+                        hr = snapshot.hrNow,
+                        rhr = snapshot.rhrResting
+                    ) // result is null (shadow mode) — only DataLake and OnlineLearner update
+                    consoleLog.add("👻 [T3c_SHADOW] DataLake tick fired for V3 ML continuity.")
+                } catch (e: Exception) {
+                    // Shadow tick must NEVER interfere with T3c delivery
+                    aapsLogger.warn(app.aaps.core.interfaces.logging.LTag.APS, "[T3c_SHADOW] Shadow tick failed silently: ${e.message}")
+                }
+            }
+            // ────────────────────────────────────────────────────────────────────────────
+
             return executeT3cBrittleMode(
                 bg = glucose_status.glucose,
                 delta = glucose_status.delta.toFloat(),
@@ -5540,12 +5626,22 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                 aapsLogger.debug(app.aaps.core.interfaces.logging.LTag.APS, "🚦 [AUTODRIVE V3] ${gate.reason} - Engaging Control Loop...")
                 
                 val snapshot = physioAdapter.getLatestSnapshot()
+                // Fix #3: Use PKPD fusedIsf as the canonical ISF source for the MPC.
+                // This eliminates the double ISF modulation (IsfFusion + MPC internal estimation).
+                // fusedIsf is in mg/dL/U; the MPC's estimatedSI space uses /10000 scaling.
+                // If PKPD is disabled, fall back to variableSensitivity / 10000.
+                val canonicalSI = if (pkpdRuntime != null) {
+                    pkpdRuntime.fusedIsf / 10000.0
+                } else {
+                    variableSensitivity.toDouble() / 10000.0
+                }
+
                 val adState = app.aaps.plugins.aps.openAPSAIMI.autodrive.models.AutoDriveState.createSafe(
                     bg = glucose_status.glucose,
-                    bgVelocity = (shortAvgDeltaAdj.toDouble() / 5.0), 
+                    bgVelocity = (shortAvgDeltaAdj.toDouble() / 5.0),
                     iob = iob_data_array.firstOrNull()?.iob ?: 0.0,
                     cob = mealData.mealCOB,
-                    estimatedSI = (variableSensitivity.toDouble() / 10000.0), 
+                    estimatedSI = canonicalSI,
                     estimatedRa = continuousStateEstimator.getLastRa(),
                     patientWeightKg = preferences.get(app.aaps.core.keys.DoubleKey.OApsAIMIweight),
                     physiologicalStressMask = doubleArrayOf(),
@@ -5920,7 +6016,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
          if (abs(this.iob - iob_data.iob.toFloat()) > 1.0) {
               consoleLog.add("⚠️ IOB Mismatch: Profiler=${this.iob} vs System=${iob_data.iob}")
          }
-         this.iob = iob_data.iob.toFloat() // FIX: Restore Official Net IOB for Safety Checks
+         // this.iob = iob_data.iob.toFloat() // Moved to start of determine_basal for early safety
         // if (iob_data.basaliob < 0) {
         //     iob2 = -iob_data.basaliob.toFloat() + iob
         //     this.iob = iob2
@@ -7657,7 +7753,8 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             if (auditorEnabled) {
                 try {
                     // Collect all data for auditor
-                    val smbProposed = finalResult.units ?: 0.0
+                    // 🎯 FIX: Explicitly sync proposed units from RT before audit
+                    val smbProposed = (finalResult.units ?: rT.units ?: 0.0)
                     val tbrRate = finalResult.rate
                     val tbrDuration = finalResult.duration
                     val intervalMin = intervalsmb  // Current interval
