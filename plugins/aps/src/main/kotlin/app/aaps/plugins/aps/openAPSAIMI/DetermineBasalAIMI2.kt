@@ -6722,6 +6722,10 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             rT.reason.append("BasalBoost: ${basalBoostSource ?: "?"} ${"%.2f".format(Locale.US, rate)}U/h. ")
             // REMOVED: return rT (continue to SMB calculation)
         }
+
+        rT.reason.appendLine(
+            context.getString(R.string.autodrive_status, autodriveDisplay, activeModeName)
+        )
         // ================================================================
 
         // 🧬 Adaptive Basal & SMB — extracted to avoid D8 VerifyError
@@ -6738,7 +6742,6 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             iob_data_array      = iob_data_array,
             flatBGsDetected     = flatBGsDetected,
             accel               = accel,
-            activeModeName      = activeModeName,
             autodrive           = autodrive,
             basal               = basal,
             basalBoostApplied   = basalBoostApplied,
@@ -6803,7 +6806,6 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         iob_data_array: Array<IobTotal>,
         flatBGsDetected: Boolean,
         accel: Double,
-        activeModeName: String,
         autodrive: Boolean,
         basal: Double,
         basalBoostApplied: Boolean,
@@ -6885,9 +6887,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         }
 
 
-        rT.reason.appendLine(
-             context.getString(R.string.autodrive_status, autodriveDisplay, activeModeName)
-        )
+
         // Cleaned up Logging
 
         rT.reason.appendLine(
