@@ -348,7 +348,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
     private val inflammationAdjuster by lazy { 
         app.aaps.plugins.aps.openAPSAIMI.inflammatory.InflammationAdjuster(wCyclePreferences) 
     }
-
+    
     private var adaptiveMult: Double = 1.0
 
     // 🦋 Thyroid (Basedow) Module
@@ -582,7 +582,9 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                 exerciseFlag = false, // remplace par ctx.modes.sport si dispo
                 profileIsf = ctx.profile.isfMgdlPerU,
                 tdd24h = ctx.tdd24hU,
-                mealContext = mealCtx
+                mealContext = mealCtx,
+                combinedDelta = ctx.bg.combinedDelta,
+                uamConfidence = AimiUamHandler.confidenceOrZero()
             )
             return if (rt != null) {
                 PkpdPort.Snapshot(
@@ -612,7 +614,9 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                                                     exerciseFlag = false, // remplace par ctx.modes.sport si dispo
                                                     profileIsf = ctx.profile.isfMgdlPerU,
                                                     tdd24h = ctx.tdd24hU,
-                                                    mealContext = mealCtx)
+                                                    mealContext = mealCtx,
+                                                    combinedDelta = ctx.bg.combinedDelta,
+                                                    uamConfidence = AimiUamHandler.confidenceOrZero())
 
             val damping = SmbDampingUsecase.run(
                 rt,
@@ -1458,8 +1462,8 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             bgNow <= hypoGuard -> 0.0
             // [BASAL FLOOR] Rising & > 85 mg/dL -> Maintain floor (ML-Aware) instead of 0.0
             // Only if prediction would otherwise set it to 0.0 (e.g. safety logic)
-            rateAdjustment == 0.0 && bgNow > 85.0 &&
-            (delta > (if (adaptiveMultiplier > 1.1) -0.5 else 1.0)) &&
+            rateAdjustment == 0.0 && bgNow > 85.0 && 
+            (delta > (if (adaptiveMultiplier > 1.1) -0.5 else 1.0)) && 
             !isMealMode && !isLgsEnabled -> {
                  val baseFloor = profile.current_basal * 0.5
                  val adaptiveFloor = baseFloor * adaptiveMultiplier
@@ -2594,35 +2598,45 @@ class DetermineBasalaimiSMB2 @Inject constructor(
     }
 
     private fun isMealModeCondition(): Boolean {
-        return mealruntime in 0..7 && mealTime
+        val pbolusM: Double = preferences.get(DoubleKey.OApsAIMIMealPrebolus)
+        return mealruntime in 0..7 && lastBolusSMBUnit != pbolusM.toFloat() && mealTime
     }
     private fun isbfastModeCondition(): Boolean {
-        return bfastruntime in 0..7 && bfastTime
+        val pbolusbfast: Double = preferences.get(DoubleKey.OApsAIMIBFPrebolus)
+        return bfastruntime in 0..7 && lastBolusSMBUnit != pbolusbfast.toFloat() && bfastTime
     }
     private fun isbfast2ModeCondition(): Boolean {
-        return bfastruntime in 15..30 && bfastTime
+        val pbolusbfast2: Double = preferences.get(DoubleKey.OApsAIMIBFPrebolus2)
+        return bfastruntime in 15..30 && lastBolusSMBUnit != pbolusbfast2.toFloat() && bfastTime
     }
     private fun isLunchModeCondition(): Boolean {
-        return lunchruntime in 0..7 && lunchTime
+        val pbolusLunch: Double = preferences.get(DoubleKey.OApsAIMILunchPrebolus)
+        return lunchruntime in 0..7 && lastBolusSMBUnit != pbolusLunch.toFloat() && lunchTime
     }
     private fun isLunch2ModeCondition(): Boolean {
-        return lunchruntime in 15..24 && lunchTime
+        val pbolusLunch2: Double = preferences.get(DoubleKey.OApsAIMILunchPrebolus2)
+        return lunchruntime in 15..24 && lastBolusSMBUnit != pbolusLunch2.toFloat() && lunchTime
     }
     private fun isDinnerModeCondition(): Boolean {
-        return dinnerruntime in 0..7 && dinnerTime
+        val pbolusDinner: Double = preferences.get(DoubleKey.OApsAIMIDinnerPrebolus)
+        return dinnerruntime in 0..7 && lastBolusSMBUnit != pbolusDinner.toFloat() && dinnerTime
     }
     private fun isDinner2ModeCondition(): Boolean {
-        return dinnerruntime in 15..24 && dinnerTime
+        val pbolusDinner2: Double = preferences.get(DoubleKey.OApsAIMIDinnerPrebolus2)
+        return dinnerruntime in 15..24 && lastBolusSMBUnit != pbolusDinner2.toFloat() && dinnerTime
     }
     private fun isHighCarbModeCondition(): Boolean {
-        return highCarbrunTime in 0..7 && highCarbTime
+        val pbolusHC: Double = preferences.get(DoubleKey.OApsAIMIHighCarbPrebolus)
+        return highCarbrunTime in 0..7 && lastBolusSMBUnit != pbolusHC.toFloat() && highCarbTime
     }
     private fun isHighCarb2ModeCondition(): Boolean {
-        return highCarbrunTime in 15..23 && highCarbTime
+        val pbolusHC: Double = preferences.get(DoubleKey.OApsAIMIHighCarbPrebolus2)
+        return highCarbrunTime in 15..23 && lastBolusSMBUnit != pbolusHC.toFloat() && highCarbTime
     }
 
     private fun issnackModeCondition(): Boolean {
-        return snackrunTime in 0..7 && snackTime
+        val pbolussnack: Double = preferences.get(DoubleKey.OApsAIMISnackPrebolus)
+        return snackrunTime in 0..7 && lastBolusSMBUnit != pbolussnack.toFloat() && snackTime
     }
     // --- Helpers "fenêtre repas 30 min" ---
     private fun runtimeToMinutes(rt: Long): Int {
@@ -4083,7 +4097,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                 || (isFragileBg && !basalFirstHeavyMeal)) && !isMealAdvisorOneShot)
                 && !isConfirmedHighRise
                 && bg < 110.0 // 🚀 REVISED: Never block SMBs when BG is above 110
-
+        
         this.cachedBasalFirstActive = basalFirstActive
         this.cachedIsFragileBg = isFragileBg
         if (basalFirstActive) {
@@ -4115,18 +4129,6 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         modeTbrLimit: Double
     ): RT? {
         fun rbf(key: DoubleKey) = preferences.get(key)
-        
-        // 🛡️ ONE-SHOT PREBOLUS GUARD (MTR Safety Patch)
-        // Ensure pre-boluses are not fired repeatedly every tick.
-        // Requires 15min lockout or 0.0 value.
-        val lockoutWindowMs = 15 * 60 * 1000L
-        val now = dateUtil.now()
-        val isLockedOut = (now - internalLastSmbMillis) < lockoutWindowMs
-
-        // 🛡️ IOB SAFETY GUARD
-        // Do not allow meal preboluses if IOB is already high.
-        // 🔒 Respect the USER'S maxIob setting. No hardcoded limits.
-        val iobGuard = iob >= this.maxIob
 
         // ─────────────────────────────────────────────────────────────────────
         // 📈 PROGRESSIVE MEAL TBR — active en permanence pendant le mode repas
@@ -4158,201 +4160,81 @@ class DetermineBasalaimiSMB2 @Inject constructor(
 
             // ✅ TBR PERMANENTE — aucune condition sur delta
             // La résistance T3c s'installe silencieusement, avant tout signal glycémique visible.
-            setTempBasal(effectiveTbrRate, 5, profile, rT, currenttemp, overrideSafetyLimits = overrideSafety, adaptiveMultiplier = adaptiveMult)
+            setTempBasal(effectiveTbrRate, 5, profile, rT, currenttemp, overrideSafetyLimits = overrideSafety, adaptiveMultiplier = 1.0)
             val deltaTag = if (delta > 0f) "+%.1f".format(delta) else "%.1f".format(delta)
             consoleLog.add("📈 MEAL_TBR [${runtime/60}m]: BG=${bg.toInt()} Δ=$deltaTag → ${"%.2f".format(effectiveTbrRate)}U/h 🛡️anti-resist")
         }
 
 
-        if (isMealModeCondition() ) {
+        if (isMealModeCondition()) {
             progressiveMealTBR(mealruntime)
-            if (!isLockedOut && !iobGuard) {
-                val requested = rbf(DoubleKey.OApsAIMIMealPrebolus)
-                val iobSpace = (this.maxIob - iob).coerceAtLeast(0.0)
-                val capped = min(requested, iobSpace)
-
-                if (capped <= 0.0) {
-                    consoleLog.add("🍱 LEGACY_MODE_MEAL BLOCKED: MaxIOB reached")
-                    return null
-                }
-
-                rT.units = capped
-                rT.reason.append(context.getString(R.string.manual_meal_prebolus, rT.units))
-                consoleLog.add("🍱 LEGACY_MODE_MEAL P1=${"%.2f".format(rT.units ?: 0.0)}U")
-                internalLastSmbMillis = dateUtil.now()
-                return rT
-            }
+            rT.units = rbf(DoubleKey.OApsAIMIMealPrebolus)
+            rT.reason.append(context.getString(R.string.manual_meal_prebolus, rT.units))
+            consoleLog.add("🍱 LEGACY_MODE_MEAL P1=${"%.2f".format(rT.units ?: 0.0)}U")
+            return rT
         }
         if (isbfastModeCondition()) {
             progressiveMealTBR(bfastruntime)
-            if (!isLockedOut && !iobGuard) {
-                val requested = rbf(DoubleKey.OApsAIMIBFPrebolus)
-                val iobSpace = (this.maxIob - iob).coerceAtLeast(0.0)
-                val capped = min(requested, iobSpace)
-
-                if (capped <= 0.0) {
-                    consoleLog.add("🍱 LEGACY_MODE_BFAST_1 BLOCKED: MaxIOB reached")
-                    return null
-                }
-
-                rT.units = capped
-                rT.reason.append(context.getString(R.string.reason_prebolus_bfast1, rT.units))
-                consoleLog.add("🍱 LEGACY_MODE_BFAST P1=${"%.2f".format(rT.units ?: 0.0)}U")
-                internalLastSmbMillis = dateUtil.now()
-                return rT
-            }
+            rT.units = rbf(DoubleKey.OApsAIMIBFPrebolus)
+            rT.reason.append(context.getString(R.string.reason_prebolus_bfast1, rT.units))
+            consoleLog.add("🍱 LEGACY_MODE_BFAST P1=${"%.2f".format(rT.units ?: 0.0)}U")
+            return rT
         }
         if (isbfast2ModeCondition()) {
             progressiveMealTBR(bfastruntime)
-            if ( !isLockedOut && !iobGuard ) {
-                val requested = rbf(DoubleKey.OApsAIMIBFPrebolus2)
-                val iobSpace = (this.maxIob - iob).coerceAtLeast(0.0)
-                val capped = min(requested, iobSpace)
-
-                if (capped <= 0.0) {
-                    consoleLog.add("🍱 LEGACY_MODE_BFAST_2 BLOCKED: MaxIOB reached")
-                    return null
-                }
-
-                rT.units = capped
-                rT.reason.append(context.getString(R.string.reason_prebolus_bfast2, rT.units))
-                consoleLog.add("🍱 LEGACY_MODE_BFAST P2=${"%.2f".format(rT.units ?: 0.0)}U")
-                internalLastSmbMillis = dateUtil.now()
-                return rT
-            }
+            rT.units = rbf(DoubleKey.OApsAIMIBFPrebolus2)
+            rT.reason.append(context.getString(R.string.reason_prebolus_bfast2, rT.units))
+            consoleLog.add("🍱 LEGACY_MODE_BFAST P2=${"%.2f".format(rT.units ?: 0.0)}U")
+            return rT
         }
         if (isLunchModeCondition()) {
             progressiveMealTBR(lunchruntime)
-            if ( !isLockedOut && !iobGuard) {
-                val requested = rbf(DoubleKey.OApsAIMILunchPrebolus)
-                val iobSpace = (this.maxIob - iob).coerceAtLeast(0.0)
-                val capped = min(requested, iobSpace)
-
-                if (capped <= 0.0) {
-                    consoleLog.add("🍱 LEGACY_MODE_LUNCH_1 BLOCKED: MaxIOB reached")
-                    return null
-                }
-
-                rT.units = capped
-                rT.reason.append(context.getString(R.string.reason_prebolus_lunch1, rT.units))
-                consoleLog.add("🍱 LEGACY_MODE_LUNCH P1=${"%.2f".format(rT.units ?: 0.0)}U")
-                internalLastSmbMillis = dateUtil.now()
-                return rT
-            }
+            rT.units = rbf(DoubleKey.OApsAIMILunchPrebolus)
+            rT.reason.append(context.getString(R.string.reason_prebolus_lunch1, rT.units))
+            consoleLog.add("🍱 LEGACY_MODE_LUNCH P1=${"%.2f".format(rT.units ?: 0.0)}U")
+            return rT
         }
         if (isLunch2ModeCondition()) {
             progressiveMealTBR(lunchruntime)
-            if ( !isLockedOut && !iobGuard) {
-                val requested = rbf(DoubleKey.OApsAIMILunchPrebolus2)
-                val iobSpace = (this.maxIob - iob).coerceAtLeast(0.0)
-                val capped = min(requested, iobSpace)
-
-                if (capped <= 0.0) {
-                    consoleLog.add("🍱 LEGACY_MODE_LUNCH_2 BLOCKED: MaxIOB reached")
-                    return null
-                }
-
-                rT.units = capped
-                rT.reason.append(context.getString(R.string.reason_prebolus_lunch2, rT.units))
-                consoleLog.add("🍱 LEGACY_MODE_LUNCH P2=${"%.2f".format(rT.units ?: 0.0)}U")
-                internalLastSmbMillis = dateUtil.now()
-                return rT
-            }
+            rT.units = rbf(DoubleKey.OApsAIMILunchPrebolus2)
+            rT.reason.append(context.getString(R.string.reason_prebolus_lunch2, rT.units))
+            consoleLog.add("🍱 LEGACY_MODE_LUNCH P2=${"%.2f".format(rT.units ?: 0.0)}U")
+            return rT
         }
         if (isDinnerModeCondition()) {
             progressiveMealTBR(dinnerruntime)
-            if ( !isLockedOut && !iobGuard) {
-                val requested = rbf(DoubleKey.OApsAIMIDinnerPrebolus)
-                val iobSpace = (this.maxIob - iob).coerceAtLeast(0.0)
-                val capped = min(requested, iobSpace)
-
-                if (capped <= 0.0) {
-                    consoleLog.add("🍱 LEGACY_MODE_DINNER_1 BLOCKED: MaxIOB reached")
-                    return null
-                }
-
-                rT.units = capped
-                rT.reason.append(context.getString(R.string.reason_prebolus_dinner1, rT.units))
-                consoleLog.add("🍱 LEGACY_MODE_DINNER P1=${"%.2f".format(rT.units ?: 0.0)}U")
-                internalLastSmbMillis = dateUtil.now()
-                return rT
-            }
+            rT.units = rbf(DoubleKey.OApsAIMIDinnerPrebolus)
+            rT.reason.append(context.getString(R.string.reason_prebolus_dinner1, rT.units))
+            consoleLog.add("🍱 LEGACY_MODE_DINNER P1=${"%.2f".format(rT.units ?: 0.0)}U")
+            return rT
         }
         if (isDinner2ModeCondition()) {
             progressiveMealTBR(dinnerruntime)
-            if ( !isLockedOut && !iobGuard) {
-                val requested = rbf(DoubleKey.OApsAIMIDinnerPrebolus2)
-                val iobSpace = (this.maxIob - iob).coerceAtLeast(0.0)
-                val capped = min(requested, iobSpace)
-
-                if (capped <= 0.0) {
-                    consoleLog.add("🍱 LEGACY_MODE_DINNER_2 BLOCKED: MaxIOB reached")
-                    return null
-                }
-
-                rT.units = capped
-                rT.reason.append(context.getString(R.string.reason_prebolus_dinner2, rT.units))
-                consoleLog.add("🍱 LEGACY_MODE_DINNER P2=${"%.2f".format(rT.units ?: 0.0)}U")
-                internalLastSmbMillis = dateUtil.now()
-                return rT
-            }
+            rT.units = rbf(DoubleKey.OApsAIMIDinnerPrebolus2)
+            rT.reason.append(context.getString(R.string.reason_prebolus_dinner2, rT.units))
+            consoleLog.add("🍱 LEGACY_MODE_DINNER P2=${"%.2f".format(rT.units ?: 0.0)}U")
+            return rT
         }
         if (isHighCarbModeCondition()) {
             progressiveMealTBR(highCarbrunTime)
-            if ( !isLockedOut && !iobGuard) {
-                val requested = rbf(DoubleKey.OApsAIMIHighCarbPrebolus)
-                val iobSpace = (this.maxIob - iob).coerceAtLeast(0.0)
-                val capped = min(requested, iobSpace)
-
-                if (capped <= 0.0) {
-                    consoleLog.add("🍱 LEGACY_MODE_HICA_1 BLOCKED: MaxIOB reached")
-                    return null
-                }
-
-                rT.units = capped
-                rT.reason.append(context.getString(R.string.reason_prebolus_highcarb, rT.units))
-                consoleLog.add("🍱 LEGACY_MODE_HIGHCARB P1=${"%.2f".format(rT.units ?: 0.0)}U")
-                internalLastSmbMillis = dateUtil.now()
-                return rT
-            }
+            rT.units = rbf(DoubleKey.OApsAIMIHighCarbPrebolus)
+            rT.reason.append(context.getString(R.string.reason_prebolus_highcarb, rT.units))
+            consoleLog.add("🍱 LEGACY_MODE_HIGHCARB P1=${"%.2f".format(rT.units ?: 0.0)}U")
+            return rT
         }
         if (isHighCarb2ModeCondition()) {
             progressiveMealTBR(highCarbrunTime)
-            if ( !isLockedOut && !iobGuard) {
-                val requested = rbf(DoubleKey.OApsAIMIHighCarbPrebolus2)
-                val iobSpace = (this.maxIob - iob).coerceAtLeast(0.0)
-                val capped = min(requested, iobSpace)
-
-                if (capped <= 0.0) {
-                    consoleLog.add("🍱 LEGACY_MODE_HICA_2 BLOCKED: MaxIOB reached")
-                    return null
-                }
-
-                rT.units = capped
-                rT.reason.append(context.getString(R.string.reason_prebolus_highcarb, rT.units))
-                consoleLog.add("🍱 LEGACY_MODE_HIGHCARB P2=${"%.2f".format(rT.units ?: 0.0)}U")
-                internalLastSmbMillis = dateUtil.now()
-                return rT
-            }
+            rT.units = rbf(DoubleKey.OApsAIMIHighCarbPrebolus2)
+            rT.reason.append(context.getString(R.string.reason_prebolus_highcarb, rT.units))
+            consoleLog.add("🍱 LEGACY_MODE_HIGHCARB P2=${"%.2f".format(rT.units ?: 0.0)}U")
+            return rT
         }
         if (issnackModeCondition()) {
             progressiveMealTBR(snackrunTime, overrideSafety = false)
-            if ( !isLockedOut && !iobGuard) {
-                val requested = rbf(DoubleKey.OApsAIMISnackPrebolus)
-                val iobSpace = (this.maxIob - iob).coerceAtLeast(0.0)
-                val capped = min(requested, iobSpace)
-
-                if (capped <= 0.0) {
-                    consoleLog.add("🍱 LEGACY_MODE_SNACK BLOCKED: MaxIOB reached")
-                    return null
-                }
-
-                rT.units = capped
-                rT.reason.append(context.getString(R.string.reason_prebolus_snack, rT.units))
-                consoleLog.add("🍱 LEGACY_MODE_SNACK P1=${"%.2f".format(rT.units ?: 0.0)}U")
-                internalLastSmbMillis = dateUtil.now()
-                return rT
-            }
+            rT.units = rbf(DoubleKey.OApsAIMISnackPrebolus)
+            rT.reason.append(context.getString(R.string.reason_prebolus_snack, rT.units))
+            consoleLog.add("🍱 LEGACY_MODE_SNACK P1=${"%.2f".format(rT.units ?: 0.0)}U")
+            return rT
         }
         return null
     }
@@ -4674,6 +4556,9 @@ class DetermineBasalaimiSMB2 @Inject constructor(
 
         // Restore variable needed for later logic (Fix Unresolved Reference)
         val isExplicitAdvisorRun = preferences.get(BooleanKey.OApsAIMIMealAdvisorTrigger)
+        val tdd7P = preferences.get(DoubleKey.OApsAIMITDD7)
+        var tdd7Days = profile.TDD
+        if (tdd7Days == 0.0 || tdd7Days < tdd7P) tdd7Days = tdd7P
 
         // 🕵️ COMPARATOR: Capture Original Profile to avoid Bias
         // AIMI modifies the profile (activity, pregnancy, autosens) in-flight.
@@ -4691,9 +4576,10 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         this.iob = iobObj.iob.toFloat() // 🛡️ Early Initialization for Safety Guards
         val accel = glucose_status.bgAcceleration ?: 0.0
         this.bgacc = accel
-
-        // 🧬 Calculate Universal Adaptive Multiplier early to use in all setTempBasal calls
-        adaptiveMult = if (preferences.get(BooleanKey.OApsAIMIT3cAdaptiveBasalEnabled)) {
+        
+        // 🧬 Harmonized Adaptive Basal Multipliers (Fix Double-Scaling Regression)
+        val hMult = if (tdd7Days.toFloat() != 0.0f) basalLearner.getMultiplier() else 1.0
+        val nMult = if (preferences.get(BooleanKey.OApsAIMIT3cAdaptiveBasalEnabled)) {
             basalNeuralLearner.getUniversalBasalMultiplier(
                 bg = glucose_status.glucose,
                 basal = profile.current_basal,
@@ -4703,6 +4589,19 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                 iob = iobObj.iob
             )
         } else 1.0
+
+        // Harmonization Logic: 
+        // 1. If both are > 1.0, take the max to avoid compounding.
+        // 2. If one is < 1.0 (hypo protection), prioritize the reduction (safety first).
+        adaptiveMult = when {
+            hMult < 0.99 || nMult < 0.99 -> min(hMult, nMult)
+            else -> max(hMult, nMult)
+        }
+        
+        // Log the decision for transparency
+        if (Math.abs(adaptiveMult - 1.0) > 0.01) {
+            consoleLog.add("🛡️ BASAL_UNIFIED_SCALING: H=${"%.2f".format(hMult)}x / N=${"%.2f".format(nMult)}x -> Applied=${"%.2f".format(adaptiveMult)}x")
+        }
 
         // 🚀 CONFIRMED HIGH RISE detection (Triple-Signal)
         val isConfirmedHighRiseLocal = glucose_status.glucose > 150.0 && glucose_status.combinedDelta > 1.5 && (glucose_status.bgAcceleration ?: 0.0) > 0.4
@@ -4983,7 +4882,10 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                 exerciseFlag = sportTime,
                 profileIsf = earlySens,
                 tdd24h = profile.max_daily_basal * 24.0, // Sort of
-                consoleLog = consoleLog
+                mealContext = null,
+                consoleLog = consoleLog,
+                combinedDelta = glucoseStatus.combinedDelta,
+                uamConfidence = AimiUamHandler.confidenceOrZero()
             )
         } catch (e: Exception) {
             consoleError.add("❌ Early PKPD Runtime init failed: ${e.message}")
@@ -5438,7 +5340,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             lastBolusTimeMs = lastBolusTimeMs,
             mealFlags = mealFlags
         )
-        val tdd7P: Double = preferences.get(DoubleKey.OApsAIMITDD7)
+        // tdd7P already hoisted to start of function
         var tdd24Hrs = tddCalculator.calculateDaily(-24, 0)?.totalAmount?.toFloat() ?: 0.0f
         if (tdd24Hrs == 0.0f) tdd24Hrs = tdd7P.toFloat()
         // TODO eliminate
@@ -5478,7 +5380,9 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             profileIsf = profile.sens,
             tdd24h = tdd24Hrs.toDouble(),
             mealContext = pkpdMealContext,
-            consoleLog = consoleLog
+            consoleLog = consoleLog,
+            combinedDelta = combinedDelta.toDouble(),
+            uamConfidence = AimiUamHandler.confidenceOrZero()
         )
 
         if (pkpdRuntimeTemp != null) {
@@ -5588,8 +5492,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         
         
         // End FCL 11.0 Hoist. Next block uses the results.
-        var tdd7Days = profile.TDD
-        if (tdd7Days == 0.0 || tdd7Days < tdd7P) tdd7Days = tdd7P
+        // tdd7Days already hoisted to start of function
         this.tdd7DaysPerHour = (tdd7Days / 24).toFloat()
 
         var tdd2Days = tddCalculator.averageTDD(tddCalculator.calculate(2, allowMissingDays = false))?.data?.totalAmount?.toFloat() ?: 0.0f
@@ -5796,7 +5699,9 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                     sourceSensor = glucose_status.sourceSensor,
                     maxIOB = this.maxIob,
                     maxSMB = this.maxSMB,
-                    highBgMaxSMB = this.maxSMBHB
+                    highBgMaxSMB = this.maxSMBHB,
+                    combinedDelta = combinedDelta.toDouble(),
+                    uamConfidence = AimiUamHandler.confidenceOrZero()
                 )
 
             // 🤖 Hardware-Awareness Logging
@@ -6315,11 +6220,9 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             consoleLog.add("ISF réduit de 10% (tendance FC anormale).")
         }
         if (tdd7Days.toFloat() != 0.0f) {
-            val learnedBasalMultiplier = basalLearner.getMultiplier()
-            basalaimi = ((tdd7Days / preferences.get(DoubleKey.OApsAIMIweight)) * learnedBasalMultiplier).toFloat()
-            if (learnedBasalMultiplier != 1.0) {
-                consoleLog.add("Basal adjusted by learner (x${"%.2f".format(learnedBasalMultiplier)})")
-            }
+            // [FIX] Use raw TDD-based basal for the decision loop to avoid double-scaling in setTempBasal
+            // but use it here for the internal 'basalaimi' reference.
+            basalaimi = (tdd7Days / preferences.get(DoubleKey.OApsAIMIweight)).toFloat()
         } else {
             basalaimi = profile_current_basal.toFloat()
             consoleLog.add("TDDis 0 -> Baseline Basal: ${basalaimi}U/h")
@@ -6327,13 +6230,20 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         this.basalaimi = basalDecisionEngine.smoothBasalRate(tdd7P.toFloat(), tdd7Days.toFloat(), basalaimi)
         if (tdd7Days.toFloat() != 0.0f) {
             this.ci = (450 / tdd7Days).toFloat()
+            // 🎯 Update carb limit using the harmonized learner (Unified Scaling)
+            val learnedBasalForLimit = basalaimi * adaptiveMult
+            this.aimilimit = (preferences.get(DoubleKey.OApsAIMICHO) / (450 / tdd7Days)).toFloat() * adaptiveMult.toFloat()
         }
 
-        val choKey: Double = preferences.get(DoubleKey.OApsAIMICHO)
-        if (ci != 0.0f && ci != Float.POSITIVE_INFINITY && ci != Float.NEGATIVE_INFINITY) {
-            this.aimilimit = (choKey / ci).toFloat()
-        } else {
-            this.aimilimit = (choKey / profile.carb_ratio).toFloat()
+        val choKey = preferences.get(DoubleKey.OApsAIMICHO)
+        this.aimilimit = when {
+            ci != 0.0f && ci.isFinite() -> (choKey / ci).toFloat()
+            else -> (choKey / profile.carb_ratio).toFloat()
+        }
+        
+        // 🎯 Apply Harmonized Adaptive Multiplier to carb limits
+        if (adaptiveMult != 1.0) {
+            this.aimilimit *= adaptiveMult.toFloat()
         }
         val timenow = LocalTime.now().hour
         val sixAMHour = LocalTime.of(6, 0).hour
@@ -6839,6 +6749,36 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         // 🔮 FCL 11.0: Preserve Predictions across reset
         val savedPredBGs = rT.predBGs
 
+        // 🌀 Preserve Trajectory fields across reset
+        val savedTrajEnabled = rT.trajectoryEnabled
+        val savedTrajType = rT.trajectoryType
+        val savedTrajCurv = rT.trajectoryCurvature
+        val savedTrajConv = rT.trajectoryConvergence
+        val savedTrajCoh = rT.trajectoryCoherence
+        val savedTrajEnergy = rT.trajectoryEnergy
+        val savedTrajOpen = rT.trajectoryOpenness
+        val savedTrajHealth = rT.trajectoryHealth
+        val savedTrajModActive = rT.trajectoryModulationActive
+        val savedTrajWarnCount = rT.trajectoryWarningsCount
+        val savedTrajETA = rT.trajectoryConvergenceETA
+        val savedTrajRelScore = rT.trajectoryRelevanceScore
+
+        // 🧠 Preserve AI Auditor fields across reset
+        val savedAuditorEnabled = rT.aiAuditorEnabled
+        val savedAuditorVerdict = rT.aiAuditorVerdict
+        val savedAuditorConf = rT.aiAuditorConfidence
+        val savedAuditorMod = rT.aiAuditorModulation
+        val savedAuditorRisk = rT.aiAuditorRiskFlags
+
+        // 🎯 Preserve Context fields across reset
+        val savedContextEnabled = rT.contextEnabled
+        val savedContextIntentCount = rT.contextIntentCount
+        val savedContextModulation = rT.contextModulation
+
+        // 📊 Preserve Learners Info and Hypo Risk
+        val savedLearnersInfo = rT.learnersInfo
+        val savedIsHypoRisk = rT.isHypoRisk
+
         rT = RT(
             algorithm = APSResult.Algorithm.AIMI,
             runningDynamicIsf = dynIsfMode,
@@ -6859,6 +6799,37 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         )
         // 🔮 FCL 11.0: Restore preserved Predictions
         rT.predBGs = savedPredBGs ?: rT.predBGs
+        
+        // 🌀 Restore preserved Trajectory fields
+        rT.trajectoryEnabled = savedTrajEnabled
+        rT.trajectoryType = savedTrajType
+        rT.trajectoryCurvature = savedTrajCurv
+        rT.trajectoryConvergence = savedTrajConv
+        rT.trajectoryCoherence = savedTrajCoh
+        rT.trajectoryEnergy = savedTrajEnergy
+        rT.trajectoryOpenness = savedTrajOpen
+        rT.trajectoryHealth = savedTrajHealth
+        rT.trajectoryModulationActive = savedTrajModActive
+        rT.trajectoryWarningsCount = savedTrajWarnCount
+        rT.trajectoryConvergenceETA = savedTrajETA
+        rT.trajectoryRelevanceScore = savedTrajRelScore
+
+        // 🧠 Restore preserved AI Auditor fields
+        rT.aiAuditorEnabled = savedAuditorEnabled
+        rT.aiAuditorVerdict = savedAuditorVerdict
+        rT.aiAuditorConfidence = savedAuditorConf
+        rT.aiAuditorModulation = savedAuditorMod
+        rT.aiAuditorRiskFlags = savedAuditorRisk
+
+        // 🎯 Restore preserved Context fields
+        rT.contextEnabled = savedContextEnabled
+        rT.contextIntentCount = savedContextIntentCount
+        rT.contextModulation = savedContextModulation
+
+        // 📊 Restore preserved Learners Info and Hypo Risk
+        rT.learnersInfo = savedLearnersInfo
+        rT.isHypoRisk = savedIsHypoRisk
+
         ensurePredictionFallback(rT, bg)
         rT.reason.append(savedReason)
 
@@ -6878,16 +6849,21 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                  // Using 1.3x boost as a safe "Meal Support" factor.
                  val targetRate = profile_current_basal * 1.3
                  val safeMax = if (maxBasalPref > 0.1) maxBasalPref else profile.max_basal
-                 calculateRate(basal, safeMax, 1.3, "Meal Advisor Trigger (One-Shot)", currenttemp, rT, overrideSafety = true)
+                 val boostedRate = calculateRate(basal, safeMax, 1.3, "Meal Advisor Trigger (One-Shot)", currenttemp, rT, overrideSafety = true)
+                 return setTempBasal(boostedRate, 30, profile, rT, currenttemp, overrideSafetyLimits = true, adaptiveMultiplier = 1.0)
             }
-            snackTime && snackrunTime in 0..30 && delta < 15 -> calculateRate(basal, profile_current_basal, 4.0, "AI Force basal because Snack Time $snackrunTime.", currenttemp, rT, overrideSafety = true)
+            snackTime && snackrunTime in 0..30 && delta < 15 -> {
+                val boostedRate = calculateRate(basal, profile_current_basal, 4.0, "AI Force basal because Snack Time $snackrunTime.", currenttemp, rT, overrideSafety = true)
+                return setTempBasal(boostedRate, 30, profile, rT, currenttemp, overrideSafetyLimits = true, adaptiveMultiplier = 1.0)
+            }
             
             // 🚀 RE-ENABLED: 30 MIN INITIAL BOOST (User Request)
             // Force Max TBR during the first 30 minutes of any meal mode to act as extended prebolus.
             (mealTime || lunchTime || dinnerTime || highCarbTime || bfastTime) && (listOf(mealruntime, lunchruntime, dinnerruntime, highCarbrunTime, bfastruntime).maxOrNull() ?: 0) in 0..30 -> {
                 val safeMax = if (maxBasalPref > 0.1) maxBasalPref else profile_current_basal * 5.0
                 //val factor = safeMax / profile_current_basal
-                calculateRate(basal, safeMax, 1.0, "Meal Boost 30min (Force MaxBasal)", currenttemp, rT, overrideSafety = true)
+                val boostedRate = calculateRate(basal, safeMax, 1.0, "Meal Boost 30min (Force MaxBasal)", currenttemp, rT, overrideSafety = true)
+                return setTempBasal(boostedRate, 30, profile, rT, currenttemp, overrideSafetyLimits = true, adaptiveMultiplier = 1.0)
             }
 
             // 🔥 Patch Post-Meal Hyper Boost (AIMI 2.0)
@@ -6977,11 +6953,8 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             rT.reason.append("BasalBoost: ${basalBoostSource ?: "?"} ${"%.2f".format(Locale.US, rate)}U/h. ")
             // REMOVED: return rT (continue to SMB calculation)
         }
-
-        rT.reason.appendLine(
-            context.getString(R.string.autodrive_status, autodriveDisplay, activeModeName)
-        )
         // ================================================================
+        
         // Final Status & TIR Logging
         rT.reason.appendLine(
             context.getString(R.string.autodrive_status, autodriveDisplay, activeModeName)
@@ -8686,7 +8659,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         // rT.units is preserved for pre-bolus from applyLegacyMealModes
 
         val baseBasal = profile.current_basal
-        // Removed the maxBasal restrictor for T3c because T3c NEEDS the 1000% capability
+        // Removed the maxBasal restrictor for T3c because T3c NEEDS the 1000% capability 
         // to act as a proper bolus replacement. It will be safely capped at 10x inside the compute function.
 
         // Fetch T3C Preferences
