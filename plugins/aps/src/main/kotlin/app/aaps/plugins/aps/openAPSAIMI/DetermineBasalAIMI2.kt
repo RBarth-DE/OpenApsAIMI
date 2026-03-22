@@ -4158,11 +4158,10 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             }
             val effectiveTbrRate = tbrRate.coerceAtMost(modeTbrLimit)
 
-            // ✅ TBR PERMANENTE — aucune condition sur delta
-            // La résistance T3c s'installe silencieusement, avant tout signal glycémique visible.
-            setTempBasal(effectiveTbrRate, 5, profile, rT, currenttemp, overrideSafetyLimits = overrideSafety, adaptiveMultiplier = 1.0)
+            // ✅ TBR PERMANENTE — 🛡️ Increased to 30m for pump compatibility
+            setTempBasal(effectiveTbrRate, 30, profile, rT, currenttemp, overrideSafetyLimits = overrideSafety, adaptiveMultiplier = 1.0)
             val deltaTag = if (delta > 0f) "+%.1f".format(delta) else "%.1f".format(delta)
-            consoleLog.add("📈 MEAL_TBR [${runtime/60}m]: BG=${bg.toInt()} Δ=$deltaTag → ${"%.2f".format(effectiveTbrRate)}U/h 🛡️anti-resist")
+            consoleLog.add("📈 MEAL_TBR [${runtime/60}m]: BG=${bg.toInt()} Δ=$deltaTag → ${"%.2f".format(effectiveTbrRate)}U/h (30m) 🛡️anti-resist")
         }
 
 
@@ -6746,113 +6745,29 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             rT.reason.append(" | 🛡️ Cap: ${"%.2f".format(beforeCap)} → ${"%.2f".format(smbToGive)}")
         }
         val savedReason = rT.reason.toString()
-        // 🔮 FCL 11.0: Preserve Predictions across reset
         val savedPredBGs = rT.predBGs
-
         val savedUnits = rT.units
         val savedRate = rT.rate
         val savedDuration = rT.duration
-        val savedDeliverAt = rT.deliverAt
-        val savedInsulinReq = rT.insulinReq
-        val savedCOB = rT.COB
-        val savedIOB = rT.IOB
-        val savedIsfMgdlForCarbs = rT.isfMgdlForCarbs
-        val savedCarbsReq = rT.carbsReq
-        val savedCarbsReqWithin = rT.carbsReqWithin
-        val savedAimilog = rT.aimilog.toString()
 
-        // 🌀 Preserve Trajectory fields across reset
-        val savedTrajEnabled = rT.trajectoryEnabled
-        val savedTrajType = rT.trajectoryType
-        val savedTrajCurv = rT.trajectoryCurvature
-        val savedTrajConv = rT.trajectoryConvergence
-        val savedTrajCoh = rT.trajectoryCoherence
-        val savedTrajEnergy = rT.trajectoryEnergy
-        val savedTrajOpen = rT.trajectoryOpenness
-        val savedTrajHealth = rT.trajectoryHealth
-        val savedTrajModActive = rT.trajectoryModulationActive
-        val savedTrajWarnCount = rT.trajectoryWarningsCount
-        val savedTrajETA = rT.trajectoryConvergenceETA
-        val savedTrajRelScore = rT.trajectoryRelevanceScore
+        rT.reason = StringBuilder("")
+        rT.units = null
+        rT.rate = null
+        rT.duration = null
+        rT.insulinReq = 0.0
+        rT.deliverAt = deliverAt
+        rT.targetBG = target_bg
+        rT.sensitivityRatio = sensitivityRatio
+        rT.variable_sens = variableSensitivity.toDouble()
 
-        // 🧠 Preserve AI Auditor fields across reset
-        val savedAuditorEnabled = rT.aiAuditorEnabled
-        val savedAuditorVerdict = rT.aiAuditorVerdict
-        val savedAuditorConf = rT.aiAuditorConfidence
-        val savedAuditorMod = rT.aiAuditorModulation
-        val savedAuditorRisk = rT.aiAuditorRiskFlags
-
-        // 🎯 Preserve Context fields across reset
-        val savedContextEnabled = rT.contextEnabled
-        val savedContextIntentCount = rT.contextIntentCount
-        val savedContextModulation = rT.contextModulation
-
-        // 📊 Preserve Learners Info and Hypo Risk
-        val savedLearnersInfo = rT.learnersInfo
-        val savedIsHypoRisk = rT.isHypoRisk
-
-        rT = RT(
-            algorithm = APSResult.Algorithm.AIMI,
-            runningDynamicIsf = dynIsfMode,
-            timestamp = currentTime,
-            bg = bg,
-            tick = tick,
-            eventualBG = eventualBG,
-            targetBG = target_bg,
-            insulinReq = 0.0,
-            deliverAt = deliverAt,
-            sensitivityRatio = sensitivityRatio,
-            consoleLog = consoleLog,
-            consoleError = consoleError,
-            variable_sens = variableSensitivity.toDouble()
-        )
-        // 🔮 FCL 11.0: Restore preserved Predictions
+        // 🔮 FCL 11.0: Restore preserved Predictions (if needed by final engine)
         rT.predBGs = savedPredBGs ?: rT.predBGs
-        
-        // 🚀 Restore preserved SMB/TBR and essential command fields
+        ensurePredictionFallback(rT, bg)
+
+        // RESTORE PRIORITY COMMANDS (from early blocks)
         rT.units = savedUnits
         rT.rate = savedRate
         rT.duration = savedDuration
-        rT.deliverAt = savedDeliverAt ?: rT.deliverAt
-        rT.insulinReq = savedInsulinReq ?: rT.insulinReq
-        rT.COB = savedCOB
-        rT.IOB = savedIOB
-        rT.isfMgdlForCarbs = savedIsfMgdlForCarbs
-        rT.carbsReq = savedCarbsReq
-        rT.carbsReqWithin = savedCarbsReqWithin
-        rT.aimilog = StringBuilder(savedAimilog)
-
-        // 🌀 Restore preserved Trajectory fields
-        rT.trajectoryEnabled = savedTrajEnabled
-        rT.trajectoryType = savedTrajType
-        rT.trajectoryCurvature = savedTrajCurv
-        rT.trajectoryConvergence = savedTrajConv
-        rT.trajectoryCoherence = savedTrajCoh
-        rT.trajectoryEnergy = savedTrajEnergy
-        rT.trajectoryOpenness = savedTrajOpen
-        rT.trajectoryHealth = savedTrajHealth
-        rT.trajectoryModulationActive = savedTrajModActive
-        rT.trajectoryWarningsCount = savedTrajWarnCount
-        rT.trajectoryConvergenceETA = savedTrajETA
-        rT.trajectoryRelevanceScore = savedTrajRelScore
-
-        // 🧠 Restore preserved AI Auditor fields
-        rT.aiAuditorEnabled = savedAuditorEnabled
-        rT.aiAuditorVerdict = savedAuditorVerdict
-        rT.aiAuditorConfidence = savedAuditorConf
-        rT.aiAuditorModulation = savedAuditorMod
-        rT.aiAuditorRiskFlags = savedAuditorRisk
-
-        // 🎯 Restore preserved Context fields
-        rT.contextEnabled = savedContextEnabled
-        rT.contextIntentCount = savedContextIntentCount
-        rT.contextModulation = savedContextModulation
-
-        // 📊 Restore preserved Learners Info and Hypo Risk
-        rT.learnersInfo = savedLearnersInfo
-        rT.isHypoRisk = savedIsHypoRisk
-
-        ensurePredictionFallback(rT, bg)
         rT.reason.append(savedReason)
 
         // ====================================================================================
@@ -6867,22 +6782,25 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         val rate: Double? = when {
             isMealAdvisorOneShot -> {
                  // Action 2: Force Basal (TBR) for 30 minutes. 
-                 val boostedRate = calculateRate(basal, if (maxBasalPref > 0.1) maxBasalPref else profile.max_basal, 1.3, "Meal Advisor Trigger (One-Shot)", currenttemp, rT, overrideSafety = true)
-                 setTempBasal(boostedRate, 30, profile, rT, currenttemp, overrideSafetyLimits = true, adaptiveMultiplier = 1.0)
-                 null // Continue to SMB logic
+                 // User requested "Force a quantity of basal". We use 130% of current basal (Safe Boost) or MaxBasal if preferred.
+                 // Using 1.3x boost as a safe "Meal Support" factor.
+                 val targetRate = profile_current_basal * 1.3
+                 val safeMax = if (maxBasalPref > 0.1) maxBasalPref else profile.max_basal
+                 val boostedRate = calculateRate(basal, safeMax, 1.3, "Meal Advisor Trigger (One-Shot)", currenttemp, rT, overrideSafety = true)
+                 return setTempBasal(boostedRate, 30, profile, rT, currenttemp, overrideSafetyLimits = true, adaptiveMultiplier = 1.0)
             }
             snackTime && snackrunTime in 0..30 && delta < 15 -> {
                 val boostedRate = calculateRate(basal, profile_current_basal, 4.0, "AI Force basal because Snack Time $snackrunTime.", currenttemp, rT, overrideSafety = true)
-                setTempBasal(boostedRate, 30, profile, rT, currenttemp, overrideSafetyLimits = true, adaptiveMultiplier = 1.0)
-                null // Continue to SMB logic
+                return setTempBasal(boostedRate, 30, profile, rT, currenttemp, overrideSafetyLimits = true, adaptiveMultiplier = 1.0)
             }
             
             // 🚀 RE-ENABLED: 30 MIN INITIAL BOOST (User Request)
+            // Force Max TBR during the first 30 minutes of any meal mode to act as extended prebolus.
             (mealTime || lunchTime || dinnerTime || highCarbTime || bfastTime) && (listOf(mealruntime, lunchruntime, dinnerruntime, highCarbrunTime, bfastruntime).maxOrNull() ?: 0) in 0..30 -> {
                 val safeMax = if (maxBasalPref > 0.1) maxBasalPref else profile_current_basal * 5.0
+                //val factor = safeMax / profile_current_basal
                 val boostedRate = calculateRate(basal, safeMax, 1.0, "Meal Boost 30min (Force MaxBasal)", currenttemp, rT, overrideSafety = true)
-                setTempBasal(boostedRate, 30, profile, rT, currenttemp, overrideSafetyLimits = true, adaptiveMultiplier = 1.0)
-                null // Continue to SMB logic
+                return setTempBasal(boostedRate, 30, profile, rT, currenttemp, overrideSafetyLimits = true, adaptiveMultiplier = 1.0)
             }
 
             // 🔥 Patch Post-Meal Hyper Boost (AIMI 2.0)
@@ -7294,17 +7212,12 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                         forced
                     )
                 )
-                setTempBasal(
+                return setTempBasal(
                     forced, 30, profile, rT, currenttemp,
                     overrideSafetyLimits = true,    // bypass du plafond IOB pour le départ repas
                     adaptiveMultiplier = adaptiveMult
                 )
-            } else {
-                // Ensure rT.rate is still populated even if already forced on pump
-                rT.rate = forced
-                rT.duration = 30
             }
-            // Continuous flow: Don't return, let SMB be calculated
         }
         val ngrResult = nightGrowthResistanceMode.evaluate(
             now = Instant.ofEpochMilli(systemTime),
@@ -7433,10 +7346,6 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             logDecisionFinal("MAX_IOB", finalResult, bg, delta)
             return finalResult
         } else {
-            // 🚀 SYNC FIX: If rT.units already has a bolus (Meal Advisor / Prebolus), sync it to local variable
-            if ((rT.units ?: 0.0) > 0.0) {
-                smbToGive = rT.units!!.toFloat()
-            }
             var insulinReq = smbToGive.toDouble()
 
             // ⚡ ACTIVITY SAFETY CLAMP
@@ -7561,7 +7470,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                 bgAcceleration = bgAcceleration.toDouble(),
                 slopeFromMaxDeviation = mealData.slopeFromMaxDeviation,
                 slopeFromMinDeviation = mealData.slopeFromMinDeviation,
-                forcedBasal = minOf(forcedBasal.toDouble(), forcedBasalmealmodes.toDouble()), // Pass the relevant forced rate
+                forcedBasal = forcedBasal.toDouble(),
                 forcedMealActive = forcedMealActive,
                 isMealActive = isMealActive,
                 runtimeMinValue = runtimeMinValue,
@@ -7790,10 +7699,22 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             
             val learnersSummary = learnersParts.joinToString(", ")
             
-            // 🛡️ PRIORITY TBR PROTECTION: If a priority decision was already set (rT.rate != null),
-            // it MUST win. The background engine is for "Steady State" decision making.
-            val finalProposedRate = rT.rate ?: basalDecision.rate
-            val finalDuration = if (rT.rate != null) (rT.duration ?: 30) else maxOf(basalDecision.duration, 30)
+            // 🛡️ PRIORITY PROTECTION (MTR Fix)
+            // If a priority rate was set earlier (e.g., Meal Mode / Advisor),
+            // we preserve it unless the engine suggests a LOWER (safer) rate.
+            val engineRate = basalDecision.rate
+            val finalProposedRate = if (rT.rate != null) {
+                if (engineRate < rT.rate!!) engineRate else rT.rate!!
+            } else {
+                engineRate
+            }
+
+            // Ensure minimum 30 min duration for all manual/priority TBRs
+            val finalDuration = if (rT.rate != null) {
+                maxOf(rT.duration ?: 30, 30)
+            } else {
+                maxOf(basalDecision.duration, 30)
+            }
 
             val finalResult = setTempBasal(
                 _rate = finalProposedRate,
@@ -7801,7 +7722,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                 profile = profile,
                 rT = rT,
                 currenttemp = currenttemp,
-                overrideSafetyLimits = basalDecision.overrideSafety || (rT.rate != null),
+                overrideSafetyLimits = basalDecision.overrideSafety,
                 adaptiveMultiplier = adaptiveMult
             )
             comparator.compare(
