@@ -7,6 +7,7 @@ import app.aaps.plugins.aps.autotune.AutotunePlugin
 import app.aaps.plugins.aps.loop.LoopPlugin
 import app.aaps.plugins.aps.openAPSAIMI.di.WCycleModule
 import app.aaps.plugins.aps.openAPSAIMI.advisor.AimiProfileAdvisorActivity
+import app.aaps.plugins.aps.openAPSAIMI.advisor.pulse.AimiPulseDetailActivity
 import app.aaps.plugins.aps.openAPSAIMI.context.ui.ContextActivity
 import dagger.Binds
 import dagger.Module
@@ -31,6 +32,7 @@ abstract class ApsModule {
     @ContributesAndroidInjector abstract fun contributesAimiModeSettingsActivity(): app.aaps.plugins.aps.openAPSAIMI.advisor.AimiModeSettingsActivity
     @ContributesAndroidInjector abstract fun contributesMealAdvisorActivity(): app.aaps.plugins.aps.openAPSAIMI.advisor.meal.MealAdvisorActivity
     @ContributesAndroidInjector abstract fun contributesContextActivity(): ContextActivity
+    @ContributesAndroidInjector abstract fun contributesAimiPulseDetailActivity(): AimiPulseDetailActivity
 
     @Module
     interface Bindings {

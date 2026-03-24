@@ -44,6 +44,7 @@ import app.aaps.plugins.main.general.dashboard.viewmodel.AdjustmentCardState
 import app.aaps.plugins.main.general.dashboard.viewmodel.OverviewViewModel
 import app.aaps.plugins.main.general.overview.graphData.GraphData
 import app.aaps.plugins.main.general.overview.notifications.NotificationUiBinder
+import androidx.core.widget.NestedScrollView
 import androidx.recyclerview.widget.LinearLayoutManager
 import io.reactivex.rxjava3.disposables.CompositeDisposable
 import io.reactivex.rxjava3.kotlin.plusAssign
@@ -60,6 +61,7 @@ import android.view.MotionEvent
 import android.annotation.SuppressLint
 import android.graphics.Color
 import android.util.Log
+import app.aaps.core.interfaces.plugin.PluginBase
 import app.aaps.core.ui.dialogs.OKDialog
 import app.aaps.plugins.aps.openAPSAIMI.advisor.auditor.model.AuditorUIState
 
@@ -105,6 +107,7 @@ class DashboardFragment : DaggerFragment() {
     private val binding get() = _binding!!
     private var currentRange = 0
     private var auditorIndicator: AuditorStatusIndicator? = null
+    private var graphViewportLayoutListener: View.OnLayoutChangeListener? = null
 
 
     private val viewModel: OverviewViewModel by viewModels {
@@ -182,7 +185,7 @@ class DashboardFragment : DaggerFragment() {
             openAdjustmentDetails()
         }
         binding.adjustmentStatus.setOnRunLoopClickListener {
-            app.aaps.core.ui.toast.ToastUtils.infoToast(context, "Loop run requested")
+            app.aaps.core.ui.toast.ToastUtils.infoToast(context, resourceHelper.gs(R.string.dashboard_loop_run_requested))
             Thread {
                 try {
                     loop.invoke("Dashboard", true)
@@ -212,7 +215,6 @@ class DashboardFragment : DaggerFragment() {
         binding.statusCard.isClickable = true
         binding.statusCard.isFocusable = true
 
-
         // Setup Action Listeners (Advisor, Adjust, Prefs, Stats)
         binding.statusCard.setActionListener(object : CircleTopActionListener {
             override fun onAimiAdvisorClicked() {
@@ -223,7 +225,10 @@ class DashboardFragment : DaggerFragment() {
                     aapsLogger.error(LTag.CORE, "Failed to launch Advisor: ${e.message}")
                 }
             }
-            override fun onAdjustClicked() { openAdjustmentDetails() }
+            override fun onAdjustClicked()
+                {
+                    openAdjustmentDetails()
+            }
             override fun onAimiPreferencesClicked() {
                 // PreferencesActivity expects UiInteraction.PLUGIN_NAME = plugin class simpleName.
                 val pluginName = resolveAimiPluginName() ?: run {
@@ -251,6 +256,15 @@ class DashboardFragment : DaggerFragment() {
                     startActivity(intent)
                 } catch (e: Exception) {
                     aapsLogger.error(LTag.CORE, "Failed to launch MealAdvisorActivity: ${e.message}")
+                }
+            }
+
+            override fun onAimiPulseClicked() {
+                try {
+                    val intent = Intent().setClassName(requireContext(), "app.aaps.plugins.aps.openAPSAIMI.advisor.pulse.AimiPulseDetailActivity")
+                    startActivity(intent)
+                } catch (e: Exception) {
+                    aapsLogger.error(LTag.CORE, "Failed to launch AimiPulseDetailActivity: ${e.message}")
                 }
             }
 
@@ -296,7 +310,7 @@ class DashboardFragment : DaggerFragment() {
                 aapsLogger.error(LTag.CORE, "Failed to launch ContextActivity: ${e.message}")
             }
         }
-
+        setupDashboardGraphChrome()
         /*
          * Glucose Graph
          */
@@ -352,6 +366,8 @@ class DashboardFragment : DaggerFragment() {
         binding.glucoseGraph.graph.gridLabelRenderer?.reloadStyles()
 
         // Setup range selection button
+        bindDashboardGraphHeightToViewport()
+
         binding.glucoseGraph.rangeButton.setOnClickListener {
             val popup = androidx.appcompat.widget.PopupMenu(requireContext(), it)
             popup.menu.add(android.view.Menu.NONE, 6, android.view.Menu.NONE, getString(R.string.graph_long_scale_6h))
@@ -371,21 +387,6 @@ class DashboardFragment : DaggerFragment() {
     }
 
     private fun bindModes() {
-        availableAutomationEvents =
-            automation.userEvents()
-                .filter { it.isEnabled && it.canRun() }
-                .take(10)
-
-        binding.modesView.setButtons(
-            availableAutomationEvents.map { it.title }
-        )
-
-        binding.modesView.setOnButtonClickListener { index ->
-            aapsLogger.debug(LTag.CORE,"RBarth: bindModes called by button press")
-            val event = availableAutomationEvents.getOrNull(index) ?: return@setOnButtonClickListener
-            modesController.runEventWithConfirmation(event)
-        }
-
     }
 
     override fun onStart() {
@@ -443,10 +444,75 @@ class DashboardFragment : DaggerFragment() {
     }
 
     override fun onDestroyView() {
+        graphViewportLayoutListener?.let { listener ->
+            _binding?.root?.getChildAt(0)?.let { child ->
+                (child as? NestedScrollView)?.removeOnLayoutChangeListener(listener)
+            }
+        }
+        graphViewportLayoutListener = null
         super.onDestroyView()
         auditorIndicator?.stopAnimations()
         auditorIndicator = null
         _binding = null
+    }
+
+    /** Same Y-axis gutter logic as [app.aaps.plugins.main.general.overview.OverviewFragment] so labels are not cramped. */
+    private fun graphAxisWidthPx(): Int = when {
+        resources.displayMetrics.densityDpi <= 120 -> 3
+        resources.displayMetrics.densityDpi <= 160 -> 10
+        resources.displayMetrics.densityDpi <= 320 -> 35
+        resources.displayMetrics.densityDpi <= 420 -> 50
+        resources.displayMetrics.densityDpi <= 560 -> 70
+        else -> 80
+    }
+
+    private fun setupDashboardGraphChrome() {
+        val ctx = context ?: return
+        val graph = binding.glucoseGraph.graph
+        graph.gridLabelRenderer?.labelVerticalWidth = graphAxisWidthPx()
+        graph.gridLabelRenderer?.gridColor = resourceHelper.gac(ctx, app.aaps.core.ui.R.attr.graphGrid)
+        graph.viewport.backgroundColor = resourceHelper.gac(ctx, app.aaps.core.ui.R.attr.viewPortBackgroundColor)
+        graph.gridLabelRenderer?.reloadStyles()
+    }
+
+    /**
+     * Graph height scales with the visible scroll viewport (rotation, split-screen, different tallies),
+     * clamped between [R.dimen.dashboard_graph_height_min] and [R.dimen.dashboard_graph_height_max].
+     */
+    private fun bindDashboardGraphHeightToViewport() {
+        val sv = binding.root.getChildAt(0) as? NestedScrollView ?: return
+        val listener = View.OnLayoutChangeListener { _, _, _, _, _, _, _, _, _ ->
+            applyDashboardGraphHeight(sv)
+        }
+        graphViewportLayoutListener = listener
+        sv.addOnLayoutChangeListener(listener)
+        sv.post { applyDashboardGraphHeight(sv) }
+    }
+
+    private fun applyDashboardGraphHeight(scrollView: NestedScrollView) {
+        if (_binding == null) return
+        val viewportH = scrollView.height
+        if (viewportH <= 0) return
+        val minPx = resources.getDimensionPixelSize(R.dimen.dashboard_graph_height_min)
+        val maxPx = resources.getDimensionPixelSize(R.dimen.dashboard_graph_height_max)
+        val fraction = resources.getFraction(R.fraction.dashboard_graph_viewport_fraction, 1, 1)
+        val raw = (viewportH * fraction).toInt()
+        // Cap below full viewport so the status block can scroll; slightly relaxed vs 50% to fit X-axis labels.
+        val viewportCapPx = (viewportH * 0.50f).toInt()
+        val effectiveMaxPx = minOf(maxPx, viewportCapPx)
+        val effectiveMinPx = minOf(minPx, effectiveMaxPx)
+        val target = raw.coerceIn(effectiveMinPx, effectiveMaxPx)
+        val lp = binding.glucoseGraph.layoutParams
+        if (lp.height == target) return
+        lp.height = target
+        binding.glucoseGraph.layoutParams = lp
+        binding.glucoseGraph.requestLayout()
+        binding.root.post {
+            if (_binding != null) {
+                setupDashboardGraphChrome()
+                updateGraph()
+            }
+        }
     }
 
     private fun setupAuditorIndicator() {

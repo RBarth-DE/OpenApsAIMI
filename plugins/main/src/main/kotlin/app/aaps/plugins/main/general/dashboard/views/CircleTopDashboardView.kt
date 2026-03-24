@@ -2,12 +2,18 @@ package app.aaps.plugins.main.general.dashboard.views
 
 import android.content.Context
 import android.graphics.Color
+import android.view.accessibility.AccessibilityManager
 import android.util.AttributeSet
+import android.view.HapticFeedbackConstants
 import android.view.LayoutInflater
 import android.view.View
 import android.widget.FrameLayout
 import androidx.viewbinding.ViewBinding
+import androidx.core.view.ViewCompat
+import androidx.core.view.isGone
+import com.google.android.material.chip.Chip
 import app.aaps.plugins.main.databinding.ComponentCircleTopStatusHybridBinding
+import app.aaps.plugins.main.general.dashboard.viewmodel.StatusCardState
 import java.util.Locale
 import java.util.TimeZone
 
@@ -31,6 +37,11 @@ class CircleTopDashboardView @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null
 ) : FrameLayout(context, attrs) {
+    private var circleTopActionListener: CircleTopActionListener? = null
+
+    private val accessibilityManager: AccessibilityManager? by lazy {
+        context.getSystemService(Context.ACCESSIBILITY_SERVICE) as? AccessibilityManager
+    }
 
     private val binding = ComponentCircleTopStatusHybridBinding.inflate(
         LayoutInflater.from(context),
@@ -105,9 +116,9 @@ class CircleTopDashboardView @JvmOverloads constructor(
             val avg = getProp<Double>("avgBgMgdl") ?: Double.NaN
             val a1c = getProp<Double>("a1c") ?: Double.NaN
             if (!avg.isNaN() && !a1c.isNaN()) {
-                binding.tirStatsText.text = String.format(Locale.US,"Avg %.0f • A1C %.1f%%", avg, a1c)
+                binding.tirStatsText.text = String.format("Auj: Avg %.0f • A1C %.1f%%", avg, a1c)
             } else {
-                binding.tirStatsText.text = "Avg -- • A1C --"
+                binding.tirStatsText.text = "Auj: Avg -- • A1C --"
             }
 
             val vl = getProp<Double>("tirVeryLow") ?: 0.0
@@ -125,7 +136,7 @@ class CircleTopDashboardView @JvmOverloads constructor(
 
                 // only show text label if segment is large enough to display it
                 if (value >= 5.0) {
-                    label.text = String.format(Locale.US, "%.0f%%", value)
+                    label.text = String.format("%.0f%%", value)
                 } else {
                     label.text = ""
                 }
@@ -151,7 +162,35 @@ class CircleTopDashboardView @JvmOverloads constructor(
                 binding.aimiInsightsContainer.setBackgroundResource(app.aaps.plugins.main.R.drawable.dashboard_chip_background_warning)
             } else {
                 binding.aimiInsightsContainer.background = null
-            }   
+            }
+
+            // ═══════════════════════════════════════════════════════════════
+            // 5b. AIMI Pulse (real APS reason + facts)
+            // ═══════════════════════════════════════════════════════════════
+            if (state is StatusCardState) {
+                binding.aimiPulseTitle.text = state.aimiPulseTitle
+                binding.aimiPulseSummary.text = state.aimiPulseSummary
+                val meta = state.aimiPulseMeta
+                binding.aimiPulseMeta.text = meta
+                binding.aimiPulseMeta.isGone = meta.isBlank()
+                val cd = buildString {
+                    append(state.aimiPulseTitle)
+                    append(". ")
+                    append(state.aimiPulseSummary)
+                    if (state.aimiPulseMeta.isNotBlank()) {
+                        append(". ")
+                        append(state.aimiPulseMeta)
+                    }
+                    append(". ")
+                    append(context.getString(app.aaps.plugins.main.R.string.dashboard_cd_aimi_pulse))
+                }
+                binding.aimiPulseContainer.contentDescription = cd
+                if (state.aimiPulseHypoRisk) {
+                    binding.aimiPulseContainer.setBackgroundResource(app.aaps.plugins.main.R.drawable.dashboard_chip_background_warning)
+                } else {
+                    binding.aimiPulseContainer.setBackgroundResource(app.aaps.plugins.main.R.drawable.dashboard_chip_background)
+                }
+            }
 
         } catch (e: Exception) {
             // Fallback: Log error but don't crash
@@ -160,15 +199,75 @@ class CircleTopDashboardView @JvmOverloads constructor(
     }
 
     /**
-     * Set action listeners for the 4 chips
+     * Set action listeners for chips and the AIMI pulse card.
      */
     fun setActionListener(listener: CircleTopActionListener) {
-        binding.chipAimiAdvisor.setOnClickListener { listener.onAimiAdvisorClicked() }
-        binding.chipAdjust.setOnClickListener { listener.onAdjustClicked() }
-        binding.chipContext.setOnClickListener { listener.onAimiContextClicked() }
-        binding.chipFood.setOnClickListener { listener.onAimiFoodClicked() }
-        binding.chipAimiPref.setOnClickListener { listener.onAimiPreferencesClicked() }
-        binding.chipStat.setOnClickListener { listener.onStatsClicked() }
+        circleTopActionListener = listener
+
+        fun applyChipStateDescription(chip: Chip) {
+            val stateRes = if (chip.isChecked) {
+                app.aaps.plugins.main.R.string.dashboard_chip_state_selected
+            } else {
+                app.aaps.plugins.main.R.string.dashboard_chip_state_not_selected
+            }
+            ViewCompat.setStateDescription(chip, context.getString(stateRes))
+        }
+
+        fun configureAccessibility(chip: Chip) {
+            chip.setOnCheckedChangeListener { buttonView, _ ->
+                applyChipStateDescription(buttonView as Chip)
+            }
+            applyChipStateDescription(chip)
+        }
+
+        fun announceIfAccessibilityEnabled(messageRes: Int) {
+            val manager = accessibilityManager
+            if (manager != null && manager.isEnabled && manager.isTouchExplorationEnabled) {
+                announceForAccessibility(context.getString(messageRes))
+            }
+        }
+
+        fun withHaptic(action: () -> Unit): View.OnClickListener = View.OnClickListener {
+            // Light, immediate tactile acknowledgement for dashboard chip actions.
+            it.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
+            action()
+        }
+
+        configureAccessibility(binding.chipAimiAdvisor)
+        configureAccessibility(binding.chipAdjust)
+        configureAccessibility(binding.chipContext)
+        configureAccessibility(binding.chipFood)
+        configureAccessibility(binding.chipAimiPref)
+        configureAccessibility(binding.chipStat)
+
+        binding.chipAimiAdvisor.setOnClickListener(withHaptic {
+            listener.onAimiAdvisorClicked()
+            announceIfAccessibilityEnabled(app.aaps.plugins.main.R.string.dashboard_chip_announced_advisor_opened)
+        })
+        binding.chipAdjust.setOnClickListener(withHaptic {
+            listener.onAdjustClicked()
+            announceIfAccessibilityEnabled(app.aaps.plugins.main.R.string.dashboard_chip_announced_adjust_opened)
+        })
+        binding.chipContext.setOnClickListener(withHaptic {
+            listener.onAimiContextClicked()
+            announceIfAccessibilityEnabled(app.aaps.plugins.main.R.string.dashboard_chip_announced_context_opened)
+        })
+        binding.chipFood.setOnClickListener(withHaptic {
+            listener.onAimiFoodClicked()
+            announceIfAccessibilityEnabled(app.aaps.plugins.main.R.string.dashboard_chip_announced_meal_mode_opened)
+        })
+        binding.chipAimiPref.setOnClickListener(withHaptic {
+            listener.onAimiPreferencesClicked()
+            announceIfAccessibilityEnabled(app.aaps.plugins.main.R.string.dashboard_chip_announced_preferences_opened)
+        })
+        binding.chipStat.setOnClickListener(withHaptic {
+            listener.onStatsClicked()
+            announceIfAccessibilityEnabled(app.aaps.plugins.main.R.string.dashboard_chip_announced_stats_opened)
+        })
+        binding.aimiPulseContainer.setOnClickListener(withHaptic {
+            circleTopActionListener?.onAimiPulseClicked()
+            announceIfAccessibilityEnabled(app.aaps.plugins.main.R.string.dashboard_chip_announced_aimi_pulse_details)
+        })
     }
     
     // ═══════════════════════════════════════════════════════════════
@@ -187,7 +286,7 @@ class CircleTopDashboardView @JvmOverloads constructor(
 }
 
 /**
- * Listener interface for the 4 action chips
+ * Listener for dashboard chips and the AIMI pulse card.
  */
 interface CircleTopActionListener {
     fun onAimiAdvisorClicked()
@@ -196,4 +295,5 @@ interface CircleTopActionListener {
     fun onStatsClicked()
     fun onAimiContextClicked()
     fun onAimiFoodClicked()
+    fun onAimiPulseClicked()
 }

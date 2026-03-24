@@ -38,6 +38,12 @@
             android:label="AIMI Modes" />
         
         <activity
+            android:name=".openAPSAIMI.advisor.pulse.AimiPulseDetailActivity"
+            android:exported="false"
+            android:theme="@style/AppTheme.NoActionBar"
+            android:label="AIMI Pulse Detail" />
+
+        <activity
             android:name=".openAPSAIMI.context.ui.ContextActivity"
             android:exported="false"
             android:theme="@style/AppTheme"
