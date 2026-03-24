@@ -132,7 +132,12 @@ class AimiSmbComparator @Inject constructor(
                 profileAimi.exercise_mode,
                 profileAimi.half_basal_exercise_target,
                 profileAimi.high_temptarget_raises_sensitivity || profileAimi.low_temptarget_lowers_sensitivity
-            )
+            ).map { tick ->
+                // DetermineBasalSMB expects iobWithZeroTemp on every tick (assert on line 540)
+                // Fallback: no active Temp → ZeroTemp projection corresponds to the tick itself
+                if (tick.iobWithZeroTemp == null) tick.copy(iobWithZeroTemp = IobTotal(tick.time))
+                else tick
+            }.toTypedArray()
             
             aapsLogger.debug(
                 LTag.APS,

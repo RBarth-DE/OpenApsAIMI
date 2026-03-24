@@ -321,17 +321,16 @@ class AIMIPhysioDataRepositoryMTR @Inject constructor(
                                 source = record.metadata.dataOrigin.packageName
                             )
                         }
-                        
-                        cache[cacheKey] = CachedData(hrvList, System.currentTimeMillis())
-                        
+                        // Only cache if there is actually data present
                         if (hrvList.isNotEmpty()) {
+                            cache[cacheKey] = CachedData(hrvList, System.currentTimeMillis())
                             val avgRMSSD = hrvList.map { it.rmssd }.average()
-                            aapsLogger.info(
-                                LTag.APS,
-                                "[$TAG] ✅ HRV: ${hrvList.size} samples, avg RMSSD=${avgRMSSD.format(1)}ms"
-                            )
+                            aapsLogger.info(LTag.APS, "[$TAG] ✅ HRV: ${hrvList.size} samples, avg RMSSD=${avgRMSSD.format(1)}ms")
+                        } else {
+                            // Do not cache — next cycle will try again
+                            // (Garmin does not write HRV to Health Connect, Samsung etc. do)
+                            aapsLogger.debug(LTag.APS, "[$TAG] HRV: 0 records in Health Connect (Garmin-User: normal)")
                         }
-                        
                         hrvList
                     }
                 }

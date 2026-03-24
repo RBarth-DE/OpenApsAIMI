@@ -6809,16 +6809,9 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         if (smbToGive < beforeCap) {
             rT.reason.append(" | 🛡️ Cap: ${"%.2f".format(beforeCap)} → ${"%.2f".format(smbToGive)}")
         }
-        val savedReason = rT.reason.toString()
-        val savedPredBGs = rT.predBGs
-        val savedUnits = rT.units
-        val savedRate = rT.rate
-        val savedDuration = rT.duration
 
-        rT.reason = StringBuilder("")
-        rT.units = null
-        rT.rate = null
-        rT.duration = null
+       // ====================================================================================
+
         rT.insulinReq = 0.0
         rT.deliverAt = deliverAt
         rT.targetBG = target_bg
@@ -6826,14 +6819,8 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         rT.variable_sens = variableSensitivity.toDouble()
 
         // 🔮 FCL 11.0: Restore preserved Predictions (if needed by final engine)
-        rT.predBGs = savedPredBGs ?: rT.predBGs
         ensurePredictionFallback(rT, bg)
 
-        // RESTORE PRIORITY COMMANDS (from early blocks)
-        rT.units = savedUnits
-        rT.rate = savedRate
-        rT.duration = savedDuration
-        rT.reason.append(savedReason)
 
         // ====================================================================================
 

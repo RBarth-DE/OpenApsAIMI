@@ -76,7 +76,7 @@ class GlucoseStatusCalculatorAimi @Inject constructor(
     fun compute(allowOldData: Boolean): Result {
         val data = iobCobCalculator.ads.getBucketedDataTableCopy()
         if (data == null || data.isEmpty()) {
-            log.debug(LTag.GLUCOSE, "AIMI GS: no data")
+            //log.debug(LTag.GLUCOSE, "AIMI GS: no data")
             return storeAndReturn(null, null)
         }
 
