@@ -5,6 +5,11 @@
     android:background="?attr/colorSurface"
     android:padding="16dp">
 
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
     <!-- Empty State -->
     <LinearLayout
         android:id="@+id/auditor_empty_state"
@@ -35,7 +40,7 @@
             android:layout_marginTop="8dp"
             android:gravity="center"
             android:text="No verdict has been received yet,\nor the last report has expired (>5 min)."
-            android:textColor="?attr/colorOnSurfaceVariant" />
+            android:textColor="?attr/colorOnSurface" />
     </LinearLayout>
 
     <!-- Content -->
@@ -52,7 +57,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginBottom="16dp"
-            android:textColor="?attr/colorOnSurfaceVariant"
+            android:textColor="?attr/colorOnSurface"
             android:textSize="12sp" />
 
         <!-- Verdict Badge -->
@@ -82,7 +87,7 @@
             android:layout_height="wrap_content"
             android:layout_marginBottom="4dp"
             android:text="BOUNDED ADJUSTMENTS"
-            android:textColor="?attr/colorOnSurfaceVariant"
+            android:textColor="?attr/colorOnSurface"
             android:textSize="11sp"
             android:letterSpacing="0.1" />
 
@@ -90,7 +95,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="16dp"
-            android:background="?attr/colorSurfaceVariant"
+            android:background="?attr/colorSurface"
             android:orientation="vertical"
             android:padding="12dp">
 
@@ -116,7 +121,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="4dp"
                 android:text="RISK FLAGS"
-                android:textColor="?attr/colorOnSurfaceVariant"
+                android:textColor="?attr/colorOnSurface"
                 android:textSize="11sp"
                 android:letterSpacing="0.1" />
 
@@ -142,7 +147,7 @@
             android:layout_height="wrap_content"
             android:layout_marginBottom="4dp"
             android:text="EVIDENCE"
-            android:textColor="?attr/colorOnSurfaceVariant"
+            android:textColor="?attr/colorOnSurface"
             android:textSize="11sp"
             android:letterSpacing="0.1" />
 
@@ -150,7 +155,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="16dp"
-            android:background="?attr/colorSurfaceVariant"
+            android:background="?attr/colorSurface"
             android:orientation="vertical"
             android:padding="12dp">
 
@@ -175,14 +180,14 @@
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="4dp"
                 android:text="DEBUG CHECKS"
-                android:textColor="?attr/colorOnSurfaceVariant"
+                android:textColor="?attr/colorOnSurface"
                 android:textSize="11sp"
                 android:letterSpacing="0.1" />
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:background="?attr/colorSurfaceVariant"
+                android:background="?attr/colorSurface"
                 android:orientation="vertical"
                 android:padding="12dp">
 
@@ -191,11 +196,12 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:fontFamily="monospace"
-                    android:textColor="?attr/colorOnSurfaceVariant"
+                    android:textColor="?attr/colorOnSurface"
                     android:textSize="11sp" />
             </LinearLayout>
         </LinearLayout>
 
     </LinearLayout>
 
+    </LinearLayout>
 </ScrollView>
