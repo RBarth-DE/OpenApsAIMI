@@ -37,16 +37,17 @@
                 style="@style/Widget.AAPS.Dashboard.Card"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="@dimen/dashboard_block_spacing"
+                android:layout_marginBottom="2dp"
                 android:clipChildren="false"
                 android:clipToPadding="false"
+                app:cardUseCompatPadding="false"
                 app:contentPadding="0dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:paddingBottom="@dimen/dashboard_hero_bottom_inset"
+                    android:paddingBottom="0dp"
                     android:clipChildren="false">
 
                     <app.aaps.plugins.main.general.dashboard.views.CircleTopDashboardView
@@ -74,12 +75,38 @@
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
-            <app.aaps.plugins.main.general.dashboard.views.AdjustmentStatusView
-                android:id="@+id/adjustment_status"
+            <com.google.android.material.card.MaterialCardView
+                style="@style/Widget.AAPS.Dashboard.Card"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:visibility="gone"
-                tools:visibility="gone" />
+                android:layout_marginBottom="2dp"
+                app:cardElevation="2dp"
+                app:cardUseCompatPadding="false"
+                app:contentPadding="0dp">
+
+                <app.aaps.plugins.main.general.dashboard.views.DashboardModesView
+                    android:id="@+id/modes_view"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"/>
+
+            </com.google.android.material.card.MaterialCardView>
+
+            <com.google.android.material.card.MaterialCardView
+                style="@style/Widget.AAPS.Dashboard.Card"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="2dp"
+                app:cardElevation="2dp"
+                app:cardUseCompatPadding="false"
+                app:contentPadding="0dp">
+
+                <app.aaps.plugins.main.general.dashboard.views.DashboardPulseView
+                    android:id="@+id/pulse_view"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="2dp" />
+
+            </com.google.android.material.card.MaterialCardView>
 
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>

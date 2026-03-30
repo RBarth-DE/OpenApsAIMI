@@ -8,7 +8,7 @@
     <dimen name="dashboard_content_padding">14dp</dimen>
     <dimen name="dashboard_scroll_padding_horizontal">4dp</dimen>
     <dimen name="dashboard_scroll_padding_vertical">6dp</dimen>
-    <dimen name="dashboard_hero_bottom_inset">6dp</dimen>
+    <dimen name="dashboard_hero_bottom_inset">2dp</dimen>
     <dimen name="dashboard_notification_padding">10dp</dimen>
     <dimen name="dashboard_notification_margin">4dp</dimen>
     <!-- Default / fallback; DashboardFragment sets height from viewport (between min and max). -->

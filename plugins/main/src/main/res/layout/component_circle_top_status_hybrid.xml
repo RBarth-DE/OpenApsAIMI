@@ -533,66 +533,6 @@
                     <TextView android:id="@+id/tir_high_label"      android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="0.2"  android:text="" android:textSize="9sp" android:textColor="#FFD600" android:gravity="end" />
                     <TextView android:id="@+id/tir_very_high_label" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="0.05" android:text="" android:textSize="9sp" android:textColor="#D50000" android:gravity="end" />
                 </LinearLayout>
-
-
-                <!-- ═══════════════════════════════════════════════════ -->
-                <!-- AIMI PULSE — last APS reason + facts (tap → details) -->
-                <!-- ═══════════════════════════════════════════════════ -->
-                <LinearLayout
-                    android:id="@+id/aimi_pulse_container"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:layout_marginTop="@dimen/dashboard_section_spacing"
-                    android:paddingStart="8dp"
-                    android:paddingEnd="8dp"
-                    android:paddingTop="6dp"
-                    android:paddingBottom="6dp"
-                    android:background="@drawable/dashboard_chip_background"
-                    android:foreground="?attr/selectableItemBackground"
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:focusableInTouchMode="true">
-
-                    <TextView
-                        android:id="@+id/aimi_pulse_title"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:textAppearance="@style/TextAppearance.AAPS.Dashboard.SectionTitle"
-                        android:textSize="12sp"
-                        android:text="@string/dashboard_aimi_pulse_title" />
-
-                    <TextView
-                        android:id="@+id/aimi_pulse_summary"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="2dp"
-                        android:textAppearance="@style/TextAppearance.AAPS.Dashboard.PrimaryLine"
-                        android:textSize="13sp"
-                        android:lineSpacingMultiplier="1.02"
-                        android:maxLines="4"
-                        android:ellipsize="end"
-                        tools:text="OpenAPS reason excerpt…" />
-
-                    <TextView
-                        android:id="@+id/aimi_pulse_meta"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="3dp"
-                        android:textAppearance="@style/TextAppearance.AAPS.Dashboard.MetaLabel"
-                        android:textColor="@color/dashboard_on_surface_muted"
-                        tools:text="SMB 0.1 U · basal 0.9 U/h · AutoSens 100%" />
-
-                    <TextView
-                        android:id="@+id/aimi_pulse_hint"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="2dp"
-                        android:text="@string/dashboard_aimi_pulse_hint"
-                        android:textAppearance="@style/TextAppearance.AAPS.Dashboard.MetaLabel"
-                        android:textSize="9sp"
-                        android:alpha="0.75" />
-                </LinearLayout>
             </LinearLayout>
 
 

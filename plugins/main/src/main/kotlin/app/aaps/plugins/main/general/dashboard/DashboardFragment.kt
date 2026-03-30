@@ -64,6 +64,7 @@ import android.util.Log
 import app.aaps.core.interfaces.plugin.PluginBase
 import app.aaps.core.ui.dialogs.OKDialog
 import app.aaps.plugins.aps.openAPSAIMI.advisor.auditor.model.AuditorUIState
+import app.aaps.plugins.main.general.dashboard.viewmodel.StatusCardState
 
 class DashboardFragment : DaggerFragment() {
 
@@ -171,28 +172,9 @@ class DashboardFragment : DaggerFragment() {
         binding.overviewNotifications.layoutManager = LinearLayoutManager(context)
 
         syncGraphRange(preferences.get(IntNonKey.RangeToDisplay), false)
-        viewModel.statusCardState.observe(viewLifecycleOwner) { binding.statusCard.updateWithState(it) }
-        viewModel.adjustmentState.observe(viewLifecycleOwner) { state ->
-            state?.let {
-                binding.adjustmentStatus.update(it)
-                if (it.isHypoRisk) {
-                    showHypoRiskDialog()
-                }
-            }
-        }
-
-        binding.adjustmentStatus.setOnClickListener {
-            openAdjustmentDetails()
-        }
-        binding.adjustmentStatus.setOnRunLoopClickListener {
-            app.aaps.core.ui.toast.ToastUtils.infoToast(context, resourceHelper.gs(R.string.dashboard_loop_run_requested))
-            Thread {
-                try {
-                    loop.invoke("Dashboard", true)
-                } catch (e: Exception) {
-                    aapsLogger.error(LTag.APS, "Error invoking loop from dashboard", e)
-                }
-            }.start()
+        viewModel.statusCardState.observe(viewLifecycleOwner) {
+            binding.statusCard.updateWithState(it)
+            binding.pulseView.update(it)
         }
 
         //new DashboardModeView
@@ -387,6 +369,21 @@ class DashboardFragment : DaggerFragment() {
     }
 
     private fun bindModes() {
+        availableAutomationEvents =
+            automation.userEvents()
+                .filter { it.isEnabled && it.canRun() }
+                .take(10)
+
+        binding.modesView.setButtons(
+            availableAutomationEvents.map { it.title }
+        )
+
+        binding.modesView.setOnButtonClickListener { index ->
+            aapsLogger.debug(LTag.CORE,"RBarth: bindModes called by button press")
+            val event = availableAutomationEvents.getOrNull(index) ?: return@setOnButtonClickListener
+            modesController.runEventWithConfirmation(event)
+        }
+
     }
 
     override fun onStart() {
@@ -549,46 +546,58 @@ class DashboardFragment : DaggerFragment() {
     }
 
     private fun handleAuditorClick() {
-        val state = auditorIndicator?.getCurrentState() ?: return
+        val state = auditorIndicator?.getCurrentState()
+
+        if (state == null) {
+            aapsLogger.debug(LTag.CORE, "Auditor click: state is null")
+            return
+        }
+
+        aapsLogger.debug(
+            LTag.CORE,
+            "Auditor click: type=${state.type}, message=${state.statusMessage}"
+        )
 
         when (state.type) {
             AuditorUIState.StateType.READY,
             AuditorUIState.StateType.WARNING -> {
-                // Mark as read
+                aapsLogger.debug(LTag.CORE, "Auditor click: entering READY/WARNING branch")
+
                 auditorStatusLiveData.markAsRead()
                 auditorNotificationManager.cancelNotification()
 
-                // TODO: Open AuditorVerdictActivity when implemented
-                // For now, show dialog with status
-                activity?.let { activity ->
-                    OKDialog.show(activity,
-                                  "Auditor Insight",
-                                  state.statusMessage)
-                }
+                val intent = Intent(
+                    requireContext(),
+                    app.aaps.plugins.aps.openAPSAIMI.advisor.auditor.ui.AuditorVerdictActivity::class.java
+                )
+
+                aapsLogger.debug(LTag.CORE, "Auditor click: starting AuditorVerdictActivity")
+                startActivity(intent)
+                aapsLogger.debug(LTag.CORE, "Auditor click: startActivity returned")
             }
 
             AuditorUIState.StateType.PROCESSING -> {
+                aapsLogger.debug(LTag.CORE, "Auditor click: PROCESSING branch")
                 activity?.let { activity ->
-                    OKDialog.show(activity,
-                                  "Auditor",
-                                  "Analysis in progress, please wait...")
+                    OKDialog.show(activity, "Auditor", "Analysis in progress, please wait...")
                 }
             }
 
             AuditorUIState.StateType.ERROR -> {
+                aapsLogger.debug(LTag.CORE, "Auditor click: ERROR branch")
                 activity?.let { activity ->
-                    OKDialog.show(activity,
-                                  resourceHelper.gs(app.aaps.core.ui.R.string.error),
-                                  state.statusMessage)
+                    OKDialog.show(
+                        activity,
+                        resourceHelper.gs(app.aaps.core.ui.R.string.error),
+                        state.statusMessage
+                    )
                 }
             }
 
             else -> {
-                // IDLE - show info
+                aapsLogger.debug(LTag.CORE, "Auditor click: ELSE/IDLE branch")
                 activity?.let { activity ->
-                    OKDialog.show(activity,
-                                  "Auditor",
-                                  "Auditor will activate at next trigger")
+                    OKDialog.show(activity, "Auditor", "Auditor will activate at next trigger")
                 }
             }
         }

@@ -3,8 +3,7 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
 
-    android:padding="16dp"
-    android:background="@drawable/dashboard_card_surface"
+    android:padding="4dp"
     android:layout_width="match_parent"
     android:layout_height="wrap_content">
 
@@ -15,7 +14,7 @@
         app:autoSizeMinTextSize="6sp"
         app:autoSizeMaxTextSize="13sp"
         style="@style/Widget.AAPS.Dashboard.ModeButton"
-        android:text="@string/circle_mode_big"/>
+        android:text="@string/circle_mode_unknown"/>
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btn1"
@@ -23,7 +22,7 @@
         app:autoSizeMinTextSize="6sp"
         app:autoSizeMaxTextSize="13sp"
         style="@style/Widget.AAPS.Dashboard.ModeButton"
-        android:text="@string/circle_mode_med"/>
+        android:text="@string/circle_mode_unknown"/>
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btn2"
@@ -31,7 +30,7 @@
         app:autoSizeMinTextSize="6sp"
         app:autoSizeMaxTextSize="13sp"
         style="@style/Widget.AAPS.Dashboard.ModeButton"
-        android:text="@string/circle_mode_small"/>
+        android:text="@string/circle_mode_unknown"/>
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btn3"
@@ -39,7 +38,7 @@
         app:autoSizeMinTextSize="6sp"
         app:autoSizeMaxTextSize="13sp"
         style="@style/Widget.AAPS.Dashboard.ModeButton"
-        android:text="@string/circle_mode_snack1"/>
+        android:text="@string/circle_mode_unknown"/>
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btn4"
@@ -47,7 +46,7 @@
         app:autoSizeMinTextSize="6sp"
         app:autoSizeMaxTextSize="13sp"
         style="@style/Widget.AAPS.Dashboard.ModeButton"
-        android:text="@string/circle_mode_snack2"/>
+        android:text="@string/circle_mode_unknown"/>
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btn5"
@@ -55,7 +54,7 @@
         app:autoSizeMinTextSize="6sp"
         app:autoSizeMaxTextSize="13sp"
         style="@style/Widget.AAPS.Dashboard.ModeButton"
-        android:text="@string/circle_mode_sport"/>
+        android:text="@string/circle_mode_unknown"/>
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btn6"
@@ -63,7 +62,7 @@
         app:autoSizeMinTextSize="6sp"
         app:autoSizeMaxTextSize="13sp"
         style="@style/Widget.AAPS.Dashboard.ModeButton"
-        android:text="@string/circle_mode_hypo"/>
+        android:text="@string/circle_mode_unknown"/>
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btn7"
@@ -71,7 +70,7 @@
         app:autoSizeMinTextSize="6sp"
         app:autoSizeMaxTextSize="13sp"
         style="@style/Widget.AAPS.Dashboard.ModeButton"
-        android:text="@string/circle_mode_beer"/>
+        android:text="@string/circle_mode_unknown"/>
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btn8"
@@ -79,7 +78,7 @@
         app:autoSizeMinTextSize="6sp"
         app:autoSizeMaxTextSize="13sp"
         style="@style/Widget.AAPS.Dashboard.ModeButton"
-        android:text="@string/circle_mode_stop"/>
+        android:text="@string/circle_mode_unknown"/>
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btn9"

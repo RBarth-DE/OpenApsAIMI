@@ -537,13 +537,13 @@ class OverviewFragment : DaggerFragment(), View.OnClickListener, OnLongClickList
                 auditorStatusLiveData.markAsRead()
                 auditorNotificationManager.cancelNotification()
                 
-                // TODO: Open AuditorVerdictActivity when implemented
-                // For now, show dialog with status
-                activity?.let { activity ->
-                    OKDialog.show(activity, 
-                        "Auditor Insight",
-                        state.statusMessage)
-                }
+                /**
+                 * Opens the AuditorVerdictActivity to display audit verdicts and recommendations.
+                 * This activity provides feedback based on the Auditor system's analysis.
+                 */
+                val intent = Intent(requireContext(),
+                                    app.aaps.plugins.aps.openAPSAIMI.advisor.auditor.ui.AuditorVerdictActivity::class.java)
+                startActivity(intent)
             }
             
             AuditorUIState.StateType.PROCESSING -> {

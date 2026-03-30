@@ -37,9 +37,15 @@ class AuditorNotificationManager @Inject constructor(
     companion object {
         private const val CHANNEL_ID = "AIMI_AUDITOR_INSIGHTS"
         private const val CHANNEL_NAME = "AIMI Auditor Insights"
-        private const val NOTIFICATION_ID = 8888  // Unique ID for Auditor
-        
-        private const val ACTION_OPEN_REPORT = "app.aaps.AUDITOR_OPEN_REPORT"
+        private const val NOTIFICATION_ID = 8888
+
+        /**
+         * Static cancel — called from AuditorVerdictActivity.onCreate()
+         * so the notification dismisses when the report is opened.
+         */
+        fun cancelNotificationStatic(context: Context) {
+            NotificationManagerCompat.from(context).cancel(NOTIFICATION_ID)
+        }
     }
     
     init {
@@ -54,7 +60,7 @@ class AuditorNotificationManager @Inject constructor(
             val channel = NotificationChannel(
                 CHANNEL_ID,
                 CHANNEL_NAME,
-                NotificationManager.IMPORTANCE_LOW  // Silent, no sound
+                NotificationManager.IMPORTANCE_LOW
             ).apply {
                 description = "Notifications when new AIMI Auditor insights are available"
                 enableVibration(false)
@@ -71,32 +77,36 @@ class AuditorNotificationManager @Inject constructor(
      * Show notification for new insights
      */
     fun showInsightAvailable(uiState: AuditorUIState) {
-        // Don't notify if not appropriate
         if (!uiState.shouldNotify) return
         if (!uiState.isActive()) return
-        
-        // Build notification
+
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_audit_monitor)
             .setContentTitle(getNotificationTitle(uiState))
             .setContentText(getNotificationText(uiState))
-            .setStyle(
-                NotificationCompat.BigTextStyle()
-                    .bigText(getNotificationBigText(uiState))
-            )
-            .setPriority(NotificationCompat.PRIORITY_LOW)  // Silent
-            .setAutoCancel(true)  // Dismiss when tapped
-            .setOnlyAlertOnce(true)  // No repeat alerts
+            .setStyle(NotificationCompat.BigTextStyle().bigText(getNotificationBigText(uiState)))
+            .setPriority(NotificationCompat.PRIORITY_LOW)
+            .setAutoCancel(true)
+            .setOnlyAlertOnce(true)
             .setContentIntent(createOpenReportIntent())
             .addAction(createOpenReportAction())
             .setColor(getNotificationColor(uiState))
             .build()
-        
-        // Show notification
+
+        // POST_NOTIFICATIONS is required on Android 13+ (API 33)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (androidx.core.content.ContextCompat.checkSelfPermission(
+                    context,
+                    android.Manifest.permission.POST_NOTIFICATIONS
+                ) != android.content.pm.PackageManager.PERMISSION_GRANTED
+            ) return
+        }
         try {
             NotificationManagerCompat.from(context).notify(NOTIFICATION_ID, notification)
-        } catch (e: Exception) {
-            // Fail silently if notifications disabled
+        } catch (_: SecurityException) {
+            // Permission revoked at runtime — fail silently
+        } catch (_: Exception) {
+            // Other failures — fail silently
         }
     }
     
@@ -143,41 +153,30 @@ class AuditorNotificationManager @Inject constructor(
      */
     private fun getNotificationColor(uiState: AuditorUIState): Int {
         val colorRes = when (uiState.type) {
-            AuditorUIState.StateType.READY -> app.aaps.core.ui.R.color.inRange
+            AuditorUIState.StateType.READY   -> app.aaps.core.ui.R.color.inRange
             AuditorUIState.StateType.WARNING -> app.aaps.core.ui.R.color.warning
-            else -> app.aaps.core.ui.R.color.examinedProfile
+            else                             -> app.aaps.core.ui.R.color.examinedProfile
         }
         return context.getColor(colorRes)
     }
     
     /**
-     * Create PendingIntent to open Auditor report
-     * TODO: Replace with actual AuditorVerdictActivity intent
+     * Opens AuditorVerdictActivity directly — no more dead Intent action.
      */
     private fun createOpenReportIntent(): PendingIntent {
-        // For now, use a generic intent
-        // Replace with actual deep link to AuditorVerdictActivity
-        val intent = Intent(ACTION_OPEN_REPORT).apply {
-            setPackage(context.packageName)
+        val intent = Intent(context, AuditorVerdictActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
         }
-        
         return PendingIntent.getActivity(
-            context,
-            0,
-            intent,
+            context, 0, intent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
     }
-    
-    /**
-     * Create "View Report" action button
-     */
-    private fun createOpenReportAction(): NotificationCompat.Action {
-        return NotificationCompat.Action.Builder(
+
+    private fun createOpenReportAction(): NotificationCompat.Action =
+        NotificationCompat.Action.Builder(
             R.drawable.ic_audit_monitor,
             "View Report",
             createOpenReportIntent()
         ).build()
-    }
 }

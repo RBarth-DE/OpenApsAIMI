@@ -212,34 +212,6 @@ class CircleTopDashboardView @JvmOverloads constructor(
                 binding.aimiInsightsContainer.background = null
             }
 
-            // ═══════════════════════════════════════════════════════════════
-            // 5b. AIMI Pulse (real APS reason + facts)
-            // ═══════════════════════════════════════════════════════════════
-            if (state is StatusCardState) {
-                binding.aimiPulseTitle.text = state.aimiPulseTitle
-                binding.aimiPulseSummary.text = state.aimiPulseSummary
-                val meta = state.aimiPulseMeta
-                binding.aimiPulseMeta.text = meta
-                binding.aimiPulseMeta.isGone = meta.isBlank()
-                val cd = buildString {
-                    append(state.aimiPulseTitle)
-                    append(". ")
-                    append(state.aimiPulseSummary)
-                    if (state.aimiPulseMeta.isNotBlank()) {
-                        append(". ")
-                        append(state.aimiPulseMeta)
-                    }
-                    append(". ")
-                    append(context.getString(app.aaps.plugins.main.R.string.dashboard_cd_aimi_pulse))
-                }
-                binding.aimiPulseContainer.contentDescription = cd
-                if (state.aimiPulseHypoRisk) {
-                    binding.aimiPulseContainer.setBackgroundResource(app.aaps.plugins.main.R.drawable.dashboard_chip_background_warning)
-                } else {
-                    binding.aimiPulseContainer.setBackgroundResource(app.aaps.plugins.main.R.drawable.dashboard_chip_background)
-                }
-            }
-
         } catch (e: Exception) {
             // Fallback: Log error but don't crash
             e.printStackTrace()
@@ -311,10 +283,6 @@ class CircleTopDashboardView @JvmOverloads constructor(
         binding.chipStat.setOnClickListener(withHaptic {
             listener.onStatsClicked()
             announceIfAccessibilityEnabled(app.aaps.plugins.main.R.string.dashboard_chip_announced_stats_opened)
-        })
-        binding.aimiPulseContainer.setOnClickListener(withHaptic {
-            circleTopActionListener?.onAimiPulseClicked()
-            announceIfAccessibilityEnabled(app.aaps.plugins.main.R.string.dashboard_chip_announced_aimi_pulse_details)
         })
     }
     

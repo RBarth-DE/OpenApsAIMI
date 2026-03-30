@@ -458,15 +458,6 @@
     <string name="circle_btn_aimi_pref">Prefs</string>
     <string name="circle_btn_stats">Stats</string>
 
-    <string name="circle_mode_big">BIG\n4+3.5</string>
-    <string name="circle_mode_med">MED\n3.5+3</string>
-    <string name="circle_mode_small">SMALL\n3+2.5</string>
-    <string name="circle_mode_snack1">SNACK1\n3</string>
-    <string name="circle_mode_snack2">SNACK2\n2</string>
-    <string name="circle_mode_sport">SPORT\n3h 180</string>
-    <string name="circle_mode_hypo">HYPO\n45m 140</string>
-    <string name="circle_mode_beer">BIER\n2.8+2.5 3h</string>
-    <string name="circle_mode_stop">STOP</string>
     <string name="circle_mode_unknown">UNKNOWN</string>
 
     <!-- Adaptive Smoothing Quality badge (phase 1 informational) -->
