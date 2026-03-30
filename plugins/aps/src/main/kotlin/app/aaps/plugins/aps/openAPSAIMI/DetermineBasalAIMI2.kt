@@ -5688,7 +5688,11 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         val advisorRes = tryMealAdvisor(bg, delta, iob_data, profile, lastBolusTimeMs ?: 0L, modesCondition, isExplicitAdvisorRun)
         if (advisorRes is DecisionResult.Applied) {
              consoleLog.add("MEAL_ADVISOR_APPLIED source=${advisorRes.source} bolus=${advisorRes.bolusU}")
-             
+             aapsLogger.debug(
+                 app.aaps.core.interfaces.logging.LTag.APS,
+                 "MEAL_ADVISOR_TRACE applied source=${advisorRes.source} explicit=$isExplicitAdvisorRun bolusU=${advisorRes.bolusU} tbrUph=${advisorRes.tbrUph}"
+             )
+
              // 1. Apply TBR (Override Limits)
              if (advisorRes.tbrUph != null) {
                   setTempBasal(advisorRes.tbrUph, advisorRes.tbrMin ?: 30, profile, rT, currenttemp, overrideSafetyLimits = true, adaptiveMultiplier = adaptiveMult)
@@ -5725,7 +5729,13 @@ class DetermineBasalaimiSMB2 @Inject constructor(
              // Add Status Log (User Request)
              rT.reason.appendLine(context.getString(R.string.autodrive_status, autodriveDisplay, "Meal Advisor"))
              logDecisionFinal("MEAL_ADVISOR", rT, bg, delta)
-             // Flow Restored: Meal Advisor no longer hard returns, allows further processing.
+            aapsLogger.debug(
+                app.aaps.core.interfaces.logging.LTag.APS,
+                "MEAL_ADVISOR_TRACE final_return rT.units=${rT.units} insulinReq=${rT.insulinReq} reasonTail=${rT.reason.takeLast(120)}"
+            )
+            // Keep Meal Advisor behavior aligned with explicit meal modes:
+            // once applied, return immediately so later SMB/TBR stages cannot override prebolus intent.
+            return rT
         }
 
 
@@ -6776,6 +6786,41 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         } else {
             this.maxIob
         }
+
+        // 🚀 OPTION 2 (Meal debridage): compute a target IOB band from rise intensity,
+        // then allow maxIOB headroom *within* the configured priority uplift.
+        //
+        // Key properties:
+        // - Deterministic & local (does not depend on external auditor, which can be rate limited).
+        // - Still bounded by hard ceilings and pump quantization later in the pipeline.
+        val isAggressiveRise =
+            (bg >= 140.0 && (delta >= 15.0 || shortAvgDelta >= 10.0)) &&
+                (predictedBg.toDouble() >= 160.0 || eventualBG >= 160.0)
+
+        val iobTargetU: Double? =
+            if (pkpdReliefEnabled && isAggressivePriorityContext && isAggressiveRise) {
+                val base = when {
+                    bg >= 250.0 -> 10.0
+                    bg >= 200.0 -> 9.0
+                    bg >= 170.0 -> 8.0
+                    else -> 6.0
+                }
+                val velocityBonus = when {
+                    delta >= 30.0 || shortAvgDelta >= 20.0 -> 2.0
+                    delta >= 22.0 || shortAvgDelta >= 15.0 -> 1.0
+                    else -> 0.0
+                }
+                (base + velocityBonus).coerceIn(5.0, 12.0)
+            } else {
+                null
+            }
+
+        val effectiveMaxIobForDebridage: Double =
+            if (iobTargetU != null) {
+                max(effectiveMaxIobForPriority, iobTargetU).coerceAtMost(25.0)
+            } else {
+                effectiveMaxIobForPriority
+            }
         if (pkpdGuard.isActive()) {
             val beforeGuard = smbToGive
             val guardFactor = if (isAggressivePriorityContext) {
@@ -6798,6 +6843,12 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                 consoleLog.add(
                     "MAXIOB_RELIEF: ${"%.2f".format(this.maxIob)} -> ${"%.2f".format(effectiveMaxIobForPriority)} " +
                         "(priority context)"
+                )
+            }
+            if (effectiveMaxIobForDebridage > effectiveMaxIobForPriority + 0.01) {
+                consoleLog.add(
+                    "MEAL_DEBRIDAGE_MAXIOB: ${"%.2f".format(effectiveMaxIobForPriority)} -> ${"%.2f".format(effectiveMaxIobForDebridage)} " +
+                        "(target=${iobTargetU?.let { "%.2f".format(it) } ?: "n/a"}U, BG=${"%.0f".format(bg)}, Δ=${"%.1f".format(delta)})"
                 )
             }
 
@@ -6861,7 +6912,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             var mealBolus = min(candidateUnits.toDouble(), redCarpetMaxSmb).toFloat()
 
             // b. Cap MaxIOB (Ultimate Safety)
-            val iobSpace = (effectiveMaxIobForPriority - this.iob).coerceAtLeast(0.0)
+            val iobSpace = (effectiveMaxIobForDebridage - this.iob).coerceAtLeast(0.0)
             
             if (mealBolus > iobSpace.toFloat()) {
                 consoleLog.add("🛡️ RED CARPET: Clamped by MaxIOB (Need=${"%.2f".format(mealBolus)}, Space=${"%.2f".format(iobSpace)})")
@@ -6895,7 +6946,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                 bg = bg,
                 maxSmbConfig = currentMaxSmb,
                 iob = iob.toDouble(),
-                maxIob = effectiveMaxIobForPriority
+                maxIob = effectiveMaxIobForDebridage
             )
         }
         if (smbToGive < beforeCap) {
@@ -8512,11 +8563,19 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         // If > 20 mins, we assume the meal is either consumed or handled by standard COB logic.
         // Re-calculating "Carbs/IC - IOB" after 90 mins with decayed IOB causes massive dangerous boluses.
         val maxPassiveWindow = if (isExplicitTrigger) 120.0 else 20.0
+        aapsLogger.debug(
+            app.aaps.core.interfaces.logging.LTag.APS,
+            "MEAL_ADVISOR_TRACE gate carbs=${"%.1f".format(estimatedCarbs)} timeSinceMin=${"%.1f".format(timeSinceEstimateMin)} maxWindow=$maxPassiveWindow bg=${"%.1f".format(bg)} explicit=$isExplicitTrigger modesCondition=$modesCondition"
+        )
 
         if (estimatedCarbs > 10.0 && timeSinceEstimateMin in 0.0..maxPassiveWindow && bg >= 60) {
             // Refractory Check (Safety)
             // 🚀 BYPASS if Explicit Trigger (User clicked Snap&Go)
             if (!isExplicitTrigger && hasReceivedRecentBolus(45, lastBolusTime)) {
+                aapsLogger.debug(
+                    app.aaps.core.interfaces.logging.LTag.APS,
+                    "MEAL_ADVISOR_TRACE blocked refractory=true explicit=$isExplicitTrigger lastBolusTime=$lastBolusTime"
+                )
                 return DecisionResult.Fallthrough("Advisor Refractory (Recent Bolus <45m)")
             }
             
@@ -8575,8 +8634,16 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                     )
             } else {
                 consoleLog.add("ADVISOR_SKIP reason=modesCondition_false (legacy mode active)")
+                aapsLogger.debug(
+                    app.aaps.core.interfaces.logging.LTag.APS,
+                    "MEAL_ADVISOR_TRACE blocked modesCondition=false"
+                )
             }
         }
+        aapsLogger.debug(
+            app.aaps.core.interfaces.logging.LTag.APS,
+            "MEAL_ADVISOR_TRACE fallthrough no_active_request carbs=${"%.1f".format(estimatedCarbs)} timeSinceMin=${"%.1f".format(timeSinceEstimateMin)} bg=${"%.1f".format(bg)}"
+        )
         return DecisionResult.Fallthrough("No active Meal Advisor request")
     }
 

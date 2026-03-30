@@ -20,11 +20,8 @@ class PhysioRealtimeWorker(
         try {
             val manager = AIMIPhysioManagerMTR.instance
             if (manager == null) return@withContext Result.retry()
-            
-            val hcRepo = manager.repo.getHcRepo() // We need to expose this or add method in Repo
-            // Ideally Repo handles everything.
-            
-            // Trigger Snapshot Update
+
+            // performUpdate() ends with HealthContextRepository.fetchSnapshot() (FC/steps from DB + HC merge)
             manager.performUpdate(daysBack = 1, runLLM = false)
             
             Result.success()
@@ -70,11 +67,6 @@ class PhysioDailyWorker(
             val manager = AIMIPhysioManagerMTR.instance
             if (manager == null) return@withContext Result.retry()
             
-            // We need access to underlying HC repo to force heavy fetch
-            // Or add a "forceRefresh" method to HealthContextRepository
-            // For now, let's just fetchSnapshot, which does 1 day lookback.
-            // If we want 7 days history updated, we need access to hcRepo.
-            
             manager.performUpdate(daysBack = 7, runLLM = true)
             
             Result.success()
@@ -82,6 +74,30 @@ class PhysioDailyWorker(
             e.printStackTrace()
             Result.retry()
         }
+    }
+}
+
+/**
+ * Verifies DB + HC + merged snapshot; triggers HC sync and physio refresh when degraded.
+ */
+class PhysioPipelineWatchdogWorker(
+    context: Context,
+    params: WorkerParameters
+) : CoroutineWorker(context, params) {
+
+    override suspend fun doWork(): Result = withContext(Dispatchers.IO) {
+        try {
+            val watchdog = AIMIPhysioPipelineWatchdogMTR.instance
+            if (watchdog == null) return@withContext Result.retry()
+            watchdog.runCheckAndRecover()
+            Result.success()
+        } catch (e: Exception) {
+            return@withContext if (runAttemptCount < 3) Result.retry() else Result.failure()
+        }
+    }
+
+    companion object {
+        const val WORK_NAME = "AIMI_PHYSIO_PIPELINE_WATCHDOG"
     }
 }
 
