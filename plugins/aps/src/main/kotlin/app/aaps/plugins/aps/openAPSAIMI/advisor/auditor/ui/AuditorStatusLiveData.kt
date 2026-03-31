@@ -79,21 +79,25 @@ class AuditorStatusLiveData @Inject constructor() {
             status.isError() -> {
                 AuditorUIState.error(getErrorMessage(status))
             }
-            
-            // ACTIVE states (OK_*) → READY or WARNING
+
             status.isActive() -> {
+                val cached = AuditorVerdictCache.get()
+                val hasRealVerdict = cached?.verdict != null
+
+                if (!hasRealVerdict) {
+                    // Sentinel ran locally (OK_CONFIRM) but LLM was skipped — nothing to show
+                    return AuditorUIState.idle()
+                }
+
                 val insightCount = getUnreadInsightCount()
                 val shouldNotify = shouldNotifyUser()
-                
-                // Determine if warning based on verdict type
+
                 when (status) {
                     AuditorStatusTracker.Status.OK_REDUCE,
                     AuditorStatusTracker.Status.OK_SOFTEN -> {
-                        // Important recommendations → WARNING
                         AuditorUIState.warning("Important: ${status.message}")
                     }
                     else -> {
-                        // Normal insights → READY
                         AuditorUIState.ready(insightCount, shouldNotify)
                     }
                 }
@@ -109,10 +113,9 @@ class AuditorStatusLiveData @Inject constructor() {
      * TODO: Implement proper logic using AuditorVerdictCache.get() when needed
      * Example: val cached = AuditorVerdictCache.get(); count = cached?.verdict?.recommendations?.size ?: 1
      */
+// Replace getUnreadInsightCount():
     private fun getUnreadInsightCount(): Int {
-        // Placeholder: return 1 if status is active
-        // AuditorVerdictCache is a singleton object, accessible via AuditorVerdictCache.get()
-        return 1
+        return AuditorVerdictCache.get()?.verdict?.evidence?.size?.coerceAtLeast(1) ?: 0
     }
     
     /**

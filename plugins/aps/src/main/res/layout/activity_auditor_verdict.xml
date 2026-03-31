@@ -41,6 +41,16 @@
             android:gravity="center"
             android:text="No verdict has been received yet,\nor the last report has expired (>5 min)."
             android:textColor="?attr/colorOnSurface" />
+
+        <TextView
+            android:id="@+id/auditor_empty_message"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:gravity="center"
+            android:text="Empty message"
+            android:textColor="?attr/colorOnSurface" />
+
     </LinearLayout>
 
     <!-- Content -->

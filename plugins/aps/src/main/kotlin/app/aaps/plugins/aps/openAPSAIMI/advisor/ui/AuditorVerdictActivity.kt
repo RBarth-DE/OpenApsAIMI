@@ -122,9 +122,11 @@ class AuditorVerdictActivity : AppCompatActivity() {
         findViewById<View>(R.id.auditor_content).visibility = View.VISIBLE
     }
 
-    private fun showEmpty() {
-        findViewById<View>(R.id.auditor_empty_state).visibility = View.VISIBLE
+    private fun showEmpty(reason: String = "No audit triggered – situation normal (Sentinel: NONE)") {
         findViewById<View>(R.id.auditor_content).visibility = View.GONE
+        val emptyView = findViewById<View>(R.id.auditor_empty_state)
+        emptyView.visibility = View.VISIBLE
+        emptyView.findViewById<TextView?>(R.id.auditor_empty_message)?.text = reason
     }
 
     private fun formatTimestamp(ts: Long): String =

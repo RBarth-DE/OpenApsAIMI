@@ -7,7 +7,7 @@
     android:paddingStart="6dp"
     android:paddingEnd="6dp"
     android:paddingTop="4dp"
-    android:paddingBottom="14dp"
+    android:paddingBottom="0dp"
     android:clipChildren="false"
     android:clipToPadding="false">
 

@@ -53,7 +53,7 @@ class TddCalculatorImpl @Inject constructor(
         val result = LongSparseArray<TDD>()
         // Try to load cached values
         while (startTime < endTime) {
-            aapsLogger.debug(LTag.APS, "Looking for cached TotalDailyDose for ${dateUtil.dateString(startTime)}")
+            //aapsLogger.debug(LTag.APS, "Looking for cached TotalDailyDose for ${dateUtil.dateString(startTime)}")
             persistenceLayer.getCalculatedTotalDailyDose(startTime)?.let {
                 result.put(startTime, it)
                 aapsLogger.debug(LTag.APS, "Loaded cached TotalDailyDose for ${dateUtil.dateString(it.timestamp)} $it")
@@ -76,7 +76,7 @@ class TddCalculatorImpl @Inject constructor(
                 tdd.ids.pumpType = PumpType.CACHE
                 persistenceLayer.insertOrUpdateCachedTotalDailyDose(tdd).subscribe()
             } else {
-                aapsLogger.debug(LTag.APS, "Skipping storing TotalDailyDose for ${dateUtil.dateString(tdd.timestamp)}")
+                //aapsLogger.debug(LTag.APS, "Skipping storing TotalDailyDose for ${dateUtil.dateString(tdd.timestamp)}")
             }
         }
         if (result.size().toLong() == days || allowMissingDays) return result

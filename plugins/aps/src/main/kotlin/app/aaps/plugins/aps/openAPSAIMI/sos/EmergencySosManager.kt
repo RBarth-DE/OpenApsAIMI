@@ -107,6 +107,7 @@ object EmergencySosManager {
 
         // FIX 4: Follow-up check only if BG is still low (recovery already returned above)
         if (lastActionTime != 0L && nowMs - lastActionTime >= FOLLOWUP_INTERVAL_MS) {
+            aapsLogger.debug(LTag.APS,"SOS  Follow-up lastActionTime=$lastActionTime -> shouldTriggerNow")
             shouldTriggerNow = true
         }
 
@@ -115,6 +116,7 @@ object EmergencySosManager {
             isStaleScenario = true
             if (lastActionTime == 0L) {
                 shouldTriggerNow = true
+                aapsLogger.debug(LTag.APS,"SOS Stale sensor lastActionTime=$lastActionTime -> shouldTriggerNow")
                 prefs.edit { putBoolean(KEY_STALE_ALERT_TRIGGERED, true) }
             }
         }
@@ -137,6 +139,7 @@ object EmergencySosManager {
                     nowMs - firstBelowTime >= OBSERVATION_WINDOW_MS -> shouldTriggerNow = true
                 }
             }
+            aapsLogger.debug(LTag.APS,"SOS Hypoglycemia management lastActionTime=$lastActionTime -> shouldTriggerNow=$shouldTriggerNow")
         }
 
         // Send SMS
@@ -233,7 +236,7 @@ object EmergencySosManager {
             else
                 smsManager?.sendTextMessage(phone, null, fullMsg, null, null)
         } catch (e: Exception) {
-            aapsLogger.error(LTag.APS, "SMS Error for $phone", e)
+            aapsLogger.error(LTag.APS, "SOS SMS Error for $phone", e)
         }
     }
 }

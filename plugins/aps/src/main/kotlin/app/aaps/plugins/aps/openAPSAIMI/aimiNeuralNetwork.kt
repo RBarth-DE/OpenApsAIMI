@@ -244,7 +244,7 @@ class AimiNeuralNetwork(
 
             // Validation
             val valLoss = validate(valInputs, valTargets)
-            println("Epoch $epoch/$totalEpochs - trainLoss=$avgTrainLoss - valLoss=$valLoss")
+            //println("Epoch $epoch/$totalEpochs - trainLoss=$avgTrainLoss - valLoss=$valLoss")
 
             if (valLoss < bestValLoss) {
                 bestValLoss = valLoss
