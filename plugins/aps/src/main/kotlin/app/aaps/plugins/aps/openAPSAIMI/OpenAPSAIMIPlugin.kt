@@ -1277,20 +1277,47 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
                     )
 
                     addPreference(
-                        app.aaps.core.validators.preferences.AdaptiveStringPreference(
+                        AdaptiveStringPreference(
                             ctx = context,
-                            stringKey = app.aaps.core.keys.StringKey.AimiEmergencySosPhone,
+                            stringKey = StringKey.AimiEmergencySosPhone,
                             title = R.string.aimi_sos_phone_title,
                             dialogMessage = R.string.aimi_sos_phone_summary
                         )
                     )
 
                     addPreference(
-                        app.aaps.core.validators.preferences.AdaptiveIntPreference(
+                        AdaptiveStringPreference(
                             ctx = context,
-                            intKey = app.aaps.core.keys.IntKey.AimiEmergencySosThreshold,
+                            stringKey = StringKey.AimiEmergencySosPhone2,
+                            title = R.string.aimi_sos_phone_title2,
+                            dialogMessage = R.string.aimi_sos_phone_summary2
+                        )
+                    )
+
+                    addPreference(
+                        AdaptiveIntPreference(
+                            ctx = context,
+                            intKey = IntKey.AimiEmergencySosThreshold,
                             title = R.string.aimi_sos_threshold_title,
                             dialogMessage = R.string.aimi_sos_threshold_summary
+                        )
+                    )
+
+                    addPreference(
+                        AdaptiveIntPreference(
+                            ctx = context,
+                            intKey = IntKey.AimiEmergencySosImmediateThreshold,
+                            title = R.string.aimi_sos_immediate_threshold_title,
+                            dialogMessage = R.string.aimi_sos_immediate_threshold_summary
+                        )
+                    )
+
+                    addPreference(
+                        AdaptiveIntPreference(
+                            ctx = context,
+                            intKey = IntKey.AimiEmergencySosStaleThreshold,
+                            title = R.string.aimi_sos_stale_threshold_title,
+                            dialogMessage = R.string.aimi_sos_stale_threshold_summary
                         )
                     )
 

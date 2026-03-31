@@ -109,6 +109,8 @@ enum class IntKey(
     AimiCosineGateMaxPeakShift("aimi_cosine_gate_max_shift", 15, 0, 60),
 
     // 🚨 Emergency SOS (Hypo)
-    AimiEmergencySosThreshold("aimi_emergency_sos_threshold", 55, 40, 100),
+    AimiEmergencySosThreshold("aimi_emergency_sos_threshold", 75, 70, 200),
+    AimiEmergencySosImmediateThreshold("aimi_emergency_sos_immediate_threshold", 60, 55, 200),
+    AimiEmergencySosStaleThreshold("aimi_emergency_sos_stale_threshold", 30, 15, 200)
 
 }

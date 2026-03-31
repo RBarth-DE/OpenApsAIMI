@@ -4772,6 +4772,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
 
         // 🚨 GLOBAL SAFETY: Trigger Emergency SOS early (Avoids T3c / Cruise Mode Bypass)
         app.aaps.plugins.aps.openAPSAIMI.sos.EmergencySosManager.evaluateSosCondition(
+            aapsLogger,
             bg = glucose_status.glucose,
             delta = glucose_status.delta,
             iob = iob_data_array.firstOrNull()?.iob ?: 0.0,
