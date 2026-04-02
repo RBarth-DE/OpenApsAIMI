@@ -325,4 +325,6 @@ enum class IntKey(
     AimiEmergencySosThreshold("aimi_emergency_sos_threshold", defaultValue = 75, min = 70, max = 200, titleResId = 0),
     AimiEmergencySosImmediateThreshold("aimi_emergency_sos_immediate_threshold", defaultValue = 60, min = 55, max = 200, titleResId = 0),
     AimiEmergencySosStaleThreshold("aimi_emergency_sos_stale_threshold", defaultValue = 30, min = 15, max = 200, titleResId = 0),
+
+    ApsKetoacidosisProtectionBasal("ketoacidosis_protection_basal", defaultValue = 20, min = 10, max = 40, titleResId = 0),
 }

@@ -196,4 +196,7 @@ enum class BooleanKey(
     OApsAIMIMealAdvisorTrigger("aimi_meal_advisor_trigger", defaultValue = false, titleResId = 0),
 
     AimiAuditorEnabled("aimi_auditor_enabled", defaultValue = false, titleResId = 0),
+
+    ApsKetoacidosisProtection("ketoacidosis_protection", defaultValue = false, titleResId = 0),
+    ApsKetoacidosisProtectionStrategy("ketoacidosis_protection_strategy", defaultValue = false, titleResId = 0),
 }

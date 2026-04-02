@@ -159,9 +159,6 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
     aapsLogger, rh, preferences
 ), APS, PluginConstraints {
 
-    override fun applyConfiguration(configuration: kotlinx.serialization.json.JsonObject) {}
-    override fun configuration(): kotlinx.serialization.json.JsonObject = kotlinx.serialization.json.JsonObject(emptyMap())
-    override fun exportConfiguration(configuration: kotlinx.serialization.json.JsonObject) {}
 
     override fun onStart() {
         super.onStart()
@@ -366,7 +363,7 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
         val smbEnabled = preferences.get(BooleanKey.ApsUseSmb)
         val smbAlwaysEnabled = preferences.get(BooleanKey.ApsUseSmbAlways)
         val uamEnabled = preferences.get(BooleanKey.ApsUseUam)
-        val advancedFiltering = activePlugin.activeBgSource.isEnabled()
+        val advancedFiltering = (activePlugin.activeBgSource as? app.aaps.core.interfaces.plugin.PluginBase)?.isEnabled() ?: false
         val autoSensOrDynIsfSensEnabled = if (preferences.get(BooleanKey.ApsUseDynamicSensitivity)) {
             preferences.get(BooleanKey.ApsDynIsfAdjustSensitivity)
         } else {
@@ -573,7 +570,7 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
         if (glucoseStatus == null) {
             rxBus.send(EventResetOpenAPSGui(rh.gs(R.string.openapsma_no_glucose_data)))
             aapsLogger.debug(LTag.APS, rh.gs(R.string.openapsma_no_glucose_data))
-            return@withContext@withContext
+            return@withContext
         }
         val profile = runBlocking { profileFunction.getProfile() }
         val pump = activePlugin.activePump
@@ -581,12 +578,12 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
         if (profile == null) {
             rxBus.send(EventResetOpenAPSGui(rh.gs(app.aaps.core.ui.R.string.no_profile_set)))
             aapsLogger.debug(LTag.APS, rh.gs(app.aaps.core.ui.R.string.no_profile_set))
-            return@withContext@withContext
+            return@withContext
         }
-        if (!isEnabled()) {
+        if (!super.isEnabled()) {
             rxBus.send(EventResetOpenAPSGui(rh.gs(R.string.openapsma_disabled)))
             aapsLogger.debug(LTag.APS, rh.gs(R.string.openapsma_disabled))
-            return@withContext@withContext
+            return@withContext
         }
 
         val inputConstraints = ConstraintObject(0.0, aapsLogger) // fake. only for collecting all results
@@ -646,7 +643,7 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
             maxBg = hardLimits.verifyHardLimits(tempTarget.highTarget, app.aaps.core.ui.R.string.temp_target_high_target, HardLimits.LIMIT_TEMP_MAX_BG[0], HardLimits.LIMIT_TEMP_MAX_BG[1])
             targetBg = hardLimits.verifyHardLimits(tempTarget.target(), app.aaps.core.ui.R.string.temp_target_value, HardLimits.LIMIT_TEMP_TARGET_BG[0], HardLimits.LIMIT_TEMP_TARGET_BG[1])
         }
-        val insulin = activePlugin.activeInsulin
+        val insulin = this.insulin.iCfg  // AAPS4: Insulin injected directly
         val insulinDivisor = when {
             insulin.peak > 65 -> 55 // rapid peak: 75
             insulin.peak > 50 -> 65 // ultra rapid peak: 55
@@ -927,7 +924,7 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
                 maxUAMSMBBasalMinutes = preferences.get(IntKey.ApsUamMaxMinutesOfBasalToLimitSmb),
                 bolus_increment = pump.pumpDescription.bolusStep,
                 carbsReqThreshold = preferences.get(IntKey.ApsCarbsRequestThreshold),
-                current_basal = activePlugin.activePump.baseBasalRate * physioMults.basalFactor, // 🏥 Basal Rate Modulation
+                current_basal = activePlugin.activePump.baseBasalRate.cU * physioMults.basalFactor, // 🏥 Basal Rate Modulation
                 temptargetSet = isTempTarget,
                 autosens_max = preferences.get(DoubleKey.AutosensMax),
                 out_units = if (profileFunction.getUnits() == GlucoseUnit.MMOL) "mmol/L" else "mg/dl",
