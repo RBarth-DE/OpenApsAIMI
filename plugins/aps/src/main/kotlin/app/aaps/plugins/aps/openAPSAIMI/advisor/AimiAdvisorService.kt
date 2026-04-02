@@ -248,7 +248,7 @@ class AimiAdvisorService {
                 }
                 
                 // Today's TIR
-                val dailyTirs = tirCalculator.calculateDaily(70.0, 180.0)
+                val dailyTirs = tirCalculator.calculate(1, 70.0, 180.0)
                 if (dailyTirs != null && dailyTirs.size() > 0) {
                      // Get the entry with the largest timestamp (latest)
                      // LongSparseArray doesn't ensure order by key?
@@ -302,7 +302,7 @@ class AimiAdvisorService {
                 // Fetch BG readings directly for the period
                 val now = System.currentTimeMillis()
                 val fromTime = now - (days * 24 * 3600 * 1000L)
-                val bgReadings = persistenceLayer.getBgReadingsDataFromTimeToTime(fromTime, now, ascending = false)
+                val bgReadings = runBlocking { persistenceLayer.getBgReadingsDataFromTimeToTime(fromTime, now, ascending = false) }
                 
                 android.util.Log.d("AIMI_ADVISOR", "📊 Mean BG calculation: fetched ${bgReadings.size} BG readings")
                 
@@ -727,7 +727,7 @@ class AimiAdvisorService {
             val fromTime = now - (periodDays * 24 * 3600 * 1000L)
             
             val bgReadings = try {
-                persistenceLayer.getBgReadingsDataFromTimeToTime(fromTime, now, false)
+                runBlocking { persistenceLayer.getBgReadingsDataFromTimeToTime(fromTime, now, false) }
                     .map { it.value }
                     .filter { it > 30.0 }
             } catch (e: Exception) {

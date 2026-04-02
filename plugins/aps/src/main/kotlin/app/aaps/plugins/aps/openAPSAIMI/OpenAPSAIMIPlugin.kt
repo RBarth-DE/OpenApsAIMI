@@ -118,7 +118,7 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
     rh: ResourceHelper,
     private val profileFunction: ProfileFunction,
     private val profileUtil: ProfileUtil,
-    config: Config,
+    private val config: Config,
     private val activePlugin: ActivePlugin,
     private val iobCobCalculator: IobCobCalculator,
     private val hardLimits: HardLimits,

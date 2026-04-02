@@ -1,4 +1,5 @@
 package app.aaps.plugins.aps.openAPSAIMI.advisor.auditor
+import kotlinx.coroutines.runBlocking
 
 import app.aaps.core.interfaces.aps.IobTotal
 import app.aaps.core.interfaces.aps.GlucoseStatusAIMI
@@ -327,7 +328,7 @@ class AuditorDataCollector @Inject constructor(
         
         // Last bolus
         val boluses = try {
-            persistenceLayer.getBolusesFromTime(fromTime, ascending = false)
+            runBlocking { persistenceLayer.getBolusesFromTime(fromTime, ascending = false) }
                 .blockingGet()
                 .filter { it.type != app.aaps.core.data.model.BS.Type.SMB }
         } catch (e: Exception) {
@@ -338,7 +339,7 @@ class AuditorDataCollector @Inject constructor(
         
         // Last SMB
         val smbs = try {
-            persistenceLayer.getBolusesFromTime(fromTime, ascending = false)
+            runBlocking { persistenceLayer.getBolusesFromTime(fromTime, ascending = false) }
                 .blockingGet()
                 .filter { it.type == app.aaps.core.data.model.BS.Type.SMB }
         } catch (e: Exception) {
@@ -349,7 +350,7 @@ class AuditorDataCollector @Inject constructor(
         
         // Last TBR
         val tbrs = try {
-            persistenceLayer.getTemporaryBasalsStartingFromTime(fromTime, ascending = false)
+            runBlocking { persistenceLayer.getTemporaryBasalsStartingFromTime(fromTime, ascending = false) }
                 .blockingGet()
                 .filter { it.duration.toInt() != 0 } // Filter out CANCELs
         } catch (e: Exception) {

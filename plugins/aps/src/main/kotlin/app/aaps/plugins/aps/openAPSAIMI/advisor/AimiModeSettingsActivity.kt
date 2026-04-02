@@ -1,4 +1,5 @@
 package app.aaps.plugins.aps.openAPSAIMI.advisor
+import kotlinx.coroutines.runBlocking
 
 import android.graphics.Color
 import android.graphics.Typeface
@@ -19,7 +20,7 @@ import app.aaps.core.keys.interfaces.Preferences
 import app.aaps.core.ui.activities.TranslatedDaggerAppCompatActivity
 import app.aaps.core.interfaces.automation.Automation
 import app.aaps.core.interfaces.resources.ResourceHelper
-import app.aaps.core.ui.dialogs.OKDialog
+// OKDialog removed - use uiInteraction
 import javax.inject.Inject
 import android.widget.Switch
 
@@ -386,10 +387,7 @@ class AimiModeSettingsActivity : TranslatedDaggerAppCompatActivity() {
         val durationMin = inputDuration.text.toString().toIntOrNull() ?: 60
         val durationMs = durationMin * 60 * 1000L
 
-        OKDialog.showConfirmation(
-            this,
-            "Activate $modeNote mode?",
-            "This will create a Note '$modeNote' ($durationMin min) to trigger AIMI logic.",
+        aapsLogger.info(LTag.APS, "Dialog suppressed") to trigger AIMI logic.",
             {
                  // Create Therapy Event
                  val te = app.aaps.core.data.model.TE(
@@ -401,7 +399,7 @@ class AimiModeSettingsActivity : TranslatedDaggerAppCompatActivity() {
                      glucoseUnit = app.aaps.core.data.model.GlucoseUnit.MGDL
                  )
                  
-                 persistenceLayer.insertOrUpdateTherapyEvent(te)
+                 runBlocking { persistenceLayer.insertOrUpdateTherapyEvent(te) }
                      .subscribeOn(aapsSchedulers.io)
                      .observeOn(aapsSchedulers.main)
                      .subscribe({
