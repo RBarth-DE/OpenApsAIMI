@@ -322,4 +322,7 @@ enum class DoubleKey(
     OApsAIMIT3cActivationThreshold("key_aimi_t3c_activation_threshold", defaultValue = 130.0, min = 100.0, max = 250.0, titleResId = 0),
     OApsAIMIT3cAggressiveness("key_aimi_t3c_aggressiveness", defaultValue = 1.0, min = 0.5, max = 3.0, titleResId = 0),
     OApsAIMIAdaptiveBasalMaxScaling("key_aimi_adaptive_basal_max_scaling", defaultValue = 1.0, min = 0.5, max = 2.0, titleResId = 0),
+
+    OApsAIMILastEstimatedCarbs(key = "OApsAIMILastEstimatedCarbs", defaultValue = 0.0, min = 0.0, max = 300.0, titleResId = 0),
+    OApsAIMILastEstimatedCarbTime(key = "OApsAIMILastEstimatedCarbTime", defaultValue = 0.0, min = 0.0, max = 20000000000000.0, titleResId = 0),
 }

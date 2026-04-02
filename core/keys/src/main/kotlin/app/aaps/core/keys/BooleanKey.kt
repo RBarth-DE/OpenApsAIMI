@@ -190,4 +190,6 @@ enum class BooleanKey(
 
     OApsAIMIUnifiedReactivityEnabled("key_use_unified_reactivity", defaultValue = true, titleResId = 0),
     OApsAIMIContextEnabled("key_aimi_context_enabled", defaultValue = false, titleResId = 0),
+
+    OApsAIMITrajectoryGuardEnabled("key_aimi_trajectory_guard_enabled", defaultValue = false, titleResId = 0),
 }

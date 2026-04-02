@@ -3731,11 +3731,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
              if (info.dayInCycle != lastCycleNotificationDay) {
                  val msg = "⚠️ WCycle: J${info.dayInCycle} > $limit. Retard détecté.\nMettre à jour le 1er jour des règles ?"
                  consoleLog.add(msg)
-                 uiInteraction.addNotification(
-                    app.aaps.core.interfaces.notifications.Notification.HYPO_RISK_ALARM,
-                    msg,
-                    app.aaps.core.interfaces.notifications.Notification.URGENT
-                 )
+                 aapsLogger.warn(LTag.APS, msg)
                  lastCycleNotificationDay = info.dayInCycle
              }
         }
@@ -4591,7 +4587,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                     analysis.warnings.filter { it.severity >= app.aaps.plugins.aps.openAPSAIMI.trajectory.WarningSeverity.HIGH }.forEach { w ->
                         consoleLog.add("  🚨 ${w.severity.emoji()} ${w.message}")
                         if (w.severity == app.aaps.plugins.aps.openAPSAIMI.trajectory.WarningSeverity.CRITICAL) {
-                            try { uiInteraction.addNotification(w.type.hashCode(), w.message, 2) } catch (e: Exception) {}
+                            try { aapsLogger.warn(LTag.APS, w.message) } catch (e: Exception) {}
                         }
                     }
                     analysis.predictedConvergenceTime?.let {
@@ -7493,11 +7489,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         rT.isHypoRisk = safetyDecision.isHypoRisk
 
         if (safetyDecision.isHypoRisk) {
-            uiInteraction.addNotification(
-                app.aaps.core.interfaces.notifications.Notification.HYPO_RISK_ALARM,
-                context.getString(R.string.hypo_risk_notification_text),
-                app.aaps.core.interfaces.notifications.Notification.URGENT
-            )
+            aapsLogger.warn(LTag.APS, context.getString(R.string.hypo_risk_notification_text))
         }
         // --- helpers ---
         fun runtimeToMinutes(rt: Long?): Int {
