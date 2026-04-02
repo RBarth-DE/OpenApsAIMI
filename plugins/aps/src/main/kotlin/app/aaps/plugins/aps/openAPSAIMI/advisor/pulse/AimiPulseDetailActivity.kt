@@ -82,7 +82,7 @@ class AimiPulseDetailActivity : TranslatedDaggerAppCompatActivity() {
         container.addView(keyValueRow("IOB", "$iob U"))
         container.addView(keyValueRow("COB", "$cob g"))
 
-        if (result.isHypoRisk) {
+        if ((result as? app.aaps.core.interfaces.aps.RT)?.isHypoRisk ?: false) {
             container.addView(spacer(8))
             container.addView(label("⚠ Hypo risk detected", 13f, color = Color.parseColor("#FF6D00")))
         }

@@ -394,7 +394,7 @@ class AimiAdvisorService {
      * Generate recommendations based on Context using the Plugin System.
      */
     fun generateRecommendations(ctx: AdvisorContext, history: List<app.aaps.plugins.aps.openAPSAIMI.advisor.data.AdvisorHistoryRepository.AdvisorActionLog>): List<AimiRecommendation> {
-        val currentProfile = profileFunction?.getProfile()
+        val currentProfile = runBlocking { profileFunction.getProfile() }
 
         if (preferences == null) return emptyList()
 
@@ -604,7 +604,7 @@ class AimiAdvisorService {
 
     fun generateBasalProfileProposal(periodDays: Int = 7): BasalProfileProposal {
         val metrics = calculateMetrics(periodDays)
-        val profile = profileFunction?.getProfile()
+        val profile = runBlocking { profileFunction.getProfile() }
         if (profile == null) {
             return BasalProfileProposal(
                 generatedAt = System.currentTimeMillis(),
@@ -736,7 +736,7 @@ class AimiAdvisorService {
             
             // 2. Build Context
             val metrics = calculateMetrics(periodDays)
-            val profile = profileFunction?.getProfile()
+            val profile = runBlocking { profileFunction.getProfile() }
             val isf = profile?.getIsfMgdlTimeFromMidnight(0) ?: 40.0 // Default or specific logic needed to get specific ISF
             
             // Dummy Physio Manager (No access to instance here easily without DI)

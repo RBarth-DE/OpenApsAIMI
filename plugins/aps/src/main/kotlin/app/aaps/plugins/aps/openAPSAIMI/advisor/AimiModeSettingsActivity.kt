@@ -408,21 +408,14 @@ class AimiModeSettingsActivity : TranslatedDaggerAppCompatActivity() {
                      e.printStackTrace()
                  }
             }
-        )
     }
 
-    private fun getStringPref(key: DoubleKey): String {
-        return try {
-            preferences.get(key).toString()
-        } catch (e: Exception) {
+ catch (e: Exception) {
             key.defaultValue.toString()
         }
     }
 
-    private fun getStringPref(key: IntKey): String {
-         return try {
-            preferences.get(key).toString()
-        } catch (e: Exception) {
+ catch (e: Exception) {
             key.defaultValue.toString()
         }
     }
