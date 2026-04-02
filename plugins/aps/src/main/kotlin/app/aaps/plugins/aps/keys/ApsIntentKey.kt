@@ -27,4 +27,6 @@ enum class ApsIntentKey(
         preferenceType = PreferenceType.URL,
         urlResId = R.string.openapsama_link_to_preference_json_doc
     )
+
+    ApsLinkToDocs("aps_link_to_docs"),
 }

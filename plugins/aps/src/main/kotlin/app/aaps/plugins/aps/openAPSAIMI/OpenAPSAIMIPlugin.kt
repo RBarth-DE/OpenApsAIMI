@@ -122,7 +122,7 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
     private val activePlugin: ActivePlugin,
     private val iobCobCalculator: IobCobCalculator,
     private val hardLimits: HardLimits,
-    private val preferences_: Preferences,
+    preferences: Preferences,
     protected val dateUtil: DateUtil,
     private val processedTbrEbData: ProcessedTbrEbData,
     private val persistenceLayer: PersistenceLayer,
@@ -2081,7 +2081,7 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
                     addPreference(
                         AdaptiveIntPreference(
                             ctx = context,
-                            intKey = IntKey.AimiAuditorMinConfidence,
+                            doubleKey = DoubleKey.AimiAuditorMinConfidence,
                             dialogMessage = R.string.aimi_auditor_min_confidence_summary,
                             title = R.string.aimi_auditor_min_confidence_title
                         )

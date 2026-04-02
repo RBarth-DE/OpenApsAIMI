@@ -244,7 +244,7 @@ class AimiAdvisorService {
                 val tirs140 = runBlocking { tirCalculator.calculate(days.toLong() }, 70.0, 140.0)
                 val avg140 = tirCalculator.averageTIR(tirs140)
                 if (avg140 != null) {
-                    tir70_140 = (avg140.inRangePct() ?: 0.0) / 100.0
+                    tir70_140 = (avg140 ?: 0.0) / 100.0
                 }
                 
                 // Today's TIR
@@ -264,7 +264,7 @@ class AimiAdvisorService {
                          }
                      }
                      if (todayStat != null) {
-                        todayTir = (todayStat.inRangePct() ?: 0.0) / 100.0
+                        todayTir = (todayStat ?: 0.0) / 100.0
                      }
                 }
 
