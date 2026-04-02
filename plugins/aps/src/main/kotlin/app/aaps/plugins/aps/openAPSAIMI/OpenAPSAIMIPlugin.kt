@@ -119,7 +119,7 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
     private val activePlugin: ActivePlugin,
     private val iobCobCalculator: IobCobCalculator,
     private val hardLimits: HardLimits,
-    private val preferences: Preferences,
+    private val preferences_: Preferences,
     protected val dateUtil: DateUtil,
     private val processedTbrEbData: ProcessedTbrEbData,
     private val persistenceLayer: PersistenceLayer,
@@ -152,13 +152,12 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
         .showInList({ config.APS })
         .description(R.string.description_openapsaimi)
         .setDefault(),
-    aapsLogger, rh
+    ownPreferences = listOf(app.aaps.plugins.aps.openAPSAIMI.keys.AimiLongKey::class.java, app.aaps.plugins.aps.openAPSAIMI.keys.AimiStringKey::class.java),
+    aapsLogger, rh, preferences
 ), APS, PluginConstraints {
 
     override fun onStart() {
         super.onStart()
-        preferences.registerPreferences(app.aaps.plugins.aps.openAPSAIMI.keys.AimiLongKey::class.java)
-        preferences.registerPreferences(app.aaps.plugins.aps.openAPSAIMI.keys.AimiStringKey::class.java)
 
         // 🏃 Start AIMI Steps Manager (Health Connect + Phone Sensor sync)
         try {
@@ -219,7 +218,7 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
             preferences.get(DoubleKey.AimiUamConfidence)
         }
         var count = 0
-        val apsResults = persistenceLayer.getApsResults(dateUtil.now() - T.days(1).msecs(), dateUtil.now())
+        val apsResults = runBlocking { persistenceLayer.getApsResults(dateUtil.now() } - T.days(1).msecs(), dateUtil.now())
         apsResults.forEach {
             val glucose = it.glucoseStatus?.glucose ?: return@forEach
             val variableSens = it.variableSens ?: return@forEach
@@ -324,7 +323,7 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
     override fun getAverageIsfMgdl(timestamp: Long, caller: String): Double? {
         if (dynIsfCache.isEmpty()) {
             aapsLogger.warn(LTag.APS, "dynIsfCache is empty. Unable to calculate average ISF.")
-            return profileFunction.getProfile()?.getProfileIsfMgdl() ?: 20.0
+            return runBlocking { profileFunction.getProfile() }?.getProfileIsfMgdl() ?: 20.0
         }
         var count = 0
         var sum = 0.0
@@ -335,7 +334,7 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
                 sum += value
             }
         }
-        val sensitivity = if (count == 0) profileFunction.getProfile()?.getProfileIsfMgdl() else sum / count
+        val sensitivity = if (count == 0) runBlocking { profileFunction.getProfile() }?.getProfileIsfMgdl() else sum / count
         //aapsLogger.debug(LTag.APS, "getAverageIsfMgdl() $sensitivity from $count values ${dateUtil.dateAndTimeAndSecondsString(timestamp)} $caller")
         return sensitivity
     }
@@ -360,7 +359,7 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
         val smbEnabled = preferences.get(BooleanKey.ApsUseSmb)
         val smbAlwaysEnabled = preferences.get(BooleanKey.ApsUseSmbAlways)
         val uamEnabled = preferences.get(BooleanKey.ApsUseUam)
-        val advancedFiltering = activePlugin.activeBgSource.advancedFilteringSupported()
+        val advancedFiltering = activePlugin.activeBgSource.isEnabled()
         val autoSensOrDynIsfSensEnabled = if (preferences.get(BooleanKey.ApsUseDynamicSensitivity)) {
             preferences.get(BooleanKey.ApsDynIsfAdjustSensitivity)
         } else {
@@ -479,7 +478,7 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
         aapsLogger.debug(LTag.APS, "Adaptive ISF via Kalman: $kalmanFastIsf for BG: $glucose")
 
         // 4) ISF lent (socle) : profil/TDD fusionné + pkpdScale (inchangé)
-        val profileIsf = profileFunction.getProfile()?.getProfileIsfMgdl() ?: 20.0
+        val profileIsf = runBlocking { profileFunction.getProfile() }?.getProfileIsfMgdl() ?: 20.0
         val tddIsf = tddIsf24hOr(profileIsf)
         val fusedSlowIsf = isfFusion().fused(profileIsf, tddIsf, lastPkpdScale)
         aapsLogger.debug(LTag.APS, "Fused slow ISF: $fusedSlowIsf (profile=$profileIsf, tddIsf=$tddIsf, pkpdScale=$lastPkpdScale)")
@@ -526,7 +525,7 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
         // This affects the "Displayed ISF" in AAPS.
         
         // Calculate IOB/COB for Cosine Gate
-        val profile = profileFunction.getProfile()
+        val profile = runBlocking { profileFunction.getProfile() }
         if (profile != null) {
             val iobCalc = iobCobCalculator.calculateFromTreatmentsAndTemps(timestamp, profile)
             val mealData = iobCobCalculator.getMealDataWithWaitingForCalculationFinish()
@@ -569,7 +568,7 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
             aapsLogger.debug(LTag.APS, rh.gs(R.string.openapsma_no_glucose_data))
             return
         }
-        val profile = profileFunction.getProfile()
+        val profile = runBlocking { profileFunction.getProfile() }
         val pump = activePlugin.activePump
 
         if (profile == null) {

@@ -6340,7 +6340,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             // Robust Steps Retrieval (Matches HR logic)
             // Search window: 210 mins to cover 180min + delays
             val stepsSearchStart = now - 210 * 60 * 1000
-            val allStepsCounts = persistenceLayer.getStepsCountFromTimeToTime(stepsSearchStart, now)
+            val allStepsCounts = runBlocking { persistenceLayer.getStepsCountFromTimeToTime(stepsSearchStart, now) }
 
             if (allStepsCounts.isNotEmpty()) {
                 val lastSteps = allStepsCounts.maxByOrNull { it.timestamp }
@@ -6387,7 +6387,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         try {
             // Search window: 200 mins to cover the 180min avg + buffer for overlapping records
             val searchStart = now - 200 * 60 * 1000
-            val allHeartRates = persistenceLayer.getHeartRatesFromTimeToTime(searchStart, now)
+            val allHeartRates = runBlocking { persistenceLayer.getHeartRatesFromTimeToTime(searchStart, now) }
 
             // Debug info for the user/screenshot
             if (allHeartRates.isNotEmpty()) {
