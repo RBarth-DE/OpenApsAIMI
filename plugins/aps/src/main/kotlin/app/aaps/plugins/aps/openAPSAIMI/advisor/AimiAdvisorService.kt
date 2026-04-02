@@ -244,11 +244,11 @@ class AimiAdvisorService {
                 val tirs140 = runBlocking { tirCalculator.calculate(days.toLong(), 70.0, 140.0) }
                 val avg140 = tirCalculator.averageTIR(tirs140)
                 if (avg140 != null) {
-                    tir70_140 = (avg140 ?: 0.0) / 100.0
+                    tir70_140 = (if (avg140.count > 0) avg140.inRange * 100.0 / avg140.count else 0.0) / 100.0
                 }
                 
                 // Today's TIR
-                val dailyTirs = tirCalculator.calculate(1, 70.0, 180.0)
+                val dailyTirs = runBlocking { tirCalculator.calculate(1, 70.0, 180.0) }
                 if (dailyTirs != null && dailyTirs.size() > 0) {
                      // Get the entry with the largest timestamp (latest)
                      // LongSparseArray doesn't ensure order by key?
@@ -264,7 +264,7 @@ class AimiAdvisorService {
                          }
                      }
                      if (todayStat != null) {
-                        todayTir = (todayStat ?: 0.0) / 100.0
+                        todayTir = todayStat?.let { if (it.count > 0) it.inRange * 100.0 / it.count else 0.0 }?.div(100.0) ?: 0.0
                      }
                 }
 

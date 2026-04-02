@@ -644,7 +644,7 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
             maxBg = hardLimits.verifyHardLimits(tempTarget.highTarget, app.aaps.core.ui.R.string.temp_target_high_target, HardLimits.LIMIT_TEMP_MAX_BG[0], HardLimits.LIMIT_TEMP_MAX_BG[1])
             targetBg = hardLimits.verifyHardLimits(tempTarget.target(), app.aaps.core.ui.R.string.temp_target_value, HardLimits.LIMIT_TEMP_TARGET_BG[0], HardLimits.LIMIT_TEMP_TARGET_BG[1])
         }
-        val insulin = this.insulin.iCfg
+        val insulin = this@OpenAPSAIMIPlugin.insulin.iCfg
         val insulinDivisor = when {
             insulin.peak > 65 -> 55 // rapid peak: 75
             insulin.peak > 50 -> 65 // ultra rapid peak: 55

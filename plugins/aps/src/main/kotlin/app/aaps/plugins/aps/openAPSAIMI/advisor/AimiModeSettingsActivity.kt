@@ -387,7 +387,7 @@ class AimiModeSettingsActivity : TranslatedDaggerAppCompatActivity() {
         val durationMin = inputDuration.text.toString().toIntOrNull() ?: 60
         val durationMs = durationMin * 60 * 1000L
 
-        aapsLogger.info(LTag.APS, "Dialog suppressed") to trigger AIMI logic.",
+        "Confirm Mode Change", "Activate $modeName mode for $durationMin min?", {
             {
                  // Create Therapy Event
                  val te = app.aaps.core.data.model.TE(
