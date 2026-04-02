@@ -87,7 +87,7 @@ class ContextActivity : TranslatedDaggerAppCompatActivity() {
                             Toast.makeText(this@ContextActivity, "${ids.size} added context(s)", Toast.LENGTH_SHORT).show()
                         } else {
                             // Feedback detailed on failure
-                            val isLLMEnabled = sp.getBoolean(app.aaps.core.keys.BooleanKey.OApsAIMIContextLLMEnabled.key, false)
+                            val isLLMEnabled = sp.getBoolean(app.aaps.core.keys.BooleanKey.OApsAIMIContextEnabled.key, false)
                             val provider = sp.getString(app.aaps.core.keys.StringKey.AimiAdvisorProvider.key, "OPENAI")
                             
                             val msg = if (isLLMEnabled) {
@@ -138,7 +138,7 @@ class ContextActivity : TranslatedDaggerAppCompatActivity() {
         
         // LLM toggle
         binding.switchLLMEnabled.setOnCheckedChangeListener { _, isChecked ->
-            sp.putBoolean(app.aaps.core.keys.BooleanKey.OApsAIMIContextLLMEnabled.key, isChecked)
+            sp.putBoolean(app.aaps.core.keys.BooleanKey.OApsAIMIContextEnabled.key, isChecked)
         }
     }
     
@@ -173,7 +173,7 @@ class ContextActivity : TranslatedDaggerAppCompatActivity() {
         
         // Settings
         binding.switchContextEnabled.isChecked = sp.getBoolean(app.aaps.core.keys.BooleanKey.OApsAIMIContextEnabled.key, false)
-        binding.switchLLMEnabled.isChecked = sp.getBoolean(app.aaps.core.keys.BooleanKey.OApsAIMIContextLLMEnabled.key, false)
+        binding.switchLLMEnabled.isChecked = sp.getBoolean(app.aaps.core.keys.BooleanKey.OApsAIMIContextEnabled.key, false)
     }
     
     private fun addPreset(preset: ContextPreset) {

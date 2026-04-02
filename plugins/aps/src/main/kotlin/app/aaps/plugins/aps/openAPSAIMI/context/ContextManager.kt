@@ -538,17 +538,7 @@ class ContextManager @Inject constructor(
             
             val disposable = CompositeDisposable()
             disposable += runBlocking { persistenceLayer.insertOrUpdateTherapyEvent(therapyEvent) }
-                .subscribeOn(aapsSchedulers.io)
-                .subscribe(
-                    {
-                        aapsLogger.info(LTag.APS, "[ContextManager] ✅ Context $intentId synced to NS")
-                        disposable.clear()
-                    },
-                    { error ->
-                        aapsLogger.error(LTag.APS, "[ContextManager] ❌ Failed to sync context $intentId: $error")
-                        disposable.clear()
-                    }
-                )
+            aapsLogger.debug(LTag.APS, "Context sync: OK")
                 
         } catch (e: Exception) {
             aapsLogger.error(LTag.APS, "[ContextManager] Exception syncing context $intentId", e)
