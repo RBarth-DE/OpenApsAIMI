@@ -192,4 +192,6 @@ enum class BooleanKey(
     OApsAIMIContextEnabled("key_aimi_context_enabled", defaultValue = false, titleResId = 0),
 
     OApsAIMITrajectoryGuardEnabled("key_aimi_trajectory_guard_enabled", defaultValue = false, titleResId = 0),
+
+    OApsAIMIMealAdvisorTrigger("aimi_meal_advisor_trigger", defaultValue = false, titleResId = 0),
 }

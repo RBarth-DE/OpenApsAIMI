@@ -5037,7 +5037,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         // On définit fromTime pour couvrir une longue période (par exemple, les 7 derniers jours)
         val fromTime = System.currentTimeMillis() - TimeUnit.DAYS.toMillis(7)
 // Récupération des événements de changement de cannule
-        val siteChanges = persistenceLayer.getTherapyEventDataFromTime(fromTime, TE.Type.CANNULA_CHANGE, true)
+        val siteChanges = runBlocking { persistenceLayer.getTherapyEventDataFromTime(fromTime, TE.Type.CANNULA_CHANGE, true) }
 
 // Calcul de l'âge du site en jours
         val pumpAgeDays: Float = if (siteChanges.isNotEmpty()) {
@@ -5118,7 +5118,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         val dayOfWeek = calendarInstance[Calendar.DAY_OF_WEEK]
         val honeymoon = preferences.get(BooleanKey.OApsAIMIhoneymoon)
         this.bg = glucoseStatus.glucose
-        val getlastBolusSMB = persistenceLayer.getNewestBolusOfType(BS.Type.SMB)
+        val getlastBolusSMB = runBlocking { persistenceLayer.getNewestBolusOfType(BS.Type.SMB) }
         val lastBolusSMBTime = getlastBolusSMB?.timestamp ?: 0L
         //val lastBolusSMBMinutes = lastBolusSMBTime / 60000
         this.lastBolusSMBUnit = getlastBolusSMB?.amount?.toFloat() ?: 0.0F
@@ -5201,20 +5201,20 @@ class DetermineBasalaimiSMB2 @Inject constructor(
              consoleLog.add("🔒 STRICT CLAMP: BG<120 -> Forced Standard MaxSMB (${String.format("%.2f", stdMaxSMB)}U)")
         }
         val ngrConfig = buildNightGrowthResistanceConfig(profile, autosens_data, glucoseStatus, targetBg.toDouble())
-        this.tir1DAYabove = tirCalculator.averageTIR(tirCalculator.calculate(1, 65.0, 180.0))?.abovePct()!!
-        val tir1DAYIR = tirCalculator.averageTIR(tirCalculator.calculate(1, 65.0, 180.0))?.inRangePct()!!
-        this.currentTIRLow = tirCalculator.averageTIR(tirCalculator.calculateDaily(65.0, 180.0))?.belowPct()!!
-        this.currentTIRRange = tirCalculator.averageTIR(tirCalculator.calculateDaily(65.0, 180.0))?.inRangePct()!!
-        this.currentTIRAbove = tirCalculator.averageTIR(tirCalculator.calculateDaily(65.0, 180.0))?.abovePct()!!
-        this.lastHourTIRLow = tirCalculator.averageTIR(tirCalculator.calculateHour(80.0, 140.0))?.belowPct()!!
-        val lastHourTIRAbove = tirCalculator.averageTIR(tirCalculator.calculateHour(72.0, 140.0))?.abovePct()
-        this.lastHourTIRLow100 = tirCalculator.averageTIR(tirCalculator.calculateHour(100.0, 140.0))?.belowPct()!!
-        this.lastHourTIRabove170 = tirCalculator.averageTIR(tirCalculator.calculateHour(100.0, 170.0))?.abovePct()!!
-        this.lastHourTIRabove120 = tirCalculator.averageTIR(tirCalculator.calculateHour(100.0, 120.0))?.abovePct()!!
-        val tirbasal3IR = tirCalculator.averageTIR(tirCalculator.calculate(3, 65.0, 120.0))?.inRangePct()
-        val tirbasal3B = tirCalculator.averageTIR(tirCalculator.calculate(3, 65.0, 120.0))?.belowPct()
-        val tirbasal3A = tirCalculator.averageTIR(tirCalculator.calculate(3, 65.0, 120.0))?.abovePct()
-        val tirbasalhAP = tirCalculator.averageTIR(tirCalculator.calculateHour(65.0, 100.0))?.abovePct()
+        this.tir1DAYabove = tirCalculator.averageTIR(runBlocking { tirCalculator.calculate(1, 65.0, 180.0) })?.abovePct()!!
+        val tir1DAYIR = tirCalculator.averageTIR(runBlocking { tirCalculator.calculate(1, 65.0, 180.0) })?.inRangePct()!!
+        this.currentTIRLow = tirCalculator.averageTIR(runBlocking { tirCalculator.calculate(1, 65.0, 180.0) })?.belowPct()!!
+        this.currentTIRRange = tirCalculator.averageTIR(runBlocking { tirCalculator.calculate(1, 65.0, 180.0) })?.inRangePct()!!
+        this.currentTIRAbove = tirCalculator.averageTIR(runBlocking { tirCalculator.calculate(1, 65.0, 180.0) })?.abovePct()!!
+        this.lastHourTIRLow = tirCalculator.averageTIR(runBlocking { tirCalculator.calculate(1, 80.0, 140.0) })?.belowPct()!!
+        val lastHourTIRAbove = tirCalculator.averageTIR(runBlocking { tirCalculator.calculate(1, 72.0, 140.0) })?.abovePct()
+        this.lastHourTIRLow100 = tirCalculator.averageTIR(runBlocking { tirCalculator.calculate(1, 100.0, 140.0) })?.belowPct()!!
+        this.lastHourTIRabove170 = tirCalculator.averageTIR(runBlocking { tirCalculator.calculate(1, 100.0, 170.0) })?.abovePct()!!
+        this.lastHourTIRabove120 = tirCalculator.averageTIR(runBlocking { tirCalculator.calculate(1, 100.0, 120.0) })?.abovePct()!!
+        val tirbasal3IR = tirCalculator.averageTIR(runBlocking { tirCalculator.calculate(3, 65.0, 120.0) })?.inRangePct()
+        val tirbasal3B = tirCalculator.averageTIR(runBlocking { tirCalculator.calculate(3, 65.0, 120.0) })?.belowPct()
+        val tirbasal3A = tirCalculator.averageTIR(runBlocking { tirCalculator.calculate(3, 65.0, 120.0) })?.abovePct()
+        val tirbasalhAP = tirCalculator.averageTIR(runBlocking { tirCalculator.calculate(1, 65.0, 100.0) })?.abovePct()
         //this.enablebasal = preferences.get(BooleanKey.OApsAIMIEnableBasal)
         this.now = System.currentTimeMillis()
         automateDeletionIfBadDay(tir1DAYIR.toInt())
@@ -7472,7 +7472,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             rT.reason.append(context.getString(R.string.reason_eventual_bg, convertBG(eventualBG), convertBG(max_bg)))
         }
         val tdd24h = tddCalculator.averageTDD(tddCalculator.calculate(1, allowMissingDays = false))?.data?.totalAmount ?: 0.0
-        val tirInHypo = tirCalculator.averageTIR(tirCalculator.calculate(1, 65.0, 180.0))?.belowPct() ?: 0.0
+        val tirInHypo = tirCalculator.averageTIR(runBlocking { tirCalculator.calculate(1, 65.0, 180.0) })?.belowPct() ?: 0.0
         val safetyDecision = safetyAdjustment(
             currentBG = glucoseStatus.glucose.toFloat(),
             predictedBG = eventualBG.toFloat(),
