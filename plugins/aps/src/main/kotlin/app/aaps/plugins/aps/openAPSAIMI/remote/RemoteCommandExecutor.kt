@@ -97,6 +97,6 @@ class RemoteCommandExecutor @Inject constructor(
     private fun log(message: String) {
         aapsLogger.info(LTag.APS, "[Remote] $message")
         // Send to NSClient Logs so parent sees the response
-        rxBus.send("NSClient log")
+        aapsLogger.info(LTag.APS, "[Remote] NSClient log")
     }
 }
