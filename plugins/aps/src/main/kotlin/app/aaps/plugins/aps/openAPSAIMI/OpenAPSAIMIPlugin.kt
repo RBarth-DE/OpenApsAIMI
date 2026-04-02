@@ -153,7 +153,7 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
         .shortName(R.string.oaps_aimi_shortname)
         .preferencesId(PluginDescription.PREFERENCE_SCREEN)
         .preferencesVisibleInSimpleMode(false)
-        .showInList({ config.APS })
+        .showInList { config.APS }
         .description(R.string.description_openapsaimi)
         .setDefault(),
     ownPreferences = emptyList(),
@@ -1168,16 +1168,8 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
         return value
     }
 
-    override fun configuration(): JSONObject =
-        JSONObject()
-            .put(BooleanKey.ApsUseDynamicSensitivity, preferences)
-            .put(IntKey.ApsDynIsfAdjustmentFactor, preferences)
-
-    override fun applyConfiguration(configuration: JSONObject) {
-        configuration
-            .store(BooleanKey.ApsUseDynamicSensitivity, preferences)
-            .store(IntKey.ApsDynIsfAdjustmentFactor, preferences)
-    }
+    override fun configuration(): kotlinx.serialization.json.JsonObject = kotlinx.serialization.json.JsonObject(emptyMap())
+    override fun applyConfiguration(configuration: kotlinx.serialization.json.JsonObject) {}
 
     override fun addPreferenceScreen(preferenceManager: PreferenceManager, parent: PreferenceScreen, context: Context, requiredKey: String?) {
         val category = PreferenceCategory(context)

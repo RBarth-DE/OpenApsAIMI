@@ -199,4 +199,6 @@ enum class BooleanKey(
 
     ApsKetoacidosisProtection("ketoacidosis_protection", defaultValue = false, titleResId = 0),
     ApsKetoacidosisProtectionStrategy("ketoacidosis_protection_strategy", defaultValue = false, titleResId = 0),
+
+    ApsLinkToDocs("aps_link_to_docs", defaultValue = true, titleResId = 0),
 }

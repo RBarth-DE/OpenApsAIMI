@@ -227,4 +227,6 @@ enum class StringKey(
     AimiEmergencySosPhone2("aimi_emergency_sos_phone2", defaultValue = "", titleResId = 0),
 
     ContextMode("aimi_context_mode", defaultValue = "BALANCED", titleResId = 0),
+
+    AimiAuditorMode("aimi_auditor_mode", defaultValue = "MONITOR", titleResId = 0),
 }

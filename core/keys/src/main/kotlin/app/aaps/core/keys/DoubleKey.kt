@@ -329,4 +329,6 @@ enum class DoubleKey(
     meal_modes_MaxBasal("key_meal_modes_max_basal", defaultValue = 3.0, min = 0.1, max = 10.0, titleResId = 0),
 
     autodriveMaxBasal("autodrive_max_basal", defaultValue = 1.0, min = 0.05, max = 25.0, titleResId = 0),
+
+    AimiAuditorMinConfidence("aimi_auditor_min_confidence", defaultValue = 0.6, min = 0.0, max = 1.0, titleResId = 0),
 }

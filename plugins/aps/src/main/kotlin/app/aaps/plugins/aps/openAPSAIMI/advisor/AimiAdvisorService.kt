@@ -1,4 +1,5 @@
 package app.aaps.plugins.aps.openAPSAIMI.advisor
+import kotlinx.coroutines.runBlocking
 
 import kotlin.math.roundToInt
 import app.aaps.plugins.aps.R
@@ -130,7 +131,7 @@ class AimiAdvisorService {
         val metrics = calculateMetrics(periodDays)
 
         // 2. Snapshot Profile
-        val profile = profileFunction.getProfile()
+        val profile = runBlocking { profileFunction.getProfile() }
         val profileSnapshot = if (profile != null) {
             val totalBasalCalc = (0 until 24).sumOf { h -> profile.getBasal((h * 3600).toLong()) }
             
@@ -139,7 +140,7 @@ class AimiAdvisorService {
                 icRatio = calculateWeightedAverage(profile.getIcsValues()),
                 isf = calculateWeightedAverage(profile.getIsfsMgdlValues()),
                 targetBg = calculateWeightedAverage(profile.getSingleTargetsMgdl()),
-                dia = profile.dia,
+                dia = profile.getBasalTimeFromMidnight(0),
                 totalBasal = totalBasalCalc
             )
         } else {
@@ -216,7 +217,7 @@ class AimiAdvisorService {
         if (tirCalculator != null) {
             try {
                 // Main Range (70-180)
-                val tirs = tirCalculator.calculate(days.toLong(), 70.0, 180.0)
+                val tirs = runBlocking { tirCalculator.calculate(days.toLong() }, 70.0, 180.0)
                 val avgTir = tirCalculator.averageTIR(tirs)
                 
                 if (avgTir != null) {
@@ -226,21 +227,21 @@ class AimiAdvisorService {
                 }
 
                 // Very Low (<54) - Calculate with low=54
-                val tirs54 = tirCalculator.calculate(days.toLong(), 54.0, 180.0)
+                val tirs54 = runBlocking { tirCalculator.calculate(days.toLong() }, 54.0, 180.0)
                 val avg54 = tirCalculator.averageTIR(tirs54)
                 if (avg54 != null) {
                     timeBelow54 = (avg54.belowPct() ?: 0.0) / 100.0
                 }
                 
                 // Very High (>250) - Calculate with high=250
-                val tirs250 = tirCalculator.calculate(days.toLong(), 70.0, 250.0)
+                val tirs250 = runBlocking { tirCalculator.calculate(days.toLong() }, 70.0, 250.0)
                 val avg250 = tirCalculator.averageTIR(tirs250)
                 if (avg250 != null) {
                     timeAbove250 = (avg250.abovePct() ?: 0.0) / 100.0
                 }
 
                 // Tight Range (70-140)
-                val tirs140 = tirCalculator.calculate(days.toLong(), 70.0, 140.0)
+                val tirs140 = runBlocking { tirCalculator.calculate(days.toLong() }, 70.0, 140.0)
                 val avg140 = tirCalculator.averageTIR(tirs140)
                 if (avg140 != null) {
                     tir70_140 = (avg140.inRangePct() ?: 0.0) / 100.0

@@ -327,4 +327,7 @@ enum class IntKey(
     AimiEmergencySosStaleThreshold("aimi_emergency_sos_stale_threshold", defaultValue = 30, min = 15, max = 200, titleResId = 0),
 
     ApsKetoacidosisProtectionBasal("ketoacidosis_protection_basal", defaultValue = 20, min = 10, max = 40, titleResId = 0),
+
+    AimiAuditorMaxPerHour("aimi_auditor_max_per_hour", defaultValue = 4, min = 1, max = 20, titleResId = 0),
+    AimiAuditorTimeoutSeconds("aimi_auditor_timeout_seconds", defaultValue = 30, min = 5, max = 120, titleResId = 0),
 }
