@@ -399,16 +399,14 @@ class AimiModeSettingsActivity : TranslatedDaggerAppCompatActivity() {
                      glucoseUnit = app.aaps.core.data.model.GlucoseUnit.MGDL
                  )
                  
-                 runBlocking { persistenceLayer.insertOrUpdateTherapyEvent(te) }
-                     .subscribeOn(aapsSchedulers.io)
-                     .observeOn(aapsSchedulers.main)
-                     .subscribe({
-                         app.aaps.core.ui.toast.ToastUtils.okToast(this, "$modeNote Mode Activated ($durationMin min)!")
-                         finish()
-                     }, { error ->
-                         app.aaps.core.ui.toast.ToastUtils.errorToast(this, "Error: ${error.message}")
-                         error.printStackTrace()
-                     })
+                 try {
+                     runBlocking { persistenceLayer.insertOrUpdateTherapyEvent(te) }
+                     app.aaps.core.ui.toast.ToastUtils.okToast(this, "$modeNote Mode Activated ($durationMin min)!")
+                     finish()
+                 } catch (e: Exception) {
+                     app.aaps.core.ui.toast.ToastUtils.errorToast(this, "Error: ${e.message}")
+                     e.printStackTrace()
+                 }
             }
         )
     }

@@ -329,7 +329,6 @@ class AuditorDataCollector @Inject constructor(
         // Last bolus
         val boluses = try {
             runBlocking { persistenceLayer.getBolusesFromTime(fromTime, ascending = false) }
-                .blockingGet()
                 .filter { it.type != app.aaps.core.data.model.BS.Type.SMB }
         } catch (e: Exception) {
             aapsLogger.debug(app.aaps.core.interfaces.logging.LTag.APS, "Failed to fetch boluses: ${e.message}")
@@ -340,7 +339,6 @@ class AuditorDataCollector @Inject constructor(
         // Last SMB
         val smbs = try {
             runBlocking { persistenceLayer.getBolusesFromTime(fromTime, ascending = false) }
-                .blockingGet()
                 .filter { it.type == app.aaps.core.data.model.BS.Type.SMB }
         } catch (e: Exception) {
             aapsLogger.debug(app.aaps.core.interfaces.logging.LTag.APS, "Failed to fetch SMBs: ${e.message}")
@@ -351,7 +349,6 @@ class AuditorDataCollector @Inject constructor(
         // Last TBR
         val tbrs = try {
             runBlocking { persistenceLayer.getTemporaryBasalsStartingFromTime(fromTime, ascending = false) }
-                .blockingGet()
                 .filter { it.duration.toInt() != 0 } // Filter out CANCELs
         } catch (e: Exception) {
             emptyList()
