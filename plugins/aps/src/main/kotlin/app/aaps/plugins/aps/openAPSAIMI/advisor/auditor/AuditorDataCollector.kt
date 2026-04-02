@@ -418,7 +418,7 @@ class AuditorDataCollector @Inject constructor(
         
         // Get TIR stats (using 7 days with standard thresholds)
         val tirData = try {
-            tirCalculator.calculate(7, 70.0, 180.0)
+            runBlocking { tirCalculator.calculate(7, 70.0, 180.0) }
         } catch (e: Exception) {
             null
         }
