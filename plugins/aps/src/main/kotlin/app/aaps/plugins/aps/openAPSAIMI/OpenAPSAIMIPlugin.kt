@@ -39,6 +39,7 @@ import app.aaps.core.interfaces.logging.AAPSLogger
 import app.aaps.core.interfaces.logging.LTag
 import app.aaps.core.interfaces.plugin.ActivePlugin
 import app.aaps.core.interfaces.plugin.PluginBase
+import app.aaps.core.interfaces.plugin.PluginBaseWithPreferences
 import app.aaps.core.interfaces.plugin.PluginDescription
 import app.aaps.core.interfaces.profile.Profile
 import app.aaps.core.interfaces.profile.ProfileFunction
@@ -47,7 +48,7 @@ import app.aaps.core.interfaces.profiling.Profiler
 import app.aaps.core.interfaces.resources.ResourceHelper
 import app.aaps.core.interfaces.rx.bus.RxBus
 import app.aaps.core.interfaces.rx.events.EventAPSCalculationFinished
-import app.aaps.core.interfaces.rx.events.EventPreferenceChange
+import app.aaps.core.interfaces.rx.events.EventConfigBuilderChange
 import app.aaps.core.interfaces.stats.TddCalculator
 import app.aaps.core.interfaces.ui.UiInteraction
 import app.aaps.core.interfaces.utils.DateUtil
@@ -139,7 +140,7 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
     private val auditorOrchestrator: app.aaps.plugins.aps.openAPSAIMI.advisor.auditor.AuditorOrchestrator, // 🧠 AI Auditor MTR
     private val contextManager: app.aaps.plugins.aps.openAPSAIMI.context.ContextManager, // 🎯 Context Manager
     private val aimiBackupManager: AimiBackupManager // ☁️ Cloud Backup Manager (Force Init)
-) : PluginBase(
+) : PluginBaseWithPreferences(
     PluginDescription()
         .mainType(PluginType.APS)
         .fragmentClass(OpenAPSFragment::class.java.name)
@@ -176,9 +177,8 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
         }
 
         physioPreferenceDisposable?.dispose()
-        physioPreferenceDisposable = rxBus.toObservable(EventPreferenceChange::class.java).subscribe(
-            { event ->
-                if (!event.isChanged(BooleanKey.AimiPhysioAssistantEnable.key)) return@subscribe
+        physioPreferenceDisposable = rxBus.toObservable(EventConfigBuilderChange::class.java).subscribe(
+            { _ ->
                 try {
                     if (preferences.get(BooleanKey.AimiPhysioAssistantEnable)) {
                         physioManager.start()
