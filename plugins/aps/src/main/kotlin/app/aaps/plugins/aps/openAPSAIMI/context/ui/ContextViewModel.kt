@@ -145,7 +145,7 @@ class ContextViewModel(
      */
     fun refreshSettings() {
         _contextEnabled.value = sp.getBoolean(app.aaps.core.keys.BooleanKey.OApsAIMIContextEnabled.key, false)
-        _llmEnabled.value = sp.getBoolean(app.aaps.core.keys.BooleanKey.OApsAIMIContextLLMEnabled.key, false)
+        _llmEnabled.value = sp.getBoolean(app.aaps.core.keys.BooleanKey.OApsAIMIContextEnabled.key, false)
     }
     
     /**
@@ -161,7 +161,7 @@ class ContextViewModel(
      * Toggle LLM parsing on/off.
      */
     fun toggleLLMEnabled(enabled: Boolean) {
-        sp.putBoolean(app.aaps.core.keys.BooleanKey.OApsAIMIContextLLMEnabled.key, enabled)
+        sp.putBoolean(app.aaps.core.keys.BooleanKey.OApsAIMIContextEnabled.key, enabled)
         _llmEnabled.value = enabled
         aapsLogger.info(LTag.APS, "[ContextViewModel] LLM parsing ${if (enabled) "enabled" else "disabled"}")
     }

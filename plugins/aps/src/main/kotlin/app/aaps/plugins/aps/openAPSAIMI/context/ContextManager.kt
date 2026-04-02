@@ -200,10 +200,7 @@ class ContextManager @Inject constructor(
             saveToStorage()
             
             // Invalidate sync record in local DB and Nightscout
-                        disposable += runBlocking { persistenceLayer.invalidateTherapyEventsWithNote("AIMI_CONTEXT:$id", Action.TREATMENT, Sources.Aaps) }
-                    { aapsLogger.debug(LTag.APS, "[ContextManager] Synced invalidation for $id") },
-                    { e -> aapsLogger.error(LTag.APS, "[ContextManager] Failed to invalidate sync record for $id: ${e.message}") }
-                )
+            try { runBlocking { persistenceLayer.invalidateTherapyEventsWithNote("AIMI_CONTEXT:$id", Action.TREATMENT, Sources.Aaps) } } catch (e: Exception) { aapsLogger.error(LTag.APS, "Failed to invalidate: ${e.message}") }
             
             return true
         }
@@ -241,10 +238,7 @@ class ContextManager @Inject constructor(
         saveToStorage()
         
         // Invalidate ALL AIMI context sync records
-                disposable += runBlocking { persistenceLayer.invalidateTherapyEventsWithNote("AIMI_CONTEXT:", Action.TREATMENT, Sources.Aaps) }
-                { aapsLogger.debug(LTag.APS, "[ContextManager] Synced invalidation for all contexts") },
-                { e -> aapsLogger.error(LTag.APS, "[ContextManager] Failed to invalidate all sync records: ${e.message}") }
-            )
+        try { runBlocking { persistenceLayer.invalidateTherapyEventsWithNote("AIMI_CONTEXT:", Action.TREATMENT, Sources.Aaps) } } catch (e: Exception) { aapsLogger.error(LTag.APS, "Failed: ${e.message}") }
     }
     
     /**
@@ -530,7 +524,7 @@ class ContextManager @Inject constructor(
             
             aapsLogger.debug(LTag.APS, "[ContextManager] Syncing context $intentId to NS")
             
-                        disposable += runBlocking { persistenceLayer.insertOrUpdateTherapyEvent(therapyEvent) }
+            runBlocking { persistenceLayer.insertOrUpdateTherapyEvent(therapyEvent) }
             aapsLogger.debug(LTag.APS, "Context sync: OK")
                 
         } catch (e: Exception) {
