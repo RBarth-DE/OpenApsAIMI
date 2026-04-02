@@ -1,4 +1,5 @@
 package app.aaps.plugins.aps.openAPSAIMI.learning
+import kotlinx.coroutines.runBlocking
 
 import android.content.Context
 import app.aaps.core.interfaces.db.PersistenceLayer
@@ -132,7 +133,7 @@ class UnifiedReactivityLearner @Inject constructor(
         try {
             // Récupérer toutes les valeurs BG des 24 dernières heures
             // getBgReadingsDataFromTime retourne Single<List<GV>>, donc on utilise blockingGet()
-            val bgReadingsList = persistenceLayer.getBgReadingsDataFromTime(start, false)
+            val bgReadingsList = runBlocking { persistenceLayer.getBgReadingsDataFromTime(start, false) }
                 .blockingGet()
             
             // Extraire les valeurs et filtrer
@@ -370,7 +371,7 @@ class UnifiedReactivityLearner @Inject constructor(
         val start = now - (2 * 60 * 60 * 1000L)  // 2 hours
         
         try {
-            val bgReadingsList = persistenceLayer.getBgReadingsDataFromTime(start, false)
+            val bgReadingsList = runBlocking { persistenceLayer.getBgReadingsDataFromTime(start, false) }
                 .blockingGet()
             
             val bgReadings = bgReadingsList

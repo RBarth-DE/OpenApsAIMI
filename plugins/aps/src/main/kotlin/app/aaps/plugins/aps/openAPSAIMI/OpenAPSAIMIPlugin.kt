@@ -1,4 +1,5 @@
 package app.aaps.plugins.aps.openAPSAIMI
+import kotlinx.coroutines.runBlocking
 
 import android.annotation.SuppressLint
 import android.content.Context
@@ -152,9 +153,12 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
         .showInList({ config.APS })
         .description(R.string.description_openapsaimi)
         .setDefault(),
-    ownPreferences = listOf(app.aaps.plugins.aps.openAPSAIMI.keys.AimiLongKey::class.java, app.aaps.plugins.aps.openAPSAIMI.keys.AimiStringKey::class.java),
+    ownPreferences = emptyList(),
     aapsLogger, rh, preferences
 ), APS, PluginConstraints {
+
+    override fun applyConfiguration(configuration: com.google.gson.JsonObject) {}
+    override fun exportConfiguration(configuration: com.google.gson.JsonObject) {}
 
     override fun onStart() {
         super.onStart()
@@ -218,7 +222,7 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
             preferences.get(DoubleKey.AimiUamConfidence)
         }
         var count = 0
-        val apsResults = runBlocking { persistenceLayer.getApsResults(dateUtil.now() } - T.days(1).msecs(), dateUtil.now())
+        val apsResults = runBlocking { persistenceLayer.getApsResults(dateUtil.now() - T.days(1).msecs(), dateUtil.now()) }
         apsResults.forEach {
             val glucose = it.glucoseStatus?.glucose ?: return@forEach
             val variableSens = it.variableSens ?: return@forEach
