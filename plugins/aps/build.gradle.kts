@@ -14,6 +14,8 @@ android {
 dependencies {
     implementation ("org.tensorflow:tensorflow-lite-metadata:0.1.0")
     implementation("org.tensorflow:tensorflow-lite-support:0.1.0")
+    // Health Connect
+    implementation("androidx.health.connect:connect-client:1.1.0-alpha07")
     implementation(project(":core:data"))
     implementation(project(":core:interfaces"))
     implementation(project(":core:keys"))
