@@ -410,13 +410,5 @@ class AimiModeSettingsActivity : TranslatedDaggerAppCompatActivity() {
             }
     }
 
- catch (e: Exception) {
-            key.defaultValue.toString()
-        }
-    }
 
- catch (e: Exception) {
-            key.defaultValue.toString()
-        }
-    }
 }
