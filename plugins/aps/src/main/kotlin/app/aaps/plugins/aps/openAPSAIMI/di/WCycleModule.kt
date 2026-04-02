@@ -9,10 +9,13 @@ import app.aaps.plugins.aps.openAPSAIMI.wcycle.WCycleFacade
 import app.aaps.plugins.aps.openAPSAIMI.wcycle.WCycleLearner
 import app.aaps.plugins.aps.openAPSAIMI.wcycle.WCyclePreferences
 import dagger.Module
+import dagger.hilt.InstallIn
+import dagger.hilt.components.SingletonComponent
 import dagger.Provides
 import javax.inject.Singleton
 
 @Module
+@InstallIn(SingletonComponent::class)
 object WCycleModule {
 
     @Provides

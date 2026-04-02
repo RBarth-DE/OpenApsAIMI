@@ -2,6 +2,8 @@ package app.aaps.plugins.aps.openAPSAIMI.di
 
 import app.aaps.plugins.aps.openAPSAIMI.steps.*
 import dagger.Module
+import dagger.hilt.InstallIn
+import dagger.hilt.components.SingletonComponent
 import dagger.Provides
 import javax.inject.Singleton
 
@@ -19,6 +21,7 @@ import javax.inject.Singleton
  * @author MTR & Lyra AI - AIMI Health Connect Integration
  */
 @Module
+@InstallIn(SingletonComponent::class)
 class AIMIStepsProviderModuleMTR {
     
     /**
