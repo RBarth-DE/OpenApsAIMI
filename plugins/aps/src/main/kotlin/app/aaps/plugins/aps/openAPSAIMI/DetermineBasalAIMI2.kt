@@ -1,4 +1,5 @@
 package app.aaps.plugins.aps.openAPSAIMI
+import kotlinx.coroutines.runBlocking
 
 import android.annotation.SuppressLint
 import android.content.Context
@@ -367,9 +368,8 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                     // Récupère les TBR depuis 'fromMillis', puis trie DESC par timestamp
                     val raws: List<TB> = try {
                         // Adapte le nom exact de l’API selon ta persistence
-                        persistenceLayer
-                            .getTemporaryBasalsStartingFromTime(fromMillis,ascending = false)    // souvent retourne Single<List<TB>>
-                            .blockingGet()
+                        runBlocking { persistenceLayer
+                            .getTemporaryBasalsStartingFromTime(fromMillis,ascending = false) }    // souvent retourne Single<List<TB>>
                     } catch (t: Throwable) {
                         emptyList()
                     }
@@ -1192,9 +1192,8 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         val lookback30min = now - 30 * 60 * 1000L
         
         return try {
-            val boluses = persistenceLayer
-                .getBolusesFromTime(lookback30min, ascending = false)
-                .blockingGet()
+            val boluses = runBlocking { persistenceLayer
+                .getBolusesFromTime(lookback30min, ascending = false) }
                 .filter { it.type == BS.Type.SMB }
             
             boluses.sumOf { it.amount }
@@ -2238,7 +2237,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         val lookbackTime = dateUtil.now() - minutes * 60 * 1000L
         
         // 1. Check DB
-        val boluses = persistenceLayer.getBolusesFromTime(lookbackTime, true).blockingGet()
+        val boluses = runBlocking { persistenceLayer.getBolusesFromTime(lookbackTime, true) }
         val dbHasBolus = boluses.any { it.amount > 0.3 }
 
         // 2. Check Pump Status Memory (Fallback)
@@ -5238,7 +5237,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         }
 
         val fourHoursAgo = now - 4 * 60 * 60 * 1000
-        this.recentNotes = persistenceLayer.getUserEntryDataFromTime(fourHoursAgo).blockingGet()
+        this.recentNotes = runBlocking { persistenceLayer.getUserEntryDataFromTime(fourHoursAgo) }
 
         this.tags0to60minAgo = parseNotes(0, 60)
         this.tags60to120minAgo = parseNotes(60, 120)
@@ -5349,9 +5348,8 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             val t3cCapCutoff   = System.currentTimeMillis() - t3cCapWindowMs
             
             // 1. Check Database (Harden: count ALL bolus types, not just SMB)
-            val recentBolusCount = persistenceLayer
-                .getBolusesFromTime(t3cCapCutoff, true)
-                .blockingGet()
+            val recentBolusCount = runBlocking { persistenceLayer
+                .getBolusesFromTime(t3cCapCutoff, true) }
                 .count { it.type == BS.Type.SMB || it.type == BS.Type.NORMAL }
 
             // 2. Check Internal Memory (Ensures 1 tick = 1 dose max even if DB is slow)
@@ -5504,7 +5502,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
 
         // 🕒 FCL 5.0 Pre-calc: Total Bolus Volume Last Hour
         val oneHourAgo = now - (60 * 60 * 1000L)
-        val bolusesHistory = persistenceLayer.getBolusesFromTime(oneHourAgo, true).blockingGet()
+        val bolusesHistory = runBlocking { persistenceLayer.getBolusesFromTime(oneHourAgo, true) }
         val totalBolusLastHour = bolusesHistory.sumOf { it.amount }
 
         val bgTrend = calculateBgTrend(recentBGs, reason)

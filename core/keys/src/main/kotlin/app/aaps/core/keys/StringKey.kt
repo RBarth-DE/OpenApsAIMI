@@ -225,4 +225,6 @@ enum class StringKey(
     OApsAIMIThyroidGuardLevel("key_aimi_thyroid_guard_level", defaultValue = "HIGH", titleResId = 0),
     AimiEmergencySosPhone("aimi_emergency_sos_phone", defaultValue = "", titleResId = 0),
     AimiEmergencySosPhone2("aimi_emergency_sos_phone2", defaultValue = "", titleResId = 0),
+
+    ContextMode("aimi_context_mode", defaultValue = "BALANCED", titleResId = 0),
 }

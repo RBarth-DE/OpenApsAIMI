@@ -187,4 +187,7 @@ enum class BooleanKey(
     AimiEndometriosisPainFlare("aimi_endo_flare", defaultValue = false, titleResId = 0),
     AimiCosineGateEnabled("aimi_cosine_gate_enabled", defaultValue = true, titleResId = 0),
     AimiEmergencySosEnable("aimi_emergency_sos_enable", defaultValue = false, titleResId = 0),
+
+    OApsAIMIUnifiedReactivityEnabled("key_use_unified_reactivity", defaultValue = true, titleResId = 0),
+    OApsAIMIContextEnabled("key_aimi_context_enabled", defaultValue = false, titleResId = 0),
 }
