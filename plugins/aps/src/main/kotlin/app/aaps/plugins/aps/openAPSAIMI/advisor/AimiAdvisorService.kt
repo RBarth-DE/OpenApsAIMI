@@ -221,23 +221,23 @@ class AimiAdvisorService {
                 val avgTir = tirCalculator.averageTIR(tirs)
                 
                 if (avgTir != null) {
-                    tir70_180 = (avgTir.inRangePct() ?: 0.0) / 100.0
-                    timeBelow70 = (avgTir.belowPct() ?: 0.0) / 100.0
-                    timeAbove180 = (avgTir.abovePct() ?: 0.0) / 100.0
+                    tir70_180 = (if (avgTir.count > 0) avgTir.inRange * 100.0 / avgTir.count else 0.0) / 100.0
+                    timeBelow70 = (if (avgTir.count > 0) avgTir.below * 100.0 / avgTir.count else 0.0) / 100.0
+                    timeAbove180 = (if (avgTir.count > 0) avgTir.above * 100.0 / avgTir.count else 0.0) / 100.0
                 }
 
                 // Very Low (<54) - Calculate with low=54
                 val tirs54 = runBlocking { tirCalculator.calculate(days.toLong() }, 54.0, 180.0)
                 val avg54 = tirCalculator.averageTIR(tirs54)
                 if (avg54 != null) {
-                    timeBelow54 = (avg54.belowPct() ?: 0.0) / 100.0
+                    timeBelow54 = (if (avg54.count > 0) avg54.below * 100.0 / avg54.count else 0.0) / 100.0
                 }
                 
                 // Very High (>250) - Calculate with high=250
                 val tirs250 = runBlocking { tirCalculator.calculate(days.toLong() }, 70.0, 250.0)
                 val avg250 = tirCalculator.averageTIR(tirs250)
                 if (avg250 != null) {
-                    timeAbove250 = (avg250.abovePct() ?: 0.0) / 100.0
+                    timeAbove250 = (if (avg250.count > 0) avg250.above * 100.0 / avg250.count else 0.0) / 100.0
                 }
 
                 // Tight Range (70-140)
