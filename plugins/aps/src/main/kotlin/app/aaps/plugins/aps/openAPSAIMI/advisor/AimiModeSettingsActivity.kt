@@ -300,32 +300,32 @@ class AimiModeSettingsActivity : TranslatedDaggerAppCompatActivity() {
     private fun loadValues(mode: ModeType) {
         when (mode) {
             ModeType.LUNCH -> {
-                inputPrebolus1.setText(getStringPref(DoubleKey.OApsAIMILunchPrebolus))
-                inputPrebolus2.setText(getStringPref(DoubleKey.OApsAIMILunchPrebolus2))
-                inputReactivity.setText(getStringPref(DoubleKey.OApsAIMILunchFactor))
+                inputPrebolus1.setText(preferences.get(DoubleKey.OApsAIMILunchPrebolus).toString())
+                inputPrebolus2.setText(preferences.get(DoubleKey.OApsAIMILunchPrebolus2).toString())
+                inputReactivity.setText(preferences.get(DoubleKey.OApsAIMILunchFactor).toString())
                 inputDuration.setText(sp.getInt("aimi_mode_lunch_duration", 60).toString())
-                inputInterval.setText(getStringPref(IntKey.OApsAIMILunchinterval))
+                inputInterval.setText(preferences.get(IntKey.OApsAIMILunchinterval).toString())
             }
             ModeType.DINNER -> {
-                inputPrebolus1.setText(getStringPref(DoubleKey.OApsAIMIDinnerPrebolus))
-                inputPrebolus2.setText(getStringPref(DoubleKey.OApsAIMIDinnerPrebolus2))
-                inputReactivity.setText(getStringPref(DoubleKey.OApsAIMIDinnerFactor))
+                inputPrebolus1.setText(preferences.get(DoubleKey.OApsAIMIDinnerPrebolus).toString())
+                inputPrebolus2.setText(preferences.get(DoubleKey.OApsAIMIDinnerPrebolus2).toString())
+                inputReactivity.setText(preferences.get(DoubleKey.OApsAIMIDinnerFactor).toString())
                 inputDuration.setText(sp.getInt("aimi_mode_dinner_duration", 60).toString())
-                inputInterval.setText(getStringPref(IntKey.OApsAIMIDinnerinterval))
+                inputInterval.setText(preferences.get(IntKey.OApsAIMIDinnerinterval).toString())
             }
             ModeType.BFAST -> {
-                inputPrebolus1.setText(getStringPref(DoubleKey.OApsAIMIBFPrebolus))
-                inputPrebolus2.setText(getStringPref(DoubleKey.OApsAIMIBFPrebolus2))
-                inputReactivity.setText(getStringPref(DoubleKey.OApsAIMIBFFactor))
+                inputPrebolus1.setText(preferences.get(DoubleKey.OApsAIMIBFPrebolus).toString())
+                inputPrebolus2.setText(preferences.get(DoubleKey.OApsAIMIBFPrebolus2).toString())
+                inputReactivity.setText(preferences.get(DoubleKey.OApsAIMIBFFactor).toString())
                 inputDuration.setText(sp.getInt("aimi_mode_bfast_duration", 60).toString())
-                inputInterval.setText(getStringPref(IntKey.OApsAIMIBFinterval))
+                inputInterval.setText(preferences.get(IntKey.OApsAIMIBFinterval).toString())
             }
             ModeType.HIGHCARB -> {
-                inputPrebolus1.setText(getStringPref(DoubleKey.OApsAIMIHighCarbPrebolus))
-                inputPrebolus2.setText(getStringPref(DoubleKey.OApsAIMIHighCarbPrebolus2))
-                inputReactivity.setText(getStringPref(DoubleKey.OApsAIMIHCFactor))
+                inputPrebolus1.setText(preferences.get(DoubleKey.OApsAIMIHighCarbPrebolus).toString())
+                inputPrebolus2.setText(preferences.get(DoubleKey.OApsAIMIHighCarbPrebolus2).toString())
+                inputReactivity.setText(preferences.get(DoubleKey.OApsAIMIHCFactor).toString())
                 inputDuration.setText(sp.getInt("aimi_mode_hc_duration", 60).toString())
-                inputInterval.setText(getStringPref(IntKey.OApsAIMIHCinterval))
+                inputInterval.setText(preferences.get(IntKey.OApsAIMIHCinterval).toString())
             }
         }
     }
@@ -387,8 +387,8 @@ class AimiModeSettingsActivity : TranslatedDaggerAppCompatActivity() {
         val durationMin = inputDuration.text.toString().toIntOrNull() ?: 60
         val durationMs = durationMin * 60 * 1000L
 
-        "Confirm Mode Change", "Activate $modeName mode for $durationMin min?", {
-            {
+        // Mode activation
+            run {
                  // Create Therapy Event
                  val te = app.aaps.core.data.model.TE(
                      timestamp = System.currentTimeMillis(),
