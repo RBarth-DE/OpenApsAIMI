@@ -161,6 +161,7 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
 
     override fun applyConfiguration(configuration: kotlinx.serialization.json.JsonObject) {}
     override fun configuration(): kotlinx.serialization.json.JsonObject = kotlinx.serialization.json.JsonObject(emptyMap())
+    override fun exportConfiguration(configuration: kotlinx.serialization.json.JsonObject) {}
 
     override fun onStart() {
         super.onStart()
@@ -572,7 +573,7 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
         if (glucoseStatus == null) {
             rxBus.send(EventResetOpenAPSGui(rh.gs(R.string.openapsma_no_glucose_data)))
             aapsLogger.debug(LTag.APS, rh.gs(R.string.openapsma_no_glucose_data))
-            return@withContext
+            return@withContext@withContext
         }
         val profile = runBlocking { profileFunction.getProfile() }
         val pump = activePlugin.activePump
@@ -580,12 +581,12 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
         if (profile == null) {
             rxBus.send(EventResetOpenAPSGui(rh.gs(app.aaps.core.ui.R.string.no_profile_set)))
             aapsLogger.debug(LTag.APS, rh.gs(app.aaps.core.ui.R.string.no_profile_set))
-            return@withContext
+            return@withContext@withContext
         }
         if (!isEnabled()) {
             rxBus.send(EventResetOpenAPSGui(rh.gs(R.string.openapsma_disabled)))
             aapsLogger.debug(LTag.APS, rh.gs(R.string.openapsma_disabled))
-            return@withContext
+            return@withContext@withContext
         }
 
         val inputConstraints = ConstraintObject(0.0, aapsLogger) // fake. only for collecting all results
@@ -702,7 +703,7 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
             val currentBG = gsData?.glucose
             if (currentBG == null) {
                 aapsLogger.error(LTag.APS, "Données de glycémie indisponibles, impossibilité de calculer l'ISF adaptatif.")
-                return
+                return@withContext
             }
             val currentDelta = gsData?.delta
             val recentDeltas = getRecentDeltas()
@@ -790,7 +791,7 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
             val mealData = runBlocking { iobCobCalculator.getMealDataWithWaitingForCalculationFinish() }
             var currentActivity = 0.0
             for (i in -4..0) { //MP: -4 to 0 calculates all the insulin active during the last 5 minutes
-                val iob = runBlocking { iobCobCalculator.calculateFromTreatmentsAndTemps(System.currentTimeMillis() } - TimeUnit.MINUTES.toMillis(i.toLong()), profile)
+                val iob = runBlocking { iobCobCalculator.calculateFromTreatmentsAndTemps(System.currentTimeMillis() - TimeUnit.MINUTES.toMillis(i.toLong()), profile) }
                 currentActivity += iob.activity
             }
             var futureActivity = 0.0
@@ -801,20 +802,20 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
             val safepk = activityPredTimePK.coerceAtLeast(35)
             
             for (i in -4..0) { //MP: calculate 5-minute-insulin activity centering around peakTime
-                val iob = runBlocking { iobCobCalculator.calculateFromTreatmentsAndTemps(System.currentTimeMillis() } + TimeUnit.MINUTES.toMillis(safepk.toLong() - i), profile)
+                val iob = runBlocking { iobCobCalculator.calculateFromTreatmentsAndTemps(System.currentTimeMillis() + TimeUnit.MINUTES.toMillis(safepk.toLong() - i), profile) }
                 futureActivity += iob.activity
             }
             val sensorLag = -10L //MP Assume that the glucose value measurement reflect the BG value from 'sensorlag' minutes ago & calculate the insulin activity then
             var sensorLagActivity = 0.0
             for (i in -4..0) {
-                val iob = runBlocking { iobCobCalculator.calculateFromTreatmentsAndTemps(System.currentTimeMillis() } + TimeUnit.MINUTES.toMillis(sensorLag - i), profile)
+                val iob = runBlocking { iobCobCalculator.calculateFromTreatmentsAndTemps(System.currentTimeMillis() + TimeUnit.MINUTES.toMillis(sensorLag - i), profile) }
                 sensorLagActivity += iob.activity
             }
 
             val activityHistoric = -20L //MP Activity at the time in minutes from now. Used to calculate activity in the past to use as target activity.
             var historicActivity = 0.0
             for (i in -2..2) {
-                val iob = runBlocking { iobCobCalculator.calculateFromTreatmentsAndTemps(System.currentTimeMillis() } + TimeUnit.MINUTES.toMillis(activityHistoric - i), profile)
+                val iob = runBlocking { iobCobCalculator.calculateFromTreatmentsAndTemps(System.currentTimeMillis() + TimeUnit.MINUTES.toMillis(activityHistoric - i), profile) }
                 historicActivity += iob.activity
             }
 // Récupère GS standard + features AIMI
@@ -822,7 +823,7 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
             val gs = pack.gs ?: run {
                 rxBus.send(EventResetOpenAPSGui(rh.gs(R.string.openapsma_no_glucose_data)))
                 aapsLogger.debug(LTag.APS, rh.gs(R.string.openapsma_no_glucose_data))
-                return
+                return@withContext
             }
             val f = pack.features
 
