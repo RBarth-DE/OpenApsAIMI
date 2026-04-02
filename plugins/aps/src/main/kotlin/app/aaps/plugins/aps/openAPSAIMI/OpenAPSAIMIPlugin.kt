@@ -1,5 +1,7 @@
 package app.aaps.plugins.aps.openAPSAIMI
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.Dispatchers
 
 import android.annotation.SuppressLint
 import android.content.Context
@@ -157,8 +159,8 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
     aapsLogger, rh, preferences
 ), APS, PluginConstraints {
 
-    override fun applyConfiguration(configuration: com.google.gson.JsonObject) {}
-    override fun exportConfiguration(configuration: com.google.gson.JsonObject) {}
+    override fun applyConfiguration(configuration: kotlinx.serialization.json.JsonObject) {}
+    override fun exportConfiguration(configuration: kotlinx.serialization.json.JsonObject) {}
 
     override fun onStart() {
         super.onStart()
@@ -465,7 +467,7 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
         if (!preferences.get(BooleanKey.ApsUseDynamicSensitivity)) return "OFF" to null
 
         // 0) cache DB existant
-        val result = persistenceLayer.getApsResultCloseTo(timestamp)
+        val result = runBlocking { persistenceLayer.getApsResultCloseTo(timestamp) }
         if (result?.variableSens != null) return "DB" to result.variableSens
 
         // 1) BG & deltas actuels
@@ -531,8 +533,8 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
         // Calculate IOB/COB for Cosine Gate
         val profile = runBlocking { profileFunction.getProfile() }
         if (profile != null) {
-            val iobCalc = iobCobCalculator.calculateFromTreatmentsAndTemps(timestamp, profile)
-            val mealData = iobCobCalculator.getMealDataWithWaitingForCalculationFinish()
+            val iobCalc = runBlocking { iobCobCalculator.calculateFromTreatmentsAndTemps(timestamp, profile) }
+            val mealData = runBlocking { iobCobCalculator.getMealDataWithWaitingForCalculationFinish() }
             
             val physioMults = physioAdapter.getMultipliers(
                 currentBG = glucose, 
@@ -563,7 +565,7 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
     }
 
 
-    override fun invoke(initiator: String, tempBasalFallback: Boolean) {
+    override suspend fun invoke(initiator: String, tempBasalFallback: Boolean) = withContext(Dispatchers.Default) {
         aapsLogger.debug(LTag.APS, "invoke from $initiator tempBasalFallback: $tempBasalFallback")
         lastAPSResult = null
         val glucoseStatus = getGlucoseStatusData(false)
@@ -608,8 +610,8 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
         
         // Calculate IOB/COB early for Physio Adapter
         val nowMs = dateUtil.now()
-        val iobCalc = iobCobCalculator.calculateFromTreatmentsAndTemps(nowMs, profile) // Uses 'profile' from enabled check above
-        val mealDataForPhysio = iobCobCalculator.getMealDataWithWaitingForCalculationFinish()
+        val iobCalc = runBlocking { iobCobCalculator.calculateFromTreatmentsAndTemps(nowMs, profile) } // Uses 'profile' from enabled check above
+        val mealDataForPhysio = runBlocking { iobCobCalculator.getMealDataWithWaitingForCalculationFinish() }
         
         val physioMults = physioAdapter.getMultipliers(
             currentBG = glucoseForPhysio, 
@@ -637,7 +639,7 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
         var maxBg = hardLimits.verifyHardLimits(Round.roundTo(profile.getTargetHighMgdl(), 0.1), app.aaps.core.ui.R.string.profile_high_target, HardLimits.LIMIT_MAX_BG[0], HardLimits.LIMIT_MAX_BG[1])
         var targetBg = hardLimits.verifyHardLimits(profile.getTargetMgdl(), app.aaps.core.ui.R.string.temp_target_value, HardLimits.LIMIT_TARGET_BG[0], HardLimits.LIMIT_TARGET_BG[1])
         var isTempTarget = false
-        persistenceLayer.getTemporaryTargetActiveAt(dateUtil.now())?.let { tempTarget ->
+        runBlocking { persistenceLayer.getTemporaryTargetActiveAt(dateUtil.now() })?.let { tempTarget ->
             isTempTarget = true
             minBg = hardLimits.verifyHardLimits(tempTarget.lowTarget, app.aaps.core.ui.R.string.temp_target_low_target, HardLimits.LIMIT_TEMP_MIN_BG[0], HardLimits.LIMIT_TEMP_MIN_BG[1])
             maxBg = hardLimits.verifyHardLimits(tempTarget.highTarget, app.aaps.core.ui.R.string.temp_target_high_target, HardLimits.LIMIT_TEMP_MAX_BG[0], HardLimits.LIMIT_TEMP_MAX_BG[1])
@@ -784,11 +786,11 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
                 aapsLogger.error(LTag.APS, "Failed to apply AIMI Brain factor", e)
             }
 
-            val iobArray = iobCobCalculator.calculateIobArrayForSMB(autosensResult, SMBDefaults.exercise_mode, SMBDefaults.half_basal_exercise_target, isTempTarget)
-            val mealData = iobCobCalculator.getMealDataWithWaitingForCalculationFinish()
+            val iobArray = runBlocking { iobCobCalculator.calculateIobArrayForSMB(autosensResult, SMBDefaults.exercise_mode, SMBDefaults.half_basal_exercise_target, isTempTarget) }
+            val mealData = runBlocking { iobCobCalculator.getMealDataWithWaitingForCalculationFinish() }
             var currentActivity = 0.0
             for (i in -4..0) { //MP: -4 to 0 calculates all the insulin active during the last 5 minutes
-                val iob = iobCobCalculator.calculateFromTreatmentsAndTemps(System.currentTimeMillis() - TimeUnit.MINUTES.toMillis(i.toLong()), profile)
+                val iob = runBlocking { iobCobCalculator.calculateFromTreatmentsAndTemps(System.currentTimeMillis() } - TimeUnit.MINUTES.toMillis(i.toLong()), profile)
                 currentActivity += iob.activity
             }
             var futureActivity = 0.0
@@ -799,20 +801,20 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
             val safepk = activityPredTimePK.coerceAtLeast(35)
             
             for (i in -4..0) { //MP: calculate 5-minute-insulin activity centering around peakTime
-                val iob = iobCobCalculator.calculateFromTreatmentsAndTemps(System.currentTimeMillis() + TimeUnit.MINUTES.toMillis(safepk.toLong() - i), profile)
+                val iob = runBlocking { iobCobCalculator.calculateFromTreatmentsAndTemps(System.currentTimeMillis() } + TimeUnit.MINUTES.toMillis(safepk.toLong() - i), profile)
                 futureActivity += iob.activity
             }
             val sensorLag = -10L //MP Assume that the glucose value measurement reflect the BG value from 'sensorlag' minutes ago & calculate the insulin activity then
             var sensorLagActivity = 0.0
             for (i in -4..0) {
-                val iob = iobCobCalculator.calculateFromTreatmentsAndTemps(System.currentTimeMillis() + TimeUnit.MINUTES.toMillis(sensorLag - i), profile)
+                val iob = runBlocking { iobCobCalculator.calculateFromTreatmentsAndTemps(System.currentTimeMillis() } + TimeUnit.MINUTES.toMillis(sensorLag - i), profile)
                 sensorLagActivity += iob.activity
             }
 
             val activityHistoric = -20L //MP Activity at the time in minutes from now. Used to calculate activity in the past to use as target activity.
             var historicActivity = 0.0
             for (i in -2..2) {
-                val iob = iobCobCalculator.calculateFromTreatmentsAndTemps(System.currentTimeMillis() + TimeUnit.MINUTES.toMillis(activityHistoric - i), profile)
+                val iob = runBlocking { iobCobCalculator.calculateFromTreatmentsAndTemps(System.currentTimeMillis() } + TimeUnit.MINUTES.toMillis(activityHistoric - i), profile)
                 historicActivity += iob.activity
             }
 // Récupère GS standard + features AIMI
@@ -860,7 +862,7 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
             val deltaNow = glucoseStatus.delta
 
 // IOB instantané
-            val iobNow = iobCobCalculator.calculateFromTreatmentsAndTemps(nowMs, profile).iob
+            val iobNow = runBlocking { iobCobCalculator.calculateFromTreatmentsAndTemps(nowMs, profile) }.iob
 
 // Utilise le TDD 24h que tu as déjà calculé/chargé dans invoke (évite les IO coûteuses)
             val tdd24ForPk = tdd24Hrs  // garde ta variable existante ici (Double)

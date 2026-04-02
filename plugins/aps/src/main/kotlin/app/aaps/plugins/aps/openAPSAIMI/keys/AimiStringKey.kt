@@ -14,8 +14,9 @@ enum class AimiStringKey(
     override val negativeDependency: app.aaps.core.keys.interfaces.BooleanPreferenceKey? = null,
     override val isPassword: Boolean = false,
     override val isPin: Boolean = false,
-    override val exportable: Boolean = true
+    override val exportable: Boolean = true,
+    override val titleResId: Int = 0
 ) : StringPreferenceKey {
-    PregnancyDueDateString("aimi_pregnancy_due_date_string", "", titleResId = 0),
-    RemoteControlPin("aimi_remote_control_pin", "", isPin = true, isPassword = true, titleResId = 0),
+    PregnancyDueDateString("aimi_pregnancy_due_date_string", ""),
+    RemoteControlPin("aimi_remote_control_pin", "", isPin = true, isPassword = true),
 }
