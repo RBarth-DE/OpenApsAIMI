@@ -325,4 +325,6 @@ enum class DoubleKey(
 
     OApsAIMILastEstimatedCarbs(key = "OApsAIMILastEstimatedCarbs", defaultValue = 0.0, min = 0.0, max = 300.0, titleResId = 0),
     OApsAIMILastEstimatedCarbTime(key = "OApsAIMILastEstimatedCarbTime", defaultValue = 0.0, min = 0.0, max = 20000000000000.0, titleResId = 0),
+
+    meal_modes_MaxBasal("key_meal_modes_max_basal", defaultValue = 3.0, min = 0.1, max = 10.0, titleResId = 0),
 }
