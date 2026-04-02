@@ -208,21 +208,12 @@ class AIMIHealthConnectSyncServiceMTR @Inject constructor(
                 device = SOURCE_DEVICE // "HealthConnect"
             )
 
-            disposable.add(
+            try {
                 runBlocking { persistenceLayer.insertOrUpdateStepsCount(sc) }
-                    .subscribeOn(Schedulers.io())
-                    .subscribe(
-                        { 
-                            aapsLogger.info(
-                                LTag.APS,
-                                "[$TAG] ✅ Steps stored  HC steps: 5min=${stepsData.steps5min}, 30min=${stepsData.steps30min}. Source=$SOURCE_DEVICE"
-                            )
-                        },
-                        { error ->
-                            aapsLogger.error(LTag.APS, "[$TAG] ❌ Steps DB insert failed", error)
-                        }
-                    )
-            )
+                aapsLogger.info(LTag.APS, "[$TAG] ✅ Steps stored")
+            } catch (e: Exception) {
+                aapsLogger.error(LTag.APS, "[$TAG] ❌ Steps DB insert failed", e)
+            }
         }
     }
 
@@ -237,21 +228,12 @@ class AIMIHealthConnectSyncServiceMTR @Inject constructor(
                 device = SOURCE_DEVICE
             )
             
-            disposable.add(
+            try {
                 runBlocking { persistenceLayer.insertOrUpdateHeartRate(hr) }
-                    .subscribeOn(Schedulers.io())
-                    .subscribe(
-                        { 
-                            aapsLogger.info(
-                                LTag.APS,
-                                "[$TAG] ✅ Synced HC Heart Rate: ${hr.beatsPerMinute} bpm. Source=$SOURCE_DEVICE"
-                            )
-                        },
-                        { error ->
-                            aapsLogger.error(LTag.APS, "[$TAG] ❌ HR DB insert failed", error)
-                        }
-                    )
-            )
+                aapsLogger.info(LTag.APS, "[$TAG] ✅ Synced HC Heart Rate: ${hr.beatsPerMinute} bpm")
+            } catch (e: Exception) {
+                aapsLogger.error(LTag.APS, "[$TAG] ❌ HR DB insert failed", e)
+            }
         }
     }
 

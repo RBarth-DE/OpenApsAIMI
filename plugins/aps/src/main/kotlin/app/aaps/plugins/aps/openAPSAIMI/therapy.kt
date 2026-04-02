@@ -28,22 +28,22 @@ class Therapy (private val persistenceLayer: PersistenceLayer){
 
     @SuppressLint("CheckResult")
     fun updateStatesBasedOnTherapyEvents() {
-        stopTime = findActivestopEvents(System.currentTimeMillis())
+        stopTime = runBlocking { findActivestopEvents(System.currentTimeMillis() })
         if (!stopTime) {
-            sleepTime = findActiveSleepEvents(System.currentTimeMillis())
-            sportTime = findActiveSportEvents(System.currentTimeMillis())
-            snackTime = findActiveSnackEvents(System.currentTimeMillis())
-            lowCarbTime = findActiveLowCarbEvents(System.currentTimeMillis())
-            highCarbTime = findActiveHighCarbEvents(System.currentTimeMillis())
-            mealTime = findActiveMealEvents(System.currentTimeMillis())
-            bfastTime = findActivebfastEvents(System.currentTimeMillis())
-            lunchTime = findActiveLunchEvents(System.currentTimeMillis())
-            dinnerTime = findActiveDinnerEvents(System.currentTimeMillis())
-            fastingTime = findActiveFastingEvents(System.currentTimeMillis())
+            sleepTime = runBlocking { findActiveSleepEvents(System.currentTimeMillis() })
+            sportTime = runBlocking { findActiveSportEvents(System.currentTimeMillis() })
+            snackTime = runBlocking { findActiveSnackEvents(System.currentTimeMillis() })
+            lowCarbTime = runBlocking { findActiveLowCarbEvents(System.currentTimeMillis() })
+            highCarbTime = runBlocking { findActiveHighCarbEvents(System.currentTimeMillis() })
+            mealTime = runBlocking { findActiveMealEvents(System.currentTimeMillis() })
+            bfastTime = runBlocking { findActivebfastEvents(System.currentTimeMillis() })
+            lunchTime = runBlocking { findActiveLunchEvents(System.currentTimeMillis() })
+            dinnerTime = runBlocking { findActiveDinnerEvents(System.currentTimeMillis() })
+            fastingTime = runBlocking { findActiveFastingEvents(System.currentTimeMillis() })
             calibrationTime = isCalibrationEvent(System.currentTimeMillis())
 
             // Mettre à jour deleteTime en vérifiant la présence de l'événement "delete"
-            deleteTime = findActivedeleteEvents(System.currentTimeMillis())
+            deleteTime = runBlocking { findActivedeleteEvents(System.currentTimeMillis() })
             // Extraire la date de l'événement "delete"
             deleteEventDate = runBlocking { persistenceLayer.getTherapyEventDataFromTime(System.currentTimeMillis() } - TimeUnit.DAYS.toMillis(1), true)
                 .map { events ->
