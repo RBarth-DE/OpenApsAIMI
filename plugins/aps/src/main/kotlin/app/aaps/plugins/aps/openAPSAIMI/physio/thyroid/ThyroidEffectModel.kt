@@ -1,4 +1,5 @@
 package app.aaps.plugins.aps.openAPSAIMI.physio.thyroid
+import kotlinx.coroutines.runBlocking
 
 class ThyroidEffectModel {
     // These constants will ideally also be configurable via Prefs, but hardcoded models are first level

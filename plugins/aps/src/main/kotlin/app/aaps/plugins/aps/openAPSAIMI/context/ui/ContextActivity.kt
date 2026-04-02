@@ -1,4 +1,5 @@
 package app.aaps.plugins.aps.openAPSAIMI.context.ui
+import kotlinx.coroutines.runBlocking
 
 import android.os.Bundle
 import android.view.MenuItem

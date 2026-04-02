@@ -1,4 +1,5 @@
 package app.aaps.plugins.aps.openAPSAIMI.activity
+import kotlinx.coroutines.runBlocking
 
 /**
  * Represents the detected activity state and its physiological impact.

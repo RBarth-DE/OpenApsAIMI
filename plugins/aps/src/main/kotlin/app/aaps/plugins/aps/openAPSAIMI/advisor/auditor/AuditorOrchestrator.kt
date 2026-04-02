@@ -1,4 +1,5 @@
 package app.aaps.plugins.aps.openAPSAIMI.advisor.auditor
+import kotlinx.coroutines.runBlocking
 
 import app.aaps.core.interfaces.aps.GlucoseStatusAIMI
 import app.aaps.core.interfaces.aps.IobTotal
@@ -348,7 +349,7 @@ class AuditorOrchestrator @Inject constructor(
                         originalTbrMin = tbrDuration,
                         originalIntervalMin = intervalMin,
                         verdict = verdict,
-                        confidence = preferences.get(IntKey.AimiAuditorMinConfidence) / 100.0,
+                        confidence = preferences.get(DoubleKey.AimiAuditorMinConfidence) / 100.0,
                         mode = getModulationMode()
                     )
                     

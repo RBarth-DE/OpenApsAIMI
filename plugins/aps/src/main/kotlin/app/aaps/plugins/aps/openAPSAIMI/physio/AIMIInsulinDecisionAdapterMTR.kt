@@ -1,4 +1,5 @@
 package app.aaps.plugins.aps.openAPSAIMI.physio
+import kotlinx.coroutines.runBlocking
 
 import app.aaps.core.interfaces.db.PersistenceLayer
 import app.aaps.core.interfaces.logging.AAPSLogger
@@ -337,11 +338,11 @@ class AIMIInsulinDecisionAdapterMTR @Inject constructor(
         
         // Check therapy events for hypo treatments
         try {
-            val hypoEvents = persistenceLayer.getTherapyEventDataFromTime(
+            val hypoEvents = runBlocking { persistenceLayer.getTherapyEventDataFromTime(
                 now - RECENT_HYPO_WINDOW_MS,
                 TE.Type.NOTE,
                 false
-            ).filter { event ->
+            ) }.filter { event ->
                 event.note?.contains("hypo", ignoreCase = true) == true ||
                 event.note?.contains("hypoglycemia", ignoreCase = true) == true
             }

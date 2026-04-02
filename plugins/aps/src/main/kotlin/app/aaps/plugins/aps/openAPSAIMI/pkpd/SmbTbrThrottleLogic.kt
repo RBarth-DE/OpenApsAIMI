@@ -1,4 +1,5 @@
 package app.aaps.plugins.aps.openAPSAIMI.pkpd
+import kotlinx.coroutines.runBlocking
 
 /**
  * Logique de throttle intelligent SMB vs TBR basé sur l'état de l'action insulinique.

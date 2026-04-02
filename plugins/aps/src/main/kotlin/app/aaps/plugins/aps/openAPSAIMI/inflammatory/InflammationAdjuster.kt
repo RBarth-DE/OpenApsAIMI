@@ -1,4 +1,5 @@
 package app.aaps.plugins.aps.openAPSAIMI.inflammatory
+import kotlinx.coroutines.runBlocking
 
 import app.aaps.plugins.aps.openAPSAIMI.wcycle.ThyroidStatus
 import app.aaps.plugins.aps.openAPSAIMI.wcycle.VerneuilStatus

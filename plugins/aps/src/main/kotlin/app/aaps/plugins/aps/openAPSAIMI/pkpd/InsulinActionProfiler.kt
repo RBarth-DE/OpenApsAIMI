@@ -1,4 +1,5 @@
 package app.aaps.plugins.aps.openAPSAIMI.pkpd
+import kotlinx.coroutines.runBlocking
 
 import app.aaps.core.interfaces.aps.IobTotal
 import app.aaps.core.interfaces.aps.OapsProfileAimi

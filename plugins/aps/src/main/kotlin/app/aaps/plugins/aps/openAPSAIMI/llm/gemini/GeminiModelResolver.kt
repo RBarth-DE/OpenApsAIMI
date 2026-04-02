@@ -1,4 +1,5 @@
 package app.aaps.plugins.aps.openAPSAIMI.llm.gemini
+import kotlinx.coroutines.runBlocking
 
 import android.content.Context
 import android.content.SharedPreferences

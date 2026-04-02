@@ -1,4 +1,5 @@
 package app.aaps.plugins.aps.openAPSAIMI.physio
+import kotlinx.coroutines.runBlocking
 
 import androidx.health.connect.client.permission.HealthPermission
 import androidx.health.connect.client.records.HeartRateRecord

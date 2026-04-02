@@ -1,4 +1,5 @@
 package app.aaps.plugins.aps.openAPSAIMI.advisor.meal
+import kotlinx.coroutines.runBlocking
 
 import android.graphics.Bitmap
 import org.json.JSONObject

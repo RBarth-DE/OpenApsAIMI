@@ -1,4 +1,5 @@
 package app.aaps.plugins.aps.openAPSAIMI
+import kotlinx.coroutines.runBlocking
 
 data class TrainingConfig(
     var learningRate: Double = 0.001,

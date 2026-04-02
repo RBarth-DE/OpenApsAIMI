@@ -1,4 +1,5 @@
 package app.aaps.plugins.aps.openAPSAIMI.decision
+import kotlinx.coroutines.runBlocking
 
 import app.aaps.plugins.aps.openAPSAIMI.model.DecisionResult
 import app.aaps.plugins.aps.openAPSAIMI.model.LoopContext

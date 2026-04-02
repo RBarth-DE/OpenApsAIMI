@@ -1,4 +1,5 @@
 package app.aaps.plugins.aps.openAPSAIMI.extensions
+import kotlinx.coroutines.runBlocking
 
 import app.aaps.core.interfaces.aps.GlucoseStatusAIMI
 import app.aaps.core.interfaces.utils.DecimalFormatter

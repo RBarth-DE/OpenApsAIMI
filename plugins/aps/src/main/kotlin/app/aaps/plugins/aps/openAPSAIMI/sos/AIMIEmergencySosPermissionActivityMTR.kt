@@ -1,4 +1,5 @@
 package app.aaps.plugins.aps.openAPSAIMI.sos
+import kotlinx.coroutines.runBlocking
 
 import android.Manifest
 import android.content.Intent

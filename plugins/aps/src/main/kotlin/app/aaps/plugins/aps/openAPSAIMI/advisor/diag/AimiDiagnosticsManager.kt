@@ -1,4 +1,5 @@
 package app.aaps.plugins.aps.openAPSAIMI.advisor.diag
+import kotlinx.coroutines.runBlocking
 
 import android.content.Context
 import android.content.SharedPreferences

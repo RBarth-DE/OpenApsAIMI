@@ -1,4 +1,5 @@
 package app.aaps.plugins.aps.openAPSAIMI.steps
+import kotlinx.coroutines.runBlocking
 
 import app.aaps.core.data.model.SC
 import app.aaps.core.data.model.HR
@@ -65,7 +66,7 @@ class UnifiedActivityProviderMTR @Inject constructor(
         val start = now - windowMs
 
         return try {
-            val records = persistenceLayer.getStepsCountFromTimeToTime(start, now)
+            val records = runBlocking { persistenceLayer.getStepsCountFromTimeToTime(start, now) }
                 .sortedByDescending { it.timestamp }
 
             if (records.isEmpty()) return null
@@ -152,7 +153,7 @@ class UnifiedActivityProviderMTR @Inject constructor(
         val start = now - windowMs
         
         try {
-            val records = persistenceLayer.getHeartRatesFromTimeToTime(start, now)
+            val records = runBlocking { persistenceLayer.getHeartRatesFromTimeToTime(start, now) }
                 .sortedByDescending { it.timestamp }
                 
             if (records.isEmpty()) return null

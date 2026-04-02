@@ -1,4 +1,5 @@
 package app.aaps.plugins.aps.openAPSAIMI.physio.thyroid
+import kotlinx.coroutines.runBlocking
 
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

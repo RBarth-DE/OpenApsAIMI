@@ -1,4 +1,5 @@
 package app.aaps.plugins.aps.openAPSAIMI.context
+import kotlinx.coroutines.runBlocking
 
 import app.aaps.core.data.model.GlucoseUnit
 import app.aaps.core.data.model.TE
@@ -200,7 +201,7 @@ class ContextManager @Inject constructor(
             
             // Invalidate sync record in local DB and Nightscout
             val disposable = CompositeDisposable()
-            disposable += persistenceLayer.invalidateTherapyEventsWithNote("AIMI_CONTEXT:$id", Action.TREATMENT, Sources.Aaps)
+            disposable += runBlocking { persistenceLayer.invalidateTherapyEventsWithNote("AIMI_CONTEXT:$id", Action.TREATMENT, Sources.Aaps) }
                 .subscribeOn(aapsSchedulers.io)
                 .subscribe(
                     { aapsLogger.debug(LTag.APS, "[ContextManager] Synced invalidation for $id") },
@@ -244,7 +245,7 @@ class ContextManager @Inject constructor(
         
         // Invalidate ALL AIMI context sync records
         val disposable = CompositeDisposable()
-        disposable += persistenceLayer.invalidateTherapyEventsWithNote("AIMI_CONTEXT:", Action.TREATMENT, Sources.Aaps)
+        disposable += runBlocking { persistenceLayer.invalidateTherapyEventsWithNote("AIMI_CONTEXT:", Action.TREATMENT, Sources.Aaps) }
             .subscribeOn(aapsSchedulers.io)
             .subscribe(
                 { aapsLogger.debug(LTag.APS, "[ContextManager] Synced invalidation for all contexts") },
@@ -536,7 +537,7 @@ class ContextManager @Inject constructor(
             aapsLogger.debug(LTag.APS, "[ContextManager] Syncing context $intentId to NS")
             
             val disposable = CompositeDisposable()
-            disposable += persistenceLayer.insertOrUpdateTherapyEvent(therapyEvent)
+            disposable += runBlocking { persistenceLayer.insertOrUpdateTherapyEvent(therapyEvent) }
                 .subscribeOn(aapsSchedulers.io)
                 .subscribe(
                     {

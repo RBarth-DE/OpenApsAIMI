@@ -1,4 +1,5 @@
 package app.aaps.plugins.aps.openAPSAIMI
+import kotlinx.coroutines.runBlocking
 
 import android.annotation.SuppressLint
 import app.aaps.core.data.model.TE
@@ -27,29 +28,29 @@ class Therapy (private val persistenceLayer: PersistenceLayer){
 
     @SuppressLint("CheckResult")
     fun updateStatesBasedOnTherapyEvents() {
-        stopTime = findActivestopEvents(System.currentTimeMillis()).blockingGet()
+        stopTime = findActivestopEvents(System.currentTimeMillis())
         if (!stopTime) {
-            sleepTime = findActiveSleepEvents(System.currentTimeMillis()).blockingGet()
-            sportTime = findActiveSportEvents(System.currentTimeMillis()).blockingGet()
-            snackTime = findActiveSnackEvents(System.currentTimeMillis()).blockingGet()
-            lowCarbTime = findActiveLowCarbEvents(System.currentTimeMillis()).blockingGet()
-            highCarbTime = findActiveHighCarbEvents(System.currentTimeMillis()).blockingGet()
-            mealTime = findActiveMealEvents(System.currentTimeMillis()).blockingGet()
-            bfastTime = findActivebfastEvents(System.currentTimeMillis()).blockingGet()
-            lunchTime = findActiveLunchEvents(System.currentTimeMillis()).blockingGet()
-            dinnerTime = findActiveDinnerEvents(System.currentTimeMillis()).blockingGet()
-            fastingTime = findActiveFastingEvents(System.currentTimeMillis()).blockingGet()
-            calibrationTime = isCalibrationEvent(System.currentTimeMillis()).blockingGet()
+            sleepTime = findActiveSleepEvents(System.currentTimeMillis())
+            sportTime = findActiveSportEvents(System.currentTimeMillis())
+            snackTime = findActiveSnackEvents(System.currentTimeMillis())
+            lowCarbTime = findActiveLowCarbEvents(System.currentTimeMillis())
+            highCarbTime = findActiveHighCarbEvents(System.currentTimeMillis())
+            mealTime = findActiveMealEvents(System.currentTimeMillis())
+            bfastTime = findActivebfastEvents(System.currentTimeMillis())
+            lunchTime = findActiveLunchEvents(System.currentTimeMillis())
+            dinnerTime = findActiveDinnerEvents(System.currentTimeMillis())
+            fastingTime = findActiveFastingEvents(System.currentTimeMillis())
+            calibrationTime = isCalibrationEvent(System.currentTimeMillis())
 
             // Mettre à jour deleteTime en vérifiant la présence de l'événement "delete"
-            deleteTime = findActivedeleteEvents(System.currentTimeMillis()).blockingGet()
+            deleteTime = findActivedeleteEvents(System.currentTimeMillis())
             // Extraire la date de l'événement "delete"
-            deleteEventDate = persistenceLayer.getTherapyEventDataFromTime(System.currentTimeMillis() - TimeUnit.DAYS.toMillis(1), true)
+            deleteEventDate = runBlocking { persistenceLayer.getTherapyEventDataFromTime(System.currentTimeMillis() } - TimeUnit.DAYS.toMillis(1), true)
                 .map { events ->
                     val note = events.find { it.type == TE.Type.NOTE && it.note?.contains("delete", ignoreCase = true) == true }?.note
                     extractDateFromDeleteEvent(note).toString() // Extraire la date de l'événement "delete"
                 }
-                .blockingGet()
+                
         } else {
             resetAllStates()
             clearActiveEvent("sleep")
@@ -88,7 +89,7 @@ class Therapy (private val persistenceLayer: PersistenceLayer){
     private fun findActiveSleepEvents(timestamp: Long): Single<Boolean> {
         val fromTime = timestamp - TimeUnit.DAYS.toMillis(1) // les dernières 24 heures
         // Utiliser la méthode getTherapyEventDataFromTime avec le timestamp et l'ordre de tri
-        return persistenceLayer.getTherapyEventDataFromTime(fromTime, true)
+        return runBlocking { persistenceLayer.getTherapyEventDataFromTime(fromTime, true) }
             .map { events ->
                 events.filter { it.type == TE.Type.NOTE } // Filtrer les événements par type
                     .any { event ->
@@ -100,7 +101,7 @@ class Therapy (private val persistenceLayer: PersistenceLayer){
 
     private fun isCalibrationEvent(timestamp: Long): Single<Boolean> {
         val tenMinutesAgo = timestamp - TimeUnit.MINUTES.toMillis(15)
-        return persistenceLayer.getTherapyEventDataFromTime(tenMinutesAgo, true)
+        return runBlocking { persistenceLayer.getTherapyEventDataFromTime(tenMinutesAgo, true) }
             .map { events ->
                 events.filter { it.type == TE.Type.FINGER_STICK_BG_VALUE }
                     .any { event ->
@@ -121,7 +122,7 @@ class Therapy (private val persistenceLayer: PersistenceLayer){
     private fun findActiveSportEvents(timestamp: Long): Single<Boolean> {
         val fromTime = timestamp - TimeUnit.DAYS.toMillis(1) // les dernières 24 heures
         // Utiliser la méthode getTherapyEventDataFromTime avec le timestamp et l'ordre de tri
-        return persistenceLayer.getTherapyEventDataFromTime(fromTime, true)
+        return runBlocking { persistenceLayer.getTherapyEventDataFromTime(fromTime, true) }
             .map { events ->
                 events.filter { it.type == TE.Type.NOTE } // Filtrer les événements par type
                     .any { event ->
@@ -141,7 +142,7 @@ class Therapy (private val persistenceLayer: PersistenceLayer){
     private fun findActiveSnackEvents(timestamp: Long): Single<Boolean> {
         val fromTime = timestamp - TimeUnit.DAYS.toMillis(1) // les dernières 24 heures
         // Utiliser la méthode getTherapyEventDataFromTime avec le timestamp et l'ordre de tri
-        return persistenceLayer.getTherapyEventDataFromTime(fromTime, true)
+        return runBlocking { persistenceLayer.getTherapyEventDataFromTime(fromTime, true) }
             .map { events ->
                 events.filter { it.type == TE.Type.NOTE } // Filtrer les événements par type
                     .any { event ->
@@ -154,7 +155,7 @@ class Therapy (private val persistenceLayer: PersistenceLayer){
     private fun findActiveLowCarbEvents(timestamp: Long): Single<Boolean> {
         val fromTime = timestamp - TimeUnit.DAYS.toMillis(1) // les dernières 24 heures
         // Utiliser la méthode getTherapyEventDataFromTime avec le timestamp et l'ordre de tri
-        return persistenceLayer.getTherapyEventDataFromTime(fromTime, true)
+        return runBlocking { persistenceLayer.getTherapyEventDataFromTime(fromTime, true) }
             .map { events ->
                 events.filter { it.type == TE.Type.NOTE } // Filtrer les événements par type
                     .any { event ->
@@ -165,7 +166,7 @@ class Therapy (private val persistenceLayer: PersistenceLayer){
     }
     private fun findActiveHighCarbEvents(timestamp: Long): Single<Boolean> {
         val fromTime = timestamp - TimeUnit.DAYS.toMillis(1) // les dernières 24 heures
-        return persistenceLayer.getTherapyEventDataFromTime(fromTime, true)
+        return runBlocking { persistenceLayer.getTherapyEventDataFromTime(fromTime, true) }
             .map { events ->
                 events.filter { it.type == TE.Type.NOTE }
                     .any { event ->
@@ -177,7 +178,7 @@ class Therapy (private val persistenceLayer: PersistenceLayer){
     }
     private fun findActiveMealEvents(timestamp: Long): Single<Boolean> {
         val fromTime = timestamp - TimeUnit.DAYS.toMillis(1) // les dernières 24 heures
-        return persistenceLayer.getTherapyEventDataFromTime(fromTime, true)
+        return runBlocking { persistenceLayer.getTherapyEventDataFromTime(fromTime, true) }
             .map { events ->
                 events.filter { it.type == TE.Type.NOTE }
                     .any { event ->
@@ -188,7 +189,7 @@ class Therapy (private val persistenceLayer: PersistenceLayer){
     }
     private fun findActivebfastEvents(timestamp: Long): Single<Boolean> {
         val fromTime = timestamp - TimeUnit.DAYS.toMillis(1) // les dernières 24 heures
-        return persistenceLayer.getTherapyEventDataFromTime(fromTime, true)
+        return runBlocking { persistenceLayer.getTherapyEventDataFromTime(fromTime, true) }
             .map { events ->
                 events.filter { it.type == TE.Type.NOTE }
                     .any { event ->
@@ -200,7 +201,7 @@ class Therapy (private val persistenceLayer: PersistenceLayer){
     }
     private fun findActiveLunchEvents(timestamp: Long): Single<Boolean> {
         val fromTime = timestamp - TimeUnit.DAYS.toMillis(1) // les dernières 24 heures
-        return persistenceLayer.getTherapyEventDataFromTime(fromTime, true)
+        return runBlocking { persistenceLayer.getTherapyEventDataFromTime(fromTime, true) }
             .map { events ->
                 events.filter { it.type == TE.Type.NOTE }
                     .any { event ->
@@ -211,7 +212,7 @@ class Therapy (private val persistenceLayer: PersistenceLayer){
     }
     private fun findActivedeleteEvents(timestamp: Long): Single<Boolean> {
         val fromTime = timestamp - TimeUnit.DAYS.toMillis(1) // les dernières 24 heures
-        return persistenceLayer.getTherapyEventDataFromTime(fromTime, true)
+        return runBlocking { persistenceLayer.getTherapyEventDataFromTime(fromTime, true) }
             .map { events ->
                 events.filter { it.type == TE.Type.NOTE }
                     .any { event ->
@@ -222,7 +223,7 @@ class Therapy (private val persistenceLayer: PersistenceLayer){
     }
     private fun findActiveDinnerEvents(timestamp: Long): Single<Boolean> {
         val fromTime = timestamp - TimeUnit.DAYS.toMillis(1) // les dernières 24 heures
-        return persistenceLayer.getTherapyEventDataFromTime(fromTime, true)
+        return runBlocking { persistenceLayer.getTherapyEventDataFromTime(fromTime, true) }
             .map { events ->
                 events.filter { it.type == TE.Type.NOTE }
                     .any { event ->
@@ -233,7 +234,7 @@ class Therapy (private val persistenceLayer: PersistenceLayer){
     }
     private fun findActiveFastingEvents(timestamp: Long): Single<Boolean> {
         val fromTime = timestamp - TimeUnit.DAYS.toMillis(1) // les dernières 24 heures
-        return persistenceLayer.getTherapyEventDataFromTime(fromTime, true)
+        return runBlocking { persistenceLayer.getTherapyEventDataFromTime(fromTime, true) }
             .map { events ->
                 events.filter { it.type == TE.Type.NOTE }
                     .any { event ->
@@ -244,7 +245,7 @@ class Therapy (private val persistenceLayer: PersistenceLayer){
     }
     private fun findActivestopEvents(timestamp: Long): Single<Boolean> {
         val fromTime = timestamp - TimeUnit.DAYS.toMillis(1) // les dernières 24 heures
-        return persistenceLayer.getTherapyEventDataFromTime(fromTime, true)
+        return runBlocking { persistenceLayer.getTherapyEventDataFromTime(fromTime, true) }
             .map { events ->
                 events.filter { it.type == TE.Type.NOTE }
                     .any { event ->
@@ -256,7 +257,7 @@ class Therapy (private val persistenceLayer: PersistenceLayer){
 
     fun getTimeElapsedSinceLastEvent(keyword: String): Long {
         val fromTime = System.currentTimeMillis() - TimeUnit.MINUTES.toMillis(60)
-        val events = persistenceLayer.getTherapyEventDataFromTime(fromTime, TE.Type.NOTE, true)
+        val events = runBlocking { persistenceLayer.getTherapyEventDataFromTime(fromTime, TE.Type.NOTE, true) }
 
         val lastEvent = events.filter { it.note?.contains(keyword, ignoreCase = true) == true }
             .maxByOrNull { it.timestamp }

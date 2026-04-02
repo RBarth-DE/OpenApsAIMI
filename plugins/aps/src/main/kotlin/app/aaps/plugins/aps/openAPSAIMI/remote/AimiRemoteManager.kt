@@ -1,4 +1,5 @@
 package app.aaps.plugins.aps.openAPSAIMI.remote
+import kotlinx.coroutines.runBlocking
 
 import app.aaps.core.data.model.TE
 import app.aaps.core.interfaces.db.PersistenceLayer
@@ -61,7 +62,7 @@ class AimiRemoteManager @Inject constructor(
         val now = dateUtil.now()
         val since = now - T.mins(5).msecs()
         
-        val events = persistenceLayer.getTherapyEventDataFromToTime(since, now).blockingGet() ?: emptyList()
+        val events = runBlocking { persistenceLayer.getTherapyEventDataFromToTime(since, now) } ?: emptyList()
         
         events.forEach { event ->
             // Only Notes/Announcements

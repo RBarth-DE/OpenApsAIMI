@@ -1,4 +1,5 @@
 package app.aaps.plugins.aps.openAPSAIMI.basal
+import kotlinx.coroutines.runBlocking
 
 import app.aaps.plugins.aps.openAPSAIMI.trajectory.TrajectoryAnalysis
 import kotlin.math.min

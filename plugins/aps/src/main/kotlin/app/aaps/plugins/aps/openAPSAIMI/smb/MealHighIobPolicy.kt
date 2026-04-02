@@ -1,4 +1,5 @@
 package app.aaps.plugins.aps.openAPSAIMI.smb
+import kotlinx.coroutines.runBlocking
 
 internal data class MealHighIobDecision(val relax: Boolean, val damping: Double)
 

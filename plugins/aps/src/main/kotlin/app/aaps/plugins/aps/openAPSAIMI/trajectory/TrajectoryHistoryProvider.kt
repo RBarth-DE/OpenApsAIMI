@@ -1,4 +1,5 @@
 package app.aaps.plugins.aps.openAPSAIMI.trajectory
+import kotlinx.coroutines.runBlocking
 
 import app.aaps.core.interfaces.aps.GlucoseStatusAIMI
 import app.aaps.core.interfaces.db.PersistenceLayer
@@ -275,10 +276,10 @@ class TrajectoryHistoryProvider @Inject constructor(
      */
     private fun estimateTimeSinceLastBolus(timestamp: Long): Int {
         try {
-            val boluses = persistenceLayer.getBolusesFromTime(
-                timestamp - (4 * 3600_000L), // Last 4 hours
+            val boluses = runBlocking { persistenceLayer.getBolusesFromTime(
+                timestamp - (4 * 3600_000L) }, // Last 4 hours
                 false
-            ).blockingGet()
+            )
             
             val lastBolus = boluses
                 .filter { it.timestamp <= timestamp && it.amount > 0.1 }

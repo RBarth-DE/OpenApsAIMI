@@ -1,4 +1,5 @@
 package app.aaps.plugins.aps.openAPSAIMI.steps
+import kotlinx.coroutines.runBlocking
 
 import app.aaps.core.data.model.SC
 import app.aaps.core.interfaces.db.PersistenceLayer
@@ -113,7 +114,7 @@ class AIMIPhoneStepsSyncServiceMTR @Inject constructor(
                 )
                 
                 disposable.add(
-                    persistenceLayer.insertOrUpdateStepsCount(sc)
+                    runBlocking { persistenceLayer.insertOrUpdateStepsCount(sc) }
                         .subscribeOn(Schedulers.io())
                         .subscribe(
                             { _ ->

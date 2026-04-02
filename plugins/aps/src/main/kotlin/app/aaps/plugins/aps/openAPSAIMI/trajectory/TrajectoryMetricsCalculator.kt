@@ -1,4 +1,5 @@
 package app.aaps.plugins.aps.openAPSAIMI.trajectory
+import kotlinx.coroutines.runBlocking
 
 import kotlin.math.abs
 import kotlin.math.max

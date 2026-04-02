@@ -1,4 +1,5 @@
 package app.aaps.plugins.aps.openAPSAIMI.di
+import kotlinx.coroutines.runBlocking
 
 import app.aaps.plugins.aps.openAPSAIMI.steps.*
 import dagger.Module

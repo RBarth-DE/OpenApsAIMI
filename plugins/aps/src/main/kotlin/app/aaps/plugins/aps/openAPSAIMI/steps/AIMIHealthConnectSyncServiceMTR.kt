@@ -209,7 +209,7 @@ class AIMIHealthConnectSyncServiceMTR @Inject constructor(
             )
 
             disposable.add(
-                persistenceLayer.insertOrUpdateStepsCount(sc)
+                runBlocking { persistenceLayer.insertOrUpdateStepsCount(sc) }
                     .subscribeOn(Schedulers.io())
                     .subscribe(
                         { 
@@ -238,7 +238,7 @@ class AIMIHealthConnectSyncServiceMTR @Inject constructor(
             )
             
             disposable.add(
-                persistenceLayer.insertOrUpdateHeartRate(hr)
+                runBlocking { persistenceLayer.insertOrUpdateHeartRate(hr) }
                     .subscribeOn(Schedulers.io())
                     .subscribe(
                         { 
@@ -356,7 +356,7 @@ class AIMIHealthConnectSyncServiceMTR @Inject constructor(
     )
     private fun logExistingSources(startMs: Long, endMs: Long) {
         try {
-            val recentSteps = persistenceLayer.getStepsCountFromTimeToTime(startMs, endMs)
+            val recentSteps = runBlocking { persistenceLayer.getStepsCountFromTimeToTime(startMs, endMs) }
             val otherSources = recentSteps.map { it.device }.distinct().filter { it != SOURCE_DEVICE }
             
             if (otherSources.isNotEmpty()) {

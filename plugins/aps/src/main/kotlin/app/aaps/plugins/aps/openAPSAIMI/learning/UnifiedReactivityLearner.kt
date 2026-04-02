@@ -134,7 +134,7 @@ class UnifiedReactivityLearner @Inject constructor(
             // Récupérer toutes les valeurs BG des 24 dernières heures
             // getBgReadingsDataFromTime retourne Single<List<GV>>, donc on utilise blockingGet()
             val bgReadingsList = runBlocking { persistenceLayer.getBgReadingsDataFromTime(start, false) }
-                .blockingGet()
+                
             
             // Extraire les valeurs et filtrer
             val bgReadings = bgReadingsList
@@ -372,7 +372,7 @@ class UnifiedReactivityLearner @Inject constructor(
         
         try {
             val bgReadingsList = runBlocking { persistenceLayer.getBgReadingsDataFromTime(start, false) }
-                .blockingGet()
+                
             
             val bgReadings = bgReadingsList
                 .mapNotNull { gv -> if (gv.value > 39.0) gv.value else null }

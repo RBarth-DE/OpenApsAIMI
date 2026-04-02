@@ -1,4 +1,5 @@
 package app.aaps.plugins.aps.openAPSAIMI.comparison
+import kotlinx.coroutines.runBlocking
 
 import app.aaps.core.interfaces.aps.AutosensResult
 import app.aaps.core.interfaces.aps.CurrentTemp
