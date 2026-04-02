@@ -47,7 +47,7 @@ class VirtualInsulinReservoir {
                 amount = decision.units!!,
                 type = BS.Type.SMB,
                 isBasalInsulin = false
-            )
+            , iCfg = app.aaps.core.data.model.ICfg())
             virtualBoluses.add(bolus)
         }
 
@@ -164,7 +164,7 @@ class VirtualIobCalculator(
                         val term = time - dia * 60 * 60 * 1000
                         if (calcDate > term && calcDate <= time) {
                             val tempBolusSize = netRate * tempBolusSpacing / 60.0
-                            val tempBolusPart = BS(timestamp = calcDate, amount = tempBolusSize, type = BS.Type.NORMAL)
+                            val tempBolusPart = BS(timestamp = calcDate, amount = tempBolusSize, type = BS.Type.NORMAL, iCfg = app.aaps.core.data.model.ICfg())
                             val aIOB = calculateIobForTreatment(tempBolusPart, time, dia)
                             total.basaliob += aIOB.iobContrib
                             total.activity += aIOB.activityContrib

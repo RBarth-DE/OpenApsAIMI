@@ -337,7 +337,7 @@ class ContextManager @Inject constructor(
     // Private helpers
     
     private fun shouldUseLLM(): Boolean {
-        if (!sp.getBoolean(app.aaps.core.keys.BooleanKey.OApsAIMIContextLLMEnabled.key, false)) {
+        if (!sp.getBoolean(app.aaps.core.keys.BooleanKey.OApsAIMIContextEnabled.key, false)) {
             return false
         }
         
