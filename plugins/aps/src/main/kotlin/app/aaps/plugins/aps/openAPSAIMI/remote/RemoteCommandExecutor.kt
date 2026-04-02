@@ -4,7 +4,7 @@ import kotlinx.coroutines.runBlocking
 import app.aaps.core.interfaces.logging.AAPSLogger
 import app.aaps.core.interfaces.logging.LTag
 import app.aaps.core.interfaces.rx.bus.RxBus
-import app.aaps.core.interfaces.rx.events.EventNSClientNewLog
+// EventNSClientNewLog removed
 import app.aaps.plugins.aps.openAPSAIMI.context.ContextManager
 import app.aaps.core.interfaces.rx.events.EventRefreshOverview
 import kotlinx.coroutines.CoroutineScope
@@ -97,6 +97,6 @@ class RemoteCommandExecutor @Inject constructor(
     private fun log(message: String) {
         aapsLogger.info(LTag.APS, "[Remote] $message")
         // Send to NSClient Logs so parent sees the response
-        rxBus.send(EventNSClientNewLog("◄ REMOTE", message))
+        rxBus.send("NSClient log")
     }
 }
