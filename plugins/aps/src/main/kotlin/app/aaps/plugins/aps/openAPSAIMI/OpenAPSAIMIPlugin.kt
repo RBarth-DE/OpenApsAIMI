@@ -2079,7 +2079,7 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
                     
                     // Minimum Confidence
                     addPreference(
-                        AdaptiveIntPreference(
+                        AdaptiveDoublePreference(
                             ctx = context,
                             doubleKey = DoubleKey.AimiAuditorMinConfidence,
                             dialogMessage = R.string.aimi_auditor_min_confidence_summary,
@@ -2311,7 +2311,7 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
                     addPreference(
                         AdaptiveIntentPreference(
                             ctx = context,
-                            intentKey = IntentKey.ApsLinkToDocs,
+                            intentKey = app.aaps.plugins.aps.keys.ApsIntentKey.LinkToDocs,
                             intent = Intent().apply { action = Intent.ACTION_VIEW; data = rh.gs(R.string.openapsama_link_to_preference_json_doc).toUri() },
                             summary = R.string.openapsama_link_to_preference_json_doc_txt
                         )
