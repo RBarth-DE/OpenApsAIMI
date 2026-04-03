@@ -469,7 +469,6 @@ class OverviewViewModel(
             aimiPulseMeta = aimiPulseMeta,
             aimiPulseHypoRisk = aimiPulseHypoRisk,
 
-        )
         _statusCardState.postValue(state)
     }
 
@@ -522,7 +521,6 @@ class OverviewViewModel(
                 RM.Mode.DISABLED_LOOP     -> app.aaps.core.ui.R.string.disabled_loop
                 RM.Mode.RESUME            -> app.aaps.core.ui.R.string.resumeloop
             }
-        )
 
     private fun updateAdjustments() {
         val now = dateUtil.now()
@@ -560,7 +558,6 @@ class OverviewViewModel(
                 "κ=%.3f  E=%.1fU  Θ=%.2f  R=%.2f".format(r.trajectoryCurvature ?: 0.0, r.trajectoryEnergy ?: 0.0, r.trajectoryOpenness ?: 0.0, r.trajectoryRelevanceScore ?: 0.0)
             },
             trajectoryRelevance = (loop.lastRun?.request?.rawData() as? RT)?.trajectoryRelevanceScore
-        )
         _adjustmentState.postValue(state)
     }
 
@@ -581,13 +578,11 @@ class OverviewViewModel(
                 R.string.dashboard_adjustment_temp_target,
                 range,
                 dateUtil.untilString(target.end, resourceHelper)
-            )
         }
         persistenceLayer.getExtendedBolusActiveAt(now)?.takeIf { it.isInProgress(dateUtil) }?.let {
             adjustments += resourceHelper.gs(
                 R.string.dashboard_adjustment_extended_bolus,
                 it.toStringFull(dateUtil, resourceHelper)
-            )
         }
         return adjustments
     }
@@ -605,7 +600,6 @@ class OverviewViewModel(
             glucoseText,
             trendSymbol(trendArrow),
             deltaText
-        )
     }
 
     private fun buildPredictionLine(now: Long): String {
@@ -953,7 +947,6 @@ class OverviewViewModel(
             ModeKeyword("snack", R.string.dashboard_mode_snack),
             ModeKeyword("sport", R.string.dashboard_mode_sport),
             ModeKeyword("sleep", R.string.dashboard_mode_sleep)
-        )
     }
 }
 
@@ -1028,10 +1021,6 @@ data class StatusCardState(
     val aimiPulseMeta: String = "",
     val aimiPulseHypoRisk: Boolean = false,
 
-    // Adaptive Smoothing Quality Badge (phase 1: informational only)
-    val     val
-    val
-)
 
 data class AdjustmentCardState(
     val glycemiaLine: String,
