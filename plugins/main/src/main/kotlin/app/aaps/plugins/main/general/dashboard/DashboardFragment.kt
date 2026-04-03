@@ -419,6 +419,8 @@ class DashboardFragment : DaggerFragment() {
             // Auditor badge removed
 
             auditorStatusLiveData.uiState.observe(viewLifecycleOwner) { uiState ->
+                auditorIndicator?.setState(uiState)
+            }
     }
 
     private fun handleAuditorClick() {
