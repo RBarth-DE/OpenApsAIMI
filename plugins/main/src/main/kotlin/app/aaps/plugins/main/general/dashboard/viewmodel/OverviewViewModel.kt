@@ -538,7 +538,7 @@ class OverviewViewModel(
             smb = loop.lastRun?.request?.smb,
             basal = loop.lastRun?.request?.rate,
             detailedReason = loop.lastRun?.request?.reason,
-            isHypoRisk = loop.lastRun?.request?.isHypoRisk ?: false,
+            isHypoRisk = (loop.lastRun?.request as? app.aaps.core.interfaces.aps.RT)?.isHypoRisk ?: false,
             // 🌀 Trajectory Visualization
             trajectoryTitle = (loop.lastRun?.request?.rawData() as? RT)?.trajectoryType?.let { name ->
                 val type = TrajectoryType.entries.find { it.name == name }
@@ -564,7 +564,7 @@ class OverviewViewModel(
         processedTbrEbData.getTempBasalIncludingConvertedExtended(now)?.takeIf { it.isInProgress }?.let {
             adjustments += resourceHelper.gs(R.string.dashboard_adjustment_temp_basal, it.toStringShort(resourceHelper))
         }
-        persistenceLayer.getTemporaryTargetActiveAt(now)?.let { target ->
+        runBlocking { persistenceLayer.getTemporaryTargetActiveAt(now) }?.let { target ->
             val units = profileFunction.getUnits()
             val range = profileUtil.toTargetRangeString(target.lowTarget, target.highTarget, GlucoseUnit.MGDL, units)
             adjustments += resourceHelper.gs(
