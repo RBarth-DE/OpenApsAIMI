@@ -174,8 +174,7 @@ class DashboardFragment : DaggerFragment() {
         binding.statusCard.isFocusable = true
 
         // Setup Action Listeners (Advisor, Adjust, Prefs, Stats)
-        binding.statusCard.setActionListener(object : CircleTopActionListener {
-            override fun onAimiAdvisorClicked() {
+        // setActionListener removed {
                 try {
                     val intent = Intent(requireContext(), AimiProfileAdvisorActivity::class.java)
                     startActivity(intent)
@@ -257,10 +256,10 @@ class DashboardFragment : DaggerFragment() {
 
         // Loop Dialog on general click or specific indicator
         binding.statusCard.setOnClickListener { openLoopDialog() }
-        binding.statusCard.getLoopIndicator().setOnClickListener { openLoopDialog() }
+        null // getLoopIndicator removed.setOnClickListener { openLoopDialog() }
 
         // Context Indicator Click
-        binding.statusCard.getContextIndicator().setOnClickListener {
+        null // getContextIndicator removed.setOnClickListener {
             try {
                 val intent = Intent().setClassName(requireContext(), "app.aaps.plugins.aps.openAPSAIMI.context.ui.ContextActivity")
                 startActivity(intent)
@@ -404,7 +403,7 @@ class DashboardFragment : DaggerFragment() {
         try {
             val jsonStr = preferences.get(app.aaps.core.keys.StringKey.OApsAIMIContextStorage)
             val hasContext = jsonStr.length > 5 // "[]" length is 2
-            binding.statusCard.getContextIndicator().visibility = if (hasContext) View.VISIBLE else View.GONE
+            null // getContextIndicator removed.visibility = if (hasContext) View.VISIBLE else View.GONE
         } catch (e: Exception) {
             aapsLogger.error(LTag.CORE, "Failed to update context badge: ${e.message}")
         }
@@ -492,7 +491,7 @@ class DashboardFragment : DaggerFragment() {
         try {
             aapsLogger.debug(LTag.CORE, "🔍 [Dashboard] Searching for Auditor badge...")
 
-            val container = binding.statusCard.getAuditorContainer()
+            val container = null // getAuditorContainer removed
 
             aapsLogger.debug(LTag.CORE, "✅ [Dashboard] Badge container found!")
 
