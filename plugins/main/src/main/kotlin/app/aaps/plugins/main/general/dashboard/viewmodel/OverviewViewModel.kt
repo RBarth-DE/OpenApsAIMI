@@ -867,63 +867,6 @@ class OverviewViewModel(
     }
 
 
-    class Factory(
-        private val application: Application,
-        private val lastBgData: LastBgData,
-        private val trendCalculator: TrendCalculator,
-        private val iobCobCalculator: IobCobCalculator,
-        private val glucoseStatusProvider: GlucoseStatusProvider,
-        private val profileUtil: ProfileUtil,
-        private val profileFunction: ProfileFunction,
-        private val resourceHelper: ResourceHelper,
-        private val dateUtil: DateUtil,
-        private val loop: Loop,
-        private val processedTbrEbData: ProcessedTbrEbData,
-        private val persistenceLayer: PersistenceLayer,
-        private val decimalFormatter: DecimalFormatter,
-        private val activePlugin: ActivePlugin,
-        private val rxBus: RxBus,
-        private val aapsSchedulers: AapsSchedulers,
-        private val fabricPrivacy: FabricPrivacy,
-        private val preferences: Preferences,
-        private val overviewData: OverviewData,
-        private val trajectoryGuard: TrajectoryGuard, // 🌀 Add to Factory
-        private val activityProvider: UnifiedActivityProviderMTR, // 🌀 Add to Factory
-        private val autodriveEngine: AutodriveEngine // 🧠 Add to Factory
-    ) : ViewModelProvider.Factory {
-
-        override fun <T : ViewModel> create(modelClass: Class<T>): T {
-            if (modelClass.isAssignableFrom(OverviewViewModel::class.java)) {
-                @Suppress("UNCHECKED_CAST")
-                return OverviewViewModel(
-                    application,
-                    lastBgData,
-                    trendCalculator,
-                    iobCobCalculator,
-                    glucoseStatusProvider,
-                    profileUtil,
-                    profileFunction,
-                    resourceHelper,
-                    dateUtil,
-                    loop,
-                    processedTbrEbData,
-                    persistenceLayer,
-                    decimalFormatter,
-                    activePlugin,
-                    rxBus,
-                    aapsSchedulers,
-                    fabricPrivacy,
-                    preferences,
-                    overviewData,
-                    trajectoryGuard,
-                    activityProvider,
-                    autodriveEngine
-                ) as T
-            }
-            throw IllegalArgumentException("Unknown ViewModel class $modelClass")
-        }
-    }
-
     private data class ModeKeyword(val token: String, val labelRes: Int)
 
     companion object {
