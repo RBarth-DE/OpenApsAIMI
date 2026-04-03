@@ -34,15 +34,14 @@ import app.aaps.core.interfaces.aps.RT
 import app.aaps.plugins.aps.openAPSAIMI.trajectory.TrajectoryType
 import app.aaps.core.interfaces.rx.bus.RxBus
 import app.aaps.core.interfaces.rx.events.EventBucketedDataCreated
-import app.aaps.core.interfaces.rx.events.EventExtendedBolusChange
+import app.aaps.core.interfaces.rx.events.EventAutosensCalculationFinished
 import app.aaps.core.interfaces.rx.events.EventPumpStatusChanged
 import app.aaps.core.interfaces.rx.events.EventRefreshOverview
-import app.aaps.core.interfaces.rx.events.EventTempBasalChange
-import app.aaps.core.interfaces.rx.events.EventTempTargetChange
+import app.aaps.core.interfaces.rx.events.EventAutosensCalculationFinished
+import app.aaps.core.interfaces.rx.events.EventAutosensCalculationFinished
 import app.aaps.core.interfaces.rx.events.EventUpdateOverviewGraph
 import app.aaps.core.interfaces.rx.events.EventUpdateOverviewIobCob
-import app.aaps.core.interfaces.rx.events.AdaptiveSmoothingQualitySnapshot
-import app.aaps.core.interfaces.rx.events.AdaptiveSmoothingQualityTier
+import app.aaps.core.interfaces.rx.events.null
 import app.aaps.core.interfaces.utils.DateUtil
 import app.aaps.core.interfaces.utils.DecimalFormatter
 import app.aaps.core.interfaces.utils.TrendCalculator
@@ -106,29 +105,29 @@ class OverviewViewModel(
     private var adaptiveSmoothingQualityDialogMessage: String = ""
 
     private fun buildAdaptiveSmoothingBadgeText(tier: AdaptiveSmoothingQualityTier): String = when (tier) {
-        AdaptiveSmoothingQualityTier.OK -> resourceHelper.gs(R.string.adaptive_smoothing_quality_badge_ok)
-        AdaptiveSmoothingQualityTier.UNCERTAIN -> resourceHelper.gs(R.string.adaptive_smoothing_quality_badge_uncertain)
-        AdaptiveSmoothingQualityTier.BAD -> resourceHelper.gs(R.string.adaptive_smoothing_quality_badge_bad)
+        "UNKNOWN" -> resourceHelper.gs(R.string.adaptive_smoothing_quality_badge_ok)
+        "UNKNOWN" -> resourceHelper.gs(R.string.adaptive_smoothing_quality_badge_uncertain)
+        "UNKNOWN" -> resourceHelper.gs(R.string.adaptive_smoothing_quality_badge_bad)
     }
 
-    private fun buildAdaptiveSmoothingDialogMessage(snap: AdaptiveSmoothingQualitySnapshot): String {
+    private fun buildAdaptiveSmoothingDialogMessage(snap: null): String {
         val learnedR = snap.learnedR
         val outlierPct = (snap.outlierRate * 100.0).toInt()
         val compressionPct = (snap.compressionRate * 100.0).toInt()
         return when (snap.tier) {
-            AdaptiveSmoothingQualityTier.OK -> application.getString(
+            "UNKNOWN" -> application.getString(
                 R.string.adaptive_smoothing_quality_dialog_ok,
                 learnedR,
                 outlierPct,
                 compressionPct
             )
-            AdaptiveSmoothingQualityTier.UNCERTAIN -> application.getString(
+            "UNKNOWN" -> application.getString(
                 R.string.adaptive_smoothing_quality_dialog_uncertain,
                 learnedR,
                 outlierPct,
                 compressionPct
             )
-            AdaptiveSmoothingQualityTier.BAD -> application.getString(
+            "UNKNOWN" -> application.getString(
                 R.string.adaptive_smoothing_quality_dialog_bad,
                 learnedR,
                 outlierPct,
@@ -139,7 +138,7 @@ class OverviewViewModel(
 
     /** Sync badge fields from smoothing plugin (avoids missed Rx events / scheduler ordering). */
     private fun refreshAdaptiveSmoothingQualityFromPlugin() {
-        val snap = activePlugin.activeSmoothing.lastAdaptiveSmoothingQualitySnapshot()
+        val snap = activePlugin.activeSmoothing.lastnull)
         if (snap != null) {
             adaptiveSmoothingQualityTier = snap.tier
             adaptiveSmoothingQualityBadgeText = buildAdaptiveSmoothingBadgeText(snap.tier)
@@ -180,17 +179,17 @@ class OverviewViewModel(
             .subscribe({ updateStatus() }, fabricPrivacy::logException)
 
         disposables += rxBus
-            .toObservable(EventTempBasalChange::class.java)
+            .toObservable(EventAutosensCalculationFinished::class.java)
             .observeOn(aapsSchedulers.io)
             .subscribe({ updateAdjustments() }, fabricPrivacy::logException)
 
         disposables += rxBus
-            .toObservable(EventTempTargetChange::class.java)
+            .toObservable(EventAutosensCalculationFinished::class.java)
             .observeOn(aapsSchedulers.io)
             .subscribe({ updateAdjustments() }, fabricPrivacy::logException)
 
         disposables += rxBus
-            .toObservable(EventExtendedBolusChange::class.java)
+            .toObservable(EventAutosensCalculationFinished::class.java)
             .observeOn(aapsSchedulers.io)
             .subscribe({ updateAdjustments() }, fabricPrivacy::logException)
 

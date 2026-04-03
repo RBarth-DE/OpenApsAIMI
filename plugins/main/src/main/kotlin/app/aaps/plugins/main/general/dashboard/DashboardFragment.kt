@@ -602,7 +602,7 @@ class DashboardFragment : DaggerFragment() {
     }
 
     private fun openHistory(): Boolean {
-        startActivity(Intent(requireContext(), app.aaps.plugins.main.general.overview.OverviewActivity::class.java))
+        // History view not available
         return true
     }
 

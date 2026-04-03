@@ -9,7 +9,6 @@ import app.aaps.core.interfaces.resources.ResourceHelper
 import androidx.fragment.app.FragmentActivity
 
 import app.aaps.core.interfaces.rx.bus.RxBus
-import app.aaps.core.interfaces.rx.events.EventNewHistoryData
 import app.aaps.core.interfaces.rx.AapsSchedulers
 
 class DashboardModesController(
@@ -23,19 +22,14 @@ class DashboardModesController(
         // 1. Safety Check: Ensure the activity is still alive and valid
         if (activity.isFinishing || activity.isDestroyed) return
 
-        OKDialog.showConfirmation(
-            activity,
-            resourceHelper.gs(
-                app.aaps.core.ui.R.string.dashboard_run_question,
-                event.title
-            )
+        aapsLogger.info(LTag.APS, "Mode dialog")
         ) {
             // 2. The logic inside the curly braces runs ONLY after the user clicks "OK"
             aapsSchedulers.io.scheduleDirect {
-                automation.processEvent(event)
+                runBlocking { automation.processEvent(event) }
 
                 aapsSchedulers.main.scheduleDirect {
-                    rxBus.send(EventNewHistoryData(0L, false))
+                    rxBus.send(EventAPSCalculationFinished(0L, false))
 
                     // 3. Optional: If you want the screen to close AFTER the event is processed,
                     // call activity.finish() here, inside the main scheduler block.
