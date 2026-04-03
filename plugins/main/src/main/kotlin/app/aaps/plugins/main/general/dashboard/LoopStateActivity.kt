@@ -67,7 +67,6 @@ class LoopStateActivity : TranslatedDaggerAppCompatActivity() {
                 setOnClickListener {
                     handler.post { onClick() }
                     finish()
-                    )
                 }
             }
             icon?.mutate()?.setTint(resourceHelper.gac(this, app.aaps.core.ui.R.attr.userOptionColor))

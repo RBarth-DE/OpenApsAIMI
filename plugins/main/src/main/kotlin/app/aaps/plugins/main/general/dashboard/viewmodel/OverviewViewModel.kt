@@ -103,13 +103,7 @@ class OverviewViewModel(
     
     }
 
-    /** Sync badge fields from smoothing plugin (avoids missed Rx events / scheduler ordering). */
-    private fun refreshAdaptiveSmoothingQualityFromPlugin() {
-        val snap = activePlugin.activeSmoothing.lastnull)
-        if (snap != null) {
-                        adaptiveSmoothingQualityBadgeText = buildAdaptiveSmoothingBadgeText(snap.tier)
-            adaptiveSmoothingQualityDialogMessage = buildAdaptiveSmoothingDialogMessage(snap)
-        } else {
+    // AdaptiveSmoothing removed else {
                         adaptiveSmoothingQualityBadgeText = ""
             adaptiveSmoothingQualityDialogMessage = ""
         }

@@ -25,10 +25,7 @@ class DashboardModesController(
         // 1. Safety Check: Ensure the activity is still alive and valid
         if (activity.isFinishing || activity.isDestroyed) return
 
-        aapsLogger.info(LTag.APS, "Mode dialog")
-        ) {
-            // 2. The logic inside the curly braces runs ONLY after the user clicks "OK"
-            aapsSchedulers.io.scheduleDirect {
+        aapsSchedulers.io.scheduleDirect {
                 runBlocking { automation.processEvent(event) }
 
                 aapsSchedulers.main.scheduleDirect {
