@@ -335,7 +335,7 @@ class OverviewViewModel(
             val from = dateUtil.beginOfDay(now) // Start of today (Midnight)
             
             // --- TODAY CLINICAL STATS COMPUTATION ---
-            val bgsToday = persistenceLayer.getBgReadingsDataFromTimeToTime(from, now, true)
+            val bgsToday = runBlocking { persistenceLayer.getBgReadingsDataFromTimeToTime(from, now, true) }
 
             if (bgsToday.isNotEmpty()) {
                 val values = bgsToday.map { it.value }
@@ -513,6 +513,7 @@ class OverviewViewModel(
                 RM.Mode.DISABLED_LOOP     -> app.aaps.core.ui.R.string.disabled_loop
                 RM.Mode.RESUME            -> app.aaps.core.ui.R.string.resumeloop
             }
+        )
 
     private fun updateAdjustments() {
         val now = dateUtil.now()
