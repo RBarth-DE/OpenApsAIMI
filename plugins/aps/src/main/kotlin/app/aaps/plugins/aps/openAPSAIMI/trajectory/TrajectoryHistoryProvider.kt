@@ -112,7 +112,7 @@ class TrajectoryHistoryProvider @Inject constructor(
                     
                     // Get COB at this time
                     val cob = try {
-                        iobCobCalculator.getCobInfo("TrajectoryHistory").displayCob ?: 0.0
+                        runBlocking { iobCobCalculator.getCobInfo("TrajectoryHistory") }.displayCob ?: 0.0
                     } catch (e: Exception) {
                         0.0
                     }
@@ -276,10 +276,7 @@ class TrajectoryHistoryProvider @Inject constructor(
      */
     private fun estimateTimeSinceLastBolus(timestamp: Long): Int {
         try {
-            val boluses = runBlocking { persistenceLayer.getBolusesFromTime(
-                timestamp - (4 * 3600_000L) }, // Last 4 hours
-                false
-            )
+            val boluses = runBlocking { persistenceLayer.getBolusesFromTime(timestamp - (4 * 3600_000L), false) } // Last 4 hours
             
             val lastBolus = boluses
                 .filter { it.timestamp <= timestamp && it.amount > 0.1 }

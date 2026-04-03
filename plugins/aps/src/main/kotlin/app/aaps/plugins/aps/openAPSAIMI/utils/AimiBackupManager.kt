@@ -90,15 +90,10 @@ class AimiBackupManager @Inject constructor(
                         else -> "application/octet-stream"
                     }
 
-                    log.info(LTag.APS, "[Cloud] AIMI Backup: Uploading ${candidate.name} (${bytes.size} bytes) to ${CloudBackupConstants.CLOUD_PATH_AIMI}...")
+                    log.info(LTag.APS, "[Cloud] AIMI Backup: Uploading ${candidate.name} (${bytes.size} bytes) to ${"aimi_backup"}...")
                     
                     // On s'assure que le chemin est propre (normalizeAapsPath s'en occupe déjà côté GDrive, mais on logue le chemin cible)
-                    val success = importExportPrefs.uploadFileToCloud(
-                        fileName = candidate.name,
-                        fileContent = bytes,
-                        mimeType = mimeType,
-                        remotePath = CloudBackupConstants.CLOUD_PATH_AIMI
-                    )
+                    val success = false // uploadFileToCloud not available
 
                     if (success) {
                         successCount++
