@@ -421,6 +421,9 @@ class DashboardFragment : DaggerFragment() {
             auditorStatusLiveData.uiState.observe(viewLifecycleOwner) { uiState ->
                 auditorIndicator?.setState(uiState)
             }
+        } catch (e: Exception) {
+            aapsLogger.error(LTag.CORE, "Failed to update Auditor badge: ${e.message}")
+        }
     }
 
     private fun handleAuditorClick() {
@@ -638,4 +641,4 @@ class DashboardFragment : DaggerFragment() {
         }
     }
 }
-}
+
