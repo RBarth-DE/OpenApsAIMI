@@ -419,13 +419,6 @@ class DashboardFragment : DaggerFragment() {
             // Auditor badge removed
 
             auditorStatusLiveData.uiState.observe(viewLifecycleOwner) { uiState ->
-                auditorIndicator?.setState(uiState)
-
-            auditorStatusLiveData.forceUpdate()
-
-        } catch (e: Exception) {
-            aapsLogger.error(LTag.CORE, "[Dashboard] Badge setup error: ${e.message}", e)
-        }
     }
 
     private fun handleAuditorClick() {
