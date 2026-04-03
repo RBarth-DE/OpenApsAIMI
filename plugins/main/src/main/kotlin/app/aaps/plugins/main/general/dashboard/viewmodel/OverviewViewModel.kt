@@ -1,4 +1,5 @@
 package app.aaps.plugins.main.general.dashboard.viewmodel
+import kotlinx.coroutines.runBlocking
 
 import android.app.Application
 import android.graphics.*
@@ -358,7 +359,7 @@ class OverviewViewModel(
             basalPctText = tbr.toStringShort(resourceHelper)
             basalText = resourceHelper.gs(
                 app.aaps.core.ui.R.string.format_insulin_units,
-                profileFunction.getProfile()?.let {
+                runBlocking { profileFunction.getProfile() }?.let {
                     tbr.convertedToAbsolute(dateUtil.now(), it)
                 })
         }
@@ -472,8 +473,8 @@ class OverviewViewModel(
             isAimiContextActive = preferences.get(app.aaps.core.keys.StringKey.OApsAIMIContextStorage).length > 5,
             // For GlucoseCircleView
             glucoseValue = lastBg?.recalculated,
-            targetLow = profileFunction.getProfile()?.getTargetLowMgdl(),
-            targetHigh = profileFunction.getProfile()?.getTargetHighMgdl(),
+            targetLow = runBlocking { profileFunction.getProfile() }?.getTargetLowMgdl(),
+            targetHigh = runBlocking { profileFunction.getProfile() }?.getTargetHighMgdl(),
 
             // Circle-Top Hybrid Dashboard fields
             glucoseMgdl = lastBg?.recalculated?.toInt(),

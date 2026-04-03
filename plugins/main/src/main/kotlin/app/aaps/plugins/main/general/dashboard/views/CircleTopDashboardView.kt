@@ -1,4 +1,5 @@
 package app.aaps.plugins.main.general.dashboard.views
+import kotlinx.coroutines.runBlocking
 
 import android.content.Context
 import android.graphics.Color
@@ -14,7 +15,7 @@ import androidx.core.view.isGone
 import com.google.android.material.chip.Chip
 import app.aaps.plugins.main.databinding.ComponentCircleTopStatusHybridBinding
 import app.aaps.plugins.main.general.dashboard.viewmodel.StatusCardState
-import app.aaps.core.ui.dialogs.OKDialog
+// OKDialog import removed
 import java.util.Locale
 import java.util.TimeZone
 
@@ -133,10 +134,7 @@ class CircleTopDashboardView @JvmOverloads constructor(
                     binding.adaptiveSmoothingQualityBadge.setOnClickListener {
                         it.performHapticFeedback(android.view.HapticFeedbackConstants.VIRTUAL_KEY)
                         if (state.adaptiveSmoothingQualityDialogMessage.isNotBlank()) {
-                            OKDialog.show(
-                                context,
-                                context.getString(app.aaps.plugins.main.R.string.adaptive_smoothing_quality_dialog_title),
-                                state.adaptiveSmoothingQualityDialogMessage
+                            uiInteraction.showOkDialog(requireContext(), context.getString(app.aaps.plugins.main.R.string.adaptive_smoothing_quality_dialog_title), state.adaptiveSmoothingQualityDialogMessage
                             )
                         }
 

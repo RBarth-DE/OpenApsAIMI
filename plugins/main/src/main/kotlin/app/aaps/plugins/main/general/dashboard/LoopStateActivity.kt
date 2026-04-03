@@ -1,4 +1,5 @@
 package app.aaps.plugins.main.general.dashboard
+import kotlinx.coroutines.runBlocking
 
 import android.os.Bundle
 import android.os.Handler
@@ -17,7 +18,7 @@ import app.aaps.core.interfaces.resources.ResourceHelper
 import app.aaps.core.keys.BooleanNonKey
 import app.aaps.core.keys.interfaces.Preferences
 import app.aaps.core.ui.activities.TranslatedDaggerAppCompatActivity
-import app.aaps.core.ui.dialogs.OKDialog
+// OKDialog import removed
 import app.aaps.plugins.main.R
 import app.aaps.plugins.main.databinding.ActivityLoopStateBinding
 import com.google.android.material.button.MaterialButton
@@ -83,7 +84,7 @@ class LoopStateActivity : TranslatedDaggerAppCompatActivity() {
             binding.loopActionsContainer.addView(button, params)
         }
 
-        val profile = profileFunction.getProfile() ?: return
+        val profile = runBlocking { profileFunction.getProfile() } ?: return
 
         if (allowedModes.contains(RM.Mode.CLOSED_LOOP)) {
             addButton(resourceHelper.gs(app.aaps.core.ui.R.string.closedloop), app.aaps.core.objects.R.drawable.ic_loop_closed) {

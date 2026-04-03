@@ -1,4 +1,5 @@
 package app.aaps.plugins.main.general.dashboard.views
+import kotlinx.coroutines.runBlocking
 
 import android.content.Context
 import android.util.AttributeSet

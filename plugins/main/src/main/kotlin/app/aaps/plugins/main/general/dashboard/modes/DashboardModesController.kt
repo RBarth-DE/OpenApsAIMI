@@ -1,9 +1,10 @@
 package app.aaps.plugins.main.general.dashboard.modes
+import kotlinx.coroutines.runBlocking
 
 import app.aaps.core.interfaces.automation.Automation
 import app.aaps.core.interfaces.automation.AutomationEvent
 import app.aaps.core.interfaces.resources.ResourceHelper
-import app.aaps.core.ui.dialogs.OKDialog
+// OKDialog import removed
 
 import androidx.fragment.app.FragmentActivity
 

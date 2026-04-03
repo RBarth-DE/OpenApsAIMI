@@ -1,4 +1,5 @@
 package app.aaps.plugins.main.general.dashboard
+import kotlinx.coroutines.runBlocking
 
 import android.content.Intent
 import android.os.Bundle
@@ -62,7 +63,7 @@ import android.annotation.SuppressLint
 import android.graphics.Color
 import android.util.Log
 import app.aaps.core.interfaces.plugin.PluginBase
-import app.aaps.core.ui.dialogs.OKDialog
+// OKDialog import removed
 import app.aaps.plugins.aps.openAPSAIMI.advisor.auditor.model.AuditorUIState
 import app.aaps.plugins.main.general.dashboard.viewmodel.StatusCardState
 
@@ -414,10 +415,10 @@ class DashboardFragment : DaggerFragment() {
             .toObservable(EventConfigBuilderChange::class.java)
             .observeOn(aapsSchedulers.main)
             .subscribe({ event ->
-                           if (event.isChanged(IntNonKey.RangeToDisplay.key)) {
+                           if (true) {
                                syncGraphRange(preferences.get(IntNonKey.RangeToDisplay), false)
                            }
-                           if (event.isChanged(app.aaps.core.keys.StringKey.OApsAIMIContextStorage.key)) {
+                           if (true) {
                                updateContextBadge()
                            }
                        }, fabricPrivacy::logException)
@@ -579,17 +580,14 @@ class DashboardFragment : DaggerFragment() {
             AuditorUIState.StateType.PROCESSING -> {
                 aapsLogger.debug(LTag.CORE, "Auditor click: PROCESSING branch")
                 activity?.let { activity ->
-                    OKDialog.show(activity, "Auditor", "Analysis in progress, please wait...")
+                    uiInteraction.showOkDialog(requireContext(), "Auditor", "Analysis in progress, please wait...")
                 }
             }
 
             AuditorUIState.StateType.ERROR -> {
                 aapsLogger.debug(LTag.CORE, "Auditor click: ERROR branch")
                 activity?.let { activity ->
-                    OKDialog.show(
-                        activity,
-                        resourceHelper.gs(app.aaps.core.ui.R.string.error),
-                        state.statusMessage
+                    uiInteraction.showOkDialog(requireContext(), resourceHelper.gs(app.aaps.core.ui.R.string.error), state.statusMessage
                     )
                 }
             }
@@ -597,7 +595,7 @@ class DashboardFragment : DaggerFragment() {
             else -> {
                 aapsLogger.debug(LTag.CORE, "Auditor click: ELSE/IDLE branch")
                 activity?.let { activity ->
-                    OKDialog.show(activity, "Auditor", "Auditor will activate at next trigger")
+                    uiInteraction.showOkDialog(requireContext(), "Auditor", "Auditor will activate at next trigger")
                 }
             }
         }
@@ -685,7 +683,7 @@ class DashboardFragment : DaggerFragment() {
         binding.glucoseGraph.rangeButton.text = overviewMenus.scaleString(clampedHours)
         preferences.put(IntNonKey.RangeToDisplay, clampedHours)
         preferences.put(BooleanNonKey.ObjectivesScaleUsed, true)
-        rxBus.send(EventConfigBuilderChange(IntNonKey.RangeToDisplay.key))
+        rxBus.send(EventConfigBuilderChange())
         if (userInitiated) {
             app.aaps.core.ui.toast.ToastUtils.infoToast(context, getString(R.string.graph_range_updated, clampedHours))
         }
@@ -758,10 +756,7 @@ class DashboardFragment : DaggerFragment() {
     private fun showHypoRiskDialog() {
         if (isHypoRiskDialogShowing) return
         isHypoRiskDialogShowing = true
-        app.aaps.core.ui.dialogs.OKDialog.show(
-            requireContext(),
-            getString(R.string.hypo_risk_notification_title),
-            getString(R.string.hypo_risk_notification_text),
+        app.aaps.core.ui.dialogs.uiInteraction.showOkDialog(requireContext(), getString(R.string.hypo_risk_notification_title), getString(R.string.hypo_risk_notification_text),
             runOnDismiss = true
         ) {
             isHypoRiskDialogShowing = false

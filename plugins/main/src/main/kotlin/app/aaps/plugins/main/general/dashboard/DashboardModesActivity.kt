@@ -1,4 +1,5 @@
 package app.aaps.plugins.main.general.dashboard
+import kotlinx.coroutines.runBlocking
 
 import android.os.Bundle
 import android.view.MenuItem
