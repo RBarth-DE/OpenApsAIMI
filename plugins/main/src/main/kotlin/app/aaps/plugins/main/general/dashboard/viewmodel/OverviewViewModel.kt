@@ -495,9 +495,9 @@ class OverviewViewModel(
         return formattedTotal
     }
 
-    private fun bolusIob(): IobTotal = iobCobCalculator.calculateIobFromBolus().round()
+    private fun bolusIob(): IobTotal = runBlocking { iobCobCalculator.calculateIobFromBolus() }.round()
 
-    private fun basalIob(): IobTotal = iobCobCalculator.calculateIobFromTempBasalsIncludingConvertedExtended().round()
+    private fun basalIob(): IobTotal = runBlocking { iobCobCalculator.calculateIobFromTempBasalsIncludingConvertedExtended() }.round()
 
     private fun loopStatusText(mode: RM.Mode): String =
         resourceHelper.gs(
