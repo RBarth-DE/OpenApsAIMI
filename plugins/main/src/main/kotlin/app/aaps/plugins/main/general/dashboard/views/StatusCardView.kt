@@ -51,14 +51,7 @@ class StatusCardView @JvmOverloads constructor(
         findViewById<View>(R.id.aimi_context_indicator)?.visibility = 
             if (state.isAimiContextActive) View.VISIBLE else View.GONE
         
-        // 🎨 Update GlucoseCircleView colors based on BG value
-        if (state.glucoseValue != null && state.targetLow != null && state.targetHigh != null) {
-            // glucoseCircle removed
-                state.glucoseValue,
-                state.targetLow,
-                state.targetHigh
-            )
-        }
+        // GlucoseCircleView removed
             
         contentDescription = state.contentDescription
     }

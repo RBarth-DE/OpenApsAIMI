@@ -190,7 +190,6 @@ class NotificationStore @Inject constructor(
             init {
                 binding.dismiss.setOnClickListener {
                     val notification = it.tag as Notification
-                    notification.applicationContext = itemView.context
                     notification.action?.run()
                     if (remove(notification.id)) activePlugin.activeOverview.overviewBus.send(EventUpdateOverviewNotification("NotificationCleared"))
                 }
