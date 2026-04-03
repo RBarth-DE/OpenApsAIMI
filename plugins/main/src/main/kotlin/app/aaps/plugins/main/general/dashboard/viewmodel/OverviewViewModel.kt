@@ -158,9 +158,7 @@ class OverviewViewModel(
             .toObservable(app.aaps.core.interfaces.rx.events.EventConfigBuilderChange::class.java)
             .observeOn(aapsSchedulers.io)
             .subscribe({
-                           if (it.isChanged(app.aaps.core.keys.StringKey.OApsAIMIContextStorage.key)) {
-                               updateStatus()
-                           }
+                           updateStatus()
                        }, fabricPrivacy::logException)
     }
 
@@ -174,7 +172,7 @@ class OverviewViewModel(
         val lookbackTime = dateUtil.now() - minutes * 60_000L
 
         // DB: nimm den neuesten Bolus im Fenster
-        val boluses = persistenceLayer.getBolusesFromTime(lookbackTime, true).blockingGet()
+        val boluses = runBlocking { persistenceLayer.getBolusesFromTime(lookbackTime, true) }
         val dbLast = boluses
             .filter { it.amount > 0.3 }
             .maxOfOrNull { it.timestamp }   // oder createdAt / time / date -> je nach Model
