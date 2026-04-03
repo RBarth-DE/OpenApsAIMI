@@ -93,7 +93,7 @@ class TrajectoryHistoryProvider @Inject constructor(
                     
                     // Get IOB at this time - use current IOB as approximation
                     val iobResult = try {
-                        iobCobCalculator.calculateIobFromBolus()
+                        runBlocking { iobCobCalculator.calculateIobFromBolus() }
                     } catch (e: Exception) {
                         aapsLogger.error(LTag.APS, "Error getting IOB for history: ${e.message}")
                         null
