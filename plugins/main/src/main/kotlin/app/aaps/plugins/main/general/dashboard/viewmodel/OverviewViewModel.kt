@@ -102,13 +102,6 @@ class OverviewViewModel(
 
     
     }
-
-    // AdaptiveSmoothing removed else {
-                        adaptiveSmoothingQualityBadgeText = ""
-            adaptiveSmoothingQualityDialogMessage = ""
-        }
-    }
-
     fun start() {
         if (started) return
         started = true
@@ -476,8 +469,6 @@ class OverviewViewModel(
             aimiPulseMeta = aimiPulseMeta,
             aimiPulseHypoRisk = aimiPulseHypoRisk,
 
-                        adaptiveSmoothingQualityBadgeText = adaptiveSmoothingQualityBadgeText,
-            adaptiveSmoothingQualityDialogMessage = adaptiveSmoothingQualityDialogMessage
         )
         _statusCardState.postValue(state)
     }
@@ -1038,8 +1029,8 @@ data class StatusCardState(
     val aimiPulseHypoRisk: Boolean = false,
 
     // Adaptive Smoothing Quality Badge (phase 1: informational only)
-    val     val adaptiveSmoothingQualityBadgeText: String = "",
-    val adaptiveSmoothingQualityDialogMessage: String = ""
+    val     val
+    val
 )
 
 data class AdjustmentCardState(
