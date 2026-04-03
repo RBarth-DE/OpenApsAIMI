@@ -236,12 +236,12 @@ class OverviewViewModel(
         }
 
         // L2. Reservoir
-        val reservoirText = activePlugin.activePump.reservoirLevel.value.insulin.let { level ->
+        val reservoirText = activePlugin.activePump.reservoirLevel.value.cU.let { level ->
             if (level > 0) decimalFormatter.to2Decimal(level) + "IE"
             else null
         }
 
-        val reservoirColor = activePlugin.activePump.reservoirLevel.value.insulin.let { level ->
+        val reservoirColor = activePlugin.activePump.reservoirLevel.value.cU.let { level ->
             if (level > 30) Color.WHITE
             else Color.YELLOW
         }
@@ -286,7 +286,7 @@ class OverviewViewModel(
 
         // R2 last bolus in IE and time
 
-        val lastBolusMs = activePlugin.activePump.lastBolusTime ?: 0L
+        val lastBolusMs = (activePlugin.activePump.lastBolusTime as? Long) ?: 0L
         val seconds = MidnightUtils.secondsFromMidnight(lastBolusMs)
         val lastBolusXMin = if (seconds > 0) dateUtil.formatHHMM(seconds) else "--:--"
 
@@ -596,6 +596,7 @@ class OverviewViewModel(
             glucoseText,
             trendSymbol(trendArrow),
             deltaText
+        )
     }
 
     private fun buildPredictionLine(now: Long): String {
@@ -660,7 +661,7 @@ class OverviewViewModel(
                 resourceHelper.gs(R.string.dashboard_aimi_pulse_fallback, smbText, basalText)
             }
         }
-        return if (request.isHypoRisk) {
+        return if ((request.rawData() as? app.aaps.core.interfaces.aps.RT)?.isHypoRisk == true) {
             resourceHelper.gs(R.string.dashboard_aimi_pulse_hypo_prefix) + " " + core
         } else {
             core
@@ -676,7 +677,7 @@ class OverviewViewModel(
     }
 
     private fun buildPumpLine(now: Long): String {
-        val reservoirLevel = activePlugin.activePump.reservoirLevel
+        val reservoirLevel = activePlugin.activePump.reservoirLevel.value.cU
         val reservoirText =
             if (reservoirLevel > 0)
                 resourceHelper.gs(app.aaps.core.ui.R.string.format_insulin_units, reservoirLevel)
