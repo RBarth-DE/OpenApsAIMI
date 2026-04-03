@@ -96,12 +96,6 @@ class OverviewViewModel(
     private val _graphMessage = MutableLiveData<String>()
     val graphMessage: LiveData<String> = _graphMessage
 
-    // Adaptive smoothing quality (informational, used only for UI badge in phase 1)
-            
-    
-
-    
-    }
     fun start() {
         if (started) return
         started = true
