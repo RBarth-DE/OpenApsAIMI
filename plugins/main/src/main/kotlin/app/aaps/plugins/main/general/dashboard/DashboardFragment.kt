@@ -174,92 +174,15 @@ class DashboardFragment : DaggerFragment() {
         binding.statusCard.isFocusable = true
 
         // Setup Action Listeners (Advisor, Adjust, Prefs, Stats)
-        // setActionListener removed {
-                try {
-                    val intent = Intent(requireContext(), AimiProfileAdvisorActivity::class.java)
-                    startActivity(intent)
-                } catch (e: Exception) {
-                    aapsLogger.error(LTag.CORE, "Failed to launch Advisor: ${e.message}")
-                }
-            }
-            override fun onAdjustClicked()
-                {
-                    openAdjustmentDetails()
-            }
-            override fun onAimiPreferencesClicked() {
-                // PreferencesActivity expects UiInteraction.PLUGIN_NAME = plugin class simpleName.
-                val pluginName = resolveAimiPluginName() ?: run {
-                    aapsLogger.error(LTag.CORE, "AIMI Pref: Plugin name could not be resolved")
-                }
-                protectionCheck.queryProtection(requireActivity(), ProtectionCheck.Protection.PREFERENCES, {
-                    val intent = Intent(requireContext(), uiInteraction.preferencesActivity)
-                        .setAction("info.nightscout.androidaps.MainActivity")
-                        .putExtra(UiInteraction.PLUGIN_NAME, pluginName as String)
-                    startActivity(intent)
-                })
-            }
-            override fun onStatsClicked() {
-                try {
-                    val c = Class.forName("app.aaps.ui.activities.StatsActivity")
-                    startActivity(Intent(requireContext(), c).setAction("info.nightscout.androidaps.MainActivity"))
-                } catch (e: Exception) {
-                    aapsLogger.error(LTag.CORE, "Failed to launch ContextActivity: ${e.message}")
-                }
-            }
-
-            override fun onAimiFoodClicked() {
-                try {
-                    val intent = Intent().setClassName(requireContext(), "app.aaps.plugins.aps.openAPSAIMI.advisor.meal.MealAdvisorActivity")
-                    startActivity(intent)
-                } catch (e: Exception) {
-                    aapsLogger.error(LTag.CORE, "Failed to launch MealAdvisorActivity: ${e.message}")
-                }
-            }
-
-            override fun onAimiPulseClicked() {
-                try {
-                    val intent = Intent().setClassName(requireContext(), "app.aaps.plugins.aps.openAPSAIMI.advisor.pulse.AimiPulseDetailActivity")
-                    startActivity(intent)
-                } catch (e: Exception) {
-                    aapsLogger.error(LTag.CORE, "Failed to launch AimiPulseDetailActivity: ${e.message}")
-                }
-            }
-
-            override fun onAimiContextClicked() {
-                try {
-                    val intent = Intent().setClassName(requireContext(), "app.aaps.plugins.aps.openAPSAIMI.context.ui.ContextActivity")
-                    startActivity(intent)
-                } catch (e: Exception) {
-                    aapsLogger.error(LTag.CORE, "Failed to launch ContextActivity: ${e.message}")
-                }
-            }
-
-            private fun resolveAimiPluginName(): String? {
-
-                val candidates = listOf(
-                    "app.aaps.plugins.aps.openAPSAIMI.OpenAPSAIMIPlugin",
-                    "app.aaps.plugins.aps.openAPSAIMI.OpenApsAIMIPlugin",
-                    "app.aaps.plugins.aps.openAPSAIMI.OpenAPSAIMI",
-                    "app.aaps.plugins.aps.openAPSAIMI.OpenApsAIMI",
-                    "app.aaps.plugins.aps.openAPSAIMI.AimiPlugin",
-                )
-                for (cn in candidates) {
-                    try {
-                        val c = Class.forName(cn)
-                        return c.simpleName
-                    } catch (_: Throwable) { }
-                }
-                // last resort: some builds register the plugin under this name
-                return "OpenAPSAIMIPlugin"
-            }
-        })
+        // Action listeners removed
 
         // Loop Dialog on general click or specific indicator
         binding.statusCard.setOnClickListener { openLoopDialog() }
-        null // getLoopIndicator removed.setOnClickListener { openLoopDialog() }
+        // getLoopIndicator removed
 
         // Context Indicator Click
-        null // getContextIndicator removed.setOnClickListener {
+        // getContextIndicator click - removed
+        run {
             try {
                 val intent = Intent().setClassName(requireContext(), "app.aaps.plugins.aps.openAPSAIMI.context.ui.ContextActivity")
                 startActivity(intent)
