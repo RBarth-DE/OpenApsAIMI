@@ -430,7 +430,7 @@ class DashboardFragment : DaggerFragment() {
         val state = auditorIndicator?.getCurrentState()
 
         if (state == null) {
-            aapsLogger.debug(LTag.CORE, "Auditor click: state is null")
+            aapsLogger.debug(LTag.CORE, "Auditor click: state is null ")
             return
         }
 
