@@ -1,4 +1,7 @@
 package app.aaps.plugins.main.general.dashboard.modes
+import app.aaps.core.interfaces.rx.events.EventAPSCalculationFinished
+import app.aaps.core.interfaces.logging.AAPSLogger
+import app.aaps.core.interfaces.logging.LTag
 import kotlinx.coroutines.runBlocking
 
 import app.aaps.core.interfaces.automation.Automation
@@ -29,7 +32,7 @@ class DashboardModesController(
                 runBlocking { automation.processEvent(event) }
 
                 aapsSchedulers.main.scheduleDirect {
-                    rxBus.send(EventAPSCalculationFinished(0L, false))
+                    rxBus.send(EventAPSCalculationFinished())
 
                     // 3. Optional: If you want the screen to close AFTER the event is processed,
                     // call activity.finish() here, inside the main scheduler block.

@@ -33,15 +33,12 @@ import app.aaps.plugins.aps.openAPSAIMI.autodrive.AutodriveEngine // 🧠 Engine
 import app.aaps.core.interfaces.aps.RT
 import app.aaps.plugins.aps.openAPSAIMI.trajectory.TrajectoryType
 import app.aaps.core.interfaces.rx.bus.RxBus
-import app.aaps.core.interfaces.rx.events.EventBucketedDataCreated
 import app.aaps.core.interfaces.rx.events.EventAutosensCalculationFinished
+import app.aaps.core.interfaces.rx.events.EventBucketedDataCreated
 import app.aaps.core.interfaces.rx.events.EventPumpStatusChanged
 import app.aaps.core.interfaces.rx.events.EventRefreshOverview
-import app.aaps.core.interfaces.rx.events.EventAutosensCalculationFinished
-import app.aaps.core.interfaces.rx.events.EventAutosensCalculationFinished
 import app.aaps.core.interfaces.rx.events.EventUpdateOverviewGraph
 import app.aaps.core.interfaces.rx.events.EventUpdateOverviewIobCob
-import app.aaps.core.interfaces.rx.events.null
 import app.aaps.core.interfaces.utils.DateUtil
 import app.aaps.core.interfaces.utils.DecimalFormatter
 import app.aaps.core.interfaces.utils.TrendCalculator
@@ -100,52 +97,20 @@ class OverviewViewModel(
     val graphMessage: LiveData<String> = _graphMessage
 
     // Adaptive smoothing quality (informational, used only for UI badge in phase 1)
-    private var adaptiveSmoothingQualityTier: AdaptiveSmoothingQualityTier? = null
-    private var adaptiveSmoothingQualityBadgeText: String = ""
-    private var adaptiveSmoothingQualityDialogMessage: String = ""
+            
+    
 
-    private fun buildAdaptiveSmoothingBadgeText(tier: AdaptiveSmoothingQualityTier): String = when (tier) {
-        "UNKNOWN" -> resourceHelper.gs(R.string.adaptive_smoothing_quality_badge_ok)
-        "UNKNOWN" -> resourceHelper.gs(R.string.adaptive_smoothing_quality_badge_uncertain)
-        "UNKNOWN" -> resourceHelper.gs(R.string.adaptive_smoothing_quality_badge_bad)
-    }
-
-    private fun buildAdaptiveSmoothingDialogMessage(snap: null): String {
-        val learnedR = snap.learnedR
-        val outlierPct = (snap.outlierRate * 100.0).toInt()
-        val compressionPct = (snap.compressionRate * 100.0).toInt()
-        return when (snap.tier) {
-            "UNKNOWN" -> application.getString(
-                R.string.adaptive_smoothing_quality_dialog_ok,
-                learnedR,
-                outlierPct,
-                compressionPct
-            )
-            "UNKNOWN" -> application.getString(
-                R.string.adaptive_smoothing_quality_dialog_uncertain,
-                learnedR,
-                outlierPct,
-                compressionPct
-            )
-            "UNKNOWN" -> application.getString(
-                R.string.adaptive_smoothing_quality_dialog_bad,
-                learnedR,
-                outlierPct,
-                compressionPct
-            )
-        }
+    
     }
 
     /** Sync badge fields from smoothing plugin (avoids missed Rx events / scheduler ordering). */
     private fun refreshAdaptiveSmoothingQualityFromPlugin() {
         val snap = activePlugin.activeSmoothing.lastnull)
         if (snap != null) {
-            adaptiveSmoothingQualityTier = snap.tier
-            adaptiveSmoothingQualityBadgeText = buildAdaptiveSmoothingBadgeText(snap.tier)
+                        adaptiveSmoothingQualityBadgeText = buildAdaptiveSmoothingBadgeText(snap.tier)
             adaptiveSmoothingQualityDialogMessage = buildAdaptiveSmoothingDialogMessage(snap)
         } else {
-            adaptiveSmoothingQualityTier = null
-            adaptiveSmoothingQualityBadgeText = ""
+                        adaptiveSmoothingQualityBadgeText = ""
             adaptiveSmoothingQualityDialogMessage = ""
         }
     }
@@ -517,8 +482,7 @@ class OverviewViewModel(
             aimiPulseMeta = aimiPulseMeta,
             aimiPulseHypoRisk = aimiPulseHypoRisk,
 
-            adaptiveSmoothingQualityTier = adaptiveSmoothingQualityTier,
-            adaptiveSmoothingQualityBadgeText = adaptiveSmoothingQualityBadgeText,
+                        adaptiveSmoothingQualityBadgeText = adaptiveSmoothingQualityBadgeText,
             adaptiveSmoothingQualityDialogMessage = adaptiveSmoothingQualityDialogMessage
         )
         _statusCardState.postValue(state)
@@ -1080,8 +1044,7 @@ data class StatusCardState(
     val aimiPulseHypoRisk: Boolean = false,
 
     // Adaptive Smoothing Quality Badge (phase 1: informational only)
-    val adaptiveSmoothingQualityTier: AdaptiveSmoothingQualityTier? = null,
-    val adaptiveSmoothingQualityBadgeText: String = "",
+    val     val adaptiveSmoothingQualityBadgeText: String = "",
     val adaptiveSmoothingQualityDialogMessage: String = ""
 )
 

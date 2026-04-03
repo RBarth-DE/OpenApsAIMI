@@ -70,7 +70,7 @@ class DashboardModesActivity : TranslatedDaggerAppCompatActivity() {
         renderActions()
     }
     private fun renderActions() {
-        val actions = automation.userEvents().filter { it.isEnabled && it.canRun() }
+        val actions = automation.userEvents().filter { it.isEnabled }
         binding.modesEmpty.isVisible = actions.isEmpty()
         binding.actionsContainer.removeAllViews()
 

@@ -65,7 +65,7 @@ class LoopStateActivity : TranslatedDaggerAppCompatActivity() {
                 iconGravity = MaterialButton.ICON_GRAVITY_TEXT_START
                 iconPadding = spacing
                 setOnClickListener {
-                    android.app.AlertDialog.Builder(this).setMessage( "${resourceHelper.gs(app.aaps.core.ui.R.string.confirm).show()}: $title",
+                    aapsLogger.info(LTag.APS, "Confirm action")}: $title",
                         Runnable {
                             handler.post { onClick() }
                             finish()

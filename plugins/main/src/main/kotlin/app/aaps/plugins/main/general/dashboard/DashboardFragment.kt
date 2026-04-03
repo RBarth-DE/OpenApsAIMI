@@ -372,7 +372,7 @@ class DashboardFragment : DaggerFragment() {
     private fun bindModes() {
         availableAutomationEvents =
             automation.userEvents()
-                .filter { it.isEnabled && it.canRun() }
+                .filter { it.isEnabled }
                 .take(10)
 
         binding.modesView.setButtons(
@@ -624,7 +624,7 @@ class DashboardFragment : DaggerFragment() {
     private fun openLoopDialog() {
         activity?.let { activity ->
             protectionCheck.queryProtection(activity, ProtectionCheck.Protection.BOLUS, UIRunnable {
-                if (isAdded) uiInteraction.runLoopDialog(childFragmentManager, true)
+                if (isAdded) uiInteraction.runLoopDialog(childFragmentManager, 0)
             })
         }
     }
