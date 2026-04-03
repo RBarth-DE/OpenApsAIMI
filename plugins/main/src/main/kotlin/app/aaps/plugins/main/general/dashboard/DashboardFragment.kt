@@ -416,16 +416,7 @@ class DashboardFragment : DaggerFragment() {
 
             val container = null // getAuditorContainer removed
 
-            aapsLogger.debug(LTag.CORE, "✅ [Dashboard] Badge container found!")
-
-            auditorIndicator = AuditorStatusIndicator(requireContext())
-            container.removeAllViews()
-            container.addView(auditorIndicator)
-
-            auditorIndicator?.setOnClickListener {
-                aapsLogger.debug(LTag.CORE, "Auditor badge clicked")
-                handleAuditorClick()
-            }
+            // Auditor badge removed
 
             auditorStatusLiveData.uiState.observe(viewLifecycleOwner) { uiState ->
                 auditorIndicator?.setState(uiState)

@@ -99,15 +99,6 @@ class CircleTopDashboardView @JvmOverloads constructor(
             binding.lastSensorValueText.text = getProp<String>("lastSensorValueText") ?: "--"
 
             // AdaptiveSmoothing badge removed
-
-                        val manager = accessibilityManager
-                        if (manager != null && manager.isEnabled && manager.isTouchExplorationEnabled) {
-                            announceForAccessibility(state.adaptiveSmoothingQualityBadgeText)
-                        }
-                    }
-                }
-            }
-
             // TBR
             binding.basalPctText.text = getProp<String>("basalPctText") ?: "--"
             binding.basalText.text = getProp<String>("basalText") ?: "--"
