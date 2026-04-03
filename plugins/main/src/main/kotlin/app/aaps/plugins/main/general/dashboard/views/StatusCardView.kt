@@ -53,7 +53,7 @@ class StatusCardView @JvmOverloads constructor(
         
         // 🎨 Update GlucoseCircleView colors based on BG value
         if (state.glucoseValue != null && state.targetLow != null && state.targetHigh != null) {
-            binding.glucoseCircle.setGlucose(
+            // glucoseCircle removed
                 state.glucoseValue,
                 state.targetLow,
                 state.targetHigh

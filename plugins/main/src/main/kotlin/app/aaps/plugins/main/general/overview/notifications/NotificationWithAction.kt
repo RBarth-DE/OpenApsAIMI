@@ -50,7 +50,7 @@ class NotificationWithAction @Inject constructor(
                 id = NS_URGENT_ALARM
                 level = URGENT
                 text = nsAlarm.title
-                soundId = R.raw.urgentalarm
+                soundId = app.aaps.core.ui.R.raw.urgentalarm
             }
         }
         buttonText = app.aaps.core.ui.R.string.snooze
