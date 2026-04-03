@@ -1016,27 +1016,3 @@ data class StatusCardState(
     val aimiPulseHypoRisk: Boolean = false,
 
 
-data class AdjustmentCardState(
-    val glycemiaLine: String,
-    val predictionLine: String,
-    val iobActivityLine: String,
-    val decisionLine: String,
-    val pumpLine: String,
-    val safetyLine: String,
-    val modeLine: String?,
-    val adjustments: List<String>,
-    val reason: String?,
-    // New fields for detailed view
-    val peakTime: Double? = null,
-    val dia: Double? = null,
-    val targetBg: Double? = null,
-    val smb: Double? = null,
-    val basal: Double? = null,
-    val detailedReason: String? = null,
-    val isHypoRisk: Boolean = false,
-    // 🌀 Trajectory Data
-    val trajectoryTitle: String? = null,
-    val trajectoryAscii: String? = null,
-    val trajectoryMetrics: String? = null,
-    val trajectoryRelevance: Double? = null
-) : Serializable
