@@ -155,7 +155,7 @@ class OverviewViewModel(
             .subscribe({ updateStatus() }, fabricPrivacy::logException)
 
         disposables += rxBus
-            .toObservable(app.aaps.core.interfaces.rx.events.EventPreferenceChange::class.java)
+            .toObservable(app.aaps.core.interfaces.rx.events.EventConfigBuilderChange::class.java)
             .observeOn(aapsSchedulers.io)
             .subscribe({
                            if (it.isChanged(app.aaps.core.keys.StringKey.OApsAIMIContextStorage.key)) {
