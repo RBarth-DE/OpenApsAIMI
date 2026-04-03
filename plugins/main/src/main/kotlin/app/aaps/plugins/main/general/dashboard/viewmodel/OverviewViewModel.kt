@@ -247,7 +247,7 @@ class OverviewViewModel(
         }
 
         // L3. Infusion Age (from CarePortal)
-        val infusionAgeText = persistenceLayer.getLastTherapyRecordUpToNow(TE.Type.CANNULA_CHANGE)?.let { event ->
+        val infusionAgeText = runBlocking { persistenceLayer.getLastTherapyRecordUpToNow(TE.Type.CANNULA_CHANGE) }?.let { event ->
             val ageMillis = dateUtil.now() - event.timestamp
             val hours = (ageMillis / (1000 * 60 * 60)).toInt()
             val days = hours / 24
@@ -255,7 +255,7 @@ class OverviewViewModel(
             if (days > 0) "${days}d ${remainingHours}h" else "${hours}h"
         }
 
-        val infusionAgeColor: Int? = persistenceLayer.getLastTherapyRecordUpToNow(TE.Type.CANNULA_CHANGE)?.let { event ->
+        val infusionAgeColor: Int? = runBlocking { persistenceLayer.getLastTherapyRecordUpToNow(TE.Type.CANNULA_CHANGE) }?.let { event ->
             val ageMillis = dateUtil.now() - event.timestamp
             val hours = (ageMillis / (1000 * 60 * 60)).toInt()
             val days = hours / 24
@@ -263,13 +263,13 @@ class OverviewViewModel(
             else Color.YELLOW
         }
         // L4. Pump Battery
-        val battTe = persistenceLayer.getLastTherapyRecordUpToNow(TE.Type.PUMP_BATTERY_CHANGE)
+        val battTe = runBlocking { persistenceLayer.getLastTherapyRecordUpToNow(TE.Type.PUMP_BATTERY_CHANGE) }
         val pumpBatteryText = formatTherapyAge(battTe, now)
 
         val pumpBatteryColor = if (batteryAgeDays(battTe, now) <= 14) Color.WHITE else Color.YELLOW
 
         // L5. Sensor Age
-        val sensorEvent = persistenceLayer.getLastTherapyRecordUpToNow(TE.Type.SENSOR_CHANGE)
+        val sensorEvent = runBlocking { persistenceLayer.getLastTherapyRecordUpToNow(TE.Type.SENSOR_CHANGE) }
         val sensorAgeText = formatTherapyAge(sensorEvent, now)
 
         val sensorAgeColor = if (batteryAgeDays(sensorEvent, now) >= 9) Color.YELLOW else Color.WHITE
@@ -678,7 +678,7 @@ class OverviewViewModel(
                 resourceHelper.gs(app.aaps.core.ui.R.string.format_insulin_units, reservoirLevel)
             else resourceHelper.gs(app.aaps.core.ui.R.string.value_unavailable_short)
 
-        val siteEvent = persistenceLayer.getLastTherapyRecordUpToNow(TE.Type.CANNULA_CHANGE)
+        val siteEvent = runBlocking { persistenceLayer.getLastTherapyRecordUpToNow(TE.Type.CANNULA_CHANGE) }
         var siteAge = formatTherapyAge(siteEvent, now)
         siteEvent?.let {
             val diff = now - it.timestamp
@@ -688,7 +688,7 @@ class OverviewViewModel(
             }
         }
 
-        val sensorEvent = persistenceLayer.getLastTherapyRecordUpToNow(TE.Type.SENSOR_CHANGE)
+        val sensorEvent = runBlocking { persistenceLayer.getLastTherapyRecordUpToNow(TE.Type.SENSOR_CHANGE) }
         var sensorAge = formatTherapyAge(sensorEvent, now)
         sensorEvent?.let {
             val diff = now - it.timestamp
