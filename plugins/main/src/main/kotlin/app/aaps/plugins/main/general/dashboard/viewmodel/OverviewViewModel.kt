@@ -236,12 +236,12 @@ class OverviewViewModel(
         }
 
         // L2. Reservoir
-        val reservoirText = activePlugin.activePump.reservoirLevel.let { level ->
+        val reservoirText = activePlugin.activePump.reservoirLevel.value.insulin.let { level ->
             if (level > 0) decimalFormatter.to2Decimal(level) + "IE"
             else null
         }
 
-        val reservoirColor = activePlugin.activePump.reservoirLevel.let { level ->
+        val reservoirColor = activePlugin.activePump.reservoirLevel.value.insulin.let { level ->
             if (level > 30) Color.WHITE
             else Color.YELLOW
         }
@@ -369,7 +369,7 @@ class OverviewViewModel(
         val aimiPulseTitle = buildAimiPulseTitle(loop.lastRun?.lastAPSRun)
         val aimiPulseSummary = buildAimiPulseSummary(lastApsRequest)
         val aimiPulseMeta = buildAimiPulseMeta(lastApsRequest)
-        val aimiPulseHypoRisk = lastApsRequest?.isHypoRisk == true
+        val aimiPulseHypoRisk = (lastApsRequest?.rawData() as? app.aaps.core.interfaces.aps.RT)?.isHypoRisk == true
 
         // 12. AIMI Insights (Autodrive V3)
         val request = lastApsRequest
@@ -460,7 +460,7 @@ class OverviewViewModel(
             aimiPulseSummary = aimiPulseSummary,
             aimiPulseMeta = aimiPulseMeta,
             aimiPulseHypoRisk = aimiPulseHypoRisk,
-
+        )
         _statusCardState.postValue(state)
     }
 
@@ -551,6 +551,7 @@ class OverviewViewModel(
                 "κ=%.3f  E=%.1fU  Θ=%.2f  R=%.2f".format(r.trajectoryCurvature ?: 0.0, r.trajectoryEnergy ?: 0.0, r.trajectoryOpenness ?: 0.0, r.trajectoryRelevanceScore ?: 0.0)
             },
             trajectoryRelevance = (loop.lastRun?.request?.rawData() as? RT)?.trajectoryRelevanceScore
+        )
         _adjustmentState.postValue(state)
     }
 
@@ -571,11 +572,13 @@ class OverviewViewModel(
                 R.string.dashboard_adjustment_temp_target,
                 range,
                 dateUtil.untilString(target.end, resourceHelper)
+            )
         }
-        persistenceLayer.getExtendedBolusActiveAt(now)?.takeIf { it.isInProgress(dateUtil) }?.let {
+        runBlocking { persistenceLayer.getExtendedBolusActiveAt(now) }?.takeIf { it.isInProgress(dateUtil) }?.let {
             adjustments += resourceHelper.gs(
                 R.string.dashboard_adjustment_extended_bolus,
                 it.toStringFull(dateUtil, resourceHelper)
+            )
         }
         return adjustments
     }
