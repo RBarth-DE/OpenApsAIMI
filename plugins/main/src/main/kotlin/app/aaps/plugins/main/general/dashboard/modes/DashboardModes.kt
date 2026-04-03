@@ -1,6 +1,6 @@
+package app.aaps.plugins.main.general.dashboard.modes
 // DashboardMode.kt
 import kotlinx.coroutines.runBlocking
-package app.aaps.plugins.main.general.dashboard.modes
 
 enum class DashboardModes {
     BIG,

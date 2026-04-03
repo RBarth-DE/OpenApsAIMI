@@ -65,9 +65,7 @@ class LoopStateActivity : TranslatedDaggerAppCompatActivity() {
                 iconGravity = MaterialButton.ICON_GRAVITY_TEXT_START
                 iconPadding = spacing
                 setOnClickListener {
-                    OKDialog.showConfirmation(
-                        this@LoopStateActivity,
-                        "${resourceHelper.gs(app.aaps.core.ui.R.string.confirm)}: $title",
+                    uiInteraction.showOkCancelDialog(this, "${resourceHelper.gs(app.aaps.core.ui.R.string.confirm)}: $title",
                         Runnable {
                             handler.post { onClick() }
                             finish()

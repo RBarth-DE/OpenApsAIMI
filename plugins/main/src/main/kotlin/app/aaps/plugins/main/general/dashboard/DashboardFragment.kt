@@ -602,7 +602,7 @@ class DashboardFragment : DaggerFragment() {
     }
 
     private fun openHistory(): Boolean {
-        startActivity(Intent(requireContext(), app.aaps.plugins.main.general.manual.UserManualActivity::class.java))
+        startActivity(Intent(requireContext(), app.aaps.plugins.main.general.overview.OverviewActivity::class.java))
         return true
     }
 
@@ -756,9 +756,7 @@ class DashboardFragment : DaggerFragment() {
     private fun showHypoRiskDialog() {
         if (isHypoRiskDialogShowing) return
         isHypoRiskDialogShowing = true
-        app.aaps.core.ui.dialogs.uiInteraction.showOkDialog(requireContext(), getString(R.string.hypo_risk_notification_title), getString(R.string.hypo_risk_notification_text),
-            runOnDismiss = true
-        ) {
+        uiInteraction.showOkDialog(requireContext(), getString(R.string.hypo_risk_notification_title), getString(R.string.hypo_risk_notification_text)) {
             isHypoRiskDialogShowing = false
         }
     }
