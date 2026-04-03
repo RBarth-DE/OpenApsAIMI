@@ -745,7 +745,7 @@ class OverviewViewModel(
         if (reasons.isEmpty()) reasons += resourceHelper.gs(R.string.dashboard_adjustment_reason_unknown)
 
         val safetyText = reasons.joinToString(", ")
-        val finalSafetyText = if (loop.lastRun?.request?.isHypoRisk == true) {
+        val finalSafetyText = if ((loop.lastRun?.request?.rawData() as? app.aaps.core.interfaces.aps.RT)?.isHypoRisk == true) {
             "<font color='#FF0000'>Hypo Risk!</font> $safetyText"
         } else {
             safetyText
@@ -755,7 +755,7 @@ class OverviewViewModel(
     }
 
     private fun resolveModeLine(now: Long): String? {
-        val events = persistenceLayer.getTherapyEventDataFromTime(now - MODE_LOOKBACK_MS, TE.Type.NOTE, false)
+        val events = runBlocking { persistenceLayer.getTherapyEventDataFromTime(now - MODE_LOOKBACK_MS, TE.Type.NOTE, false) }
         var latest: Pair<TE, ModeKeyword>? = null
         events.forEach { event ->
             val keyword = modeKeywords.firstOrNull { event.note?.contains(it.token, ignoreCase = true) == true } ?: return@forEach
