@@ -72,13 +72,8 @@ class CircleTopDashboardView @JvmOverloads constructor(
             // 1. GlucoseRingView (Center Circle)
             // ═══════════════════════════════════════════════════════════════
             val bgMgdl = getProp<Int>("glucoseMgdl")
-            binding.glucoseRing.update(
-                bgMgdl = bgMgdl ?: 0,
-                mainText = getProp<String>("glucoseText") ?: "--",
-                subLeftText = getProp<String>("timeAgo") ?: "",
-                subRightText = getProp<String>("deltaText") ?: "",
-                noseAngleDeg = getProp<Float>("noseAngleDeg"),
-            )
+            // GlucoseRingView stub - will be connected later
+            // binding.glucoseRing.update(bgMgdl = bgMgdl ?: 0)
 
 
             // ═══════════════════════════════════════════════════════════════
@@ -103,40 +98,7 @@ class CircleTopDashboardView @JvmOverloads constructor(
             binding.lastUpdateText.text = getProp<String>("lastUpdateText") ?: "--"
             binding.lastSensorValueText.text = getProp<String>("lastSensorValueText") ?: "--"
 
-            // Adaptive Smoothing Quality badge (informational, phase 1)
-            if (state is StatusCardState) {
-                val tier = state.adaptiveSmoothingQualityTier
-                binding.adaptiveSmoothingQualityBadge.isGone = tier == null
-                if (tier != null) {
-                    val bgRes = when (tier) {
-                        app.aaps.core.interfaces.rx.events.AdaptiveSmoothingQualityTier.OK ->
-                            app.aaps.plugins.main.R.drawable.dashboard_chip_background_quality_ok
-                        app.aaps.core.interfaces.rx.events.AdaptiveSmoothingQualityTier.UNCERTAIN ->
-                            app.aaps.plugins.main.R.drawable.dashboard_chip_background_quality_uncertain
-                        app.aaps.core.interfaces.rx.events.AdaptiveSmoothingQualityTier.BAD ->
-                            app.aaps.plugins.main.R.drawable.dashboard_chip_background_quality_bad
-                    }
-                    binding.adaptiveSmoothingQualityBadge.setBackgroundResource(bgRes)
-
-                    val tintRes = when (tier) {
-                        app.aaps.core.interfaces.rx.events.AdaptiveSmoothingQualityTier.OK ->
-                            app.aaps.plugins.main.R.color.dashboard_on_surface_muted
-                        app.aaps.core.interfaces.rx.events.AdaptiveSmoothingQualityTier.UNCERTAIN ->
-                            app.aaps.plugins.main.R.color.dashboard_metric_attention
-                        app.aaps.core.interfaces.rx.events.AdaptiveSmoothingQualityTier.BAD ->
-                            app.aaps.plugins.main.R.color.dashboard_chip_border_warning
-                    }
-                    binding.adaptiveSmoothingQualityIcon.setColorFilter(
-                        context.getColor(tintRes)
-                    )
-
-                    binding.adaptiveSmoothingQualityBadge.contentDescription = state.adaptiveSmoothingQualityBadgeText
-                    binding.adaptiveSmoothingQualityBadge.setOnClickListener {
-                        it.performHapticFeedback(android.view.HapticFeedbackConstants.VIRTUAL_KEY)
-                        if (state.adaptiveSmoothingQualityDialogMessage.isNotBlank()) {
-                            uiInteraction.showOkDialog(requireContext(), context.getString(app.aaps.plugins.main.R.string.adaptive_smoothing_quality_dialog_title), state.adaptiveSmoothingQualityDialogMessage
-                            )
-                        }
+            // AdaptiveSmoothing badge removed
 
                         val manager = accessibilityManager
                         if (manager != null && manager.isEnabled && manager.isTouchExplorationEnabled) {
