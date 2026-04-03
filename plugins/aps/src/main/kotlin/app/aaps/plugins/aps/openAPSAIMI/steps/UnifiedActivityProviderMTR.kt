@@ -107,8 +107,8 @@ class UnifiedActivityProviderMTR @Inject constructor(
         val now = System.currentTimeMillis()
 
         return try {
-            val records = persistenceLayer
-                .getStepsCountFromTimeToTime(startMs, now)
+            val records = runBlocking { persistenceLayer
+                .getStepsCountFromTimeToTime(startMs, now) }
                 .sortedBy { it.timestamp } // zeitlich vorwärts
 
             if (records.isEmpty()) return null

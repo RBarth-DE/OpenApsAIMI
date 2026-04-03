@@ -113,21 +113,12 @@ class AIMIPhoneStepsSyncServiceMTR @Inject constructor(
                     device = SOURCE_DEVICE
                 )
                 
-                disposable.add(
+                try {
                     runBlocking { persistenceLayer.insertOrUpdateStepsCount(sc) }
-                        .subscribeOn(Schedulers.io())
-                        .subscribe(
-                            { _ ->
-                                aapsLogger.debug(
-                                    LTag.APS,
-                                    "[$TAG] ✅ Steps stored Phone Sync $sc: $steps5 steps (5min), 15min=$steps15, 30min=$steps30"
-                                )
-                            },
-                            { error ->
-                                aapsLogger.error(LTag.APS, "[$TAG] ❌ DB insert failed", error)
-                            }
-                        )
-                )
+                    aapsLogger.debug(LTag.APS, "[$TAG] ✅ Steps stored")
+                } catch (e: Exception) {
+                    aapsLogger.error(LTag.APS, "[$TAG] ❌ DB insert failed", e)
+                }
             } else {
                 aapsLogger.debug(LTag.APS, "[$TAG] No steps to sync (StepService returned 0)")
             }
