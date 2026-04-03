@@ -638,3 +638,4 @@ class DashboardFragment : DaggerFragment() {
         }
     }
 }
+}
