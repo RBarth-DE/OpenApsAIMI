@@ -1,0 +1,661 @@
+<?xml version="1.0" encoding="utf-8"?>
+<merge xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/dashboard_card_surface"
+        android:orientation="vertical"
+        android:padding="5dp">
+
+        <!-- ═══════════════════════════════════════════════════ -->
+        <!-- TOP SECTION: Circle + Badges + Trend               -->
+        <!-- ═══════════════════════════════════════════════════ -->
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <!-- ═══════════════════════════════════════════════════ -->
+            <!-- ROW 1: AIMI INSIGHTS (T3c, Manoeuvre, AI Factor)   -->
+            <!-- ═══════════════════════════════════════════════════ -->
+            <LinearLayout
+                android:id="@+id/aimiInsightsContainer"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@null"
+                android:gravity="center"
+                android:orientation="horizontal"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent">
+
+                <TextView
+                    android:id="@+id/insight_t3c"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="6dp"
+                    android:text="🎯 --"
+                    android:textColor="@color/dashboard_on_surface"
+                    android:textSize="10sp" />
+
+                <TextView
+                    android:id="@+id/insight_manoeuvre"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="6dp"
+                    android:text="🌀 --"
+                    android:textColor="@color/dashboard_on_surface"
+                    android:textSize="10sp" />
+
+                <TextView
+                    android:id="@+id/insight_factor"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="6dp"
+                    android:text="⚡ x1.0"
+                    android:textColor="@color/dashboard_on_surface"
+                    android:textSize="10sp" />
+
+                <TextView
+                    android:id="@+id/insight_health"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="6dp"
+                    android:text="🩺 --"
+                    android:textColor="@color/dashboard_on_surface"
+                    android:textSize="10sp" />
+            </LinearLayout>
+
+            <!-- ═══════════════════════════════════════════════════ -->
+            <!-- ROW 2: [Indicator | Context | spacer | Loop Status] -->
+            <!-- Einzige horizontale Zeile — stabiler Anker für Ring  -->
+            <!-- ═══════════════════════════════════════════════════ -->
+            <LinearLayout
+                android:id="@+id/indicator_row"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="3dp"
+                android:layout_marginBottom="-2dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/aimiInsightsContainer">
+
+                <FrameLayout
+                    android:id="@+id/adaptive_smoothing_quality_badge"
+                    android:layout_width="22dp"
+                    android:layout_height="22dp"
+                    android:layout_marginStart="6dp"
+                    android:layout_gravity="center_vertical"
+                    android:background="@drawable/dashboard_chip_background_quality_ok"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:visibility="gone"
+                    android:contentDescription="@string/adaptive_smoothing_quality_badge_a11y">
+
+                    <ImageView
+                        android:id="@+id/adaptive_smoothing_quality_icon"
+                        android:layout_width="14dp"
+                        android:layout_height="14dp"
+                        android:layout_gravity="center"
+                        app:srcCompat="@drawable/ic_dashboard_wave"
+                        app:tint="@color/dashboard_on_surface_muted" />
+                </FrameLayout>
+                <!-- Auditor Indicator -->
+                <FrameLayout
+                    android:id="@+id/aimi_auditor_indicator_container"
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:elevation="20dp" />
+
+                <!-- Context Indicator (direkt rechts vom Auditor) -->
+                <ImageView
+                    android:id="@+id/aimi_context_indicator"
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:layout_marginStart="4dp"
+                    android:contentDescription="@string/aimi_context"
+                    android:elevation="20dp"
+                    android:visibility="gone"
+                    app:srcCompat="@drawable/ic_graduation"
+                    app:tint="?android:attr/textColorPrimary" />
+
+                <!-- Spacer -->
+                <View
+                    android:layout_width="0dp"
+                    android:layout_height="1dp"
+                    android:layout_weight="1" />
+
+                <!-- Loop Status (ganz rechts) -->
+                <LinearLayout
+                    android:id="@+id/loop_status_container"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/loop_status"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginEnd="6dp"
+                        android:alpha="0.7"
+                        android:text="@string/closed_loop"
+                        android:textColor="@color/dashboard_on_surface"
+                        android:textSize="12sp" />
+
+                    <View
+                        android:id="@+id/loop_indicator"
+                        android:layout_width="12dp"
+                        android:layout_height="12dp"
+                        android:background="@drawable/dashboard_loop_indicator" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- ═══════════════════════════════════════════════════ -->
+            <!-- ROW 3+: GLUCOSE RING (Mitte)                        -->
+            <!-- Top hängt an indicator_row — sauber und stabil      -->
+            <!-- ═══════════════════════════════════════════════════ -->
+
+            <!-- ═══════════════════════════════════════════════════ -->
+            <!-- LEFT COLUMN (neben Ring links)                      -->
+            <!-- ═══════════════════════════════════════════════════ -->
+            <app.aaps.core.ui.views.GlucoseRingView
+                android:id="@+id/glucose_ring"
+                android:layout_width="140dp"
+                android:layout_height="140dp"
+                android:layout_marginTop="-3dp"
+                android:elevation="3dp"
+                app:glucoseRingStep1MaxMgdl="130"
+                app:glucoseRingStep2MaxMgdl="180"
+                app:glucoseRingStep3MaxMgdl="220"
+                app:glucoseRingStepColor1="#00C853"
+                app:glucoseRingStepColor2="#FFD600"
+                app:glucoseRingStepColor3="#FF6D00"
+                app:glucoseRingStepColor4="#D50000"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/indicator_row"
+                app:layout_constraintVertical_bias="0.0"
+                app:ringBackgroundColor="@android:color/transparent"
+                app:ringStrokeWidth="5dp"
+                app:ringSubTextColor="?android:attr/textColorSecondary"
+                app:ringTextColor="?android:attr/textColorPrimary" />
+
+            <LinearLayout
+                android:id="@+id/left_col"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:layout_marginEnd="8dp"
+                android:gravity="center_vertical"
+                android:orientation="vertical"
+                android:paddingStart="6dp"
+                app:layout_constrainedWidth="true"
+                app:layout_constraintBottom_toBottomOf="@id/glucose_ring"
+                app:layout_constraintEnd_toStartOf="@id/glucose_ring"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="@id/glucose_ring"
+                app:layout_constraintWidth_percent="0.3">
+
+                <!-- STEPS -->
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="6dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <ImageView
+                        android:layout_width="12dp"
+                        android:layout_height="12dp"
+                        android:layout_marginEnd="6dp"
+                        app:srcCompat="@drawable/ic_dashboard_shoe"
+                        app:tint="#CDDC39" />
+
+                    <TextView
+                        android:id="@+id/steps_text"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:ellipsize="none"
+                        android:singleLine="true"
+                        android:text="--"
+                        android:textAppearance="@style/TextAppearance.MaterialComponents.Caption"
+                        android:textColor="#AAFFFFFF"
+                        android:textStyle="bold" />
+                </LinearLayout>
+
+                <!-- Reservoir -->
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="6dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <ImageView
+                        android:layout_width="18dp"
+                        android:layout_height="18dp"
+                        android:layout_marginEnd="6dp"
+                        android:ellipsize="none"
+                        android:singleLine="true"
+                        app:srcCompat="@drawable/ic_cp_age_insulin"
+                        app:tint="@color/dashboard_on_surface" />
+
+                    <TextView
+                        android:id="@+id/reservoir_chip"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="--"
+                        android:textAppearance="@style/TextAppearance.MaterialComponents.Caption"
+                        android:textColor="@color/dashboard_on_surface" />
+                </LinearLayout>
+
+                <!-- Infusion Age -->
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="6dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <ImageView
+                        android:layout_width="18dp"
+                        android:layout_height="18dp"
+                        android:layout_marginEnd="6dp"
+                        app:srcCompat="@drawable/ic_cp_age_cannula"
+                        app:tint="@color/dashboard_on_surface" />
+
+                    <TextView
+                        android:id="@+id/infusion_age_text"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="--"
+                        android:textAppearance="@style/TextAppearance.MaterialComponents.Caption"
+                        android:textColor="@color/dashboard_on_surface" />
+                </LinearLayout>
+
+                <!-- Pump Battery -->
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="6dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <ImageView
+                        android:layout_width="18dp"
+                        android:layout_height="18dp"
+                        android:layout_marginEnd="6dp"
+                        app:srcCompat="@drawable/ic_dashboard_battery"
+                        app:tint="@color/dashboard_on_surface" />
+
+                    <TextView
+                        android:id="@+id/pump_battery_text"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="--"
+                        android:textAppearance="@style/TextAppearance.MaterialComponents.Caption"
+                        android:textColor="@color/dashboard_on_surface" />
+                </LinearLayout>
+
+                <!-- Sensor Age -->
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <ImageView
+                        android:layout_width="18dp"
+                        android:layout_height="18dp"
+                        android:layout_marginEnd="6dp"
+                        app:srcCompat="@drawable/ic_cp_age_sensor"
+                        app:tint="@color/dashboard_on_surface" />
+
+                    <TextView
+                        android:id="@+id/sensor_age_text"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="--"
+                        android:textAppearance="@style/TextAppearance.MaterialComponents.Caption"
+                        android:textColor="@color/dashboard_on_surface" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- ═══════════════════════════════════════════════════ -->
+            <!-- RIGHT COLUMN (neben Ring rechts)                    -->
+            <!-- ═══════════════════════════════════════════════════ -->
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:layout_marginStart="8dp"
+                android:gravity="center_vertical|end"
+                android:orientation="vertical"
+                app:layout_constrainedWidth="true"
+                app:layout_constraintBottom_toBottomOf="@id/glucose_ring"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toEndOf="@id/glucose_ring"
+                app:layout_constraintTop_toTopOf="@id/glucose_ring">
+
+                <!-- HEART RATE -->
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="6dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/hr_text"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="--"
+                        android:textAppearance="@style/TextAppearance.MaterialComponents.Caption"
+                        android:textColor="#AAFFFFFF"
+                        android:textStyle="bold" />
+
+                    <ImageView
+                        android:layout_width="12dp"
+                        android:layout_height="12dp"
+                        android:layout_marginStart="6dp"
+                        app:srcCompat="@drawable/ic_cp_heart_rate"
+                        app:tint="#ED1B24" />
+                </LinearLayout>
+
+                <!-- Last SMB -->
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="6dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:gravity="start"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:id="@+id/last_update_text"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="0%"
+                            android:textAppearance="@style/TextAppearance.MaterialComponents.Caption"
+                            android:textColor="@color/dashboard_on_surface" />
+
+                        <TextView
+                            android:id="@+id/last_sensor_value_text"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="0.00 U/h"
+                            android:textAppearance="@style/TextAppearance.MaterialComponents.Caption"
+                            android:textColor="@color/dashboard_on_surface" />
+                    </LinearLayout>
+
+                    <ImageView
+                        android:layout_width="18dp"
+                        android:layout_height="18dp"
+                        android:layout_marginStart="6dp"
+                        app:srcCompat="@drawable/ic_dashboard_droplet"
+                        app:tint="@color/dashboard_on_surface" />
+                </LinearLayout>
+
+                <!-- TBR Rate -->
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="6dp"
+                    android:gravity="end"
+                    android:orientation="horizontal">
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:gravity="start"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:id="@+id/basalPctText"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="--"
+                            android:textAppearance="@style/TextAppearance.MaterialComponents.Caption"
+                            android:textColor="@color/dashboard_on_surface" />
+
+                        <TextView
+                            android:id="@+id/basal_text"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="--"
+                            android:textAppearance="@style/TextAppearance.MaterialComponents.Caption"
+                            android:textColor="@color/dashboard_on_surface" />
+                    </LinearLayout>
+
+                    <ImageView
+                        android:layout_width="18dp"
+                        android:layout_height="18dp"
+                        android:layout_marginStart="6dp"
+                        app:srcCompat="@drawable/ic_dashboard_wave"
+                        app:tint="@color/dashboard_on_surface" />
+                </LinearLayout>
+
+                <!-- IOB -->
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/iob_text"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="--"
+                        android:textAppearance="@style/TextAppearance.MaterialComponents.Caption"
+                        android:textColor="@color/dashboard_on_surface" />
+
+                    <ImageView
+                        android:layout_width="18dp"
+                        android:layout_height="18dp"
+                        android:layout_marginStart="6dp"
+                        app:srcCompat="@drawable/ic_dashboard_iob"
+                        app:tint="@color/dashboard_on_surface" />
+                </LinearLayout>
+            </LinearLayout>
+
+        <!-- ═══════════════════════════════════════════════════ -->
+        <!-- TIR BAR (24H)                                       -->
+        <!-- ═══════════════════════════════════════════════════ -->
+            <LinearLayout
+                android:id="@+id/tir_container"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="0dp"
+                android:orientation="vertical"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/glucose_ring">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginTop="-2dp"
+                android:layout_marginBottom="4dp">
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="TIR — TODAY"
+                    android:textSize="10sp"
+                    android:textAllCaps="true"
+                    android:letterSpacing="0.1"
+                    android:textColor="#88FFFFFF" />
+                <TextView
+                    android:id="@+id/tir_stats_text"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Avg -- • A1C --"
+                    android:textSize="10sp"
+                    android:textColor="#FFFFFF" />
+            </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="8dp"
+                    android:background="#22FFFFFF"
+                    android:orientation="horizontal">
+
+                    <View android:id="@+id/tir_very_low_bar"  android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="0.01" android:background="#D50000" />
+                    <View android:id="@+id/tir_low_bar"       android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="0.04" android:background="#FF6D00" />
+                    <View android:id="@+id/tir_in_range_bar"  android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="0.75" android:background="#00C853" />
+                    <View android:id="@+id/tir_high_bar"      android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="0.15" android:background="#FFD600" />
+                    <View android:id="@+id/tir_very_high_bar" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="0.05" android:background="#D50000" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:baselineAligned="false"
+                    android:orientation="horizontal">
+
+                    <TextView android:id="@+id/tir_very_low_label"  android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="0.05" android:text="" android:textSize="9sp" android:textColor="#D50000" android:gravity="start" />
+                    <TextView android:id="@+id/tir_low_label"       android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="0.2"  android:text="" android:textSize="9sp" android:textColor="#FF6D00" android:gravity="start" />
+                    <TextView android:id="@+id/tir_in_range_label"  android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="0.5"  android:text="" android:textSize="9sp" android:textColor="#00C853" android:gravity="center" />
+                    <TextView android:id="@+id/tir_high_label"      android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="0.2"  android:text="" android:textSize="9sp" android:textColor="#FFD600" android:gravity="end" />
+                    <TextView android:id="@+id/tir_very_high_label" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="0.05" android:text="" android:textSize="9sp" android:textColor="#D50000" android:gravity="end" />
+                </LinearLayout>
+            </LinearLayout>
+
+
+            <!-- ═══════════════════════════════════════════════════ -->
+            <!-- BOTTOM ROW: Action Chips                            -->
+            <!-- ═══════════════════════════════════════════════════ -->
+            <LinearLayout
+                android:id="@+id/bottom_action_row"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                app:layout_constraintTop_toBottomOf="@id/tir_container"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/chip_aimi_advisor"
+                        android:layout_width="0dp" android:layout_height="wrap_content"
+                        android:layout_marginStart="2dp" android:layout_marginEnd="2dp" android:layout_weight="1"
+                        android:checkable="false" android:clickable="true" android:elevation="4dp"
+                        android:focusable="true" android:gravity="center" android:minWidth="0dp"
+                        android:text="@string/circle_btn_aimi_advisor" android:textAlignment="center"
+                        android:textAppearance="@style/TextAppearance.MaterialComponents.Caption"
+                        android:textColor="@color/dashboard_on_surface"
+                        app:autoSizeMaxTextSize="12sp" app:autoSizeMinTextSize="8sp"
+                        app:autoSizeStepGranularity="1sp" app:autoSizeTextType="uniform"
+                        app:chipBackgroundColor="@color/dashboard_chip_background" app:chipCornerRadius="12dp"
+                        app:chipEndPadding="1dp" app:chipIconVisible="false" app:chipMinHeight="32dp"
+                        app:chipMinTouchTargetSize="0dp" app:chipStartPadding="1dp"
+                        app:chipStrokeColor="@color/dashboard_chip_border" app:chipStrokeWidth="1.5dp"
+                        app:closeIconVisible="false" app:textEndPadding="1dp" app:textStartPadding="1dp" />
+
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/chip_adjust"
+                        android:layout_width="0dp" android:layout_height="wrap_content"
+                        android:layout_marginStart="2dp" android:layout_marginEnd="2dp" android:layout_weight="1"
+                        android:checkable="false" android:clickable="true" android:elevation="4dp"
+                        android:focusable="true" android:gravity="center" android:minWidth="0dp"
+                        android:text="@string/circle_btn_adjust" android:textAlignment="center"
+                        android:textAppearance="@style/TextAppearance.MaterialComponents.Caption"
+                        android:textColor="@color/dashboard_on_surface"
+                        app:autoSizeMaxTextSize="12sp" app:autoSizeMinTextSize="8sp"
+                        app:autoSizeStepGranularity="1sp" app:autoSizeTextType="uniform"
+                        app:chipBackgroundColor="@color/dashboard_chip_background" app:chipCornerRadius="12dp"
+                        app:chipEndPadding="1dp" app:chipIconVisible="false" app:chipMinHeight="32dp"
+                        app:chipMinTouchTargetSize="0dp" app:chipStartPadding="1dp"
+                        app:chipStrokeColor="@color/dashboard_chip_border" app:chipStrokeWidth="1.5dp"
+                        app:closeIconVisible="false" app:textEndPadding="1dp" app:textStartPadding="1dp" />
+
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/chip_context"
+                        android:layout_width="0dp" android:layout_height="wrap_content"
+                        android:layout_marginStart="2dp" android:layout_marginEnd="2dp" android:layout_weight="1"
+                        android:checkable="false" android:clickable="true" android:elevation="4dp"
+                        android:focusable="true" android:gravity="center" android:minWidth="0dp"
+                        android:text="@string/circle_btn_context" android:textAlignment="center"
+                        android:textAppearance="@style/TextAppearance.MaterialComponents.Caption"
+                        android:textColor="@color/dashboard_on_surface"
+                        app:autoSizeMaxTextSize="12sp" app:autoSizeMinTextSize="8sp"
+                        app:autoSizeStepGranularity="1sp" app:autoSizeTextType="uniform"
+                        app:chipBackgroundColor="@color/dashboard_chip_background" app:chipCornerRadius="12dp"
+                        app:chipEndPadding="1dp" app:chipIconVisible="false" app:chipMinHeight="32dp"
+                        app:chipMinTouchTargetSize="0dp" app:chipStartPadding="1dp"
+                        app:chipStrokeColor="@color/dashboard_chip_border" app:chipStrokeWidth="1.5dp"
+                        app:closeIconVisible="false" app:textEndPadding="1dp" app:textStartPadding="1dp" />
+
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/chip_food"
+                        android:layout_width="0dp" android:layout_height="wrap_content"
+                        android:layout_marginStart="2dp" android:layout_marginEnd="2dp" android:layout_weight="1"
+                        android:checkable="false" android:clickable="true" android:elevation="4dp"
+                        android:focusable="true" android:gravity="center" android:minWidth="0dp"
+                        android:text="@string/circle_btn_food" android:textAlignment="center"
+                        android:textAppearance="@style/TextAppearance.MaterialComponents.Caption"
+                        android:textColor="@color/dashboard_on_surface"
+                        app:autoSizeMaxTextSize="12sp" app:autoSizeMinTextSize="8sp"
+                        app:autoSizeStepGranularity="1sp" app:autoSizeTextType="uniform"
+                        app:chipBackgroundColor="@color/dashboard_chip_background" app:chipCornerRadius="12dp"
+                        app:chipEndPadding="1dp" app:chipIconVisible="false" app:chipMinHeight="32dp"
+                        app:chipMinTouchTargetSize="0dp" app:chipStartPadding="1dp"
+                        app:chipStrokeColor="@color/dashboard_chip_border" app:chipStrokeWidth="1.5dp"
+                        app:closeIconVisible="false" app:textEndPadding="1dp" app:textStartPadding="1dp" />
+
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/chip_aimi_pref"
+                        android:layout_width="0dp" android:layout_height="wrap_content"
+                        android:layout_marginStart="2dp" android:layout_marginEnd="2dp" android:layout_weight="1"
+                        android:checkable="false" android:clickable="true" android:elevation="4dp"
+                        android:focusable="true" android:gravity="center" android:minWidth="0dp"
+                        android:text="@string/circle_btn_aimi_pref" android:textAlignment="center"
+                        android:textAppearance="@style/TextAppearance.MaterialComponents.Caption"
+                        android:textColor="@color/dashboard_on_surface"
+                        app:autoSizeMaxTextSize="12sp" app:autoSizeMinTextSize="8sp"
+                        app:autoSizeStepGranularity="1sp" app:autoSizeTextType="uniform"
+                        app:chipBackgroundColor="@color/dashboard_chip_background" app:chipCornerRadius="12dp"
+                        app:chipEndPadding="1dp" app:chipIconVisible="false" app:chipMinHeight="32dp"
+                        app:chipMinTouchTargetSize="0dp" app:chipStartPadding="1dp"
+                        app:chipStrokeColor="@color/dashboard_chip_border" app:chipStrokeWidth="1.5dp"
+                        app:closeIconVisible="false" app:textEndPadding="1dp" app:textStartPadding="1dp" />
+
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/chip_stat"
+                        android:layout_width="0dp" android:layout_height="wrap_content"
+                        android:layout_marginStart="2dp" android:layout_marginEnd="2dp" android:layout_weight="1"
+                        android:checkable="false" android:clickable="true" android:elevation="4dp"
+                        android:focusable="true" android:gravity="center" android:minWidth="0dp"
+                        android:text="@string/circle_btn_stats" android:textAlignment="center"
+                        android:textAppearance="@style/TextAppearance.MaterialComponents.Caption"
+                        android:textColor="@color/dashboard_on_surface"
+                        app:autoSizeMaxTextSize="12sp" app:autoSizeMinTextSize="8sp"
+                        app:autoSizeStepGranularity="1sp" app:autoSizeTextType="uniform"
+                        app:chipBackgroundColor="@color/dashboard_chip_background" app:chipCornerRadius="12dp"
+                        app:chipEndPadding="1dp" app:chipIconVisible="false" app:chipMinHeight="32dp"
+                        app:chipMinTouchTargetSize="0dp" app:chipStartPadding="1dp"
+                        app:chipStrokeColor="@color/dashboard_chip_border" app:chipStrokeWidth="1.5dp"
+                        app:closeIconVisible="false" app:textEndPadding="1dp" app:textStartPadding="1dp" />
+                </LinearLayout>
+            </LinearLayout>
+        </androidx.constraintlayout.widget.ConstraintLayout>
+    </LinearLayout>
+</merge>

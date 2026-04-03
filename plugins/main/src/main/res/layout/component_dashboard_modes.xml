@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+
+    android:padding="4dp"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <!-- Buttons -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btn0"
+        app:autoSizeTextType="uniform"
+        app:autoSizeMinTextSize="6sp"
+        app:autoSizeMaxTextSize="13sp"
+        style="@style/Widget.AAPS.Dashboard.ModeButton"
+        android:text="@string/circle_mode_unknown"/>
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btn1"
+        app:autoSizeTextType="uniform"
+        app:autoSizeMinTextSize="6sp"
+        app:autoSizeMaxTextSize="13sp"
+        style="@style/Widget.AAPS.Dashboard.ModeButton"
+        android:text="@string/circle_mode_unknown"/>
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btn2"
+        app:autoSizeTextType="uniform"
+        app:autoSizeMinTextSize="6sp"
+        app:autoSizeMaxTextSize="13sp"
+        style="@style/Widget.AAPS.Dashboard.ModeButton"
+        android:text="@string/circle_mode_unknown"/>
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btn3"
+        app:autoSizeTextType="uniform"
+        app:autoSizeMinTextSize="6sp"
+        app:autoSizeMaxTextSize="13sp"
+        style="@style/Widget.AAPS.Dashboard.ModeButton"
+        android:text="@string/circle_mode_unknown"/>
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btn4"
+        app:autoSizeTextType="uniform"
+        app:autoSizeMinTextSize="6sp"
+        app:autoSizeMaxTextSize="13sp"
+        style="@style/Widget.AAPS.Dashboard.ModeButton"
+        android:text="@string/circle_mode_unknown"/>
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btn5"
+        app:autoSizeTextType="uniform"
+        app:autoSizeMinTextSize="6sp"
+        app:autoSizeMaxTextSize="13sp"
+        style="@style/Widget.AAPS.Dashboard.ModeButton"
+        android:text="@string/circle_mode_unknown"/>
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btn6"
+        app:autoSizeTextType="uniform"
+        app:autoSizeMinTextSize="6sp"
+        app:autoSizeMaxTextSize="13sp"
+        style="@style/Widget.AAPS.Dashboard.ModeButton"
+        android:text="@string/circle_mode_unknown"/>
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btn7"
+        app:autoSizeTextType="uniform"
+        app:autoSizeMinTextSize="6sp"
+        app:autoSizeMaxTextSize="13sp"
+        style="@style/Widget.AAPS.Dashboard.ModeButton"
+        android:text="@string/circle_mode_unknown"/>
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btn8"
+        app:autoSizeTextType="uniform"
+        app:autoSizeMinTextSize="6sp"
+        app:autoSizeMaxTextSize="13sp"
+        style="@style/Widget.AAPS.Dashboard.ModeButton"
+        android:text="@string/circle_mode_unknown"/>
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btn9"
+        app:autoSizeTextType="uniform"
+        app:autoSizeMinTextSize="6sp"
+        app:autoSizeMaxTextSize="13sp"
+        style="@style/Widget.AAPS.Dashboard.ModeButton"
+        android:text="@string/circle_mode_unknown"/>
+
+    <!-- Flow Layout -->
+    <androidx.constraintlayout.helper.widget.Flow
+        android:id="@+id/modes_flow"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        app:constraint_referenced_ids="
+            btn0,
+            btn1,
+            btn2,
+            btn3,
+            btn4,
+            btn5,
+            btn6,
+            btn7,
+            btn8,
+            btn9"
+        app:flow_horizontalGap="6dp"
+        app:flow_horizontalStyle="spread"
+
+        app:flow_maxElementsWrap="5"
+        app:flow_verticalGap="6dp"
+        app:flow_wrapMode="aligned"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+
+        app:layout_constraintTop_toTopOf="parent" />
+</androidx.constraintlayout.widget.ConstraintLayout>
