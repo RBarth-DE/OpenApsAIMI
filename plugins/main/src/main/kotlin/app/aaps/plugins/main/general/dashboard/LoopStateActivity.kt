@@ -65,11 +65,8 @@ class LoopStateActivity : TranslatedDaggerAppCompatActivity() {
                 iconGravity = MaterialButton.ICON_GRAVITY_TEXT_START
                 iconPadding = spacing
                 setOnClickListener {
-                    aapsLogger.info(LTag.APS, "Confirm action")}: $title",
-                        Runnable {
-                            handler.post { onClick() }
-                            finish()
-                        }
+                    handler.post { onClick() }
+                    finish()
                     )
                 }
             }
