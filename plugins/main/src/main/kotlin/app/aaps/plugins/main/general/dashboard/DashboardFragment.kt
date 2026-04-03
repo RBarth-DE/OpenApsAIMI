@@ -112,32 +112,7 @@ class DashboardFragment : DaggerFragment() {
     private var graphViewportLayoutListener: View.OnLayoutChangeListener? = null
 
 
-    private val viewModel: OverviewViewModel by viewModels {
-        OverviewViewModel.Factory(
-            requireActivity().application,
-            lastBgData,
-            trendCalculator,
-            iobCobCalculator,
-            glucoseStatusProvider,
-            profileUtil,
-            profileFunction,
-            resourceHelper,
-            dateUtil,
-            loop,
-            processedTbrEbData,
-            persistenceLayer,
-            decimalFormatter,
-            activePlugin,
-            rxBus,
-            aapsSchedulers,
-            fabricPrivacy,
-            preferences,
-            overviewData,
-            trajectoryGuard, // 🌀 Pass to Factory
-            activityProvider,
-            autodriveEngine // 🧠 Pass to Factory
-        )
-    }
+    private val viewModel: OverviewViewModel by viewModels()
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = FragmentDashboardBinding.inflate(inflater, container, false)
@@ -401,7 +376,7 @@ class DashboardFragment : DaggerFragment() {
         super.onResume()
         Log.d("DashboardFragment", "onResume")
         updateContextBadge()
-        viewModel.start()
+        // viewModel.start() - removed
 
         //bind / refresh mode buttons in case of a background change
         bindModes()
@@ -437,7 +412,7 @@ class DashboardFragment : DaggerFragment() {
 
     override fun onPause() {
         super.onPause()
-        viewModel.stop()
+        // viewModel.stop() - removed
         disposables.clear()
     }
 
