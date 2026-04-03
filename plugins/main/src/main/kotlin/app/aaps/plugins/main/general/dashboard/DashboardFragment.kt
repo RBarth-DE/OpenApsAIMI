@@ -28,7 +28,7 @@ import app.aaps.core.interfaces.logging.LTag
 import app.aaps.core.interfaces.resources.ResourceHelper
 import app.aaps.core.interfaces.rx.AapsSchedulers
 import app.aaps.core.interfaces.rx.bus.RxBus
-import app.aaps.core.interfaces.rx.events.EventPreferenceChange
+import app.aaps.core.interfaces.rx.events.EventConfigBuilderChange
 import app.aaps.core.interfaces.utils.DateUtil
 import app.aaps.core.interfaces.utils.DecimalFormatter
 import app.aaps.core.interfaces.utils.TrendCalculator
@@ -411,7 +411,7 @@ class DashboardFragment : DaggerFragment() {
             disposable = disposables,
         )
         disposables += rxBus
-            .toObservable(EventPreferenceChange::class.java)
+            .toObservable(EventConfigBuilderChange::class.java)
             .observeOn(aapsSchedulers.main)
             .subscribe({ event ->
                            if (event.isChanged(IntNonKey.RangeToDisplay.key)) {
@@ -685,7 +685,7 @@ class DashboardFragment : DaggerFragment() {
         binding.glucoseGraph.rangeButton.text = overviewMenus.scaleString(clampedHours)
         preferences.put(IntNonKey.RangeToDisplay, clampedHours)
         preferences.put(BooleanNonKey.ObjectivesScaleUsed, true)
-        rxBus.send(EventPreferenceChange(IntNonKey.RangeToDisplay.key))
+        rxBus.send(EventConfigBuilderChange(IntNonKey.RangeToDisplay.key))
         if (userInitiated) {
             app.aaps.core.ui.toast.ToastUtils.infoToast(context, getString(R.string.graph_range_updated, clampedHours))
         }

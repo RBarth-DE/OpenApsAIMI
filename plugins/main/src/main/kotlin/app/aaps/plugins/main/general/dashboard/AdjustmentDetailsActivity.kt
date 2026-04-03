@@ -74,7 +74,7 @@ class AdjustmentDetailsActivity : TranslatedDaggerAppCompatActivity() {
             ToastUtils.infoToast(this, resourceHelper.gs(R.string.dashboard_loop_run_requested))
             Thread {
                 try {
-                    loop.invoke("AdjustmentDetails", true)
+                    runBlocking { loop.invoke("AdjustmentDetails", true) }
                 } catch (e: Exception) {
                     aapsLogger.error(LTag.APS, "Error invoking loop from details", e)
                 }
