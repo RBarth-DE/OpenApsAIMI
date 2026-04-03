@@ -420,12 +420,6 @@ class DashboardFragment : DaggerFragment() {
 
             auditorStatusLiveData.uiState.observe(viewLifecycleOwner) { uiState ->
                 auditorIndicator?.setState(uiState)
-                if (uiState.shouldNotify) {
-                    auditorNotificationManager.showInsightAvailable(uiState)
-                }
-                container.visibility = View.VISIBLE
-                aapsLogger.debug(LTag.CORE, "[Dashboard] Badge state: ${uiState.type}")
-            }
 
             auditorStatusLiveData.forceUpdate()
 
