@@ -183,6 +183,7 @@ class OverviewViewModel(
         return dbLast ?: memLast
     }
 
+    private fun refreshAdaptiveSmoothingQualityFromPlugin() { /* stub */ }
     private fun updateStatus() {
         refreshAdaptiveSmoothingQualityFromPlugin()
         val now = dateUtil.now()
@@ -194,8 +195,7 @@ class OverviewViewModel(
             profileUtil.fromMgdlToSignedStringInUnits(it)
         } ?: resourceHelper.gs(app.aaps.core.ui.R.string.value_unavailable_short)
 
-        val cobText = iobCobCalculator
-            .getCobInfo("Dashboard COB")
+        val cobText = runBlocking { iobCobCalculator.let { runBlocking { it.getCobInfo("Dashboard COB") } } }
             .displayText(resourceHelper, decimalFormatter)
             ?: resourceHelper.gs(app.aaps.core.ui.R.string.value_unavailable_short)
         val timeAgoLong = dateUtil.minAgoLong(resourceHelper, lastBg?.timestamp)
