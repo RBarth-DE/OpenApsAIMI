@@ -703,7 +703,7 @@ class OverviewViewModel(
             }
         }
 
-        val lastConnection = activePlugin.activePump.lastDataTime
+        val lastConnection = activePlugin.activePump.lastDataTime as? Long ?: 0L
         val threshold = T.mins(preferences.get(IntKey.AlertsPumpUnreachableThreshold).toLong()).msecs()
         val isUnreachable = preferences.get(app.aaps.core.keys.BooleanKey.AlertPumpUnreachable) && (lastConnection + threshold < now)
 
@@ -887,6 +887,7 @@ class OverviewViewModel(
             ModeKeyword("snack", R.string.dashboard_mode_snack),
             ModeKeyword("sport", R.string.dashboard_mode_sport),
             ModeKeyword("sleep", R.string.dashboard_mode_sleep)
+        )
     }
 }
 
@@ -962,3 +963,4 @@ data class StatusCardState(
     val aimiPulseHypoRisk: Boolean = false,
 
 
+) : Serializable
