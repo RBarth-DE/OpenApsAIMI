@@ -103,20 +103,14 @@ android {
     productFlavors {
         create("full") {
             isDefault = true
-            applicationId = "info.nightscout.androidaps"
+            applicationId = "info.nightscout.androidaps.dev"
             dimension = "standard"
             resValue("string", "app_name", "AAPS")
             versionName = Versions.appVersion
             manifestPlaceholders["appIcon"] = "@mipmap/ic_launcher"
             manifestPlaceholders["appIconRound"] = "@mipmap/ic_launcher_round"
         }
-        create("fulldev") {
-            applicationId = "info.nightscout.androidaps.dev"
-            dimension = "standard"
-            resValue("string", "app_name", "AAPS Dev")
-            versionName = Versions.appVersion + "-dev"
-        }
-        create("pumpcontrol") {
+create("pumpcontrol") {
             applicationId = "info.nightscout.aapspumpcontrol"
             dimension = "standard"
             resValue("string", "app_name", "Pumpcontrol")
