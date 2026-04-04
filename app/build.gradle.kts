@@ -105,12 +105,12 @@ android {
             isDefault = true
             applicationId = "info.nightscout.androidaps.dev"
             dimension = "standard"
-            resValue("string", "app_name", "AAPS")
+            resValue("string", "app_name", "AAPS DEV")
             versionName = Versions.appVersion
             manifestPlaceholders["appIcon"] = "@mipmap/ic_launcher"
             manifestPlaceholders["appIconRound"] = "@mipmap/ic_launcher_round"
         }
-create("pumpcontrol") {
+        create("pumpcontrol") {
             applicationId = "info.nightscout.aapspumpcontrol"
             dimension = "standard"
             resValue("string", "app_name", "Pumpcontrol")
