@@ -48,6 +48,15 @@ fun app.aaps.database.entities.APSResult.fromDb(apsResultProvider: Provider<APSR
                 result.autosensResult = this.autosensDataJson?.let { Json.decodeFromString(it) }
             }
 
+        app.aaps.database.entities.APSResult.Algorithm.AIMI -> {
+            val result = apsResultProvider.get()
+            result.algorithm = APSResult.Algorithm.AIMI
+            result.date = this.timestamp
+            result.iobData = this.iobDataJson?.let { Json.decodeFromString(it) }
+            result.mealData = this.mealDataJson?.let { Json.decodeFromString(it) }
+            result.autosensResult = this.autosensDataJson?.let { Json.decodeFromString(it) }
+            result
+        }
         else                                                    -> error("Unsupported")
     }
 
