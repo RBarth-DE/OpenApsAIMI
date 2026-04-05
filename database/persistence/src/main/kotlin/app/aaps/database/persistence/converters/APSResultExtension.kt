@@ -81,6 +81,18 @@ fun APSResult.toDb(): app.aaps.database.entities.APSResult =
                 resultJson = Json.encodeToString(RT.serializer(), this.rawData() as RT)
             )
 
+        APSResult.Algorithm.AIMI ->
+            app.aaps.database.entities.APSResult(
+                timestamp = this.date,
+                algorithm = this.algorithm.toDb(),
+                glucoseStatusJson = null,
+                currentTempJson = null,
+                iobDataJson = null,
+                profileJson = null,
+                mealDataJson = null,
+                autosensDataJson = null,
+                resultJson = "{}"
+            )
         else                         -> error("Unsupported")
     }
 
