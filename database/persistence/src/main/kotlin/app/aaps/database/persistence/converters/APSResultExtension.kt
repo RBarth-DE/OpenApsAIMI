@@ -101,6 +101,7 @@ fun app.aaps.database.entities.APSResult.Algorithm.fromDb(): APSResult.Algorithm
         app.aaps.database.entities.APSResult.Algorithm.AMA      -> APSResult.Algorithm.AMA
         app.aaps.database.entities.APSResult.Algorithm.SMB      -> APSResult.Algorithm.SMB
         app.aaps.database.entities.APSResult.Algorithm.AUTO_ISF -> APSResult.Algorithm.AUTO_ISF
+        app.aaps.database.entities.APSResult.Algorithm.AIMI      -> APSResult.Algorithm.AIMI
         else                                                    -> error("Unsupported")
     }
 
@@ -109,6 +110,7 @@ fun APSResult.Algorithm.toDb(): app.aaps.database.entities.APSResult.Algorithm =
         APSResult.Algorithm.AMA      -> app.aaps.database.entities.APSResult.Algorithm.AMA
         APSResult.Algorithm.SMB      -> app.aaps.database.entities.APSResult.Algorithm.SMB
         APSResult.Algorithm.AUTO_ISF -> app.aaps.database.entities.APSResult.Algorithm.AUTO_ISF
+        APSResult.Algorithm.AIMI      -> app.aaps.database.entities.APSResult.Algorithm.AIMI
         APSResult.Algorithm.AIMI ->
             app.aaps.database.entities.APSResult(
                 timestamp = this.date,
