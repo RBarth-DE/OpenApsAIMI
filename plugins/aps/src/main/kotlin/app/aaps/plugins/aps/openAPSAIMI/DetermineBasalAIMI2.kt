@@ -404,7 +404,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
     private var consoleError = mutableListOf<String>()
     private var consoleLog = mutableListOf<String>()
     private var lastAutodriveActionTime: Long = 0L  // FCL 14.1 Cooldown State
-    private val externalDir = File(Environment.getExternalStorageDirectory().absolutePath + "/Documents/AAPS")
+    private val externalDir = context.getExternalFilesDir(null) ?: File(Environment.getExternalStorageDirectory().absolutePath + "/Documents/AAPS")
     //private val modelFile = File(externalDir, "ml/model.tflite")
     //private val modelFileUAM = File(externalDir, "ml/modelUAM.tflite")
     private val csvfile = File(externalDir, "oapsaimiML2_records.csv")
@@ -1566,12 +1566,14 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             "$peakintermediaire,$latestAdjustedDia"
 
 
-        if (!csvfile.exists()) {
-            csvfile.parentFile?.mkdirs()
-            csvfile.createNewFile()
-            csvfile.appendText(headerRow)
-        }
-        csvfile.appendText(valuesToRecord + "\n")
+        try {
+            if (!csvfile.exists()) {
+                csvfile.parentFile?.mkdirs()
+                csvfile.createNewFile()
+                csvfile.appendText(headerRow)
+            }
+            csvfile.appendText(valuesToRecord + "\n")
+        } catch (e: Exception) { /* CSV write failed */ }
     }
 
     private fun logDataToCsv(predictedSMB: Float, smbToGive: Float) {
@@ -8329,7 +8331,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                      decisionsFile.parentFile?.mkdirs()
                      decisionsFile.createNewFile()
                 }
-                decisionsFile.appendText("$medicalJson\n")
+                try { decisionsFile.appendText("$medicalJson\n") } catch (e: Exception) { /* CSV write failed */ }
             } catch (e: Exception) {
                 consoleError.add("Failed to save AIMI Decision JSON: ${e.message}")
             }
