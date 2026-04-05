@@ -8,7 +8,11 @@
     <application>
         <activity
             android:name="app.aaps.plugins.aps.openAPSAIMI.physio.AIMIHealthConnectPermissionActivityMTR"
-            android:exported="false" />
+            android:exported="true">
+            <intent-filter>
+                <action android:name="androidx.health.ACTION_SHOW_PERMISSIONS_RATIONALE" />
+            </intent-filter>
+        </activity>
         <activity
             android:name="app.aaps.plugins.aps.openAPSAIMI.physio.AIMIHealthConnectSyncServiceMTR"
             android:exported="false" />
