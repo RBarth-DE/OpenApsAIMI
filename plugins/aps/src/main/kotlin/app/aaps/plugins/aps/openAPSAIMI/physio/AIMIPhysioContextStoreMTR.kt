@@ -64,10 +64,8 @@ class AIMIPhysioContextStoreMTR @Inject constructor(
     
     // Storage directory
     private val storageDir: File by lazy {
-        val dir = File(
-            android.os.Environment.getExternalStorageDirectory(),
-            "Documents/AAPS"
-        )
+        val dir = context.getExternalFilesDir(null)
+            ?: File(android.os.Environment.getExternalStorageDirectory(), "Documents/AAPS")
         if (!dir.exists()) {
             dir.mkdirs()
         }
