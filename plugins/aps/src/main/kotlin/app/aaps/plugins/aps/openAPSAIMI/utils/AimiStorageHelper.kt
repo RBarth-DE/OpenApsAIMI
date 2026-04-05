@@ -65,7 +65,7 @@ class AimiStorageHelper @Inject constructor(
         
         // 1️⃣ Tenter Documents/AAPS d'abord (préféré pour cohérence AIMI)
         try {
-            val docsDir = File(Environment.getExternalStorageDirectory(), "Documents/AAPS")
+            val docsDir = context.getExternalFilesDir(null) ?: File(android.os.Environment.getExternalStorageDirectory(), "Documents/AAPS")
             
             // Créer le répertoire s'il n'existe pas
             if (!docsDir.exists()) {

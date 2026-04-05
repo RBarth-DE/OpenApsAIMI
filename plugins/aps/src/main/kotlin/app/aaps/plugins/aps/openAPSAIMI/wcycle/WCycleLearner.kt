@@ -22,7 +22,7 @@ class WCycleLearner(
 
     // 🔧 FIX: Use standard /Documents/AAPS path like all other AIMI components
     private val dir by lazy { 
-        File(Environment.getExternalStorageDirectory().absolutePath + "/Documents/AAPS")
+        context.getExternalFilesDir(null) ?: File(android.os.Environment.getExternalStorageDirectory(), "Documents/AAPS")
     }
     private val learnedFile by lazy { File(dir, "oapsaimi_wcycle_learned.json") }
 

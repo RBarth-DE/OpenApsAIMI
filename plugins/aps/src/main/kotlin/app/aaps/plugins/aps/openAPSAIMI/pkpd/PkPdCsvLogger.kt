@@ -35,7 +35,7 @@ data class PkPdLogRow(
 )
 
 object PkPdCsvLogger {
-    private val externalDir = File(Environment.getExternalStorageDirectory().absolutePath + "/Documents/AAPS")
+    private val externalDir = context.getExternalFilesDir(null) ?: File(android.os.Environment.getExternalStorageDirectory(), "Documents/AAPS")
     private val PATH = File(externalDir, "oapsaimi_pkpd_records.csv")
     private const val TAG = "PkPdCsvLogger"
 

@@ -12,7 +12,7 @@ class WCycleCsvLogger(private val ctx: Context) {
     private val TAG = "WCycleCsvLogger"
 
     // 🔧 FIX: Use ONLY standard /Documents/AAPS path (no app-specific fallback)
-    private val dir = File(Environment.getExternalStorageDirectory().absolutePath + "/Documents/AAPS")
+    private val dir = context.getExternalFilesDir(null) ?: File(android.os.Environment.getExternalStorageDirectory(), "Documents/AAPS")
     private val file = File(dir, "oapsaimi_wcycle.csv")
 
     private val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US)
