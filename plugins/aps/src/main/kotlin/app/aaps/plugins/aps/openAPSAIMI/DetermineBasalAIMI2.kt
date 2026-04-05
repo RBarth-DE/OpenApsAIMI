@@ -4757,7 +4757,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         )
         
         var rT = RT(
-            algorithm = APSResult.Algorithm.SMB,
+            algorithm = APSResult.Algorithm.AIMI,
             runningDynamicIsf = dynIsfMode,
             timestamp = currentTime,
             consoleLog = consoleLog,
