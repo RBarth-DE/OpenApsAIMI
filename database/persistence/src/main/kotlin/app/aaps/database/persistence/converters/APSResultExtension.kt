@@ -81,19 +81,7 @@ fun APSResult.toDb(): app.aaps.database.entities.APSResult =
                 resultJson = Json.encodeToString(RT.serializer(), this.rawData() as RT)
             )
 
-        APSResult.Algorithm.AIMI ->
-            app.aaps.database.entities.APSResult(
-                timestamp = this.date,
-                algorithm = this.algorithm.toDb(),
-                glucoseStatusJson = null,
-                currentTempJson = this.currentTemp?.let { Json.encodeToString(CurrentTemp.serializer(), it) },
-                iobDataJson = this.iobData?.let { Json.encodeToString(ArraySerializer(IobTotal.serializer()), it) },
-                profileJson = null,
-                mealDataJson = this.mealData?.let { Json.encodeToString(MealData.serializer(), it) },
-                autosensDataJson = this.autosensResult?.let { Json.encodeToString(AutosensResult.serializer(), it) },
-                resultJson = Json.encodeToString(RT.serializer(), this.rawData() as RT)
-            )
-                else                         -> error("Unsupported")
+        else                         -> error("Unsupported")
     }
 
 fun app.aaps.database.entities.APSResult.Algorithm.fromDb(): APSResult.Algorithm =
@@ -111,17 +99,5 @@ fun APSResult.Algorithm.toDb(): app.aaps.database.entities.APSResult.Algorithm =
         APSResult.Algorithm.SMB      -> app.aaps.database.entities.APSResult.Algorithm.SMB
         APSResult.Algorithm.AUTO_ISF -> app.aaps.database.entities.APSResult.Algorithm.AUTO_ISF
         APSResult.Algorithm.AIMI      -> app.aaps.database.entities.APSResult.Algorithm.AIMI
-        APSResult.Algorithm.AIMI ->
-            app.aaps.database.entities.APSResult(
-                timestamp = this.date,
-                algorithm = this.algorithm.toDb(),
-                glucoseStatusJson = null,
-                currentTempJson = this.currentTemp?.let { Json.encodeToString(CurrentTemp.serializer(), it) },
-                iobDataJson = this.iobData?.let { Json.encodeToString(ArraySerializer(IobTotal.serializer()), it) },
-                profileJson = null,
-                mealDataJson = this.mealData?.let { Json.encodeToString(MealData.serializer(), it) },
-                autosensDataJson = this.autosensResult?.let { Json.encodeToString(AutosensResult.serializer(), it) },
-                resultJson = Json.encodeToString(RT.serializer(), this.rawData() as RT)
-            )
-                else                         -> error("Unsupported")
+        else                         -> error("Unsupported")
     }
