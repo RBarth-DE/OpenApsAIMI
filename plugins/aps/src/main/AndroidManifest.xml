@@ -1,4 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-
+    <application>
+        <activity
+            android:name="app.aaps.plugins.aps.openAPSAIMI.physio.AIMIHealthConnectPermissionActivityMTR"
+            android:exported="false" />
+        <activity
+            android:name="app.aaps.plugins.aps.openAPSAIMI.physio.AIMIHealthConnectSyncServiceMTR"
+            android:exported="false" />
+        <activity
+            android:name="app.aaps.plugins.aps.openAPSAIMI.advisor.AimiModeSettingsActivity"
+            android:exported="false" />
+        <activity
+            android:name="app.aaps.plugins.aps.openAPSAIMI.context.ui.ContextActivity"
+            android:exported="false" />
+        <activity
+            android:name="app.aaps.plugins.aps.openAPSAIMI.advisor.pulse.AimiPulseDetailActivity"
+            android:exported="false" />
+    </application>
 </manifest>
