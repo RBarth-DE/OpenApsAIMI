@@ -59,7 +59,7 @@ fun APSResult.toDb(): app.aaps.database.entities.APSResult =
             app.aaps.database.entities.APSResult(
                 timestamp = this.date,
                 algorithm = this.algorithm.toDb(),
-                glucoseStatusJson = this.glucoseStatus?.let { Json.encodeToString(GlucoseStatusSMB.serializer(), it as GlucoseStatusSMB) },
+                glucoseStatusJson = this.glucoseStatus?.let { gs -> if (gs is GlucoseStatusSMB) Json.encodeToString(GlucoseStatusSMB.serializer(), gs) else null },
                 currentTempJson = this.currentTemp?.let { Json.encodeToString(CurrentTemp.serializer(), it) },
                 iobDataJson = this.iobData?.let { Json.encodeToString(ArraySerializer(IobTotal.serializer()), it) },
                 profileJson = this.oapsProfile?.let { Json.encodeToString(OapsProfile.serializer(), it) },
