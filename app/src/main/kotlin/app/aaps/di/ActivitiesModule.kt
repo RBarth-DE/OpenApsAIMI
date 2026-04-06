@@ -5,6 +5,7 @@ import app.aaps.activities.HistoryBrowseActivity
 import app.aaps.activities.MyPreferenceFragment
 import app.aaps.activities.PreferencesActivity
 import dagger.Module
+import app.aaps.plugins.aps.OpenAPSFragment
 import dagger.android.ContributesAndroidInjector
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
@@ -18,4 +19,5 @@ abstract class ActivitiesModule {
     @ContributesAndroidInjector abstract fun contributesMainActivity(): MainActivity
     @ContributesAndroidInjector abstract fun contributesPreferencesActivity(): PreferencesActivity
     @ContributesAndroidInjector abstract fun contributesPreferencesFragment(): MyPreferenceFragment
+    @ContributesAndroidInjector abstract fun contributesOpenAPSFragment(): OpenAPSFragment
 }
