@@ -429,7 +429,7 @@ class AuditorDataCollector @Inject constructor(
         // Get TDD stats
         val tdd7d = try {
             tddCalculator.averageTDD(
-                tddCalculator.calculate(7, allowMissingDays = true)
+                runBlocking { tddCalculator.calculate(7, allowMissingDays = true) }
             )?.data?.totalAmount ?: 0.0
         } catch (e: Exception) {
             0.0

@@ -66,9 +66,9 @@ class KalmanISFCalculator(
 
     private fun computeEffectiveTDD(): Double {
         val tdd7P = preferences.get(DoubleKey.OApsAIMITDD7)
-        val tdd7D = tddCalculator.averageTDD(tddCalculator.calculate(7, allowMissingDays = false))?.data?.totalAmount ?: tdd7P
-        val tdd2Days = tddCalculator.averageTDD(tddCalculator.calculate(2, allowMissingDays = false))?.data?.totalAmount ?: tdd7P
-        val tddDaily = tddCalculator.averageTDD(tddCalculator.calculate(1, allowMissingDays = false))?.data?.totalAmount ?: tdd7P
+        val tdd7D = tddCalculator.averageTDD(runBlocking { tddCalculator.calculate(7, allowMissingDays = false) })?.data?.totalAmount ?: tdd7P
+        val tdd2Days = tddCalculator.averageTDD(runBlocking { tddCalculator.calculate(2, allowMissingDays = false) })?.data?.totalAmount ?: tdd7P
+        val tddDaily = tddCalculator.averageTDD(runBlocking { tddCalculator.calculate(1, allowMissingDays = false) })?.data?.totalAmount ?: tdd7P
         return (0.2 * tdd7D) + (0.4 * tdd2Days) + (0.4 * tddDaily)
     }
 

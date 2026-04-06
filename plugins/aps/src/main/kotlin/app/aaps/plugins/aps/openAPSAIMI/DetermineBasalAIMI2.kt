@@ -1830,7 +1830,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         chainAfterRefractory = gatedUnits
 
          // 🔧 FIX 2: Adaptive AbsorptionGuard threshold (pediatric-safe)
-         val tdd24h = tddCalculator.calculateDaily(-24, 0)?.totalAmount ?: 30.0
+         val tdd24h = runBlocking { tddCalculator.calculateDaily(-24, 0) }?.totalAmount ?: 30.0
          val activityThreshold = (tdd24h / 24.0) * 0.15 // 15% of hourly TDD
          
         if (sinceBolus < 20.0 && iobActivityNow > activityThreshold && !isExplicitUserAction && !mealPriorityContext) {
@@ -5540,7 +5540,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             mealFlags = mealFlags
         )
         // tdd7P already hoisted to start of function
-        var tdd24Hrs = tddCalculator.calculateDaily(-24, 0)?.totalAmount?.toFloat() ?: 0.0f
+        var tdd24Hrs = runBlocking { tddCalculator.calculateDaily(-24, 0) }?.totalAmount?.toFloat() ?: 0.0f
         if (tdd24Hrs == 0.0f) tdd24Hrs = tdd7P.toFloat()
         // TODO eliminate
         val bgTime = glucoseStatus.date
@@ -5704,11 +5704,11 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         // tdd7Days already hoisted to start of function
         this.tdd7DaysPerHour = (tdd7Days / 24).toFloat()
 
-        var tdd2Days = tddCalculator.averageTDD(tddCalculator.calculate(2, allowMissingDays = false))?.data?.totalAmount?.toFloat() ?: 0.0f
+        var tdd2Days = tddCalculator.averageTDD(runBlocking { tddCalculator.calculate(2, allowMissingDays = false) })?.data?.totalAmount?.toFloat() ?: 0.0f
         if (tdd2Days == 0.0f || tdd2Days < tdd7P) tdd2Days = tdd7P.toFloat()
         this.tdd2DaysPerHour = tdd2Days / 24
 
-        var tddDaily = tddCalculator.averageTDD(tddCalculator.calculate(1, allowMissingDays = false))?.data?.totalAmount?.toFloat() ?: 0.0f
+        var tddDaily = tddCalculator.averageTDD(runBlocking { tddCalculator.calculate(1, allowMissingDays = false) })?.data?.totalAmount?.toFloat() ?: 0.0f
         if (tddDaily == 0.0f || tddDaily < tdd7P / 2) tddDaily = tdd7P.toFloat()
         this.tddPerHour = tddDaily / 24
 
@@ -7473,7 +7473,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             //rT.reason.append("Eventual BG " + convertBG(eventualBG) + " >= " + convertBG(max_bg) + ", ")
             rT.reason.append(context.getString(R.string.reason_eventual_bg, convertBG(eventualBG), convertBG(max_bg)))
         }
-        val tdd24h = tddCalculator.averageTDD(tddCalculator.calculate(1, allowMissingDays = false))?.data?.totalAmount ?: 0.0
+        val tdd24h = tddCalculator.averageTDD(runBlocking { tddCalculator.calculate(1, allowMissingDays = false) })?.data?.totalAmount ?: 0.0
         val tirInHypo = tirCalculator.averageTIR(runBlocking { tirCalculator.calculate(1, 65.0, 180.0) })?.let { if (it.count > 0) it.below * 100.0 / it.count else 0.0 } ?: 0.0
         val safetyDecision = safetyAdjustment(
             currentBG = glucoseStatus.glucose.toFloat(),
@@ -8552,7 +8552,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         val predChunk = "${if (predAvailable) "Y" else "N"}(sz=${predSize} ev=${eventual.roundToInt()})"
 
         // 🔧 FIX 4: Enhanced diagnostic logging with activity threshold
-        val tdd24h = tddCalculator.calculateDaily(-24, 0)?.totalAmount ?: 30.0
+        val tdd24h = runBlocking { tddCalculator.calculateDaily(-24, 0) }?.totalAmount ?: 30.0
         val activityThreshold = (tdd24h / 24.0) * 0.15
         
         // 🧬 Unified Learning Update (Centralized)

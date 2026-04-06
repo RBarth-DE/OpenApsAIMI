@@ -276,7 +276,7 @@ class AimiAdvisorService {
         // 2. Calculate Real TDD
         if (tddCalculator != null) {
             try {
-                val tdds = tddCalculator.calculate(days.toLong(), true)
+                val tdds = runBlocking { tddCalculator.calculate(days.toLong(), true) }
                 val avgTdd = tddCalculator.averageTDD(tdds)
                 
                 if (avgTdd != null) {
@@ -286,7 +286,7 @@ class AimiAdvisorService {
                     }
                 }
                 
-                val today = tddCalculator.calculateToday()
+                val today = runBlocking { tddCalculator.calculateToday() }
                 if (today != null) {
                     todayTdd = today.totalAmount
                 }

@@ -83,7 +83,6 @@ import app.aaps.core.validators.preferences.AdaptiveSwitchPreference
 import app.aaps.core.validators.preferences.AdaptiveUnitPreference
 import app.aaps.core.validators.DefaultEditTextValidator
 import app.aaps.core.validators.EditTextValidator
-import app.aaps.plugins.aps.OpenAPSFragment
 import app.aaps.plugins.aps.R
 import app.aaps.plugins.aps.events.EventOpenAPSUpdateGui
 import app.aaps.plugins.aps.events.EventResetOpenAPSGui
@@ -147,7 +146,6 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
 ) : PluginBaseWithPreferences(
     PluginDescription()
         .mainType(PluginType.APS)
-        .fragmentClass(OpenAPSFragment::class.java.name)
         .pluginIcon(app.aaps.core.ui.R.drawable.ic_generic_icon)
         .pluginName(R.string.openapsaimi)
         .shortName(R.string.oaps_aimi_shortname)
@@ -402,7 +400,7 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
     // ISF basé TDD (ancre 1800/TDD 24h) avec garde-fous
     private fun tddIsf24hOr(profileIsf: Double): Double {
         val tdd24 = tddCalculator
-            .averageTDD(tddCalculator.calculate(1, allowMissingDays = false))
+            .averageTDD(runBlocking { tddCalculator.calculate(1, allowMissingDays = false) })
             ?.data?.totalAmount
             ?: preferences.get(DoubleKey.OApsAIMITDD7) // fallback 7j
         val anchored = if (tdd24 > 0.1) 1800.0 / tdd24 else profileIsf
@@ -489,7 +487,7 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
         aapsLogger.debug(LTag.APS, "Fused slow ISF: $fusedSlowIsf (profile=$profileIsf, tddIsf=$tddIsf, pkpdScale=$lastPkpdScale)")
 
         // 5) EMA TDD (stabilise l’ajustement AF)
-        val tdd24 = tddCalculator.calculateDaily(-24, 0)?.totalAmount ?: tddIsf /* fallback */
+        val tdd24 = runBlocking { tddCalculator.calculateDaily(-24, 0) }?.totalAmount ?: tddIsf /* fallback */
         tddEma = when (val prev = tddEma) {
             null -> tdd24
             else -> prev + TDD_EMA_ALPHA * (tdd24 - prev)
@@ -662,7 +660,7 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
             val minTDD = 10.0
 //
 // Récupération et ajustement du TDD sur 7 jours
-            val tdd7D = tddCalculator.averageTDD(tddCalculator.calculate(7, allowMissingDays = false))
+            val tdd7D = tddCalculator.averageTDD(runBlocking { tddCalculator.calculate(7, allowMissingDays = false) })
             if (tdd7D != null && tdd7D.data.totalAmount > tdd7P && tdd7D.data.totalAmount > 1.3 * tdd7P) {
                 tdd7D.data.totalAmount = 1.2 * tdd7P
                 aapsLogger.info(LTag.APS, "TDD for 7 days limited to 10% increase. New TDD7D: ${tdd7D.data.totalAmount}")
@@ -673,14 +671,14 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
             }
 
             // Calcul du TDD sur 2 jours
-            var tdd2Days = tddCalculator.averageTDD(tddCalculator.calculate(2, allowMissingDays = false))?.data?.totalAmount ?: 0.0
+            var tdd2Days = tddCalculator.averageTDD(runBlocking { tddCalculator.calculate(2, allowMissingDays = false) })?.data?.totalAmount ?: 0.0
             if (tdd2Days == 0.0 || tdd2Days < tdd7P) tdd2Days = tdd7P
 //
             val tdd2DaysPerHour = tdd2Days / 24
             val tddLast4H = tdd2DaysPerHour * 4
 //
 // Calcul du TDD sur 1 jour avec une limite minimale pour éviter des instabilités
-            var tddDaily = tddCalculator.averageTDD(tddCalculator.calculate(1, allowMissingDays = false))?.data?.totalAmount ?: 0.0
+            var tddDaily = tddCalculator.averageTDD(runBlocking { tddCalculator.calculate(1, allowMissingDays = false) })?.data?.totalAmount ?: 0.0
             if (tddDaily == 0.0 || tddDaily < tdd7P / 2) tddDaily = maxOf(tdd7P, minTDD)
 
             if (tddDaily > tdd7P && tddDaily > 1.1 * tdd7P) {
@@ -688,7 +686,7 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
                 aapsLogger.info(LTag.APS, "TDD for 1 day limited to 10% increase. New TDDDaily: $tddDaily")
             }
 // // Calcul du TDD sur 24 heures
-            var tdd24Hrs = tddCalculator.calculateDaily(-24, 0)?.totalAmount ?: 0.0
+            var tdd24Hrs = runBlocking { tddCalculator.calculateDaily(-24, 0) }?.totalAmount ?: 0.0
             if (tdd24Hrs == 0.0) tdd24Hrs = tdd7P
             val tdd24HrsPerHour = tdd24Hrs / 24
             val tddLast8to4H = tdd24HrsPerHour * 4
@@ -887,7 +885,7 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
 
             lastPkpdScale = pkpdRuntimeNow?.pkpdScale ?: 1.0
             aapsLogger.debug(LTag.APS, "PK/PD: pkpdScale=$lastPkpdScale (bg=$bgNow, delta=$deltaNow, iob=$iobNow, tdd24=$tdd24ForPk, isfRaw=$profileIsfRaw)")
-            val tdd4D = tddCalculator.averageTDD(tddCalculator.calculate(4, allowMissingDays = false))
+            val tdd4D = tddCalculator.averageTDD(runBlocking { tddCalculator.calculate(4, allowMissingDays = false) })
             val oapsProfile = OapsProfileAimi(
                 dia = hardLimits.minDia(),
                 min_5m_carbimpact = 0.0, // not used
