@@ -56,6 +56,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.aaps.core.data.model.RM
 import app.aaps.core.data.model.TT
 import app.aaps.core.interfaces.notifications.AapsNotification
+import app.aaps.core.interfaces.pump.BolusProgressState
+import app.aaps.core.keys.IntKey
 import app.aaps.core.ui.compose.AapsTheme
 import app.aaps.core.ui.compose.LocalConfig
 import app.aaps.core.ui.compose.LocalDateUtil
@@ -64,8 +66,11 @@ import app.aaps.core.ui.compose.icons.IcSettingsOff
 import app.aaps.core.ui.compose.navigation.ElementType
 import app.aaps.core.ui.compose.navigation.NavigationRequest
 import app.aaps.core.ui.compose.preference.AdaptivePreferenceList
+import app.aaps.core.ui.compose.preference.PreferenceCategory
 import app.aaps.core.ui.compose.preference.PreferenceSubScreenDef
 import app.aaps.core.ui.compose.preference.ProvidePreferenceTheme
+import app.aaps.core.ui.compose.pump.PumpActivityDialog
+import app.aaps.core.ui.compose.pump.PumpActivityFab
 import app.aaps.core.ui.compose.statusLevelToColor
 import app.aaps.ui.compose.main.TempTargetChipState
 import app.aaps.ui.compose.manageSheet.ManageViewModel
@@ -109,6 +114,11 @@ fun OverviewScreen(
     onAutoShowConsumed: () -> Unit,
     paddingValues: PaddingValues,
     fabBottomOffset: Dp = 0.dp,
+    bolusState: BolusProgressState? = null,
+    pumpStatusText: String = "",
+    queueStatusText: String? = null,
+    isPumpCommunicating: Boolean = false,
+    onStopBolus: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val config = LocalConfig.current
@@ -119,6 +129,14 @@ fun OverviewScreen(
 
     // Notification bottom sheet state
     var showNotificationSheet by remember { mutableStateOf(false) }
+    // Pump activity dialog state
+    var showPumpActivityDialog by remember { mutableStateOf(false) }
+    val showPumpFab = isPumpCommunicating || (bolusState != null && bolusState.isSMB)
+
+    // Auto-close pump dialog when bolus ends
+    LaunchedEffect(bolusState) {
+        if (bolusState == null) showPumpActivityDialog = false
+    }
 
     // Auto-show bottom sheet on resume when urgent notifications exist
     LaunchedEffect(autoShowNotificationSheet) {
@@ -264,8 +282,19 @@ fun OverviewScreen(
             }
 
             // Graph content - New Compose/Vico graphs
-            GraphsSection(graphViewModel = graphViewModel)
+            GraphsSection(graphViewModel = graphViewModel, isSimpleMode = isSimpleMode)
         }
+
+        // Pump activity FAB — visible during pump communication or SMB
+        PumpActivityFab(
+            visible = showPumpFab,
+            bolusState = bolusState,
+            onClick = { showPumpActivityDialog = true },
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(paddingValues)
+                .padding(end = 16.dp, bottom = 128.dp + fabBottomOffset)
+        )
 
         // Notification FAB overlay
         NotificationFab(
@@ -276,6 +305,18 @@ fun OverviewScreen(
                 .align(Alignment.BottomEnd)
                 .padding(paddingValues)
                 .padding(end = 16.dp, bottom = 72.dp + fabBottomOffset)
+        )
+    }
+
+    // Pump activity dialog (non-modal, opened from FAB)
+    if (showPumpActivityDialog) {
+        PumpActivityDialog(
+            bolusState = bolusState,
+            pumpStatus = pumpStatusText,
+            queueStatus = queueStatusText,
+            isModal = false,
+            onStop = onStopBolus,
+            onDismiss = { showPumpActivityDialog = false }
         )
     }
 
@@ -305,6 +346,7 @@ private fun OverviewStatusSection(
 ) {
     val items = listOfNotNull(cannulaStatus, insulinStatus, sensorStatus, batteryStatus)
     if (items.isEmpty()) return
+    val compactItems = items.filter { it.compactAge || (it.compactLevel && it.level != null) }
 
     var expanded by rememberSaveable { mutableStateOf(false) }
     var showSettingsSheet by rememberSaveable { mutableStateOf(false) }
@@ -367,7 +409,7 @@ private fun OverviewStatusSection(
                         horizontalArrangement = Arrangement.SpaceEvenly,
                         verticalArrangement = Arrangement.spacedBy(2.dp)
                     ) {
-                        items.forEach { item ->
+                        compactItems.forEach { item ->
                             CompactStatusItem(item = item)
                         }
                     }
@@ -447,6 +489,14 @@ private fun StatusLightsSettingsContent(
 ) {
     var showCopyDialog by remember { mutableStateOf(false) }
 
+    // Group items by status light category
+    val groups = listOf(
+        stringResource(app.aaps.core.ui.R.string.cannula) to listOf(IntKey.OverviewCageWarning, IntKey.OverviewCageCritical),
+        stringResource(app.aaps.core.ui.R.string.insulin_label) to listOf(IntKey.OverviewIageWarning, IntKey.OverviewIageCritical, IntKey.OverviewResWarning, IntKey.OverviewResCritical),
+        stringResource(app.aaps.core.ui.R.string.sensor_label) to listOf(IntKey.OverviewSageWarning, IntKey.OverviewSageCritical, IntKey.OverviewSbatWarning, IntKey.OverviewSbatCritical),
+        stringResource(app.aaps.core.ui.R.string.pb_label) to listOf(IntKey.OverviewBageWarning, IntKey.OverviewBageCritical, IntKey.OverviewBattWarning, IntKey.OverviewBattCritical)
+    )
+
     Column(
         modifier = Modifier
             .verticalScroll(rememberScrollState())
@@ -460,11 +510,12 @@ private fun StatusLightsSettingsContent(
             modifier = Modifier.padding(horizontal = 24.dp, vertical = 12.dp)
         )
 
-        // Settings list
+        // Grouped settings
         ProvidePreferenceTheme {
-            AdaptivePreferenceList(
-                items = settingsDef.items
-            )
+            groups.forEach { (categoryTitle, keys) ->
+                PreferenceCategory(title = { Text(categoryTitle) })
+                AdaptivePreferenceList(items = keys)
+            }
         }
 
         // "Copy from Nightscout" button
@@ -494,6 +545,10 @@ private fun StatusLightsSettingsContent(
 
 @Composable
 private fun CompactStatusItem(item: StatusItem) {
+    val showAge = item.compactAge
+    val showLevel = item.compactLevel && item.level != null
+    if (!showAge && !showLevel) return
+
     val ageColor = statusLevelToColor(item.ageStatus)
     val levelColor = if (item.level != null) statusLevelToColor(item.levelStatus) else ageColor
 
@@ -509,12 +564,14 @@ private fun CompactStatusItem(item: StatusItem) {
         Spacer(modifier = Modifier.width(2.dp))
         Text(
             text = buildAnnotatedString {
-                withStyle(SpanStyle(color = ageColor)) {
-                    append(item.age)
+                if (showAge) {
+                    withStyle(SpanStyle(color = ageColor)) {
+                        append(item.age)
+                    }
                 }
-                if (item.level != null) {
+                if (showLevel) {
                     withStyle(SpanStyle(color = levelColor)) {
-                        append(" ")
+                        if (showAge) append(" ")
                         append(item.level)
                     }
                 }

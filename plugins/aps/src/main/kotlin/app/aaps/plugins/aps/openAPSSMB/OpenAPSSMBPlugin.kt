@@ -73,7 +73,6 @@ import app.aaps.core.validators.preferences.AdaptiveIntPreference
 import app.aaps.core.validators.preferences.AdaptiveIntentPreference
 import app.aaps.core.validators.preferences.AdaptiveSwitchPreference
 import app.aaps.core.validators.preferences.AdaptiveUnitPreference
-import app.aaps.plugins.aps.OpenAPSFragment
 import app.aaps.plugins.aps.R
 import app.aaps.plugins.aps.events.EventOpenAPSUpdateGui
 import app.aaps.plugins.aps.events.EventResetOpenAPSGui
@@ -118,7 +117,6 @@ open class OpenAPSSMBPlugin @Inject constructor(
 ) : PluginBaseWithPreferences(
     PluginDescription()
         .mainType(PluginType.APS)
-        .fragmentClass(OpenAPSFragment::class.java.name)
         .composeContent { plugin ->
             app.aaps.plugins.aps.compose.OpenAPSComposeContent(
                 apsPlugin = plugin as APS,
@@ -283,7 +281,7 @@ open class OpenAPSSMBPlugin @Inject constructor(
             "DynIsfResult: tdd1D=$tdd1D tdd7D=$tdd7D tddLast24H=$tddLast24H tddLast4H=$tddLast4H tddLast8to4H=$tddLast8to4H tdd=$tdd variableSensitivity=$variableSensitivity insulinDivisor=$insulinDivisor tdd7DDataCarbs=$tdd7DDataCarbs tdd7DAllDaysHaveCarbs=$tdd7DAllDaysHaveCarbs"
     }
 
-    private fun calculateRawDynIsf(multiplier: Double): DynIsfResult {
+    private suspend fun calculateRawDynIsf(multiplier: Double): DynIsfResult {
         val dynIsfResult = DynIsfResult()
         // DynamicISF specific
         // without these values DynISF doesn't work properly
