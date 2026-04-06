@@ -36,8 +36,13 @@ import app.aaps.core.keys.interfaces.Preferences
 object AimiUamHandler {
     private const val TAG = "AIMI-UAM"
     // Emplacement standard du modèle
-    private val externalDir = File(android.os.Environment.getExternalStorageDirectory(), "Documents/AAPS")
-    private val modelUamFile = File(externalDir, "ml/modelUAM.tflite")
+    private var externalDir: File = File(android.os.Environment.getExternalStorageDirectory(), "Documents/AAPS")
+    private var modelUamFile: File = File(externalDir, "ml/modelUAM.tflite")
+
+    fun initialize(context: android.content.Context) {
+        externalDir = context.getExternalFilesDir(null) ?: File(android.os.Environment.getExternalStorageDirectory(), "Documents/AAPS")
+        modelUamFile = File(externalDir, "ml/modelUAM.tflite")
+    }
     // Interpreter TFLite (lazy/persistant)
     @Volatile private var interpreter: Interpreter? = null
     private val lock = Any()

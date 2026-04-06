@@ -21,6 +21,7 @@ import app.aaps.core.data.model.GV
 import app.aaps.core.data.model.TrendArrow
 import app.aaps.core.data.model.SourceSensor
 import app.aaps.core.data.plugin.PluginType
+import app.aaps.plugins.aps.OpenAPSFragment
 import app.aaps.core.data.time.T
 import app.aaps.core.interfaces.aps.APS
 import app.aaps.core.interfaces.aps.APSResult
@@ -145,6 +146,7 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
     private val insulin: app.aaps.core.interfaces.insulin.Insulin
 ) : PluginBaseWithPreferences(
     PluginDescription()
+        .fragmentClass(OpenAPSFragment::class.java.name)
         .mainType(PluginType.APS)
         .pluginIcon(app.aaps.core.ui.R.drawable.ic_generic_icon)
         .pluginName(R.string.openapsaimi)
@@ -215,6 +217,7 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
             aapsLogger.error(LTag.APS, "❌ Failed to schedule AIMI Neural Trainer", e)
         }
         
+        AimiUamHandler.initialize(context)
         AimiUamHandler.clearCache(context)
         AimiUamHandler.installConfidenceSupplier {
             // retourne null si tu veux "laisser la main" au runtime
