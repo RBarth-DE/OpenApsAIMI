@@ -99,6 +99,26 @@ android {
         testInstrumentationRunner = "app.aaps.runners.InjectedTestRunner"
     }
 
+
+    val keystoreProps = java.util.Properties().apply {
+        rootProject.file("keystore.properties").takeIf { it.exists() }?.inputStream()?.use { load(it) }
+    }
+
+    signingConfigs {
+        create("release") {
+            storeFile = keystoreProps["storeFile"]?.let { file(it as String) }
+            storePassword = keystoreProps["storePassword"] as? String
+            keyAlias = keystoreProps["keyAlias"] as? String
+            keyPassword = keystoreProps["keyPassword"] as? String
+        }
+    }
+
+    buildTypes {
+        getByName("release") {
+            signingConfig = signingConfigs.getByName("release")
+        }
+    }
+
     flavorDimensions.add("standard")
     productFlavors {
         create("full") {
