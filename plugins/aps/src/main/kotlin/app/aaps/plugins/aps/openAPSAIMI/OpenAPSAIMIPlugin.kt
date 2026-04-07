@@ -46,6 +46,7 @@ import app.aaps.core.interfaces.plugin.ActivePlugin
 import app.aaps.core.interfaces.insulin.ConcentrationHelper
 import app.aaps.core.interfaces.insulin.Insulin
 import app.aaps.core.interfaces.plugin.PluginBase
+import app.aaps.core.interfaces.plugin.PluginBaseWithPreferences
 import app.aaps.core.interfaces.plugin.PluginDescription
 import app.aaps.core.interfaces.profile.EffectiveProfile
 import app.aaps.core.interfaces.profile.Profile
@@ -132,7 +133,7 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
     private val activePlugin: ActivePlugin,
     private val iobCobCalculator: IobCobCalculator,
     private val hardLimits: HardLimits,
-    private val preferences: Preferences,
+    preferences: Preferences,
     protected val dateUtil: DateUtil,
     private val processedTbrEbData: ProcessedTbrEbData,
     private val persistenceLayer: PersistenceLayer,
@@ -155,7 +156,7 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
     private val aimiBackupManager: AimiBackupManager, // ☁️ Cloud Backup Manager (Force Init)
     private val insulin: Insulin,
     private val ch: ConcentrationHelper,
-) : PluginBase(
+) : PluginBaseWithPreferences(
     PluginDescription()
         .fragmentClass(OpenAPSFragment::class.java.name)
         .composeContent { plugin ->
@@ -176,7 +177,8 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
         .showInList({ config.APS })
         .description(R.string.description_openapsaimi)
         .setDefault(),
-    aapsLogger, rh
+    ownPreferences = emptyList(),
+    aapsLogger, rh, preferences
 ), APS, PluginConstraints {
 
 
