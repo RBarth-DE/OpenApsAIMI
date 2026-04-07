@@ -1019,7 +1019,15 @@ class ComposeMainActivity : AppCompatActivity() {
                     activePlugin = activePlugin,
                     rh = rh,
                     builtInSearchables = builtInSearchables,
-                    onBackClick = { navController.safePopBackStack() }
+                    onBackClick = { navController.safePopBackStack() },
+                    onOpenLegacyXmlPreferences = {
+                        withProtection(ProtectionCheck.Protection.PREFERENCES) {
+                            startActivity(
+                                Intent(this@ComposeMainActivity, uiInteraction.preferencesActivity)
+                                    .setAction("info.nightscout.androidaps.MainActivity")
+                            )
+                        }
+                    }
                 )
             }
 
@@ -1190,13 +1198,6 @@ class ComposeMainActivity : AppCompatActivity() {
                     onPreferenceClick = {
                         navController.navigate(AppRoute.SiteRotationSettings.route)
                     }
-                )
-            }
-
-            composable(AppRoute.SiteRotationSettings.route) {
-                SiteRotationSettingsScreen(
-                    viewModel = siteRotationManagementViewModel,
-                    onNavigateBack = { navController.safePopBackStack() }
                 )
             }
         }

@@ -289,7 +289,7 @@ class MyPreferenceFragment : PreferenceFragmentCompat(), OnSharedPreferenceChang
                     keyDefinition.isPin                                                     -> pref.summary = rh.gs(app.aaps.core.ui.R.string.pin_not_set)
                     keyDefinition.isPassword                                                -> pref.summary = rh.gs(app.aaps.core.ui.R.string.password_not_set)
                     pref is EditTextPreference && value.isNotEmpty()                        -> pref.summary = value
-                    pref is ListPreference                                                  -> pref.summary = pref.entry
+                    pref is ListPreference && pref.summaryProvider == null                 -> pref.summary = pref.entry
                 }
             }
 
