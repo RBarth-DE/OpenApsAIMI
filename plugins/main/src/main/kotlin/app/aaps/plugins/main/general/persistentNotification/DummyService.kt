@@ -2,7 +2,9 @@ package app.aaps.plugins.main.general.persistentNotification
 
 import android.app.Notification
 import android.content.Intent
+import android.content.pm.ServiceInfo
 import android.os.Binder
+import android.os.Build
 import android.os.IBinder
 import app.aaps.core.interfaces.logging.AAPSLogger
 import app.aaps.core.interfaces.logging.LTag
@@ -36,13 +38,21 @@ class DummyService : DaggerService() {
     private val binder = LocalBinder()
     override fun onBind(intent: Intent): IBinder = binder
 
+    private fun startForegroundCompat(id: Int, notification: Notification) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            startForeground(id, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE)
+        } else {
+            startForeground(id, notification)
+        }
+    }
+
     override fun onCreate() {
         super.onCreate()
         try {
             aapsLogger.debug("Starting DummyService with ID ${notificationHolder.notificationID} notification ${notificationHolder.notification}")
-            startForeground(notificationHolder.notificationID, notificationHolder.notification)
+            startForegroundCompat(notificationHolder.notificationID, notificationHolder.notification)
         } catch (e: Exception) {
-            startForeground(4711, Notification())
+            startForegroundCompat(4711, Notification())
         }
         disposable.add(
             rxBus
@@ -66,9 +76,9 @@ class DummyService : DaggerService() {
         super.onStartCommand(intent, flags, startId)
         try {
             aapsLogger.debug("Starting DummyService with ID ${notificationHolder.notificationID} notification ${notificationHolder.notification}")
-            startForeground(notificationHolder.notificationID, notificationHolder.notification)
+            startForegroundCompat(notificationHolder.notificationID, notificationHolder.notification)
         } catch (e: Exception) {
-            startForeground(4711, Notification())
+            startForegroundCompat(4711, Notification())
         }
         return START_STICKY
     }

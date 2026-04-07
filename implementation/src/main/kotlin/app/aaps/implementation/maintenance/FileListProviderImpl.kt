@@ -162,7 +162,11 @@ class FileListProviderImpl @Inject constructor(
         val uri = prefUri.toUri()
         val baseDir = DocumentFile.fromTreeUri(context, uri)
         val files = baseDir?.listFiles()
-        return files?.firstOrNull { it.name == extraPath } ?: baseDir?.createDirectory(extraPath)
+        return files?.firstOrNull { it.name == extraPath } ?: try {
+            baseDir?.createDirectory(extraPath)
+        } catch (e: SecurityException) {
+            null
+        }
     }
 
     override fun ensureResultDirExists(): File {

@@ -9,7 +9,9 @@
             android:exported="false"
             android:theme="@style/AppTheme" />
 
-        <service android:name=".general.persistentNotification.DummyService" />
+        <service
+            android:name=".general.persistentNotification.DummyService"
+            android:foregroundServiceType="specialUse" />
 
         <service
             android:name="app.aaps.plugins.sync.wear.wearintegration.DataLayerListenerServiceMobile"
