@@ -158,6 +158,14 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
 ) : PluginBase(
     PluginDescription()
         .fragmentClass(OpenAPSFragment::class.java.name)
+        .composeContent { plugin ->
+            app.aaps.plugins.aps.compose.OpenAPSComposeContent(
+                apsPlugin = plugin as APS,
+                rxBus = rxBus,
+                rh = rh,
+                dateUtil = dateUtil
+            )
+        }
         .mainType(PluginType.APS)
         .pluginIcon(app.aaps.core.objects.R.drawable.ic_calculator)
         .icon(IcPluginOpenAPS)
