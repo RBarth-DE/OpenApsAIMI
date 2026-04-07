@@ -15,58 +15,68 @@
         <!-- ═══════════════════════════════════════════════════ -->
         <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+            android:layout_height="wrap_content"
+            android:layout_marginTop="0dp"
+            android:layout_marginBottom="0dp"
+            android:paddingBottom="4dp"
+            android:minHeight="@dimen/dashboard_glucose_hero_min_side">
 
-            <!-- ═══════════════════════════════════════════════════ -->
-            <!-- ROW 1: AIMI INSIGHTS (T3c, Manoeuvre, AI Factor)   -->
-            <!-- ═══════════════════════════════════════════════════ -->
-            <LinearLayout
-                android:id="@+id/aimiInsightsContainer"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:background="@null"
-                android:gravity="center"
-                android:orientation="horizontal"
-                app:layout_constraintEnd_toEndOf="parent"
+            <!-- Glucose hero (Compose + AapsTheme): responsive width, square ratio -->
+            <FrameLayout
+                android:id="@+id/glucose_ring_container"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:elevation="6dp"
+                app:layout_constraintWidth_percent="0.42"
+                app:layout_constraintWidth_max="@dimen/dashboard_glucose_hero_width_max"
+                app:layout_constraintWidth_min="@dimen/dashboard_glucose_hero_min_side"
+                app:layout_constraintDimensionRatio="1:1"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent">
 
-                <TextView
-                    android:id="@+id/insight_t3c"
+                <LinearLayout
+                    android:id="@+id/aimiInsightsContainer"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginEnd="6dp"
-                    android:text="🎯 --"
-                    android:textColor="@color/dashboard_on_surface"
-                    android:textSize="10sp" />
+                    android:orientation="horizontal">
 
-                <TextView
-                    android:id="@+id/insight_manoeuvre"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginEnd="6dp"
-                    android:text="🌀 --"
-                    android:textColor="@color/dashboard_on_surface"
-                    android:textSize="10sp" />
+                    <TextView
+                        android:id="@+id/insight_t3c"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginEnd="6dp"
+                        android:text="🎯 --"
+                        android:textColor="@color/dashboard_on_surface"
+                        android:textSize="10sp" />
 
-                <TextView
-                    android:id="@+id/insight_factor"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginEnd="6dp"
-                    android:text="⚡ x1.0"
-                    android:textColor="@color/dashboard_on_surface"
-                    android:textSize="10sp" />
+                    <TextView
+                        android:id="@+id/insight_manoeuvre"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginEnd="6dp"
+                        android:text="🌀 --"
+                        android:textColor="@color/dashboard_on_surface"
+                        android:textSize="10sp" />
 
-                <TextView
-                    android:id="@+id/insight_health"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginEnd="6dp"
-                    android:text="🩺 --"
-                    android:textColor="@color/dashboard_on_surface"
-                    android:textSize="10sp" />
-            </LinearLayout>
+                    <TextView
+                        android:id="@+id/insight_factor"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginEnd="6dp"
+                        android:text="⚡ x1.0"
+                        android:textColor="@color/dashboard_on_surface"
+                        android:textSize="10sp" />
+
+                    <TextView
+                        android:id="@+id/insight_health"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginEnd="6dp"
+                        android:text="🩺 --"
+                        android:textColor="@color/dashboard_on_surface"
+                        android:textSize="10sp" />
+                </LinearLayout>
+            </FrameLayout>
 
             <!-- ═══════════════════════════════════════════════════ -->
             <!-- ROW 2: [Indicator | Context | spacer | Loop Status] -->
@@ -82,7 +92,7 @@
                 android:orientation="horizontal"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/aimiInsightsContainer">
+                app:layout_constraintTop_toBottomOf="@id/glucose_ring_container">
 
                 <FrameLayout
                     android:id="@+id/adaptive_smoothing_quality_badge"
@@ -160,32 +170,17 @@
             <!-- Top hängt an indicator_row — sauber und stabil      -->
             <!-- ═══════════════════════════════════════════════════ -->
 
-            <!-- ═══════════════════════════════════════════════════ -->
-            <!-- LEFT COLUMN (neben Ring links)                      -->
-            <!-- ═══════════════════════════════════════════════════ -->
-            <app.aaps.core.ui.views.GlucoseRingView
-                android:id="@+id/glucose_ring"
-                android:layout_width="140dp"
-                android:layout_height="140dp"
-                android:layout_marginTop="-3dp"
-                android:elevation="3dp"
-                app:glucoseRingStep1MaxMgdl="130"
-                app:glucoseRingStep2MaxMgdl="180"
-                app:glucoseRingStep3MaxMgdl="220"
-                app:glucoseRingStepColor1="#00C853"
-                app:glucoseRingStepColor2="#FFD600"
-                app:glucoseRingStepColor3="#FF6D00"
-                app:glucoseRingStepColor4="#D50000"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/indicator_row"
-                app:layout_constraintVertical_bias="0.0"
-                app:ringBackgroundColor="@android:color/transparent"
-                app:ringStrokeWidth="5dp"
-                app:ringSubTextColor="?android:attr/textColorSecondary"
-                app:ringTextColor="?android:attr/textColorPrimary" />
+        <!-- ═══════════════════════════════════════════════════ -->
+        <!-- METRICS ROW: Left Column + Right Column             -->
+        <!-- ═══════════════════════════════════════════════════ -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="@dimen/dashboard_metrics_row_overlap"
+            android:layout_marginBottom="@dimen/dashboard_row_spacing_small">
 
+            <!-- LEFT COLUMN -->
             <LinearLayout
                 android:id="@+id/left_col"
                 android:layout_width="0dp"
@@ -195,10 +190,10 @@
                 android:orientation="vertical"
                 android:paddingStart="6dp"
                 app:layout_constrainedWidth="true"
-                app:layout_constraintBottom_toBottomOf="@id/glucose_ring"
-                app:layout_constraintEnd_toStartOf="@id/glucose_ring"
+                app:layout_constraintBottom_toBottomOf="@id/glucose_ring_container"
+                app:layout_constraintEnd_toStartOf="@id/glucose_ring_container"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="@id/glucose_ring"
+                app:layout_constraintTop_toTopOf="@id/glucose_ring_container"
                 app:layout_constraintWidth_percent="0.3">
 
                 <!-- STEPS -->
@@ -338,10 +333,10 @@
                 android:gravity="center_vertical|end"
                 android:orientation="vertical"
                 app:layout_constrainedWidth="true"
-                app:layout_constraintBottom_toBottomOf="@id/glucose_ring"
+                app:layout_constraintBottom_toBottomOf="@id/glucose_ring_container"
                 app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toEndOf="@id/glucose_ring"
-                app:layout_constraintTop_toTopOf="@id/glucose_ring">
+                app:layout_constraintStart_toEndOf="@id/glucose_ring_container"
+                app:layout_constraintTop_toTopOf="@id/glucose_ring_container">
 
                 <!-- HEART RATE -->
                 <LinearLayout
@@ -469,6 +464,7 @@
                         app:tint="@color/dashboard_on_surface" />
                 </LinearLayout>
             </LinearLayout>
+        </LinearLayout>
 
         <!-- ═══════════════════════════════════════════════════ -->
         <!-- TIR BAR (24H)                                       -->
@@ -481,7 +477,7 @@
                 android:orientation="vertical"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/glucose_ring">
+                app:layout_constraintTop_toBottomOf="@id/glucose_ring_container">
 
             <LinearLayout
                 android:layout_width="match_parent"

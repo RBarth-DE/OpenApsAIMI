@@ -244,12 +244,19 @@ class OverviewViewModel(
         val lastBg = lastBgData.lastBg()
         val glucoseText = profileUtil.fromMgdlToStringInUnits(lastBg?.recalculated)
         val trendArrow = trendCalculator.getTrendArrow(iobCobCalculator.ads)?.directionToIcon()
-        val trendDescription = trendCalculator.getTrendDescription(iobCobCalculator.ads)
-        val deltaText = glucoseStatusProvider.glucoseStatusData?.shortAvgDelta?.let {
-            profileUtil.fromMgdlToSignedStringInUnits(it)
-        } ?: resourceHelper.gs(app.aaps.core.ui.R.string.value_unavailable_short)
-
-        val cobText = runBlocking { iobCobCalculator.let { runBlocking { it.getCobInfo("Dashboard COB") } } }
+        val trendDescription = trendCalculator.getTrendDescription(iobCobCalculator.ads) ?: ""
+        val gs = glucoseStatusProvider.glucoseStatusData
+        val deltaMgdlForDisplay = when {
+            gs == null -> null
+            gs.shortAvgDelta.isFinite() -> gs.shortAvgDelta
+            gs.delta.isFinite() -> gs.delta
+            else -> null
+        }
+        val deltaText = deltaMgdlForDisplay?.let { v ->
+            "Δ " + profileUtil.fromMgdlToSignedStringInUnits(v)
+        } ?: ("Δ " + resourceHelper.gs(app.aaps.core.ui.R.string.value_unavailable_short))
+        val iobText = totalIobText()
+        val cobText = runBlocking { iobCobCalculator.getCobInfo("Dashboard COB") }
             .displayText(resourceHelper, decimalFormatter)
             ?: resourceHelper.gs(app.aaps.core.ui.R.string.value_unavailable_short)
         val timeAgoLong = dateUtil.minAgoLong(resourceHelper, lastBg?.timestamp)
@@ -371,9 +378,6 @@ class OverviewViewModel(
             basalText = if (basalRate == null || basalRate == -1.0) resourceHelper.gs(app.aaps.core.ui.R.string.value_unavailable_short)
                         else resourceHelper.gs( app.aaps.core.ui.R.string.format_insulin_units, basalRate )
         }
-        // R4 IOB (basal + bolus IOB)
-        val iobText = totalIobText()
-
         // 11. 24H Clinical Stats (TIR, CV, A1C)
         var tirVeryLow: Double? = null
         var tirLow: Double? = null
@@ -643,8 +647,14 @@ class OverviewViewModel(
         glucoseStatus: GlucoseStatus?
     ): String {
         val glucoseText = profileUtil.fromMgdlToStringInUnits(lastBg?.recalculated)
-        val deltaText = glucoseStatus?.shortAvgDelta?.let { profileUtil.fromMgdlToSignedStringInUnits(it) }
-            ?: resourceHelper.gs(app.aaps.core.ui.R.string.value_unavailable_short)
+        val deltaMgdl = when {
+            glucoseStatus == null -> null
+            glucoseStatus.shortAvgDelta.isFinite() -> glucoseStatus.shortAvgDelta
+            glucoseStatus.delta.isFinite() -> glucoseStatus.delta
+            else -> null
+        }
+        val deltaText = deltaMgdl?.let { "Δ " + profileUtil.fromMgdlToSignedStringInUnits(it) }
+            ?: ("Δ " + resourceHelper.gs(app.aaps.core.ui.R.string.value_unavailable_short))
         return resourceHelper.gs(
             R.string.dashboard_adjustment_glycemia,
             glucoseText,

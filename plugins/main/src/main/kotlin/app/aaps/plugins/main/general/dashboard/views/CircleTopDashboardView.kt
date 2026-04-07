@@ -69,15 +69,7 @@ class CircleTopDashboardView @JvmOverloads constructor(
                 }
             }
             // ═══════════════════════════════════════════════════════════════
-            // 1. GlucoseRingView (Center Circle)
-            // ═══════════════════════════════════════════════════════════════
-            val bgMgdl = getProp<Int>("glucoseMgdl")
-            // GlucoseRingView stub - will be connected later
-            // binding.glucoseRing.update(bgMgdl = bgMgdl ?: 0)
-
-
-            // ═══════════════════════════════════════════════════════════════
-            // 2. Left Column Metrics
+            // 1. Left Column Metrics
             // ═══════════════════════════════════════════════════════════════
             binding.stepsText.text = getProp<String>("stepsText") ?: "--"
             binding.reservoirChip.text = getProp<String>("reservoirText") ?: "--"
