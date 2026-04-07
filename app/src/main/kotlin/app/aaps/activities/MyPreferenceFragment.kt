@@ -50,7 +50,6 @@ import app.aaps.core.validators.preferences.AdaptiveStringPreference
 import app.aaps.core.validators.preferences.AdaptiveSwitchPreference
 import app.aaps.plugins.aps.autotune.AutotunePlugin
 import app.aaps.plugins.automation.AutomationPlugin
-import app.aaps.plugins.configuration.maintenance.MaintenancePlugin
 import app.aaps.plugins.main.skins.SkinProvider
 import app.aaps.plugins.sync.smsCommunicator.SmsCommunicatorPlugin
 import dagger.android.support.AndroidSupportInjection
@@ -72,7 +71,6 @@ class MyPreferenceFragment : PreferenceFragmentCompat(), OnSharedPreferenceChang
     @Inject lateinit var automationPlugin: AutomationPlugin
     @Inject lateinit var autotunePlugin: AutotunePlugin
     @Inject lateinit var smsCommunicatorPlugin: SmsCommunicatorPlugin
-    @Inject lateinit var maintenancePlugin: MaintenancePlugin
     @Inject lateinit var skinProvider: SkinProvider
     @Inject lateinit var overview: Overview
     @Inject lateinit var uiInteraction: UiInteraction
@@ -142,7 +140,7 @@ class MyPreferenceFragment : PreferenceFragmentCompat(), OnSharedPreferenceChang
             addPreferencesIfEnabled(activePlugin.activeSafety as PluginBase, rootKey)
             addPreferencesIfEnabled(activePlugin.activeBgSource as PluginBase, rootKey)
             activePlugin.getSpecificPluginsList(PluginType.LOOP).forEach { addPreferencesIfEnabled(it, rootKey, config.APS) }
-            addPreferencesIfEnabled(activePlugin.activeAPS as PluginBase, rootKey, config.APS)
+            (activePlugin.activeAPS as? PluginBase)?.let { addPreferencesIfEnabled(it, rootKey, config.APS) }
             addPreferencesIfEnabled(activePlugin.activeSensitivity as PluginBase, rootKey)
             addPreferencesIfEnabled(activePlugin.activePumpInternal as PluginBase, rootKey)
             addPumpScreen(rootKey)
@@ -151,7 +149,6 @@ class MyPreferenceFragment : PreferenceFragmentCompat(), OnSharedPreferenceChang
             addPreferencesIfEnabled(automationPlugin, rootKey)
             addPreferencesIfEnabled(autotunePlugin, rootKey)
             addAlertScreen(rootKey)
-            addPreferencesIfEnabled(maintenancePlugin, rootKey)
         }
         try {
             initSummary(preferenceScreen, pluginName != null)

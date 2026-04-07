@@ -22,6 +22,7 @@ import app.aaps.core.interfaces.insulin.ConcentrationHelper
 import app.aaps.core.interfaces.iob.IobCobCalculator
 import app.aaps.core.interfaces.logging.AAPSLogger
 import app.aaps.core.interfaces.logging.LTag
+import app.aaps.core.interfaces.maintenance.Maintenance
 import app.aaps.core.interfaces.plugin.ActivePlugin
 import app.aaps.core.interfaces.profile.ProfileFunction
 import app.aaps.core.interfaces.queue.Command
@@ -35,7 +36,6 @@ import app.aaps.core.keys.LongNonKey
 import app.aaps.core.keys.interfaces.Preferences
 import app.aaps.core.objects.profile.ProfileSealed
 import app.aaps.core.objects.workflow.LoggingWorker
-import app.aaps.plugins.configuration.maintenance.MaintenancePlugin
 import app.aaps.plugins.constraints.dstHelper.DstHelperPlugin
 import com.google.common.util.concurrent.ListenableFuture
 import kotlinx.coroutines.Dispatchers
@@ -58,7 +58,7 @@ class KeepAliveWorker(
     @Inject lateinit var profileFunction: ProfileFunction
     @Inject lateinit var rxBus: RxBus
     @Inject lateinit var commandQueue: CommandQueue
-    @Inject lateinit var maintenancePlugin: MaintenancePlugin
+    @Inject lateinit var maintenance: Maintenance
     @Inject lateinit var rh: ResourceHelper
     @Inject lateinit var preferences: Preferences
     @Inject lateinit var dstHelperPlugin: DstHelperPlugin
@@ -138,7 +138,7 @@ class KeepAliveWorker(
         localAlertUtils.checkStaleBGAlert()
         checkPump()
         checkAPS()
-        maintenancePlugin.deleteLogs(30)
+        maintenance.deleteLogs(30)
         workerDbStatus()
         databaseCleanup()
 
@@ -180,7 +180,7 @@ class KeepAliveWorker(
         if (config.AAPSCLIENT) return
         if (config.PUMPCONTROL) shouldUploadStatus = true
         else if (!loop.runningMode.isLoopRunning() || iobCobCalculator.ads.actualBg() == null) shouldUploadStatus = true
-        else if (dateUtil.isOlderThan(activePlugin.activeAPS.lastAPSRun, 5)) shouldUploadStatus = true
+        else if (activePlugin.activeAPS?.let { dateUtil.isOlderThan(it.lastAPSRun, 5) } == true) shouldUploadStatus = true
         if (dateUtil.isOlderThan(lastIobUpload, IOB_UPDATE_FREQUENCY_IN_MINUTES) && shouldUploadStatus) {
             lastIobUpload = dateUtil.now()
             loop.scheduleBuildAndStoreDeviceStatus("KeepAliveWorker")
