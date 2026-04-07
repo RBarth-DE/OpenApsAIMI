@@ -1990,6 +1990,20 @@ class PersistenceLayerImpl @Inject constructor(
         }
     }
 
+    override suspend fun deleteLastEventMatchingKeyword(noteKeyword: String): Unit = withContext(Dispatchers.IO) {
+        val lookback = dateUtil.now() - 24 * 60 * 60 * 1000L
+        val match = repository.getTherapyEventDataFromTime(lookback, ascending = false)
+            .firstOrNull { it.note?.contains(noteKeyword, ignoreCase = true) == true }
+        if (match != null) {
+            try {
+                repository.runTransactionForResultSuspend(InvalidateTherapyEventTransaction(match.id))
+                aapsLogger.debug(LTag.DATABASE, "Deleted TherapyEvent matching keyword '$noteKeyword': $match")
+            } catch (e: Exception) {
+                aapsLogger.error(LTag.DATABASE, "Error deleting TherapyEvent matching keyword '$noteKeyword'", e)
+            }
+        }
+    }
+
     override suspend fun invalidateTherapyEvent(id: Long, action: Action, source: Sources, note: String?, listValues: List<ValueWithUnit>)
         : PersistenceLayer.TransactionResult<TE> = withContext(Dispatchers.IO) {
         try {

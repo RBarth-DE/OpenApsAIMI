@@ -71,7 +71,7 @@ class OpenAPSFragment : DaggerFragment(), MenuProvider {
         )
         binding.swipeRefresh.setOnRefreshListener {
             binding.lastrun.text = "Running..."
-            handler.post { kotlinx.coroutines.runBlocking { activePlugin.activeAPS.invoke("OpenAPS swipe refresh", false) } }
+            handler.post { kotlinx.coroutines.runBlocking { activePlugin.activeAPS?.invoke("OpenAPS swipe refresh", false) } }
         }
     }
 
@@ -84,7 +84,7 @@ class OpenAPSFragment : DaggerFragment(), MenuProvider {
         when (item.itemId) {
             ID_MENU_RUN -> {
                 binding.lastrun.text = "Running..."
-                handler.post { kotlinx.coroutines.runBlocking { activePlugin.activeAPS.invoke("OpenAPS menu", false) } }
+                handler.post { kotlinx.coroutines.runBlocking { activePlugin.activeAPS?.invoke("OpenAPS menu", false) } }
                 true
             }
 
@@ -133,7 +133,7 @@ class OpenAPSFragment : DaggerFragment(), MenuProvider {
     private fun updateGUI() {
         if (_binding == null) return
         val openAPSPlugin = activePlugin.activeAPS
-        openAPSPlugin.lastAPSResult?.let { lastAPSResult ->
+        openAPSPlugin?.lastAPSResult?.let { lastAPSResult ->
             binding.result.text = lastAPSResult.rawData().dataClassToHtml()
             binding.request.text = lastAPSResult.resultAsSpanned()
             binding.glucosestatus.text = lastAPSResult.glucoseStatus?.dataClassToHtml(listOf("glucose", "delta", "shortAvgDelta", "longAvgDelta"))

@@ -9,7 +9,7 @@ import app.aaps.core.keys.interfaces.StringValidator
 enum class StringKey(
     override val key: String,
     override val defaultValue: String,
-    override val titleResId: Int,
+    override val titleResId: Int = 0,
     override val summaryResId: Int? = null,
     override val preferenceType: PreferenceType = PreferenceType.TEXT_FIELD,
     override val entries: Map<String, Int> = emptyMap(),
@@ -198,35 +198,43 @@ enum class StringKey(
         validator = StringValidator.minLength(17)
     ),
 
+    PumpCommonBolusStorage("pump_sync_storage_bolus", ""),
+    PumpCommonTbrStorage("pump_sync_storage_tbr", ""),
+    GarminRequestKey(key = "garmin_aaps_key", defaultValue = ""),
+    OApsAIMIWCycleTrackingMode("key_oaps_aimi_wcycle_tracking_mode", "FIXED_28"),
+    OApsAIMIWCycleContraceptive("key_oaps_aimi_wcycle_contraceptive", "NONE"),
+    OApsAIMIWCycleThyroid("key_oaps_aimi_wcycle_thyroid", "EUTHYROID"),
+    OApsAIMIWCycleVerneuil("key_oaps_aimi_wcycle_verneuil", "NONE"),
+    OApsAIMINightGrowthStart("key_oaps_aimi_ngr_night_start", "22:00"),
+    OApsAIMINightGrowthEnd("key_oaps_aimi_ngr_night_end", "06:00"),
+    AimiAdvisorOpenAIKey("aimi_advisor_openai_key", "", isPassword = true),
+    AimiAdvisorGeminiKey("aimi_advisor_gemini_key", "", isPassword = true),
+    AimiAdvisorDeepSeekKey("aimi_advisor_deepseek_key", "", isPassword = true),
+    AimiAdvisorClaudeKey("aimi_advisor_claude_key", "", isPassword = true),
+    AimiAdvisorProvider("aimi_advisor_provider", "OPENAI"),
+    AimiAuditorMode("aimi_auditor_mode", "AUDIT_ONLY"),  // 🧠 AI Auditor mode: AUDIT_ONLY, SOFT_MODULATION, HIGH_RISK_ONLY
 
-    // AIMI entries
-    OApsAIMIWCycleTrackingMode("key_oaps_aimi_wcycle_tracking_mode", defaultValue = "FIXED_28", titleResId = 0),
-    OApsAIMIWCycleContraceptive("key_oaps_aimi_wcycle_contraceptive", defaultValue = "NONE", titleResId = 0),
-    OApsAIMIWCycleThyroid("key_oaps_aimi_wcycle_thyroid", defaultValue = "EUTHYROID", titleResId = 0),
-    OApsAIMIWCycleVerneuil("key_oaps_aimi_wcycle_verneuil", defaultValue = "NONE", titleResId = 0),
-    OApsAIMINightGrowthStart("key_oaps_aimi_ngr_night_start", defaultValue = "22:00", titleResId = 0),
-    OApsAIMINightGrowthEnd("key_oaps_aimi_ngr_night_end", defaultValue = "06:00", titleResId = 0),
-    AimiAdvisorOpenAIKey("aimi_advisor_openai_key", defaultValue = "", isPassword = true, titleResId = 0),
-    AimiAdvisorGeminiKey("aimi_advisor_gemini_key", defaultValue = "", isPassword = true, titleResId = 0),
-    AimiAdvisorDeepSeekKey("aimi_advisor_deepseek_key", defaultValue = "", isPassword = true, titleResId = 0),
-    AimiAdvisorClaudeKey("aimi_advisor_claude_key", defaultValue = "", isPassword = true, titleResId = 0),
-    AimiAdvisorProvider("aimi_advisor_provider", defaultValue = "OPENAI", titleResId = 0),
-    ContextLLMProvider("aimi_context_llm_provider", defaultValue = "OPENAI", titleResId = 0),
-    ContextLLMOpenAIKey("aimi_context_llm_openai_key", defaultValue = "", isPassword = true, titleResId = 0),
-    ContextLLMGeminiKey("aimi_context_llm_gemini_key", defaultValue = "", isPassword = true, titleResId = 0),
-    ContextLLMDeepSeekKey("aimi_context_llm_deepseek_key", defaultValue = "", isPassword = true, titleResId = 0),
-    ContextLLMClaudeKey("aimi_context_llm_claude_key", defaultValue = "", isPassword = true, titleResId = 0),
-    OApsAIMIUnstableModeState("key_oaps_aimi_mode_state", defaultValue = "", titleResId = 0),
-    OApsAIMIContextStorage("aimi_context_storage", defaultValue = "", exportable = false, titleResId = 0),
-    AimiPhysioLLMProvider("aimi_physio_llm_provider", defaultValue = "gpt4", titleResId = 0),
-    OApsAIMIThyroidMode("key_aimi_thyroid_mode", defaultValue = "MANUAL", titleResId = 0),
-    OApsAIMIThyroidManualStatus("key_aimi_thyroid_manual_status", defaultValue = "EUTHYROID", titleResId = 0),
-    OApsAIMIThyroidTreatmentPhase("key_aimi_thyroid_treatment_phase", defaultValue = "NONE", titleResId = 0),
-    OApsAIMIThyroidGuardLevel("key_aimi_thyroid_guard_level", defaultValue = "HIGH", titleResId = 0),
-    AimiEmergencySosPhone("aimi_emergency_sos_phone", defaultValue = "", titleResId = 0),
-    AimiEmergencySosPhone2("aimi_emergency_sos_phone2", defaultValue = "", titleResId = 0),
+    // Context Module (dedicated provider for flexibility)
+    ContextLLMProvider("aimi_context_llm_provider", "OPENAI"),
+    ContextLLMOpenAIKey("aimi_context_llm_openai_key", "", isPassword = true),
+    ContextLLMGeminiKey("aimi_context_llm_gemini_key", "", isPassword = true),
+    ContextLLMDeepSeekKey("aimi_context_llm_deepseek_key", "", isPassword = true),
+    ContextLLMClaudeKey("aimi_context_llm_claude_key", "", isPassword = true),
+    ContextMode("aimi_context_mode", "BALANCED"), // CONSERVATIVE, BALANCED, AGGRESSIVE
 
-    ContextMode("aimi_context_mode", defaultValue = "BALANCED", titleResId = 0),
+    OApsAIMIUnstableModeState("key_oaps_aimi_mode_state", ""),
+    OApsAIMIContextStorage("aimi_context_storage", "", exportable = false),
 
-    AimiAuditorMode("aimi_auditor_mode", defaultValue = "MONITOR", titleResId = 0),
+    // 🏥 AIMI Physiological Assistant (MTR)
+    AimiPhysioLLMProvider("aimi_physio_llm_provider", "gpt4"),
+
+    // 🦋 Thyroid / Basedow Module (MTR)
+    OApsAIMIThyroidMode("key_aimi_thyroid_mode", "MANUAL"),
+    OApsAIMIThyroidManualStatus("key_aimi_thyroid_manual_status", "EUTHYROID"),
+    OApsAIMIThyroidTreatmentPhase("key_aimi_thyroid_treatment_phase", "NONE"),
+    OApsAIMIThyroidGuardLevel("key_aimi_thyroid_guard_level", "HIGH"),
+
+    // 🚨 Emergency SOS (Hypo)
+    AimiEmergencySosPhone("aimi_emergency_sos_phone", ""),
+    AimiEmergencySosPhone2("aimi_emergency_sos_phone2", ""),
 }

@@ -42,9 +42,12 @@ import app.aaps.core.interfaces.iob.IobCobCalculator
 import app.aaps.core.interfaces.logging.AAPSLogger
 import app.aaps.core.interfaces.logging.LTag
 import app.aaps.core.interfaces.plugin.ActivePlugin
+import app.aaps.core.interfaces.insulin.ConcentrationHelper
+import app.aaps.core.interfaces.insulin.Insulin
 import app.aaps.core.interfaces.plugin.PluginBase
 import app.aaps.core.interfaces.plugin.PluginBaseWithPreferences
 import app.aaps.core.interfaces.plugin.PluginDescription
+import app.aaps.core.interfaces.profile.EffectiveProfile
 import app.aaps.core.interfaces.profile.Profile
 import app.aaps.core.interfaces.profile.ProfileFunction
 import app.aaps.core.interfaces.profile.ProfileUtil
@@ -52,7 +55,6 @@ import app.aaps.core.interfaces.profiling.Profiler
 import app.aaps.core.interfaces.resources.ResourceHelper
 import app.aaps.core.interfaces.rx.bus.RxBus
 import app.aaps.core.interfaces.rx.events.EventAPSCalculationFinished
-import app.aaps.core.interfaces.rx.events.EventConfigBuilderChange
 import app.aaps.core.interfaces.stats.TddCalculator
 import app.aaps.core.interfaces.ui.UiInteraction
 import app.aaps.core.interfaces.utils.DateUtil
@@ -62,6 +64,8 @@ import app.aaps.core.keys.BooleanKey
 import app.aaps.core.keys.DoubleKey
 import app.aaps.core.keys.IntKey
 import app.aaps.core.keys.IntentKey
+import app.aaps.plugins.aps.keys.ApsIntentKey
+import app.aaps.core.interfaces.rx.events.EventConfigBuilderChange
 import app.aaps.core.keys.interfaces.Preferences
 import app.aaps.core.keys.UnitDoubleKey
 import app.aaps.core.keys.StringKey
@@ -84,6 +88,7 @@ import app.aaps.core.validators.preferences.AdaptiveSwitchPreference
 import app.aaps.core.validators.preferences.AdaptiveUnitPreference
 import app.aaps.core.validators.DefaultEditTextValidator
 import app.aaps.core.validators.EditTextValidator
+import app.aaps.core.ui.compose.icons.IcPluginOpenAPS
 import app.aaps.plugins.aps.R
 import app.aaps.plugins.aps.events.EventOpenAPSUpdateGui
 import app.aaps.plugins.aps.events.EventResetOpenAPSGui
@@ -108,6 +113,7 @@ import androidx.core.net.toUri
 import kotlin.math.abs
 import kotlin.math.exp
 import app.aaps.plugins.aps.openAPSAIMI.utils.AimiBackupManager
+import kotlinx.serialization.json.JsonObject
 
 @Singleton
 open class OpenAPSAIMIPlugin  @Inject constructor(
@@ -122,7 +128,7 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
     private val activePlugin: ActivePlugin,
     private val iobCobCalculator: IobCobCalculator,
     private val hardLimits: HardLimits,
-    preferences: Preferences,
+    private val preferences: Preferences,
     protected val dateUtil: DateUtil,
     private val processedTbrEbData: ProcessedTbrEbData,
     private val persistenceLayer: PersistenceLayer,
@@ -143,26 +149,37 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
     private val auditorOrchestrator: app.aaps.plugins.aps.openAPSAIMI.advisor.auditor.AuditorOrchestrator, // 🧠 AI Auditor MTR
     private val contextManager: app.aaps.plugins.aps.openAPSAIMI.context.ContextManager, // 🎯 Context Manager
     private val aimiBackupManager: AimiBackupManager, // ☁️ Cloud Backup Manager (Force Init)
-    private val insulin: app.aaps.core.interfaces.insulin.Insulin
-) : PluginBaseWithPreferences(
+    private val insulin: Insulin,
+    private val ch: ConcentrationHelper,
+) : PluginBase(
     PluginDescription()
         .fragmentClass(OpenAPSFragment::class.java.name)
         .mainType(PluginType.APS)
-        .pluginIcon(app.aaps.core.ui.R.drawable.ic_generic_icon)
+        .composeContent { plugin ->
+            app.aaps.plugins.aps.compose.OpenAPSComposeContent(
+                apsPlugin = plugin as APS,
+                rxBus = rxBus,
+                rh = rh,
+                dateUtil = dateUtil
+            )
+        }
+        .pluginIcon(app.aaps.core.objects.R.drawable.ic_calculator)
+        .icon(IcPluginOpenAPS)
         .pluginName(R.string.openapsaimi)
         .shortName(R.string.oaps_aimi_shortname)
         .preferencesId(PluginDescription.PREFERENCE_SCREEN)
         .preferencesVisibleInSimpleMode(false)
-        .showInList { config.APS }
+        .showInList({ config.APS })
         .description(R.string.description_openapsaimi)
         .setDefault(),
-    ownPreferences = emptyList(),
-    aapsLogger, rh, preferences
+    aapsLogger, rh
 ), APS, PluginConstraints {
 
 
     override fun onStart() {
         super.onStart()
+        preferences.registerPreferences(app.aaps.plugins.aps.openAPSAIMI.keys.AimiLongKey::class.java)
+        preferences.registerPreferences(app.aaps.plugins.aps.openAPSAIMI.keys.AimiStringKey::class.java)
 
         // 🏃 Start AIMI Steps Manager (Health Connect + Phone Sensor sync)
         try {
@@ -203,7 +220,7 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
                 .setRequiresDeviceIdle(true)
                 .build()
                 
-            val workRequest = androidx.work.PeriodicWorkRequestBuilder<app.aaps.plugins.aps.openAPSAIMI.learning.AutodriveNeuralTrainerWorker>(
+            val workRequest = androidx.work.PeriodicWorkRequestBuilder<app.aaps.plugins.aps.openAPSAIMI.autodrive.learning.AutodriveNeuralTrainerWorker>(
                 6, java.util.concurrent.TimeUnit.HOURS
             ).setConstraints(constraints).build()
 
@@ -224,7 +241,9 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
             preferences.get(DoubleKey.AimiUamConfidence)
         }
         var count = 0
-        val apsResults = runBlocking { persistenceLayer.getApsResults(dateUtil.now() - T.days(1).msecs(), dateUtil.now()) }
+        val apsResults = runBlocking {
+            persistenceLayer.getApsResults(dateUtil.now() - T.days(1).msecs(), dateUtil.now())
+        }
         apsResults.forEach {
             val glucose = it.glucoseStatus?.glucose ?: return@forEach
             val variableSens = it.variableSens ?: return@forEach
@@ -315,7 +334,7 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
         val multiplier = (profile as? ProfileSealed.EPS)?.value?.originalPercentage?.div(100.0)
             ?: return null
 
-        val sensitivity = calculateVariableIsf(start)
+        val sensitivity = runBlocking { calculateVariableIsf(start) }
 
         profiler.log(
             LTag.APS,
@@ -329,7 +348,7 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
     override fun getAverageIsfMgdl(timestamp: Long, caller: String): Double? {
         if (dynIsfCache.isEmpty()) {
             aapsLogger.warn(LTag.APS, "dynIsfCache is empty. Unable to calculate average ISF.")
-            return runBlocking { profileFunction.getProfile() }?.getProfileIsfMgdl() ?: 20.0
+            return runBlocking { profileFunction.getProfile()?.getProfileIsfMgdl() } ?: 20.0
         }
         var count = 0
         var sum = 0.0
@@ -340,8 +359,8 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
                 sum += value
             }
         }
-        val sensitivity = if (count == 0) runBlocking { profileFunction.getProfile() }?.getProfileIsfMgdl() else sum / count
-        //aapsLogger.debug(LTag.APS, "getAverageIsfMgdl() $sensitivity from $count values ${dateUtil.dateAndTimeAndSecondsString(timestamp)} $caller")
+        val sensitivity = if (count == 0) runBlocking { profileFunction.getProfile()?.getProfileIsfMgdl() } else sum / count
+        aapsLogger.debug(LTag.APS, "getAverageIsfMgdl() $sensitivity from $count values ${dateUtil.dateAndTimeAndSecondsString(timestamp)} $caller")
         return sensitivity
     }
 
@@ -365,7 +384,7 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
         val smbEnabled = preferences.get(BooleanKey.ApsUseSmb)
         val smbAlwaysEnabled = preferences.get(BooleanKey.ApsUseSmbAlways)
         val uamEnabled = preferences.get(BooleanKey.ApsUseUam)
-        val advancedFiltering = (activePlugin.activeBgSource as? app.aaps.core.interfaces.plugin.PluginBase)?.isEnabled() ?: false
+        val advancedFiltering = runBlocking { persistenceLayer.isAdvancedFilteringSupported() }
         val autoSensOrDynIsfSensEnabled = if (preferences.get(BooleanKey.ApsUseDynamicSensitivity)) {
             preferences.get(BooleanKey.ApsDynIsfAdjustSensitivity)
         } else {
@@ -381,7 +400,7 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
         preferenceFragment.findPreference<AdaptiveIntPreference>(IntKey.ApsUamMaxMinutesOfBasalToLimitSmb.key)?.isVisible = smbEnabled && uamEnabled
         
         // 🧠 Autodrive System
-        preferenceFragment.findPreference<SwitchPreference>(BooleanKey.OApsAIMIautoDriveActive.key)?.isVisible = true
+        preferenceFragment.findPreference<SwitchPreference>(BooleanKey.OApsAIMIautoDrive.key)?.isVisible = true
     }
 
     private val dynIsfCache = LongSparseArray<Double>()
@@ -401,9 +420,9 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
     }
 
     // ISF basé TDD (ancre 1800/TDD 24h) avec garde-fous
-    private fun tddIsf24hOr(profileIsf: Double): Double {
+    private suspend fun tddIsf24hOr(profileIsf: Double): Double {
         val tdd24 = tddCalculator
-            .averageTDD(runBlocking { tddCalculator.calculate(1, allowMissingDays = false) })
+            .averageTDD(tddCalculator.calculate(1, allowMissingDays = false))
             ?.data?.totalAmount
             ?: preferences.get(DoubleKey.OApsAIMITDD7) // fallback 7j
         val anchored = if (tdd24 > 0.1) 1800.0 / tdd24 else profileIsf
@@ -461,9 +480,8 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
         }
         return recent
     }
-    @Synchronized
     @SuppressLint("DefaultLocale")
-    private fun calculateVariableIsf(timestamp: Long): Pair<String, Double?> {
+    private suspend fun calculateVariableIsf(timestamp: Long): Pair<String, Double?> {
         if (!preferences.get(BooleanKey.ApsUseDynamicSensitivity)) return "OFF" to null
 
         // 0) cache DB existant
@@ -565,7 +583,7 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
     }
 
 
-    override suspend fun invoke(initiator: String, tempBasalFallback: Boolean) = withContext(Dispatchers.Default) {
+    override suspend fun invoke(initiator: String, tempBasalFallback: Boolean): Unit = withContext(Dispatchers.Default) {
         aapsLogger.debug(LTag.APS, "invoke from $initiator tempBasalFallback: $tempBasalFallback")
         lastAPSResult = null
         val glucoseStatus = getGlucoseStatusData(false)
@@ -590,7 +608,8 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
 
         val inputConstraints = ConstraintObject(0.0, aapsLogger) // fake. only for collecting all results
 
-        if (!hardLimits.checkHardLimits(hardLimits.minDia(), app.aaps.core.ui.R.string.profile_dia, hardLimits.minDia(), hardLimits.maxDia())) return@withContext
+        val eff = profile as EffectiveProfile
+        if (!hardLimits.checkHardLimits(eff.iCfg.dia, app.aaps.core.ui.R.string.profile_dia, hardLimits.minDia(), hardLimits.maxDia())) return@withContext
         if (!hardLimits.checkHardLimits(
                 profile.getIcTimeFromMidnight(MidnightUtils.secondsFromMidnight()),
                 app.aaps.core.ui.R.string.profile_carbs_ratio_value,
@@ -600,7 +619,7 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
         ) return@withContext
         if (!hardLimits.checkHardLimits(profile.getIsfMgdl("OpenAPSAIMIPlugin"), app.aaps.core.ui.R.string.profile_sensitivity_value, HardLimits.MIN_ISF, HardLimits.MAX_ISF)) return@withContext
         if (!hardLimits.checkHardLimits(profile.getMaxDailyBasal(), app.aaps.core.ui.R.string.profile_max_daily_basal_value, 0.02, hardLimits.maxBasal())) return@withContext
-        if (!hardLimits.checkHardLimits(pump.baseBasalRate.cU, app.aaps.core.ui.R.string.current_basal_value, 0.01, hardLimits.maxBasal())) return@withContext
+        if (!hardLimits.checkHardLimits(ch.fromPump(pump.baseBasalRate), app.aaps.core.ui.R.string.current_basal_value, 0.01, hardLimits.maxBasal())) return@withContext
 
         // End of check, start gathering data
         
@@ -890,7 +909,7 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
             aapsLogger.debug(LTag.APS, "PK/PD: pkpdScale=$lastPkpdScale (bg=$bgNow, delta=$deltaNow, iob=$iobNow, tdd24=$tdd24ForPk, isfRaw=$profileIsfRaw)")
             val tdd4D = tddCalculator.averageTDD(runBlocking { tddCalculator.calculate(4, allowMissingDays = false) })
             val oapsProfile = OapsProfileAimi(
-                dia = hardLimits.minDia(),
+                dia = eff.iCfg.dia,
                 min_5m_carbimpact = 0.0, // not used
                 max_iob = constraintsChecker.getMaxIOBAllowed().also { inputConstraints.copyReasons(it) }.value(),
                 max_daily_basal = profile.getMaxDailyBasal(),
@@ -926,7 +945,7 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
                 maxUAMSMBBasalMinutes = preferences.get(IntKey.ApsUamMaxMinutesOfBasalToLimitSmb),
                 bolus_increment = pump.pumpDescription.bolusStep,
                 carbsReqThreshold = preferences.get(IntKey.ApsCarbsRequestThreshold),
-                current_basal = activePlugin.activePump.baseBasalRate.cU * physioMults.basalFactor, // 🏥 Basal Rate Modulation
+                current_basal = ch.fromPump(activePlugin.activePump.baseBasalRate) * physioMults.basalFactor, // 🏥 Basal Rate Modulation
                 temptargetSet = isTempTarget,
                 autosens_max = preferences.get(DoubleKey.AutosensMax),
                 out_units = if (profileFunction.getUnits() == GlucoseUnit.MMOL) "mmol/L" else "mg/dl",
@@ -1169,8 +1188,16 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
         return value
     }
 
-    override fun configuration(): kotlinx.serialization.json.JsonObject = kotlinx.serialization.json.JsonObject(emptyMap())
-    override fun applyConfiguration(configuration: kotlinx.serialization.json.JsonObject) {}
+    override fun configuration(): JsonObject =
+        JsonObject(emptyMap())
+            .put(BooleanKey.ApsUseDynamicSensitivity, preferences)
+            .put(IntKey.ApsDynIsfAdjustmentFactor, preferences)
+
+    override fun applyConfiguration(configuration: JsonObject) {
+        configuration
+            .store(BooleanKey.ApsUseDynamicSensitivity, preferences)
+            .store(IntKey.ApsDynIsfAdjustmentFactor, preferences)
+    }
 
     override fun addPreferenceScreen(preferenceManager: PreferenceManager, parent: PreferenceScreen, context: Context, requiredKey: String?) {
         val category = PreferenceCategory(context)
@@ -1583,6 +1610,14 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
                         )
                     )
                     addPreference(
+                        AdaptiveSwitchPreference(
+                            ctx = context,
+                            booleanKey = BooleanKey.OApsAIMIIobSurveillanceGuard,
+                            title = R.string.aimi_iob_surveillance_guard_title,
+                            summary = R.string.aimi_iob_surveillance_guard_summary
+                        )
+                    )
+                    addPreference(
                         AdaptiveDoublePreference(
                             ctx = context,
                             doubleKey = DoubleKey.OApsAIMIPriorityMaxIobFactor,
@@ -1670,6 +1705,14 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
                             doubleKey = DoubleKey.OApsAIMIT3cAggressiveness,
                             title = R.string.aimi_t3c_aggressiveness_title,
                             dialogMessage = R.string.aimi_t3c_aggressiveness_summary
+                        )
+                    )
+                    addPreference(
+                        AdaptiveDoublePreference(
+                            ctx = context,
+                            doubleKey = DoubleKey.OApsAIMIT3cAnticipationStrength,
+                            title = R.string.aimi_t3c_anticipation_strength_title,
+                            dialogMessage = R.string.aimi_t3c_anticipation_strength_summary
                         )
                     )
                 })
@@ -2080,9 +2123,9 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
                     
                     // Minimum Confidence
                     addPreference(
-                        AdaptiveDoublePreference(
+                        AdaptiveIntPreference(
                             ctx = context,
-                            doubleKey = DoubleKey.AimiAuditorMinConfidence,
+                            intKey = IntKey.AimiAuditorMinConfidence,
                             dialogMessage = R.string.aimi_auditor_min_confidence_summary,
                             title = R.string.aimi_auditor_min_confidence_title
                         )
@@ -2312,7 +2355,7 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
                     addPreference(
                         AdaptiveIntentPreference(
                             ctx = context,
-                            intentKey = app.aaps.plugins.aps.keys.ApsIntentKey.LinkToDocs,
+                            intentKey = ApsIntentKey.LinkToDocs,
                             intent = Intent().apply { action = Intent.ACTION_VIEW; data = rh.gs(R.string.openapsama_link_to_preference_json_doc).toUri() },
                             summary = R.string.openapsama_link_to_preference_json_doc_txt
                         )

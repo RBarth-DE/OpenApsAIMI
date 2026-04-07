@@ -2,7 +2,10 @@ package app.aaps
 
 import android.app.Application
 import android.bluetooth.BluetoothDevice
+import android.content.Context
 import android.content.Intent
+import android.hardware.Sensor
+import android.hardware.SensorManager
 import android.content.IntentFilter
 import android.net.ConnectivityManager
 import android.net.wifi.WifiManager
@@ -53,8 +56,8 @@ import app.aaps.core.interfaces.utils.HardLimits
 import app.aaps.core.interfaces.utils.SafeParse
 import app.aaps.core.interfaces.utils.fabric.FabricPrivacy
 import app.aaps.core.interfaces.versionChecker.VersionCheckerUtils
-import app.aaps.core.keys.BooleanKey
 import app.aaps.core.keys.BooleanNonKey
+import app.aaps.core.keys.BooleanKey
 import app.aaps.core.keys.IntKey
 import app.aaps.core.keys.LongComposedKey
 import app.aaps.core.keys.ProfileComposedBooleanKey
@@ -73,6 +76,7 @@ import app.aaps.implementation.plugin.PluginStore
 import app.aaps.implementation.receivers.NetworkChangeReceiver
 import app.aaps.plugins.configuration.keys.ConfigurationBooleanComposedKey
 import app.aaps.plugins.constraints.objectives.keys.ObjectivesLongComposedKey
+import app.aaps.plugins.aps.openAPSAIMI.StepService
 import app.aaps.plugins.constraints.signatureVerifier.SignatureVerifierPlugin
 import app.aaps.receivers.BTReceiver
 import app.aaps.receivers.ChargingStateReceiver
@@ -258,6 +262,31 @@ class MainApp : Application(), HasAndroidInjector {
         exportPasswordResetCheck()
         config.initCompleted()
         rxBus.send(EventAppInitialized())
+        handler.postDelayed(refreshWidget, 60000)
+        val sensorManager = getSystemService(Context.SENSOR_SERVICE) as SensorManager
+        try {
+            val stepSensor = sensorManager.getDefaultSensor(Sensor.TYPE_STEP_COUNTER)
+            if (stepSensor != null) {
+                // 🛡️ CRITICAL FIX: Check Permission before Registering (Prevents Crash on Fresh Install)
+                val hasPermission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                    androidx.core.content.ContextCompat.checkSelfPermission(
+                        this,
+                        android.Manifest.permission.ACTIVITY_RECOGNITION
+                    ) == android.content.pm.PackageManager.PERMISSION_GRANTED
+                } else {
+                    true
+                }
+
+                if (hasPermission) {
+                    sensorManager.registerListener(StepService, stepSensor, SensorManager.SENSOR_DELAY_NORMAL)
+                    aapsLogger.debug("StepService registered")
+                } else {
+                    aapsLogger.debug("StepService SKIPPED (No Permission)")
+                }
+            }
+        } catch (e: Exception) {
+            aapsLogger.error("StepService registration failed", e)
+        }
         aapsLogger.debug("doInit end")
     }
 

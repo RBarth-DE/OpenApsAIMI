@@ -6,7 +6,7 @@ import app.aaps.core.keys.interfaces.PreferenceVisibility
 enum class BooleanKey(
     override val key: String,
     override val defaultValue: Boolean,
-    override val titleResId: Int,
+    override val titleResId: Int = 0,
     override val summaryResId: Int? = null,
     override val preferenceType: PreferenceType = PreferenceType.SWITCH,
     override val calculatedDefaultValue: Boolean = false,
@@ -154,50 +154,59 @@ enum class BooleanKey(
     SiteRotationManagePump("site_rotation_manage_pump", defaultValue = false, titleResId = R.string.pref_title_site_rotation_manage_pump),
     SiteRotationManageCgm("site_rotation_manage_cgm", defaultValue = false, titleResId = R.string.pref_title_site_rotation_manage_cgm),
 
+    OApsAIMIMLtraining("key_enable_ML_training", false),
+    OApsAIMIEnableBasal("key_enable_basal", false),
+    OApsAIMIEnableStepsFromWatch("count_steps_watch", false),
+    OApsAIMIpregnancy("key_use_AimiPregnancy",false),
+    OApsAIMIforcelimits("key_use_AimiForceLimits",false),
+    OApsAIMInight("OApsAIMI_Enable_night",false),
+    OApsAIMIhoneymoon("key_use_Aimi_honeymoon",false),
+    OApsxdriponeminute(key = "key_use_Aimi_xdripOM",defaultValue = false),
+    OApsAIMIautoDrive(key = "key_use_Aimi_autoDrive",defaultValue = false),
+    OApsAIMIT3cAdaptiveBasalEnabled("key_use_aimi_t3c_adaptive_basal", false),
+    OApsAIMIAutodriveV3EnhancedGater("key_use_aimi_autodrive_v3_enhanced_gater", false),
+    OApsAIMIautoDriveActive(key = "key_use_aimi_autodrive_active", defaultValue = false),
+    OApsAIMIwcycle(key = "key_use_Aimi_wcycle",defaultValue = false),
+    OApsAIMIWCycleShadow("key_use_Aimi_wcycle_shadow", false),
+    OApsAIMIWCycleRequireConfirm("key_use_Aimi_wcycle_require_confirm", false),
+    OApsAIMINightGrowthEnabled("key_oaps_aimi_ngr_enabled", true),
+    OApsAIMIPkpdEnabled("key_aimi_pkpd_enabled", false),
+    OApsAIMIPkpdPragmaticReliefEnabled("key_aimi_pkpd_pragmatic_relief_enabled", true),
+    /** Plateau + meaningful IOB + falling prediction → throttle SMB, bias TBR, no Red Carpet restore. */
+    OApsAIMIIobSurveillanceGuard("key_aimi_iob_surveillance_guard", true),
+    OApsAIMIUnifiedReactivityEnabled("key_use_unified_reactivity", true),  // 🎯 NEW: Enable UnifiedReactivityLearner
+    AimiAuditorEnabled("aimi_auditor_enabled", false),  // 🧠 AI Decision Auditor
+    OApsAIMITrajectoryGuardEnabled("key_aimi_trajectory_guard_enabled", false),  // 🌀 Phase-Space Trajectory Control
+    OApsAIMIContextEnabled("key_aimi_context_enabled", false),  // 🎯 Context Module
+    OApsAIMIContextLLMEnabled("key_aimi_context_llm_enabled", false),  // 🤖 LLM-powered context parsing
+    OApsAIMIT3cBrittleMode("key_aimi_t3c_brittle_mode", false),
 
     // AIMI entries
-    OApsAIMIMLtraining("key_enable_ML_training", defaultValue = false, titleResId = 0),
-    OApsAIMIEnableBasal("key_enable_basal", defaultValue = false, titleResId = 0),
-    OApsAIMIEnableStepsFromWatch("count_steps_watch", defaultValue = false, titleResId = 0),
-    OApsAIMIpregnancy("key_use_AimiPregnancy", defaultValue = false, titleResId = 0),
-    OApsAIMIforcelimits("key_use_AimiForceLimits", defaultValue = false, titleResId = 0),
-    OApsAIMInight("OApsAIMI_Enable_night", defaultValue = false, titleResId = 0),
-    OApsAIMIhoneymoon("key_use_Aimi_honeymoon", defaultValue = false, titleResId = 0),
-    OApsxdriponeminute(key = "key_use_Aimi_xdripOM", defaultValue = false, titleResId = 0),
-    OApsAIMIautoDrive(key = "key_use_Aimi_autoDrive", defaultValue = false, titleResId = 0),
-    OApsAIMIT3cAdaptiveBasalEnabled("key_use_aimi_t3c_adaptive_basal", defaultValue = false, titleResId = 0),
-    OApsAIMIAutodriveV3EnhancedGater("key_use_aimi_autodrive_v3_enhanced_gater", defaultValue = false, titleResId = 0),
-    OApsAIMIautoDriveActive(key = "key_use_aimi_autodrive_active", defaultValue = false, titleResId = 0),
-    OApsAIMIwcycle(key = "key_use_Aimi_wcycle", defaultValue = false, titleResId = 0),
-    OApsAIMIWCycleShadow("key_use_Aimi_wcycle_shadow", defaultValue = false, titleResId = 0),
-    OApsAIMIWCycleRequireConfirm("key_use_Aimi_wcycle_require_confirm", defaultValue = false, titleResId = 0),
-    OApsAIMINightGrowthEnabled("key_oaps_aimi_ngr_enabled", defaultValue = true, titleResId = 0),
-    OApsAIMIPkpdEnabled("key_aimi_pkpd_enabled", defaultValue = false, titleResId = 0),
-    OApsAIMIPkpdPragmaticReliefEnabled("key_aimi_pkpd_pragmatic_relief_enabled", defaultValue = true, titleResId = 0),
-    OApsAIMIT3cBrittleMode("key_aimi_t3c_brittle_mode", defaultValue = false, titleResId = 0),
-    OApsAIMIThyroidEnabled("key_aimi_thyroid_enabled", defaultValue = false, titleResId = 0),
-    OApsAIMIThyroidLogVerbosity("key_aimi_thyroid_debug", defaultValue = false, titleResId = 0),
-    AimiPhysioAssistantEnable("aimi_physio_assistant_enable", defaultValue = false, titleResId = 0),
-    AimiPhysioSleepDataEnable("aimi_physio_sleep_enable", defaultValue = true, titleResId = 0),
-    AimiPhysioHRVDataEnable("aimi_physio_hrv_enable", defaultValue = true, titleResId = 0),
-    AimiPhysioLLMAnalysisEnable("aimi_physio_llm_enable", defaultValue = false, titleResId = 0),
-    AimiPhysioDebugLogs("aimi_physio_debug_logs", defaultValue = false, titleResId = 0),
-    AimiEndometriosisEnable("aimi_endo_enable", defaultValue = false, titleResId = 0),
-    AimiEndometriosisHormonalSuppression("aimi_endo_suppression", defaultValue = false, titleResId = 0),
-    AimiEndometriosisPainFlare("aimi_endo_flare", defaultValue = false, titleResId = 0),
-    AimiCosineGateEnabled("aimi_cosine_gate_enabled", defaultValue = true, titleResId = 0),
-    AimiEmergencySosEnable("aimi_emergency_sos_enable", defaultValue = false, titleResId = 0),
+    // 🦋 Thyroid / Basedow Module (MTR)
+    OApsAIMIThyroidEnabled("key_aimi_thyroid_enabled", false),
+    OApsAIMIThyroidLogVerbosity("key_aimi_thyroid_debug", false),
 
-    OApsAIMIUnifiedReactivityEnabled("key_use_unified_reactivity", defaultValue = true, titleResId = 0),
-    OApsAIMIContextEnabled("key_aimi_context_enabled", defaultValue = false, titleResId = 0),
+    // 🏥 AIMI Physiological Assistant (MTR)
+    AimiPhysioAssistantEnable("aimi_physio_assistant_enable", false),
+    AimiPhysioSleepDataEnable("aimi_physio_sleep_enable", true),
+    AimiPhysioHRVDataEnable("aimi_physio_hrv_enable", true),
+    AimiPhysioLLMAnalysisEnable("aimi_physio_llm_enable", false),
+    AimiPhysioDebugLogs("aimi_physio_debug_logs", false),
 
-    OApsAIMITrajectoryGuardEnabled("key_aimi_trajectory_guard_enabled", defaultValue = false, titleResId = 0),
+    // 🌸 Endometriosis & Cycle Management (MTR)
+    AimiEndometriosisEnable("aimi_endo_enable", false),
+    AimiEndometriosisHormonalSuppression("aimi_endo_suppression", false),
+    AimiEndometriosisPainFlare("aimi_endo_flare", false),
+    OApsAIMIMealAdvisorTrigger("aimi_meal_advisor_trigger", false), // Trigger for one-shot MAX-SMB bypass
 
-    OApsAIMIMealAdvisorTrigger("aimi_meal_advisor_trigger", defaultValue = false, titleResId = 0),
+    //Ketoacidosis Protection
+    ApsKetoacidosisProtection("ketoacidosis_protection", false, defaultedBySM = true),
+    ApsKetoacidosisProtectionStrategy("ketoacidosis_protection_strategy", false, defaultedBySM = true),
 
-    AimiAuditorEnabled("aimi_auditor_enabled", defaultValue = false, titleResId = 0),
+    // 🌀 Adaptive Kernel Bank (Cosine Gate)
+    AimiCosineGateEnabled("aimi_cosine_gate_enabled", true),
 
-    ApsKetoacidosisProtection("ketoacidosis_protection", defaultValue = false, titleResId = 0),
-    ApsKetoacidosisProtectionStrategy("ketoacidosis_protection_strategy", defaultValue = false, titleResId = 0),
+    // 🚨 Emergency SOS (Hypo)
+    AimiEmergencySosEnable("aimi_emergency_sos_enable", false),
 
 }

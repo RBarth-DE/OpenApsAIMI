@@ -44,12 +44,7 @@ interface Intents {
 
         // Broadcast status
         const val AAPS_BROADCAST = "info.nightscout.androidaps.status"
-        // Patched Ottai App -> AAPS (International)
-        const val OTTAI_APP = "info.nightscout.androidaps.action.OTTAI_APP"
-        // Patched Ottai App -> AAPS (China)
-        const val OTTAI_APP_CN = "cn.diyaps.sharing.OT_APP"
-
-        // Patched SI App -> AAPS
+// Patched SI App -> AAPS
         const val SI_APP = "cn.diyaps.sharing.SI_APP"
 
         // Patched Sino App -> AAPS

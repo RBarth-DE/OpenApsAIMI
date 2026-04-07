@@ -3,6 +3,7 @@ import kotlinx.coroutines.runBlocking
 
 import android.os.Bundle
 import android.view.ViewGroup
+import androidx.lifecycle.lifecycleScope
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.core.view.isVisible
@@ -15,6 +16,7 @@ import app.aaps.core.interfaces.logging.AAPSLogger
 import app.aaps.core.interfaces.logging.LTag
 import app.aaps.core.interfaces.resources.ResourceHelper
 import app.aaps.core.ui.toast.ToastUtils
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 class AdjustmentDetailsActivity : TranslatedDaggerAppCompatActivity() {
@@ -73,13 +75,13 @@ class AdjustmentDetailsActivity : TranslatedDaggerAppCompatActivity() {
 
         binding.runLoopButton.setOnClickListener {
             ToastUtils.infoToast(this, resourceHelper.gs(R.string.dashboard_loop_run_requested))
-            Thread {
+            lifecycleScope.launch {
                 try {
                     runBlocking { loop.invoke("AdjustmentDetails", true) }
                 } catch (e: Exception) {
                     aapsLogger.error(LTag.APS, "Error invoking loop from details", e)
                 }
-            }.start()
+            }
         }
     }
 

@@ -104,6 +104,8 @@
     <string name="insulin_peak">Peak</string>
 
     <!--    Loop -->
+    <string name="key_smb_enable_carbs_suggestions_threshold" translatable="false">smb_enable_carbs_suggestions_threshold</string>
+
     <string name="run_now">Run now</string>
     <string name="smb_frequency_exceeded">A bolus was delivered within the last 3 minutes, skipping SMB</string>
     <string name="pump_not_initialized">Pump not initialized!</string>
@@ -400,6 +402,8 @@
     <string name="OApsAIMI_Enable_pregnancy">Pregnancy Mode</string>
     <string name="OApsAIMI_PregnancyDueDate_title">Due Date (Terme)</string>
     <string name="OApsAIMI_PregnancyDueDate_summary">Enter estimated delivery date (YYYY-MM-DD) to enable gestational autopilot.</string>
+    <string name="OApsAIMI_RemoteControlPin_title">Remote control PIN</string>
+    <string name="OApsAIMI_RemoteControlPin_summary">PIN for AIMI remote control features.</string>
     <string name="error_invalid_date_format">Invalid format. Please use YYYY-MM-DD.</string>
     <string name="OApsAIMI_Force_Limits">Force AAPS Multiplier Limits</string>
     <string name="OApsAIMI_Enable_honeymoon">Child Mode (insulin needs lower than adult)</string>
@@ -654,6 +658,8 @@
     <string name="meal_modes_max_basal_title_genericmeal">Fixed basal 30 min at meal start (U/h)</string>
     <string name="meal_modes_max_basal_summary_genericmeal">Manual mode: fixed TBR, after pre-bolus 1 set a fixed TBR for 30 minutes for generic meal</string>
 
+<!--    <string name="wcycle_preferences">Menstrual Cycle Adjustments</string>-->
+<!--    <string name="wcycle_preferences_title_menu">Menstrual Cycle Adjustments - Settings</string>-->
 <!--    <string name="oaps_aimi_enablewcycle_title">Enable menstrual cycle</string>-->
 <!--    <string name="wcycledateday_summary">Enter only the first day of the cycle, format dd</string>-->
 <!--    <string name="wcycledateday_title">First day of cycle</string>-->
@@ -1419,6 +1425,11 @@
     <string name="aimi_t3c_activation_threshold_summary">Corrections will engage above this level (Default: 130)</string>
     <string name="aimi_t3c_aggressiveness_title">T3C Correction Aggressiveness</string>
     <string name="aimi_t3c_aggressiveness_summary">Scales the intensity of basal adjustments (Default: 1.0)</string>
+    <string name="aimi_t3c_anticipation_strength_title">T3C anticipation (predictions)</string>
+    <string name="aimi_t3c_anticipation_strength_summary">0 = legacy (local projection only). Increase to blend eventual BG and IOB/COB curve timing into basal (earlier hypo relief and hyper lead). Range 0–1.</string>
+    <string name="aimi_iob_surveillance_guard_title">IOB surveillance (anti-stacking)</string>
+    <string name="aimi_iob_surveillance_guard_summary">When BG is above target with meaningful IOB, the trend is no longer a fast rise (plateau), and predictions point downward, SMB is capped and temp basal is slightly favoured so onboard insulin can act—without blocking sharp rises or strong meal absorption (COB/UAM). Meal-rise bypass: Δ≥2.0 or short-avg≥2.5 mg/dL/5m while meal-priority context is on. Constants: InsulinStackingStance.kt. Analytics: adjustments.iob_surveillance in Documents/AAPS/AIMI_Decisions.jsonl each loop.</string>
+    <string name="aimi_iob_surveillance_applied">IOB surveillance: high active insulin and falling prediction — SMB reduced; prefer TBR. Wait for stacked insulin to work.</string>
     <string name="aimi_t3c_settings_title">T3C Brittle Mode Settings</string>
 
     <string name="oaps_aimi_adaptive_basal_title">Universal Adaptive Basal</string>

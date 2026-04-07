@@ -350,7 +350,7 @@ class AuditorOrchestrator @Inject constructor(
                         originalTbrMin = tbrDuration,
                         originalIntervalMin = intervalMin,
                         verdict = verdict,
-                        confidence = preferences.get(DoubleKey.AimiAuditorMinConfidence) / 100.0,
+                        confidence = preferences.get(IntKey.AimiAuditorMinConfidence) / 100.0,
                         mode = getModulationMode()
                     )
                     

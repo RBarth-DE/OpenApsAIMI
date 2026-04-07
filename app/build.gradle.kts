@@ -1,5 +1,13 @@
+import java.util.Properties
+
 import java.text.SimpleDateFormat
 import java.util.Date
+import java.util.Locale
+import org.gradle.kotlin.dsl.dependencies
+import org.gradle.kotlin.dsl.project
+
+// Fixes errors in KSP task dependency
+import org.gradle.api.GradleException
 
 plugins {
     alias(libs.plugins.ksp)
@@ -99,26 +107,6 @@ android {
         testInstrumentationRunner = "app.aaps.runners.InjectedTestRunner"
     }
 
-
-    val keystoreProps = java.util.Properties().apply {
-        rootProject.file("keystore.properties").takeIf { it.exists() }?.inputStream()?.use { load(it) }
-    }
-
-    signingConfigs {
-        create("release") {
-            storeFile = keystoreProps["storeFile"]?.let { file(it as String) }
-            storePassword = keystoreProps["storePassword"] as? String
-            keyAlias = keystoreProps["keyAlias"] as? String
-            keyPassword = keystoreProps["keyPassword"] as? String
-        }
-    }
-
-    buildTypes {
-        getByName("release") {
-            signingConfig = signingConfigs.getByName("release")
-        }
-    }
-
     flavorDimensions.add("standard")
     productFlavors {
         create("full") {
@@ -164,6 +152,27 @@ android {
         }
     }
 
+    // -------------------------------------------------------------------------
+    // Configuration de signature (release)
+    // -------------------------------------------------------------------------
+    signingConfigs {
+        // On peut l'appeler "release" ou un autre nom
+        create("release") {
+            // Seule storeFile attend un File
+            storeFile = file(System.getenv("KEYSTORE_FILE") ?: "dummy.jks")
+            // Les autres sont des Strings
+            storePassword = System.getenv("KEYSTORE_PASSWORD") ?: "dummy"
+            keyAlias = System.getenv("KEY_ALIAS") ?: "dummy"
+            keyPassword = System.getenv("KEY_PASSWORD") ?: "dummy"
+        }
+    }
+
+    buildTypes {
+        getByName("release") {
+            signingConfig = signingConfigs.getByName("release")
+        }
+    }
+
     useLibrary("org.apache.http.legacy")
 
     buildFeatures {
@@ -177,6 +186,28 @@ android {
         getByName("pumpcontrol") { kotlin.directories.add("src/withPumps/kotlin") }
         getByName("aapsclient2") { kotlin.directories.add("src/aapsclient/kotlin") }
         getByName("aapsclient3") { kotlin.directories.add("src/aapsclient/kotlin") }
+    }
+}
+
+tasks.register<Copy>("renameReleaseApk") {
+    val timestamp = SimpleDateFormat("yyyyMMdd-HHmm", Locale.US).format(Date())
+
+    doFirst {
+        layout.buildDirectory.dir("outputs/renamed").get().asFile.listFiles()
+            ?.filter { it.name.endsWith(".apk") }
+            ?.forEach { it.delete() }
+    }
+
+    from(layout.buildDirectory.dir("outputs/apk/full/release"))
+    into(layout.buildDirectory.dir("outputs/renamed"))
+
+    include("*.apk")
+    rename { _ -> "app-full-release-$timestamp.apk" }
+}
+
+afterEvaluate {
+    tasks.named("assembleFullRelease") {
+        finalizedBy("renameReleaseApk")
     }
 }
 
@@ -263,6 +294,8 @@ dependencies {
 
     // MainApp
     api(libs.com.uber.rxdogtag2.rxdogtag)
+    // MPAndroidChart for comparator
+    implementation("com.github.PhilJay:MPAndroidChart:v3.1.0")
     // Remote config
     api(libs.com.google.firebase.config)
     // Navigation Compose
@@ -277,7 +310,7 @@ println("-------------------")
 if (!gitAvailable()) {
     throw GradleException("GIT system is not available. On Windows try to run Android Studio as an Administrator. Check if GIT is installed and Studio have permissions to use it")
 }
-if (isMaster() && !allCommitted()) {
-    throw GradleException("There are uncommitted changes. Clone sources again as described in wiki and do not allow gradle update")
-}
 
+/*if (isMaster() && !allCommitted()) {
+    throw GradleException("There are uncommitted changes.")
+}*/

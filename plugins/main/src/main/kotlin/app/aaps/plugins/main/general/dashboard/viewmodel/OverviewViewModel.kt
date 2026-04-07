@@ -1,4 +1,8 @@
 package app.aaps.plugins.main.general.dashboard.viewmodel
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.runBlocking
 
 import android.app.Application
@@ -39,6 +43,8 @@ import app.aaps.core.interfaces.rx.events.EventPumpStatusChanged
 import app.aaps.core.interfaces.rx.events.EventRefreshOverview
 import app.aaps.core.interfaces.rx.events.EventUpdateOverviewGraph
 import app.aaps.core.interfaces.rx.events.EventUpdateOverviewIobCob
+import app.aaps.core.interfaces.rx.events.AdaptiveSmoothingQualitySnapshot
+import app.aaps.core.interfaces.rx.events.AdaptiveSmoothingQualityTier
 import app.aaps.core.interfaces.utils.DateUtil
 import app.aaps.core.interfaces.utils.DecimalFormatter
 import app.aaps.core.interfaces.utils.TrendCalculator
@@ -86,6 +92,7 @@ class OverviewViewModel(
 
     private val disposables = CompositeDisposable()
     private var started = false
+    private var updateScope: CoroutineScope? = null
 
     private val _statusCardState = MutableLiveData<StatusCardState>()
     val statusCardState: LiveData<StatusCardState> = _statusCardState
@@ -96,8 +103,60 @@ class OverviewViewModel(
     private val _graphMessage = MutableLiveData<String>()
     val graphMessage: LiveData<String> = _graphMessage
 
+    // Adaptive smoothing quality (informational, used only for UI badge in phase 1)
+    private var adaptiveSmoothingQualityTier: AdaptiveSmoothingQualityTier? = null
+    private var adaptiveSmoothingQualityBadgeText: String = ""
+    private var adaptiveSmoothingQualityDialogMessage: String = ""
+
+    private fun buildAdaptiveSmoothingBadgeText(tier: AdaptiveSmoothingQualityTier): String = when (tier) {
+        AdaptiveSmoothingQualityTier.OK -> resourceHelper.gs(R.string.adaptive_smoothing_quality_badge_ok)
+        AdaptiveSmoothingQualityTier.UNCERTAIN -> resourceHelper.gs(R.string.adaptive_smoothing_quality_badge_uncertain)
+        AdaptiveSmoothingQualityTier.BAD -> resourceHelper.gs(R.string.adaptive_smoothing_quality_badge_bad)
+    }
+
+    private fun buildAdaptiveSmoothingDialogMessage(snap: AdaptiveSmoothingQualitySnapshot): String {
+        val learnedR = snap.learnedR
+        val outlierPct = (snap.outlierRate * 100.0).toInt()
+        val compressionPct = (snap.compressionRate * 100.0).toInt()
+        return when (snap.tier) {
+            AdaptiveSmoothingQualityTier.OK -> application.getString(
+                R.string.adaptive_smoothing_quality_dialog_ok,
+                learnedR,
+                outlierPct,
+                compressionPct
+            )
+            AdaptiveSmoothingQualityTier.UNCERTAIN -> application.getString(
+                R.string.adaptive_smoothing_quality_dialog_uncertain,
+                learnedR,
+                outlierPct,
+                compressionPct
+            )
+            AdaptiveSmoothingQualityTier.BAD -> application.getString(
+                R.string.adaptive_smoothing_quality_dialog_bad,
+                learnedR,
+                outlierPct,
+                compressionPct
+            )
+        }
+    }
+
+    /** Sync badge fields from smoothing plugin (avoids missed Rx events / scheduler ordering). */
+    private fun refreshAdaptiveSmoothingQualityFromPlugin() {
+        val snap = activePlugin.activeSmoothing.lastAdaptiveSmoothingQualitySnapshot()
+        if (snap != null) {
+            adaptiveSmoothingQualityTier = snap.tier
+            adaptiveSmoothingQualityBadgeText = buildAdaptiveSmoothingBadgeText(snap.tier)
+            adaptiveSmoothingQualityDialogMessage = buildAdaptiveSmoothingDialogMessage(snap)
+        } else {
+            adaptiveSmoothingQualityTier = null
+            adaptiveSmoothingQualityBadgeText = ""
+            adaptiveSmoothingQualityDialogMessage = ""
+        }
+    }
+
     fun start() {
         if (started) return
+        updateScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
         started = true
         subscribeToUpdates()
         refreshAll()
@@ -106,14 +165,20 @@ class OverviewViewModel(
     fun stop() {
         started = false
         disposables.clear()
+        updateScope?.cancel()
+        updateScope = null
     }
 
     override fun onCleared() {
         disposables.clear()
+        updateScope?.cancel()
+        updateScope = null
         super.onCleared()
     }
 
     private fun subscribeToUpdates() {
+        val scope = updateScope ?: return
+
         disposables += rxBus
             .toObservable(EventRefreshOverview::class.java)
             .observeOn(aapsSchedulers.io)
@@ -123,16 +188,6 @@ class OverviewViewModel(
             .toObservable(EventBucketedDataCreated::class.java)
             .observeOn(aapsSchedulers.io)
             .subscribe({ updateStatus() }, fabricPrivacy::logException)
-
-        disposables += rxBus
-            .toObservable(EventAutosensCalculationFinished::class.java)
-            .observeOn(aapsSchedulers.io)
-            .subscribe({ updateAdjustments() }, fabricPrivacy::logException)
-
-        disposables += rxBus
-            .toObservable(EventAutosensCalculationFinished::class.java)
-            .observeOn(aapsSchedulers.io)
-            .subscribe({ updateAdjustments() }, fabricPrivacy::logException)
 
         disposables += rxBus
             .toObservable(EventAutosensCalculationFinished::class.java)
@@ -183,7 +238,6 @@ class OverviewViewModel(
         return dbLast ?: memLast
     }
 
-    private fun refreshAdaptiveSmoothingQualityFromPlugin() { /* stub */ }
     private fun updateStatus() {
         refreshAdaptiveSmoothingQualityFromPlugin()
         val now = dateUtil.now()

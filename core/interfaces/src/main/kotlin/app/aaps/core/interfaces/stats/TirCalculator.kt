@@ -1,5 +1,7 @@
 package app.aaps.core.interfaces.stats
 
+import android.content.Context
+import android.widget.TableLayout
 import androidx.collection.LongSparseArray
 
 /**
@@ -65,4 +67,6 @@ interface TirCalculator {
      * @return TIR object with aggregated counts from all days
      */
     fun averageTIR(tirs: LongSparseArray<TIR>): TIR
+    fun calculateHour(lowMgdl: Double, highMgdl: Double): LongSparseArray<TIR>
+    fun calculateDaily(lowMgdl: Double, highMgdl: Double): LongSparseArray<TIR>
 }

@@ -10,7 +10,7 @@ enum class IntKey(
     override val defaultValue: Int,
     override val min: Int,
     override val max: Int,
-    override val titleResId: Int,
+    override val titleResId: Int = 0,
     override val summaryResId: Int? = null,
     override val preferenceType: PreferenceType = PreferenceType.TEXT_FIELD,
     override val entries: Map<Int, Int> = emptyMap(),
@@ -304,30 +304,44 @@ enum class IntKey(
     SiteRotationUserProfile(key = "site_rotation_user_profile", defaultValue = 0, min = 0, max = 2, titleResId = R.string.pref_title_site_rotation_profile),
 
     // AIMI entries
-    OApsAIMIHighBGinterval("key_oaps_aimi_highBG_interval", defaultValue = 3, min = 1, max = 20, titleResId = 0),
-    OApsAIMImealinterval("key_oaps_aimi_meal_interval", defaultValue = 3, min = 1, max = 20, titleResId = 0),
-    OApsAIMILunchinterval("key_oaps_aimi_lunch_interval", defaultValue = 3, min = 1, max = 20, titleResId = 0),
-    OApsAIMIDinnerinterval("key_oaps_aimi_dinner_interval", defaultValue = 3, min = 1, max = 20, titleResId = 0),
-    OApsAIMIHCinterval("key_oaps_aimi_HC_interval", defaultValue = 3, min = 1, max = 20, titleResId = 0),
-    OApsAIMISnackinterval("key_oaps_aimi_snack_interval", defaultValue = 3, min = 1, max = 20, titleResId = 0),
-    OApsAIMIBFinterval("key_oaps_aimi_BF_interval", defaultValue = 3, min = 1, max = 20, titleResId = 0),
-    OApsAIMISleepinterval("key_oaps_aimi_sleep_interval", defaultValue = 3, min = 1, max = 20, titleResId = 0),
-    OApsAIMIAutodriveTarget("key_oaps_aimi_autodriveTarget", defaultValue = 70, min = 1, max = 160, titleResId = 0),
-    OApsAIMIAutodriveBG("key_oaps_aimi_autodriveBG", defaultValue = 90, min = 1, max = 160, titleResId = 0),
-    OApsAIMIWCycleAvgLength("key_wcycle_avg_length", defaultValue = 28, min = 20, max = 90, titleResId = 0),
-    OApsAIMINightGrowthAgeYears("key_oaps_aimi_ngr_age_years", defaultValue = 14, min = 1, max = 25, titleResId = 0),
-    OApsAIMINightGrowthMinDurationMin("key_oaps_aimi_ngr_min_duration", defaultValue = 30, min = 5, max = 240, titleResId = 0),
-    OApsAIMINightGrowthMinEventualOverTarget("key_oaps_aimi_ngr_min_eventual_over_target", defaultValue = 15, min = 0, max = 120, titleResId = 0),
-    OApsAIMINightGrowthDecayMinutes("key_oaps_aimi_ngr_decay_minutes", defaultValue = 20, min = 0, max = 120, titleResId = 0),
-    OApsAIMIlogsize("key_oaps_aimi_logsize", defaultValue = 25, min = 1, max = 50, titleResId = 0),
-    AimiEndometriosisFlareDuration("aimi_endo_flare_duration", defaultValue = 4, min = 1, max = 24, titleResId = 0),
-    AimiCosineGateMaxPeakShift("aimi_cosine_gate_max_shift", defaultValue = 15, min = 0, max = 60, titleResId = 0),
-    AimiEmergencySosThreshold("aimi_emergency_sos_threshold", defaultValue = 75, min = 70, max = 200, titleResId = 0),
-    AimiEmergencySosImmediateThreshold("aimi_emergency_sos_immediate_threshold", defaultValue = 60, min = 55, max = 200, titleResId = 0),
-    AimiEmergencySosStaleThreshold("aimi_emergency_sos_stale_threshold", defaultValue = 30, min = 15, max = 200, titleResId = 0),
+    GarminLocalHttpPort("communication_http_port", 28891, 1001, 65535, defaultedBySM = true, hideParentScreenIfHidden = true),
+    OApsAIMIHighBGinterval("key_oaps_aimi_highBG_interval", 3, 1, 20, defaultedBySM = true),
+    OApsAIMImealinterval("key_oaps_aimi_meal_interval", 3, 1, 20, defaultedBySM = true),
+    OApsAIMILunchinterval("key_oaps_aimi_lunch_interval", 3, 1, 20, defaultedBySM = true),
+    OApsAIMIDinnerinterval("key_oaps_aimi_dinner_interval", 3, 1, 20, defaultedBySM = true),
+    OApsAIMIHCinterval("key_oaps_aimi_HC_interval", 3, 1, 20, defaultedBySM = true),
+    OApsAIMISnackinterval("key_oaps_aimi_snack_interval", 3, 1, 20, defaultedBySM = true),
+    OApsAIMIBFinterval("key_oaps_aimi_BF_interval", 3, 1, 20, defaultedBySM = true),
+    OApsAIMISleepinterval("key_oaps_aimi_sleep_interval", 3, 1, 20, defaultedBySM = true),
+    //OApsAIMIautodriveISF("key_oaps_aimi_autodriveISF",5,1,500),
+    OApsAIMIAutodriveTarget("key_oaps_aimi_autodriveTarget",70,1,160),
+    OApsAIMIAutodriveBG("key_oaps_aimi_autodriveBG",90,1,160),
+    OApsAIMIWCycleAvgLength("key_wcycle_avg_length", 28, 20, 90),
+    OApsAIMINightGrowthAgeYears("key_oaps_aimi_ngr_age_years", 14, 1, 25),
+    OApsAIMINightGrowthMinDurationMin("key_oaps_aimi_ngr_min_duration", 30, 5, 240),
+    OApsAIMINightGrowthMinEventualOverTarget("key_oaps_aimi_ngr_min_eventual_over_target", 15, 0, 120),
+    OApsAIMINightGrowthDecayMinutes("key_oaps_aimi_ngr_decay_minutes", 20, 0, 120),
+    OApsAIMIlogsize("key_oaps_aimi_logsize",25,1,50),
+    // --- AIMI Adaptive Basal ---
+    OApsAIMIKickerStartMin(key = "OApsAIMIKickerStartMin", 10, 5, 30), // durée initiale du “kick” plateau (min)
+    OApsAIMIKickerMaxMin(key = "OApsAIMIKickerMaxMin", 30, 10, 60), // durée max du “kick” plateau (min)
+    OApsAIMIZeroResumeMin(key = "OApsAIMIZeroResumeMin", 10,  5, 30), // délai avant micro-reprise (minutes à 0)
+    OApsAIMIZeroResumeMax(key = "OApsAIMIZeroResumeMax", 30, 10, 60), // durée max de la micro-reprise
+    // --- AI Decision Auditor ---
+    AimiAuditorMaxPerHour("aimi_auditor_max_per_hour", 12, 1, 30),  // Max audits per hour
+    AimiAuditorTimeoutSeconds("aimi_auditor_timeout_seconds", 120, 30, 300),  // API timeout (seconds)
+    AimiAuditorMinConfidence("aimi_auditor_min_confidence", 65, 50, 95),  // Min confidence % to apply modulation
 
-    ApsKetoacidosisProtectionBasal("ketoacidosis_protection_basal", defaultValue = 20, min = 10, max = 40, titleResId = 0),
+    // 🌸 Endometriosis & Cycle Management (MTR)
+    AimiEndometriosisFlareDuration("aimi_endo_flare_duration", 4, 1, 24),
 
-    AimiAuditorMaxPerHour("aimi_auditor_max_per_hour", defaultValue = 4, min = 1, max = 20, titleResId = 0),
-    AimiAuditorTimeoutSeconds("aimi_auditor_timeout_seconds", defaultValue = 30, min = 5, max = 120, titleResId = 0),
+    // Ketoacidosis Protection
+    ApsKetoacidosisProtectionBasal("ketoacidosis_protection_basal", 20,10, 40, defaultedBySM = true),
+    // 🌀 Adaptive Kernel Bank (Cosine Gate)
+    AimiCosineGateMaxPeakShift("aimi_cosine_gate_max_shift", 15, 0, 60),
+
+    // 🚨 Emergency SOS (Hypo)
+    AimiEmergencySosThreshold("aimi_emergency_sos_threshold", 55, 40, 100),
+    AimiEmergencySosImmediateThreshold("aimi_emergency_sos_immediate_threshold", 50, 40, 100),
+    AimiEmergencySosStaleThreshold("aimi_emergency_sos_stale_threshold", 30, 5, 120),
 }

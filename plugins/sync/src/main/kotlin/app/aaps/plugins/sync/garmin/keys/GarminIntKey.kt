@@ -22,5 +22,5 @@ enum class GarminIntKey(
     override val exportable: Boolean = true
 ) : IntPreferenceKey {
 
-    LocalHttpPort("communication_http_port", 28891, 1001, 65535, dependency = GarminBooleanKey.LocalHttpServer, titleResId = R.string.garmin_local_http_server_port, defaultedBySM = true, hideParentScreenIfHidden = true),
+    LocalHttpPort("communication_http_port", 28891, 1001, 65535, defaultedBySM = true, hideParentScreenIfHidden = true),
 }

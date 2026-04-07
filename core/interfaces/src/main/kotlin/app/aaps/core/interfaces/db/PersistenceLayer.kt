@@ -26,6 +26,7 @@ import app.aaps.core.data.ue.Sources
 import app.aaps.core.data.ue.ValueWithUnit
 import app.aaps.core.interfaces.aps.APSResult
 import io.reactivex.rxjava3.core.Completable
+import io.reactivex.rxjava3.core.Single
 import kotlinx.coroutines.flow.Flow
 import kotlin.reflect.KClass
 
@@ -1373,11 +1374,12 @@ interface PersistenceLayer {
     suspend fun updateFoodsNsIds(foods: List<FD>): TransactionResult<FD>
 
     // UE
-    suspend fun insertUserEntries(entries: List<UE>): TransactionResult<UE>
+   suspend fun insertUserEntries(entries: List<UE>): TransactionResult<UE>
+   suspend fun getUserEntryDataFromTime(timestamp: Long): List<UE>
+   suspend fun getUserEntryFilteredDataFromTime(timestamp: Long): List<UE>
+   suspend fun deleteLastEventMatchingKeyword(noteKeyword: String)
 
-    suspend fun getUserEntryDataFromTime(timestamp: Long): List<UE>
 
-    suspend fun getUserEntryFilteredDataFromTime(timestamp: Long): List<UE>
 
     // TDD
 
@@ -1447,8 +1449,11 @@ interface PersistenceLayer {
     suspend fun getLastStepsCountFromTimeToTime(startTime: Long, endTime: Long): SC?
 
     /**
-     * Insert or update if exists record
+     * Get latest step counts record from interval
      *
+     * @param startTime from
+     * @param endTime to
+     * @return step count record
      * @param stepsCount record
      * @return List of inserted/updated records
      */
@@ -1476,6 +1481,24 @@ interface PersistenceLayer {
      * @return List of arrays of records
      */
     suspend fun collectNewEntriesSince(since: Long, until: Long, limit: Int, offset: Int): NE
+    suspend fun getMostRecentCarbByDate(): Long? {
+        val now = System.currentTimeMillis()
+        return getCarbsFromTime(now, false) // false pour ordre décroissant
+            .maxByOrNull { it.timestamp }
+            ?.timestamp
+    }
+    suspend fun getMostRecentCarbAmount(): Double? {
+        val now = System.currentTimeMillis()
+        return getCarbsFromTime(now, false) // Supposant que cette méthode existe
+            .maxByOrNull { it.timestamp }
+            ?.amount
+    }
+    suspend fun getFutureCob(): Double {
+        val now = System.currentTimeMillis()
+        return getCarbsFromTime(now, true) // Supposant que cette méthode existe
+            .filter { it.timestamp > now }
+            .sumOf { it.amount }
+    }
     class TransactionResult<T> {
 
         val inserted = mutableListOf<T>()

@@ -19,5 +19,6 @@ enum class GarminBooleanKey(
     override val exportable: Boolean = true
 ) : BooleanPreferenceKey {
 
-    LocalHttpServer("communication_http", false, titleResId = R.string.garmin_local_http_server, defaultedBySM = true, hideParentScreenIfHidden = true),
+    LocalHttpServer("communication_http", false, defaultedBySM = true, hideParentScreenIfHidden = true),
+    GarminSendSmoothedData(key = "send_smoothed_data", defaultValue = false, defaultedBySM = true, hideParentScreenIfHidden = true)
 }
