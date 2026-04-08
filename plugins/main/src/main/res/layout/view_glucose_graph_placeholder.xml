@@ -48,4 +48,14 @@
         android:textSize="12sp"
         style="?attr/borderlessButtonStyle" />
 
+    <ImageButton
+        android:id="@+id/chart_menu_button"
+        android:layout_width="35dp"
+        android:layout_height="35dp"
+        android:layout_gravity="top|end"
+        android:contentDescription="@string/chart_menu"
+        android:paddingTop="5dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        app:srcCompat="@drawable/ic_arrow_drop_down_white_24dp" />
+
 </FrameLayout>

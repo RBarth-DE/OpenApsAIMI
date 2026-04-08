@@ -23,18 +23,17 @@ enum class SeriesType {
     DEV_SLOPE,
     HEART_RATE,
     STEPS,
-    ACTIVITY
+    ACTIVITY,
+    MODES,
+    PULSE,
+    TIR
 }
 
 /**
  * Configuration for the overview graphs.
  *
- * Fixed graphs (not removable):
- * - BG graph: blood glucose with optional activity overlay (toggled via [bgOverlays]).
- * - IOB graph: IOB line with bolus markers + flipped basal overlay, with optional activity
- *   overlay (toggled via [iobOverlays]).
- *
  * @param bgOverlays       Overlay toggles for the BG graph (currently only [SeriesType.ACTIVITY]).
+ * @param showIobGraph     Whether the fixed IOB/BAS graph is visible (default true).
  * @param iobOverlays      Overlay toggles for the fixed IOB graph (currently only [SeriesType.ACTIVITY]).
  * @param secondaryGraphs  Ordered list of user-configurable secondary graph configurations.
  *   IOB cannot appear here (it has a dedicated fixed slot). Each graph is a List (not Set) to
@@ -44,6 +43,7 @@ enum class SeriesType {
  */
 data class GraphConfig(
     val bgOverlays: List<SeriesType> = listOf(SeriesType.ACTIVITY),
+    val showIobGraph: Boolean = true,
     val iobOverlays: List<SeriesType> = listOf(SeriesType.ACTIVITY),
     val secondaryGraphs: List<List<SeriesType>> = listOf(
         listOf(SeriesType.COB)

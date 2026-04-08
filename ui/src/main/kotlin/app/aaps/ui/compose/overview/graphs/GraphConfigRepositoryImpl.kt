@@ -60,6 +60,7 @@ class GraphConfigRepositoryImpl @Inject constructor(
 
         private const val KEY_SECONDARY_GRAPHS = "secondaryGraphs"
         private const val KEY_BG_OVERLAYS = "bgOverlays"
+        private const val KEY_SHOW_IOB_GRAPH = "showIobGraph"
         private const val KEY_IOB_OVERLAYS = "iobOverlays"
 
         private fun overlaysToJson(overlays: List<SeriesType>): JSONArray {
@@ -85,6 +86,7 @@ class GraphConfigRepositoryImpl @Inject constructor(
         fun toJson(config: GraphConfig): String {
             val obj = JSONObject()
             obj.put(KEY_BG_OVERLAYS, overlaysToJson(config.bgOverlays))
+            obj.put(KEY_SHOW_IOB_GRAPH, config.showIobGraph)
             obj.put(KEY_IOB_OVERLAYS, overlaysToJson(config.iobOverlays))
             val graphsArray = JSONArray()
             for (graph in config.secondaryGraphs) {
@@ -119,7 +121,8 @@ class GraphConfigRepositoryImpl @Inject constructor(
                     if (series.isNotEmpty()) graphs.add(series.take(2)) // max 2 per graph
                 }
             }
-            return GraphConfig(bgOverlays = bgOverlays, iobOverlays = iobOverlays, secondaryGraphs = graphs)
+            val showIobGraph = obj.optBoolean(KEY_SHOW_IOB_GRAPH, true)
+            return GraphConfig(bgOverlays = bgOverlays, showIobGraph = showIobGraph, iobOverlays = iobOverlays, secondaryGraphs = graphs)
         }
     }
 }

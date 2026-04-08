@@ -36,6 +36,7 @@ import app.aaps.core.data.ue.Sources
 import app.aaps.core.graph.data.GraphViewWithCleanup
 import app.aaps.core.interfaces.aps.IobTotal
 import app.aaps.core.interfaces.aps.Loop
+import app.aaps.core.interfaces.aps.RT
 import app.aaps.core.interfaces.automation.Automation
 import app.aaps.core.interfaces.bgQualityCheck.BgQualityCheck
 import app.aaps.core.interfaces.configuration.Config
@@ -106,8 +107,12 @@ import app.aaps.core.ui.extensions.toVisibilityKeepSpace
 import app.aaps.plugins.main.R
 import app.aaps.plugins.main.databinding.OverviewFragmentBinding
 import app.aaps.plugins.main.databinding.OverviewNotificationItemBinding
+import app.aaps.plugins.main.general.dashboard.views.DashboardModesView
+import app.aaps.plugins.main.general.dashboard.views.DashboardPulseView
+import app.aaps.plugins.main.general.dashboard.viewmodel.OverviewViewModel
 import app.aaps.plugins.main.general.overview.graphData.GraphData
 import app.aaps.plugins.main.general.overview.ui.StatusLightHandler
+import app.aaps.plugins.main.general.overview.views.OverviewTirView
 import app.aaps.plugins.main.skins.SkinProvider
 import com.jjoe64.graphview.GraphView
 import dagger.android.support.DaggerFragment
@@ -115,6 +120,7 @@ import io.reactivex.rxjava3.disposables.CompositeDisposable
 import io.reactivex.rxjava3.kotlin.plusAssign
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.collectLatest
@@ -184,6 +190,9 @@ class OverviewFragment : DaggerFragment(), View.OnClickListener, OnLongClickList
 
     private val secondaryGraphs = ArrayList<GraphView>()
     private val secondaryGraphsLabel = ArrayList<TextView>()
+    private val secondaryModesViews = ArrayList<DashboardModesView>()
+    private val secondaryPulseViews = ArrayList<DashboardPulseView>()
+    private val secondaryTirViews = ArrayList<OverviewTirView>()
 
     private var carbAnimation: AnimationDrawable? = null
     private var lastUserAction = ""
@@ -427,6 +436,9 @@ class OverviewFragment : DaggerFragment(), View.OnClickListener, OnLongClickList
         carbAnimation = null
         secondaryGraphs.clear()
         secondaryGraphsLabel.clear()
+        secondaryModesViews.clear()
+        secondaryPulseViews.clear()
+        secondaryTirViews.clear()
     }
 
     override fun onDestroy() {
@@ -791,14 +803,18 @@ class OverviewFragment : DaggerFragment(), View.OnClickListener, OnLongClickList
             // rebuild needed
             secondaryGraphs.clear()
             secondaryGraphsLabel.clear()
+            secondaryModesViews.clear()
+            secondaryPulseViews.clear()
+            secondaryTirViews.clear()
             binding.graphsLayout.secondaryGraphs.removeAllViews()
+            val slotHeight = rh.dpToPx(skinProvider.activeSkin().secondaryGraphHeight)
+            val slotMargins: LinearLayout.LayoutParams.() -> Unit = { setMargins(0, rh.dpToPx(15), 0, rh.dpToPx(10)) }
             (1 until numOfGraphs).forEach { _ ->
                 val relativeLayout = RelativeLayout(context)
                 relativeLayout.layoutParams = RelativeLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
 
                 val graph = GraphViewWithCleanup(requireContext())
-                graph.layoutParams =
-                    LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, rh.dpToPx(skinProvider.activeSkin().secondaryGraphHeight)).also { it.setMargins(0, rh.dpToPx(15), 0, rh.dpToPx(10)) }
+                graph.layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, slotHeight).also(slotMargins)
                 graph.gridLabelRenderer?.gridColor = rh.gac(context, app.aaps.core.ui.R.attr.graphGrid)
                 graph.gridLabelRenderer?.reloadStyles()
                 graph.gridLabelRenderer?.isHorizontalLabelsVisible = false
@@ -807,11 +823,29 @@ class OverviewFragment : DaggerFragment(), View.OnClickListener, OnLongClickList
                 graph.viewport.backgroundColor = rh.gac(context, app.aaps.core.ui.R.attr.viewPortBackgroundColor)
                 relativeLayout.addView(graph)
 
+                val modesView = DashboardModesView(requireContext())
+                modesView.layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, slotHeight).also(slotMargins)
+                modesView.visibility = View.GONE
+                relativeLayout.addView(modesView)
+                secondaryModesViews.add(modesView)
+
+                val pulseView = DashboardPulseView(requireContext())
+                pulseView.layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, slotHeight).also(slotMargins)
+                pulseView.visibility = View.GONE
+                relativeLayout.addView(pulseView)
+                secondaryPulseViews.add(pulseView)
+
+                val tirView = OverviewTirView(requireContext())
+                tirView.layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, slotHeight).also(slotMargins)
+                tirView.visibility = View.GONE
+                relativeLayout.addView(tirView)
+                secondaryTirViews.add(tirView)
+
                 val label = TextView(context)
-                val layoutParams = RelativeLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT).also { it.setMargins(rh.dpToPx(30), rh.dpToPx(25), 0, 0) }
-                layoutParams.addRule(RelativeLayout.ALIGN_PARENT_TOP)
-                layoutParams.addRule(RelativeLayout.ALIGN_PARENT_LEFT)
-                label.layoutParams = layoutParams
+                val labelParams = RelativeLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT).also { it.setMargins(rh.dpToPx(30), rh.dpToPx(25), 0, 0) }
+                labelParams.addRule(RelativeLayout.ALIGN_PARENT_TOP)
+                labelParams.addRule(RelativeLayout.ALIGN_PARENT_LEFT)
+                label.layoutParams = labelParams
                 relativeLayout.addView(label)
                 secondaryGraphsLabel.add(label)
 
@@ -1106,66 +1140,148 @@ class OverviewFragment : DaggerFragment(), View.OnClickListener, OnLongClickList
 
         val now = System.currentTimeMillis()
         for (g in 0 until min(secondaryGraphs.size, menuChartSettings.size - 1)) {
+            val settings = menuChartSettings[g + 1]
+            val hasCustomView = settings[OverviewMenus.CharType.MODES.ordinal] ||
+                settings[OverviewMenus.CharType.PULSE.ordinal] ||
+                settings[OverviewMenus.CharType.TIR.ordinal]
+
             val secondGraphData = graphDataProvider.get().with(secondaryGraphs[g], overviewData)
-            var useABSForScale = false
-            var useIobForScale = false
-            var useCobForScale = false
-            var useDevForScale = false
-            var useRatioForScale = false
-            var useVarSensForScale = false
-            var useDSForScale = false
-            var useBGIForScale = false
-            var useHRForScale = false
-            var useSTEPSForScale = false
-            when {
-                menuChartSettings[g + 1][OverviewMenus.CharType.ABS.ordinal]      -> useABSForScale = true
-                menuChartSettings[g + 1][OverviewMenus.CharType.IOB.ordinal]      -> useIobForScale = true
-                menuChartSettings[g + 1][OverviewMenus.CharType.COB.ordinal]      -> useCobForScale = true
-                menuChartSettings[g + 1][OverviewMenus.CharType.DEV.ordinal]      -> useDevForScale = true
-                menuChartSettings[g + 1][OverviewMenus.CharType.BGI.ordinal]      -> useBGIForScale = true
-                menuChartSettings[g + 1][OverviewMenus.CharType.SEN.ordinal]      -> useRatioForScale = true
-                menuChartSettings[g + 1][OverviewMenus.CharType.VAR_SEN.ordinal]  -> useVarSensForScale = true
-                menuChartSettings[g + 1][OverviewMenus.CharType.DEVSLOPE.ordinal] -> useDSForScale = true
-                menuChartSettings[g + 1][OverviewMenus.CharType.HR.ordinal]       -> useHRForScale = true
-                menuChartSettings[g + 1][OverviewMenus.CharType.STEPS.ordinal]    -> useSTEPSForScale = true
+            if (!hasCustomView) {
+                var useABSForScale = false
+                var useIobForScale = false
+                var useCobForScale = false
+                var useDevForScale = false
+                var useRatioForScale = false
+                var useVarSensForScale = false
+                var useDSForScale = false
+                var useBGIForScale = false
+                var useHRForScale = false
+                var useSTEPSForScale = false
+                when {
+                    settings[OverviewMenus.CharType.ABS.ordinal]      -> useABSForScale = true
+                    settings[OverviewMenus.CharType.IOB.ordinal]      -> useIobForScale = true
+                    settings[OverviewMenus.CharType.COB.ordinal]      -> useCobForScale = true
+                    settings[OverviewMenus.CharType.DEV.ordinal]      -> useDevForScale = true
+                    settings[OverviewMenus.CharType.BGI.ordinal]      -> useBGIForScale = true
+                    settings[OverviewMenus.CharType.SEN.ordinal]      -> useRatioForScale = true
+                    settings[OverviewMenus.CharType.VAR_SEN.ordinal]  -> useVarSensForScale = true
+                    settings[OverviewMenus.CharType.DEVSLOPE.ordinal] -> useDSForScale = true
+                    settings[OverviewMenus.CharType.HR.ordinal]       -> useHRForScale = true
+                    settings[OverviewMenus.CharType.STEPS.ordinal]    -> useSTEPSForScale = true
+                }
+                val alignDevBgiScale = settings[OverviewMenus.CharType.DEV.ordinal] && settings[OverviewMenus.CharType.BGI.ordinal]
+
+                if (settings[OverviewMenus.CharType.ABS.ordinal]) secondGraphData.addAbsIob(useABSForScale, 1.0)
+                if (settings[OverviewMenus.CharType.IOB.ordinal]) secondGraphData.addIob(useIobForScale, 1.0)
+                if (settings[OverviewMenus.CharType.COB.ordinal]) secondGraphData.addCob(useCobForScale, if (useCobForScale) 1.0 else 0.5)
+                if (settings[OverviewMenus.CharType.DEV.ordinal]) secondGraphData.addDeviations(useDevForScale, 1.0)
+                if (settings[OverviewMenus.CharType.BGI.ordinal]) secondGraphData.addMinusBGI(useBGIForScale, if (alignDevBgiScale) 1.0 else 0.8)
+                if (settings[OverviewMenus.CharType.SEN.ordinal]) secondGraphData.addRatio(useRatioForScale, if (useRatioForScale) 1.0 else 0.8)
+                if (settings[OverviewMenus.CharType.VAR_SEN.ordinal]) secondGraphData.addVarSens(useVarSensForScale, if (useVarSensForScale) 1.0 else 0.8)
+                if (settings[OverviewMenus.CharType.DEVSLOPE.ordinal] && config.isDev()) secondGraphData.addDeviationSlope(
+                    useDSForScale,
+                    if (useDSForScale) 1.0 else 0.8,
+                    useRatioForScale
+                )
+                if (settings[OverviewMenus.CharType.HR.ordinal]) secondGraphData.addHeartRate(useHRForScale, if (useHRForScale) 1.0 else 0.8)
+                if (settings[OverviewMenus.CharType.STEPS.ordinal]) secondGraphData.addSteps(useSTEPSForScale, if (useSTEPSForScale) 1.0 else 0.8)
+
+                // set manual x bounds to have nice steps
+                secondGraphData.formatAxis(overviewData.fromTime, overviewData.endTime)
+                secondGraphData.addNowLine(now)
             }
-            val alignDevBgiScale = menuChartSettings[g + 1][OverviewMenus.CharType.DEV.ordinal] && menuChartSettings[g + 1][OverviewMenus.CharType.BGI.ordinal]
-
-            if (menuChartSettings[g + 1][OverviewMenus.CharType.ABS.ordinal]) secondGraphData.addAbsIob(useABSForScale, 1.0)
-            if (menuChartSettings[g + 1][OverviewMenus.CharType.IOB.ordinal]) secondGraphData.addIob(useIobForScale, 1.0)
-            if (menuChartSettings[g + 1][OverviewMenus.CharType.COB.ordinal]) secondGraphData.addCob(useCobForScale, if (useCobForScale) 1.0 else 0.5)
-            if (menuChartSettings[g + 1][OverviewMenus.CharType.DEV.ordinal]) secondGraphData.addDeviations(useDevForScale, 1.0)
-            if (menuChartSettings[g + 1][OverviewMenus.CharType.BGI.ordinal]) secondGraphData.addMinusBGI(useBGIForScale, if (alignDevBgiScale) 1.0 else 0.8)
-            if (menuChartSettings[g + 1][OverviewMenus.CharType.SEN.ordinal]) secondGraphData.addRatio(useRatioForScale, if (useRatioForScale) 1.0 else 0.8)
-            if (menuChartSettings[g + 1][OverviewMenus.CharType.VAR_SEN.ordinal]) secondGraphData.addVarSens(useVarSensForScale, if (useVarSensForScale) 1.0 else 0.8)
-            if (menuChartSettings[g + 1][OverviewMenus.CharType.DEVSLOPE.ordinal] && config.isDev()) secondGraphData.addDeviationSlope(
-                useDSForScale,
-                if (useDSForScale) 1.0 else 0.8,
-                useRatioForScale
-            )
-            if (menuChartSettings[g + 1][OverviewMenus.CharType.HR.ordinal]) secondGraphData.addHeartRate(useHRForScale, if (useHRForScale) 1.0 else 0.8)
-            if (menuChartSettings[g + 1][OverviewMenus.CharType.STEPS.ordinal]) secondGraphData.addSteps(useSTEPSForScale, if (useSTEPSForScale) 1.0 else 0.8)
-
-            // set manual x bounds to have nice steps
-            secondGraphData.formatAxis(overviewData.fromTime, overviewData.endTime)
-            secondGraphData.addNowLine(now)
             secondaryGraphsData.add(secondGraphData)
         }
+        var hasTirEnabled = false
         for (g in 0 until min(secondaryGraphs.size, menuChartSettings.size - 1)) {
+            val settings = menuChartSettings[g + 1]
+            val hasModes = settings[OverviewMenus.CharType.MODES.ordinal]
+            val hasPulse = settings[OverviewMenus.CharType.PULSE.ordinal]
+            val hasTir = settings[OverviewMenus.CharType.TIR.ordinal]
+            val hasCustomView = hasModes || hasPulse || hasTir
+
             secondaryGraphsLabel[g].text = overviewMenus.enabledTypes(g + 1)
-            secondaryGraphs[g].visibility = (
-                menuChartSettings[g + 1][OverviewMenus.CharType.ABS.ordinal] ||
-                    menuChartSettings[g + 1][OverviewMenus.CharType.IOB.ordinal] ||
-                    menuChartSettings[g + 1][OverviewMenus.CharType.COB.ordinal] ||
-                    menuChartSettings[g + 1][OverviewMenus.CharType.DEV.ordinal] ||
-                    menuChartSettings[g + 1][OverviewMenus.CharType.BGI.ordinal] ||
-                    menuChartSettings[g + 1][OverviewMenus.CharType.SEN.ordinal] ||
-                    menuChartSettings[g + 1][OverviewMenus.CharType.VAR_SEN.ordinal] ||
-                    menuChartSettings[g + 1][OverviewMenus.CharType.DEVSLOPE.ordinal] ||
-                    menuChartSettings[g + 1][OverviewMenus.CharType.HR.ordinal] ||
-                    menuChartSettings[g + 1][OverviewMenus.CharType.STEPS.ordinal]
-                ).toVisibility()
-            secondaryGraphsData[g].performUpdate()
+
+            if (hasCustomView) {
+                secondaryGraphs[g].visibility = View.GONE
+                secondaryModesViews[g].visibility = hasModes.toVisibility()
+                secondaryPulseViews[g].visibility = (hasPulse && !hasModes).toVisibility()
+                secondaryTirViews[g].visibility = (hasTir && !hasModes && !hasPulse).toVisibility()
+
+                when {
+                    hasModes -> {
+                        val events = automation.userEvents().filter { it.isEnabled }.take(10)
+                        secondaryModesViews[g].setButtons(events.map { it.title })
+                        secondaryModesViews[g].setOnButtonClickListener { index ->
+                            val event = events.getOrNull(index) ?: return@setOnButtonClickListener
+                            context?.let { ctx ->
+                                uiInteraction.showOkCancelDialog(
+                                    context = ctx,
+                                    message = rh.gs(R.string.run_question, event.title),
+                                    ok = { scope?.launch { automation.processEvent(event) } }
+                                )
+                            }
+                        }
+                    }
+                    hasPulse -> {
+                        val lastRun = loop.lastRun
+                        val title = OverviewViewModel.buildAimiPulseTitle(lastRun?.lastAPSRun, dateUtil, rh)
+                        val summary = OverviewViewModel.buildAimiPulseSummary(lastRun?.request, rh, decimalFormatter)
+                        val meta = OverviewViewModel.buildAimiPulseMeta(lastRun?.request, rh, decimalFormatter)
+                        val hypoRisk = (lastRun?.request?.rawData() as? RT)?.isHypoRisk == true
+                        secondaryPulseViews[g].updatePulse(title, summary, meta, hypoRisk)
+                    }
+                }
+                if (hasTir) hasTirEnabled = true
+            } else {
+                secondaryModesViews[g].visibility = View.GONE
+                secondaryPulseViews[g].visibility = View.GONE
+                secondaryTirViews[g].visibility = View.GONE
+                secondaryGraphs[g].visibility = (
+                    settings[OverviewMenus.CharType.ABS.ordinal] ||
+                        settings[OverviewMenus.CharType.IOB.ordinal] ||
+                        settings[OverviewMenus.CharType.COB.ordinal] ||
+                        settings[OverviewMenus.CharType.DEV.ordinal] ||
+                        settings[OverviewMenus.CharType.BGI.ordinal] ||
+                        settings[OverviewMenus.CharType.SEN.ordinal] ||
+                        settings[OverviewMenus.CharType.VAR_SEN.ordinal] ||
+                        settings[OverviewMenus.CharType.DEVSLOPE.ordinal] ||
+                        settings[OverviewMenus.CharType.HR.ordinal] ||
+                        settings[OverviewMenus.CharType.STEPS.ordinal]
+                    ).toVisibility()
+                secondaryGraphsData[g].performUpdate()
+            }
+        }
+        if (hasTirEnabled) updateTirViews(menuChartSettings)
+    }
+
+    private fun updateTirViews(menuChartSettings: List<Array<Boolean>>) {
+        viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
+            val now = System.currentTimeMillis()
+            val from = dateUtil.beginOfDay(now)
+            val readings = persistenceLayer.getBgReadingsDataFromTimeToTime(from, now, true)
+            if (readings.isEmpty()) return@launch
+            val values = readings.map { it.value }
+            val count = values.size.toDouble()
+            val vl = (values.count { it < 54.0 } / count) * 100.0
+            val l = (values.count { it in 54.0..69.99 } / count) * 100.0
+            val tr = (values.count { it in 70.0..180.0 } / count) * 100.0
+            val h = (values.count { it in 180.01..250.0 } / count) * 100.0
+            val vh = (values.count { it > 250.0 } / count) * 100.0
+            val avg = values.average()
+            val a1c = (avg + 46.7) / 28.7
+            withContext(Dispatchers.Main) {
+                _binding ?: return@withContext
+                for (g in 0 until min(secondaryTirViews.size, menuChartSettings.size - 1)) {
+                    val settings = menuChartSettings[g + 1]
+                    val hasModes = settings[OverviewMenus.CharType.MODES.ordinal]
+                    val hasPulse = settings[OverviewMenus.CharType.PULSE.ordinal]
+                    val hasTir = settings[OverviewMenus.CharType.TIR.ordinal]
+                    if (hasTir && !hasModes && !hasPulse) {
+                        secondaryTirViews[g].update(vl, l, tr, h, vh, avg, a1c)
+                    }
+                }
+            }
         }
     }
 

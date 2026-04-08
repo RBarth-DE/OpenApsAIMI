@@ -74,6 +74,12 @@
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
+            <LinearLayout
+                android:id="@+id/secondary_graphs"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical" />
+
             <com.google.android.material.card.MaterialCardView
                 style="@style/Widget.AAPS.Dashboard.Card"
                 android:layout_width="match_parent"

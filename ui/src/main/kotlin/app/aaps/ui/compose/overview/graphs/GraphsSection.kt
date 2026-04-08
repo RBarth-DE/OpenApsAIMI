@@ -13,10 +13,17 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
@@ -25,6 +32,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
@@ -38,8 +46,15 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
+import android.content.Intent
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -81,6 +96,9 @@ private val SIMPLE_MODE_CONFIG = GraphConfig(
 
 /** Series types available for user-configurable secondary graphs (IOB excluded — has dedicated fixed slot) */
 private val CONFIGURABLE_SERIES = SeriesType.entries.filter { it != SeriesType.IOB }
+
+/** Custom-view types occupy the entire slot; they are mutually exclusive with chart types */
+private fun SeriesType.isCustomView() = this == SeriesType.MODES || this == SeriesType.PULSE || this == SeriesType.TIR
 
 @OptIn(FlowPreview::class)
 @Composable
@@ -178,6 +196,11 @@ fun GraphsSection(
                 for (i in 0 until count) secScrollStates[i].scroll(Scroll.Absolute.pixels(scroll))
             }
     }
+
+    // Custom panel states — collected here (not inside the loop) to satisfy Compose composition rules
+    val modesState by graphViewModel.modesFlow.collectAsStateWithLifecycle()
+    val pulseState by graphViewModel.pulseFlow.collectAsStateWithLifecycle()
+    val tirState by graphViewModel.tirFlow.collectAsStateWithLifecycle()
 
     // Auto-scroll when new BG value arrives
     val bgInfoState by graphViewModel.bgInfoState.collectAsStateWithLifecycle()
@@ -287,72 +310,102 @@ fun GraphsSection(
                 onDismiss = { editingBgOverlays = false }
             )
         }
-        // Fixed IOB graph (Graph 1) with optional Activity overlay
+        // Fixed IOB graph (Graph 1) — optional, removable via pencil edit
         var editingIobOverlays by remember { mutableStateOf(false) }
-        Box(modifier = Modifier.offset(y = (-8).dp)) {
-            SecondaryGraphCompose(
-                viewModel = graphViewModel,
-                seriesTypes = listOf(SeriesType.IOB),
-                scrollState = iobScrollState,
-                zoomState = iobZoomState,
-                derivedTimeRange = derivedTimeRange,
-                nowTimestamp = nowTimestamp,
-                activityOverlay = SeriesType.ACTIVITY in graphConfig.iobOverlays,
-                modifier = Modifier.fillMaxWidth()
-            )
-            Text(
-                text = stringResource(app.aaps.core.ui.R.string.iob) + " / " + stringResource(app.aaps.core.ui.R.string.basal_shortname),
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-                modifier = Modifier
-                    .align(Alignment.TopStart)
-                    .padding(start = 36.dp, top = 2.dp)
-            )
-            if (!isSimpleMode) {
-                GraphEditButton(
-                    onClick = { editingIobOverlays = true },
-                    modifier = Modifier
-                        .align(Alignment.TopEnd)
-                        .padding(end = 4.dp, top = 2.dp)
-                )
-            }
-        }
-        if (editingIobOverlays) {
-            GraphSeriesBottomSheet(
-                title = stringResource(app.aaps.core.ui.R.string.iob) + " / " + stringResource(app.aaps.core.ui.R.string.basal_shortname),
-                selectedSeries = graphConfig.iobOverlays,
-                availableSeries = listOf(SeriesType.ACTIVITY),
-                onToggle = { type ->
-                    val current = graphConfig.iobOverlays.toMutableList()
-                    if (type in current) current.remove(type) else current.add(type)
-                    graphViewModel.updateGraphConfig(graphConfig.copy(iobOverlays = current))
-                },
-                onDismiss = { editingIobOverlays = false }
-            )
-        }
-
-        // Secondary graphs — config-driven (labels start at "Graph 2")
-        var editingGraphIndex by remember { mutableIntStateOf(-1) }
-        for (i in 0 until activeCount) {
-            val seriesList = graphConfig.secondaryGraphs[i]
+        if (graphConfig.showIobGraph) {
             Box(modifier = Modifier.offset(y = (-8).dp)) {
                 SecondaryGraphCompose(
                     viewModel = graphViewModel,
-                    seriesTypes = seriesList,
-                    scrollState = secScrollStates[i],
-                    zoomState = secZoomStates[i],
+                    seriesTypes = listOf(SeriesType.IOB),
+                    scrollState = iobScrollState,
+                    zoomState = iobZoomState,
                     derivedTimeRange = derivedTimeRange,
                     nowTimestamp = nowTimestamp,
+                    activityOverlay = SeriesType.ACTIVITY in graphConfig.iobOverlays,
                     modifier = Modifier.fillMaxWidth()
                 )
                 Text(
-                    text = seriesListLabel(seriesList),
+                    text = stringResource(app.aaps.core.ui.R.string.iob) + " / " + stringResource(app.aaps.core.ui.R.string.basal_shortname),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
                     modifier = Modifier
                         .align(Alignment.TopStart)
                         .padding(start = 36.dp, top = 2.dp)
                 )
+                if (!isSimpleMode) {
+                    GraphEditButton(
+                        onClick = { editingIobOverlays = true },
+                        modifier = Modifier
+                            .align(Alignment.TopEnd)
+                            .padding(end = 4.dp, top = 2.dp)
+                    )
+                }
+            }
+            if (editingIobOverlays) {
+                GraphSeriesBottomSheet(
+                    title = stringResource(app.aaps.core.ui.R.string.iob) + " / " + stringResource(app.aaps.core.ui.R.string.basal_shortname),
+                    selectedSeries = graphConfig.iobOverlays,
+                    availableSeries = listOf(SeriesType.ACTIVITY),
+                    onToggle = { type ->
+                        val current = graphConfig.iobOverlays.toMutableList()
+                        if (type in current) current.remove(type) else current.add(type)
+                        graphViewModel.updateGraphConfig(graphConfig.copy(iobOverlays = current))
+                    },
+                    onRemoveGraph = {
+                        graphViewModel.updateGraphConfig(graphConfig.copy(showIobGraph = false))
+                        editingIobOverlays = false
+                    },
+                    onDismiss = { editingIobOverlays = false }
+                )
+            }
+        }
+
+        // Secondary graphs — config-driven (labels start at "Graph 2")
+        var editingGraphIndex by remember { mutableIntStateOf(-1) }
+        for (i in 0 until activeCount) {
+            val seriesList = graphConfig.secondaryGraphs[i]
+            val customType = seriesList.firstOrNull { it.isCustomView() }
+            Box(modifier = Modifier.offset(y = (-8).dp)) {
+                when (customType) {
+                    SeriesType.MODES -> {
+                        ModesPanel(
+                            events = modesState.events,
+                            onRunEvent = { eventId -> graphViewModel.runAutomationEvent(eventId) },
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+                    SeriesType.PULSE -> {
+                        PulsePanel(
+                            state = pulseState,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+                    SeriesType.TIR -> {
+                        TirPanel(
+                            state = tirState,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+                    else -> {
+                        SecondaryGraphCompose(
+                            viewModel = graphViewModel,
+                            seriesTypes = seriesList,
+                            scrollState = secScrollStates[i],
+                            zoomState = secZoomStates[i],
+                            derivedTimeRange = derivedTimeRange,
+                            nowTimestamp = nowTimestamp,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                        Text(
+                            text = seriesListLabel(seriesList),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                            modifier = Modifier
+                                .align(Alignment.TopStart)
+                                .padding(start = 36.dp, top = 2.dp)
+                        )
+                    }
+                }
                 if (!isSimpleMode) {
                     GraphEditButton(
                         onClick = { editingGraphIndex = i },
@@ -373,12 +426,17 @@ fun GraphsSection(
                     val current = graphs[editingGraphIndex].toMutableList()
                     if (type in current) {
                         current.remove(type)
-                    } else {
+                    } else if (type.isCustomView()) {
+                        // Custom view fills entire slot — clear other series
+                        current.clear()
                         current.add(type)
-                        if (current.size > 2) current.removeAt(0) // FIFO: drop oldest
+                    } else {
+                        // Chart type — remove any custom view, then apply FIFO
+                        current.removeAll { it.isCustomView() }
+                        current.add(type)
+                        if (current.size > 2) current.removeAt(0)
                     }
                     if (current.isEmpty()) {
-                        // Auto-remove graph when all series deselected
                         graphs.removeAt(editingGraphIndex)
                         editingGraphIndex = -1
                     } else {
@@ -396,7 +454,9 @@ fun GraphsSection(
             )
         }
         // Add graph button (hidden in simple mode)
-        if (!isSimpleMode && activeCount < GraphConfig.MAX_SECONDARY_GRAPHS) {
+        // Also shown when IOB graph is hidden (to restore it) — IOB appears as the first chip
+        val showAddButton = !isSimpleMode && (activeCount < GraphConfig.MAX_SECONDARY_GRAPHS || !graphConfig.showIobGraph)
+        if (showAddButton) {
             var showAddSheet by remember { mutableStateOf(false) }
             TextButton(
                 onClick = { showAddSheet = true },
@@ -407,16 +467,30 @@ fun GraphsSection(
                 Text(stringResource(app.aaps.core.ui.R.string.graph_add), style = MaterialTheme.typography.labelMedium)
             }
             if (showAddSheet) {
+                // When IOB is hidden, show it as the first (exclusive) chip so user can restore it
+                val addAvailableSeries = if (!graphConfig.showIobGraph)
+                    listOf(SeriesType.IOB) + CONFIGURABLE_SERIES
+                else CONFIGURABLE_SERIES
                 var newGraphSeries by remember { mutableStateOf(emptyList<SeriesType>()) }
                 GraphSeriesBottomSheet(
                     title = stringResource(app.aaps.core.ui.R.string.graph_new),
                     selectedSeries = newGraphSeries,
-                    availableSeries = CONFIGURABLE_SERIES,
+                    availableSeries = addAvailableSeries,
                     onToggle = { type ->
+                        if (type == SeriesType.IOB) {
+                            // Restore the fixed IOB/BAS graph and close immediately
+                            graphViewModel.updateGraphConfig(graphConfig.copy(showIobGraph = true))
+                            showAddSheet = false
+                            return@GraphSeriesBottomSheet
+                        }
                         val current = newGraphSeries.toMutableList()
                         if (type in current) {
                             current.remove(type)
+                        } else if (type.isCustomView()) {
+                            current.clear()
+                            current.add(type)
                         } else {
+                            current.removeAll { it.isCustomView() }
                             current.add(type)
                             if (current.size > 2) current.removeAt(0)
                         }
@@ -463,6 +537,9 @@ private fun seriesShortNameId(type: SeriesType): Int = when (type) {
     SeriesType.HEART_RATE      -> app.aaps.core.ui.R.string.heartRate_shortname
     SeriesType.STEPS           -> app.aaps.core.ui.R.string.steps_shortname
     SeriesType.ACTIVITY        -> app.aaps.core.ui.R.string.activity_shortname
+    SeriesType.MODES           -> app.aaps.core.ui.R.string.modes_series_shortname
+    SeriesType.PULSE           -> app.aaps.core.ui.R.string.pulse_series_shortname
+    SeriesType.TIR             -> app.aaps.core.ui.R.string.tir_series_shortname
 }
 
 // =========================================================================
@@ -490,6 +567,209 @@ private fun GraphEditButton(
     }
 }
 
+// =========================================================================
+// Custom panel composables (MODES, PULSE, TIR)
+// =========================================================================
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun ModesPanel(
+    events: List<AutomationEventData>,
+    onRunEvent: (String) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    var pendingEvent by remember { mutableStateOf<AutomationEventData?>(null) }
+
+    Column(
+        modifier = modifier
+            .padding(horizontal = 4.dp, vertical = 4.dp)
+    ) {
+        Text(
+            text = stringResource(app.aaps.core.ui.R.string.modes_series_shortname),
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+            modifier = Modifier.padding(start = 32.dp)
+        )
+        Spacer(Modifier.height(4.dp))
+        if (events.isEmpty()) {
+            Text(
+                text = "—",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
+                modifier = Modifier.padding(start = 32.dp)
+            )
+        } else {
+            FlowRow(
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp),
+                modifier = Modifier.padding(start = 32.dp)
+            ) {
+                for (event in events) {
+                    OutlinedButton(
+                        onClick = { pendingEvent = event },
+                        border = BorderStroke(1.5.dp, MaterialTheme.colorScheme.outline),
+                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
+                        modifier = Modifier
+                            .heightIn(min = 32.dp)
+                            .widthIn(min = 64.dp, max = 160.dp)
+                    ) {
+                        Text(
+                            text = event.title,
+                            style = MaterialTheme.typography.labelSmall,
+                            maxLines = 3,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+    pendingEvent?.let { event ->
+        AlertDialog(
+            onDismissRequest = { pendingEvent = null },
+            title = { Text(event.title) },
+            text = { Text(stringResource(app.aaps.core.ui.R.string.run_event_question, event.title)) },
+            confirmButton = {
+                Button(onClick = {
+                    onRunEvent(event.id)
+                    pendingEvent = null
+                }) { Text(stringResource(app.aaps.core.ui.R.string.ok)) }
+            },
+            dismissButton = {
+                TextButton(onClick = { pendingEvent = null }) {
+                    Text(stringResource(app.aaps.core.ui.R.string.cancel))
+                }
+            }
+        )
+    }
+}
+
+@Composable
+private fun PulsePanel(
+    state: PulseUiState,
+    modifier: Modifier = Modifier
+) {
+    val context = LocalContext.current
+    val hypoColor = Color(0xFFD50000)
+    Card(
+        onClick = {
+            try {
+                context.startActivity(
+                    Intent().setClassName(context, "app.aaps.plugins.aps.openAPSAIMI.advisor.pulse.AimiPulseDetailActivity")
+                )
+            } catch (_: Exception) {}
+        },
+        modifier = modifier.padding(bottom = 4.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.Transparent),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+    ) {
+        Column(modifier = Modifier.padding(start = 32.dp, end = 12.dp, top = 4.dp, bottom = 4.dp)) {
+            if (state.titleText.isNotEmpty()) {
+                Text(
+                    text = state.titleText,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = if (state.isHypoRisk) hypoColor
+                    else MaterialTheme.colorScheme.onSurface
+                )
+            }
+            if (state.summaryText.isNotEmpty()) {
+                Spacer(Modifier.height(2.dp))
+                Text(
+                    text = state.summaryText,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.85f),
+                    maxLines = 4
+                )
+            }
+            if (state.metaText.isNotEmpty()) {
+                Spacer(Modifier.height(2.dp))
+                Text(
+                    text = state.metaText,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun TirPanel(
+    state: TirUiState,
+    modifier: Modifier = Modifier
+) {
+    val colorVeryLow  = Color(0xFFD50000)
+    val colorLow      = Color(0xFFFF6D00)
+    val colorInRange  = Color(0xFF00C853)
+    val colorHigh     = Color(0xFFFFD600)
+    val colorVeryHigh = Color(0xFFD50000)
+
+    Column(
+        modifier = modifier.padding(start = 32.dp, end = 12.dp, top = 4.dp, bottom = 4.dp)
+    ) {
+        Text(
+            text = stringResource(app.aaps.core.ui.R.string.tir_series_shortname),
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+        )
+        Spacer(Modifier.height(4.dp))
+        if (state.readingCount == 0) {
+            Text(
+                text = "—",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
+            )
+        } else {
+            // Color bar
+            Row(modifier = Modifier.fillMaxWidth().height(16.dp)) {
+                    val segments = listOf(
+                        state.veryLow  to colorVeryLow,
+                        state.low      to colorLow,
+                        state.inRange  to colorInRange,
+                        state.high     to colorHigh,
+                        state.veryHigh to colorVeryHigh
+                    )
+                    for ((fraction, color) in segments) {
+                        if (fraction > 0f) {
+                            Box(
+                                modifier = Modifier
+                                    .weight(fraction)
+                                    .height(16.dp)
+                                    .background(color)
+                            )
+                        }
+                    }
+                }
+                Spacer(Modifier.height(2.dp))
+                // Percentage labels
+                Row(modifier = Modifier.fillMaxWidth()) {
+                    val labels = listOf(
+                        state.veryLow  to colorVeryLow,
+                        state.low      to colorLow,
+                        state.inRange  to colorInRange,
+                        state.high     to colorHigh,
+                        state.veryHigh to colorVeryHigh
+                    )
+                    for ((fraction, color) in labels) {
+                        if (fraction > 0f) {
+                            Box(modifier = Modifier.weight(fraction)) {
+                                val pct = (fraction * 100).toInt()
+                                if (fraction > 0.08f) {
+                                    Text(
+                                        text = "$pct%",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = color,
+                                        modifier = Modifier.align(Alignment.Center)
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+        }
+    }
+}
 /** Bottom sheet with toggleable FilterChips for series selection + optional remove button */
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable

@@ -424,9 +424,9 @@ class OverviewViewModel(
         }
 
         val lastApsRequest = loop.lastRun?.request
-        val aimiPulseTitle = buildAimiPulseTitle(loop.lastRun?.lastAPSRun)
-        val aimiPulseSummary = buildAimiPulseSummary(lastApsRequest)
-        val aimiPulseMeta = buildAimiPulseMeta(lastApsRequest)
+        val aimiPulseTitle = buildAimiPulseTitle(loop.lastRun?.lastAPSRun, dateUtil, resourceHelper)
+        val aimiPulseSummary = buildAimiPulseSummary(lastApsRequest, resourceHelper, decimalFormatter)
+        val aimiPulseMeta = buildAimiPulseMeta(lastApsRequest, resourceHelper, decimalFormatter)
         val aimiPulseHypoRisk = (lastApsRequest?.rawData() as? app.aaps.core.interfaces.aps.RT)?.isHypoRisk == true
 
         // 12. AIMI Insights (Autodrive V3)
@@ -692,54 +692,6 @@ class OverviewViewModel(
         return resourceHelper.gs(R.string.dashboard_adjustment_decision, smbText, basalText)
     }
 
-    private fun buildAimiPulseTitle(lastApsRunMillis: Long?): String {
-        val ts = lastApsRunMillis ?: return resourceHelper.gs(R.string.dashboard_aimi_pulse_title)
-        if (ts <= 0L) return resourceHelper.gs(R.string.dashboard_aimi_pulse_title)
-        val elapsed = (dateUtil.now() - ts).coerceAtLeast(0L)
-        val age = dateUtil.age(elapsed, true, resourceHelper).trim()
-        return resourceHelper.gs(R.string.dashboard_aimi_pulse_title_with_age, age)
-    }
-
-    private fun plainTextFromAimiReason(raw: String): String {
-        if (raw.isBlank()) return ""
-        return raw.replace(Regex("<[^>]+>"), " ")
-            .replace("&nbsp;", " ")
-            .replace(Regex("\\s+"), " ")
-            .trim()
-    }
-
-    private fun clipAimiReasonForPulse(plain: String, maxLen: Int = 220): String {
-        val singleLine = plain.replace('\n', ' ').replace(Regex("\\s+"), " ").trim()
-        if (singleLine.length <= maxLen) return singleLine
-        return singleLine.take(maxLen - 1).trimEnd() + "…"
-    }
-
-    private fun buildAimiPulseSummary(request: APSResult?): String {
-        if (request == null) return resourceHelper.gs(R.string.dashboard_aimi_pulse_summary_none)
-        val plain = plainTextFromAimiReason(request.reason)
-        val core = when {
-            plain.isNotBlank() -> clipAimiReasonForPulse(plain)
-            else -> {
-                val smbText = decimalFormatter.to2Decimal(request.smb)
-                val basalText = if (request.rate == -1.0) "—" else decimalFormatter.to2Decimal(request.rate)
-                resourceHelper.gs(R.string.dashboard_aimi_pulse_fallback, smbText, basalText)
-            }
-        }
-        return if ((request.rawData() as? app.aaps.core.interfaces.aps.RT)?.isHypoRisk == true) {
-            resourceHelper.gs(R.string.dashboard_aimi_pulse_hypo_prefix) + " " + core
-        } else {
-            core
-        }
-    }
-
-    private fun buildAimiPulseMeta(request: APSResult?): String {
-        if (request == null) return ""
-        val smb = decimalFormatter.to2Decimal(request.smb)
-        val basalDisplay = if (request.rate == -1.0) "—" else decimalFormatter.to2Decimal(request.rate) + " U/h"
-        val sens = decimalFormatter.to0Decimal((request.autosensResult?.ratio ?: 1.0) * 100.0)
-        return resourceHelper.gs(R.string.dashboard_aimi_pulse_meta, smb, basalDisplay, sens)
-    }
-
     private fun buildPumpLine(now: Long): String {
         val reservoirLevel = activePlugin.activePump.reservoirLevel.value.cU
         val reservoirText =
@@ -938,6 +890,52 @@ class OverviewViewModel(
 
     companion object {
         private const val PREDICTION_LOOKAHEAD_MINUTES = 30L
+
+        fun buildAimiPulseTitle(lastApsRunMillis: Long?, dateUtil: DateUtil, rh: ResourceHelper): String {
+            val ts = lastApsRunMillis ?: return rh.gs(R.string.dashboard_aimi_pulse_title)
+            if (ts <= 0L) return rh.gs(R.string.dashboard_aimi_pulse_title)
+            val elapsed = (dateUtil.now() - ts).coerceAtLeast(0L)
+            val age = dateUtil.age(elapsed, true, rh).trim()
+            return rh.gs(R.string.dashboard_aimi_pulse_title_with_age, age)
+        }
+
+        fun buildAimiPulseSummary(request: APSResult?, rh: ResourceHelper, decimalFormatter: DecimalFormatter): String {
+            if (request == null) return rh.gs(R.string.dashboard_aimi_pulse_summary_none)
+            val plain = plainTextFromAimiReason(request.reason)
+            val core = when {
+                plain.isNotBlank() -> clipAimiReasonForPulse(plain)
+                else               -> {
+                    val smbText = decimalFormatter.to2Decimal(request.smb)
+                    val basalText = if (request.rate == -1.0) "—" else decimalFormatter.to2Decimal(request.rate)
+                    rh.gs(R.string.dashboard_aimi_pulse_fallback, smbText, basalText)
+                }
+            }
+            return if ((request.rawData() as? RT)?.isHypoRisk == true)
+                rh.gs(R.string.dashboard_aimi_pulse_hypo_prefix) + " " + core
+            else core
+        }
+
+        fun buildAimiPulseMeta(request: APSResult?, rh: ResourceHelper, decimalFormatter: DecimalFormatter): String {
+            if (request == null) return ""
+            val smb = decimalFormatter.to2Decimal(request.smb)
+            val basalDisplay = if (request.rate == -1.0) "—" else decimalFormatter.to2Decimal(request.rate) + " U/h"
+            val sens = decimalFormatter.to0Decimal((request.autosensResult?.ratio ?: 1.0) * 100.0)
+            return rh.gs(R.string.dashboard_aimi_pulse_meta, smb, basalDisplay, sens)
+        }
+
+        private fun plainTextFromAimiReason(raw: String): String {
+            if (raw.isBlank()) return ""
+            return raw.replace(Regex("<[^>]+>"), " ")
+                .replace("&nbsp;", " ")
+                .replace(Regex("\\s+"), " ")
+                .trim()
+        }
+
+        private fun clipAimiReasonForPulse(plain: String, maxLen: Int = 220): String {
+            val singleLine = plain.replace('\n', ' ').replace(Regex("\\s+"), " ").trim()
+            if (singleLine.length <= maxLen) return singleLine
+            return singleLine.take(maxLen - 1).trimEnd() + "…"
+        }
         private const val SAFETY_LIMITED_BG = 90.0
         private const val SAFETY_CRITICAL_BG = 70.0
         private val MODE_LOOKBACK_MS = TimeUnit.HOURS.toMillis(12)

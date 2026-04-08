@@ -149,6 +149,9 @@ fun SecondaryGraphCompose(
         SeriesType.HEART_RATE      -> viewModel.heartRateGraphFlow.collectAsStateWithLifecycle().value.heartRates
         SeriesType.STEPS           -> viewModel.stepsGraphFlow.collectAsStateWithLifecycle().value.steps
         SeriesType.ACTIVITY        -> viewModel.activityGraphFlow.collectAsStateWithLifecycle().value.activity
+        SeriesType.MODES,
+        SeriesType.PULSE,
+        SeriesType.TIR             -> emptyList()
         null                       -> emptyList()
     }
 
@@ -771,6 +774,9 @@ data class SeriesColors(
         SeriesType.HEART_RATE      -> heartRate
         SeriesType.STEPS           -> steps
         SeriesType.ACTIVITY        -> activity
+        SeriesType.MODES,
+        SeriesType.PULSE,
+        SeriesType.TIR             -> activity
     }
 }
 

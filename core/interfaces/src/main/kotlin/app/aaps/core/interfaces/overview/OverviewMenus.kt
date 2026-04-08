@@ -18,7 +18,10 @@ interface OverviewMenus {
         ACT,
         DEVSLOPE,
         HR,
-        STEPS
+        STEPS,
+        MODES,
+        PULSE,
+        TIR
     }
 
     val setting: List<Array<Boolean>>

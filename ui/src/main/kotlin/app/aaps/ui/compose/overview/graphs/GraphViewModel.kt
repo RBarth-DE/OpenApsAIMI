@@ -5,6 +5,9 @@ import androidx.compose.runtime.Stable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import app.aaps.core.interfaces.aps.Loop
+import app.aaps.core.interfaces.aps.RT
+import app.aaps.core.interfaces.automation.Automation
+import app.aaps.core.interfaces.automation.AutomationEvent
 import app.aaps.core.interfaces.configuration.Config
 import app.aaps.core.interfaces.constraints.ConstraintsChecker
 import app.aaps.core.interfaces.db.PersistenceLayer
@@ -32,6 +35,8 @@ import app.aaps.core.ui.R
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
@@ -106,6 +111,44 @@ data class SensitivityUiState(
     val hasData: Boolean = false
 )
 
+/**
+ * Immutable snapshot of an automation event (id + title) for Compose UI
+ */
+@Immutable
+data class AutomationEventData(val id: String, val title: String)
+
+/**
+ * UI state for Automation Modes panel
+ */
+@Immutable
+data class ModesUiState(
+    val events: List<AutomationEventData> = emptyList()
+)
+
+/**
+ * UI state for APS Pulse / rate panel
+ */
+@Immutable
+data class PulseUiState(
+    val titleText: String = "",
+    val summaryText: String = "",
+    val metaText: String = "",
+    val isHypoRisk: Boolean = false
+)
+
+/**
+ * UI state for Time In Range panel
+ */
+@Immutable
+data class TirUiState(
+    val veryLow: Float = 0f,
+    val low: Float = 0f,
+    val inRange: Float = 0f,
+    val high: Float = 0f,
+    val veryHigh: Float = 0f,
+    val readingCount: Int = 0
+)
+
 @HiltViewModel
 @Stable
 class GraphViewModel @Inject constructor(
@@ -124,7 +167,8 @@ class GraphViewModel @Inject constructor(
     private val profileFunction: ProfileFunction,
     private val processedDeviceStatusData: ProcessedDeviceStatusData,
     private val profileUtil: ProfileUtil,
-    private val activePlugin: ActivePlugin
+    private val activePlugin: ActivePlugin,
+    private val automation: Automation
 ) : ViewModel() {
 
     // Chart config - updates when high/low mark preferences change
@@ -361,6 +405,120 @@ class GraphViewModel @Inject constructor(
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = null
     )
+
+    // =========================================================================
+    // Custom panel flows (MODES, PULSE, TIR) — updated every 30s
+    // =========================================================================
+
+    val modesFlow: StateFlow<ModesUiState> = ticker30s.map {
+        ModesUiState(
+            events = automation.userEvents()
+                .filter { it.isEnabled }
+                .take(10)
+                .map { AutomationEventData(id = it.id, title = it.title) }
+        )
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = ModesUiState()
+    )
+
+    val pulseFlow: StateFlow<PulseUiState> = ticker30s.map {
+        buildPulseUiState()
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = PulseUiState()
+    )
+
+    val tirFlow: StateFlow<TirUiState> = ticker30s.map {
+        buildTirUiState()
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = TirUiState()
+    )
+
+    private fun buildPulseUiState(): PulseUiState {
+        val lastRun = loop.lastRun
+        val ts = lastRun?.lastAPSRun
+        val titleText = if (ts != null && ts > 0L) {
+            val elapsed = (dateUtil.now() - ts).coerceAtLeast(0L)
+            rh.gs(R.string.pulse_panel_title_with_age, dateUtil.age(elapsed, true, rh).trim())
+        } else {
+            rh.gs(R.string.pulse_panel_title)
+        }
+
+        val request = lastRun?.request
+            ?: return PulseUiState(titleText = titleText, summaryText = rh.gs(R.string.pulse_panel_no_data))
+
+        val isHypoRisk = (request.rawData() as? RT)?.isHypoRisk == true
+
+        val plain = request.reason
+            .replace(Regex("<[^>]+>"), " ")
+            .replace("&nbsp;", " ")
+            .replace(Regex("\\s{2,}"), " ")
+            .trim()
+        val summaryCore = if (plain.isNotBlank()) {
+            val single = plain.replace('\n', ' ').replace(Regex("\\s{2,}"), " ").trim()
+            if (single.length <= 220) single else single.take(219).trimEnd() + "…"
+        } else {
+            rh.gs(
+                R.string.pulse_panel_fallback,
+                decimalFormatter.to2Decimal(request.smb),
+                if (request.rate == -1.0) "—" else decimalFormatter.to2Decimal(request.rate)
+            )
+        }
+        val summaryText = if (isHypoRisk) rh.gs(R.string.pulse_panel_hypo_prefix) + " " + summaryCore
+        else summaryCore
+
+        val metaText = rh.gs(
+            R.string.pulse_panel_meta,
+            decimalFormatter.to2Decimal(request.smb),
+            if (request.rate == -1.0) "—" else decimalFormatter.to2Decimal(request.rate) + " U/h",
+            decimalFormatter.to0Decimal((request.autosensResult?.ratio ?: 1.0) * 100.0)
+        )
+
+        return PulseUiState(
+            titleText = titleText,
+            summaryText = summaryText,
+            metaText = metaText,
+            isHypoRisk = isHypoRisk
+        )
+    }
+
+    private suspend fun buildTirUiState(): TirUiState {
+        val end = System.currentTimeMillis()
+        val start = end - 24 * 60 * 60 * 1000L
+        val readings = persistenceLayer.getBgReadingsDataFromTimeToTime(start, end, ascending = true)
+        if (readings.isEmpty()) return TirUiState()
+        var veryLow = 0; var low = 0; var inRange = 0; var high = 0; var veryHigh = 0
+        for (gv in readings) {
+            when {
+                gv.value < 54.0  -> veryLow++
+                gv.value < 70.0  -> low++
+                gv.value <= 180.0 -> inRange++
+                gv.value <= 250.0 -> high++
+                else             -> veryHigh++
+            }
+        }
+        val total = readings.size.toFloat()
+        return TirUiState(
+            veryLow  = veryLow  / total,
+            low      = low      / total,
+            inRange  = inRange  / total,
+            high     = high     / total,
+            veryHigh = veryHigh / total,
+            readingCount = readings.size
+        )
+    }
+
+    fun runAutomationEvent(eventId: String) {
+        viewModelScope.launch {
+            val event = automation.userEvents().firstOrNull { it.id == eventId } ?: return@launch
+            automation.processEvent(event)
+        }
+    }
 
     init {
         aapsLogger.debug(LTag.UI, "GraphViewModel initialized - exposing independent series flows")

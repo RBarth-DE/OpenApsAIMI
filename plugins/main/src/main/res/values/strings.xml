@@ -382,6 +382,12 @@
     <string name="description_persistent_notification">Shows an ongoing notification with a short overview of what your loop is doing</string>
     <string name="old_data">OLD DATA</string>
     <string name="overview_show_steps">Steps</string>
+    <string name="overview_show_modes">Modes</string>
+    <string name="modes_shortname">MOD</string>
+    <string name="overview_show_pulse">Pulse</string>
+    <string name="pulse_shortname">PLS</string>
+    <string name="overview_show_tir">Time In Range</string>
+    <string name="tir_shortname">TIR</string>
     <string name="simple_mode_enabled">Simple mode enabled</string>
     <string name="minimal_skin_description">New skin dashboard</string>
 

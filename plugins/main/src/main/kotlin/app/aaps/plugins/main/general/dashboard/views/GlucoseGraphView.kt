@@ -24,6 +24,7 @@ class GlucoseGraphView @JvmOverloads constructor(
 
     val graph: GraphView get() = binding.graphView
     val rangeButton: android.widget.Button get() = binding.graphRangeButton
+    val chartMenuButton: android.widget.ImageButton get() = binding.chartMenuButton
 
     fun setUpdateMessage(message: String) {
         binding.graphUpdatedAt.text = message

@@ -32,6 +32,17 @@ class DashboardPulseView @JvmOverloads constructor(
         }
     }
 
+    fun updatePulse(title: String, summary: String, meta: String, hypoRisk: Boolean) {
+        binding.aimiPulseTitle.text = title
+        binding.aimiPulseSummary.text = summary
+        binding.aimiPulseMeta.text = meta
+        binding.aimiPulseMeta.isGone = meta.isBlank()
+        binding.aimiPulseContainer.setBackgroundResource(
+            if (hypoRisk) R.drawable.dashboard_chip_background_warning
+            else R.drawable.dashboard_chip_background
+        )
+    }
+
     fun update(state: StatusCardState) {
         binding.aimiPulseTitle.text = state.aimiPulseTitle
         binding.aimiPulseSummary.text = state.aimiPulseSummary

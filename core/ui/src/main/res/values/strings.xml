@@ -1076,5 +1076,16 @@
     <string name="sensitivity_shortname" comment="Short label for Sensitivity/Autosens graph series">SENS%</string>
     <string name="variable_sensitivity_shortname" comment="Short label for Variable Sensitivity graph series">VSENS</string>
     <string name="steps_shortname" comment="Short label for Steps graph series">STEPS</string>
+    <string name="modes_series_shortname" comment="Short label for Automation Modes custom panel">Modes</string>
+    <string name="pulse_series_shortname" comment="Short label for APS Pulse/Rate custom panel">Pulse</string>
+    <string name="tir_series_shortname" comment="Short label for Time In Range custom panel">TIR</string>
+    <string name="run_event_question">Run %s?</string>
+    <!-- Pulse panel strings (Compose dashboard) -->
+    <string name="pulse_panel_title">Last AIMI run</string>
+    <string name="pulse_panel_title_with_age">Last AIMI run · %1$s</string>
+    <string name="pulse_panel_no_data">No APS output yet</string>
+    <string name="pulse_panel_fallback">SMB %1$s U · Basal %2$s U/h</string>
+    <string name="pulse_panel_hypo_prefix">Hypo risk —</string>
+    <string name="pulse_panel_meta">SMB %1$s U · demand %2$s · AutoSens %3$s%%</string>
 
 </resources>
