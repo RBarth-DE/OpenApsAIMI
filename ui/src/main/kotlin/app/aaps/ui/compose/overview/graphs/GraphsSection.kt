@@ -50,9 +50,8 @@ import android.content.Intent
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.res.stringResource
@@ -582,42 +581,36 @@ private fun ModesPanel(
 
     Column(
         modifier = modifier
-            .padding(horizontal = 4.dp, vertical = 4.dp)
+            .padding(horizontal = 8.dp, vertical = 4.dp)
     ) {
-        Text(
-            text = stringResource(app.aaps.core.ui.R.string.modes_series_shortname),
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-            modifier = Modifier.padding(start = 32.dp)
-        )
-        Spacer(Modifier.height(4.dp))
         if (events.isEmpty()) {
             Text(
                 text = "—",
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
-                modifier = Modifier.padding(start = 32.dp)
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
             )
         } else {
             FlowRow(
+                maxItemsInEachRow = 5,
                 horizontalArrangement = Arrangement.spacedBy(6.dp),
-                verticalArrangement = Arrangement.spacedBy(4.dp),
-                modifier = Modifier.padding(start = 32.dp)
+                verticalArrangement = Arrangement.spacedBy(6.dp),
+                modifier = Modifier.fillMaxWidth()
             ) {
-                for (event in events) {
+                for (event in events.take(10)) {
                     OutlinedButton(
                         onClick = { pendingEvent = event },
                         border = BorderStroke(1.5.dp, MaterialTheme.colorScheme.outline),
-                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
+                        contentPadding = PaddingValues(horizontal = 4.dp, vertical = 0.dp),
                         modifier = Modifier
-                            .heightIn(min = 32.dp)
-                            .widthIn(min = 64.dp, max = 160.dp)
+                            .weight(1f)
+                            .height(32.dp)
                     ) {
                         Text(
                             text = event.title,
                             style = MaterialTheme.typography.labelSmall,
-                            maxLines = 3,
-                            overflow = TextOverflow.Ellipsis
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis,
+                            textAlign = TextAlign.Center
                         )
                     }
                 }
@@ -664,7 +657,7 @@ private fun PulsePanel(
         colors = CardDefaults.cardColors(containerColor = Color.Transparent),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
-        Column(modifier = Modifier.padding(start = 32.dp, end = 12.dp, top = 4.dp, bottom = 4.dp)) {
+        Column(modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)) {
             if (state.titleText.isNotEmpty()) {
                 Text(
                     text = state.titleText,
@@ -706,7 +699,7 @@ private fun TirPanel(
     val colorVeryHigh = Color(0xFFD50000)
 
     Column(
-        modifier = modifier.padding(start = 32.dp, end = 12.dp, top = 4.dp, bottom = 4.dp)
+        modifier = modifier.padding(horizontal = 8.dp, vertical = 4.dp)
     ) {
         Text(
             text = stringResource(app.aaps.core.ui.R.string.tir_series_shortname),
