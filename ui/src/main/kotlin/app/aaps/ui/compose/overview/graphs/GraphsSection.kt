@@ -53,7 +53,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.sp
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -200,7 +199,6 @@ fun GraphsSection(
     val modesState by graphViewModel.modesFlow.collectAsStateWithLifecycle()
     val pulseState by graphViewModel.pulseFlow.collectAsStateWithLifecycle()
     val tirState by graphViewModel.tirFlow.collectAsStateWithLifecycle()
-
     // Auto-scroll when new BG value arrives
     val bgInfoState by graphViewModel.bgInfoState.collectAsStateWithLifecycle()
     val predictions by graphViewModel.predictionsFlow.collectAsStateWithLifecycle()

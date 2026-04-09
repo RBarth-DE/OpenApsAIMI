@@ -42,7 +42,7 @@ object AapsSpacing {
 
     // Chip dimensions
     val chipCornerRadius = 8.dp
-    val chipHeight = 35.dp
-    val chipIconSize = 24.dp
+    val chipHeight = 22.dp
+    val chipIconSize = 14.dp
     val chipProgressHeight = 3.dp
 }

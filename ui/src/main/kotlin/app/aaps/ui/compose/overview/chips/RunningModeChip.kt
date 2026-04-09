@@ -21,6 +21,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import app.aaps.core.data.model.RM
 import app.aaps.core.ui.compose.AapsSpacing
 import app.aaps.core.ui.compose.AapsTheme
@@ -31,6 +32,7 @@ import app.aaps.core.ui.compose.icons.IcLoopLgs
 import app.aaps.core.ui.compose.icons.IcLoopOpen
 import app.aaps.core.ui.compose.icons.IcLoopPaused
 import app.aaps.core.ui.compose.icons.IcLoopSuperbolus
+
 
 @Composable
 fun RunningModeChip(
@@ -57,7 +59,7 @@ fun RunningModeChip(
         Column {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.padding(horizontal = AapsSpacing.medium, vertical = AapsSpacing.small)
+                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
             ) {
                 Icon(
                     imageVector = mode.toIcon(),
@@ -67,8 +69,9 @@ fun RunningModeChip(
                 )
                 Text(
                     text = text,
+                    style = MaterialTheme.typography.labelSmall,
                     color = textColor,
-                    modifier = Modifier.padding(start = AapsSpacing.medium)
+                    modifier = Modifier.padding(start = AapsSpacing.small)
                 )
             }
             Box(

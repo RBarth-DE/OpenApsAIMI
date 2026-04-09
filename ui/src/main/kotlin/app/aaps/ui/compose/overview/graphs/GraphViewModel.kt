@@ -11,6 +11,12 @@ import app.aaps.core.interfaces.automation.AutomationEvent
 import app.aaps.core.interfaces.configuration.Config
 import app.aaps.core.interfaces.constraints.ConstraintsChecker
 import app.aaps.core.interfaces.db.PersistenceLayer
+import app.aaps.core.interfaces.db.ProcessedTbrEbData
+import app.aaps.core.interfaces.overview.AuditorDisplayState
+import app.aaps.core.interfaces.overview.AuditorStateProvider
+import app.aaps.core.objects.extensions.convertedToAbsolute
+import app.aaps.core.objects.extensions.toStringShort
+import app.aaps.core.utils.MidnightUtils
 import app.aaps.core.interfaces.iob.IobCobCalculator
 import app.aaps.core.interfaces.logging.AAPSLogger
 import app.aaps.core.interfaces.logging.LTag
@@ -149,6 +155,20 @@ data class TirUiState(
     val readingCount: Int = 0
 )
 
+/**
+ * UI state for the compact status panel (top-right overlay).
+ */
+@Immutable
+data class StatusPanelUiState(
+    val stepsText: String = "--",
+    val hrText: String = "--",
+    val lastSmbTime: String = "--:--",
+    val lastSmbAmount: String = "--",
+    val basalPctText: String = "--",
+    val basalRateText: String = "--",
+    val iobText: String = "--"
+)
+
 @HiltViewModel
 @Stable
 class GraphViewModel @Inject constructor(
@@ -168,7 +188,9 @@ class GraphViewModel @Inject constructor(
     private val processedDeviceStatusData: ProcessedDeviceStatusData,
     private val profileUtil: ProfileUtil,
     private val activePlugin: ActivePlugin,
-    private val automation: Automation
+    private val automation: Automation,
+    private val processedTbrEbData: ProcessedTbrEbData,
+    private val auditorStateProvider: AuditorStateProvider
 ) : ViewModel() {
 
     // Chart config - updates when high/low mark preferences change
@@ -438,6 +460,72 @@ class GraphViewModel @Inject constructor(
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = TirUiState()
     )
+
+    val statusPanelFlow: StateFlow<StatusPanelUiState> = ticker30s.map {
+        buildStatusPanelUiState()
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = StatusPanelUiState()
+    )
+
+    val auditorStateFlow: StateFlow<AuditorDisplayState> = auditorStateProvider.displayStateFlow
+
+    private suspend fun buildStatusPanelUiState(): StatusPanelUiState {
+        val now = System.currentTimeMillis()
+        val midnight = java.time.LocalDate.now()
+            .atStartOfDay(java.time.ZoneId.systemDefault())
+            .toInstant().toEpochMilli()
+
+        // Steps — sum today's 5-min buckets; delta from last 15 min
+        val stepsAll = stepsGraphFlow.value.steps
+        val stepsToday = stepsAll.filter { it.timestamp >= midnight }.sumOf { it.value }.toInt()
+        val stepsDelta = stepsAll.filter { it.timestamp >= now - 15 * 60 * 1000L }.sumOf { it.value }.toInt()
+        val stepsText = if (stepsToday > 0) "$stepsToday / +$stepsDelta" else "--"
+
+        // HR — latest non-zero BPM reading
+        val hrText = heartRateGraphFlow.value.heartRates
+            .filter { it.value > 0 }.lastOrNull()?.value?.toInt()?.toString() ?: "--"
+
+        // Last SMB (bolus)
+        val lastBolusMs = activePlugin.activePump.lastBolusTime.value ?: 0L
+        val smbSeconds = MidnightUtils.secondsFromMidnight(lastBolusMs)
+        val lastSmbTime = if (smbSeconds > 0) dateUtil.formatHHMM(smbSeconds) else "--:--"
+        val lastSmbAmount = activePlugin.activePump.lastBolusAmount.value
+            ?.let { decimalFormatter.to2Decimal(it.cU) + " U" } ?: "--"
+
+        // Current basal (TBR or loop fallback)
+        val unavail = rh.gs(R.string.value_unavailable_short)
+        val tbr = processedTbrEbData.getTempBasalIncludingConvertedExtended(now)
+        val (basalPctText, basalRateText) = if (tbr?.isValid == true) {
+            val pct = tbr.toStringShort(rh)
+            val profile = profileFunction.getProfile()
+            val rate = profile?.let { rh.gs(R.string.format_insulin_units, tbr.convertedToAbsolute(now, it)) } ?: unavail
+            pct to rate
+        } else {
+            val pctVal = loop.lastRun?.request?.percent
+            val pct = if (pctVal == null || pctVal < 0) unavail else "$pctVal%"
+            val rateVal = loop.lastRun?.request?.rate
+            val rate = if (rateVal == null || rateVal == -1.0) unavail
+                       else rh.gs(R.string.format_insulin_units, rateVal)
+            pct to rate
+        }
+
+        // IOB — total bolus + basal IOB
+        val bolusIob = iobCobCalculator.calculateIobFromBolus().round()
+        val basalIob = iobCobCalculator.calculateIobFromTempBasalsIncludingConvertedExtended().round()
+        val iobText = rh.gs(R.string.format_insulin_units, bolusIob.iob + basalIob.basaliob)
+
+        return StatusPanelUiState(
+            stepsText = stepsText,
+            hrText = hrText,
+            lastSmbTime = lastSmbTime,
+            lastSmbAmount = lastSmbAmount,
+            basalPctText = basalPctText,
+            basalRateText = basalRateText,
+            iobText = iobText
+        )
+    }
 
     private fun buildPulseUiState(): PulseUiState {
         val lastRun = loop.lastRun

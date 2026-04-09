@@ -2,6 +2,7 @@ package app.aaps.plugins.aps.di
 
 import app.aaps.core.interfaces.aps.Loop
 import app.aaps.core.interfaces.autotune.Autotune
+import app.aaps.core.interfaces.overview.AuditorStateProvider
 import app.aaps.plugins.aps.autotune.AutotunePlugin
 import app.aaps.plugins.aps.loop.LoopPlugin
 import app.aaps.plugins.aps.openAPSAIMI.di.WCycleModule
@@ -9,6 +10,8 @@ import app.aaps.plugins.aps.openAPSAIMI.advisor.AimiModeSettingsActivity
 import app.aaps.plugins.aps.openAPSAIMI.advisor.AimiProfileAdvisorActivity
 import app.aaps.plugins.aps.openAPSAIMI.advisor.meal.MealAdvisorActivity
 import app.aaps.plugins.aps.openAPSAIMI.advisor.pulse.AimiPulseDetailActivity
+import app.aaps.plugins.aps.openAPSAIMI.advisor.auditor.ui.AuditorStateProviderImpl
+import app.aaps.plugins.aps.openAPSAIMI.advisor.auditor.ui.AuditorVerdictActivity
 import app.aaps.plugins.aps.openAPSAIMI.context.ui.ContextActivity
 import dagger.Binds
 import dagger.Module
@@ -35,6 +38,7 @@ abstract class ApsModule {
     @ContributesAndroidInjector abstract fun contributesMealAdvisorActivity(): MealAdvisorActivity
     @ContributesAndroidInjector abstract fun contributesAimiPulseDetailActivity(): AimiPulseDetailActivity
     @ContributesAndroidInjector abstract fun contributesContextActivity(): ContextActivity
+    @ContributesAndroidInjector abstract fun contributesAuditorVerdictActivity(): AuditorVerdictActivity
 
     @Module
     @InstallIn(SingletonComponent::class)
@@ -42,5 +46,6 @@ abstract class ApsModule {
 
         @Binds fun bindLoop(loopPlugin: LoopPlugin): Loop
         @Binds fun bindAutotune(autotunePlugin: AutotunePlugin): Autotune
+        @Binds fun bindAuditorStateProvider(impl: AuditorStateProviderImpl): AuditorStateProvider
     }
 }

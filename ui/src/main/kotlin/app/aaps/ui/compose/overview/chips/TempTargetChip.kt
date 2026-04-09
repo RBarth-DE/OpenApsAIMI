@@ -21,6 +21,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import app.aaps.core.data.model.TT
 import app.aaps.core.ui.compose.AapsSpacing
 import app.aaps.core.ui.compose.AapsTheme
@@ -29,6 +30,7 @@ import app.aaps.core.ui.compose.icons.IcTtEatingSoon
 import app.aaps.core.ui.compose.icons.IcTtHypo
 import app.aaps.core.ui.compose.icons.IcTtManual
 import app.aaps.ui.compose.main.TempTargetChipState
+
 
 @Composable
 fun TempTargetChip(
@@ -63,7 +65,7 @@ fun TempTargetChip(
         Column {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.padding(horizontal = AapsSpacing.medium, vertical = AapsSpacing.small)
+                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
             ) {
                 Icon(
                     imageVector = reason.toIcon(),
@@ -73,8 +75,9 @@ fun TempTargetChip(
                 )
                 Text(
                     text = targetText,
+                    style = MaterialTheme.typography.labelSmall,
                     color = textColor,
-                    modifier = Modifier.padding(start = AapsSpacing.medium)
+                    modifier = Modifier.padding(start = AapsSpacing.small)
                 )
             }
             Box(

@@ -5,6 +5,8 @@ import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
+import android.content.Intent
+import androidx.annotation.DrawableRes
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -19,7 +21,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ExpandLess
@@ -30,12 +34,14 @@ import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -45,6 +51,9 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -56,8 +65,10 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.aaps.core.data.model.RM
 import app.aaps.core.data.model.TT
 import app.aaps.core.interfaces.notifications.AapsNotification
+import app.aaps.core.interfaces.overview.AuditorDisplayState
 import app.aaps.core.interfaces.pump.BolusProgressState
 import app.aaps.core.keys.IntKey
+import app.aaps.core.ui.compose.AapsSpacing
 import app.aaps.core.ui.compose.AapsTheme
 import app.aaps.core.ui.compose.LocalConfig
 import app.aaps.core.ui.compose.LocalDateUtil
@@ -77,13 +88,12 @@ import app.aaps.ui.compose.manageSheet.ManageViewModel
 import app.aaps.ui.compose.notificationsSheet.NotificationBottomSheet
 import app.aaps.ui.compose.notificationsSheet.NotificationFab
 import app.aaps.ui.compose.overview.aapsClient.AapsClientStatusCard
-import app.aaps.ui.compose.overview.chips.IobCobChipsRow
-import app.aaps.ui.compose.overview.chips.ProfileChip
 import app.aaps.ui.compose.overview.chips.RunningModeChip
 import app.aaps.ui.compose.overview.chips.SensitivityChip
 import app.aaps.ui.compose.overview.chips.TempTargetChip
 import app.aaps.ui.compose.overview.graphs.GraphViewModel
 import app.aaps.ui.compose.overview.graphs.GraphsSection
+import app.aaps.ui.compose.overview.graphs.StatusPanelUiState
 import app.aaps.ui.compose.overview.statusLights.StatusItem
 import app.aaps.ui.compose.overview.statusLights.StatusSectionContent
 import app.aaps.ui.compose.overview.statusLights.StatusViewModel
@@ -162,14 +172,14 @@ fun OverviewScreen(
                         .height(4.dp),
                 )
             }
-            // BG Info and Chips in a row
+            // BG Info, Chips, and AIMI actions in a 3-column row
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 8.dp, vertical = 8.dp),
-                verticalAlignment = Alignment.Bottom
+                verticalAlignment = Alignment.Top
             ) {
-                // BG Info section + sensitivity chip on the left
+                // Left: BG Info section + sensitivity chip
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
@@ -196,11 +206,11 @@ fun OverviewScreen(
                     }
                 }
 
-                // Chips column on the right
+                // Middle: Chips + at-a-glance status panel
                 Column(
                     modifier = Modifier
                         .weight(1f)
-                        .padding(start = 8.dp),
+                        .padding(horizontal = 8.dp),
                     verticalArrangement = Arrangement.spacedBy(2.dp)
                 ) {
                     // Running mode chip + simple mode icon
@@ -225,15 +235,6 @@ fun OverviewScreen(
                             }
                         }
                     }
-                    // Profile chip
-                    if (profileName.isNotEmpty()) {
-                        ProfileChip(
-                            profileName = profileName,
-                            isModified = isProfileModified,
-                            progress = profileProgress,
-                            onClick = { onNavigate(NavigationRequest.Element(ElementType.PROFILE_MANAGEMENT)) }
-                        )
-                    }
                     // TempTarget chip (show when text is available)
                     if (tempTargetText.isNotEmpty()) {
                         TempTargetChip(
@@ -244,13 +245,67 @@ fun OverviewScreen(
                             onClick = { onNavigate(NavigationRequest.Element(ElementType.TEMP_TARGET_MANAGEMENT)) }
                         )
                     }
-                    // IOB + COB chips row
-                    val iobUiState by graphViewModel.iobUiState.collectAsStateWithLifecycle()
-                    val cobUiState by graphViewModel.cobUiState.collectAsStateWithLifecycle()
-                    IobCobChipsRow(
-                        iobUiState = iobUiState,
-                        cobUiState = cobUiState
+                    // Steps / HR / SMB / Basal / IOB at-a-glance
+                    val statusPanelState by graphViewModel.statusPanelFlow.collectAsStateWithLifecycle()
+                    OverviewStatusPanel(
+                        state = statusPanelState,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 4.dp)
                     )
+                }
+
+                // Right: Auditor indicator + AIMI action buttons
+                val auditorState by graphViewModel.auditorStateFlow.collectAsStateWithLifecycle()
+                val context = LocalContext.current
+                Column(
+                    modifier = Modifier.padding(start = 4.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    AuditorIconButton(state = auditorState) {
+                        try {
+                            context.startActivity(
+                                Intent().setClassName(
+                                    context,
+                                    "app.aaps.plugins.aps.openAPSAIMI.advisor.auditor.ui.AuditorVerdictActivity"
+                                )
+                            )
+                        } catch (_: Exception) {}
+                    }
+                    AimiActionButton(label = stringResource(app.aaps.core.ui.R.string.aimi_btn_advisor)) {
+                        try {
+                            context.startActivity(
+                                Intent().setClassName(
+                                    context,
+                                    "app.aaps.plugins.aps.openAPSAIMI.advisor.AimiProfileAdvisorActivity"
+                                )
+                            )
+                        } catch (_: Exception) {}
+                    }
+                    AimiActionButton(label = stringResource(app.aaps.core.ui.R.string.aimi_btn_meal)) {
+                        try {
+                            context.startActivity(
+                                Intent().setClassName(
+                                    context,
+                                    "app.aaps.plugins.aps.openAPSAIMI.advisor.meal.MealAdvisorActivity"
+                                )
+                            )
+                        } catch (_: Exception) {}
+                    }
+                    AimiActionButton(label = stringResource(app.aaps.core.ui.R.string.aimi_btn_context)) {
+                        try {
+                            context.startActivity(
+                                Intent().setClassName(
+                                    context,
+                                    "app.aaps.plugins.aps.openAPSAIMI.context.ui.ContextActivity"
+                                )
+                            )
+                        } catch (_: Exception) {}
+                    }
+                    AimiActionButton(label = stringResource(app.aaps.core.ui.R.string.aimi_btn_stats)) {
+                        onNavigate(NavigationRequest.Element(ElementType.STATISTICS))
+                    }
                 }
             }
 
@@ -539,6 +594,132 @@ private fun StatusLightsSettingsContent(
                 showCopyDialog = false
             },
             onDismiss = { showCopyDialog = false }
+        )
+    }
+}
+
+// =========================================================================
+// Overview status panel — compact at-a-glance stats (Steps/HR/SMB/Basal/IOB)
+// =========================================================================
+
+private val StatusChipStepsColor  = Color(0xFF26A69A)  // teal
+private val StatusChipHrColor     = Color(0xFFEF5350)  // red
+private val StatusChipSmbColor    = Color(0xFFFF7043)  // orange
+private val StatusChipBasalColor  = Color(0xFF42A5F5)  // light blue
+private val StatusChipIobColor    = Color(0xFF7E57C2)  // purple
+
+@Composable
+private fun OverviewStatusPanel(
+    state: StatusPanelUiState,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier,
+        verticalArrangement = Arrangement.spacedBy(2.dp)
+    ) {
+        StatusChip(
+            iconRes = app.aaps.core.ui.R.drawable.ic_dashboard_shoe,
+            text = state.stepsText,
+            chipColor = StatusChipStepsColor
+        )
+        StatusChip(
+            iconRes = app.aaps.core.objects.R.drawable.ic_cp_heart_rate,
+            text = state.hrText,
+            chipColor = StatusChipHrColor
+        )
+        StatusChip(
+            iconRes = app.aaps.core.ui.R.drawable.ic_dashboard_droplet,
+            text = "${state.lastSmbTime} · ${state.lastSmbAmount}",
+            chipColor = StatusChipSmbColor
+        )
+        StatusChip(
+            iconRes = app.aaps.core.ui.R.drawable.ic_dashboard_wave,
+            text = "${state.basalPctText} · ${state.basalRateText}",
+            chipColor = StatusChipBasalColor
+        )
+        StatusChip(
+            iconRes = app.aaps.core.ui.R.drawable.ic_dashboard_iob,
+            text = state.iobText,
+            chipColor = StatusChipIobColor
+        )
+    }
+}
+
+@Composable
+private fun StatusChip(
+    @DrawableRes iconRes: Int,
+    text: String,
+    chipColor: Color,
+    modifier: Modifier = Modifier
+) {
+    Surface(
+        shape = RoundedCornerShape(AapsSpacing.chipCornerRadius),
+        color = chipColor.copy(alpha = 0.15f),
+        modifier = modifier
+            .fillMaxWidth()
+            .height(AapsSpacing.chipHeight)
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+        ) {
+            Icon(
+                painter = painterResource(iconRes),
+                contentDescription = null,
+                tint = chipColor,
+                modifier = Modifier.size(AapsSpacing.chipIconSize)
+            )
+            Text(
+                text = text,
+                style = MaterialTheme.typography.labelSmall,
+                color = chipColor.copy(alpha = 0.9f),
+                modifier = Modifier.padding(start = AapsSpacing.small)
+            )
+        }
+    }
+}
+
+// =========================================================================
+// AIMI right-column: Auditor indicator + action buttons
+// =========================================================================
+
+@Composable
+private fun AuditorIconButton(
+    state: AuditorDisplayState,
+    onClick: () -> Unit
+) {
+    val tint = when (state) {
+        AuditorDisplayState.IDLE -> MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+        AuditorDisplayState.PROCESSING -> AapsTheme.generalColors.ttActivity
+        AuditorDisplayState.READY -> AapsTheme.generalColors.statusNormal
+        AuditorDisplayState.WARNING -> AapsTheme.generalColors.statusWarning
+        AuditorDisplayState.ERROR -> AapsTheme.generalColors.statusCritical
+    }
+    IconButton(
+        onClick = onClick,
+        modifier = Modifier.size(36.dp)
+    ) {
+        Icon(
+            painter = painterResource(app.aaps.core.ui.R.drawable.ic_audit_monitor),
+            contentDescription = "Auditor",
+            tint = tint,
+            modifier = Modifier.size(28.dp)
+        )
+    }
+}
+
+@Composable
+private fun AimiActionButton(label: String, onClick: () -> Unit) {
+    OutlinedButton(
+        onClick = onClick,
+        contentPadding = PaddingValues(horizontal = 6.dp, vertical = 0.dp),
+        modifier = Modifier
+            .height(28.dp)
+            .widthIn(min = 56.dp)
+    ) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelSmall
         )
     }
 }
