@@ -486,7 +486,7 @@ fun BgGraphCompose(
             pointProvider = LineCartesianLayer.PointProvider.single(
                 LineCartesianLayer.Point(
                     component = ShapeComponent(fill = Fill(smbColor), shape = TriangleShape),
-                    size = 8.dp
+                    size = 12.dp
                 )
             )
         )
@@ -582,7 +582,7 @@ fun BgGraphCompose(
         modelProducer = modelProducer,
         modifier = modifier
             .fillMaxWidth()
-            .height(100.dp),
+            .height(130.dp),
         scrollState = scrollState,
         zoomState = zoomState
     )
