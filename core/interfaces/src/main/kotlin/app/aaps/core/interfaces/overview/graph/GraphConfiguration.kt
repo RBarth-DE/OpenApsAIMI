@@ -8,7 +8,7 @@ import kotlinx.coroutines.flow.StateFlow
  * IOB implicitly includes bolus markers, COB implicitly includes carbs markers.
  *
  * Not all types are allowed on all graphs — the UI enforces allowed sets per graph type.
- * BG graph: only BASAL, ACTIVITY.
+ * BG graph: BOLUS, ACTIVITY.
  * Secondary graphs: all types.
  */
 enum class SeriesType {
@@ -26,7 +26,8 @@ enum class SeriesType {
     ACTIVITY,
     MODES,
     PULSE,
-    TIR
+    TIR,
+    BOLUS   // SMB triangle markers on BG graph (fixed at bottom)
 }
 
 /**
@@ -42,7 +43,7 @@ enum class SeriesType {
  *   Max 2 series per graph. FIFO: adding a 3rd deselects the oldest.
  */
 data class GraphConfig(
-    val bgOverlays: List<SeriesType> = listOf(SeriesType.ACTIVITY),
+    val bgOverlays: List<SeriesType> = listOf(SeriesType.BOLUS, SeriesType.ACTIVITY),
     val showIobGraph: Boolean = true,
     val iobOverlays: List<SeriesType> = listOf(SeriesType.ACTIVITY),
     val secondaryGraphs: List<List<SeriesType>> = listOf(

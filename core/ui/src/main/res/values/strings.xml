@@ -1079,6 +1079,7 @@
     <string name="modes_series_shortname" comment="Short label for Automation Modes custom panel">Modes</string>
     <string name="pulse_series_shortname" comment="Short label for APS Pulse/Rate custom panel">Pulse</string>
     <string name="tir_series_shortname" comment="Short label for Time In Range custom panel">TIR</string>
+    <string name="graph_series_smb" comment="Short label for SMB triangle markers on BG graph">SMBs</string>
     <string name="run_event_question">Run %s?</string>
     <!-- Pulse panel strings (Compose dashboard) -->
     <string name="pulse_panel_title">Last AIMI run</string>

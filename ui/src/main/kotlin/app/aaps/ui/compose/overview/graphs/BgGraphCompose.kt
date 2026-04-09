@@ -22,9 +22,11 @@ import app.aaps.core.interfaces.overview.graph.ActivityGraphData
 import app.aaps.core.interfaces.overview.graph.BasalGraphData
 import app.aaps.core.interfaces.overview.graph.BgDataPoint
 import app.aaps.core.interfaces.overview.graph.BgType
+import app.aaps.core.interfaces.overview.graph.BolusType
 import app.aaps.core.interfaces.overview.graph.EpsGraphPoint
 import app.aaps.core.interfaces.overview.graph.SeriesType
 import app.aaps.core.interfaces.overview.graph.TargetLineData
+import app.aaps.core.interfaces.overview.graph.TreatmentGraphData
 import app.aaps.core.ui.compose.AapsTheme
 import app.aaps.core.ui.compose.icons.IcProfile
 import com.patrykandpatrick.vico.compose.cartesian.CartesianChartHost
@@ -97,6 +99,9 @@ fun BgGraphCompose(
     val epsPoints by viewModel.epsGraphFlow.collectAsStateWithLifecycle()
     val showActivity = SeriesType.ACTIVITY in bgOverlays
     val activityData by viewModel.activityGraphFlow.collectAsStateWithLifecycle()
+    val showBolus = SeriesType.BOLUS in bgOverlays
+    val treatmentData by viewModel.treatmentGraphFlow.collectAsStateWithLifecycle()
+    val smbColor = AapsTheme.elementColors.insulin
     val chartConfig by viewModel.chartConfigFlow.collectAsStateWithLifecycle()
 
     // Use derived time range or fall back to default (last 24 hours)
@@ -147,7 +152,10 @@ fun BgGraphCompose(
         currentTargetData: TargetLineData,
         currentEpsPoints: List<EpsGraphPoint>,
         currentActivityData: ActivityGraphData,
-        currentMaxBgY: Double
+        currentMaxBgY: Double,
+        currentTreatmentData: TreatmentGraphData,
+        showBolusMarkers: Boolean,
+        currentLowMark: Double
     ) {
         val regularPoints = seriesRegistry[SERIES_REGULAR] ?: emptyList()
         val bucketedPoints = seriesRegistry[SERIES_BUCKETED] ?: emptyList()
@@ -271,6 +279,21 @@ fun BgGraphCompose(
                     series(x = listOf(0.0, 1.0), y = listOf(0.0, 0.0))
                 }
             }
+
+            // Block 6 → SMB markers (layer 5, start axis — fixed at bottom of BG chart)
+            lineSeries {
+                val smbX = if (showBolusMarkers) {
+                    currentTreatmentData.boluses
+                        .filter { it.bolusType == BolusType.SMB && it.isValid }
+                        .map { timestampToX(it.timestamp, minTimestamp) }
+                        .filter { it in 0.0..maxX }
+                } else emptyList()
+                if (smbX.isNotEmpty()) {
+                    series(x = smbX, y = List(smbX.size) { currentLowMark })
+                } else {
+                    series(x = listOf(0.0, 1.0), y = listOf(0.0, 0.0))
+                }
+            }
         }
     }
 
@@ -286,7 +309,7 @@ fun BgGraphCompose(
     }
 
     // Single LaunchedEffect for all data - ensures atomic updates
-    LaunchedEffect(bgReadings, bucketedData, predictionsByType, basalData, targetData, epsPoints, activityData, showActivity, chartConfig, stableTimeRange) {
+    LaunchedEffect(bgReadings, bucketedData, predictionsByType, basalData, targetData, epsPoints, activityData, showActivity, chartConfig, stableTimeRange, treatmentData, showBolus) {
         seriesRegistry[SERIES_REGULAR] = bgReadings
         seriesRegistry[SERIES_BUCKETED] = bucketedData
         for ((key, points) in predictionsByType) {
@@ -295,7 +318,7 @@ fun BgGraphCompose(
         // maxBgY clamped against highMark (same as legacy GraphData.maxY logic)
         val allBgValues = (bgReadings + bucketedData).map { it.value }
         val maxBgY = if (allBgValues.isNotEmpty()) maxOf(allBgValues.max(), chartConfig.highMark) else chartConfig.highMark
-        rebuildChart(basalData, targetData, epsPoints, activityData, maxBgY)
+        rebuildChart(basalData, targetData, epsPoints, activityData, maxBgY, treatmentData, showBolus, chartConfig.lowMark)
     }
 
     // Build lookup map for BUCKETED points: x-value -> BgDataPoint (for PointProvider)
@@ -463,6 +486,20 @@ fun BgGraphCompose(
         listOf(activityHistLine, activityPredLine)
     }
 
+    val smbLine = remember(smbColor) {
+        LineCartesianLayer.Line(
+            fill = LineCartesianLayer.LineFill.single(Fill(Color.Transparent)),
+            areaFill = null,
+            pointProvider = LineCartesianLayer.PointProvider.single(
+                LineCartesianLayer.Point(
+                    component = ShapeComponent(fill = Fill(smbColor), shape = TriangleShape),
+                    size = 8.dp
+                )
+            )
+        )
+    }
+    val smbLines = remember(smbLine) { listOf(smbLine) }
+
     // Basal Y-axis range: maxBasal * 4 so basal occupies ~25% of chart height
     // EPS layer shares End axis with basal, so both must use the same Y-range (basalMaxY)
     val basalMaxY = remember(basalData.maxBasal) {
@@ -521,6 +558,12 @@ fun BgGraphCompose(
             // Layer 4: Activity (start axis — shares BG Y-axis range, values normalized in rebuildChart)
             rememberLineCartesianLayer(
                 lineProvider = LineCartesianLayer.LineProvider.series(activityLines),
+                rangeProvider = startAxisRangeProvider,
+                verticalAxisPosition = Axis.Position.Vertical.Start
+            ),
+            // Layer 5: SMB markers (start axis — triangle points fixed at lowMark, no line)
+            rememberLineCartesianLayer(
+                lineProvider = LineCartesianLayer.LineProvider.series(smbLines),
                 rangeProvider = startAxisRangeProvider,
                 verticalAxisPosition = Axis.Position.Vertical.Start
             ),

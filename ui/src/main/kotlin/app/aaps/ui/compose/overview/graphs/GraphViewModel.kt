@@ -39,6 +39,7 @@ import app.aaps.core.objects.extensions.displayText
 import app.aaps.core.objects.extensions.round
 import app.aaps.core.ui.R
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.map
@@ -602,7 +603,7 @@ class GraphViewModel @Inject constructor(
     }
 
     fun runAutomationEvent(eventId: String) {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             val event = automation.userEvents().firstOrNull { it.id == eventId } ?: return@launch
             automation.processEvent(event)
         }

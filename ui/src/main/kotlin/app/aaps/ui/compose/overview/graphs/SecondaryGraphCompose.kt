@@ -151,7 +151,8 @@ fun SecondaryGraphCompose(
         SeriesType.ACTIVITY        -> viewModel.activityGraphFlow.collectAsStateWithLifecycle().value.activity
         SeriesType.MODES,
         SeriesType.PULSE,
-        SeriesType.TIR             -> emptyList()
+        SeriesType.TIR,
+        SeriesType.BOLUS           -> emptyList()
         null                       -> emptyList()
     }
 
@@ -776,7 +777,8 @@ data class SeriesColors(
         SeriesType.ACTIVITY        -> activity
         SeriesType.MODES,
         SeriesType.PULSE,
-        SeriesType.TIR             -> activity
+        SeriesType.TIR,
+        SeriesType.BOLUS           -> activity
     }
 }
 
