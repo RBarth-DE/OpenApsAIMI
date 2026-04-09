@@ -100,7 +100,7 @@ class GraphConfigRepositoryImpl @Inject constructor(
 
         fun fromJson(json: String): GraphConfig {
             val obj = JSONObject(json)
-            val bgOverlays = overlaysFromJson(obj.optJSONArray(KEY_BG_OVERLAYS), listOf(SeriesType.BOLUS, SeriesType.ACTIVITY))
+            val bgOverlays = overlaysFromJson(obj.optJSONArray(KEY_BG_OVERLAYS), listOf(SeriesType.BASAL, SeriesType.BOLUS, SeriesType.ACTIVITY))
             val iobOverlays = overlaysFromJson(obj.optJSONArray(KEY_IOB_OVERLAYS), listOf(SeriesType.ACTIVITY))
             val graphs = mutableListOf<List<SeriesType>>()
             val graphsArray = obj.optJSONArray(KEY_SECONDARY_GRAPHS)

@@ -298,7 +298,7 @@ fun GraphsSection(
             GraphSeriesBottomSheet(
                 title = stringResource(app.aaps.core.ui.R.string.graph_bg),
                 selectedSeries = graphConfig.bgOverlays,
-                availableSeries = listOf(SeriesType.BOLUS, SeriesType.ACTIVITY),
+                availableSeries = listOf(SeriesType.BASAL, SeriesType.BOLUS, SeriesType.ACTIVITY),
                 onToggle = { type ->
                     val current = graphConfig.bgOverlays.toMutableList()
                     if (type in current) current.remove(type) else current.add(type)
@@ -523,6 +523,7 @@ private fun seriesListLabel(seriesList: List<SeriesType>): String {
 
 /** String resource ID for the short name of a series type */
 private fun seriesShortNameId(type: SeriesType): Int = when (type) {
+    SeriesType.BASAL           -> app.aaps.core.ui.R.string.basal_shortname
     SeriesType.IOB             -> app.aaps.core.ui.R.string.iob
     SeriesType.ABS_IOB         -> app.aaps.core.ui.R.string.abs_insulin_shortname
     SeriesType.COB             -> app.aaps.core.ui.R.string.cob
