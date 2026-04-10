@@ -115,6 +115,7 @@ class AimiAdvisorService {
             }
         }
 
+        // Pass application Context so assets/oref/*.onnx can be loaded when present. Window stays capped (OrefLocalPipeline) to limit heap.
         val orefInsight = if (persistenceLayer != null) {
             runBlocking {
                 try {
