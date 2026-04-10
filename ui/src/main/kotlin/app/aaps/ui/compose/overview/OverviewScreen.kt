@@ -654,7 +654,7 @@ private fun StatusChip(
 ) {
     Surface(
         shape = RoundedCornerShape(AapsSpacing.chipCornerRadius),
-        color = chipColor.copy(alpha = 0.15f),
+        //color = chipColor.copy(alpha = 0.15f),
         modifier = modifier
             .fillMaxWidth()
             .height(AapsSpacing.chipHeight)
@@ -714,7 +714,7 @@ private fun AimiActionButton(label: String, onClick: () -> Unit) {
         onClick = onClick,
         contentPadding = PaddingValues(horizontal = 6.dp, vertical = 0.dp),
         modifier = Modifier
-            .height(28.dp)
+            .height(26.dp)
             .widthIn(min = 56.dp)
     ) {
         Text(

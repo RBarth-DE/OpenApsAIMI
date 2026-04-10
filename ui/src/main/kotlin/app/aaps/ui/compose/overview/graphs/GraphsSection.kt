@@ -679,7 +679,9 @@ private fun PulsePanel(
                 Spacer(Modifier.height(2.dp))
                 Text(
                     text = state.metaText,
-                    style = MaterialTheme.typography.labelSmall,
+                    style = MaterialTheme.typography.labelSmall.copy(
+                        fontSize = TextUnit(9f, TextUnitType.Sp)
+                    ),
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                 )
             }
@@ -710,7 +712,9 @@ private fun TirPanel(
         if (state.readingCount == 0) {
             Text(
                 text = "—",
-                style = MaterialTheme.typography.bodySmall,
+                style = MaterialTheme.typography.bodySmall.copy(
+                    fontSize = TextUnit(9f, TextUnitType.Sp)
+                ),
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
             )
         } else {
@@ -751,7 +755,9 @@ private fun TirPanel(
                                 if (fraction > 0.08f) {
                                     Text(
                                         text = "$pct%",
-                                        style = MaterialTheme.typography.labelSmall,
+                                        style = MaterialTheme.typography.labelSmall.copy(
+                                            fontSize = TextUnit(9f, TextUnitType.Sp)
+                                        ),
                                         color = color,
                                         modifier = Modifier.align(Alignment.Center)
                                     )
