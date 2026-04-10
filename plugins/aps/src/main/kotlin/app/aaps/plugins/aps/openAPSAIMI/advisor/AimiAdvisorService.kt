@@ -120,7 +120,7 @@ class AimiAdvisorService {
                 try {
                     OrefLocalPipeline(persistenceLayer).run(
                         profileSnapshot = context.profile,
-                        windowDays = 30L,
+                        windowDays = OrefLocalPipeline.DEFAULT_HISTORY_DAYS,
                         assetContext = assetContext,
                     )
                 } catch (t: Throwable) {
@@ -138,6 +138,7 @@ class AimiAdvisorService {
             overallAssessment = getAssessmentLabel(score),
             recommendations = recommendations,
             summary = formatSummary(context.metrics),
+            advisorContext = context,
             orefAnalysis = orefInsight,
         )
     }
