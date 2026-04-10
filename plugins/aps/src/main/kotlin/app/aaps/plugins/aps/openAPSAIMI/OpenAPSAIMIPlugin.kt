@@ -21,6 +21,7 @@ import app.aaps.core.data.model.GlucoseUnit
 import app.aaps.core.data.model.GV
 import app.aaps.core.data.model.TrendArrow
 import app.aaps.core.data.model.SourceSensor
+import app.aaps.core.data.model.advancedFilteringSupported
 import app.aaps.core.data.plugin.PluginType
 import app.aaps.plugins.aps.OpenAPSFragment
 import app.aaps.core.data.time.T
@@ -390,7 +391,8 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
         val smbEnabled = preferences.get(BooleanKey.ApsUseSmb)
         val smbAlwaysEnabled = preferences.get(BooleanKey.ApsUseSmbAlways)
         val uamEnabled = preferences.get(BooleanKey.ApsUseUam)
-        val advancedFiltering = runBlocking { persistenceLayer.isAdvancedFilteringSupported() }
+        // Same rule as PersistenceLayer.isAdvancedFilteringSupported() but without runBlocking(DB) on Main (preferences listener).
+        val advancedFiltering = iobCobCalculator.ads.lastBg()?.sourceSensor?.advancedFilteringSupported() ?: false
         val autoSensOrDynIsfSensEnabled = if (preferences.get(BooleanKey.ApsUseDynamicSensitivity)) {
             preferences.get(BooleanKey.ApsDynIsfAdjustSensitivity)
         } else {
