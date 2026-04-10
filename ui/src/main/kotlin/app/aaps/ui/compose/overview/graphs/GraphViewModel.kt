@@ -140,6 +140,7 @@ data class PulseUiState(
     val titleText: String = "",
     val summaryText: String = "",
     val metaText: String = "",
+    val hintText: String = "",
     val isHypoRisk: Boolean = false
 )
 
@@ -153,7 +154,9 @@ data class TirUiState(
     val inRange: Float = 0f,
     val high: Float = 0f,
     val veryHigh: Float = 0f,
-    val readingCount: Int = 0
+    val readingCount: Int = 0,
+    val avgMgDl: Float = 0f,
+    val a1c: Float = 0f
 )
 
 /**
@@ -572,6 +575,7 @@ class GraphViewModel @Inject constructor(
             titleText = titleText,
             summaryText = summaryText,
             metaText = metaText,
+            hintText = rh.gs(R.string.pulse_panel_hint),
             isHypoRisk = isHypoRisk
         )
     }
@@ -592,13 +596,17 @@ class GraphViewModel @Inject constructor(
             }
         }
         val total = readings.size.toFloat()
+        val avgMgDl = readings.map { it.value }.average().toFloat()
+        val a1c = ((avgMgDl + 46.7) / 28.7).toFloat()
         return TirUiState(
             veryLow  = veryLow  / total,
             low      = low      / total,
             inRange  = inRange  / total,
             high     = high     / total,
             veryHigh = veryHigh / total,
-            readingCount = readings.size
+            readingCount = readings.size,
+            avgMgDl  = avgMgDl,
+            a1c      = a1c
         )
     }
 

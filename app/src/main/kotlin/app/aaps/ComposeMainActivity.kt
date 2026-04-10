@@ -56,6 +56,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import app.aaps.activities.PreferencesActivity
 import app.aaps.compose.navigation.AppRoute
 import app.aaps.compose.navigation.appNavGraph
 import app.aaps.core.data.ue.Sources
@@ -664,6 +665,13 @@ class ComposeMainActivity : AppCompatActivity() {
                 onRefreshPermissions = { permissionsViewModel.refresh() },
                 onExecuteQuickWizard = { guid -> mainViewModel.executeQuickWizard(this@ComposeMainActivity, guid) },
                 findScreenDef = { key -> findScreenDef(key) },
+                onOpenLegacyXmlPreferences = { pluginSimpleName ->
+                    val intent = Intent(this@ComposeMainActivity, PreferencesActivity::class.java)
+                    if (pluginSimpleName != null) {
+                        intent.putExtra(UiInteraction.PLUGIN_NAME, pluginSimpleName)
+                    }
+                    startActivity(intent)
+                },
             )
         }
 
@@ -851,13 +859,15 @@ class ComposeMainActivity : AppCompatActivity() {
         }
     }
 
-    private fun openCgmApp(packageName: String) {
-        try {
+    private fun openCgmApp(packageName: String): Boolean {
+        return try {
             val intent = packageManager.getLaunchIntentForPackage(packageName) ?: throw ActivityNotFoundException()
             intent.addCategory(Intent.CATEGORY_LAUNCHER)
             startActivity(intent)
+            true
         } catch (_: ActivityNotFoundException) {
             aapsLogger.debug("Error opening CGM app: $packageName")
+            false
         }
     }
 
@@ -965,8 +975,9 @@ class ComposeMainActivity : AppCompatActivity() {
             ElementType.EXTENDED_BOLUS          -> navController.navigate(AppRoute.ExtendedBolusDialog.route)
 
             // CGM
-            ElementType.CGM_XDRIP               -> openCgmApp("com.eveningoutpost.dexdrip")
+            ElementType.CGM_XDRIP               -> if (!openCgmApp("com.eveningoutpost.dexdrip")) openCgmApp("tk.glucodata")
             ElementType.CGM_DEX                 -> dexcomBoyda.dexcomPackages().forEach { openCgmApp(it) }
+            ElementType.CGM_JUGGLUCO            -> openCgmApp("tk.glucodata")
 
             ElementType.CALIBRATION             -> navController.navigate(AppRoute.CalibrationDialog.route)
 

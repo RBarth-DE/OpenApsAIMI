@@ -4380,7 +4380,13 @@ class DetermineBasalaimiSMB2 @Inject constructor(
 
     private fun applyLegacyMealModes(profile: OapsProfileAimi, rT: RT, currenttemp: CurrentTemp, modeTbrLimit: Double): RT? {
         fun rbf(key: DoubleKey) = preferences.get(key)
-        
+
+        // 🛡️ Safety gate: never fire pre-bolus when BG is low and dropping
+        if (bg < 80.0 && delta < 0.0) {
+            consoleLog.add("🛡️ LEGACY_MODE pre-bolus BLOCKED: BG=${bg.toInt()} < 80 & dropping (Δ=${"%.1f".format(delta)})")
+            return null
+        }
+
         // ─────────────────────────────────────────────────────────────────────
         // 📈 PROGRESSIVE MEAL TBR — active en permanence pendant le mode repas
         //
@@ -5527,7 +5533,10 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             else -> "N/A"
         }
         
-        applyLegacyMealModes(profile, rT, currenttemp, modeTbrLimit.toDouble())?.let { return it }
+        applyLegacyMealModes(profile, rT, currenttemp, modeTbrLimit.toDouble())?.let {
+            it.aiAuditorEnabled = preferences.get(BooleanKey.AimiAuditorEnabled)
+            return it
+        }
         
         // 🛡️ T3C BRITTLE MODE BRANCH (Moved here to capture `therapy` variables for Prebolus)
         // If the user has no pancreas and relies solely on basal shifts, we skip ALL

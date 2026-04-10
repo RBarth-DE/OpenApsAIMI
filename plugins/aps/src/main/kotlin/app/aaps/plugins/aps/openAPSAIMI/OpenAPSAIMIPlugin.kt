@@ -353,7 +353,7 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
 
     override fun getAverageIsfMgdl(timestamp: Long, caller: String): Double? {
         if (dynIsfCache.isEmpty()) {
-            aapsLogger.warn(LTag.APS, "dynIsfCache is empty. Unable to calculate average ISF.")
+            //aapsLogger.warn(LTag.APS, "dynIsfCache is empty. Unable to calculate average ISF.")
             return runBlocking { profileFunction.getProfile()?.getProfileIsfMgdl() } ?: 20.0
         }
         var count = 0

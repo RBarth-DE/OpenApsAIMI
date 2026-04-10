@@ -100,9 +100,6 @@ import app.aaps.ui.compose.overview.statusLights.StatusViewModel
 
 @Composable
 fun OverviewScreen(
-    profileName: String,
-    isProfileModified: Boolean,
-    profileProgress: Float,
     tempTargetText: String,
     tempTargetState: TempTargetChipState,
     tempTargetProgress: Float,
@@ -531,7 +528,6 @@ private fun StatusLightsSettingsBottomSheet(
         containerColor = MaterialTheme.colorScheme.surface
     ) {
         StatusLightsSettingsContent(
-            settingsDef = settingsDef,
             onCopyFromNightscout = onCopyFromNightscout
         )
     }
@@ -539,7 +535,6 @@ private fun StatusLightsSettingsBottomSheet(
 
 @Composable
 private fun StatusLightsSettingsContent(
-    settingsDef: PreferenceSubScreenDef,
     onCopyFromNightscout: () -> Unit
 ) {
     var showCopyDialog by remember { mutableStateOf(false) }

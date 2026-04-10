@@ -454,7 +454,8 @@ fun NavGraphBuilder.appNavGraph(
             activePlugin = activePlugin,
             rh = rh,
             builtInSearchables = builtInSearchables,
-            onBackClick = { navController.safePopBackStack() }
+            onBackClick = { navController.safePopBackStack() },
+            onOpenLegacyXmlPreferences = { onOpenLegacyXmlPreferences(null) }
         )
     }
 
@@ -512,7 +513,8 @@ fun NavGraphBuilder.appNavGraph(
             PluginPreferencesScreen(
                 plugin = plugin,
                 visibilityContext = visibilityContext,
-                onBackClick = { navController.safePopBackStack() }
+                onBackClick = { navController.safePopBackStack() },
+                onOpenLegacyXmlPreferences = { onOpenLegacyXmlPreferences(plugin.javaClass.simpleName) }
             )
         }
     }

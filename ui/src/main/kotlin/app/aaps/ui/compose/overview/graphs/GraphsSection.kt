@@ -54,6 +54,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.TextUnit
+import androidx.compose.ui.unit.TextUnitType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.aaps.core.interfaces.overview.graph.GraphConfig
@@ -657,11 +660,14 @@ private fun PulsePanel(
         colors = CardDefaults.cardColors(containerColor = Color.Transparent),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
-        Column(modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)) {
+        Column(modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp)) {
             if (state.titleText.isNotEmpty()) {
                 Text(
                     text = state.titleText,
-                    style = MaterialTheme.typography.bodyMedium,
+                    style = MaterialTheme.typography.labelSmall.copy(
+                        fontSize = TextUnit(9f, TextUnitType.Sp)
+                    ),
+                    fontWeight = FontWeight.Bold,
                     color = if (state.isHypoRisk) hypoColor
                     else MaterialTheme.colorScheme.onSurface
                 )
@@ -670,19 +676,32 @@ private fun PulsePanel(
                 Spacer(Modifier.height(2.dp))
                 Text(
                     text = state.summaryText,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.85f),
+                    style = MaterialTheme.typography.labelSmall.copy(
+                        fontSize = TextUnit(9f, TextUnitType.Sp)
+                    ),
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface,
                     maxLines = 4
                 )
             }
             if (state.metaText.isNotEmpty()) {
-                Spacer(Modifier.height(2.dp))
+                Spacer(Modifier.height(3.dp))
                 Text(
                     text = state.metaText,
                     style = MaterialTheme.typography.labelSmall.copy(
                         fontSize = TextUnit(9f, TextUnitType.Sp)
                     ),
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                )
+            }
+            if (state.hintText.isNotEmpty()) {
+                Spacer(Modifier.height(2.dp))
+                Text(
+                    text = state.hintText,
+                    style = MaterialTheme.typography.labelSmall.copy(
+                        fontSize = TextUnit(8f, TextUnitType.Sp)
+                    ),
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.75f)
                 )
             }
         }
@@ -719,7 +738,7 @@ private fun TirPanel(
             )
         } else {
             // Color bar
-            Row(modifier = Modifier.fillMaxWidth().height(16.dp)) {
+            Row(modifier = Modifier.fillMaxWidth().height(10.dp)) {
                     val segments = listOf(
                         state.veryLow  to colorVeryLow,
                         state.low      to colorLow,
@@ -732,7 +751,7 @@ private fun TirPanel(
                             Box(
                                 modifier = Modifier
                                     .weight(fraction)
-                                    .height(16.dp)
+                                    .height(7.dp)
                                     .background(color)
                             )
                         }
@@ -752,7 +771,7 @@ private fun TirPanel(
                         if (fraction > 0f) {
                             Box(modifier = Modifier.weight(fraction)) {
                                 val pct = (fraction * 100).toInt()
-                                if (fraction > 0.08f) {
+                                if (fraction >= 0.05f) {
                                     Text(
                                         text = "$pct%",
                                         style = MaterialTheme.typography.labelSmall.copy(
@@ -766,6 +785,14 @@ private fun TirPanel(
                         }
                     }
                 }
+                Spacer(Modifier.height(2.dp))
+                Text(
+                    text = "Avg %.0f mg/dL · A1C %.1f%%".format(state.avgMgDl, state.a1c),
+                    style = MaterialTheme.typography.labelSmall.copy(
+                        fontSize = TextUnit(9f, TextUnitType.Sp)
+                    ),
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                )
         }
     }
 }

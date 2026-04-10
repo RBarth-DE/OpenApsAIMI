@@ -43,6 +43,7 @@ dependencies {
     testImplementation(project(":shared:tests"))
 
     api(libs.androidx.appcompat)
+    api(libs.androidx.swiperefreshlayout)
     api(kotlin("reflect"))
 
     // APS (it should be androidTestImplementation but it doesn't work)

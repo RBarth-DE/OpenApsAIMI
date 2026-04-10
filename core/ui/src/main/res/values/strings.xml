@@ -1106,6 +1106,7 @@
     <string name="pulse_panel_fallback">SMB %1$s U · Basal %2$s U/h</string>
     <string name="pulse_panel_hypo_prefix">Hypo risk —</string>
     <string name="pulse_panel_meta">SMB %1$s U · demand %2$s · AutoSens %3$s%%</string>
+    <string name="pulse_panel_hint">Tap for full rationale and trajectory</string>
     <!-- AIMI dashboard action buttons -->
     <string name="aimi_btn_advisor">Advisor</string>
     <string name="aimi_btn_meal">Meal</string>

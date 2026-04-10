@@ -19,6 +19,7 @@ import app.aaps.core.ui.compose.icons.IcBolus
 import app.aaps.core.ui.compose.icons.IcByoda
 import app.aaps.core.ui.compose.icons.IcCalculator
 import app.aaps.core.ui.compose.icons.IcCalibration
+import app.aaps.core.ui.compose.icons.IcGenericCgm
 import app.aaps.core.ui.compose.icons.IcCannulaChange
 import app.aaps.core.ui.compose.icons.IcCarbs
 import app.aaps.core.ui.compose.icons.IcCgmInsert
@@ -65,6 +66,7 @@ fun ElementType.color(): Color = when (this) {
 
     ElementType.CGM_XDRIP               -> AapsTheme.elementColors.cgmXdrip
     ElementType.CGM_DEX                 -> AapsTheme.elementColors.cgmDex
+    ElementType.CGM_JUGGLUCO            -> AapsTheme.elementColors.cgmXdrip
     ElementType.CALIBRATION             -> AapsTheme.elementColors.calibration
     ElementType.INSULIN_MANAGEMENT      -> AapsTheme.elementColors.insulin
 
@@ -122,6 +124,7 @@ fun ElementType.icon(): ImageVector = when (this) {
     ElementType.TREATMENT               -> Icons.Default.Add
     ElementType.CGM_XDRIP               -> IcXDrip
     ElementType.CGM_DEX                 -> IcByoda
+    ElementType.CGM_JUGGLUCO            -> IcGenericCgm
     ElementType.CALIBRATION             -> IcCalibration
     ElementType.INSULIN_MANAGEMENT      -> IcPluginInsulin
 
@@ -174,6 +177,7 @@ fun ElementType.labelResId(): Int = when (this) {
     ElementType.TREATMENT               -> R.string.overview_treatment_label
     ElementType.CGM_XDRIP               -> R.string.cgm
     ElementType.CGM_DEX                 -> R.string.cgm
+    ElementType.CGM_JUGGLUCO            -> R.string.cgm
     ElementType.CALIBRATION             -> R.string.calibration
     ElementType.INSULIN_MANAGEMENT      -> R.string.insulin_management
     ElementType.PROFILE_MANAGEMENT      -> R.string.profile_management
@@ -229,7 +233,8 @@ fun ElementType.descriptionResId(): Int = when (this) {
     ElementType.NOTE                    -> R.string.treatment_note_desc
     ElementType.QUESTION                -> R.string.treatment_question_desc
     ElementType.CGM_XDRIP,
-    ElementType.CGM_DEX                 -> R.string.treatment_cgm_desc
+    ElementType.CGM_DEX,
+    ElementType.CGM_JUGGLUCO            -> R.string.treatment_cgm_desc
 
     ElementType.CALIBRATION             -> R.string.treatment_calibration_desc
     ElementType.BG_CHECK                -> R.string.treatment_bg_check_desc

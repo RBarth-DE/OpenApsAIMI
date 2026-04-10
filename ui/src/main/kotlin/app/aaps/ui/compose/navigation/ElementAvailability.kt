@@ -22,8 +22,9 @@ class ElementAvailability @Inject constructor(
 
     fun isAvailable(elementType: ElementType): Boolean = when (elementType) {
         ElementType.CALIBRATION,
-        ElementType.CGM_XDRIP   -> xDripSource.isEnabled()
-        ElementType.CGM_DEX     -> dexcomBoyda.isEnabled()
+        ElementType.CGM_XDRIP,
+        ElementType.CGM_JUGGLUCO -> xDripSource.isEnabled()
+        ElementType.CGM_DEX      -> dexcomBoyda.isEnabled()
 
         else                    -> true
     }
