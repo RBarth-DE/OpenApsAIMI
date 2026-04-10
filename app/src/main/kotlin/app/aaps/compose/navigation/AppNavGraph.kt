@@ -454,8 +454,7 @@ fun NavGraphBuilder.appNavGraph(
             activePlugin = activePlugin,
             rh = rh,
             builtInSearchables = builtInSearchables,
-            onBackClick = { navController.safePopBackStack() },
-            onOpenLegacyXmlPreferences = { onOpenLegacyXmlPreferences(null) }
+            onBackClick = { navController.safePopBackStack() }
         )
     }
 
@@ -513,8 +512,7 @@ fun NavGraphBuilder.appNavGraph(
             PluginPreferencesScreen(
                 plugin = plugin,
                 visibilityContext = visibilityContext,
-                onBackClick = { navController.safePopBackStack() },
-                onOpenLegacyXmlPreferences = { onOpenLegacyXmlPreferences(plugin.javaClass.simpleName) }
+                onBackClick = { navController.safePopBackStack() }
             )
         }
     }
@@ -557,6 +555,19 @@ fun NavGraphBuilder.appNavGraph(
                 navController.safePopBackStack()
             },
             entries = entries
+        )
+    }
+
+    composable(AppRoute.FoodManagement.route) {
+        val foodManagementViewModel: app.aaps.ui.compose.foodManagement.FoodManagementViewModel = androidx.hilt.navigation.compose.hiltViewModel()
+        app.aaps.ui.compose.foodManagement.FoodManagementScreen(
+            viewModel = foodManagementViewModel,
+            onNavigateBack = { navController.safePopBackStack() },
+            onNavigateToWizard = { carbs, name ->
+                withProtection(ProtectionCheck.Protection.BOLUS) {
+                    navController.navigate(AppRoute.WizardDialog.createRoute(carbs = carbs, notes = name))
+                }
+            }
         )
     }
 
