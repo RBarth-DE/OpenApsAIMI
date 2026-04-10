@@ -1,6 +1,8 @@
 package app.aaps.plugins.aps.openAPSAIMI.advisor
 import kotlinx.coroutines.runBlocking
 
+import app.aaps.plugins.aps.openAPSAIMI.advisor.oref.OrefAnalysisReport
+
 /**
  * =============================================================================
  * AIMI ADVISOR DATA MODELS
@@ -92,7 +94,9 @@ data class AdvisorReport(
     val overallAssessment: String,
     val recommendations: List<AimiRecommendation>,
     // PkpdSuggestions merged into recommendations with Domain.PKPD
-    val summary: String
+    val summary: String,
+    /** On-device OREF-aligned feature/outcome analysis (local DB); LGBM scores optional via ONNX. */
+    val orefAnalysis: OrefAnalysisReport? = null,
 )
 
 /**
