@@ -37,3 +37,4 @@ wear/pumpcontrol/*
 tmpclaude-*
 /app/.idea/*
 /.tmp/gradle_*
+.venv_onnx/
