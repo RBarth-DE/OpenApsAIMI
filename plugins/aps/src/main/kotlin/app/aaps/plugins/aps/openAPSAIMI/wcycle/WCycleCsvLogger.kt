@@ -1,19 +1,15 @@
 package app.aaps.plugins.aps.openAPSAIMI.wcycle
 import kotlinx.coroutines.runBlocking
 
-import android.content.Context
-import android.os.Environment
 import android.util.Log
-import java.io.File
+import app.aaps.plugins.aps.openAPSAIMI.utils.AimiStorageHelper
 import java.text.SimpleDateFormat
 import java.util.*
 
-class WCycleCsvLogger(private val ctx: Context) {
+class WCycleCsvLogger(private val storageHelper: AimiStorageHelper) {
     private val TAG = "WCycleCsvLogger"
 
-    // 🔧 FIX: Use ONLY standard /Documents/AAPS path (no app-specific fallback)
-    private val dir = File(android.os.Environment.getExternalStorageDirectory(), "Documents/AAPS")
-    private val file = File(dir, "oapsaimi_wcycle.csv")
+    private val file by lazy { storageHelper.getAimiFile("oapsaimi_wcycle.csv") }
 
     private val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US)
 
@@ -22,17 +18,10 @@ class WCycleCsvLogger(private val ctx: Context) {
         val line = build(row, headerNeeded)
 
         return runCatching {
-            ensureDir(dir)
             file.appendText(line)
         }.onFailure { t ->
             Log.w(TAG, "Write failed at ${file.absolutePath}", t)
         }.isSuccess
-    }
-
-    private fun ensureDir(dir: File) {
-        if (!dir.exists() && !dir.mkdirs()) {
-            error("Unable to create directory ${dir.absolutePath}")
-        }
     }
 
     private fun build(row: Map<String, Any?>, header: Boolean): String {

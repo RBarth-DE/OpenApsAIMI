@@ -1,8 +1,8 @@
 package app.aaps.plugins.aps.openAPSAIMI.di
 import kotlinx.coroutines.runBlocking
 
-import android.content.Context
 import app.aaps.core.keys.interfaces.Preferences
+import app.aaps.plugins.aps.openAPSAIMI.utils.AimiStorageHelper
 import app.aaps.plugins.aps.openAPSAIMI.wcycle.WCycleAdjuster
 import app.aaps.plugins.aps.openAPSAIMI.wcycle.WCycleCsvLogger
 import app.aaps.plugins.aps.openAPSAIMI.wcycle.WCycleEstimator
@@ -32,7 +32,7 @@ object WCycleModule {
 
     @Provides
     @Singleton
-    fun provideWCycleLearner(context: Context): WCycleLearner =
+    fun provideWCycleLearner(context: android.content.Context): WCycleLearner =
         WCycleLearner(ctx = context)
 
     @Provides
@@ -46,8 +46,8 @@ object WCycleModule {
 
     @Provides
     @Singleton
-    fun provideWCycleCsvLogger(context: Context): WCycleCsvLogger =
-        WCycleCsvLogger(context)
+    fun provideWCycleCsvLogger(storageHelper: AimiStorageHelper): WCycleCsvLogger =
+        WCycleCsvLogger(storageHelper)
 
     @Provides
     @Singleton
