@@ -86,7 +86,8 @@ object SmbInstructionExecutor {
         val profileCurrentBasal: Double,
         val cob: Float,
         val globalReactivityFactor: Double,  // 🎯 NEW: From UnifiedReactivityLearner
-        val isConfirmedHighRise: Boolean = false // 🚀 NEW: For meal confirmation
+        val isConfirmedHighRise: Boolean = false, // 🚀 NEW: For meal confirmation
+        val pkPdCsvLogger: PkPdCsvLogger
     )
 
     data class Hooks(
@@ -590,7 +591,7 @@ object SmbInstructionExecutor {
             val exMultLog = audit?.exerciseMult
             val lateMultLog = audit?.lateFatMult
 
-            PkPdCsvLogger.append(
+            input.pkPdCsvLogger.append(
                 PkPdLogRow(
                     dateStr = dateStr,
                     epochMin = epochMin,

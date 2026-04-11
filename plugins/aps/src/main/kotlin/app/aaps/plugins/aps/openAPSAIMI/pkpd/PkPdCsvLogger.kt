@@ -1,9 +1,10 @@
 package app.aaps.plugins.aps.openAPSAIMI.pkpd
 import kotlinx.coroutines.runBlocking
 
-import android.os.Environment
 import android.util.Log
-import java.io.File
+import app.aaps.plugins.aps.openAPSAIMI.utils.AimiStorageHelper
+import javax.inject.Inject
+import javax.inject.Singleton
 
 data class PkPdLogRow(
     val dateStr: String,
@@ -34,12 +35,11 @@ data class PkPdLogRow(
     val anticipation: Double? = null
 )
 
-object PkPdCsvLogger {
-    private val externalDir = File(android.os.Environment.getExternalStorageDirectory(), "Documents/AAPS")
-    private val PATH = File(externalDir, "oapsaimi_pkpd_records.csv")
-    private const val TAG = "PkPdCsvLogger"
+@Singleton
+class PkPdCsvLogger @Inject constructor(private val storageHelper: AimiStorageHelper) {
+    private val path by lazy { storageHelper.getAimiFile("oapsaimi_pkpd_records.csv") }
+    private val TAG = "PkPdCsvLogger"
 
-    @JvmStatic
     fun append(row: PkPdLogRow) {
         val appendResult = runCatching {
             val line = listOf(
@@ -70,17 +70,11 @@ object PkPdCsvLogger {
                 row.anticipation
             ).joinToString(",")
 
-            //val file = File(PATH)
-            PATH.parentFile?.let { parent ->
-                if (!parent.exists() && !parent.mkdirs()) {
-                    error("Unable to create directory ${parent.absolutePath}")
-                }
-            }
-            PATH.appendText(line + "\n")
+            path.appendText(line + "\n")
         }
 
         appendResult.exceptionOrNull()?.let { throwable ->
-            Log.w(TAG, "Unable to append PK/PD log row to $PATH", throwable)
+            Log.w(TAG, "Unable to append PK/PD log row to ${path.absolutePath}", throwable)
         }
     }
 }

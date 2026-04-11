@@ -386,7 +386,8 @@ class DetermineBasalaimiSMB2 @Inject constructor(
     private val pumpCapabilityValidator: app.aaps.plugins.aps.openAPSAIMI.validation.PumpCapabilityValidator,
     private val dynamicBasalController: app.aaps.plugins.aps.openAPSAIMI.basal.DynamicBasalController,
     private val autodriveEngine: AutodriveEngine,
-    private val context: Context
+    private val context: Context,
+    private val pkPdCsvLogger: PkPdCsvLogger
 ) {
     @Inject lateinit var persistenceLayer: PersistenceLayer
     @Inject lateinit var tddCalculator: TddCalculator
@@ -651,7 +652,8 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         runCatching { LocalTime.parse(value, ngrTimeFormatter) }.getOrElse { fallback }
 
     private class PkpdPortAdapter(
-        private val pkpdIntegration: PkPdIntegration
+        private val pkpdIntegration: PkPdIntegration,
+        private val pkPdCsvLogger: PkPdCsvLogger
     ) : PkpdPort {
 
         private fun app.aaps.plugins.aps.openAPSAIMI.model.LoopContext.mealModeActive(): Boolean =
@@ -743,7 +745,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         ) {
             val dateStr  = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.US).format(Date(ctx.nowEpochMillis))
             val epochMin = TimeUnit.MILLISECONDS.toMinutes(ctx.nowEpochMillis)
-            PkPdCsvLogger.append(
+            pkPdCsvLogger.append(
                 PkPdLogRow(
                     dateStr = dateStr,
                     epochMin = epochMin,
@@ -4302,7 +4304,8 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                 globalReactivityFactor = if (preferences.get(BooleanKey.OApsAIMIUnifiedReactivityEnabled)) {
                     if (isConfirmedHighRise) max(safeReactivityFactor, 1.0) else safeReactivityFactor
                 } else 1.0,
-                isConfirmedHighRise = isConfirmedHighRise
+                isConfirmedHighRise = isConfirmedHighRise,
+                pkPdCsvLogger = pkPdCsvLogger
             ),
             SmbInstructionExecutor.Hooks(
                 refineSmb = { combined, short, long, predicted, profileInput ->
