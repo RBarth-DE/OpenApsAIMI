@@ -1,48 +1,46 @@
 package app.aaps.plugins.aps.openAPSAIMI.physio.gate
 
 import app.aaps.core.interfaces.logging.AAPSLogger
-import app.aaps.core.interfaces.sharedPreferences.SP
 import app.aaps.core.keys.BooleanKey
 import app.aaps.core.keys.DoubleKey
 import app.aaps.core.keys.IntKey
-import app.aaps.core.keys.interfaces.BooleanPreferenceKey
-import app.aaps.core.keys.interfaces.DoublePreferenceKey
-import app.aaps.core.keys.interfaces.IntPreferenceKey
+import app.aaps.core.keys.interfaces.Preferences
 import app.aaps.plugins.aps.openAPSAIMI.physio.GateInput
 import app.aaps.plugins.aps.openAPSAIMI.physio.KernelType
 import app.aaps.plugins.aps.openAPSAIMI.physio.PhysioStateMTR
+import io.mockk.every
+import io.mockk.mockk
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
-import org.mockito.kotlin.mock
-import org.mockito.kotlin.whenever
-import app.aaps.core.keys.interfaces.Preferences
 
 class CosineTrajectoryGateTest {
 
     private lateinit var gate: CosineTrajectoryGate
-    private lateinit var mockPrefs: Preferences
-    private lateinit var mockLogger: AAPSLogger
+    private lateinit var prefs: Preferences
+    private lateinit var logger: AAPSLogger
 
     @Before
     fun setup() {
-        mockPrefs = mock()
-        mockLogger = mock()
-        gate = CosineTrajectoryGate(mockPrefs, mockLogger)
-        
-        // Defaults
-        whenever(mockPrefs.get(BooleanKey.AimiCosineGateEnabled)).thenReturn(true)
-        whenever(mockPrefs.get(DoubleKey.AimiCosineGateAlpha)).thenReturn(2.0)
-        whenever(mockPrefs.get(DoubleKey.AimiCosineGateMinDataQuality)).thenReturn(0.3)
-        whenever(mockPrefs.get(DoubleKey.AimiCosineGateMinSensitivity)).thenReturn(0.7)
-        whenever(mockPrefs.get(DoubleKey.AimiCosineGateMaxSensitivity)).thenReturn(1.3)
-        whenever(mockPrefs.get(IntKey.AimiCosineGateMaxPeakShift)).thenReturn(15)
+        prefs = mockk(relaxed = true)
+        logger = mockk(relaxed = true)
+        configureDefaultPrefs()
+        gate = CosineTrajectoryGate(prefs, logger)
+    }
+
+    private fun configureDefaultPrefs() {
+        every { prefs.get(BooleanKey.AimiCosineGateEnabled) } returns true
+        every { prefs.get(DoubleKey.AimiCosineGateAlpha) } returns 2.0
+        every { prefs.get(DoubleKey.AimiCosineGateMinDataQuality) } returns 0.3
+        every { prefs.get(DoubleKey.AimiCosineGateMinSensitivity) } returns 0.7
+        every { prefs.get(DoubleKey.AimiCosineGateMaxSensitivity) } returns 1.3
+        every { prefs.get(IntKey.AimiCosineGateMaxPeakShift) } returns 15
     }
 
     @Test
     fun `test Neutral Output when Disabled`() {
-        whenever(mockPrefs.get(BooleanKey.AimiCosineGateEnabled)).thenReturn(false)
+        every { prefs.get(BooleanKey.AimiCosineGateEnabled) } returns false
         val input = createInput()
         val result = gate.compute(input)
         assertEquals(1.0, result.effectiveSensitivityMultiplier, 0.01)
@@ -58,8 +56,7 @@ class CosineTrajectoryGateTest {
             physioState = PhysioStateMTR.OPTIMAL
         )
         val result = gate.compute(input)
-        
-        // Near 1.0 / 0
+
         assertEquals(1.0, result.effectiveSensitivityMultiplier, 0.05)
         assertEquals(0, result.peakTimeShiftMinutes)
         assertEquals(KernelType.REST, result.dominantKernel)
@@ -67,7 +64,6 @@ class CosineTrajectoryGateTest {
 
     @Test
     fun `test STRESS Kernel match`() {
-        // Delta +3.0 (norm 0.3), Steps 0, StressDetected (norm 1.0)
         val input = createInput(
             delta = 3.0,
             steps = 0,
@@ -75,8 +71,7 @@ class CosineTrajectoryGateTest {
             hr = 100
         )
         val result = gate.compute(input)
-        
-        // STRESS base: Sens 0.8, Shift 10
+
         assertEquals(KernelType.STRESS, result.dominantKernel)
         assertTrue("Sens < 1.0 for stress", result.effectiveSensitivityMultiplier < 0.95)
         assertTrue("Shift > 0 for stress", result.peakTimeShiftMinutes > 5)
@@ -84,15 +79,14 @@ class CosineTrajectoryGateTest {
 
     @Test
     fun `test ACTIVITY Kernel match`() {
-        // Delta -5.0 (norm -0.5), Steps 1500 (norm 1.0), Activity Detected by steps
+        // Delta -5.0 (norm -0.5), Steps 1500 (norm 1.0), ActivityDetected
         val input = createInput(
             delta = -5.0,
             steps = 1500,
             physioState = PhysioStateMTR.OPTIMAL
         )
         val result = gate.compute(input)
-       
-        // ACTIVITY base: Sens 1.3, Shift 0
+
         assertEquals(KernelType.ACTIVITY, result.dominantKernel)
         assertTrue("Sens > 1.0 for activity", result.effectiveSensitivityMultiplier > 1.1)
     }
@@ -101,7 +95,7 @@ class CosineTrajectoryGateTest {
     fun `test Data Quality Fallback`() {
         val input = createInput(dataQuality = 0.1)
         val result = gate.compute(input)
-        
+
         assertEquals(1.0, result.effectiveSensitivityMultiplier, 0.01)
         assertTrue(result.debug.contains("Low Quality"))
     }
@@ -126,6 +120,4 @@ class CosineTrajectoryGateTest {
             dataQuality = dataQuality
         )
     }
-
-
 }
