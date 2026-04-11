@@ -394,6 +394,9 @@ class DetermineBasalaimiSMB2 @Inject constructor(
     
     private var adaptiveMult: Double = 1.0
 
+    /** Latest CGM noise from the current determine_basal invocation (for basal governance context). */
+    private var lastLoopCgmNoise: Double = 0.0
+
     // 🦋 Thyroid (Basedow) Module
     private val thyroidPreferences by lazy { app.aaps.plugins.aps.openAPSAIMI.physio.thyroid.ThyroidPreferences(preferences) }
     private val thyroidStateEstimator = app.aaps.plugins.aps.openAPSAIMI.physio.thyroid.ThyroidStateEstimator()
@@ -4664,6 +4667,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         consoleLog = mutableListOf()
         exerciseInsulinLockoutActive = false
         aimiContextActivityActive = false
+        lastLoopCgmNoise = glucose_status.noise
         
         if (extraDebug.isNotEmpty()) {
              // Append to log history AND consoleError for "Script Debug" visibility
@@ -5516,7 +5520,8 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                 maxIob = maxIob,
                 eventualBg = eventualT3c.coerceAtLeast(40.0),
                 rT = rT,
-                trajectoryContext = t3cTrajCtx
+                trajectoryContext = t3cTrajCtx,
+                cgmNoise = glucose_status.noise,
             )
         }
         val modesCondition = (!mealTime || mealruntime > 30) && (!lunchTime || lunchruntime > 30) && (!bfastTime || bfastruntime > 30) && (!dinnerTime || dinnerruntime > 30) && !sportTime && (!snackTime || snackrunTime > 30) && (!highCarbTime || highCarbrunTime > 30) && !sleepTime && !lowCarbTime
@@ -8558,6 +8563,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         val modeLabel: String,
         val predChunk: String,
         val refractoryStatus: String,
+        val cgmNoise: Double,
     )
 
     /** Console: DECISION_FINAL line + [lastSmbFinal]; no ML side effects. */
@@ -8603,6 +8609,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             modeLabel = modeLabel,
             predChunk = predChunk,
             refractoryStatus = refractoryStatus,
+            cgmNoise = lastLoopCgmNoise,
         )
     }
 
@@ -8622,13 +8629,21 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             accel = bgacc,
             duraISFminutes = duraISFminutes,
             duraISFaverage = duraISFaverage,
-            iob = iobNet
+            iob = iobNet,
+            loopDeltaMgDl5m = diag.deltaValue,
+            sensorNoise = diag.cgmNoise,
+            shortMinPredBg = minPredictedAcrossCurves(rT.predBGs),
         )
         val gov = basalNeuralLearner.getGovernanceSnapshot()
         consoleLog.add(
             "🧭 BASAL_GOV: action=${gov.action} conf=${"%.2f".format(Locale.US, gov.confidence)} " +
-                "n=${gov.sampleCount} hypo=${"%.2f".format(Locale.US, gov.hypoRate)} high=${"%.2f".format(Locale.US, gov.highRate)} " +
-                "mae=${"%.1f".format(Locale.US, gov.meanAbsTargetError)} reason=${gov.reason}"
+                "n=${gov.sampleCount} hypo=${"%.2f".format(Locale.US, gov.hypoRate)} hypoG=${"%.2f".format(Locale.US, gov.hypoRateGovernance)} " +
+                "hypoAdj=${"%.2f".format(Locale.US, gov.hypoGovernanceAdjusted)} ant=${"%.2f".format(Locale.US, gov.anticipationRelief)} " +
+                "wMean=${"%.2f".format(Locale.US, gov.meanGovernanceWeight)} high=${"%.2f".format(Locale.US, gov.highRate)} " +
+                "mae=${"%.1f".format(Locale.US, gov.meanAbsTargetError)} latch=${gov.hypoHoldLatched} " +
+                "floorB=${gov.activeBasalFloor?.let { "%.2f".format(Locale.US, it) } ?: "-"} " +
+                "floorA=${gov.activeAggressivenessFloor?.let { "%.2f".format(Locale.US, it) } ?: "-"} " +
+                "reason=${gov.reason}"
         )
         return activityThreshold
     }
@@ -8947,7 +8962,8 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         maxIob: Double,
         eventualBg: Double,
         rT: RT,
-        trajectoryContext: T3cTrajectoryContext? = null
+        trajectoryContext: T3cTrajectoryContext? = null,
+        cgmNoise: Double = 0.0,
     ): RT {
         rT.reason = StringBuilder("")
         rT.deliverAt = System.currentTimeMillis()
@@ -9083,13 +9099,21 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             accel = accel,
             duraISFminutes = duraISFminutes,
             duraISFaverage = duraISFaverage,
-            iob = iob.iob
+            iob = iob.iob,
+            loopDeltaMgDl5m = delta.toDouble(),
+            sensorNoise = cgmNoise,
+            shortMinPredBg = minPredictedAcrossCurves(rT.predBGs),
         )
         val gov = basalNeuralLearner.getGovernanceSnapshot()
         consoleLog.add(
             "🧭 BASAL_GOV[T3C]: action=${gov.action} conf=${"%.2f".format(Locale.US, gov.confidence)} " +
-                "n=${gov.sampleCount} hypo=${"%.2f".format(Locale.US, gov.hypoRate)} high=${"%.2f".format(Locale.US, gov.highRate)} " +
-                "mae=${"%.1f".format(Locale.US, gov.meanAbsTargetError)} reason=${gov.reason}"
+                "n=${gov.sampleCount} hypo=${"%.2f".format(Locale.US, gov.hypoRate)} hypoG=${"%.2f".format(Locale.US, gov.hypoRateGovernance)} " +
+                "hypoAdj=${"%.2f".format(Locale.US, gov.hypoGovernanceAdjusted)} ant=${"%.2f".format(Locale.US, gov.anticipationRelief)} " +
+                "wMean=${"%.2f".format(Locale.US, gov.meanGovernanceWeight)} high=${"%.2f".format(Locale.US, gov.highRate)} " +
+                "mae=${"%.1f".format(Locale.US, gov.meanAbsTargetError)} latch=${gov.hypoHoldLatched} " +
+                "floorB=${gov.activeBasalFloor?.let { "%.2f".format(Locale.US, it) } ?: "-"} " +
+                "floorA=${gov.activeAggressivenessFloor?.let { "%.2f".format(Locale.US, it) } ?: "-"} " +
+                "reason=${gov.reason}"
         )
 
         consoleLog.add(rT.reason.toString())

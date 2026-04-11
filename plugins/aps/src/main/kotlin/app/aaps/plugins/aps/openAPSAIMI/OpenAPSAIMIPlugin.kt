@@ -58,6 +58,7 @@ import app.aaps.core.interfaces.utils.HardLimits
 import app.aaps.core.interfaces.utils.Round
 import app.aaps.core.keys.BooleanKey
 import app.aaps.core.keys.DoubleKey
+import app.aaps.core.keys.R as CoreKeysR
 import app.aaps.core.keys.IntKey
 import app.aaps.core.keys.interfaces.PreferenceItem
 import app.aaps.core.keys.interfaces.Preferences
@@ -1310,10 +1311,26 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
         PreferenceSubScreenDef(
             key = "aimi_compose_adaptive_basal",
             titleResId = R.string.oaps_aimi_adaptive_basal_title,
-            items = listOf(
-                BooleanKey.OApsAIMIT3cAdaptiveBasalEnabled,
-                DoubleKey.OApsAIMIAdaptiveBasalMaxScaling,
-            ),
+            items = buildList {
+                add(BooleanKey.OApsAIMIT3cAdaptiveBasalEnabled)
+                add(DoubleKey.OApsAIMIAdaptiveBasalMaxScaling)
+                add(DoubleKey.OApsAIMIGovernanceHypoRateEnter)
+                add(DoubleKey.OApsAIMIGovernanceHypoRateExit)
+                add(DoubleKey.OApsAIMIGovernanceHypoBgMgdl)
+                add(DoubleKey.OApsAIMIGovernanceSevereHypoBgMgdl)
+                add(DoubleKey.OApsAIMIGovernanceHoldBasalFloorRate)
+                add(DoubleKey.OApsAIMIGovernanceHoldBasalDecayRate)
+                add(DoubleKey.OApsAIMIGovernanceHoldAggFloorRate)
+                add(DoubleKey.OApsAIMIGovernanceHoldAggDecayRate)
+                add(DoubleKey.OApsAIMIGovernanceHoldBasalFloorSevere)
+                add(DoubleKey.OApsAIMIGovernanceHoldBasalDecaySevere)
+                add(DoubleKey.OApsAIMIGovernanceHoldAggFloorSevere)
+                add(DoubleKey.OApsAIMIGovernanceHoldAggDecaySevere)
+                add(DoubleKey.OApsAIMIGovernanceAnticipationLookbackSamples)
+                add(DoubleKey.OApsAIMIGovernanceAnticipationMarginMgdl)
+                add(DoubleKey.OApsAIMIGovernanceAnticipationHypoDamp)
+                add(DoubleKey.OApsAIMIGovernanceAnticipationDecayBlendMax)
+            },
         )
 
     private fun aimiComposeT3cSubScreen(): PreferenceSubScreenDef =
@@ -1576,4 +1593,5 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
                 add(DoubleKey.OApsAIMISmbLateFatDamping)
             },
         )
+
 }
