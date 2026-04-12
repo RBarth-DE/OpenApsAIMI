@@ -54,9 +54,6 @@ import app.aaps.ui.compose.overview.statusLights.StatusViewModel
 
 @Composable
 fun OverviewScreenStacked(
-    profileName: String,
-    isProfileModified: Boolean,
-    profileProgress: Float,
     tempTargetText: String,
     tempTargetState: TempTargetChipState,
     tempTargetProgress: Float,
@@ -77,8 +74,6 @@ fun OverviewScreenStacked(
     val config = LocalConfig.current
     val bgInfoState by graphViewModel.bgInfoState.collectAsStateWithLifecycle()
     val sensitivityUiState by graphViewModel.sensitivityUiState.collectAsStateWithLifecycle()
-    val iobUiState by graphViewModel.iobUiState.collectAsStateWithLifecycle()
-    val cobUiState by graphViewModel.cobUiState.collectAsStateWithLifecycle()
     val statusState by statusViewModel.uiState.collectAsStateWithLifecycle()
     val statusPanelState by graphViewModel.statusPanelFlow.collectAsStateWithLifecycle()
     val auditorState by graphViewModel.auditorStateFlow.collectAsStateWithLifecycle()
@@ -129,15 +124,10 @@ fun OverviewScreenStacked(
                     runningModeText = runningModeText,
                     runningModeProgress = runningModeProgress,
                     isSimpleMode = isSimpleMode,
-                    profileName = profileName,
-                    isProfileModified = isProfileModified,
-                    profileProgress = profileProgress,
                     tempTargetText = tempTargetText,
                     tempTargetState = tempTargetState,
                     tempTargetProgress = tempTargetProgress,
                     tempTargetReason = tempTargetReason,
-                    iobUiState = iobUiState,
-                    cobUiState = cobUiState,
                     onNavigate = onNavigate
                 )
                 OverviewStatusPanel(

@@ -22,12 +22,8 @@ import app.aaps.core.ui.compose.icons.IcSettingsOff
 import app.aaps.core.ui.compose.navigation.ElementType
 import app.aaps.core.ui.compose.navigation.NavigationRequest
 import app.aaps.ui.compose.main.TempTargetChipState
-import app.aaps.ui.compose.overview.chips.IobCobChipsRow
-import app.aaps.ui.compose.overview.chips.ProfileChip
 import app.aaps.ui.compose.overview.chips.RunningModeChip
 import app.aaps.ui.compose.overview.chips.TempTargetChip
-import app.aaps.ui.compose.overview.graphs.CobUiState
-import app.aaps.ui.compose.overview.graphs.IobUiState
 
 @Composable
 fun OverviewChipsColumn(
@@ -35,15 +31,10 @@ fun OverviewChipsColumn(
     runningModeText: String,
     runningModeProgress: Float,
     isSimpleMode: Boolean,
-    profileName: String,
-    isProfileModified: Boolean,
-    profileProgress: Float,
     tempTargetText: String,
     tempTargetState: TempTargetChipState,
     tempTargetProgress: Float,
     tempTargetReason: TT.Reason?,
-    iobUiState: IobUiState,
-    cobUiState: CobUiState,
     onNavigate: (NavigationRequest) -> Unit,
     modifier: Modifier = Modifier,
     trailingContent: @Composable (RowScope.() -> Unit)? = null
@@ -68,9 +59,6 @@ fun OverviewChipsColumn(
                             runningModeText = runningModeText,
                             runningModeProgress = runningModeProgress,
                             isSimpleMode = isSimpleMode,
-                            profileName = profileName,
-                            isProfileModified = isProfileModified,
-                            profileProgress = profileProgress,
                             tempTargetText = tempTargetText,
                             tempTargetState = tempTargetState,
                             tempTargetProgress = tempTargetProgress,
@@ -90,9 +78,6 @@ fun OverviewChipsColumn(
                 runningModeText = runningModeText,
                 runningModeProgress = runningModeProgress,
                 isSimpleMode = isSimpleMode,
-                profileName = profileName,
-                isProfileModified = isProfileModified,
-                profileProgress = profileProgress,
                 tempTargetText = tempTargetText,
                 tempTargetState = tempTargetState,
                 tempTargetProgress = tempTargetProgress,
@@ -100,10 +85,6 @@ fun OverviewChipsColumn(
                 onNavigate = onNavigate
             )
         }
-        IobCobChipsRow(
-            iobUiState = iobUiState,
-            cobUiState = cobUiState
-        )
     }
 }
 
@@ -113,9 +94,6 @@ private fun NarrowChips(
     runningModeText: String,
     runningModeProgress: Float,
     isSimpleMode: Boolean,
-    profileName: String,
-    isProfileModified: Boolean,
-    profileProgress: Float,
     tempTargetText: String,
     tempTargetState: TempTargetChipState,
     tempTargetProgress: Float,
@@ -142,14 +120,6 @@ private fun NarrowChips(
                 )
             }
         }
-    }
-    if (profileName.isNotEmpty()) {
-        ProfileChip(
-            profileName = profileName,
-            isModified = isProfileModified,
-            progress = profileProgress,
-            onClick = { onNavigate(NavigationRequest.Element(ElementType.PROFILE_MANAGEMENT)) }
-        )
     }
     if (tempTargetText.isNotEmpty()) {
         TempTargetChip(
