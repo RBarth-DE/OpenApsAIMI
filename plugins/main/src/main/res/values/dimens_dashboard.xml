@@ -2,29 +2,41 @@
 <resources>
     <dimen name="dashboard_card_corner_large">24dp</dimen>
     <dimen name="dashboard_card_corner_small">18dp</dimen>
-    <dimen name="dashboard_card_elevation">8dp</dimen>
-    <dimen name="dashboard_block_spacing">8dp</dimen>
+    <dimen name="dashboard_card_elevation">6dp</dimen>
+    <dimen name="dashboard_block_spacing">6dp</dimen>
     <!-- Slightly tighter horizontal inset so the hero card uses more of the screen width. -->
-    <dimen name="dashboard_content_padding">14dp</dimen>
-    <dimen name="dashboard_scroll_padding_horizontal">4dp</dimen>
-    <dimen name="dashboard_scroll_padding_vertical">6dp</dimen>
-    <dimen name="dashboard_hero_bottom_inset">2dp</dimen>
+    <dimen name="dashboard_content_padding">12dp</dimen>
+    <!-- Single horizontal gutter for scroll; card inner padding handles insets (avoids double inset). -->
+    <dimen name="dashboard_scroll_padding_horizontal">0dp</dimen>
+    <dimen name="dashboard_scroll_padding_vertical">4dp</dimen>
+    <dimen name="dashboard_hero_bottom_inset">4dp</dimen>
     <dimen name="dashboard_notification_padding">10dp</dimen>
     <dimen name="dashboard_notification_margin">4dp</dimen>
     <!-- Default / fallback; DashboardFragment sets height from viewport (between min and max). -->
     <dimen name="dashboard_graph_height">260dp</dimen>
     <dimen name="dashboard_graph_height_min">176dp</dimen>
-    <dimen name="dashboard_graph_height_max">260dp</dimen>
+    <dimen name="dashboard_graph_height_max">340dp</dimen>
+    <!-- Still used by component_adjustment_status.xml; split variants below for newer layouts. -->
     <dimen name="dashboard_card_inner_padding">10dp</dimen>
-    <dimen name="dashboard_section_spacing">6dp</dimen>
+    <!-- Split so hero content can use more width without shrinking vertical breathing room. -->
+    <dimen name="dashboard_card_inner_padding_horizontal">4dp</dimen>
+    <dimen name="dashboard_card_inner_padding_vertical">8dp</dimen>
+    <dimen name="dashboard_section_spacing">4dp</dimen>
     <dimen name="dashboard_row_spacing_small">4dp</dimen>
     <dimen name="dashboard_row_spacing_medium">6dp</dimen>
     <dimen name="dashboard_chip_padding_vertical">6dp</dimen>
     <dimen name="dashboard_chip_padding_horizontal">12dp</dimen>
-    <dimen name="dashboard_chip_spacing">6dp</dimen>
+    <dimen name="dashboard_chip_spacing">4dp</dimen>
     <!-- Glucose hero: see layout_constraintWidth_percent on container; cap avoids huge circle on tablets -->
     <dimen name="dashboard_glucose_hero_width_max">168dp</dimen>
     <dimen name="dashboard_glucose_hero_min_side">122dp</dimen>
     <!-- Negative margin: pulls metric columns up; too much hides delta under overlap -->
     <dimen name="dashboard_metrics_row_overlap">-44dp</dimen>
+    <dimen name="dashboard_hero_ring_margin_end">3dp</dimen>
+    <dimen name="dashboard_hero_status_column_margin_start">4dp</dimen>
+    <!-- Extra inset so the TIR block reads as a card inside the hero, not edge-to-edge -->
+    <dimen name="dashboard_tir_horizontal_inset">8dp</dimen>
+    <dimen name="dashboard_compact_metric_min_width">76dp</dimen>
+    <!-- ConstraintLayout top hero block: space under ring row (was hardcoded 4dp in hybrid layout). -->
+    <dimen name="dashboard_hero_constraint_padding_bottom">2dp</dimen>
 </resources>
