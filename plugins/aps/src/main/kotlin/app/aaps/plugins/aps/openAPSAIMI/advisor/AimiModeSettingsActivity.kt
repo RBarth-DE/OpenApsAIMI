@@ -1,6 +1,7 @@
 package app.aaps.plugins.aps.openAPSAIMI.advisor
 import kotlinx.coroutines.runBlocking
 
+import android.content.Context
 import android.graphics.Color
 import android.graphics.Typeface
 import android.os.Bundle
@@ -398,7 +399,7 @@ class AimiModeSettingsActivity : TranslatedDaggerAppCompatActivity() {
                      enteredBy = "AIMI Advisor",
                      glucoseUnit = app.aaps.core.data.model.GlucoseUnit.MGDL
                  )
-                 
+
                  try {
                      runBlocking { persistenceLayer.insertOrUpdateTherapyEvent(te) }
                      app.aaps.core.ui.toast.ToastUtils.okToast(this, "$modeNote Mode Activated ($durationMin min)!")

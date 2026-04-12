@@ -26,5 +26,6 @@
     <string name="migrating_profile_switches">Migrating profile switches…</string>
     <string name="migrating_effective_profile_switches">Migrating effective profile switches…</string>
     <string name="migrating_boluses">Migrating boluses…</string>
+    <string name="nav_preferences_plugin">%1$s Preferences</string>
 
 </resources>

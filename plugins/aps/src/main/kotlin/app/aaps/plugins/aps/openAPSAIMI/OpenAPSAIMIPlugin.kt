@@ -15,7 +15,6 @@ import app.aaps.core.data.model.GlucoseUnit
 import app.aaps.core.data.model.GV
 import app.aaps.core.data.model.TrendArrow
 import app.aaps.core.data.model.SourceSensor
-import app.aaps.core.data.model.advancedFilteringSupported
 import app.aaps.core.data.plugin.PluginType
 import app.aaps.plugins.aps.OpenAPSFragment
 import app.aaps.core.data.time.T

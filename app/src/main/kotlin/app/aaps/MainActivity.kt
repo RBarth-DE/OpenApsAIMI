@@ -1,9 +1,16 @@
 package app.aaps
 
+import android.content.Context
 import android.content.Intent
 import android.graphics.Rect
+import android.net.Uri
+import android.os.Build
 import android.os.Bundle
+import android.os.Environment
 import android.os.PersistableBundle
+import android.provider.Settings
+import android.text.SpannableString
+import android.text.style.ForegroundColorSpan
 import android.util.TypedValue
 import android.view.Menu
 import android.view.MenuInflater
@@ -21,6 +28,7 @@ import androidx.core.view.GravityCompat
 import androidx.core.view.MenuCompat
 import androidx.core.view.MenuProvider
 import app.aaps.activities.HistoryBrowseActivity
+import app.aaps.core.data.plugin.PluginType
 import app.aaps.core.interfaces.aps.Loop
 import app.aaps.core.interfaces.configuration.Config
 import app.aaps.core.interfaces.configuration.ConfigBuilder
@@ -32,20 +40,28 @@ import app.aaps.core.interfaces.protection.ProtectionCheck
 import app.aaps.core.interfaces.rx.AapsSchedulers
 import app.aaps.core.interfaces.rx.events.EventAppInitialized
 import app.aaps.core.interfaces.rx.events.EventRebuildTabs
+import app.aaps.core.interfaces.constraints.ConstraintsChecker
+import app.aaps.core.interfaces.maintenance.FileListProvider
+import app.aaps.core.interfaces.protection.ExportPasswordDataStore
 import app.aaps.core.interfaces.smsCommunicator.SmsCommunicator
 import app.aaps.core.interfaces.utils.fabric.FabricPrivacy
+import app.aaps.core.objects.crypto.CryptoUtil
+import app.aaps.plugins.constraints.signatureVerifier.SignatureVerifierPlugin
 import app.aaps.core.keys.BooleanKey
 import app.aaps.core.keys.BooleanNonKey
 import app.aaps.core.keys.StringKey
 import app.aaps.core.ui.UIRunnable
 import app.aaps.core.ui.locale.LocaleHelper
+import app.aaps.core.ui.toast.ToastUtils
 import app.aaps.core.utils.isRunningRealPumpTest
 import app.aaps.databinding.ActivityMainBinding
 import app.aaps.plugins.configuration.activities.DaggerAppCompatActivityWithResult
 import app.aaps.plugins.configuration.activities.SingleFragmentActivity
 import app.aaps.plugins.configuration.setupwizard.SetupWizardActivity
 import app.aaps.ui.tabs.TabPageAdapter
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.tabs.TabLayoutMediator
+import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.joanzapata.iconify.Iconify
 import com.joanzapata.iconify.fonts.FontAwesomeModule
 import dagger.hilt.android.AndroidEntryPoint
@@ -58,6 +74,7 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import java.util.Locale
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -76,6 +93,11 @@ class MainActivity : DaggerAppCompatActivityWithResult() {
     @Inject lateinit var profileFunction: ProfileFunction
     @Inject lateinit var configBuilder: ConfigBuilder
     @Inject lateinit var notificationManager: NotificationManager
+    @Inject lateinit var constraintChecker: ConstraintsChecker
+    @Inject lateinit var signatureVerifierPlugin: SignatureVerifierPlugin
+    @Inject lateinit var fileListProvider: FileListProvider
+    @Inject lateinit var cryptoUtil: CryptoUtil
+    @Inject lateinit var exportPasswordDataStore: ExportPasswordDataStore
 
     private lateinit var actionBarDrawerToggle: ActionBarDrawerToggle
     private var menu: Menu? = null
@@ -286,7 +308,21 @@ class MainActivity : DaggerAppCompatActivityWithResult() {
         if (binding.mainDrawerLayout.isDrawerOpen(GravityCompat.START)) {
             binding.mainDrawerLayout.closeDrawers()
         }
-        return super.onMenuOpened(featureId, menu)
+        val result = super.onMenuOpened(featureId, menu)
+        val pluginPrefsItem = this.menu?.findItem(R.id.nav_plugin_preferences)
+        if (binding.mainPager.currentItem >= 0) {
+            (binding.mainPager.adapter as? TabPageAdapter)?.let { tabPageAdapter ->
+                val plugin = tabPageAdapter.getPluginAt(binding.mainPager.currentItem)
+                pluginPrefsItem?.title = rh.gs(R.string.nav_preferences_plugin, plugin.name)
+                pluginPrefsItem?.isEnabled = plugin.hasPreferences()
+            }
+        }
+        if (pluginPrefsItem?.isEnabled == false) {
+            val spanString = SpannableString(pluginPrefsItem?.title?.toString().orEmpty())
+        spanString.setSpan(ForegroundColorSpan(rh.gac(app.aaps.core.ui.R.attr.disabledTextColor)), 0, spanString.length, 0)
+            pluginPrefsItem?.title = spanString
+        }
+        return result
     }
 
     override fun onPanelClosed(featureId: Int, menu: Menu) {
@@ -294,4 +330,106 @@ class MainActivity : DaggerAppCompatActivityWithResult() {
         super.onPanelClosed(featureId, menu)
     }
 
+    // Correct place for calling setUserStats() would be probably MainApp
+    // but we need to have it called at least once a day. Thus this location
+    private fun checkAndRequestPermissions() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            if (!Environment.isExternalStorageManager()) {
+                showPermissionExplanation()
+            }
+        }
+    }
+
+    private fun showPermissionExplanation() {
+        MaterialAlertDialogBuilder(this)
+            .setTitle("Permission Required")
+            .setMessage("This app needs access to manage all files to provide functionality.")
+            .setPositiveButton("Grant Access") { _, _ ->
+                requestManageExternalStoragePermission()
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+
+    private fun requestManageExternalStoragePermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            val intent = Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION)
+            intent.data = Uri.parse("package:$packageName")
+            startActivity(intent)
+        }
+    }
+
+    private fun setUserStats() {
+        if (!fabricPrivacy.fabricEnabled()) return
+        val closedLoopEnabled = if (constraintChecker.isClosedLoopAllowed().value()) "CLOSED_LOOP_ENABLED" else "CLOSED_LOOP_DISABLED"
+        // Size is limited to 36 chars
+        val remote = config.REMOTE.lowercase(Locale.getDefault())
+            .replace("https://", "")
+            .replace("http://", "")
+            .replace(".git", "")
+            .replace(".com/", ":")
+            .replace(".org/", ":")
+            .replace(".net/", ":")
+        fabricPrivacy.setUserProperty("Mode", config.APPLICATION_ID + "-" + closedLoopEnabled)
+        fabricPrivacy.setUserProperty("Language", preferences.getIfExists(StringKey.GeneralLanguage) ?: Locale.getDefault().language)
+        fabricPrivacy.setUserProperty("Version", config.VERSION_NAME)
+        fabricPrivacy.setUserProperty("HEAD", BuildConfig.HEAD)
+        fabricPrivacy.setUserProperty("Remote", remote)
+        val hashes: List<String> = signatureVerifierPlugin.shortHashes()
+        if (hashes.isNotEmpty()) fabricPrivacy.setUserProperty("Hash", hashes[0])
+        activePlugin.activePump.let { fabricPrivacy.setUserProperty("Pump", it::class.java.simpleName) }
+        if (!config.AAPSCLIENT && !config.PUMPCONTROL)
+            activePlugin.activeAPS?.let { fabricPrivacy.setUserProperty("Aps", it::class.java.simpleName) }
+        activePlugin.activeBgSource.let { fabricPrivacy.setUserProperty("BgSource", it::class.java.simpleName) }
+        fabricPrivacy.setUserProperty(
+            "Profile",
+            activePlugin.getSpecificPluginsList(PluginType.PROFILE).firstOrNull { it.isEnabled() }?.javaClass?.simpleName ?: "none"
+        )
+        activePlugin.activeSensitivity.let { fabricPrivacy.setUserProperty("Sensitivity", it::class.java.simpleName) }
+        // Add to crash log too
+        FirebaseCrashlytics.getInstance().setCustomKey("HEAD", BuildConfig.HEAD)
+        FirebaseCrashlytics.getInstance().setCustomKey("Version", config.VERSION_NAME)
+        FirebaseCrashlytics.getInstance().setCustomKey("BuildType", config.BUILD_TYPE)
+        FirebaseCrashlytics.getInstance().setCustomKey("BuildFlavor", config.FLAVOR)
+        FirebaseCrashlytics.getInstance().setCustomKey("Remote", remote)
+        FirebaseCrashlytics.getInstance().setCustomKey("Committed", config.COMMITTED)
+        if (hashes.isNotEmpty()) {
+            FirebaseCrashlytics.getInstance().setCustomKey("Hash", hashes[0])
+        }
+        FirebaseCrashlytics.getInstance().setCustomKey("Email", preferences.get(StringKey.MaintenanceIdentification))
+    }
+
+    /**
+     * Check for existing PasswordReset file and
+     * reset password to SN of active pump if file exists
+     */
+    private fun passwordResetCheck(context: Context) {
+        val fh = fileListProvider.ensureExtraDirExists()?.findFile("PasswordReset")
+        if (fh?.exists() == true) {
+            Thread {
+                // Wait for virtual pump. SN is not available immediately
+                while (activePlugin.activePump.serialNumber().isEmpty()) {
+                    Thread.sleep(100)
+                }
+                preferences.put(StringKey.ProtectionMasterPassword, cryptoUtil.hashPassword(activePlugin.activePump.serialNumber()))
+                fh.delete()
+                // Also clear any stored password
+                exportPasswordDataStore.clearPasswordDataStore(context)
+                ToastUtils.okToast(context, context.getString(app.aaps.core.ui.R.string.password_set), isShort = false)
+            }.start()
+        }
+    }
+
+    /**
+     * Check for existing ExportPasswordReset file and
+     * clear password stored in datastore if file exists
+     */
+    private fun exportPasswordResetCheck(context: Context) {
+        val fh = fileListProvider.ensureExtraDirExists()?.findFile("ExportPasswordReset")
+        if (fh?.exists() == true) {
+            exportPasswordDataStore.clearPasswordDataStore(context)
+            fh.delete()
+            ToastUtils.okToast(context, context.getString(app.aaps.core.ui.R.string.datastore_password_cleared))
+        }
+    }
 }
