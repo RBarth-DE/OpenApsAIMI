@@ -97,7 +97,8 @@ object RtInstrumentationHelpers {
      * Build auditor debug line (1 line)
      * 
      * Formats (NEW - explicit status):
-     * - OFF: "Auditor: OFF"
+     * - OFF: "Auditor: OFF" (preference disabled)
+     * - PENDING: "Auditor: PENDING" (enabled, not yet evaluated this session)
      * - OFFLINE_NO_APIKEY: "Auditor: OFFLINE_NO_APIKEY"
      * - SKIPPED_RATE_LIMITED: "Auditor: SKIPPED_RATE_LIMITED"  
      * - ERROR_TIMEOUT: "Auditor: ERROR_TIMEOUT"
@@ -115,9 +116,9 @@ object RtInstrumentationHelpers {
         val (status, ageMs) = AuditorStatusTracker.getStatus(maxAgeMs = 300_000)
         
         return when {
-            // Disabled
-            status == AuditorStatusTracker.Status.OFF -> 
-                "Auditor: OFF"
+            // Enabled but not yet evaluated this session
+            status == AuditorStatusTracker.Status.OFF ->
+                "Auditor: PENDING"
             
             // Offline (can't reach AI - explicit reason)
             status.isOffline() -> 
