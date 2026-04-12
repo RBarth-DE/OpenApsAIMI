@@ -1262,7 +1262,10 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
                 items = buildList {
                     add(BooleanKey.AimiEmergencySosEnable)
                     add(StringKey.AimiEmergencySosPhone)
+                    add(StringKey.AimiEmergencySosPhone2)
                     add(IntKey.AimiEmergencySosThreshold)
+                    add(IntKey.AimiEmergencySosImmediateThreshold)
+                    add(IntKey.AimiEmergencySosStaleThreshold)
                     add(ApsIntentKey.AimiSosPermissions)
                 },
             )
