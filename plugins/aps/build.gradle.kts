@@ -13,8 +13,9 @@ android {
 }
 
 dependencies {
-    implementation ("org.tensorflow:tensorflow-lite-metadata:0.1.0")
+    implementation("org.tensorflow:tensorflow-lite:2.4.0")
     implementation("org.tensorflow:tensorflow-lite-support:0.1.0")
+    implementation("org.tensorflow:tensorflow-lite-metadata:0.1.0")
     // Health Connect
     implementation("androidx.health.connect:connect-client:1.1.0-alpha07")
     implementation(project(":core:data"))
@@ -28,16 +29,6 @@ dependencies {
 
     implementation(libs.androidx.compose.ui.tooling.preview)
     debugImplementation(libs.androidx.compose.ui.tooling)
-    implementation(project(":core:validators"))
-    // Align core + GPU on the same version so AndroidManifest namespace is not duplicated (2.3 GPU + 2.4 core).
-    implementation("org.tensorflow:tensorflow-lite:2.4.0")
-    implementation("org.tensorflow:tensorflow-lite-gpu:2.4.0")
-    implementation("org.tensorflow:tensorflow-lite-support:0.1.0")
-    implementation("org.tensorflow:tensorflow-lite-metadata:0.1.0")
-    implementation("androidx.core:core-i18n:1.0.0-alpha01")
-
-    // 🏥 Health Connect - MTR Steps Integration (Android 14+)
-    implementation("androidx.health.connect:connect-client:1.1.0-alpha07")
 
     testImplementation(project(":pump:virtual"))
     testImplementation(project(":shared:tests"))
@@ -56,12 +47,6 @@ dependencies {
     ksp(libs.com.google.dagger.hilt.compiler)
     testImplementation("io.mockk:mockk:1.13.8")
     ksp(libs.com.google.dagger.android.processor)
-
-    // Quality & Performance (Truth & JMH)
-    testImplementation(libs.com.google.truth)
-
-    // 📺 Jitsi Screen Share: no SDK needed — handled via Android Intent deep-link
-    // The app opens meet.jit.si room via browser or the Jitsi Meet app if installed.
 
     // OREF Advisor: optional on-device LightGBM via ONNX (place models under assets/oref/).
     implementation("com.microsoft.onnxruntime:onnxruntime-android:1.20.0")

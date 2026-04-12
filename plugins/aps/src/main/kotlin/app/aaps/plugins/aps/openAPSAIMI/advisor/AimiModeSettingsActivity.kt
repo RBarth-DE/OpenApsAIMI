@@ -35,7 +35,7 @@ class AimiModeSettingsActivity : TranslatedDaggerAppCompatActivity() {
     @Inject lateinit var preferences: Preferences
     @Inject lateinit var persistenceLayer: app.aaps.core.interfaces.db.PersistenceLayer
     @Inject lateinit var aapsSchedulers: app.aaps.core.interfaces.rx.AapsSchedulers
-    private val sp by lazy { androidx.preference.PreferenceManager.getDefaultSharedPreferences(this) }
+    private val sp by lazy { getSharedPreferences("${packageName}_preferences", android.content.Context.MODE_PRIVATE) }
 
     private var selectedMode = ModeType.LUNCH
 

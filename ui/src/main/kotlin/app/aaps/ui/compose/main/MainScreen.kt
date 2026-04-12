@@ -195,6 +195,9 @@ fun MainScreen(
                 val hasToolbar = quickLaunchItems.isNotEmpty()
                 Box(modifier = Modifier.fillMaxSize()) {
                     OverviewScreen(
+                        profileName = uiState.profileName,
+                        isProfileModified = uiState.isProfileModified,
+                        profileProgress = uiState.profileProgress,
                         tempTargetText = uiState.tempTargetText,
                         tempTargetState = uiState.tempTargetState,
                         tempTargetProgress = uiState.tempTargetProgress,
