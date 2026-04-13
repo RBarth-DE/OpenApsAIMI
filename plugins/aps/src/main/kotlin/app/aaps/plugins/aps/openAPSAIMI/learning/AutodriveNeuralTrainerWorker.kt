@@ -2,14 +2,15 @@ package app.aaps.plugins.aps.openAPSAIMI.learning
 import kotlinx.coroutines.runBlocking
 
 import android.content.Context
-import android.os.Environment
 import androidx.work.WorkerParameters
 import app.aaps.core.interfaces.logging.LTag
 import app.aaps.core.objects.workflow.LoggingWorker
 import app.aaps.plugins.aps.openAPSAIMI.AimiNeuralNetwork
 import app.aaps.plugins.aps.openAPSAIMI.TrainingConfig
+import app.aaps.plugins.aps.openAPSAIMI.utils.AimiStorageHelper
 import kotlinx.coroutines.Dispatchers
 import java.io.File
+import javax.inject.Inject
 import kotlin.math.exp
 import kotlin.math.min
 
@@ -18,10 +19,12 @@ class AutodriveNeuralTrainerWorker(
     workerParams: WorkerParameters
 ) : LoggingWorker(appContext, workerParams, Dispatchers.IO) {
 
+    @Inject lateinit var storageHelper: AimiStorageHelper
+
     override suspend fun doWorkAndLog(): Result {
         aapsLogger.debug(LTag.APS, "🧠 AutodriveNeuralTrainerWorker: Démarrage de l'entraînement du Cerveau Asynchrone")
-        
-        val externalDir = applicationContext.getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS + "/AAPS") ?: applicationContext.filesDir
+
+        val externalDir = storageHelper.getAimiDirectory()
         val csvfile = File(externalDir, "oapsaimiML2_records.csv")
         val weightsFile = File(externalDir, "aimi_brain_weights.json")
 

@@ -149,6 +149,9 @@ import app.aaps.ui.compose.treatmentsSheet.TreatmentViewModel
 import app.aaps.ui.search.BuiltInSearchables
 import app.aaps.ui.search.SearchIndexEntry
 import app.aaps.ui.search.SearchViewModel
+import android.os.Build
+import android.os.Environment
+import app.aaps.plugins.aps.openAPSAIMI.utils.AimiStorageHelper
 import dagger.hilt.android.AndroidEntryPoint
 import io.reactivex.rxjava3.disposables.CompositeDisposable
 import kotlinx.coroutines.flow.drop
@@ -185,6 +188,7 @@ class ComposeMainActivity : AppCompatActivity() {
     @Inject lateinit var localProfileManager: LocalProfileManager
     @Inject lateinit var bolusProgressData: BolusProgressData
     @Inject lateinit var commandQueue: CommandQueue
+    @Inject lateinit var storageHelper: AimiStorageHelper
 
     private var accessTree: ActivityResultLauncher<Uri?>? = null
     private var callForBatteryOptimization: ActivityResultLauncher<Void?>? = null
@@ -242,6 +246,7 @@ class ComposeMainActivity : AppCompatActivity() {
                 }
                 contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
                 preferences.put(StringKey.AapsDirectoryUri, uri.toString())
+                storageHelper.resetDirectory()  // directory changed – invalidate cached storage path
             }
         }
         callForBatteryOptimization = registerForActivityResult(OptimizationPermissionContract()) {
@@ -266,8 +271,29 @@ class ComposeMainActivity : AppCompatActivity() {
 
         observePreferences()
 
+        checkAndRequestStoragePermission()
+
         setContent {
             MainContent()
+        }
+    }
+
+    private fun checkAndRequestStoragePermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && !Environment.isExternalStorageManager()) {
+            android.app.AlertDialog.Builder(this)
+                .setTitle("All Files Access Required")
+                .setMessage(
+                    "AIMI needs 'All files access' to read/write algorithm data " +
+                    "(models, CSV logs, learned parameters) in your AAPS folder.\n\n" +
+                    "Tap 'Grant Access' → find AndroidAPS Dev → enable 'Allow management of all files'."
+                )
+                .setPositiveButton("Grant Access") { _, _ ->
+                    val intent = Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION)
+                    intent.data = Uri.parse("package:$packageName")
+                    startActivity(intent)
+                }
+                .setNegativeButton("Later", null)
+                .show()
         }
     }
 
@@ -757,6 +783,11 @@ class ComposeMainActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         if (!config.appInitialized) return
+        // Reset AIMI storage cache whenever MANAGE_EXTERNAL_STORAGE is granted,
+        // so the user-configured directory is picked up after granting 'All files access'
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && Environment.isExternalStorageManager()) {
+            storageHelper.resetDirectory()
+        }
         refreshOnResume()
     }
 

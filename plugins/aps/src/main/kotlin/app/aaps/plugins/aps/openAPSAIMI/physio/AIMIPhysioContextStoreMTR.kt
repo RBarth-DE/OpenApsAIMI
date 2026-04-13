@@ -1,9 +1,9 @@
 package app.aaps.plugins.aps.openAPSAIMI.physio
 import kotlinx.coroutines.runBlocking
 
-import android.content.Context
 import app.aaps.core.interfaces.logging.AAPSLogger
 import app.aaps.core.interfaces.logging.LTag
+import app.aaps.plugins.aps.openAPSAIMI.utils.AimiStorageHelper
 import org.json.JSONObject
 import java.io.File
 import java.util.concurrent.locks.ReentrantReadWriteLock
@@ -19,7 +19,7 @@ import kotlin.concurrent.write
  * - In-memory: Volatile, fast access for loop execution
  * - JSON file: Persistent storage with 15-20h validity
  * 
- * Storage Location: /storage/emulated/0/Documents/AAPS/physio_context.json
+ * Storage Location: user-configured AAPS directory / physio_context.json
  * 
  * Lifecycle:
  * - Updated every 6 hours by PhysioManager
@@ -32,8 +32,8 @@ import kotlin.concurrent.write
  */
 @Singleton
 class AIMIPhysioContextStoreMTR @Inject constructor(
-    private val context: Context,
-    private val aapsLogger: AAPSLogger
+    private val aapsLogger: AAPSLogger,
+    private val storageHelper: AimiStorageHelper
 ) {
     
     companion object {
@@ -62,18 +62,8 @@ class AIMIPhysioContextStoreMTR @Inject constructor(
     @Volatile
     private var lastUpdate: Long = 0
     
-    // Storage directory
-    private val storageDir: File by lazy {
-        val dir = context.getExternalFilesDir(null)
-            ?: File(android.os.Environment.getExternalStorageDirectory(), "Documents/AAPS")
-        if (!dir.exists()) {
-            dir.mkdirs()
-        }
-        dir
-    }
-    
     private val storageFile: File by lazy {
-        File(storageDir, FILENAME)
+        storageHelper.getAimiFile(FILENAME)
     }
     
     init {

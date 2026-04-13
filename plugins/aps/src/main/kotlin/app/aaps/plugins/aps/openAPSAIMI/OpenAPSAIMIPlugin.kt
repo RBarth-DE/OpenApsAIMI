@@ -226,7 +226,7 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
             aapsLogger.error(LTag.APS, "❌ Failed to schedule AIMI Neural Trainer", e)
         }
         
-        AimiUamHandler.initialize(context)
+        AimiUamHandler.initialize(storageHelper, context)
         AimiUamHandler.clearCache(context)
         AimiUamHandler.installConfidenceSupplier {
             // retourne null si tu veux "laisser la main" au runtime

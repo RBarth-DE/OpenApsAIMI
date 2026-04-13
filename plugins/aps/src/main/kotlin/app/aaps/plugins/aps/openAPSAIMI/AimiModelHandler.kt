@@ -3,6 +3,7 @@ import kotlinx.coroutines.runBlocking
 
 import android.os.Environment
 import android.util.Log
+import app.aaps.plugins.aps.openAPSAIMI.utils.AimiStorageHelper
 import com.google.common.cache.Cache
 import com.google.common.cache.CacheBuilder
 import org.tensorflow.lite.Interpreter
@@ -35,13 +36,10 @@ import app.aaps.core.keys.interfaces.Preferences
  */
 object AimiUamHandler {
     private const val TAG = "AIMI-UAM"
-    // Emplacement standard du modèle
-    private var externalDir: File = File(android.os.Environment.getExternalStorageDirectory(), "Documents/AAPS")
-    private var modelUamFile: File = File(externalDir, "ml/modelUAM.tflite")
+    private var modelUamFile: File = File("/data/local/tmp", "ml/modelUAM.tflite") // placeholder until initialize()
 
-    fun initialize(context: android.content.Context) {
-        externalDir = File(android.os.Environment.getExternalStorageDirectory(), "Documents/AAPS")
-        modelUamFile = File(externalDir, "ml/modelUAM.tflite")
+    fun initialize(storageHelper: AimiStorageHelper, context: android.content.Context) {
+        modelUamFile = storageHelper.getAimiFile("ml", "modelUAM.tflite")
     }
     // Interpreter TFLite (lazy/persistant)
     @Volatile private var interpreter: Interpreter? = null

@@ -2,7 +2,6 @@ package app.aaps.plugins.aps.openAPSAIMI.wcycle
 import kotlinx.coroutines.runBlocking
 
 import android.content.Context
-import android.os.Environment
 import java.io.File
 import java.util.EnumMap
 import org.json.JSONArray
@@ -21,8 +20,7 @@ class WCycleLearner(
     @Volatile private var initialized = false
 
     private val dir by lazy {
-        ctx.getExternalFilesDir(null)
-            ?: File(android.os.Environment.getExternalStorageDirectory(), "Documents/AAPS")
+        ctx.getExternalFilesDir(null) ?: ctx.filesDir
     }
     private val learnedFile by lazy { File(dir, "oapsaimi_wcycle_learned.json") }
 

@@ -94,6 +94,7 @@ class MainActivity : DaggerAppCompatActivityWithResult() {
     @Inject lateinit var fileListProvider: FileListProvider
     @Inject lateinit var cryptoUtil: CryptoUtil
     @Inject lateinit var exportPasswordDataStore: ExportPasswordDataStore
+    @Inject lateinit var storageHelper: app.aaps.plugins.aps.openAPSAIMI.utils.AimiStorageHelper
 
     private lateinit var actionBarDrawerToggle: ActionBarDrawerToggle
     private var menu: Menu? = null
@@ -177,6 +178,7 @@ class MainActivity : DaggerAppCompatActivityWithResult() {
     private fun start() {
         binding.splash.visibility = View.GONE
         setupViews()
+        checkAndRequestPermissions()
     }
 
     override fun onPostCreate(savedInstanceState: Bundle?, persistentState: PersistableBundle?) {
@@ -197,6 +199,10 @@ class MainActivity : DaggerAppCompatActivityWithResult() {
     override fun onResume() {
         super.onResume()
         if (config.appInitialized) binding.splash.visibility = View.GONE
+        // Re-check after returning from Settings (user may have just granted All files access)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && Environment.isExternalStorageManager()) {
+            storageHelper.resetDirectory()
+        }
         if (!isProtectionCheckActive) {
             isProtectionCheckActive = true
             protectionCheck.queryProtection(

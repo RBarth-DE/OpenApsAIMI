@@ -2,14 +2,15 @@ package app.aaps.plugins.aps.openAPSAIMI.learning
 import kotlinx.coroutines.runBlocking
 
 import android.content.Context
-import android.os.Environment
 import androidx.work.WorkerParameters
 import app.aaps.core.interfaces.logging.LTag
 import app.aaps.core.objects.workflow.LoggingWorker
 import app.aaps.plugins.aps.openAPSAIMI.AimiNeuralNetwork
 import app.aaps.plugins.aps.openAPSAIMI.TrainingConfig
+import app.aaps.plugins.aps.openAPSAIMI.utils.AimiStorageHelper
 import kotlinx.coroutines.Dispatchers
 import java.io.File
+import javax.inject.Inject
 import kotlin.math.abs
 import kotlin.math.min
 
@@ -23,10 +24,12 @@ class BasalAdaptiveTrainerWorker(
     workerParams: WorkerParameters
 ) : LoggingWorker(appContext, workerParams, Dispatchers.IO) {
 
+    @Inject lateinit var storageHelper: AimiStorageHelper
+
     override suspend fun doWorkAndLog(): Result {
         aapsLogger.debug(LTag.APS, "🧠 Basal Adaptive Trainer: Starting training session")
-        
-        val externalDir = applicationContext.getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS + "/AAPS") ?: applicationContext.filesDir
+
+        val externalDir = storageHelper.getAimiDirectory()
         val csvFile = File(externalDir, "basal_adaptive_records.csv")
         val weightsFile = File(externalDir, "basal_adaptive_weights.json")
 

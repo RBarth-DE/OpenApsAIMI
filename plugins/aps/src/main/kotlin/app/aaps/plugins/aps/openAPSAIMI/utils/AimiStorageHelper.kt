@@ -2,9 +2,13 @@ package app.aaps.plugins.aps.openAPSAIMI.utils
 import kotlinx.coroutines.runBlocking
 
 import android.content.Context
+import android.net.Uri
 import android.os.Environment
+import android.provider.DocumentsContract
 import app.aaps.core.interfaces.logging.AAPSLogger
 import app.aaps.core.interfaces.logging.LTag
+import app.aaps.core.keys.StringKey
+import app.aaps.core.keys.interfaces.Preferences
 import java.io.File
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -29,13 +33,15 @@ import javax.inject.Singleton
 @Singleton
 class AimiStorageHelper @Inject constructor(
     private val context: Context,
-    private val log: AAPSLogger
+    private val log: AAPSLogger,
+    private val preferences: Preferences
 ) {
-    
+
     /**
      * État du stockage utilisé (pour logs de santé)
      */
     enum class StorageStatus {
+        USER_CONFIGURED,     // ✅ User-selected AAPS directory (from Maintenance)
         DOCUMENTS_AAPS,      // ✅ Documents/AAPS accessible
         APP_SCOPED_EXTERNAL, // ⚠️ Fallback app-scoped external
         INTERNAL_ONLY,       // ⚠️ Dernier recours internal
@@ -62,33 +68,67 @@ class AimiStorageHelper @Inject constructor(
         if (currentDirectory != null) {
             return currentDirectory!!
         }
-        
-        // 1️⃣ Tenter Documents/AAPS d'abord (préféré pour cohérence AIMI)
+
+        val storageManagerGranted = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
+            Environment.isExternalStorageManager()
+        } else {
+            true
+        }
+
+        // 0️⃣ Dossier configuré par l'utilisateur dans Maintenance (priorité absolue)
         try {
-            val docsDir = File(Environment.getExternalStorageDirectory(), "Documents/AAPS")
-
-            // Sur Android 11+, canWrite() est peu fiable sous scoped storage.
-            // isExternalStorageManager() est la vérification authoritative pour MANAGE_EXTERNAL_STORAGE.
-            val hasAccess = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
-                Environment.isExternalStorageManager()
-            } else {
-                docsDir.exists() && docsDir.canWrite()
-            }
-
-            if (hasAccess) {
-                if (!docsDir.exists()) docsDir.mkdirs()
-                currentStatus = StorageStatus.DOCUMENTS_AAPS
-                currentDirectory = docsDir
-                log.info(LTag.APS, "AimiStorageHelper: 📁 Using Documents/AAPS (preferred)")
-                log.info(LTag.APS, "  → Path: ${docsDir.absolutePath}")
-                return docsDir
-            } else {
-                lastError = "Documents/AAPS not accessible (MANAGE_EXTERNAL_STORAGE not granted)"
-                log.warn(LTag.APS, "AimiStorageHelper: ⚠️ $lastError")
+            val uriString = preferences.getIfExists(StringKey.AapsDirectoryUri)
+            if (uriString != null) {
+                val rawDir = rawPathFromSafUri(uriString)
+                if (rawDir != null) {
+                    val hasAccess = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
+                        storageManagerGranted
+                    } else {
+                        rawDir.exists() && rawDir.canWrite()
+                    }
+                    if (hasAccess) {
+                        if (!rawDir.exists()) rawDir.mkdirs()
+                        currentStatus = StorageStatus.USER_CONFIGURED
+                        currentDirectory = rawDir
+                        log.info(LTag.APS, "AimiStorageHelper: 📁 Using user-configured AAPS directory")
+                        log.info(LTag.APS, "  → Path: ${rawDir.absolutePath}")
+                        return rawDir
+                    } else {
+                        lastError = "${rawDir.absolutePath} not accessible (MANAGE_EXTERNAL_STORAGE not granted – grant 'All files access' in Settings)"
+                        log.warn(LTag.APS, "AimiStorageHelper: ⚠️ $lastError")
+                    }
+                }
             }
         } catch (e: Exception) {
-            lastError = "Cannot access Documents/AAPS: ${e.message}"
-            log.warn(LTag.APS, "AimiStorageHelper: ⚠️ $lastError")
+            log.warn(LTag.APS, "AimiStorageHelper: ⚠️ Cannot read user-configured dir: ${e.message}")
+        }
+
+        // 1️⃣ Documents/AAPS (only attempted if MANAGE_EXTERNAL_STORAGE is granted; same permission needed)
+        if (storageManagerGranted) {
+            try {
+                val docsDir = File(Environment.getExternalStorageDirectory(), "Documents/AAPS")
+                val hasAccess = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
+                    true  // storageManagerGranted == true in this branch
+                } else {
+                    docsDir.exists() && docsDir.canWrite()
+                }
+                if (hasAccess) {
+                    if (!docsDir.exists()) docsDir.mkdirs()
+                    currentStatus = StorageStatus.DOCUMENTS_AAPS
+                    currentDirectory = docsDir
+                    log.info(LTag.APS, "AimiStorageHelper: 📁 Using Documents/AAPS (preferred)")
+                    log.info(LTag.APS, "  → Path: ${docsDir.absolutePath}")
+                    return docsDir
+                } else {
+                    if (lastError == null) lastError = "Documents/AAPS not accessible (canWrite=false)"
+                    log.warn(LTag.APS, "AimiStorageHelper: ⚠️ Documents/AAPS not accessible (canWrite=false)")
+                }
+            } catch (e: Exception) {
+                if (lastError == null) lastError = "Cannot access Documents/AAPS: ${e.message}"
+                log.warn(LTag.APS, "AimiStorageHelper: ⚠️ Cannot access Documents/AAPS: ${e.message}")
+            }
+        } else {
+            log.debug(LTag.APS, "AimiStorageHelper: Skipping Documents/AAPS – MANAGE_EXTERNAL_STORAGE not granted")
         }
         
         // 2️⃣ Fallback vers app-scoped external storage
@@ -121,6 +161,18 @@ class AimiStorageHelper @Inject constructor(
      */
     fun getAimiDirectory(): File {
         return determineStorageDirectory()
+    }
+
+    /**
+     * Resets cached directory so it is re-evaluated on next access.
+     * Call after MANAGE_EXTERNAL_STORAGE is granted at runtime.
+     */
+    @Synchronized
+    fun resetDirectory() {
+        currentDirectory = null
+        currentStatus = StorageStatus.ERROR
+        lastError = null
+        log.info(LTag.APS, "AimiStorageHelper: Directory cache reset (will re-evaluate on next access)")
     }
     
     /**
@@ -252,14 +304,36 @@ class AimiStorageHelper @Inject constructor(
     fun getHealthReport(): String {
         val (status, path, error) = getStorageStatus()
         return when (status) {
-            StorageStatus.DOCUMENTS_AAPS -> 
+            StorageStatus.USER_CONFIGURED ->
+                "✅ Storage: User-configured (${path?.substringAfterLast('/')})"
+            StorageStatus.DOCUMENTS_AAPS ->
                 "✅ Storage: Documents/AAPS"
-            StorageStatus.APP_SCOPED_EXTERNAL -> 
+            StorageStatus.APP_SCOPED_EXTERNAL ->
                 "⚠️ Storage: App-scoped (fallback) - Reason: ${error ?: "unknown"}"
-            StorageStatus.INTERNAL_ONLY -> 
+            StorageStatus.INTERNAL_ONLY ->
                 "⚠️ Storage: Internal only (degraded) - Reason: ${error ?: "unknown"}"
-            StorageStatus.ERROR -> 
+            StorageStatus.ERROR ->
                 "❌ Storage: ERROR - ${error ?: "unknown"}"
+        }
+    }
+
+    /**
+     * Converts a SAF tree URI (content://com.android.externalstorage.documents/tree/primary%3ADocuments%2FAAPS-DEV)
+     * to a raw File path on primary storage.
+     * Returns null for non-primary volumes or unrecognised URI formats.
+     */
+    private fun rawPathFromSafUri(uriString: String): File? {
+        return try {
+            val uri = Uri.parse(uriString)
+            val docId = DocumentsContract.getTreeDocumentId(uri) // e.g. "primary:Documents/AAPS-DEV"
+            val colon = docId.indexOf(':')
+            if (colon < 0) return null
+            val volume = docId.substring(0, colon)
+            val relativePath = docId.substring(colon + 1)
+            if (volume != "primary") return null  // SD card or other volume – skip
+            File(Environment.getExternalStorageDirectory(), relativePath)
+        } catch (_: Throwable) {
+            null
         }
     }
 }
