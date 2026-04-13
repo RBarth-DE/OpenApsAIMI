@@ -40,7 +40,7 @@ object AimiUamHandler {
     private var modelUamFile: File = File(externalDir, "ml/modelUAM.tflite")
 
     fun initialize(context: android.content.Context) {
-        externalDir = context.getExternalFilesDir(null) ?: File(android.os.Environment.getExternalStorageDirectory(), "Documents/AAPS")
+        externalDir = File(android.os.Environment.getExternalStorageDirectory(), "Documents/AAPS")
         modelUamFile = File(externalDir, "ml/modelUAM.tflite")
     }
     // Interpreter TFLite (lazy/persistant)
