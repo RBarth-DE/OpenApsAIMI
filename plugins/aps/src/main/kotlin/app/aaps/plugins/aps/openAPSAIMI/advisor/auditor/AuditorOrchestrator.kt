@@ -248,14 +248,26 @@ class AuditorOrchestrator @Inject constructor(
         if (!shouldCallExternal) {
             // Sentinel tier < HIGH: Apply Sentinel advice only, no External call
             aapsLogger.info(LTag.APS, "🌐 External: Skipped (Sentinel tier=${sentinelAdvice.tier})")
-            
-            // 🔧 FIX: Update status tracker to reflect Sentinel-only operation
-            AuditorStatusTracker.updateStatus(AuditorStatusTracker.Status.OK_CONFIRM)
-            
+
             val combined = DualBrainHelpers.combineAdvice(sentinelAdvice, null)
             val modulated = combined.toDecisionResult(smbProposed, tbrRate, tbrDuration, intervalMin)
+
+            // Map Sentinel recommendation to the correct tracker status
+            val trackerStatus = when (sentinelAdvice.recommendation) {
+                LocalSentinel.Recommendation.CONFIRM          -> AuditorStatusTracker.Status.SKIPPED_NO_TRIGGER
+                LocalSentinel.Recommendation.REDUCE_SMB       -> AuditorStatusTracker.Status.OK_REDUCE
+                LocalSentinel.Recommendation.HOLD_SOFT        -> AuditorStatusTracker.Status.OK_SOFTEN
+                LocalSentinel.Recommendation.INCREASE_INTERVAL -> AuditorStatusTracker.Status.OK_INCREASE_INTERVAL
+                LocalSentinel.Recommendation.PREFER_BASAL     -> AuditorStatusTracker.Status.OK_PREFER_TBR
+            }
+            AuditorStatusTracker.updateStatus(trackerStatus)
+
+            // Cache actionable Sentinel verdicts so AuditorVerdictActivity can display them
+            if (sentinelAdvice.recommendation != LocalSentinel.Recommendation.CONFIRM) {
+                AuditorVerdictCache.update(buildSentinelVerdict(sentinelAdvice), modulated)
+            }
+
             aapsLogger.info(LTag.APS, "✅ ${combined.toLogString()}")
-            
             callback?.invoke(null, modulated)
             return
         }
@@ -517,8 +529,40 @@ class AuditorOrchestrator @Inject constructor(
         }
     }
 
-    /** 
-     * Performance: Cached bucket calculation 
+    /**
+     * Builds a synthetic AuditorVerdict from a Sentinel-only result.
+     * Used when External AI is skipped so the activity still has something to display.
+     */
+    private fun buildSentinelVerdict(advice: LocalSentinel.SentinelAdvice): AuditorVerdict {
+        val verdictType = when (advice.recommendation) {
+            LocalSentinel.Recommendation.CONFIRM            -> VerdictType.Confirm
+            LocalSentinel.Recommendation.REDUCE_SMB         -> VerdictType.Soften
+            LocalSentinel.Recommendation.HOLD_SOFT          -> VerdictType.Soften
+            LocalSentinel.Recommendation.INCREASE_INTERVAL  -> VerdictType.Soften
+            LocalSentinel.Recommendation.PREFER_BASAL       -> VerdictType.ShiftToTbr
+        }
+        return AuditorVerdict(
+            verdict = verdictType,
+            confidence = advice.score / 100.0,
+            degradedMode = false,
+            riskFlags = if (advice.tier != LocalSentinel.Tier.NONE) listOf("Sentinel: ${advice.reason}") else emptyList(),
+            evidence = advice.details,
+            boundedAdjustments = BoundedAdjustments(
+                smbFactorClamp = advice.smbFactor,
+                intervalAddMin = advice.extraIntervalMin,
+                preferTbr = advice.preferBasal,
+                tbrFactorClamp = 1.0
+            ),
+            debugChecks = listOf(
+                "Source: Local Sentinel (offline, no AI call)",
+                "Tier: ${advice.tier}  Score: ${advice.score}/100",
+                "Recommendation: ${advice.recommendation}"
+            )
+        )
+    }
+
+    /**
+     * Performance: Cached bucket calculation
      */
     private fun getCurrentTimeBucket(): Long {
         val now = System.currentTimeMillis()

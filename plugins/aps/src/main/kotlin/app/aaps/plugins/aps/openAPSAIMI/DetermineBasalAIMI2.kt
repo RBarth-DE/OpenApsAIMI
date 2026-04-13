@@ -3,7 +3,6 @@ import kotlinx.coroutines.runBlocking
 
 import android.annotation.SuppressLint
 import android.content.Context
-import android.os.Environment
 import app.aaps.core.data.model.BS
 import app.aaps.core.data.model.TB
 import app.aaps.core.data.model.TE
@@ -451,11 +450,11 @@ class DetermineBasalaimiSMB2 @Inject constructor(
     private var consoleError = mutableListOf<String>()
     private var consoleLog = mutableListOf<String>()
     private var lastAutodriveActionTime: Long = 0L  // FCL 14.1 Cooldown State
-    private val externalDir = File(android.os.Environment.getExternalStorageDirectory(), "Documents/AAPS")
-    //private val modelFile = File(externalDir, "ml/model.tflite")
-    //private val modelFileUAM = File(externalDir, "ml/modelUAM.tflite")
-    private val csvfile = File(externalDir, "oapsaimiML2_records.csv")
-    private val csvfile2 = File(externalDir, "oapsaimi2_records.csv")
+    private val externalDir: File get() = storageHelper.getAimiDirectory()
+    //private val modelFile get() = File(externalDir, "ml/model.tflite")
+    //private val modelFileUAM get() = File(externalDir, "ml/modelUAM.tflite")
+    private val csvfile: File get() = File(storageHelper.getAimiDirectory(), "oapsaimiML2_records.csv")
+    private val csvfile2: File get() = File(storageHelper.getAimiDirectory(), "oapsaimi2_records.csv")
     private val pkpdIntegration = PkPdIntegration(preferences)
     //private val tempFile = File(externalDir, "temp.csv")
     private var bgacc = 0.0
@@ -8354,9 +8353,9 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             val medicalJson = decisionCtx.toMedicalJson()
             consoleLog.add("AIMI_SNAPSHOT: $medicalJson")
             
-            // 💾 PERSISTENCE: Save to Documents/AAPS/AIMI_Decisions.jsonl
+            // 💾 PERSISTENCE: Save to AIMI storage dir/AIMI_Decisions.jsonl
             try {
-                val decisionsFile = File(externalDir, "AIMI_Decisions.jsonl")
+                val decisionsFile = storageHelper.getAimiFile("AIMI_Decisions.jsonl")
                 if (!decisionsFile.exists()) {
                      decisionsFile.parentFile?.mkdirs()
                      decisionsFile.createNewFile()

@@ -65,24 +65,25 @@ class AimiStorageHelper @Inject constructor(
         
         // 1️⃣ Tenter Documents/AAPS d'abord (préféré pour cohérence AIMI)
         try {
-            val docsDir = File(android.os.Environment.getExternalStorageDirectory(), "Documents/AAPS")
-            
-            // Créer le répertoire s'il n'existe pas
-            if (!docsDir.exists()) {
-                if (docsDir.mkdirs()) {
-                    log.info(LTag.APS, "AimiStorageHelper: ✅ Created Documents/AAPS directory")
-                }
+            val docsDir = File(Environment.getExternalStorageDirectory(), "Documents/AAPS")
+
+            // Sur Android 11+, canWrite() est peu fiable sous scoped storage.
+            // isExternalStorageManager() est la vérification authoritative pour MANAGE_EXTERNAL_STORAGE.
+            val hasAccess = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
+                Environment.isExternalStorageManager()
+            } else {
+                docsDir.exists() && docsDir.canWrite()
             }
-            
-            // Tester si on peut écrire (vérification permission)
-            if (docsDir.exists() && docsDir.canWrite()) {
+
+            if (hasAccess) {
+                if (!docsDir.exists()) docsDir.mkdirs()
                 currentStatus = StorageStatus.DOCUMENTS_AAPS
                 currentDirectory = docsDir
                 log.info(LTag.APS, "AimiStorageHelper: 📁 Using Documents/AAPS (preferred)")
                 log.info(LTag.APS, "  → Path: ${docsDir.absolutePath}")
                 return docsDir
             } else {
-                lastError = "Documents/AAPS not writable (permission issue?)"
+                lastError = "Documents/AAPS not accessible (MANAGE_EXTERNAL_STORAGE not granted)"
                 log.warn(LTag.APS, "AimiStorageHelper: ⚠️ $lastError")
             }
         } catch (e: Exception) {

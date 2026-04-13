@@ -31,7 +31,7 @@ object AuditorVerdictCache {
     
     @JvmStatic
     @JvmOverloads
-    fun get(maxAgeMs: Long = 300_000): CachedVerdict? {
+    fun get(maxAgeMs: Long = 1800_000): CachedVerdict? {
         return get(DEFAULT_KEY, maxAgeMs)
     }
 

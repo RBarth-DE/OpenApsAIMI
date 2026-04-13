@@ -28,7 +28,6 @@ import androidx.core.view.GravityCompat
 import androidx.core.view.MenuCompat
 import androidx.core.view.MenuProvider
 import app.aaps.activities.HistoryBrowseActivity
-import app.aaps.core.data.plugin.PluginType
 import app.aaps.core.interfaces.aps.Loop
 import app.aaps.core.interfaces.configuration.Config
 import app.aaps.core.interfaces.configuration.ConfigBuilder
@@ -362,10 +361,6 @@ class MainActivity : DaggerAppCompatActivityWithResult() {
         if (!config.AAPSCLIENT && !config.PUMPCONTROL)
             activePlugin.activeAPS?.let { fabricPrivacy.setUserProperty("Aps", it::class.java.simpleName) }
         activePlugin.activeBgSource.let { fabricPrivacy.setUserProperty("BgSource", it::class.java.simpleName) }
-        fabricPrivacy.setUserProperty(
-            "Profile",
-            activePlugin.getSpecificPluginsList(PluginType.PROFILE).firstOrNull { it.isEnabled() }?.javaClass?.simpleName ?: "none"
-        )
         activePlugin.activeSensitivity.let { fabricPrivacy.setUserProperty("Sensitivity", it::class.java.simpleName) }
         // Add to crash log too
         FirebaseCrashlytics.getInstance().setCustomKey("HEAD", BuildConfig.HEAD)

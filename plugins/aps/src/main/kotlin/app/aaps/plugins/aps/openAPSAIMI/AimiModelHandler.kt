@@ -211,12 +211,26 @@ object AimiUamHandler {
             interpreter?.let { return it }
 
             val file = File(lastModelPath ?: modelUamFile.absolutePath)
+
+            // Diagnostic: log permission + file state before any access attempt
+            val hasStorageManager = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
+                android.os.Environment.isExternalStorageManager()
+            } else true
+            Log.d(TAG, "UAM load attempt: path=${file.absolutePath}")
+            Log.d(TAG, "  isExternalStorageManager=$hasStorageManager exists=${file.exists()} size=${if (file.exists()) file.length() else -1}B canRead=${file.canRead()}")
+
+            if (!hasStorageManager) {
+                lastLoadOk = false
+                lastLoadError = "MANAGE_EXTERNAL_STORAGE not granted"
+                Log.w(TAG, "UAM model skipped: 'All files access' permission not granted. Grant it in Android Settings > Apps > AAPS > Permissions.")
+                reason?.appendLine("UAM model: permission not granted (All files access)")
+                return null
+            }
+
             if (!file.exists()) {
                 lastLoadOk = false
                 lastLoadError = "file not found"
-                //reason?.appendLine("❌ Fichier modèle introuvable : ${file.absolutePath}")
                 reason?.appendLine(context.getString(R.string.model_missing, file.absolutePath))
-              //Log.e(TAG, "Model file not found: ${file.absolutePath}")
                 Log.e(TAG, context.getString(R.string.log_model_file_not_found, file.absolutePath))
                 return null
             }
@@ -228,20 +242,16 @@ object AimiUamHandler {
                     lastLoadError = null
                     lastLoadTime = System.currentTimeMillis()
                     lastModelPath = file.absolutePath
-                    //reason?.appendLine("📦 Chargé ✓ : ${file.name} (${file.length()} B)")
                     reason?.appendLine(context.getString(R.string.model_loaded, file.name, "%.1f".format(file.length().toDouble() / 1024)))
-                  //Log.i(TAG, "Interpreter initialized from ${file.absolutePath} (${file.length()} bytes)")
-                  //Log.i(TAG, context.getString(R.string.log_interpreter_initialized, file.absolutePath, file.length()))
                     val sizeKb = String.format("%.1f KB", file.length().toDouble() / 1024)
                     Log.i(TAG, context.getString(R.string.log_interpreter_initialized, file.absolutePath, sizeKb))
                 }
             } catch (e: Throwable) {
                 lastLoadOk = false
                 lastLoadError = e.message
-                //reason?.appendLine("❌ Échec chargement modèle: ${e.message}")
                 reason?.appendLine(context.getString(R.string.model_load_failed, e.message ?: "Unknown error"))
-              //Log.e(TAG, "Failed to init UAM model: ${e.message}")
-                Log.e(TAG, context.getString(R.string.log_failed_init_uam, e.message ?: "Unknown error"))
+                Log.e(TAG, "UAM model load failed: ${e::class.simpleName}: ${e.message}")
+                Log.e(TAG, "  path=${file.absolutePath} exists=${file.exists()} canRead=${file.canRead()} isStorageManager=$hasStorageManager")
                 null
             }
         }

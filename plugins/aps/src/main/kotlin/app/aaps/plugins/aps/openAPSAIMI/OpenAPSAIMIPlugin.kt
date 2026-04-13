@@ -104,6 +104,7 @@ import kotlin.math.abs
 import kotlin.math.exp
 import app.aaps.plugins.aps.openAPSAIMI.compose.AimiPkpdSettingsScreen
 import app.aaps.plugins.aps.openAPSAIMI.utils.AimiBackupManager
+import app.aaps.plugins.aps.openAPSAIMI.utils.AimiStorageHelper
 import kotlinx.serialization.json.JsonObject
 
 @Singleton
@@ -142,6 +143,7 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
     private val aimiBackupManager: AimiBackupManager, // ☁️ Cloud Backup Manager (Force Init)
     private val insulin: Insulin,
     private val ch: ConcentrationHelper,
+    private val storageHelper: AimiStorageHelper,
 ) : PluginBaseWithPreferences(
     PluginDescription()
         .fragmentClass(OpenAPSFragment::class.java.name)
@@ -246,8 +248,7 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
 
         // 🧠 Pre-load ML model into memory for O(1) SMB inference on hot path
         try {
-            val externalDir = java.io.File(android.os.Environment.getExternalStorageDirectory().absolutePath + "/Documents/AAPS")
-            app.aaps.plugins.aps.openAPSAIMI.ml.AimiSmbTrainer.loadModel(externalDir)
+            app.aaps.plugins.aps.openAPSAIMI.ml.AimiSmbTrainer.loadModel(storageHelper.getAimiDirectory())
             aapsLogger.info(LTag.APS, "✅ AimiSmbTrainer: model load requested (async)")
         } catch (e: Exception) {
             aapsLogger.error(LTag.APS, "❌ AimiSmbTrainer: failed to request model load", e)

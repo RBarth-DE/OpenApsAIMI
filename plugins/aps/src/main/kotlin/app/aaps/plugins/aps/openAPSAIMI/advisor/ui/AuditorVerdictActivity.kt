@@ -8,6 +8,7 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import app.aaps.plugins.aps.openAPSAIMI.advisor.auditor.AuditorStatusTracker
 import app.aaps.plugins.aps.openAPSAIMI.advisor.auditor.AuditorVerdictCache
 import app.aaps.plugins.aps.openAPSAIMI.model.VerdictType
 import app.aaps.plugins.aps.R
@@ -47,7 +48,38 @@ class AuditorVerdictActivity : AppCompatActivity() {
         val cached = AuditorVerdictCache.get()
 
         if (cached == null) {
-            showEmpty()
+            val (status, _) = AuditorStatusTracker.getStatus()
+            val message = when {
+                status == AuditorStatusTracker.Status.OFF ->
+                    "AI Auditor is disabled. Enable it in AIMI settings."
+                status.isOffline() -> when (status) {
+                    AuditorStatusTracker.Status.OFFLINE_NO_APIKEY ->
+                        "No API key configured.\nAdd your AI provider key in AIMI → Auditor settings."
+                    AuditorStatusTracker.Status.OFFLINE_NO_NETWORK ->
+                        "No network connection.\nCheck device connectivity."
+                    AuditorStatusTracker.Status.OFFLINE_NO_ENDPOINT ->
+                        "AI API endpoint unavailable."
+                    AuditorStatusTracker.Status.OFFLINE_DNS_FAIL ->
+                        "DNS resolution failed. Check network."
+                    else -> "Auditor offline: ${status.message}"
+                }
+                status.isError() -> when (status) {
+                    AuditorStatusTracker.Status.ERROR_TIMEOUT ->
+                        "Last audit timed out.\nThe AI server did not respond in time."
+                    AuditorStatusTracker.Status.ERROR_PARSE ->
+                        "Last audit failed: could not parse AI response."
+                    AuditorStatusTracker.Status.ERROR_HTTP ->
+                        "Last audit failed: HTTP error from AI server."
+                    AuditorStatusTracker.Status.ERROR_EXCEPTION ->
+                        "Last audit failed with an unexpected error."
+                    else -> "Auditor error: ${status.message}"
+                }
+                status.isSkipped() ->
+                    "Sentinel monitoring active – situation normal, no AI review needed this cycle."
+                else ->
+                    "No audit report yet.\nStatus: ${status.message}"
+            }
+            showEmpty(message)
             return
         }
 
@@ -123,7 +155,7 @@ class AuditorVerdictActivity : AppCompatActivity() {
         findViewById<View>(R.id.auditor_content).visibility = View.VISIBLE
     }
 
-    private fun showEmpty(reason: String = "No audit triggered – situation normal (Sentinel: NONE)") {
+    private fun showEmpty(reason: String) {
         findViewById<View>(R.id.auditor_content).visibility = View.GONE
         val emptyView = findViewById<View>(R.id.auditor_empty_state)
         emptyView.visibility = View.VISIBLE

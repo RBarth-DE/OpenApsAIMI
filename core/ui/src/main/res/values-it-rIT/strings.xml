@@ -79,6 +79,8 @@
     <string name="shortgram">g</string>
     <string name="shortpercent">%</string>
     <string name="bluetooth">Bluetooth</string>
+    <string name="btwatchdog_title">BT Watchdog</string>
+    <string name="btwatchdog_summary">Spegne il bluetooth del telefono per qualche secondo se non è possibile alcuna connessione al micro. Questo può essere utile su alcuni telefoni.</string>
     <string name="virtualpump_resultok">OK</string>
     <string name="pump_time_updated">Ora del micro aggiornata</string>
     <string name="exit">Esci</string>
@@ -111,6 +113,7 @@
     <string name="calibration">Calibrazione</string>
     <string name="alarminxmin">Esegui allarme in %1$d min</string>
     <string name="treatmentdeliveryerror">Segnalato errore sul bolo. Controlla manualmente la reale quantità erogata</string>
+    <string name="bolus_reminder">Promemoria bolo</string>
     <string name="duration_label">Durata</string>
     <string name="shortgramm">g</string>
     <string name="pumpsuspended">Micro sospeso</string>
@@ -134,15 +137,18 @@
     <string name="a11y_inrange">in range</string>
     <string name="a11y_low">basso</string>
     <string name="average">Media</string>
+    <string name="tir">TIR</string>
     <string name="none"><![CDATA[<none>]]></string>
     <string name="remove_label">RIMUOVI</string>
     <string name="activate_profile">Attiva profilo</string>
+    <string name="reset">reset</string>
     <string name="profileswitch_ismissing">Nessun cambio profilo. Effettua un cambio profilo o premi \"Attiva profilo\" nella sezione Profilo locale.</string>
     <string name="profile">Profilo</string>
     <string name="select_for_removal">Seleziona per la rimozione</string>
     <string name="confirm_remove_multiple_items">Sicuro di voler eliminare %1$d elementi</string>
     <string name="overview_treatment_label">Trattamento</string>
     <string name="copytolocalprofile">Creare un nuovo profilo da questo profilo?</string>
+    <string name="wear_wizard_settings">Impostazioni Calcolatore</string>
     <string name="bg_trend_label">Trend di 15min</string>
     <string name="treatments_wizard_cob_label">COB</string>
     <string name="bolus_iob_label">IOB da bolo</string>
@@ -303,6 +309,7 @@
     <string name="expweight">TDD esponenzialmente ponderato</string>
     <string name="basalrate">Basale</string>
     <string name="bolus">Bolo</string>
+    <string name="tdd">TDD</string>
     <string name="ratio">Rapporto</string>
     <string name="amount_days"># Giorni</string>
     <string name="weight">Peso</string>
@@ -457,6 +464,7 @@
     <string name="sensitivity">Sensibilità</string>
     <string name="isf_for_carbs">ISF per Calcolatrice e Assorbimento di Carbo: %1$.1f</string>
     <string name="autosens_long">Valore Autosens: %.0f%%</string>
+    <string name="autosens_short">AS: %.0f%%</string>
     <string name="algorithm_long">Autosens nell\'algoritmo: %.0f%%</string>
     <string name="algorithm_short">Alg: %.0f%%</string>
     <string name="a11y_file">file</string>
@@ -466,6 +474,7 @@
     <string name="autotune_tune_days">Giorni regolazione :</string>
     <string name="autotune_select_profile">Seleziona il profilo da regolare</string>
     <!-- Alerts -->
+    <string name="raise_notifications_as_android_notifications">Usa le notifiche di sistema per gli avvisi</string>
     <string name="urgent_alarm">Allarme urgente</string>
     <string name="info">INFO</string>
     <!-- BolusWizard -->
@@ -473,6 +482,8 @@
     <string name="bolus_advisor_message">Hai una glicemia alta. Invece di mangiare ora, si consiglia di attendere una glicemia migliore. Vuoi fare adesso un bolo di correzione ed ricevere un promemoria quando è il momento di mangiare? In questo caso non verranno registrati carboidrati e dovrai usare di nuovo il calcolatore quando ti verrà mostrato il promemoria.</string>
     <string name="cobvsiob">COB vs IOB</string>
     <string name="slowabsorptiondetected"><![CDATA[<font color=\'%1$s\'>!!!!! Rilevato assorbimento lento dei carboidrati: %2$d%% del tempo. Ricontrolla il tuo calcolo. I COB potrebbero essere sovrastimati e potrebbe essere somministrata più insulina !!!!!</font>]]></string>
+    <string name="partialboluswizard">Eroga parte del risultato del calcolatore [%]</string>
+    <string name="partialboluswizard_reset_time">Soglia tempo glicemia \"vecchia\" [min]</string>
     <string name="bolus_constraint_applied_warn">Vincolo bolo applicato: %1$.2f U a %2$.2f U</string>
     <string name="bolus_recorded_only">Il bolo sarà solo registrato (non erogato dal micro)</string>
     <string name="advisoralarm">Esegui allarme quando è tempo di mangiare</string>
@@ -549,6 +560,7 @@
     <string name="message">Messaggio</string>
     <string name="ok">OK</string>
     <string name="cancel">Annulla</string>
+    <string name="dismiss">RIMUOVI</string>
     <string name="yes">Sì</string>
     <string name="no">No</string>
     <string name="close">Chiudi</string>
