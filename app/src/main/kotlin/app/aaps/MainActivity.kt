@@ -48,16 +48,13 @@ import app.aaps.core.interfaces.utils.fabric.FabricPrivacy
 import app.aaps.core.objects.crypto.CryptoUtil
 import app.aaps.plugins.constraints.signatureVerifier.SignatureVerifierPlugin
 import app.aaps.core.keys.BooleanKey
-import app.aaps.core.keys.BooleanNonKey
 import app.aaps.core.keys.StringKey
 import app.aaps.core.ui.UIRunnable
 import app.aaps.core.ui.locale.LocaleHelper
 import app.aaps.core.ui.toast.ToastUtils
-import app.aaps.core.utils.isRunningRealPumpTest
 import app.aaps.databinding.ActivityMainBinding
 import app.aaps.plugins.configuration.activities.DaggerAppCompatActivityWithResult
 import app.aaps.plugins.configuration.activities.SingleFragmentActivity
-import app.aaps.plugins.configuration.setupwizard.SetupWizardActivity
 import app.aaps.ui.tabs.TabPageAdapter
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.tabs.TabLayoutMediator
@@ -168,13 +165,6 @@ class MainActivity : DaggerAppCompatActivityWithResult() {
                         true
                     }
 
-                    R.id.nav_setupwizard    -> {
-                        protectionCheck.queryProtection(this@MainActivity, ProtectionCheck.Protection.PREFERENCES, {
-                            startActivity(Intent(this@MainActivity, SetupWizardActivity::class.java).setAction("info.nightscout.androidaps.MainActivity"))
-                        })
-                        true
-                    }
-
                     else                    ->
                         actionBarDrawerToggle.onOptionsItemSelected(menuItem)
                 }
@@ -188,16 +178,7 @@ class MainActivity : DaggerAppCompatActivityWithResult() {
     private fun start() {
         binding.splash.visibility = View.GONE
         setupViews()
-
-        if (startWizard() && !isRunningRealPumpTest()) {
-            protectionCheck.queryProtection(this, ProtectionCheck.Protection.PREFERENCES, {
-                startActivity(Intent(this, SetupWizardActivity::class.java).setAction("info.nightscout.androidaps.MainActivity"))
-            })
-        }
     }
-
-    private fun startWizard(): Boolean =
-        !preferences.get(BooleanNonKey.GeneralSetupWizardProcessed)
 
     override fun onPostCreate(savedInstanceState: Bundle?, persistentState: PersistableBundle?) {
         super.onPostCreate(savedInstanceState, persistentState)

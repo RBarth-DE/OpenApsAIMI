@@ -661,6 +661,8 @@
     <string name="wizard_carb_time">Carb time</string>
     <string name="carb_time_now">Now</string>
     <string name="change">Change</string>
+    <string name="grant">Grant</string>
+    <string name="set">Set</string>
     <string name="wizard_set_alarm">Set alarm</string>
     <string name="wizard_use_percentage">Use percentage</string>
     <string name="wizard_include_bg">Include BG</string>
@@ -724,6 +726,7 @@
     <string name="clicked_connect_to_pump" comment="26 characters max for translation">Clicked connect to pump</string>
     <string name="reservoir_value">%1$.0f / %2$d U</string>
     <string name="daily_units">Daily units</string>
+    <string name="max_daily_units">Max daily units</string>
     <string name="pump_icon">Pump icon</string>
     <string name="view_profile">View profile</string>
     <string name="pump_history">Pump history</string>
@@ -747,6 +750,7 @@
     <string name="firmware" comment="Pump firmware version label">Firmware</string>
     <string name="bolusspeed" comment="Speed at which bolus is delivered">Bolus speed</string>
     <string name="history" comment="Tab/screen title for viewing past events">History</string>
+    <string name="overview_reservoir_concentration_value_over">Over %1$s left</string>
 
     <!--    Constraints-->
     <string name="limitingbasalratio">Limiting max basal rate to %1$.2f U/h because of %2$s</string>
