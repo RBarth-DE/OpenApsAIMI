@@ -274,6 +274,7 @@ class AimiStorageHelper @Inject constructor(
      * Génère un rapport de santé du stockage pour les logs Adjustments.
      */
     fun getHealthReport(): String {
+        getAimiDirectory() // ensure lazy init is done before reading status
         val (status, path, error) = getStorageStatus()
         return when (status) {
             StorageStatus.DOCUMENTS_AAPS ->
