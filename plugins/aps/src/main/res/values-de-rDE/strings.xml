@@ -82,6 +82,7 @@
     <!--    Autotune   -->
     <string name="insulin_peak">Peak</string>
     <!--    Loop -->
+    <string name="run_now">Sofort ausführen</string>
     <string name="smb_frequency_exceeded">Aufgrund eines Bolus in den letzten 3 Minuten wird kein SMB abgegeben</string>
     <string name="pump_not_initialized">Pumpe nicht initialisiert!</string>
     <string name="loop_shortname">LOOP</string>
@@ -333,6 +334,7 @@
     <string name="aimi_adv_error_gen">Fehler beim Erstellen des Berichts</string>
     <string name="aimi_diag_subject">AIMI Diagnosebericht - %1$s</string>
     <string name="aimi_diag_chooser">Diagnose an MTR senden</string>
+    <string name="aimi_default_preferences">Standardeinstellungen AIMI</string>
     <string name="user_preferences">Benutzereinstellungen</string>
     <string name="user_modes_preferences_title_menu">Benutzereinstellungen - Modi</string>
     <string name="reactivity_preferences">BZ &lt; 120</string>
@@ -1133,6 +1135,7 @@
     <string name="aimi_adv_rec_basal_desc">Der Basalanteil (%1$d%%) ist hoch. Überprüfen Sie, ob Ihre Basalrate korrekt ist.</string>
     <string name="aimi_adv_rec_profile_ok_title">Ausgezeichnetes Profil</string>
     <string name="aimi_adv_rec_profile_ok_desc">Keine wesentlichen Anpassungen erforderlich.</string>
+    <string name="aimi_adv_rec_priority_maxiob_extra_reduce_desc">Die Priorität von MaxIOB extra liegt bei %1$sU, während die Tiefwerte erhöht sind. Eine Anpassung in Richtung ~%2$sU könnte sicherer sein, als den Spielraum weiter zu vergrößern.</string>
     <string name="aimi_pkpd_title_enable">PK/PD-Aktivierung</string>
     <string name="aimi_pkpd_title_dia">Wirkdauer (DIA)</string>
     <string name="aimi_pkpd_title_peak">Wirkungsgipfel</string>
@@ -1145,6 +1148,7 @@
     <string name="aimi_pkpd_hypo_dia">Hypoglykämien erkannt: DIA verlängern (%1$s → %2$sh), um Stapelung (Stacking) zu reduzieren.</string>
     <string name="aimi_pkpd_hypo_peak">Frühe Hypoglykämien: Gipfel verzögern (%1$s min), um die Kurve abzuflachen.</string>
     <string name="aimi_pkpd_hypo_damping">Hypo-Risiko: Dämpfung (Damping) erhöhen, um SMBs am Ende der DIA zu reduzieren.</string>
+    <string name="aimi_pkpd_hyper_damping_reduce">Anhaltende Höchstwerte mit starker SMB-Enddämpfung (%1$s): Wenn Hypotheken selten sind, sollte eine moderate Verringerung der Dämpfung auf ~%2$s in Betracht gezogen werden, anstatt sie stets nur zu erhöhen.</string>
     <string name="aimi_meal_advisor_title">AIMI Meal Advisor</string>
     <string name="aimi_auditor_enabled_title">AI-Entscheidungsprüfer aktivieren</string>
     <string name="aimi_auditor_enabled_summary">Das Second Brain aktivieren, um AIMI-Entscheidungen zu hinterfragen und zu modulieren</string>
@@ -1236,4 +1240,28 @@
     <string name="aimi_trajectory_stable_orbit_desc">STABIL – Stabile Umlaufbahn beibehalten</string>
     <string name="aimi_trajectory_hovering_desc">SCHWEBEND – Stabil schwebend, aber abseits des Zielwerts</string>
     <string name="aimi_trajectory_uncertain_desc">UNKLAR – Mehr Daten benötigt</string>
+    <string name="aimi_adv_rec_oref_isf_hypo_title">Hypo-Muster: Besprechen Sie ISF mit Ihrem Betreuungsteam</string>
+    <string name="aimi_adv_rec_oref_isf_hypo_desc">Die OREF/ML-Anzeige am Gerät signalisiert eine niedrige Priorität. Etwa %1$s%% der CGM-Zeit lag unter 70 mg/dL. Fragen Sie Ihren Arzt, ob ein etwas höherer ISF-Wert (mehr mg/dL pro Einheit = sanftere Korrekturen) zu Ihrem Profil passt – vermeiden Sie abrupte Sprünge in einem Schritt.</string>
+    <string name="aimi_adv_rec_oref_isf_hyper_title">Leitbild: ISF-Ausrichtung gemeinsam mit Ihrem Team</string>
+    <string name="aimi_adv_rec_oref_isf_hyper_desc">Der Wert liegt bei über 180 bei etwa %1$s%% mit wenigen Tiefpunkten. Es sollte erörtert werden, ob das ISF-Profil etwas stärkere Korrekturen zulassen sollte (oftmals ein geringfügig niedrigerer ISF-Wert in mg/dl pro U) – allerdings nur unter ärztlicher Aufsicht.</string>
+    <string name="aimi_adv_rec_oref_isf_mixed_title">Licht und Schatten: Die Vor- und Nachteile des ISF</string>
+    <string name="aimi_adv_rec_oref_isf_mixed_desc">OREF signalisiert sowohl Hypotonie als auch Hypertonie (etwa %1$s%% unter 70 und %2$s%% über 180). Die ISF-Bewertungen sind nicht eindeutig: Halten Sie sich in Absprache mit Ihrem Behandlungsteam an das Problem, das im Wochenvergleich überwiegt (milder, wenn die Tiefwerte dominieren; stärker, wenn die Hochwerte dominieren).</string>
+    <string name="aimi_adv_rec_oref_basal_hypo_title">Basalanteil und Tiefstwerte</string>
+    <string name="aimi_adv_rec_oref_basal_hypo_desc">Die Basalrate beträgt etwa %1$s%% der TDD, während das Risiko einer Hypoglykämie erhöht ist. Besprechen Sie die Basalraten für die Nacht und den Tag mit Ihrem Team, bevor Sie die Mahlzeitenanteile oder die PKPD ändern.</string>
+    <string name="aimi_adv_rec_oref_ic_hyper_title">Blutzuckeranstieg nach dem Essen: Überprüfen Sie das Kohlenhydratverhältnis.</string>
+    <string name="aimi_adv_rec_oref_ic_hyper_desc">Der OREF-Fokus liegt im Hyperbereich, wobei der Wert etwa %1$s%% der Zeit über 180 mg/dl liegt. Überprüfen Sie die Genauigkeit und den Zeitpunkt der IC (Kohlenhydrat-Verhältnis); nehmen Sie Anpassungen nur in kleinen, unter Aufsicht durchgeführten Schritten vor.</string>
+    <string name="aimi_adv_rec_oref_pkpd_review_title">PKPD: DIA, Spitzenwert, Dämpfung</string>
+    <string name="aimi_adv_rec_oref_pkpd_review_desc">PKPD ist aktiviert und OREF meldet ein Ungleichgewicht. Besprechen Sie gemeinsam mit Ihrem behandelnden Arzt DIA, Peak-Zeit und SMB-Dämpfung – und zwar nicht isoliert, sondern unter Verwendung der oben genannten Beraterkarten als Checkliste.</string>
+    <string name="aimi_adv_rec_oref_autodrive_mpc_title">AutoDrive: Aggressivität der MPC</string>
+    <string name="aimi_adv_rec_oref_autodrive_mpc_desc">AutoDrive ist aktiviert. Der aktuelle MPC-Insulinstufenwert pro kg beträgt %1$s (Einstellung). Sollten anhaltende Hyperglykämien ohne Hypoglykämien auftreten, besprechen Sie eine vorsichtige Erhöhung mit Ihrem Team; erhöhen Sie die Dosis nicht wiederholt, ohne dies zuvor zu überprüfen.</string>
+    <string name="aimi_adv_rec_oref_autodrive_mpc_hypo_title">AutoDrive: Tendenz zu weniger aggressivem MPC</string>
+    <string name="aimi_adv_rec_oref_autodrive_mpc_hypo_desc">Häufige Unterzuckerungen bei aktiviertem AutoDrive (MPC-Stufe %1$s). Besprechen Sie mit Ihrem behandelnden Arzt eine Verringerung der MPC-Aggressivität, bevor Sie die Stufe weiter erhöhen.</string>
+    <string name="aimi_adv_rec_pkpd_relief_reduce_title">Niedrigere PKPD-Entlastungsschwelle (Hypo-Kontext)</string>
+    <string name="aimi_adv_rec_pkpd_relief_reduce_desc">Der Mindestfaktor für die Entlastung beträgt %1$s bei einer erhöhten Zeit unter 70. Erwägen Sie, unter Aufsicht auf ~%2$s zu erhöhen, und überprüfen Sie dann die Situation erneut – die Anpassung kann in beide Richtungen erfolgen</string>
+    <string name="aimi_adv_rec_redcarpet_reduce_title">Schwellenwert für die Wiederherstellung des unteren roten Teppichs senken (Hypo-Kontext)</string>
+    <string name="aimi_adv_rec_redcarpet_reduce_desc">Der Schwellenwert für die Wiederherstellung liegt bei %1$s, während es häufig zu Tiefstwerten kommt. Eine moderate Senkung auf etwa %2$s könnte den späten SMB-Snapback verringern – bitte klären Sie dies mit Ihrem Team ab.</string>
+    <string name="aimi_adv_rec_priority_maxiob_reduce_title">Prioritäts-MaxIOB-Faktor reduzieren (Hypo-Kontext)</string>
+    <string name="aimi_adv_rec_priority_maxiob_reduce_desc">Der Prioritäts-MaxIOB-Faktor beträgt %1$s bei deutlicher Hypoglykämie-Exposition. Ziehen Sie eine Überwachung bei ~%2$s in Betracht, anstatt den Wert weiter zu erhöhen.</string>
+    <string name="aimi_adv_rec_priority_maxiob_extra_reduce_title">Trim-Priorität MaxIOB extra (Hypo-Kontext)</string>
+    <string name="aimi_pkpd_hypo_isf_reduce">Häufige Tiefpunkte bei hohem ISF-Fusionsspielraum: Erwägen Sie gemeinsam mit Ihrem Arzt, den maximalen Fusionswert von %1$sx auf ~%2$sx zu senken, um aggressive Korrekturen zu begrenzen.</string>
 </resources>

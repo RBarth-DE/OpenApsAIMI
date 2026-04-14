@@ -1183,6 +1183,26 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
      * nested AIMI sections so Compose settings match most of the legacy tree.
      */
     private fun buildAimiComposePreferenceItems(): List<PreferenceItem> = buildList {
+        add(
+            PreferenceSubScreenDef(
+                key = "aimi_default_preferences",
+                titleResId = R.string.aimi_default_preferences,
+                items = aimiComposeAIMIDefaultPreferenceItems(),
+            )
+        )
+
+        add(
+            PreferenceSubScreenDef(
+                key = "aimi_user_preferences",
+                titleResId = R.string.user_preferences,
+                items = aimiComposeUserPreferenceItems(),
+            )
+        )
+        add(aimiComposeManualModesSubScreen())
+        add(aimiComposeAutodriveSubScreen())
+    }
+
+    private fun aimiComposeAIMIDefaultPreferenceItems(): List<PreferenceItem> = buildList {
         add(DoubleKey.ApsMaxBasal)
         add(DoubleKey.ApsSmbMaxIob)
         add(BooleanKey.ApsUseDynamicSensitivity)
@@ -1215,15 +1235,6 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
                 ),
             )
         )
-        add(
-            PreferenceSubScreenDef(
-                key = "aimi_user_preferences",
-                titleResId = R.string.user_preferences,
-                items = aimiComposeUserPreferenceItems(),
-            )
-        )
-        add(aimiComposeManualModesSubScreen())
-        add(aimiComposeAutodriveSubScreen())
     }
 
     private fun aimiComposeStringArrayMap(@ArrayRes valuesId: Int, @ArrayRes labelsId: Int): Map<String, String> {

@@ -309,7 +309,7 @@
     <string name="aimi_diag_subject">AIMI Diagnostic Report - %1$s</string>
     <string name="aimi_diag_chooser">Send Diagnostic to MTR</string>
 
-
+    <string name="aimi_default_preferences">Default Preferences AIMI</string>
     <string name="user_preferences">Preferences user</string>
     <string name="user_modes_preferences_title_menu">Preferences user - Modes</string>
     <string name="reactivity_preferences"><![CDATA[BG < 120]]></string>
