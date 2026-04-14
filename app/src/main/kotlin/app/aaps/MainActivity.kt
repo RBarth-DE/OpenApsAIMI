@@ -237,6 +237,7 @@ class MainActivity : DaggerAppCompatActivityWithResult() {
                 ) {
                     val menuItem = menu.add(p.name)
                     menuItem.isCheckable = true
+                    @Suppress("DEPRECATION")
                     if (p.menuIcon != -1) menuItem.setIcon(p.menuIcon)
                     else menuItem.setIcon(app.aaps.core.ui.R.drawable.ic_settings)
                     menuItem.setOnMenuItemClickListener {
@@ -304,9 +305,9 @@ class MainActivity : DaggerAppCompatActivityWithResult() {
             }
         }
         if (pluginPrefsItem?.isEnabled == false) {
-            val spanString = SpannableString(pluginPrefsItem?.title?.toString().orEmpty())
+            val spanString = SpannableString(pluginPrefsItem.title?.toString().orEmpty())
         spanString.setSpan(ForegroundColorSpan(rh.gac(app.aaps.core.ui.R.attr.disabledTextColor)), 0, spanString.length, 0)
-            pluginPrefsItem?.title = spanString
+            pluginPrefsItem.title = spanString
         }
         return result
     }

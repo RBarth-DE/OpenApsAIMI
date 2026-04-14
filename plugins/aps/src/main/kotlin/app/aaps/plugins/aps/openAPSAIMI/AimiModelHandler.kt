@@ -36,11 +36,14 @@ import app.aaps.core.keys.interfaces.Preferences
  */
 object AimiUamHandler {
     private const val TAG = "AIMI-UAM"
-    private var modelUamFile: File = File("/data/local/tmp", "ml/modelUAM.tflite") // placeholder until initialize()
+    private var storageHelperRef: AimiStorageHelper? = null
 
     fun initialize(storageHelper: AimiStorageHelper, context: android.content.Context) {
-        modelUamFile = storageHelper.getAimiFile("ml", "modelUAM.tflite")
+        storageHelperRef = storageHelper
     }
+
+    private val modelUamFile: File?
+        get() = storageHelperRef?.getAimiFile("ml", "modelUAM.tflite")
     // Interpreter TFLite (lazy/persistant)
     @Volatile private var interpreter: Interpreter? = null
     private val lock = Any()
@@ -79,7 +82,7 @@ object AimiUamHandler {
 
     /** Ligne de statut prête à logguer dans rT.reason */
     fun statusLine(context: Context): String {
-        val path = lastModelPath ?: modelUamFile.absolutePath
+        val path = lastModelPath ?: modelUamFile?.absolutePath ?: "not initialized"
         val documentsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS).absolutePath
         val documentsFolderName = context.getString(R.string.folder_documents)
         val relativePath = if (path.startsWith(documentsDir)) {
@@ -87,10 +90,8 @@ object AimiUamHandler {
         } else {
            path
         }
-        //val flag = if (lastLoadOk) "✅" else "❌"
         val flag = if (lastLoadOk) "✔" else "✘"
-        //val size = if (modelUamFile.exists()) "${modelUamFile.length()} B" else "missing"
-        val size = if (modelUamFile.exists()) String.format("%.1f KB", modelUamFile.length().toDouble() / 1024) else "missing"
+        val size = modelUamFile?.let { if (it.exists()) String.format("%.1f KB", it.length().toDouble() / 1024) else "missing" } ?: "missing"
         //return "📦 UAM model: $flag ($path, $size)"
         return context.getString(R.string.uam_model_status, flag, relativePath, size)
     }
@@ -128,13 +129,13 @@ object AimiUamHandler {
             close(context)
             if (file != null) {
                 if (file.exists()) {
-                    modelUamFile.parentFile?.mkdirs()
+                    modelUamFile?.parentFile?.mkdirs()
                     // on ne copie pas : on pointe directement
                     // (si tu veux copier dans le dossier AAPS, ajoute une copie ici)
                 }
                 lastModelPath = file.absolutePath
             } else {
-                lastModelPath = modelUamFile.absolutePath
+                lastModelPath = modelUamFile?.absolutePath
             }
             lastLoadOk = false
             lastLoadError = null
@@ -204,11 +205,33 @@ object AimiUamHandler {
     // ────────────────────────── Privé : init & exécution ──────────────────────────
 
     private fun ensureInterpreter(reason: StringBuilder? = null, context: Context): Interpreter? {
+        // If storage path changed (e.g. MANAGE_EXTERNAL_STORAGE just granted after init),
+        // close the stale interpreter so it reloads from the correct location.
+        if (interpreter != null && lastModelPath != null) {
+            val resolved = modelUamFile?.absolutePath
+            if (resolved != null && resolved != lastModelPath) {
+                synchronized(lock) {
+                    if (interpreter != null && lastModelPath != null && modelUamFile?.absolutePath != lastModelPath) {
+                        interpreter?.close()
+                        interpreter = null
+                        lastLoadOk = false
+                        lastLoadError = null
+                        lastModelPath = null
+                        smbCache.invalidateAll()
+                        Log.i(TAG, "UAM model path changed → $resolved, will reload")
+                    }
+                }
+            }
+        }
         interpreter?.let { return it }
         synchronized(lock) {
             interpreter?.let { return it }
 
-            val file = File(lastModelPath ?: modelUamFile.absolutePath)
+            val file = File(lastModelPath ?: modelUamFile?.absolutePath ?: run {
+                lastLoadError = "not initialized"
+                Log.w(TAG, "UAM: ensureInterpreter called before initialize()")
+                return null
+            })
 
             // Diagnostic: log permission + file state before any access attempt
             val hasStorageManager = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
@@ -234,7 +257,7 @@ object AimiUamHandler {
             }
             return try {
                 val mapped = loadModel(file)
-                Interpreter(mapped).also {
+                Interpreter(mapped, Interpreter.Options()).also {
                     interpreter = it
                     lastLoadOk = true
                     lastLoadError = null
@@ -287,7 +310,7 @@ object AimiUamHandler {
 
     private fun isUsable(v: Float): Boolean = v.isFinite() && !v.isNaN()
 
-    private fun round4(v: Float): Float = (v * 10000f).toInt() / 10000f.toFloat()
+    private fun round4(v: Float): Float = (v * 10000f).toInt() / 10000f
 
     private fun cacheKey(modelName: String, inputs: FloatArray): String {
         val md = MessageDigest.getInstance("SHA-256")

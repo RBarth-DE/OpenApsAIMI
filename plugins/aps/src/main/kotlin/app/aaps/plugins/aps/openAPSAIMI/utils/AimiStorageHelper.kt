@@ -183,7 +183,12 @@ class AimiStorageHelper @Inject constructor(
      */
     fun getAimiFile(filename: String): File {
         val dir = getAimiDirectory()
-        return File(dir, filename).also {
+        val targetDir = if (filename.endsWith(".tflite")) {
+            File(dir, "ml").also { if (!it.exists()) it.mkdirs() }
+        } else {
+            dir
+        }
+        return File(targetDir, filename).also {
             log.debug(LTag.APS, "AimiStorageHelper: File '$filename' → ${it.absolutePath}")
         }
     }
