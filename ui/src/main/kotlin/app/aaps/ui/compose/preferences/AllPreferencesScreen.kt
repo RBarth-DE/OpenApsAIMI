@@ -137,6 +137,9 @@ fun AllPreferencesScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     var composeScreen: ComposeScreenContent? by remember { mutableStateOf(null) }
     var drilledSubScreen: PreferenceSubScreenDef? by remember { mutableStateOf(null) }
+    // Hoist outside the early-return block so state survives drill-down/back cycles.
+    val listState = rememberLazyListState()
+    val sectionState = rememberPreferenceSectionState()
 
     BackHandler(enabled = composeScreen != null) {
         composeScreen = null
@@ -194,8 +197,6 @@ fun AllPreferencesScreen(
                 },
                 snackbarHost = { SnackbarHost(snackbarHostState) }
             ) { paddingValues ->
-                val listState = rememberLazyListState()
-                val sectionState = rememberPreferenceSectionState()
                 LazyColumn(
                     modifier = Modifier
                         .fillMaxSize()
