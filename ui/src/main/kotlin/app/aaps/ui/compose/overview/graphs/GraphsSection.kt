@@ -51,6 +51,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.res.stringResource
@@ -58,9 +59,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.TextUnitType
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.repeatOnLifecycle
 import app.aaps.core.interfaces.overview.graph.GraphConfig
+import app.aaps.core.interfaces.overview.graph.SecondaryGraph
 import app.aaps.core.interfaces.overview.graph.SeriesType
+import app.aaps.core.ui.compose.NumberInputRow
 import com.patrykandpatrick.vico.compose.cartesian.Scroll
 import com.patrykandpatrick.vico.compose.cartesian.Zoom
 import com.patrykandpatrick.vico.compose.cartesian.rememberVicoScrollState
@@ -92,11 +97,16 @@ import kotlin.math.abs
 private val SIMPLE_MODE_CONFIG = GraphConfig(
     bgOverlays = emptyList(),
     iobOverlays = emptyList(),
-    secondaryGraphs = listOf(listOf(SeriesType.COB))
+    secondaryGraphs = listOf(SecondaryGraph(listOf(SeriesType.COB)))
 )
 
-/** Series types available for user-configurable secondary graphs (IOB excluded — has dedicated fixed slot) */
-private val CONFIGURABLE_SERIES = SeriesType.entries.filter { it != SeriesType.IOB }
+/** Series types available as BG graph overlays */
+private val BG_OVERLAY_SERIES = listOf(SeriesType.ACTIVITY, SeriesType.PREDICTIONS, SeriesType.BOLUS, SeriesType.BASAL)
+
+/** Series types available for user-configurable secondary graphs (IOB + UI-only overlays excluded) */
+private val CONFIGURABLE_SERIES = SeriesType.entries.filter {
+    it != SeriesType.IOB && it != SeriesType.PREDICTIONS
+}
 
 /** Custom-view types occupy the entire slot; they are mutually exclusive with chart types */
 private fun SeriesType.isCustomView() = this == SeriesType.MODES || this == SeriesType.PULSE || this == SeriesType.TIR
@@ -174,6 +184,8 @@ fun GraphsSection(
         arrayOf(sec0zoom, sec1zoom, sec2zoom, sec3zoom, sec4zoom)
     }
 
+    val lifecycleOwner = LocalLifecycleOwner.current
+
     // Observe BG graph scroll/zoom and sync to belt + active secondary graphs
     // Keys include ALL state objects — identical pattern to the original working sync
     LaunchedEffect(
@@ -181,27 +193,30 @@ fun GraphsSection(
         iobScrollState, iobZoomState,
         sec0scroll, sec0zoom, sec1scroll, sec1zoom,
         sec2scroll, sec2zoom, sec3scroll, sec3zoom,
-        sec4scroll, sec4zoom
+        sec4scroll, sec4zoom,
+        lifecycleOwner
     ) {
-        var initialValue = true
-        snapshotFlow { bgScrollState.value to bgZoomState.value }
-            .debounce(30) // Wait for gesture to settle
-            .collect { (scroll, zoom) ->
-                if (initialValue) {
-                    initialValue = false
-                } else {
-                    graphViewModel.onGraphInteraction()
+        lifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+            var initialValue = true
+            snapshotFlow { bgScrollState.value to bgZoomState.value }
+                .debounce(30) // Wait for gesture to settle
+                .collect { (scroll, zoom) ->
+                    if (initialValue) {
+                        initialValue = false
+                    } else {
+                        graphViewModel.onGraphInteraction()
+                    }
+                    val count = activeCount
+                    // Sync zoom first, then scroll (order matters for proper positioning)
+                    beltZoomState.zoom(Zoom.fixed(zoom))
+                    iobZoomState.zoom(Zoom.fixed(zoom))
+                    for (i in 0 until count) secZoomStates[i].zoom(Zoom.fixed(zoom))
+                    delay(10)
+                    beltScrollState.scroll(Scroll.Absolute.pixels(scroll))
+                    iobScrollState.scroll(Scroll.Absolute.pixels(scroll))
+                    for (i in 0 until count) secScrollStates[i].scroll(Scroll.Absolute.pixels(scroll))
                 }
-                val count = activeCount
-                // Sync zoom first, then scroll (order matters for proper positioning)
-                beltZoomState.zoom(Zoom.fixed(zoom))
-                iobZoomState.zoom(Zoom.fixed(zoom))
-                for (i in 0 until count) secZoomStates[i].zoom(Zoom.fixed(zoom))
-                delay(10)
-                beltScrollState.scroll(Scroll.Absolute.pixels(scroll))
-                iobScrollState.scroll(Scroll.Absolute.pixels(scroll))
-                for (i in 0 until count) secScrollStates[i].scroll(Scroll.Absolute.pixels(scroll))
-            }
+        }
     }
 
     // Custom panel states — collected here (not inside the loop) to satisfy Compose composition rules
@@ -213,58 +228,63 @@ fun GraphsSection(
     val predictions by graphViewModel.predictionsFlow.collectAsStateWithLifecycle()
     var lastBgTimestamp by remember { mutableLongStateOf(0L) }
 
-    LaunchedEffect(bgInfoState.bgInfo?.timestamp) {
+    LaunchedEffect(bgInfoState.bgInfo?.timestamp, lifecycleOwner) {
         val newTimestamp = bgInfoState.bgInfo?.timestamp ?: return@LaunchedEffect
-        if (lastBgTimestamp != 0L && newTimestamp > lastBgTimestamp) {
-            val timeRange = derivedTimeRange
-            if (predictions.isNotEmpty() && timeRange != null) {
-                // Scroll so "now + 2h" is at the right edge of viewport
-                val (minTimestamp, _) = timeRange
-                val nowX = timestampToX(System.currentTimeMillis(), minTimestamp)
-                bgScrollState.animateScroll(Scroll.Absolute.x(nowX + 120.0, bias = 1f))
-            } else {
-                // No predictions - scroll to end
-                bgScrollState.animateScroll(Scroll.Absolute.End)
+        lifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+            val showPredictions = SeriesType.PREDICTIONS in graphConfig.bgOverlays
+            if (lastBgTimestamp != 0L && newTimestamp > lastBgTimestamp) {
+                val timeRange = derivedTimeRange
+                if (showPredictions && predictions.isNotEmpty() && timeRange != null) {
+                    // Scroll so "now + 2h" is at the right edge of viewport
+                    val (minTimestamp, _) = timeRange
+                    val nowX = timestampToX(System.currentTimeMillis(), minTimestamp)
+                    bgScrollState.animateScroll(Scroll.Absolute.x(nowX + 120.0, bias = 1f))
+                } else {
+                    // No predictions - scroll to end
+                    bgScrollState.animateScroll(Scroll.Absolute.End)
+                }
             }
+            lastBgTimestamp = newTimestamp
         }
-        lastBgTimestamp = newTimestamp
     }
 
     // Correct secondary graph scroll drift — Vico may internally adjust scroll
     // when model producers fire. Watch for any divergence and re-sync to BG.
     // No isSyncing guard needed: primary sync only reads BG state, so writing to
     // secondary states here cannot trigger primary sync (no feedback loop).
-    LaunchedEffect(Unit) {
-        snapshotFlow {
-            // Only read states that are attached to a chart (belt + IOB fixed + active secondary)
-            val count = activeCount
-            buildList {
-                add(beltScrollState.value to beltZoomState.value)
-                add(iobScrollState.value to iobZoomState.value)
-                for (i in 0 until count) {
-                    add(secScrollStates[i].value to secZoomStates[i].value)
+    LaunchedEffect(lifecycleOwner) {
+        lifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+            snapshotFlow {
+                // Only read states that are attached to a chart (belt + IOB fixed + active secondary)
+                val count = activeCount
+                buildList {
+                    add(beltScrollState.value to beltZoomState.value)
+                    add(iobScrollState.value to iobZoomState.value)
+                    for (i in 0 until count) {
+                        add(secScrollStates[i].value to secZoomStates[i].value)
+                    }
                 }
             }
+                .debounce(100) // Let Vico settle after model update
+                .collect { states ->
+                    val bgScroll = bgScrollState.value
+                    val bgZoom = bgZoomState.value
+                    val threshold = 1f
+                    val needsSync = states.any { (scroll, zoom) ->
+                        abs(scroll - bgScroll) > threshold || abs(zoom - bgZoom) > 0.001f
+                    }
+                    if (needsSync) {
+                        val count = activeCount
+                        beltZoomState.zoom(Zoom.fixed(bgZoom))
+                        iobZoomState.zoom(Zoom.fixed(bgZoom))
+                        for (i in 0 until count) secZoomStates[i].zoom(Zoom.fixed(bgZoom))
+                        delay(10)
+                        beltScrollState.scroll(Scroll.Absolute.pixels(bgScroll))
+                        iobScrollState.scroll(Scroll.Absolute.pixels(bgScroll))
+                        for (i in 0 until count) secScrollStates[i].scroll(Scroll.Absolute.pixels(bgScroll))
+                    }
+                }
         }
-            .debounce(100) // Let Vico settle after model update
-            .collect { states ->
-                val bgScroll = bgScrollState.value
-                val bgZoom = bgZoomState.value
-                val threshold = 1f
-                val needsSync = states.any { (scroll, zoom) ->
-                    abs(scroll - bgScroll) > threshold || abs(zoom - bgZoom) > 0.001f
-                }
-                if (needsSync) {
-                    val count = activeCount
-                    beltZoomState.zoom(Zoom.fixed(bgZoom))
-                    iobZoomState.zoom(Zoom.fixed(bgZoom))
-                    for (i in 0 until count) secZoomStates[i].zoom(Zoom.fixed(bgZoom))
-                    delay(10)
-                    beltScrollState.scroll(Scroll.Absolute.pixels(bgScroll))
-                    iobScrollState.scroll(Scroll.Absolute.pixels(bgScroll))
-                    for (i in 0 until count) secScrollStates[i].scroll(Scroll.Absolute.pixels(bgScroll))
-                }
-            }
     }
 
 
@@ -292,7 +312,9 @@ fun GraphsSection(
                 zoomState = bgZoomState,
                 derivedTimeRange = derivedTimeRange,
                 nowTimestamp = nowTimestamp,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(graphConfig.bgHeight.dp)
             )
             if (!isSimpleMode) {
                 GraphEditButton(
@@ -307,7 +329,11 @@ fun GraphsSection(
             GraphSeriesBottomSheet(
                 title = stringResource(app.aaps.core.ui.R.string.graph_bg),
                 selectedSeries = graphConfig.bgOverlays,
-                availableSeries = listOf(SeriesType.BASAL, SeriesType.BOLUS, SeriesType.ACTIVITY),
+                availableSeries = BG_OVERLAY_SERIES,
+                height = graphConfig.bgHeight,
+                onHeightChange = { h ->
+                    graphViewModel.updateGraphConfig(graphConfig.copy(bgHeight = h))
+                },
                 onToggle = { type ->
                     val current = graphConfig.bgOverlays.toMutableList()
                     if (type in current) current.remove(type) else current.add(type)
@@ -316,7 +342,7 @@ fun GraphsSection(
                 onDismiss = { editingBgOverlays = false }
             )
         }
-        // Fixed IOB graph (Graph 1) — optional, removable via pencil edit
+        // Fixed IOB graph (Graph 1) with optional Activity overlay
         var editingIobOverlays by remember { mutableStateOf(false) }
         if (graphConfig.showIobGraph) {
             Box(modifier = Modifier.offset(y = (-8).dp)) {
@@ -328,7 +354,9 @@ fun GraphsSection(
                     derivedTimeRange = derivedTimeRange,
                     nowTimestamp = nowTimestamp,
                     activityOverlay = SeriesType.ACTIVITY in graphConfig.iobOverlays,
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(graphConfig.iobHeight.dp)
                 )
                 Text(
                     text = stringResource(app.aaps.core.ui.R.string.iob) + " / " + stringResource(app.aaps.core.ui.R.string.basal_shortname),
@@ -352,6 +380,10 @@ fun GraphsSection(
                     title = stringResource(app.aaps.core.ui.R.string.iob) + " / " + stringResource(app.aaps.core.ui.R.string.basal_shortname),
                     selectedSeries = graphConfig.iobOverlays,
                     availableSeries = listOf(SeriesType.ACTIVITY),
+                    height = graphConfig.iobHeight,
+                    onHeightChange = { h ->
+                        graphViewModel.updateGraphConfig(graphConfig.copy(iobHeight = h))
+                    },
                     onToggle = { type ->
                         val current = graphConfig.iobOverlays.toMutableList()
                         if (type in current) current.remove(type) else current.add(type)
@@ -365,45 +397,55 @@ fun GraphsSection(
                 )
             }
         }
-
         // Secondary graphs — config-driven (labels start at "Graph 2")
         var editingGraphIndex by remember { mutableIntStateOf(-1) }
         for (i in 0 until activeCount) {
-            val seriesList = graphConfig.secondaryGraphs[i]
-            val customType = seriesList.firstOrNull { it.isCustomView() }
+            val secondary = graphConfig.secondaryGraphs[i]
+            val customType = secondary.series.firstOrNull { it.isCustomView() }
             Box(modifier = Modifier.offset(y = (-8).dp)) {
                 when (customType) {
                     SeriesType.MODES -> {
                         ModesPanel(
                             events = modesState.events,
                             onRunEvent = { eventId -> graphViewModel.runAutomationEvent(eventId) },
-                            modifier = Modifier.fillMaxWidth()
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(secondary.height.dp)
                         )
                     }
+
                     SeriesType.PULSE -> {
                         PulsePanel(
                             state = pulseState,
-                            modifier = Modifier.fillMaxWidth()
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(secondary.height.dp)
                         )
                     }
-                    SeriesType.TIR -> {
+
+                    SeriesType.TIR   -> {
                         TirPanel(
                             state = tirState,
-                            modifier = Modifier.fillMaxWidth()
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(secondary.height.dp)
                         )
                     }
-                    else -> {
+
+                    else             -> {
                         SecondaryGraphCompose(
                             viewModel = graphViewModel,
-                            seriesTypes = seriesList,
+                            seriesTypes = secondary.series,
                             scrollState = secScrollStates[i],
                             zoomState = secZoomStates[i],
                             derivedTimeRange = derivedTimeRange,
                             nowTimestamp = nowTimestamp,
-                            modifier = Modifier.fillMaxWidth()
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(secondary.height.dp)
                         )
                         Text(
-                            text = seriesListLabel(seriesList),
+                            text = seriesListLabel(secondary.series),
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
                             modifier = Modifier
@@ -423,30 +465,32 @@ fun GraphsSection(
             }
         }
         if (editingGraphIndex >= 0 && editingGraphIndex < activeCount) {
+            val editing = graphConfig.secondaryGraphs[editingGraphIndex]
             GraphSeriesBottomSheet(
                 title = stringResource(app.aaps.core.ui.R.string.graph_number, editingGraphIndex + 2),
-                selectedSeries = graphConfig.secondaryGraphs[editingGraphIndex],
-                availableSeries = SeriesType.entries.filter { it != SeriesType.IOB },
+                selectedSeries = editing.series,
+                availableSeries = CONFIGURABLE_SERIES,
+                height = editing.height,
+                onHeightChange = { h ->
+                    val graphs = graphConfig.secondaryGraphs.toMutableList()
+                    graphs[editingGraphIndex] = graphs[editingGraphIndex].copy(height = h)
+                    graphViewModel.updateGraphConfig(graphConfig.copy(secondaryGraphs = graphs))
+                },
                 onToggle = { type ->
                     val graphs = graphConfig.secondaryGraphs.toMutableList()
-                    val current = graphs[editingGraphIndex].toMutableList()
+                    val current = graphs[editingGraphIndex].series.toMutableList()
                     if (type in current) {
                         current.remove(type)
-                    } else if (type.isCustomView()) {
-                        // Custom view fills entire slot — clear other series
-                        current.clear()
-                        current.add(type)
                     } else {
-                        // Chart type — remove any custom view, then apply FIFO
-                        current.removeAll { it.isCustomView() }
                         current.add(type)
-                        if (current.size > 2) current.removeAt(0)
+                        if (current.size > 2) current.removeAt(0) // FIFO: drop oldest
                     }
                     if (current.isEmpty()) {
+                        // Auto-remove graph when all series deselected
                         graphs.removeAt(editingGraphIndex)
                         editingGraphIndex = -1
                     } else {
-                        graphs[editingGraphIndex] = current
+                        graphs[editingGraphIndex] = graphs[editingGraphIndex].copy(series = current)
                     }
                     graphViewModel.updateGraphConfig(graphConfig.copy(secondaryGraphs = graphs))
                 },
@@ -460,9 +504,7 @@ fun GraphsSection(
             )
         }
         // Add graph button (hidden in simple mode)
-        // Also shown when IOB graph is hidden (to restore it) — IOB appears as the first chip
-        val showAddButton = !isSimpleMode && (activeCount < GraphConfig.MAX_SECONDARY_GRAPHS || !graphConfig.showIobGraph)
-        if (showAddButton) {
+        if (!isSimpleMode && activeCount < GraphConfig.MAX_SECONDARY_GRAPHS) {
             var showAddSheet by remember { mutableStateOf(false) }
             TextButton(
                 onClick = { showAddSheet = true },
@@ -473,30 +515,19 @@ fun GraphsSection(
                 Text(stringResource(app.aaps.core.ui.R.string.graph_add), style = MaterialTheme.typography.labelMedium)
             }
             if (showAddSheet) {
-                // When IOB is hidden, show it as the first (exclusive) chip so user can restore it
-                val addAvailableSeries = if (!graphConfig.showIobGraph)
-                    listOf(SeriesType.IOB) + CONFIGURABLE_SERIES
-                else CONFIGURABLE_SERIES
                 var newGraphSeries by remember { mutableStateOf(emptyList<SeriesType>()) }
+                var newGraphHeight by remember { mutableIntStateOf(GraphConfig.DEFAULT_GRAPH_HEIGHT_DP) }
                 GraphSeriesBottomSheet(
                     title = stringResource(app.aaps.core.ui.R.string.graph_new),
                     selectedSeries = newGraphSeries,
-                    availableSeries = addAvailableSeries,
+                    availableSeries = CONFIGURABLE_SERIES,
+                    height = newGraphHeight,
+                    onHeightChange = { newGraphHeight = it },
                     onToggle = { type ->
-                        if (type == SeriesType.IOB) {
-                            // Restore the fixed IOB/BAS graph and close immediately
-                            graphViewModel.updateGraphConfig(graphConfig.copy(showIobGraph = true))
-                            showAddSheet = false
-                            return@GraphSeriesBottomSheet
-                        }
                         val current = newGraphSeries.toMutableList()
                         if (type in current) {
                             current.remove(type)
-                        } else if (type.isCustomView()) {
-                            current.clear()
-                            current.add(type)
                         } else {
-                            current.removeAll { it.isCustomView() }
                             current.add(type)
                             if (current.size > 2) current.removeAt(0)
                         }
@@ -505,10 +536,11 @@ fun GraphsSection(
                     onDismiss = {
                         if (newGraphSeries.isNotEmpty()) {
                             val graphs = graphConfig.secondaryGraphs.toMutableList()
-                            graphs.add(newGraphSeries)
+                            graphs.add(SecondaryGraph(newGraphSeries, newGraphHeight))
                             graphViewModel.updateGraphConfig(graphConfig.copy(secondaryGraphs = graphs))
                         }
                         newGraphSeries = emptyList()
+                        newGraphHeight = GraphConfig.DEFAULT_GRAPH_HEIGHT_DP
                         showAddSheet = false
                     }
                 )
@@ -532,7 +564,6 @@ private fun seriesListLabel(seriesList: List<SeriesType>): String {
 
 /** String resource ID for the short name of a series type */
 private fun seriesShortNameId(type: SeriesType): Int = when (type) {
-    SeriesType.BASAL           -> app.aaps.core.ui.R.string.basal_shortname
     SeriesType.IOB             -> app.aaps.core.ui.R.string.iob
     SeriesType.ABS_IOB         -> app.aaps.core.ui.R.string.abs_insulin_shortname
     SeriesType.COB             -> app.aaps.core.ui.R.string.cob
@@ -544,6 +575,8 @@ private fun seriesShortNameId(type: SeriesType): Int = when (type) {
     SeriesType.HEART_RATE      -> app.aaps.core.ui.R.string.heartRate_shortname
     SeriesType.STEPS           -> app.aaps.core.ui.R.string.steps_shortname
     SeriesType.ACTIVITY        -> app.aaps.core.ui.R.string.activity_shortname
+    SeriesType.PREDICTIONS     -> app.aaps.core.ui.R.string.predictions_shortname
+    SeriesType.BASAL           -> app.aaps.core.ui.R.string.basal_shortname
     SeriesType.MODES           -> app.aaps.core.ui.R.string.modes_series_shortname
     SeriesType.PULSE           -> app.aaps.core.ui.R.string.pulse_series_shortname
     SeriesType.TIR             -> app.aaps.core.ui.R.string.tir_series_shortname
@@ -809,6 +842,8 @@ private fun GraphSeriesBottomSheet(
     title: String,
     selectedSeries: List<SeriesType>,
     availableSeries: List<SeriesType>,
+    height: Int,
+    onHeightChange: (Int) -> Unit,
     onToggle: (SeriesType) -> Unit,
     onDismiss: () -> Unit,
     onRemoveGraph: (() -> Unit)? = null
@@ -841,6 +876,15 @@ private fun GraphSeriesBottomSheet(
                 }
             }
             Spacer(Modifier.height(12.dp))
+            NumberInputRow(
+                labelResId = app.aaps.core.ui.R.string.graph_height,
+                value = height.toDouble(),
+                onValueChange = { onHeightChange(it.toInt()) },
+                valueRange = GraphConfig.MIN_GRAPH_HEIGHT_DP.toDouble()..GraphConfig.MAX_GRAPH_HEIGHT_DP.toDouble(),
+                step = 10.0,
+                formatAsInt = true
+            )
+            Spacer(Modifier.height(8.dp))
             FlowRow(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalArrangement = Arrangement.spacedBy(4.dp),

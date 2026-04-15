@@ -25,11 +25,21 @@ enum class SeriesType {
     HEART_RATE,
     STEPS,
     ACTIVITY,
+    PREDICTIONS,
     MODES,
     PULSE,
     TIR,
     BOLUS   // SMB triangle markers on BG graph (fixed at bottom)
 }
+
+/**
+ * Secondary graph entry: series list + per-graph height (dp).
+ * Max 2 series per graph. Height is per-graph user-adjustable.
+ */
+data class SecondaryGraph(
+    val series: List<SeriesType>,
+    val height: Int = GraphConfig.DEFAULT_GRAPH_HEIGHT_DP
+)
 
 /**
  * Configuration for the overview graphs.
@@ -47,8 +57,10 @@ data class GraphConfig(
     val bgOverlays: List<SeriesType> = listOf(SeriesType.BASAL, SeriesType.BOLUS, SeriesType.ACTIVITY),
     val showIobGraph: Boolean = true,
     val iobOverlays: List<SeriesType> = listOf(SeriesType.ACTIVITY),
-    val secondaryGraphs: List<List<SeriesType>> = listOf(
-        listOf(SeriesType.COB)
+    val bgHeight: Int = DEFAULT_GRAPH_HEIGHT_DP,
+    val iobHeight: Int = DEFAULT_GRAPH_HEIGHT_DP,
+    val secondaryGraphs: List<SecondaryGraph> = listOf(
+        SecondaryGraph(listOf(SeriesType.COB))
     )
 ) {
 
@@ -56,6 +68,15 @@ data class GraphConfig(
 
         /** Maximum number of secondary graphs allowed */
         const val MAX_SECONDARY_GRAPHS = 5
+
+        /** Maximum graph height in dp (2.5x default) */
+        const val MIN_GRAPH_HEIGHT_DP = 50
+
+        /** Default graph height in dp (minimum value — user-adjustable up to [MAX_GRAPH_HEIGHT_DP]) */
+        const val DEFAULT_GRAPH_HEIGHT_DP = 100
+
+        /** Maximum graph height in dp (2.5x default) */
+        const val MAX_GRAPH_HEIGHT_DP = 250
     }
 }
 
