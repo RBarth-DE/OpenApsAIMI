@@ -24,6 +24,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.math.sqrt
 import app.aaps.plugins.aps.openAPSAIMI.steps.UnifiedActivityProviderMTR
+import androidx.health.connect.client.records.metadata.DataOrigin
 
 /**
  * 🏥 AIMI Physiological Data Repository - MTR Implementation
@@ -575,7 +576,8 @@ class AIMIPhysioDataRepositoryMTR @Inject constructor(
                         val response = client.aggregate(
                             AggregateRequest(
                                 metrics = setOf(StepsRecord.COUNT_TOTAL),
-                                timeRangeFilter = TimeRangeFilter.between(startTime, now)
+                                timeRangeFilter = TimeRangeFilter.between(startTime, now),
+                                dataOriginFilter = setOf(DataOrigin("com.garmin.android.apps.connectmobile"))
                             )
                         )
 
@@ -612,49 +614,44 @@ class AIMIPhysioDataRepositoryMTR @Inject constructor(
             val mode = UnifiedActivityProviderMTR.getMode(context)
             if (mode == UnifiedActivityProviderMTR.MODE_PREFER_WEAR ||
                 mode == UnifiedActivityProviderMTR.MODE_DISABLED) {
-                // Steps handled by Wear/Plugin directly, or disabled
                 return 0
             }
         }
 
         val cacheKey = "steps_${daysBack}days"
         val cached = cache[cacheKey] as? CachedData<Int>
-        
         if (cached?.isValid() == true) {
             return cached.data ?: 0
         }
-        
+
         val client = healthConnectClient ?: return 0
-        
+
         return try {
             runBlocking {
                 withTimeout(API_TIMEOUT_MS) {
                     withContext(Dispatchers.IO) {
                         val now = Instant.now()
-
-                        // Guard: daysBack muss mindestens 1 sein
                         val safeDaysBack = daysBack.coerceAtLeast(1)
-                        val startTime = now.minusSeconds((safeDaysBack * 24 * 60 * 60).toLong())
+                        val startTime = now.minusSeconds((safeDaysBack * 24L * 60 * 60))
 
                         val response = client.aggregate(
                             AggregateRequest(
                                 metrics = setOf(StepsRecord.COUNT_TOTAL),
-                                timeRangeFilter = TimeRangeFilter.between(startTime, now)
+                                timeRangeFilter = TimeRangeFilter.between(startTime, now),
+                                dataOriginFilter = setOf(DataOrigin("com.garmin.android.apps.connectmobile"))
                             )
                         )
 
                         val totalSteps = response[StepsRecord.COUNT_TOTAL] ?: 0L
                         val avgSteps = (totalSteps / safeDaysBack).toInt()
-                        
+
                         cache[cacheKey] = CachedData(avgSteps, System.currentTimeMillis())
-                        
-                        aapsLogger.info(LTag.APS, "[$TAG] ✅ Steps (HC Aggregated): total=$totalSteps, avg=$avgSteps/day")
+                        aapsLogger.info(LTag.APS, "[$TAG] ✅ Steps (HC Aggregated, Garmin-only): total=$totalSteps, avg=$avgSteps/day")
                         avgSteps
                     }
                 }
             }
         } catch (e: SecurityException) {
-            // Health Connect permission not granted — expected, not an error
             aapsLogger.debug(LTag.APS, "[$TAG] Steps aggregation skipped: HC permission not granted")
             0
         } catch (e: kotlinx.coroutines.TimeoutCancellationException) {
@@ -662,11 +659,7 @@ class AIMIPhysioDataRepositoryMTR @Inject constructor(
             0
         } catch (e: Exception) {
             aapsLogger.warn(LTag.APS, "[$TAG] Steps aggregation failed: ${e.javaClass.simpleName}: ${e.message}")
-            // Stack trace explizit ausgeben
-            e.stackTrace.take(5).forEach {
-                aapsLogger.warn(LTag.APS, "[$TAG]   at $it")
-            }
-            aapsLogger.warn(LTag.APS, "[$TAG] Steps aggregation EXCEPTION: ${e.javaClass.canonicalName}: ${e.message}")
+            e.stackTrace.take(5).forEach { aapsLogger.warn(LTag.APS, "[$TAG]   at $it") }
             e.cause?.let { aapsLogger.warn(LTag.APS, "[$TAG] Caused by: ${it.javaClass.canonicalName}: ${it.message}") }
             0
         }
