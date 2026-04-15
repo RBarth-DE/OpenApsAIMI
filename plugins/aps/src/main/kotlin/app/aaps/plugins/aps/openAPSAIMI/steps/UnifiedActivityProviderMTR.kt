@@ -48,7 +48,9 @@ class UnifiedActivityProviderMTR @Inject constructor(
         // Known Source Identifiers
         private const val SOURCE_HC = "HealthConnect"
         private const val SOURCE_PHONE = "PhoneSensor"
-        
+        private const val SOURCE_GARMIN = "Garmin-Watchface"
+
+
         /**
          * Static helper to get mode from any component context
          */
@@ -71,22 +73,25 @@ class UnifiedActivityProviderMTR @Inject constructor(
 
             if (records.isEmpty()) return null
 
-            val wearRecord  = records.firstOrNull { isWearDevice(it.device) }
-            val hcRecord    = records.firstOrNull { it.device == SOURCE_HC }
-            val phoneRecord = records.firstOrNull { it.device == SOURCE_PHONE }
+            val garminRecord = records.firstOrNull { it.device == SOURCE_GARMIN }
+            val wearRecord   = records.firstOrNull { isWearDevice(it.device) }
+            val hcRecord     = records.firstOrNull { it.device == SOURCE_HC }
+            val phoneRecord  = records.firstOrNull { it.device == SOURCE_PHONE }
 
             when (mode) {
-                MODE_PREFER_WEAR         -> wearRecord?.let { toStepsResult(it) }
+                MODE_PREFER_WEAR         -> garminRecord?.let { toStepsResult(it) }
+                    ?: wearRecord?.let { toStepsResult(it) }
                 MODE_HEALTH_CONNECT_ONLY -> hcRecord?.let { toStepsResult(it) }
-                MODE_AUTO_FALLBACK       -> wearRecord?.let { toStepsResult(it) }
+                MODE_AUTO_FALLBACK -> garminRecord?.let { toStepsResult(it) }
+                    ?: wearRecord?.let { toStepsResult(it) }
                     ?: hcRecord?.let { toStepsResult(it) }
-                    ?: phoneRecord?.let { toStepsResult(it) }
+                    ?: if (garminRecord == null && wearRecord == null) {
+                        phoneRecord?.let { toStepsResult(it) }
+                    } else null
                 else -> null
             }
 
         } catch (e: RuntimeException) {
-            // blockingGet() auf RxJava-Thread wirft RuntimeException(InterruptedException)
-            // Thread-Interrupt-Flag wiederherstellen
             if (e.cause is InterruptedException) {
                 Thread.currentThread().interrupt()
                 aapsLogger.debug(LTag.APS, "[$TAG] getLatestSteps: skipped (thread interrupted)")

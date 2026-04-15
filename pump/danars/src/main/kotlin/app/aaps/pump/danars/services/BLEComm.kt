@@ -280,8 +280,17 @@ class BLEComm @Inject constructor(
 
         synchronized(readBuffer) {
             // Append incoming data to input buffer
-            System.arraycopy(buffer, 0, readBuffer, bufferLength, buffer.size)
-            bufferLength += buffer.size
+            if (bufferLength + buffer.size > readBuffer.size) {
+                aapsLogger.error(LTag.PUMPBTCOMM, "Read buffer overflow. Resetting buffer.")
+                bufferLength = 0
+            }
+            if (bufferLength + buffer.size <= readBuffer.size) {
+                System.arraycopy(buffer, 0, readBuffer, bufferLength, buffer.size)
+                bufferLength += buffer.size
+            } else {
+                // This should not happen after the reset above unless buffer.size > readBuffer.size
+                aapsLogger.error(LTag.PUMPBTCOMM, "Incoming packet too large for read buffer: ${buffer.size} bytes")
+            }
         }
     }
 
@@ -323,7 +332,7 @@ class BLEComm @Inject constructor(
                             // AA AA LEN TYPE CODE PARAMS CHECKSUM1 CHECKSUM2 EE EE
                             //           ^---- LEN -----^
                             // total packet length 2 + 1 + readBuffer[2] + 2 + 2
-                            length = readBuffer[2].toInt()
+                            length = readBuffer[2].toInt() and 0xFF
                             // test if there is enough data loaded
                             if (length + 7 > bufferLength)
                                 return
@@ -448,8 +457,8 @@ class BLEComm @Inject constructor(
             // v3 2nd layer encryption
             encryption = EncryptionType.ENCRYPTION_RSv3
             danaPump.ignoreUserPassword = true
-            danaPump.hwModel = decryptedBuffer[5].toInt()
-            danaPump.protocol = decryptedBuffer[7].toInt()
+            danaPump.hwModel = decryptedBuffer[5].toInt() and 0xFF
+            danaPump.protocol = decryptedBuffer[7].toInt() and 0xFF
             // grab randomSyncKey
             preferences.put(DanaStringComposedKey.V3RandomSyncKey, danaRSPlugin.mDeviceName, value = String.format("%02x", decryptedBuffer[decryptedBuffer.size - 1]))
 
@@ -467,8 +476,8 @@ class BLEComm @Inject constructor(
             // v3 2nd layer encryption
             encryption = EncryptionType.ENCRYPTION_BLE5
             danaPump.ignoreUserPassword = true
-            danaPump.hwModel = decryptedBuffer[5].toInt()
-            danaPump.protocol = decryptedBuffer[7].toInt()
+            danaPump.hwModel = decryptedBuffer[5].toInt() and 0xFF
+            danaPump.protocol = decryptedBuffer[7].toInt() and 0xFF
             val pairingKey = DanaRSPacket.asciiStringFromBuff(decryptedBuffer, 8, 6) // used while bonding
             if (decryptedBuffer[8] != 0.toByte())
                 preferences.put(DanaStringComposedKey.Ble5PairingKey, danaRSPlugin.mDeviceName, value = pairingKey)
