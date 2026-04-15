@@ -735,6 +735,27 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
 
                 unifiedReactivityLearner.processIfNeeded(isConfirmedHighRise)
                 var brainFactor = unifiedReactivityLearner.getCombinedFactor()
+                val bgNow = gsData?.glucose ?: 0.0
+                val targetLow = profile.getTargetLowMgdl()
+                val targetHigh = profile.getTargetHighMgdl()
+                val nearTargetMargin = 15.0
+                val isNearTargetBand = bgNow in (targetLow - nearTargetMargin)..(targetHigh + nearTargetMargin)
+                val evidenceScore = run {
+                    var score = 0
+                    val deltaNow = gsData?.delta ?: 0.0
+                    val shortNow = gsData?.shortAvgDelta ?: 0.0
+                    val longNow = gsData?.longAvgDelta ?: 0.0
+                    if (deltaNow > 1.2) score += 25
+                    if (shortNow > 1.0) score += 20
+                    if (longNow > 0.6) score += 10
+                    if (combDelta > 1.5) score += 15
+                    if (accel > 0.4) score += 15
+                    if (predictedDelta > 1.5) score += 10
+                    if (bgNow > targetHigh + 20.0) score += 10
+                    if (deltaNow > 2.5 && accel > 0.6) score += 10
+                    score.coerceIn(0, 100)
+                }
+                val hasFormalMealEvidence = evidenceScore >= 60
                 
                 // 🚨 SAFETY OVERRIDE (FCL 10.3) - Refined for "Blind Spot" Removal:
                 // If we are in Hyper (>150) AND Rising/Stable, we MUST NOT be protective (<1.0).
@@ -749,10 +770,22 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
                     brainFactor = 1.0
                 }
 
+                // 🛡️ Evidence Gate: near target, do not over-correct without formal rise evidence.
+                if (isNearTargetBand && !hasFormalMealEvidence && brainFactor > 1.02) {
+                    aapsLogger.debug(
+                        LTag.APS,
+                        "🛡️ Evidence Gate: Near-target BG=${"%.1f".format(bgNow)} score=$evidenceScore → cap brainFactor ${"%.2f".format(brainFactor)}→1.02"
+                    )
+                    brainFactor = 1.02
+                }
+
                 // 🚀 EXPLOSIVE RISE BOOST: If delta is very high, force a slight aggressive factor
-                if (glucoseStatus.delta > 6.0 && brainFactor < 1.1) {
+                if (glucoseStatus.delta > 6.0 && brainFactor < 1.1 && (!isNearTargetBand || hasFormalMealEvidence)) {
                     aapsLogger.debug(LTag.APS, "🚀 Brain Boost: Forcing factor 1.1 due to explosive rise (delta=${glucoseStatus.delta})")
                     brainFactor = 1.1
+                }
+                if (glucoseStatus.delta > 6.0 && isNearTargetBand && !hasFormalMealEvidence) {
+                    aapsLogger.debug(LTag.APS, "🛡️ Evidence Gate: Explosive boost blocked near target (score=$evidenceScore, BG=${"%.1f".format(bgNow)})")
                 }
 
                 if (brainFactor != 1.0) {

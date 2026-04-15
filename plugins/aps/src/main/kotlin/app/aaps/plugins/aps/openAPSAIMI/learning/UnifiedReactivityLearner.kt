@@ -54,7 +54,10 @@ class UnifiedReactivityLearner @Inject constructor(
         val globalFactor: Double,
         val shortTermFactor: Double,
         val previousFactor: Double,
-        val adjustmentReason: String
+        val adjustmentReason: String,
+        val floorLocked: Boolean = false,
+        val floorLockReason: String = "",
+        val floorReleased: Boolean = false
     )
     
     var lastAnalysis: AnalysisSnapshot? = null
@@ -131,12 +134,10 @@ class UnifiedReactivityLearner @Inject constructor(
         val start = now - (24 * 60 * 60 * 1000L)
         
         try {
-            // Récupérer toutes les valeurs BG des 24 dernières heures
-            // getBgReadingsDataFromTime retourne Single<List<GV>>, donc on utilise blockingGet()
-            val bgReadingsList = runBlocking { persistenceLayer.getBgReadingsDataFromTime(start, false) }
-                
-            
-            // Extraire les valeurs et filtrer
+            val bgReadingsList = runBlocking {
+                persistenceLayer.getBgReadingsDataFromTime(start, ascending = false)
+            }
+
             val bgReadings = bgReadingsList
                 .mapNotNull { gv ->
                     // GV type a la propriété 'value' de type Double
@@ -291,6 +292,8 @@ class UnifiedReactivityLearner @Inject constructor(
         
         val previousFactor = globalFactor
         var targetFactor = globalFactor * adjustment
+        var floorReleased = false
+        var floorLockReason = ""
 
         if (isOptimal) {
             // EMA douce vers 1.0 (decay de 5% par analyse)
@@ -314,9 +317,36 @@ class UnifiedReactivityLearner @Inject constructor(
             // Apply EMA: New = (Target * alpha) + (Old * (1-alpha))
             globalFactor = (targetFactor * alpha + globalFactor * (1 - alpha)).coerceIn(0.5, 1.5)
         }
-        
+
+        // 🛡️ Floor release: avoid being indefinitely stuck at 0.50 when hyper is sustained and no recent hypos.
+        val canReleaseFloor = globalFactor <= 0.52 &&
+            perf.hypo_count == 0 &&
+            perf.cv_percent < 45 &&
+            (perf.tir_above_180 > 40 || (isConfirmedRise && perf.tir_above_180 > 30))
+        if (canReleaseFloor) {
+            val released = (globalFactor + 0.03).coerceAtMost(0.65)
+            if (released > globalFactor) {
+                floorReleased = true
+                globalFactor = released
+                reasons.add("Floor release +0.03 (sustained hyper, no recent hypo)")
+            }
+        }
+        if (globalFactor <= 0.5001) {
+            floorLockReason = when {
+                perf.hypo_count > 0 -> "Recent hypo burden"
+                perf.cv_percent > 40 -> "High variability (CV)"
+                perf.tir_above_180 < 25 -> "No sustained hyper pressure"
+                else -> "Awaiting stronger rise confirmation"
+            }
+        }
+
         val reasonsStr = reasons.joinToString(", ")
-        log.info(LTag.APS, "UnifiedReactivityLearner: New globalFactor = ${"%.3f".format(globalFactor)} | $reasonsStr")
+        log.info(LTag.APS, "UnifiedReactivityLearner: Nouveau globalFactor = ${"%.3f".format(globalFactor)} | $reasonsStr")
+        if (globalFactor <= 0.5001) {
+            log.info(LTag.APS, "UnifiedReactivityLearner: Floor lock active at 0.50 | reason=$floorLockReason")
+        } else if (floorReleased) {
+            log.info(LTag.APS, "UnifiedReactivityLearner: Floor released progressively to ${"%.3f".format(globalFactor)}")
+        }
         
         // 📊 Capture snapshot for rT display
         val now = dateUtil.now()
@@ -328,7 +358,10 @@ class UnifiedReactivityLearner @Inject constructor(
             globalFactor = globalFactor,
             shortTermFactor = shortTermFactor,
             previousFactor = previousFactor,
-            adjustmentReason = reasonsStr
+            adjustmentReason = reasonsStr,
+            floorLocked = globalFactor <= 0.5001,
+            floorLockReason = floorLockReason,
+            floorReleased = floorReleased
         )
         
         save()
@@ -372,8 +405,8 @@ class UnifiedReactivityLearner @Inject constructor(
         
         try {
             val bgReadingsList = runBlocking { persistenceLayer.getBgReadingsDataFromTime(start, false) }
-                
-            
+
+
             val bgReadings = bgReadingsList
                 .mapNotNull { gv -> if (gv.value > 39.0) gv.value else null }
             

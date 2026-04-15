@@ -7898,6 +7898,11 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                 consoleLog.add("  │ TIR 70-180: ${analysis.tir70_180.toInt()}%")
                 consoleLog.add("  │ CV%: ${analysis.cv_percent.toInt()}%")
                 consoleLog.add("  │ Hypo count (24h): ${analysis.hypo_count}")
+                if (analysis.floorLocked) {
+                    consoleLog.add("  │ floorLock: ACTIVE @0.50 (${analysis.floorLockReason})")
+                } else if (analysis.floorReleased) {
+                    consoleLog.add("  │ floorLock: RELEASED progressively")
+                }
                 consoleLog.add("  │ Reason: ${analysis.adjustmentReason}")
                 consoleLog.add("  └ Analyzed at: ${sdf.format(Date(analysis.timestamp))}")
             }

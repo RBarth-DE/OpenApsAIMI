@@ -28,9 +28,22 @@ class LastBgDataImpl @Inject constructor(
     private val iobCobCalculator: IobCobCalculator
 ) : LastBgData {
 
-    override fun lastBg(): InMemoryGlucoseValue? =
-        iobCobCalculator.ads.bucketedData?.firstOrNull()
-            ?: runBlocking { persistenceLayer.getLastGlucoseValue() }?.let { InMemoryGlucoseValue.fromGv(it) }
+    /**
+     * Prefer in-memory bucketed (smoothed) data, but if the DB has a **newer** reading — common after the app
+     * was backgrounded while bucketed data was not rebuilt yet — use DB so overview / hybrid dashboard match
+     * treatments and loop output without requiring a manual loop run.
+     */
+    override fun lastBg(): InMemoryGlucoseValue? {
+        val fromBucket = iobCobCalculator.ads.lastBg()
+        val fromGv = runBlocking { persistenceLayer.getLastGlucoseValue() }
+        val fromDb = fromGv?.let { InMemoryGlucoseValue.fromGv(it) }
+        return when {
+            fromBucket == null -> fromDb
+            fromDb == null -> fromBucket
+            fromDb.timestamp > fromBucket.timestamp -> fromDb
+            else -> fromBucket
+        }
+    }
 
     override fun isLow(): Boolean =
         lastBg()?.let { lastBg ->
