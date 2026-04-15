@@ -713,11 +713,15 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
             
             aapsLogger.debug(LTag.APS, "Final adaptive ISF after clamping: $variableSensitivity")
 
-// 🔹 Création du résultat final (Convention: Ratio < 1 = Résistant)
+            val autosensMax = preferences.get(DoubleKey.AutosensMax)
+            val autosensMin = preferences.get(DoubleKey.AutosensMin)
+
+            val rawRatio = (tdd2Days / tdd24Hrs).coerceIn(autosensMin, autosensMax)
+
             autosensResult = AutosensResult(
-                ratio = tdd2Days / tdd24Hrs,
-                ratioFromTdd = tdd2Days / tdd24Hrs,
-                ratioFromCarbs = 1.0 
+                ratio = rawRatio,
+                ratioFromTdd = rawRatio,
+                ratioFromCarbs = 1.0
             )
 
             // 🧠 AIMI BRAIN INTEGRATION (UnifiedReactivityLearner)
@@ -757,7 +761,8 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
                     
                     // 1. Modulate Autosens Ratio (Basal/Targets/ISF)
                     // High Brain Factor (Aggressive) -> Ratio decreases (e.g. 0.8 / 1.5 = 0.53) -> More Resistant
-                    autosensResult.ratio = originalRatio / brainFactor
+                    //autosensResult.ratio = originalRatio / brainFactor
+                    autosensResult.ratio = (originalRatio / brainFactor).coerceIn(autosensMin, autosensMax)
                     
                     // 🚨 IMPORTANT: variableSensitivity (Dynamic ISF) is NO LONGER modulated here.
                     // It will be modulated by autosensResult.ratio in DetermineBasalAIMI2.kt 
