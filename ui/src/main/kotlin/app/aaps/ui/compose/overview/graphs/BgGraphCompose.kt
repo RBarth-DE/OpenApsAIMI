@@ -571,14 +571,15 @@ fun BgGraphCompose(
     // Initialzoom einmalig capturen (entspricht DEFAULT_GRAPH_ZOOM_MINUTES Viewport
     var initialZoom by remember { mutableFloatStateOf(-1f) }
 
-    // Synchron in der Composition — vor smbTapModifier
-    if (initialZoom <= 0f && zoomState.value > 0f) {
-        initialZoom = zoomState.value
+    // Capture the initial zoom value via LaunchedEffect — must NOT be done during composition
+    LaunchedEffect(zoomState.value) {
+        if (initialZoom <= 0f && zoomState.value > 0f) {
+            initialZoom = zoomState.value
+        }
     }
 
     val smbTapModifier = if (showBolus && visibleSmbs.isNotEmpty()) {
         Modifier
-            .onGloballyPositioned { chartWidthPx = it.size.width.toFloat() }
             .pointerInput(visibleSmbs, minTimestamp, maxX) {
                 awaitEachGesture {
                     val down = awaitFirstDown(pass = PointerEventPass.Initial)
@@ -649,6 +650,7 @@ fun BgGraphCompose(
         modifier = modifier
             .fillMaxWidth()
             .height(130.dp)
+            .onGloballyPositioned { chartWidthPx = it.size.width.toFloat() }
             .then(smbTapModifier)
     ) {
         CartesianChartHost(
