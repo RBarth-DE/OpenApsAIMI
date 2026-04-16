@@ -60,6 +60,7 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.Dispatchers
 import javax.inject.Inject
 import kotlin.math.abs
 
@@ -563,9 +564,11 @@ class MainViewModel @Inject constructor(
     fun executeConfirmableAction(action: ConfirmableAction) = viewModelScope.launch {
         actionConfirmation.update { null }
         when (action) {
-            is ConfirmableAction.ExecuteAutomation        -> {
+            is ConfirmableAction.ExecuteAutomation -> {
                 val event = automation.findEventById(action.automationId) ?: return@launch
-                viewModelScope.launch { automation.processEvent(event) }
+                viewModelScope.launch(Dispatchers.IO) {  // ← IO statt Main
+                    automation.processEvent(event)
+                }
             }
 
             is ConfirmableAction.ActivateTempTargetPreset -> {

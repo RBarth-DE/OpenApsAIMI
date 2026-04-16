@@ -390,14 +390,14 @@ class AutomationPlugin @Inject constructor(
                             rxBus.send(EventAutomationUpdateGui())
                         }
                     })
-                    SystemClock.sleep(3000)
+                    delay(3000)  // ← instead of SystemClock.sleep(3000)
                 } else {
                     executionLog.add("Invalid action: ${action.shortDescription()}")
                     aapsLogger.debug(LTag.AUTOMATION, "Invalid action: ${action.shortDescription()}")
                     rxBus.send(EventAutomationUpdateGui())
                 }
             }
-            SystemClock.sleep(1100)
+            delay(1100)  // ← instead of  SystemClock.sleep(1100)
             event.lastRun = dateUtil.now()
             if (event.autoRemove) remove(event)
         }
