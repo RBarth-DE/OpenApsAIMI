@@ -247,8 +247,13 @@ object LocalSentinel {
         
         val (recommendation, smbFactor, extraInterval, preferBasal) = when {
             mainReason == "STACKING_RISK" || mainReason == "SMB_CHAIN" -> {
-                // Stacking : réduire fortement + augmenter interval
-                Tuple4(Recommendation.HOLD_SOFT, 0.6, 6, false)
+                // PRE_ONSET + highIOB + chain = Insulin hat erst 2% gewirkt, der Abfall kommt noch
+                val aggressiveStack = pkpdStage == "PRE_ONSET" && highIOB && smbChain
+                if (aggressiveStack) {
+                    Tuple4(Recommendation.HOLD_SOFT, 0.30, 10, true)
+                } else {
+                    Tuple4(Recommendation.HOLD_SOFT, 0.6, 6, false)
+                }
             }
             mainReason == "PREDICTION_MISSING" -> {
                 // Degraded mode : cap modéré + interval

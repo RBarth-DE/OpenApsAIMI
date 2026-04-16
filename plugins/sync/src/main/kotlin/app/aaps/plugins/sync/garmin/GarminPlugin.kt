@@ -44,6 +44,7 @@ import javax.inject.Singleton
 import kotlin.concurrent.withLock
 import kotlin.math.roundToInt
 import app.aaps.core.interfaces.sharedPreferences.SP
+import kotlinx.coroutines.runBlocking
 
 /** Support communication with Garmin devices.
  *
@@ -587,6 +588,28 @@ class GarminPlugin @Inject constructor(
             if (totalSteps > 0 && delta == 0) {
                 sp.putInt(PREF_GARMIN_LAST_STEPS, totalSteps)
                 sp.putLong(PREF_GARMIN_LAST_TS, now)
+
+                // FIX: Wenn heute noch keine Records → totalSteps als Initialwert speichern
+                val midnight = java.time.LocalDate.now()
+                    .atStartOfDay(java.time.ZoneId.systemDefault())
+                    .toInstant()
+                    .toEpochMilli()
+                val todayCount = runBlocking {
+                    persistenceLayer.getStepsCountFromTimeToTime(midnight, now).count { it.device == device }
+                }
+                if (todayCount == 0) {
+                    aapsLogger.info(LTag.GARMIN, "[GarminHTTP] no records today, storing initial total=$totalSteps")
+                    loopHub.storeStepsCount(
+                        Instant.ofEpochSecond(samplingStart),
+                        Instant.ofEpochSecond(samplingEnd),
+                        totalSteps,
+                        none, none, none, none, none,
+                        device
+                    )
+                } else {
+                    aapsLogger.info(LTag.GARMIN, "[GarminHTTP] delta=0 but $todayCount records already today, skipping")
+                }
+                return
             }
             else
             {

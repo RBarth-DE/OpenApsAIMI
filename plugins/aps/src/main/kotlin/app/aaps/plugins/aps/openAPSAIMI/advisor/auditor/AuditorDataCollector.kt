@@ -436,9 +436,9 @@ class AuditorDataCollector @Inject constructor(
         }
         
         return Stats7d(
-            tir = tirStats?.let { it.let { if (it.count > 0) it.inRange * 100.0 / it.count else 0.0 } } ?: 0.0,
-            hypoPct = tirStats?.let { it.let { if (it.count > 0) it.below * 100.0 / it.count else 0.0 } } ?: 0.0,
-            hyperPct = tirStats?.let { it.let { if (it.count > 0) it.above * 100.0 / it.count else 0.0 } } ?: 0.0,
+            tir = tirStats?.let { it.inRangePct() } ?: 0.0,
+            hypoPct = tirStats?.let { it.belowPct() } ?: 0.0,
+            hyperPct = tirStats?.let { it.abovePct() } ?: 0.0,
             meanBG = 100.0,  // TODO: calculate from glucose values when implementing buildHistory()
             cv = 0.0,  // TODO: calculate CV from std dev when available
             tdd7dAvg = tdd7d,

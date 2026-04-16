@@ -63,7 +63,7 @@ class UnifiedActivityProviderMTR @Inject constructor(
     override fun getLatestSteps(windowMs: Long): StepsResult? {
         val mode = getMode()
         if (mode == MODE_DISABLED) return null
-        
+
         val now = System.currentTimeMillis()
         val start = now - windowMs
 
@@ -71,36 +71,37 @@ class UnifiedActivityProviderMTR @Inject constructor(
             val records = runBlocking { persistenceLayer.getStepsCountFromTimeToTime(start, now) }
                 .sortedByDescending { it.timestamp }
 
-            if (records.isEmpty()) return null
+            // DEBUG
+            aapsLogger.error(LTag.GARMIN, "getLatestSteps: windowMs=$windowMs found=${records.size} records")
+            records.forEach { r ->
+                aapsLogger.error(LTag.GARMIN, "  record: device=${r.device} steps5=${r.steps5min} steps15=${r.steps15min} ts=${r.timestamp}")
+            }
 
             val garminRecord = records.firstOrNull { it.device == SOURCE_GARMIN }
             val wearRecord   = records.firstOrNull { isWearDevice(it.device) }
             val hcRecord     = records.firstOrNull { it.device == SOURCE_HC }
             val phoneRecord  = records.firstOrNull { it.device == SOURCE_PHONE }
 
+            aapsLogger.error(LTag.GARMIN, "mode=$mode garmin=${garminRecord?.steps5min} wear=${wearRecord?.steps5min} hc=${hcRecord?.steps5min} phone=${phoneRecord?.steps5min}")
+
             when (mode) {
-                MODE_PREFER_WEAR         -> garminRecord?.let { toStepsResult(it) }
+                MODE_PREFER_WEAR   -> garminRecord?.let { toStepsResult(it) }
                     ?: wearRecord?.let { toStepsResult(it) }
                 MODE_HEALTH_CONNECT_ONLY -> hcRecord?.let { toStepsResult(it) }
-                MODE_AUTO_FALLBACK -> garminRecord?.let { toStepsResult(it) }
-                    ?: wearRecord?.let { toStepsResult(it) }
-                    ?: hcRecord?.let { toStepsResult(it) }
-                    ?: if (garminRecord == null && wearRecord == null) {
-                        phoneRecord?.let { toStepsResult(it) }
-                    } else null
+                MODE_AUTO_FALLBACK -> {
+                    val result = garminRecord?.let { toStepsResult(it) }
+                        ?: wearRecord?.let { toStepsResult(it) }
+                        ?: hcRecord?.let { toStepsResult(it) }
+                        ?: if (garminRecord == null && wearRecord == null) {
+                            phoneRecord?.let { toStepsResult(it) }
+                        } else null
+                    aapsLogger.error(LTag.GARMIN, "AUTO_FALLBACK result: steps=${result?.steps} source=${result?.source}")
+                    result
+                }
                 else -> null
             }
-
-        } catch (e: RuntimeException) {
-            if (e.cause is InterruptedException) {
-                Thread.currentThread().interrupt()
-                aapsLogger.debug(LTag.APS, "[$TAG] getLatestSteps: skipped (thread interrupted)")
-            } else {
-                aapsLogger.error(LTag.APS, "[$TAG] Error fetching steps", e)
-            }
-            null
         } catch (e: Exception) {
-            aapsLogger.error(LTag.APS, "[$TAG] Error fetching steps", e)
+            aapsLogger.error(LTag.GARMIN, "getLatestSteps error", e)
             null
         }
     }
@@ -145,7 +146,7 @@ class UnifiedActivityProviderMTR @Inject constructor(
                 duration = now - startMs
             )
         } catch (e: Exception) {
-            aapsLogger.error(LTag.APS, "[$TAG] Error fetching total steps", e)
+            aapsLogger.error(LTag.GARMIN, "[$TAG] Error fetching total steps", e)
             null
         }
     }
@@ -178,7 +179,7 @@ class UnifiedActivityProviderMTR @Inject constructor(
             }
             
         } catch (e: Exception) {
-            aapsLogger.error(LTag.APS, "[$TAG] Error fetching HR", e)
+            aapsLogger.error(LTag.GARMIN, "[$TAG] Error fetching HR", e)
             return null
         }
     }

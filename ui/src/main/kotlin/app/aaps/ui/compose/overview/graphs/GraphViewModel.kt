@@ -55,7 +55,9 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import java.util.Locale
 import javax.inject.Inject
-
+import kotlinx.coroutines.runBlocking
+import java.time.LocalDate
+import java.time.ZoneId
 /**
  * ViewModel for Overview graphs (Compose/Vico version).
  *
@@ -486,14 +488,29 @@ class GraphViewModel @Inject constructor(
 
     private suspend fun buildStatusPanelUiState(): StatusPanelUiState {
         val now = System.currentTimeMillis()
-        val midnight = java.time.LocalDate.now()
-            .atStartOfDay(java.time.ZoneId.systemDefault())
-            .toInstant().toEpochMilli()
+        val midnight = LocalDate.now()
+            .atStartOfDay(ZoneId.systemDefault())
+            .toInstant()
+            .toEpochMilli()
 
-        // Steps — sum today's 5-min buckets; delta from last 15 min
-        val stepsAll = stepsGraphFlow.value.steps
-        val stepsToday = stepsAll.filter { it.timestamp >= midnight }.sumOf { it.value }.toInt()
-        val stepsDelta = stepsAll.filter { it.timestamp >= now - 15 * 60 * 1000L }.sumOf { it.value }.toInt()
+        // Tagesschritte direkt aus DB — gleicher Weg wie UnifiedActivityProvider
+        val todayRecords = persistenceLayer.getStepsCountFromTimeToTime(midnight, System.currentTimeMillis())
+
+        // Source-Priorität: Garmin > Wear > HC > Phone
+        val bestSource = todayRecords.map { it.device }.firstOrNull { it == "Garmin-Watchface" }
+            ?: todayRecords.map { it.device }.firstOrNull { it.startsWith("Wear") }
+            ?: todayRecords.map { it.device }.firstOrNull { it == "HealthConnect" }
+            ?: todayRecords.firstOrNull()?.device
+
+        val stepsToday = todayRecords
+            .filter { it.device == bestSource }
+            .sumOf { it.steps5min }
+
+        val recentRecords = todayRecords.filter { it.timestamp >= System.currentTimeMillis() - 15 * 60 * 1000L }
+        val stepsDelta = recentRecords
+            .filter { it.device == bestSource }
+            .sumOf { it.steps5min }
+
         val stepsText = if (stepsToday > 0) "$stepsToday / +$stepsDelta" else "--"
 
         // HR — latest non-zero BPM reading
