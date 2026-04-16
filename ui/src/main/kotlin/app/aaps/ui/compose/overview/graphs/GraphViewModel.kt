@@ -601,7 +601,7 @@ class GraphViewModel @Inject constructor(
             titleText = titleText,
             summaryText = summaryText,
             metaText = metaText,
-            hintText = rh.gs(R.string.pulse_panel_hint),
+            hintText = "", //rh.gs(R.string.pulse_panel_hint),  //remove for now. not usefully
             isHypoRisk = isHypoRisk
         )
     }

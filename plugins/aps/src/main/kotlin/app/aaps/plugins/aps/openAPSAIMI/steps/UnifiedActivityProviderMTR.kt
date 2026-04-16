@@ -72,17 +72,17 @@ class UnifiedActivityProviderMTR @Inject constructor(
                 .sortedByDescending { it.timestamp }
 
             // DEBUG
-            aapsLogger.error(LTag.GARMIN, "getLatestSteps: windowMs=$windowMs found=${records.size} records")
-            records.forEach { r ->
-                aapsLogger.error(LTag.GARMIN, "  record: device=${r.device} steps5=${r.steps5min} steps15=${r.steps15min} ts=${r.timestamp}")
-            }
+            //aapsLogger.error(LTag.GARMIN, "getLatestSteps: windowMs=$windowMs found=${records.size} records")
+            // records.forEach { r ->
+            //     aapsLogger.error(LTag.GARMIN, "  record: device=${r.device} steps5=${r.steps5min} steps15=${r.steps15min} ts=${r.timestamp}")
+            // }
 
             val garminRecord = records.firstOrNull { it.device == SOURCE_GARMIN }
             val wearRecord   = records.firstOrNull { isWearDevice(it.device) }
             val hcRecord     = records.firstOrNull { it.device == SOURCE_HC }
             val phoneRecord  = records.firstOrNull { it.device == SOURCE_PHONE }
 
-            aapsLogger.error(LTag.GARMIN, "mode=$mode garmin=${garminRecord?.steps5min} wear=${wearRecord?.steps5min} hc=${hcRecord?.steps5min} phone=${phoneRecord?.steps5min}")
+            //aapsLogger.error(LTag.GARMIN, "mode=$mode garmin=${garminRecord?.steps5min} wear=${wearRecord?.steps5min} hc=${hcRecord?.steps5min} phone=${phoneRecord?.steps5min}")
 
             when (mode) {
                 MODE_PREFER_WEAR   -> garminRecord?.let { toStepsResult(it) }
@@ -95,7 +95,7 @@ class UnifiedActivityProviderMTR @Inject constructor(
                         ?: if (garminRecord == null && wearRecord == null) {
                             phoneRecord?.let { toStepsResult(it) }
                         } else null
-                    aapsLogger.error(LTag.GARMIN, "AUTO_FALLBACK result: steps=${result?.steps} source=${result?.source}")
+                    aapsLogger.debug(LTag.GARMIN, "AUTO_FALLBACK result: steps=${result?.steps} source=${result?.source}")
                     result
                 }
                 else -> null
