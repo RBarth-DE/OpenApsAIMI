@@ -255,13 +255,6 @@ fun MainScreen(
                             )
                         }
 
-                        // Version overlay
-                        VersionOverlay(
-                            modifier = Modifier
-                                .align(Alignment.TopEnd)
-                                .padding(contentPadding)
-                        )
-
                         // Top bar overlay
                         AnimatedVisibility(
                             visible = showChrome,
