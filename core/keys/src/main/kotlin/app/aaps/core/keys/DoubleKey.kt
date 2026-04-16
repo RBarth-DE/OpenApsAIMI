@@ -358,6 +358,58 @@ enum class DoubleKey(
     AimiCosineGateMinSensitivity("aimi_cosine_gate_min_sens", 0.7, 0.5, 1.0),
     AimiCosineGateMaxSensitivity("aimi_cosine_gate_max_sens", 1.3, 1.0, 2.0),
 
+    // --- Straight-line tube advisor (MPC-lite on SMB + optional basal trim) ---
+    AimiTubeHypoFloorMgdl(
+        key = "key_aimi_tube_hypo_floor_mgdl",
+        defaultValue = 72.0,
+        min = 65.0,
+        max = 90.0,
+        titleResId = R.string.aimi_tube_hypo_floor_title,
+        summaryResId = R.string.aimi_tube_hypo_floor_summary,
+        dependency = BooleanKey.OApsAIMIStraightLineTubeAdvisorEnabled,
+        unitType = UnitType.MGDL,
+    ),
+    AimiTubeHyperBandMgdl(
+        key = "key_aimi_tube_hyper_band_mgdl",
+        defaultValue = 35.0,
+        min = 15.0,
+        max = 55.0,
+        titleResId = R.string.aimi_tube_hyper_band_title,
+        summaryResId = R.string.aimi_tube_hyper_band_summary,
+        dependency = BooleanKey.OApsAIMIStraightLineTubeAdvisorEnabled,
+        unitType = UnitType.MGDL,
+    ),
+    AimiTubeAggressiveness(
+        key = "key_aimi_tube_aggressiveness",
+        defaultValue = 1.0,
+        min = 0.5,
+        max = 2.0,
+        titleResId = R.string.aimi_tube_aggressiveness_title,
+        summaryResId = R.string.aimi_tube_aggressiveness_summary,
+        dependency = BooleanKey.OApsAIMIStraightLineTubeAdvisorEnabled,
+        unitType = UnitType.DOUBLE_2,
+    ),
+    AimiTubeBasalTrimMax(
+        key = "key_aimi_tube_basal_trim_max",
+        defaultValue = 0.12,
+        min = 0.0,
+        max = 0.25,
+        titleResId = R.string.aimi_tube_basal_trim_title,
+        summaryResId = R.string.aimi_tube_basal_trim_summary,
+        dependency = BooleanKey.OApsAIMIStraightLineTubeAdvisorEnabled,
+        unitType = UnitType.DOUBLE_2,
+    ),
+    AimiTubeKappaSafetyMargin(
+        key = "key_aimi_tube_kappa_margin",
+        defaultValue = 0.08,
+        min = 0.0,
+        max = 0.35,
+        titleResId = R.string.aimi_tube_kappa_margin_title,
+        summaryResId = R.string.aimi_tube_kappa_margin_summary,
+        dependency = BooleanKey.OApsAIMIStraightLineTubeAdvisorEnabled,
+        unitType = UnitType.DOUBLE_2,
+    ),
+
     // --- T3C Enhancements ---
     OApsAIMIT3cActivationThreshold("key_aimi_t3c_activation_threshold", 130.0, 100.0, 250.0),
     /** 0 = parabolic PI only (legacy). >0 blends eventual BG + prediction curve timing into T3C basal. */

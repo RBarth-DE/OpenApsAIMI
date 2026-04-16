@@ -63,6 +63,7 @@ import app.aaps.plugins.aps.openAPSAIMI.safety.signalEventualDrop
 import app.aaps.plugins.aps.openAPSAIMI.safety.signalMinPredDrop
 import app.aaps.plugins.aps.openAPSAIMI.safety.capSmbDose
 import app.aaps.plugins.aps.openAPSAIMI.safety.clampSmbToMaxSmbAndMaxIob
+import app.aaps.plugins.aps.openAPSAIMI.control.StraightLineTubeAdvisor
 import app.aaps.plugins.aps.openAPSAIMI.safety.signalTrajectoryStack
 import app.aaps.plugins.aps.openAPSAIMI.safety.HypoThresholdMath
 import app.aaps.plugins.aps.openAPSAIMI.safety.resolveSafetyStart
@@ -381,6 +382,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
     @Inject lateinit var contextManager: app.aaps.plugins.aps.openAPSAIMI.context.ContextManager  // 🎯 Context Module
     @Inject lateinit var contextInfluenceEngine: app.aaps.plugins.aps.openAPSAIMI.context.ContextInfluenceEngine  // 🎯 Context Influence
     @Inject lateinit var physioAdapter: app.aaps.plugins.aps.openAPSAIMI.physio.AIMIInsulinDecisionAdapterMTR  // 🏥 Physiological Modulation
+    @Inject lateinit var straightLineTubeAdvisor: StraightLineTubeAdvisor  // 📐 MPC-lite hypo tube + SMB-cap smoothing
     @Inject lateinit var continuousStateEstimator: app.aaps.plugins.aps.openAPSAIMI.autodrive.estimator.ContinuousStateEstimator  // 🌐 T9: G6 lead compensation universelle (V2+V3)
     
     // 🌸 Endometriosis Adjuster (Lazy init manually since not in graph yet or use manual passing)
@@ -5071,6 +5073,50 @@ class DetermineBasalaimiSMB2 @Inject constructor(
 
         val effectivePeakMin = pkpdRuntime?.params?.peakMin
             ?: profile.peakTime  // idem, legacy seulement en fallback
+
+        if (preferences.get(BooleanKey.OApsAIMIStraightLineTubeAdvisorEnabled)) {
+            try {
+                val minPredVal = minPredictedAcrossCurves(rT.predBGs)
+                val evVal = this.eventualBG ?: glucoseStatus.glucose
+                val tubeOut = straightLineTubeAdvisor.advise(
+                    StraightLineTubeAdvisor.Input(
+                        bgMgdl = glucoseStatus.glucose,
+                        deltaMgdlPer5m = glucoseStatus.delta,
+                        iobU = iobTotal,
+                        cobG = mealData.mealCOB.toDouble(),
+                        isfMgdlPerU = earlySens,
+                        diaHours = effectiveDiaH,
+                        targetMgdl = profile.target_bg,
+                        maxSmbU = this.maxSMB,
+                        minPredictedBg = minPredVal,
+                        eventualBgMgdl = evVal,
+                    )
+                )
+                if (!tubeOut.feasible) {
+                    this.maxSMB = 0.05
+                    this.maxSMBHB = 0.05
+                    consoleLog.add("📐 TUBE-LINE: ${tubeOut.reason}")
+                } else if (tubeOut.smbCapScale < 0.999) {
+                    val prevMs = this.maxSMB
+                    val prevHb = this.maxSMBHB
+                    this.maxSMB = (this.maxSMB * tubeOut.smbCapScale).coerceAtLeast(0.05)
+                    this.maxSMBHB = (this.maxSMBHB * tubeOut.smbCapScale).coerceAtLeast(0.05)
+                    consoleLog.add(
+                        "📐 TUBE-LINE: maxSMB ${"%.2f".format(prevMs)}→${"%.2f".format(this.maxSMB)} " +
+                            "maxSMBHB ${"%.2f".format(prevHb)}→${"%.2f".format(this.maxSMBHB)} | ${tubeOut.reason}"
+                    )
+                }
+                if (tubeOut.basalCapScale < 0.999) {
+                    val b = tubeOut.basalCapScale
+                    profile.current_basal = profile.current_basal * b
+                    profile.max_daily_basal = profile.max_daily_basal * b
+                    consoleLog.add("📐 TUBE-LINE: basal ×${"%.3f".format(b)} (current & max_daily)")
+                }
+            } catch (e: Exception) {
+                consoleError.add("📐 TUBE-LINE: ${e.message}")
+            }
+        }
+
         val recentDeltas = getRecentDeltas()
         val predicted = predictedDelta(recentDeltas)
         val useLegacyDynamics = (pkpdRuntime == null)

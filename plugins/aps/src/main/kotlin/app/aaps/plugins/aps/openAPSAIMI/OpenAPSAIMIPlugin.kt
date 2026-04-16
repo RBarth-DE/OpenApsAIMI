@@ -1401,7 +1401,23 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
         PreferenceSubScreenDef(
             key = "aimi_compose_trajectory",
             titleResId = R.string.aimi_trajectory_section_title,
-            items = listOf(BooleanKey.OApsAIMITrajectoryGuardEnabled),
+            items = buildList {
+                add(BooleanKey.OApsAIMITrajectoryGuardEnabled)
+                add(BooleanKey.OApsAIMIStraightLineTubeAdvisorEnabled)
+                add(
+                    PreferenceSubScreenDef(
+                        key = "aimi_compose_tube_mpc",
+                        titleResId = CoreKeysR.string.aimi_tube_advanced_title,
+                        items = listOf(
+                            DoubleKey.AimiTubeHypoFloorMgdl,
+                            DoubleKey.AimiTubeHyperBandMgdl,
+                            DoubleKey.AimiTubeAggressiveness,
+                            DoubleKey.AimiTubeBasalTrimMax,
+                            DoubleKey.AimiTubeKappaSafetyMargin,
+                        ),
+                    )
+                )
+            },
         )
 
     private fun aimiComposeWomenCycleSubScreen(): PreferenceSubScreenDef =

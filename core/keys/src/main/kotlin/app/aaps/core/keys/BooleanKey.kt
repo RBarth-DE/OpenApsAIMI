@@ -177,6 +177,13 @@ enum class BooleanKey(
     OApsAIMIUnifiedReactivityEnabled("key_use_unified_reactivity", true),  // 🎯 NEW: Enable UnifiedReactivityLearner
     AimiAuditorEnabled("aimi_auditor_enabled", false),  // 🧠 AI Decision Auditor
     OApsAIMITrajectoryGuardEnabled("key_aimi_trajectory_guard_enabled", false),  // 🌀 Phase-Space Trajectory Control
+    /** Discrete tube + straight-command regularizer on max SMB (uses PKPD min-pred curve). Off by default. */
+    OApsAIMIStraightLineTubeAdvisorEnabled(
+        key = "key_aimi_straight_line_tube_enabled",
+        defaultValue = false,
+        titleResId = R.string.pref_title_aimi_straight_line_tube,
+        summaryResId = R.string.pref_summary_aimi_straight_line_tube,
+    ),
     OApsAIMIContextEnabled("key_aimi_context_enabled", false),  // 🎯 Context Module
     OApsAIMIContextLLMEnabled("key_aimi_context_llm_enabled", false),  // 🤖 LLM-powered context parsing
     OApsAIMIT3cBrittleMode("key_aimi_t3c_brittle_mode", false),
