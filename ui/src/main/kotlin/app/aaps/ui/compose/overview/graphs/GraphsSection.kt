@@ -1,5 +1,10 @@
 package app.aaps.ui.compose.overview.graphs
 
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.waitForUpOrCancellation
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -19,7 +24,6 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -28,8 +32,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
@@ -50,7 +52,11 @@ import android.content.Intent
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.input.pointer.PointerEventTimeoutCancellationException
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalViewConfiguration
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -92,8 +98,13 @@ import kotlin.math.abs
  * Secondary graphs are config-driven via [GraphConfig.secondaryGraphs].
  * Scroll/Zoom states are pre-allocated (up to [GraphConfig.MAX_SECONDARY_GRAPHS])
  * to avoid dynamic composable state issues with Vico's remember-based states.
+ *
+ * Long-press any graph to edit its series/height (hidden in simple mode).
+ *
+ * MODES uses [PointerEventPass.Initial] to intercept long press before
+ * OutlinedButtons consume the gesture.
+ * PULSE uses [combinedClickable] replacing Card's onClick.
  */
-/** Fixed graph layout used in simple mode: BG (no overlays), IOB+BAS (no overlays), COB */
 private val SIMPLE_MODE_CONFIG = GraphConfig(
     bgOverlays = emptyList(),
     iobOverlays = emptyList(),
@@ -111,7 +122,49 @@ private val CONFIGURABLE_SERIES = SeriesType.entries.filter {
 /** Custom-view types occupy the entire slot; they are mutually exclusive with chart types */
 private fun SeriesType.isCustomView() = this == SeriesType.MODES || this == SeriesType.PULSE || this == SeriesType.TIR
 
-@OptIn(FlowPreview::class)
+// =========================================================================
+// Long press interceptor using PointerEventPass.Initial
+//
+// detectTapGestures / combinedClickable use Main pass — child composables
+// (OutlinedButton) consume events first and the parent never sees long press.
+//
+// Initial pass fires BEFORE children. We eavesdrop:
+//   finger down + timeout → long press → invoke callback
+//   finger up before timeout → normal tap → do nothing, children handle it
+// =========================================================================
+@Composable
+private fun Modifier.interceptLongPress(
+    enabled: Boolean,
+    onLongPress: () -> Unit
+): Modifier {
+    if (!enabled) return this
+    val longPressTimeout = LocalViewConfiguration.current.longPressTimeoutMillis
+    return this.pointerInput(onLongPress, longPressTimeout) {
+        awaitEachGesture {
+            awaitFirstDown(pass = PointerEventPass.Initial)
+            val isLongPress = try {
+                withTimeout(longPressTimeout) {
+                    waitForUpOrCancellation(pass = PointerEventPass.Initial)
+                }
+                false
+            } catch (_: PointerEventTimeoutCancellationException) {
+                true
+            }
+            if (isLongPress) {
+                onLongPress()
+                // Consume finger-up so button onClick doesn't fire afterwards
+                var event = awaitPointerEvent(PointerEventPass.Main)
+                event.changes.forEach { it.consume() }
+                while (event.changes.any { it.pressed }) {
+                    event = awaitPointerEvent(PointerEventPass.Main)
+                    event.changes.forEach { it.consume() }
+                }
+            }
+        }
+    }
+}
+
+@OptIn(FlowPreview::class, ExperimentalFoundationApi::class)
 @Composable
 fun GraphsSection(
     graphViewModel: GraphViewModel,
@@ -269,9 +322,8 @@ fun GraphsSection(
                 .collect { states ->
                     val bgScroll = bgScrollState.value
                     val bgZoom = bgZoomState.value
-                    val threshold = 1f
                     val needsSync = states.any { (scroll, zoom) ->
-                        abs(scroll - bgScroll) > threshold || abs(zoom - bgZoom) > 0.001f
+                        abs(scroll - bgScroll) > 1f || abs(zoom - bgZoom) > 0.001f
                     }
                     if (needsSync) {
                         val count = activeCount
@@ -304,7 +356,16 @@ fun GraphsSection(
         )
         // BG Graph - primary interactive graph
         var editingBgOverlays by remember { mutableStateOf(false) }
-        Box(modifier = Modifier.offset(y = (-16).dp)) {
+        Box(
+            modifier = Modifier
+                .offset(y = (-16).dp)
+                .then(
+                    if (!isSimpleMode) Modifier.combinedClickable(
+                        onClick = {},
+                        onLongClick = { editingBgOverlays = true }
+                    ) else Modifier
+                )
+        ) {
             BgGraphCompose(
                 viewModel = graphViewModel,
                 bgOverlays = graphConfig.bgOverlays,
@@ -316,14 +377,6 @@ fun GraphsSection(
                     .fillMaxWidth()
                     .height(graphConfig.bgHeight.dp)
             )
-            if (!isSimpleMode) {
-                GraphEditButton(
-                    onClick = { editingBgOverlays = true },
-                    modifier = Modifier
-                        .align(Alignment.TopEnd)
-                        .padding(end = 4.dp, top = 2.dp)
-                )
-            }
         }
         if (editingBgOverlays) {
             GraphSeriesBottomSheet(
@@ -345,7 +398,16 @@ fun GraphsSection(
         // Fixed IOB graph (Graph 1) with optional Activity overlay
         var editingIobOverlays by remember { mutableStateOf(false) }
         if (graphConfig.showIobGraph) {
-            Box(modifier = Modifier.offset(y = (-8).dp)) {
+            Box(
+                modifier = Modifier
+                    .offset(y = (-8).dp)
+                    .then(
+                        if (!isSimpleMode) Modifier.combinedClickable(
+                            onClick = {},
+                            onLongClick = { editingIobOverlays = true }
+                        ) else Modifier
+                    )
+            ) {
                 SecondaryGraphCompose(
                     viewModel = graphViewModel,
                     seriesTypes = listOf(SeriesType.IOB),
@@ -366,14 +428,6 @@ fun GraphsSection(
                         .align(Alignment.TopStart)
                         .padding(start = 36.dp, top = 2.dp)
                 )
-                if (!isSimpleMode) {
-                    GraphEditButton(
-                        onClick = { editingIobOverlays = true },
-                        modifier = Modifier
-                            .align(Alignment.TopEnd)
-                            .padding(end = 4.dp, top = 2.dp)
-                    )
-                }
             }
             if (editingIobOverlays) {
                 GraphSeriesBottomSheet(
@@ -405,30 +459,37 @@ fun GraphsSection(
             Box(modifier = Modifier.offset(y = (-8).dp)) {
                 when (customType) {
                     SeriesType.MODES -> {
+                        // FIX: pass onLongPress → interceptLongPress uses Initial pass
+                        // so it fires BEFORE OutlinedButtons consume the gesture
                         ModesPanel(
                             events = modesState.events,
                             onRunEvent = { eventId -> graphViewModel.runAutomationEvent(eventId) },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(secondary.height.dp)
+                            onLongPress = if (!isSimpleMode) ({ editingGraphIndex = i }) else null,
+                            modifier = Modifier.fillMaxWidth().height(secondary.height.dp)
                         )
                     }
 
                     SeriesType.PULSE -> {
+                        // FIX: pass onLongPress → combinedClickable on Card handles both
                         PulsePanel(
                             state = pulseState,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(secondary.height.dp)
+                            onLongPress = if (!isSimpleMode) ({ editingGraphIndex = i }) else null,
+                            modifier = Modifier.fillMaxWidth().height(secondary.height.dp)
                         )
                     }
 
-                    SeriesType.TIR   -> {
+                    SeriesType.TIR -> {
                         TirPanel(
                             state = tirState,
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(secondary.height.dp)
+                                .then(
+                                    if (!isSimpleMode) Modifier.combinedClickable(
+                                        onClick = {},
+                                        onLongClick = { editingGraphIndex = i }
+                                    ) else Modifier
+                                )
                         )
                     }
 
@@ -443,6 +504,12 @@ fun GraphsSection(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(secondary.height.dp)
+                                .then(
+                                    if (!isSimpleMode) Modifier.combinedClickable(
+                                        onClick = {},
+                                        onLongClick = { editingGraphIndex = i }
+                                    ) else Modifier
+                                )
                         )
                         Text(
                             text = seriesListLabel(secondary.series),
@@ -453,14 +520,6 @@ fun GraphsSection(
                                 .padding(start = 36.dp, top = 2.dp)
                         )
                     }
-                }
-                if (!isSimpleMode) {
-                    GraphEditButton(
-                        onClick = { editingGraphIndex = i },
-                        modifier = Modifier
-                            .align(Alignment.TopEnd)
-                            .padding(end = 4.dp, top = 2.dp)
-                    )
                 }
             }
         }
@@ -557,10 +616,8 @@ fun GraphsSection(
 
 /** Generate a short label from the series types in a graph (e.g., "IOB", "COB", "BGI / DEV") */
 @Composable
-private fun seriesListLabel(seriesList: List<SeriesType>): String {
-    val names = seriesList.map { stringResource(seriesShortNameId(it)) }
-    return names.joinToString(" / ")
-}
+private fun seriesListLabel(seriesList: List<SeriesType>): String =
+    seriesList.map { stringResource(seriesShortNameId(it)) }.joinToString(" / ")
 
 /** String resource ID for the short name of a series type */
 private fun seriesShortNameId(type: SeriesType): Int = when (type) {
@@ -584,31 +641,6 @@ private fun seriesShortNameId(type: SeriesType): Int = when (type) {
 }
 
 // =========================================================================
-// Graph edit button + series picker bottom sheet
-// =========================================================================
-
-/** Small pencil icon button overlaid on a graph */
-@Composable
-private fun GraphEditButton(
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    IconButton(
-        onClick = onClick,
-        modifier = modifier.size(28.dp),
-        colors = IconButtonDefaults.iconButtonColors(
-            contentColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
-        )
-    ) {
-        Icon(
-            imageVector = Icons.Filled.Edit,
-            contentDescription = null,
-            modifier = Modifier.size(16.dp)
-        )
-    }
-}
-
-// =========================================================================
 // Custom panel composables (MODES, PULSE, TIR)
 // =========================================================================
 
@@ -617,13 +649,18 @@ private fun GraphEditButton(
 private fun ModesPanel(
     events: List<AutomationEventData>,
     onRunEvent: (String) -> Unit,
+    onLongPress: (() -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
+    // FIX: was missing — pendingEvent must be declared here
     var pendingEvent by remember { mutableStateOf<AutomationEventData?>(null) }
 
     Column(
         modifier = modifier
             .padding(horizontal = 8.dp, vertical = 4.dp)
+            // FIX: replaced detectTapGestures (Main pass, blocked by buttons)
+            // with interceptLongPress (Initial pass, fires before buttons consume)
+            .interceptLongPress(enabled = onLongPress != null, onLongPress = onLongPress ?: {})
     ) {
         if (events.isEmpty()) {
             Text(
@@ -683,19 +720,31 @@ private fun ModesPanel(
 @Composable
 private fun PulsePanel(
     state: PulseUiState,
+    onLongPress: (() -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
+    // FIX: was missing — hypoColor must be declared here
     val hypoColor = Color(0xFFD50000)
+
     Card(
-        onClick = {
-            try {
-                context.startActivity(
-                    Intent().setClassName(context, "app.aaps.plugins.aps.openAPSAIMI.advisor.pulse.AimiPulseDetailActivity")
-                )
-            } catch (_: Exception) {}
-        },
-        modifier = modifier.padding(bottom = 4.dp),
+        // FIX: Card has no onClick → combinedClickable on modifier handles both
+        // tap (navigate to detail) and long press (edit graph)
+        modifier = modifier
+            .padding(bottom = 4.dp)
+            .combinedClickable(
+                onClick = {
+                    try {
+                        context.startActivity(
+                            Intent().setClassName(
+                                context,
+                                "app.aaps.plugins.aps.openAPSAIMI.advisor.pulse.AimiPulseDetailActivity"
+                            )
+                        )
+                    } catch (_: Exception) {}
+                },
+                onLongClick = { onLongPress?.invoke() }
+            ),
         colors = CardDefaults.cardColors(containerColor = Color.Transparent),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
@@ -707,8 +756,7 @@ private fun PulsePanel(
                         fontSize = TextUnit(9f, TextUnitType.Sp)
                     ),
                     fontWeight = FontWeight.Bold,
-                    color = if (state.isHypoRisk) hypoColor
-                    else MaterialTheme.colorScheme.onSurface
+                    color = if (state.isHypoRisk) hypoColor else MaterialTheme.colorScheme.onSurface
                 )
             }
             if (state.summaryText.isNotEmpty()) {
@@ -835,7 +883,11 @@ private fun TirPanel(
         }
     }
 }
-/** Bottom sheet with toggleable FilterChips for series selection + optional remove button */
+
+// =========================================================================
+// Graph series bottom sheet
+// =========================================================================
+
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 private fun GraphSeriesBottomSheet(

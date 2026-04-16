@@ -3,25 +3,41 @@ package app.aaps.ui.compose.overview.graphs
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.platform.LocalViewConfiguration
+import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.waitForUpOrCancellation
+import androidx.compose.foundation.layout.Box
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.aaps.core.graph.vico.Square
 import app.aaps.core.interfaces.overview.graph.ActivityGraphData
 import app.aaps.core.interfaces.overview.graph.BasalGraphData
 import app.aaps.core.interfaces.overview.graph.BgDataPoint
 import app.aaps.core.interfaces.overview.graph.BgType
+import app.aaps.core.interfaces.overview.graph.BolusGraphPoint
 import app.aaps.core.interfaces.overview.graph.BolusType
 import app.aaps.core.interfaces.overview.graph.EpsGraphPoint
 import app.aaps.core.interfaces.overview.graph.SeriesType
@@ -47,6 +63,9 @@ import com.patrykandpatrick.vico.compose.common.component.LineComponent
 import com.patrykandpatrick.vico.compose.common.component.ShapeComponent
 import com.patrykandpatrick.vico.compose.common.component.TextComponent
 import com.patrykandpatrick.vico.compose.common.component.rememberTextComponent
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 /** Series identifiers */
 private const val SERIES_REGULAR = "regular"
@@ -71,6 +90,8 @@ private val PREDICTION_SERIES = listOf(SERIES_PRED_IOB, SERIES_PRED_COB, SERIES_
  * Scroll/Zoom:
  * - Accepts external scroll/zoom states for synchronization with secondary graphs
  * - This is the primary interactive graph - user controls scroll/zoom here
+ *
+ * Tap on SMB triangle to show bolus details dialog.
  */
 @Composable
 fun BgGraphCompose(
@@ -129,6 +150,8 @@ fun BgGraphCompose(
     val uamPredColor = AapsTheme.generalColors.uamPrediction
     val ztPredColor = AapsTheme.generalColors.ztPrediction
 
+    val viewConfiguration = LocalViewConfiguration.current
+
     // Calculate x-axis range (must match COB graph for alignment)
     val maxX = remember(minTimestamp, maxTimestamp) {
         timestampToX(maxTimestamp, minTimestamp)
@@ -142,7 +165,19 @@ fun BgGraphCompose(
         minTimestamp to maxTimestamp
     }
 
-    // Function to rebuild chart from registry
+    // =========================================================================
+    // SMB tap detection state
+    // =========================================================================
+    var selectedSmb by remember { mutableStateOf<BolusGraphPoint?>(null) }
+    var chartWidthPx by remember { mutableFloatStateOf(0f) }
+    val density = LocalDensity.current
+
+    // Precompute visible SMB list for hit testing (same filter as rebuildChart)
+    val visibleSmbs = remember(treatmentData, showBolus, minTimestamp) {
+        if (!showBolus) emptyList()
+        else treatmentData.boluses.filter { it.bolusType == BolusType.SMB && it.isValid }
+    }
+
     suspend fun rebuildChart(
         currentBasalData: BasalGraphData,
         currentTargetData: TargetLineData,
@@ -522,72 +557,164 @@ fun BgGraphCompose(
     }
 
     // =========================================================================
-    // Chart — multi layer
+    // SMB tap hit-test modifier
+    // Left axis occupies ~36dp; remaining width is chart content.
+    // chartX = (tapX - leftAxisPx + scrollPx) / (contentPx * zoom / maxX)
+    // Tolerance: ±15dp in screen space → converted to chart units.
     // =========================================================================
 
-    CartesianChartHost(
-        chart = rememberCartesianChart(
-            // Layer 0: BG (start axis, visible)
-            rememberLineCartesianLayer(
-                lineProvider = LineCartesianLayer.LineProvider.series(bgLines),
-                rangeProvider = startAxisRangeProvider,
-                verticalAxisPosition = Axis.Position.Vertical.Start
-            ),
-            // Layer 1: Basal (end axis, hidden — no endAxis parameter)
-            rememberLineCartesianLayer(
-                lineProvider = LineCartesianLayer.LineProvider.series(basalLines),
-                rangeProvider = endAxisRangeProvider,
-                verticalAxisPosition = Axis.Position.Vertical.End
-            ),
-            // Layer 2: Target line (start axis — shares BG Y-axis range)
-            rememberLineCartesianLayer(
-                lineProvider = LineCartesianLayer.LineProvider.series(targetLines),
-                rangeProvider = startAxisRangeProvider,
-                verticalAxisPosition = Axis.Position.Vertical.Start
-            ),
-            // Layer 3: EPS (end axis — shares basalMaxY range, EPS Y-values normalized in rebuildChart)
-            rememberLineCartesianLayer(
-                lineProvider = LineCartesianLayer.LineProvider.series(epsLines),
-                rangeProvider = endAxisRangeProvider,
-                verticalAxisPosition = Axis.Position.Vertical.End
-            ),
-            // Layer 4: Activity (start axis — shares BG Y-axis range, values normalized in rebuildChart)
-            rememberLineCartesianLayer(
-                lineProvider = LineCartesianLayer.LineProvider.series(activityLines),
-                rangeProvider = startAxisRangeProvider,
-                verticalAxisPosition = Axis.Position.Vertical.Start
-            ),
-            // Layer 5: SMB markers (start axis — triangle points fixed at lowMark, no line)
-            rememberLineCartesianLayer(
-                lineProvider = LineCartesianLayer.LineProvider.series(smbLines),
-                rangeProvider = startAxisRangeProvider,
-                verticalAxisPosition = Axis.Position.Vertical.Start
-            ),
-            startAxis = VerticalAxis.rememberStart(
-                itemPlacer = VerticalAxis.ItemPlacer.count(),
-                valueFormatter = remember { CartesianValueFormatter.decimal(0) },
-                label = rememberTextComponent(
-                    style = TextStyle(color = MaterialTheme.colorScheme.onSurface),
-                    minWidth = TextComponent.MinWidth.fixed(30.dp)
-                ),
-                guideline = LineComponent(fill = Fill(MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)))
-            ),
-            bottomAxis = HorizontalAxis.rememberBottom(
-                valueFormatter = timeFormatter,
-                itemPlacer = bottomAxisItemPlacer,
-                label = rememberTextComponent(
-                    style = TextStyle(color = MaterialTheme.colorScheme.onSurface)
-                ),
-                guideline = LineComponent(fill = Fill(MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)))
-            ),
-            decorations = decorations,
-            getXStep = { 1.0 }
-        ),
-        modelProducer = modelProducer,
+    // Diese States werden im Lambda immer aktuell gelesen
+    val latestZoom by rememberUpdatedState(zoomState.value)
+    val latestScroll by rememberUpdatedState(scrollState.value)
+    val latestChartWidth by rememberUpdatedState(chartWidthPx)
+
+    // Initialzoom einmalig capturen (entspricht DEFAULT_GRAPH_ZOOM_MINUTES Viewport
+    var initialZoom by remember { mutableFloatStateOf(-1f) }
+
+    // Synchron in der Composition — vor smbTapModifier
+    if (initialZoom <= 0f && zoomState.value > 0f) {
+        initialZoom = zoomState.value
+    }
+
+    val smbTapModifier = if (showBolus && visibleSmbs.isNotEmpty()) {
+        Modifier
+            .onGloballyPositioned { chartWidthPx = it.size.width.toFloat() }
+            .pointerInput(visibleSmbs, minTimestamp, maxX) {
+                awaitEachGesture {
+                    val down = awaitFirstDown(pass = PointerEventPass.Initial)
+                    val up = withTimeoutOrNull(viewConfiguration.longPressTimeoutMillis) {
+                        waitForUpOrCancellation(pass = PointerEventPass.Initial)
+                    }
+                    if (up != null) {
+                        val leftAxisPx = with(density) { 36.dp.toPx() }
+                        val contentPx = latestChartWidth - leftAxisPx  // ← latest
+                        // Absicherung im pointerInput:
+                        if (contentPx <= 0f) return@awaitEachGesture
+                        if (initialZoom <= 0f) return@awaitEachGesture  // ← neu: warten bis initialisiert
+
+                        val zoomFactor = latestZoom / initialZoom
+                        // Sanity check — verhindert Division by zero oder extreme Werte
+                        if (zoomFactor <= 0f || zoomFactor > 100f) return@awaitEachGesture
+
+                        val pixelsPerUnit = (contentPx / DEFAULT_GRAPH_ZOOM_MINUTES) * zoomFactor
+                        val tappedChartX = (down.position.x - leftAxisPx + latestScroll) / pixelsPerUnit
+                        val toleranceUnits = with(density) { 30.dp.toPx() } / pixelsPerUnit
+
+                        val hit = visibleSmbs.minByOrNull { smb ->
+                            kotlin.math.abs(timestampToX(smb.timestamp, minTimestamp) - tappedChartX)
+                        }?.takeIf { smb ->
+                            kotlin.math.abs(timestampToX(smb.timestamp, minTimestamp) - tappedChartX) <= toleranceUnits
+                        }
+
+                        if (hit != null) {
+                            //haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                            selectedSmb = hit
+                        }
+                    }
+                }
+            }
+    } else Modifier
+
+    // =========================================================================
+    // SMB detail dialog
+    // =========================================================================
+
+    selectedSmb?.let { smb ->
+        val timeStr = remember(smb.timestamp) {
+            SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(Date(smb.timestamp))
+        }
+        AlertDialog(
+            onDismissRequest = { selectedSmb = null },
+            title = { Text("SMB") },
+            text = {
+                Text(
+                    // Adjust field name if TreatmentPoint uses a different property (e.g. units, value)
+                    "Zeit: $timeStr\nMenge: ${"%.2f".format(smb.amount)} U"
+                )
+            },
+            confirmButton = {
+                Button(onClick = { selectedSmb = null }) {
+                    Text("OK")
+                }
+            }
+        )
+    }
+
+    // =========================================================================
+    // Chart
+    // =========================================================================
+
+    // Box-Wrapper statt direkt auf CartesianChartHost
+    Box(
         modifier = modifier
             .fillMaxWidth()
-            .height(130.dp),
-        scrollState = scrollState,
-        zoomState = zoomState
-    )
+            .height(130.dp)
+            .then(smbTapModifier)
+    ) {
+        CartesianChartHost(
+            chart = rememberCartesianChart(
+                // Layer 0: BG (start axis, visible)
+                rememberLineCartesianLayer(
+                    lineProvider = LineCartesianLayer.LineProvider.series(bgLines),
+                    rangeProvider = startAxisRangeProvider,
+                    verticalAxisPosition = Axis.Position.Vertical.Start
+                ),
+                // Layer 1: Basal (end axis, hidden — no endAxis parameter)
+                rememberLineCartesianLayer(
+                    lineProvider = LineCartesianLayer.LineProvider.series(basalLines),
+                    rangeProvider = endAxisRangeProvider,
+                    verticalAxisPosition = Axis.Position.Vertical.End
+                ),
+                // Layer 2: Target line (start axis — shares BG Y-axis range)
+                rememberLineCartesianLayer(
+                    lineProvider = LineCartesianLayer.LineProvider.series(targetLines),
+                    rangeProvider = startAxisRangeProvider,
+                    verticalAxisPosition = Axis.Position.Vertical.Start
+                ),
+                // Layer 3: EPS (end axis — shares basalMaxY range, EPS Y-values normalized in rebuildChart)
+                rememberLineCartesianLayer(
+                    lineProvider = LineCartesianLayer.LineProvider.series(epsLines),
+                    rangeProvider = endAxisRangeProvider,
+                    verticalAxisPosition = Axis.Position.Vertical.End
+                ),
+                // Layer 4: Activity (start axis — shares BG Y-axis range, values normalized in rebuildChart)
+                rememberLineCartesianLayer(
+                    lineProvider = LineCartesianLayer.LineProvider.series(activityLines),
+                    rangeProvider = startAxisRangeProvider,
+                    verticalAxisPosition = Axis.Position.Vertical.Start
+                ),
+                // Layer 5: SMB markers (start axis — triangle points fixed at lowMark, no line)
+                rememberLineCartesianLayer(
+                    lineProvider = LineCartesianLayer.LineProvider.series(smbLines),
+                    rangeProvider = startAxisRangeProvider,
+                    verticalAxisPosition = Axis.Position.Vertical.Start
+                ),
+                startAxis = VerticalAxis.rememberStart(
+                    itemPlacer = VerticalAxis.ItemPlacer.count(),
+                    valueFormatter = remember { CartesianValueFormatter.decimal(0) },
+                    label = rememberTextComponent(
+                        style = TextStyle(color = MaterialTheme.colorScheme.onSurface),
+                        minWidth = TextComponent.MinWidth.fixed(30.dp)
+                    ),
+                    guideline = LineComponent(fill = Fill(MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)))
+                ),
+                bottomAxis = HorizontalAxis.rememberBottom(
+                    valueFormatter = timeFormatter,
+                    itemPlacer = bottomAxisItemPlacer,
+                    label = rememberTextComponent(
+                        style = TextStyle(color = MaterialTheme.colorScheme.onSurface)
+                    ),
+                    guideline = LineComponent(fill = Fill(MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)))
+                ),
+                decorations = decorations,
+                getXStep = { 1.0 }
+            ),
+            modelProducer = modelProducer,
+            modifier = modifier
+                .fillMaxWidth()
+                .height(130.dp),
+            scrollState = scrollState,
+            zoomState = zoomState
+        )
+    }
 }
