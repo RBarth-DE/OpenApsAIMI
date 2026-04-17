@@ -111,6 +111,7 @@ class BasalNeuralLearner @Inject constructor(
     
     init {
         loadModels()
+        loadGovernanceWindow()
     }
 
     private fun loadModels() {
@@ -271,6 +272,7 @@ class BasalNeuralLearner @Inject constructor(
             )
         )
         while (governanceWindow.size > GOVERNANCE_WINDOW_MAX) governanceWindow.removeLast()
+        saveGovernanceWindow()
     }
 
     /**
@@ -646,6 +648,63 @@ class BasalNeuralLearner @Inject constructor(
         internalAggressivenessFactor = 1.0
         lastLoggedAction = GovernanceAction.WARMUP
         lastGovernanceLogAt = 0L
+    }
+
+    private fun saveGovernanceWindow() {
+        val file = storageHelper.getAimiFile("basal_neural_governance.json")
+        try {
+            val arr = org.json.JSONArray()
+            governanceWindow.forEach { s ->
+                val o = org.json.JSONObject()
+                o.put("ts", s.timestamp)
+                o.put("bgB", s.bgBefore)
+                o.put("bgA", s.bgAfter)
+                o.put("tgt", s.targetBg)
+                o.put("d", s.deltaMgDl)
+                o.put("iob", s.iobUnits)
+                o.put("noise", s.sensorNoise)
+                s.shortMinPredBg?.let { o.put("pred", it) }
+                arr.put(o)
+            }
+            storageHelper.saveFileSafe(file, arr.toString())
+        } catch (e: Exception) {
+            log.warn(LTag.APS, "BasalNeuralLearner: saveGovernanceWindow failed: ${e.message}")
+        }
+    }
+
+    private fun loadGovernanceWindow() {
+        val file = storageHelper.getAimiFile("basal_neural_governance.json")
+        storageHelper.loadFileSafe(file,
+           onSuccess = { content ->
+               try {
+                   val arr = org.json.JSONArray(content)
+                   governanceWindow.clear()
+                   // Array ist newest-first gespeichert → addLast um Reihenfolge zu erhalten
+                   for (i in 0 until arr.length()) {
+                       val o = arr.getJSONObject(i)
+                       governanceWindow.addLast(LearningSample(
+                           timestamp    = o.getLong("ts"),
+                           bgBefore     = o.getDouble("bgB"),
+                           bgAfter      = o.getDouble("bgA"),
+                           targetBg     = o.getDouble("tgt"),
+                           deltaMgDl    = o.getDouble("d"),
+                           iobUnits     = o.getDouble("iob"),
+                           sensorNoise  = o.getDouble("noise"),
+                           shortMinPredBg = if (o.has("pred")) o.getDouble("pred") else null,
+                       ))
+                   }
+                   // Zu alte Samples entfernen (> 24h)
+                   val cutoff = System.currentTimeMillis() - 24 * 60 * 60 * 1000L
+                   governanceWindow.removeAll { it.timestamp < cutoff }
+                   log.info(LTag.APS, "BasalNeuralLearner: ✅ Loaded ${governanceWindow.size} governance samples")
+               } catch (e: Exception) {
+                   log.warn(LTag.APS, "BasalNeuralLearner: loadGovernanceWindow parse failed: ${e.message}")
+               }
+           },
+           onError = {
+               log.info(LTag.APS, "BasalNeuralLearner: No governance window file, starting fresh")
+           }
+        )
     }
 
     private companion object {

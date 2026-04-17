@@ -7915,7 +7915,25 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             val currentHour = LocalTime.now().hour
             val anyMealActive = mealTime || bfastTime || lunchTime || dinnerTime || highCarbTime
             val isNight = currentHour >= 22 || currentHour <= 6
-            
+
+            val hypoGuardLocal = HypoThresholdMath.computeHypoThreshold(
+                minBg = profile.min_bg,
+                lgsThreshold = profile.lgsThreshold
+            )
+            val isHypoNow = HypoGuard.isBelowHypoThreshold(
+                bgNow = bg,
+                predicted = predictedBg.toDouble(),
+                eventual = eventualBG,
+                hypo = hypoGuardLocal,
+                delta = delta.toDouble()
+            )
+
+            aapsLogger.debug(LTag.APS, "BasalLearner: hypoCheck bg=$bg predicted=$predictedBg eventual=$eventualBG hypoGuard=${"%.1f".format(hypoGuardLocal)} delta=$delta isHypoNow=$isHypoNow")
+
+            if (isHypoNow) {
+                basalLearner.onHypoDetected()
+            }
+
             basalLearner.process(
                 currentBg = bg,
                 currentDelta = delta.toDouble(),
