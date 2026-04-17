@@ -6,8 +6,10 @@ import android.view.MenuItem
 import android.view.View
 import android.widget.LinearLayout
 import android.widget.TextView
-import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import app.aaps.core.keys.BooleanKey
+import app.aaps.core.keys.interfaces.Preferences
+import app.aaps.core.ui.activities.TranslatedDaggerAppCompatActivity
 import app.aaps.plugins.aps.openAPSAIMI.advisor.auditor.AuditorStatusTracker
 import app.aaps.plugins.aps.openAPSAIMI.advisor.auditor.AuditorVerdictCache
 import app.aaps.plugins.aps.openAPSAIMI.model.VerdictType
@@ -15,6 +17,7 @@ import app.aaps.plugins.aps.R
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import javax.inject.Inject
 
 /**
  * AuditorVerdictActivity
@@ -27,7 +30,9 @@ import java.util.Locale
  * - DashboardFragment auditor indicator click
  * - OverviewFragment auditor indicator click
  */
-class AuditorVerdictActivity : AppCompatActivity() {
+class AuditorVerdictActivity : TranslatedDaggerAppCompatActivity() {
+
+    @Inject lateinit var preferences: Preferences
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -45,13 +50,18 @@ class AuditorVerdictActivity : AppCompatActivity() {
     }
 
     private fun renderVerdict() {
+        if (!preferences.get(BooleanKey.AimiAuditorEnabled)) {
+            showEmpty("AI Auditor is disabled. Enable it in AIMI settings.")
+            return
+        }
+
         val cached = AuditorVerdictCache.get()
 
         if (cached == null) {
             val (status, _) = AuditorStatusTracker.getStatus()
             val message = when {
                 status == AuditorStatusTracker.Status.OFF ->
-                    "AI Auditor is disabled. Enable it in AIMI settings."
+                    "Auditor enabled — waiting for first cycle."
                 status.isOffline() -> when (status) {
                     AuditorStatusTracker.Status.OFFLINE_NO_APIKEY ->
                         "No API key configured.\nAdd your AI provider key in AIMI → Auditor settings."

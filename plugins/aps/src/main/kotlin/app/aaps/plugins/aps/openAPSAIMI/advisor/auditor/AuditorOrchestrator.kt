@@ -149,14 +149,15 @@ class AuditorOrchestrator @Inject constructor(
         // Check if auditor is enabled
         if (!isAuditorEnabled()) {
             aapsLogger.debug(LTag.APS, "AI Auditor: Disabled")
+            AuditorStatusTracker.updateStatus(AuditorStatusTracker.Status.OFF)
             stateManager.transitionTo(AuditorUIState.Idle, "Auditor preference disabled")
             callback?.invoke(null, createUnmodulatedDecision(smbProposed, tbrRate, tbrDuration, intervalMin, "Auditor disabled"))
             return
         }
-        
+
         // Start processing
         stateManager.transitionTo(AuditorUIState.Processing, "Audit tick started")
-        
+
         // Check if should trigger (intelligent gating)
         val shouldTrigger = DecisionModulator.shouldTriggerAudit(
             bg = bg,
@@ -169,9 +170,10 @@ class AuditorOrchestrator @Inject constructor(
             inMealMode = modeType != null,
             inPrebolusWindow = inPrebolusWindow
         )
-        
+
         if (!shouldTrigger) {
             aapsLogger.debug(LTag.APS, "AI Auditor: No trigger conditions met")
+            AuditorStatusTracker.updateStatus(AuditorStatusTracker.Status.SKIPPED_NO_TRIGGER)
             stateManager.transitionTo(AuditorUIState.Idle, "Conditions not met")
             callback?.invoke(null, createUnmodulatedDecision(smbProposed, tbrRate, tbrDuration, intervalMin, "No trigger"))
             return
@@ -181,6 +183,7 @@ class AuditorOrchestrator @Inject constructor(
         val dataAgeMs = now - (glucoseStatus?.date ?: 0L)
         if (dataAgeMs > 15 * 60 * 1000L) {
             aapsLogger.warn(LTag.APS, "AI Auditor: Data too stale (${dataAgeMs / 60000} min)")
+            AuditorStatusTracker.updateStatus(AuditorStatusTracker.Status.SKIPPED_NO_TRIGGER)
             stateManager.transitionTo(AuditorUIState.Error("Stale CGM Data"), "Security: Exceeded 15m threshold")
             callback?.invoke(null, createUnmodulatedDecision(smbProposed, tbrRate, tbrDuration, intervalMin, "Stale data"))
             return
