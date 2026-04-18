@@ -69,7 +69,7 @@ fun RunningModeChip(
                 )
                 Text(
                     text = text,
-                    style = MaterialTheme.typography.labelSmall,
+                    style = MaterialTheme.typography.labelLarge,
                     color = textColor,
                     modifier = Modifier.padding(start = AapsSpacing.small)
                 )

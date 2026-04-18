@@ -45,4 +45,6 @@ object AapsSpacing {
     val chipHeight = 20.dp
     val chipIconSize = 12.dp
     val chipProgressHeight = 3.dp
+
+    val auditorIconSize = 28.dp
 }

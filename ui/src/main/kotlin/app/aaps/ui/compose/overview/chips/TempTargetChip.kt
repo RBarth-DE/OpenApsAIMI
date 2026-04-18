@@ -65,7 +65,7 @@ fun TempTargetChip(
         Column {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                modifier = Modifier.padding(horizontal = AapsSpacing.small, vertical = 0.dp)
             ) {
                 Icon(
                     imageVector = reason.toIcon(),
@@ -75,7 +75,7 @@ fun TempTargetChip(
                 )
                 Text(
                     text = targetText,
-                    style = MaterialTheme.typography.labelSmall,
+                    style = MaterialTheme.typography.labelLarge,
                     color = textColor,
                     modifier = Modifier.padding(start = AapsSpacing.small)
                 )

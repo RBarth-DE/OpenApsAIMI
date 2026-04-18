@@ -281,17 +281,17 @@ private fun StatusChip(
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+            modifier = Modifier.padding(horizontal = AapsSpacing.small, vertical = 0.dp)
         ) {
             Icon(
                 painter = painterResource(iconRes),
                 contentDescription = null,
                 tint = chipColor,
-                modifier = Modifier.size(AapsSpacing.chipIconSize)
+                modifier = Modifier.size(AapsSpacing.large)
             )
             Text(
                 text = text,
-                style = MaterialTheme.typography.labelSmall,
+                style = MaterialTheme.typography.labelLarge,
                 color = chipColor.copy(alpha = 0.9f),
                 modifier = Modifier.padding(start = AapsSpacing.small)
             )
@@ -319,7 +319,7 @@ internal fun AuditorIconButton(
             painter = painterResource(app.aaps.core.ui.R.drawable.ic_audit_monitor),
             contentDescription = "Auditor",
             tint = tint,
-            modifier = Modifier.size(28.dp)
+            modifier = Modifier.size(AapsSpacing.auditorIconSize)
         )
     }
 }
@@ -328,14 +328,14 @@ internal fun AuditorIconButton(
 internal fun AimiActionButton(label: String, onClick: () -> Unit) {
     OutlinedButton(
         onClick = onClick,
-        contentPadding = PaddingValues(horizontal = 6.dp, vertical = 0.dp),
+        contentPadding = PaddingValues(horizontal = AapsSpacing.small, vertical = 0.dp),
         modifier = Modifier
             .height(26.dp)
             .widthIn(min = 56.dp)
     ) {
         Text(
             text = label,
-            style = MaterialTheme.typography.labelSmall
+            style = MaterialTheme.typography.labelMedium
         )
     }
 }
