@@ -22,6 +22,7 @@ import app.aaps.core.interfaces.logging.AAPSLogger
 import app.aaps.core.interfaces.logging.LTag
 
 import app.aaps.core.interfaces.plugin.PluginDescription
+import app.aaps.core.ui.compose.icons.IcPluginApexDetailed
 import app.aaps.core.interfaces.profile.Profile
 import app.aaps.core.interfaces.pump.DetailedBolusInfo
 import app.aaps.core.interfaces.pump.Pump
@@ -82,7 +83,7 @@ class ApexPumpPlugin @Inject constructor(
     PluginDescription()
         .mainType(PluginType.PUMP)
         .fragmentClass(ApexFragment::class.java.name)
-        .pluginIcon(R.drawable.ic_apex_detailed)
+        .icon(IcPluginApexDetailed)
         .pluginName(R.string.apex_plugin_name)
         .shortName(R.string.apex_plugin_shortname)
         .description(R.string.apex_plugin_description),

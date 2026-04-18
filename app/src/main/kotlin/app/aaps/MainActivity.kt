@@ -132,7 +132,6 @@ class MainActivity : DaggerAppCompatActivityWithResult() {
         val newScope = CoroutineScope(Dispatchers.Main + SupervisorJob())
         scope = newScope
         preferences.observe(BooleanKey.OverviewKeepScreenOn).drop(1).onEach { setWakeLock() }.launchIn(newScope)
-        preferences.observe(StringKey.GeneralSkin).drop(1).onEach { recreate() }.launchIn(newScope)
         disposable += rxBus
             .toObservable(EventAppInitialized::class.java)
             .observeOn(aapsSchedulers.main)
@@ -237,9 +236,7 @@ class MainActivity : DaggerAppCompatActivityWithResult() {
                 ) {
                     val menuItem = menu.add(p.name)
                     menuItem.isCheckable = true
-                    @Suppress("DEPRECATION")
-                    if (p.menuIcon != -1) menuItem.setIcon(p.menuIcon)
-                    else menuItem.setIcon(app.aaps.core.ui.R.drawable.ic_settings)
+                    menuItem.setIcon(app.aaps.core.ui.R.drawable.ic_settings)
                     menuItem.setOnMenuItemClickListener {
                         startActivity(
                             Intent(this, SingleFragmentActivity::class.java)

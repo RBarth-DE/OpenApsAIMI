@@ -104,7 +104,6 @@ import app.aaps.plugins.main.general.dashboard.viewmodel.OverviewViewModel
 import app.aaps.plugins.main.general.overview.graphData.GraphData
 import app.aaps.plugins.main.general.overview.ui.StatusLightHandler
 import app.aaps.plugins.main.general.overview.views.OverviewTirView
-import app.aaps.plugins.main.skins.SkinProvider
 import com.jjoe64.graphview.GraphView
 import dagger.android.support.DaggerFragment
 import io.reactivex.rxjava3.disposables.CompositeDisposable
@@ -151,7 +150,6 @@ class OverviewFragment : DaggerFragment(), View.OnClickListener {
     @Inject lateinit var protectionCheck: ProtectionCheck
     @Inject lateinit var fabricPrivacy: FabricPrivacy
     @Inject lateinit var overviewMenus: OverviewMenus
-    @Inject lateinit var skinProvider: SkinProvider
     @Inject lateinit var trendCalculator: TrendCalculator
     @Inject lateinit var dateUtil: DateUtil
     @Inject lateinit var uel: UserEntryLogger
@@ -208,7 +206,6 @@ class OverviewFragment : DaggerFragment(), View.OnClickListener {
         val screenHeight = wm.bounds.height()
         smallWidth = screenWidth <= Constants.SMALL_WIDTH
         smallHeight = screenHeight <= Constants.SMALL_HEIGHT
-        val landscape = screenHeight < screenWidth
 
         if (config.AAPSCLIENT1)
             binding.nsclientCard.setBackgroundColor(Color.argb(80, 0xE8, 0xC5, 0x0C))
@@ -219,7 +216,6 @@ class OverviewFragment : DaggerFragment(), View.OnClickListener {
 
         overview.setVersionView(binding.infoLayout.version)
 
-        skinProvider.activeSkin().preProcessLandscapeOverviewLayout(binding, landscape, rh.gb(app.aaps.core.ui.R.bool.isTablet), smallHeight)
         binding.nsclientCard.visibility = config.AAPSCLIENT.toVisibility()
 
         binding.notifications.setHasFixedSize(false)
@@ -235,7 +231,6 @@ class OverviewFragment : DaggerFragment(), View.OnClickListener {
         binding.graphsLayout.bgGraph.gridLabelRenderer?.gridColor = rh.gac(context, app.aaps.core.ui.R.attr.graphGrid)
         binding.graphsLayout.bgGraph.gridLabelRenderer?.reloadStyles()
         binding.graphsLayout.bgGraph.gridLabelRenderer?.labelVerticalWidth = axisWidth
-        binding.graphsLayout.bgGraph.layoutParams?.height = rh.dpToPx(skinProvider.activeSkin().mainGraphHeight)
 
         carbAnimation = binding.infoLayout.carbsIcon.background as AnimationDrawable?
         carbAnimation?.setEnterFadeDuration(1200)
@@ -625,14 +620,15 @@ class OverviewFragment : DaggerFragment(), View.OnClickListener {
             secondaryPulseViews.clear()
             secondaryTirViews.clear()
             binding.graphsLayout.secondaryGraphs.removeAllViews()
-            val slotHeight = rh.dpToPx(skinProvider.activeSkin().secondaryGraphHeight)
+            val slotHeight = rh.dpToPx(100)
             val slotMargins: LinearLayout.LayoutParams.() -> Unit = { setMargins(0, rh.dpToPx(15), 0, rh.dpToPx(10)) }
             (1 until numOfGraphs).forEach { _ ->
                 val relativeLayout = RelativeLayout(context)
                 relativeLayout.layoutParams = RelativeLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
 
                 val graph = GraphViewWithCleanup(requireContext())
-                graph.layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, slotHeight).also(slotMargins)
+                graph.layoutParams =
+                    LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, rh.dpToPx(100)).also { it.setMargins(0, rh.dpToPx(15), 0, rh.dpToPx(10)) }
                 graph.gridLabelRenderer?.gridColor = rh.gac(context, app.aaps.core.ui.R.attr.graphGrid)
                 graph.gridLabelRenderer?.reloadStyles()
                 graph.gridLabelRenderer?.isHorizontalLabelsVisible = false
