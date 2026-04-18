@@ -38,6 +38,9 @@ import app.aaps.core.keys.interfaces.Preferences
 import app.aaps.core.objects.extensions.displayText
 import app.aaps.core.objects.extensions.round
 import app.aaps.core.ui.R
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -55,7 +58,6 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import java.util.Locale
-import javax.inject.Inject
 import kotlinx.coroutines.runBlocking
 import java.time.LocalDate
 import java.time.ZoneId
@@ -176,10 +178,10 @@ data class StatusPanelUiState(
     val iobText: String = "--"
 )
 
-@HiltViewModel
+@HiltViewModel(assistedFactory = GraphViewModel.Factory::class)
 @Stable
-class GraphViewModel @Inject constructor(
-    cache: OverviewDataCache,
+class GraphViewModel @AssistedInject constructor(
+    @Assisted cache: OverviewDataCache,
     private val graphConfigRepository: GraphConfigRepository,
     private val aapsLogger: AAPSLogger,
     private val preferences: Preferences,
@@ -199,6 +201,12 @@ class GraphViewModel @Inject constructor(
     private val processedTbrEbData: ProcessedTbrEbData,
     private val auditorStateProvider: AuditorStateProvider
 ) : ViewModel() {
+
+    @AssistedFactory
+    interface Factory {
+
+        fun create(cache: OverviewDataCache): GraphViewModel
+    }
 
     // Chart config - updates when high/low mark preferences change
     private val _chartConfigFlow = MutableStateFlow(

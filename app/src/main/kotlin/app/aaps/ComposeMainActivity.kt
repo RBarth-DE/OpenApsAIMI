@@ -51,6 +51,8 @@ import androidx.core.app.ActivityCompat
 import androidx.core.net.toUri
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -59,21 +61,21 @@ import androidx.navigation.compose.rememberNavController
 import app.aaps.compose.navigation.AppRoute
 import app.aaps.compose.navigation.appNavGraph
 import app.aaps.core.data.ue.Sources
+import app.aaps.core.interfaces.bgQualityCheck.BgQualityCheck
 import app.aaps.core.interfaces.configuration.Config
 import app.aaps.core.interfaces.configuration.ConfigBuilder
 import app.aaps.core.interfaces.configuration.InitProgress
+import app.aaps.core.interfaces.db.PersistenceLayer
 import app.aaps.core.interfaces.iob.IobCobCalculator
 import app.aaps.core.interfaces.logging.AAPSLogger
 import app.aaps.core.interfaces.logging.LTag
 import app.aaps.core.interfaces.maintenance.FileListProvider
-import app.aaps.core.interfaces.maintenance.ImportExportPrefs
 import app.aaps.core.interfaces.notifications.NotificationId
 import app.aaps.core.interfaces.notifications.NotificationLevel
 import app.aaps.core.interfaces.notifications.NotificationManager
-import app.aaps.core.interfaces.bgQualityCheck.BgQualityCheck
+import app.aaps.core.interfaces.overview.graph.OverviewDataCache
 import app.aaps.core.interfaces.plugin.ActivePlugin
 import app.aaps.core.interfaces.plugin.PluginBase
-import app.aaps.core.interfaces.profile.LocalProfileManager
 import app.aaps.core.interfaces.profile.ProfileUtil
 import app.aaps.core.interfaces.protection.PasswordCheck
 import app.aaps.core.interfaces.protection.ProtectionCheck
@@ -83,7 +85,6 @@ import app.aaps.core.interfaces.queue.CommandQueue
 import app.aaps.core.interfaces.resources.ResourceHelper
 import app.aaps.core.interfaces.rx.bus.RxBus
 import app.aaps.core.interfaces.source.DexcomBoyda
-import app.aaps.core.interfaces.source.XDripSource
 import app.aaps.core.interfaces.ui.UiInteraction
 import app.aaps.core.interfaces.utils.DateUtil
 import app.aaps.core.interfaces.utils.fabric.FabricPrivacy
@@ -115,7 +116,6 @@ import app.aaps.core.utils.isRunningRealPumpTest
 import app.aaps.implementation.plugin.PluginStore
 import app.aaps.implementation.protection.BiometricCheck
 import app.aaps.plugins.configuration.activities.OptimizationPermissionContract
-import app.aaps.plugins.configuration.activities.SingleFragmentActivity
 import app.aaps.plugins.configuration.setupwizard.SWDefinition
 import app.aaps.plugins.source.DexcomPlugin
 import app.aaps.plugins.source.activities.RequestDexcomPermissionActivity
@@ -163,7 +163,6 @@ class ComposeMainActivity : AppCompatActivity() {
 
     @Inject lateinit var rxBus: RxBus
     @Inject lateinit var rh: ResourceHelper
-    @Inject lateinit var importExportPrefs: ImportExportPrefs
     @Inject lateinit var aapsLogger: AAPSLogger
     @Inject lateinit var preferences: Preferences
     @Inject lateinit var uiInteraction: UiInteraction
@@ -177,19 +176,19 @@ class ComposeMainActivity : AppCompatActivity() {
     @Inject lateinit var config: Config
     @Inject lateinit var profileUtil: ProfileUtil
     @Inject lateinit var visibilityContext: PreferenceVisibilityContext
-    @Inject lateinit var xDripSource: XDripSource
     @Inject lateinit var dexcomBoyda: DexcomBoyda
     @Inject lateinit var iobCobCalculator: IobCobCalculator
-    @Inject lateinit var persistenceLayer: app.aaps.core.interfaces.db.PersistenceLayer
+    @Inject lateinit var persistenceLayer: PersistenceLayer
     @Inject lateinit var prefFileList: FileListProvider
     @Inject lateinit var notificationManager: NotificationManager
     @Inject lateinit var dateUtil: DateUtil
     @Inject lateinit var builtInSearchables: BuiltInSearchables
-    @Inject lateinit var localProfileManager: LocalProfileManager
     @Inject lateinit var bolusProgressData: BolusProgressData
     @Inject lateinit var commandQueue: CommandQueue
     @Inject lateinit var storageHelper: AimiStorageHelper
     @Inject lateinit var bgQualityCheck: BgQualityCheck
+    @Inject lateinit var graphViewModelFactory: GraphViewModel.Factory
+    @Inject lateinit var overviewDataCache: OverviewDataCache
 
     private var accessTree: ActivityResultLauncher<Uri?>? = null
     private var callForBatteryOptimization: ActivityResultLauncher<Void?>? = null
@@ -204,7 +203,9 @@ class ComposeMainActivity : AppCompatActivity() {
     private val treatmentViewModel: TreatmentViewModel by viewModels()
     private val automationViewModel: AutomationViewModel by viewModels()
     private val loopActionViewModel: LoopActionViewModel by viewModels()
-    private val graphViewModel: GraphViewModel by viewModels()
+    private val graphViewModel: GraphViewModel by viewModels {
+        viewModelFactory { initializer { graphViewModelFactory.create(overviewDataCache) } }
+    }
     private val treatmentsViewModel: TreatmentsViewModel by viewModels()
     private val insulinManagementViewModel: InsulinManagementViewModel by viewModels()
     private val tempTargetManagementViewModel: TempTargetManagementViewModel by viewModels()
@@ -537,14 +538,14 @@ class ComposeMainActivity : AppCompatActivity() {
                 // Pump setup button in bottom bar
                 val pumpPlugin = activePlugin.activePumpInternal as PluginBase
                 val showPumpSetup = (!activePlugin.activePump.isInitialized() || activePlugin.activePump.isSuspended()) &&
-                    (pumpPlugin.hasComposeContent() || pumpPlugin.hasFragment())
+                    pumpPlugin.hasComposeContent()
                 val pumpSetupPlugin = if (showPumpSetup) pumpPlugin else null
 
                 // BG source shortcut: shown when BG quality check reports FLAT or DOUBLED
                 val bgQualityState by bgQualityCheck.stateFlow.collectAsStateWithLifecycle()
                 val bgSourcePlugin = activePlugin.activeBgSource as PluginBase
                 val showBgSetup = (bgQualityState == BgQualityCheck.State.FLAT || bgQualityState == BgQualityCheck.State.DOUBLED) &&
-                    (bgSourcePlugin.hasComposeContent() || bgSourcePlugin.hasFragment())
+                    bgSourcePlugin.hasComposeContent()
                 val bgSetupPlugin = if (showBgSetup) bgSourcePlugin else null
                 val bgQualityBadgeIconRes = if (showBgSetup) bgQualityCheck.icon() else 0
                 val bgQualityBadgeDescription = if (showBgSetup) bgQualityCheck.stateDescription() else null
@@ -598,7 +599,6 @@ class ComposeMainActivity : AppCompatActivity() {
                     onMenuClick = { mainViewModel.openDrawer() },
                     onNavigate = { request -> handleNavigationRequest(request, navController) },
                     onDrawerClosed = { mainViewModel.closeDrawer() },
-                    onSwitchToClassicUi = { switchToClassicUi() },
                     onAboutDialogDismiss = { mainViewModel.setShowAboutDialog(false) },
                     onMaintenanceSheetDismiss = { mainViewModel.setShowMaintenanceSheet(false) },
                     onDirectoryClick = {
@@ -840,11 +840,6 @@ class ComposeMainActivity : AppCompatActivity() {
         }
     }
 
-    private fun switchToClassicUi() {
-        startActivity(Intent(this, MainActivity::class.java))
-        finish()
-    }
-
     private fun handleNotificationAction(notificationId: NotificationId, navController: NavController) {
         when (notificationId) {
             NotificationId.IDENTIFICATION_NOT_SET  ->
@@ -998,7 +993,7 @@ class ComposeMainActivity : AppCompatActivity() {
             ElementType.TDD_CYCLE_PATTERN       -> navController.navigate(AppRoute.Stats.route)
 
             ElementType.PROFILE_HELPER          -> navController.navigate(AppRoute.ProfileHelper.route)
-            ElementType.HISTORY_BROWSER         -> startActivity(Intent(this@ComposeMainActivity, uiInteraction.historyBrowseActivity))
+            ElementType.HISTORY_BROWSER         -> navController.navigate(AppRoute.HistoryBrowser.route)
             ElementType.SETUP_WIZARD            -> navController.navigate(AppRoute.SetupWizard.route)
             ElementType.MAINTENANCE             -> mainViewModel.setShowMaintenanceSheet(true)
             ElementType.CONFIGURATION           -> navController.navigate(AppRoute.Configuration.route)
@@ -1067,12 +1062,6 @@ class ComposeMainActivity : AppCompatActivity() {
         val pluginIndex = activePlugin.getPluginsList().indexOf(plugin)
         if (plugin.hasComposeContent()) {
             navController?.navigate(AppRoute.PluginContent.createRoute(pluginIndex))
-        } else if (plugin.hasFragment()) {
-            startActivity(
-                Intent(this, SingleFragmentActivity::class.java)
-                    .setAction(this::class.simpleName)
-                    .putExtra("plugin", pluginIndex)
-            )
         }
     }
 }
