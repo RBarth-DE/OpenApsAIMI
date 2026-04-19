@@ -100,7 +100,10 @@ class TrajectoryGuard @Inject constructor(
                 ))
         
         if (modulation.isSignificant()) {
-            aapsLogger.info(LTag.APS, "TrajectoryGuard: Modulation active - ${modulation.reason}")
+            // NOTE: "computed" ≠ "applied". A relevance gate in DetermineBasalAIMI2
+            // may still suppress this modulation (trajectoryModulationActive=false).
+            aapsLogger.info(LTag.APS, "TrajectoryGuard: Modulation computed (relevance=${
+                "%.2f".format(modulation.relevanceScore)}) - ${modulation.reason}")
         }
         
         warnings.forEach { warning ->
@@ -147,7 +150,24 @@ class TrajectoryGuard @Inject constructor(
             
             // Case 3: Converging (Moving TOWARDS target)
             velocity > 0.1 -> {
-                TrajectoryType.CLOSING_CONVERGING
+                val currentBg    = history.last().bg
+                val currentDelta = history.last().bgDelta
+                // Overshoot detection: high speed + wide-open trajectory + BG already close to target
+                // + strong downward momentum = system will shoot through the target.
+                // Θ > OPENNESS_DIVERGING is the telltale: a genuinely closing trajectory
+                // should have Θ dropping, not staying wide open.
+                val overshootRisk = velocity > 2.0
+                    && metrics.openness > OPENNESS_DIVERGING   // Θ still wide open
+                    && currentDelta < -5.0                     // strong downward momentum
+                    && (currentBg - stableOrbit.targetBg) < 50.0  // within striking distance
+
+                if (overshootRisk) {
+                    // Fast approach with open trajectory → classify as FAST_APPROACH
+                    // NOT TIGHT_SPIRAL (which implies high curvature κ — different phenomenon)
+                    TrajectoryType.FAST_APPROACH
+                } else {
+                    TrajectoryType.CLOSING_CONVERGING
+                }
             }
             
             // Case 4: Stable / Stationary (Velocity near zero)
@@ -222,6 +242,27 @@ class TrajectoryGuard @Inject constructor(
                 )
             }
             
+            TrajectoryType.FAST_APPROACH -> {
+                // BG closing fast but Θ wide open → momentum will carry past target.
+                // Strategy: aggressive SMB damping + wait longer + expand safety margins.
+                // Do NOT use TIGHT_SPIRAL damping levels — no insulin stacking here,
+                // just excessive downward velocity. Primary risk: hypo from IOB tail.
+                val currentDelta = history.last().bgDelta
+                val dampingLevel = when {
+                    currentDelta < -10.0 -> 0.5  // very fast fall, strong damping
+                    currentDelta < -7.0  -> 0.6  // fast fall
+                    else                 -> 0.7  // moderate fast approach
+                }
+                TrajectoryModulation(
+                    smbDamping = dampingLevel,
+                    intervalStretch = 1.5,           // wait — let momentum dissipate
+                    basalPreference = 0.7,           // prefer temp basal over bolus
+                    safetyMarginExpand = 1.15,       // widen margins to absorb overshoot
+                    relevanceScore = 0.85,           // high relevance — active hypo risk
+                    reason = "Fast approach - overshoot risk (Δ=${"%.1f".format(currentDelta)} Θ=${"%.2f".format(metrics.openness)})"
+                )
+            }
+
             TrajectoryType.CLOSING_CONVERGING -> {
                 // System returning to target - gentle damping, let it converge
                 val dampingLevel = when {
@@ -285,6 +326,19 @@ class TrajectoryGuard @Inject constructor(
         
         val warnings = mutableListOf<TrajectoryWarning>()
         
+        // Warning 0: Fast approach / overshoot risk (independent of curvature)
+        // This fires for FAST_APPROACH which has low κ by definition — unlike TIGHT_SPIRAL.
+        if (classification == TrajectoryType.FAST_APPROACH) {
+            val currentDelta = history.last().bgDelta
+            val currentBg    = history.last().bg
+            warnings.add(TrajectoryWarning(
+                severity = if (currentDelta < -10.0) WarningSeverity.HIGH else WarningSeverity.MEDIUM,
+                type = "FAST_APPROACH_OVERSHOOT",
+                message = "BG closing fast (${currentBg.toInt()} mg/dL, Δ=${"%.1f".format(currentDelta)}) with high IOB — overshoot/hypo likely",
+                suggestedAction = "Stop SMBs, reduce or suspend basal, monitor closely"
+            ))
+        }
+
         // Warning 1: Insulin stacking detected
         if (metrics.energyBalance > ENERGY_STACKING && metrics.curvature > 0.2) {
             val severity = when {
@@ -324,14 +378,20 @@ class TrajectoryGuard @Inject constructor(
         }
         
         // Warning 4: PRE_ONSET stacking risk
-        if (history.last().pkpdStage == ActivityStage.RISING &&
-            history.last().iob > 1.5 &&
+        // Original condition used pkpdStage == ActivityStage.RISING, but estimatePkpdStage()
+        // returns RISING only when delta > 0. On a falling BG the stage is PEAK/FALLING —
+        // so the warning never fired even with fresh IOB. Use timeSinceLastBolus as the
+        // primary signal: a bolus < 30 min ago is definitionally in pre-onset/early-peak.
+        val currentState = history.last()
+        if (currentState.timeSinceLastBolus < 30 &&
+            currentState.iob > 1.5 &&
             metrics.curvature > 0.15) {
+            val minutesOld = currentState.timeSinceLastBolus
             warnings.add(TrajectoryWarning(
-                severity = WarningSeverity.LOW,
+                severity = if (minutesOld < 15) WarningSeverity.MEDIUM else WarningSeverity.LOW,
                 type = "PRE_ONSET_COMPRESSION",
-                message = "Fresh IOB (${" %.2f".format(history.last().iob)}U) in PRE_ONSET but trajectory already tightening (κ=${"%.3f".format(metrics.curvature)})",
-                suggestedAction = "Caution: avoid additional bolus, trajectory will tighten further as insulin activates"
+                message = "Fresh IOB (${"%.2f".format(currentState.iob)}U, bolus ${minutesOld}min ago) but trajectory already tightening (κ=${"%.3f".format(metrics.curvature)})",
+                suggestedAction = "Caution: avoid additional bolus — insulin not yet fully active, trajectory will tighten further"
             ))
         }
         

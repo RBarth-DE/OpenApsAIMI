@@ -4557,14 +4557,21 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                     consoleLog.add("  📊 Metrics: Coherence=${"%.2f".format(analysis.metrics.coherence)} Energy=${"%.1f".format(analysis.metrics.energyBalance)}U Openness=${"%.2f".format(analysis.metrics.openness)}")
                     
                     // 3. Apply Modulation (The "Safety" Gate)
-                    // We only modify insulin delivery if relevance is sufficient (> 0.4)
+                    // Relevance is the MAX of:
+                    //   - physio CGate score (external, passed in as `relevanceScore`)
+                    //   - TrajectoryGuard's own modulation relevance (mod.relevanceScore)
+                    // Rationale: CGate reflects physio context; TrajectoryGuard reflects geometric
+                    // trajectory quality. Either source can justify modulation independently.
+                    // Previously only the CGate score was used → modulation always gated when
+                    // CGate returned 0.0, regardless of what TrajectoryGuard computed.
                     val mod = analysis.modulation
+                    val effectiveRelevance = maxOf(relevanceScore, mod.relevanceScore)
                     val uamConfidence = AimiUamHandler.confidenceOrZero()
                     val strongMealRiseContext =
                         bg >= 145.0 &&
                             delta >= 1.8 &&
                             (cob >= 6.0 || uamConfidence >= 0.45)
-                    if (relevanceScore > 0.4 && mod.isSignificant()) {
+                    if (effectiveRelevance > 0.4 && mod.isSignificant()) {
                         val effectiveSmbDamping = if (strongMealRiseContext) {
                             mod.smbDamping.coerceAtLeast(0.70)
                         } else {
@@ -4582,7 +4589,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                                     "(BG=${"%.0f".format(bg)} Δ=${"%.1f".format(delta)} COB=${"%.1f".format(cob)} UAM=${"%.2f".format(uamConfidence)})"
                             )
                         }
-                        consoleLog.add("  🎛 Modulation: SMB×${"%.2f".format(effectiveSmbDamping)} Int×${"%.2f".format(effectiveIntervalStretch)} (${mod.reason})")
+                        consoleLog.add("  🎛 Modulation: SMB×${"%.2f".format(effectiveSmbDamping)} Int×${"%.2f".format(effectiveIntervalStretch)} (${mod.reason}) [rel=physio:${"%.2f".format(relevanceScore)} traj:${"%.2f".format(mod.relevanceScore)}]")
                         
                         if (kotlin.math.abs(effectiveSmbDamping - 1.0) > 0.05) {
                             val orig = maxSMB
@@ -4605,8 +4612,8 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                                 consoleLog.add("    → MaxIOB Modulation: ${"%.2f".format(beforeMod)}U → ${"%.2f".format(maxIob)}U (Floor=${"%.2f".format(floor)}U)")
                             }
                         }
-                    } else if (relevanceScore <= 0.4) {
-                        consoleLog.add("  ⏸ Modulation Gated (Relevance ${"%.2f".format(relevanceScore)} <= 0.4)")
+                    } else if (effectiveRelevance <= 0.4) {
+                        consoleLog.add("  ⏸ Modulation Gated (Physio=${"%.2f".format(relevanceScore)} Traj=${"%.2f".format(mod.relevanceScore)} max=${"%.2f".format(effectiveRelevance)} <= 0.4)")
                     }
                     
                     // Warning Propagation
@@ -4628,14 +4635,15 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                     // 4. Populate RT for UI (Always if traj exists)
                     rT.trajectoryEnabled = true
                     rT.trajectoryType = analysis.classification.name
-                    // Note: rT.trajectoryRelevanceScore is already set to the Cosine relevanceScore at start
+                    // Show the effective relevance score (max of physio + trajectory own score)
+                    rT.trajectoryRelevanceScore = effectiveRelevance
                     rT.trajectoryCurvature = analysis.metrics.curvature
                     rT.trajectoryConvergence = analysis.metrics.convergenceVelocity
                     rT.trajectoryCoherence = analysis.metrics.coherence
                     rT.trajectoryEnergy = analysis.metrics.energyBalance
                     rT.trajectoryOpenness = analysis.metrics.openness
                     rT.trajectoryHealth = (analysis.metrics.healthScore * 100).toInt()
-                    rT.trajectoryModulationActive = relevanceScore > 0.4 && analysis.modulation.isSignificant()
+                    rT.trajectoryModulationActive = effectiveRelevance > 0.4 && analysis.modulation.isSignificant()
                     rT.trajectoryWarningsCount = analysis.warnings.size
                     rT.trajectoryConvergenceETA = analysis.predictedConvergenceTime
                 }
@@ -5531,7 +5539,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                 val tEff = kotlin.math.max(iobRowT3c.lastBolusTime, internalLastSmbMillis)
                 ((currentTime - tEff) / 60000.0).coerceAtLeast(0.0)
             } else {
-                0.0
+                120.0 // No bolus found → assume 2 hours ago (matches estimateTimeSinceLastBolus default)
             }
             val dynSensT3c = profile.variable_sens.takeIf { it > 0.0 } ?: profile.sens
             val fusedT3c = pkpdRuntime?.fusedIsf
@@ -5744,8 +5752,13 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         // ═══════════════════════════════════════════════════════════════════
         run {
             val lastTraj = trajectoryGuard.getLastAnalysis()
-            if (lastTraj != null &&
-                lastTraj.classification == app.aaps.plugins.aps.openAPSAIMI.trajectory.TrajectoryType.TIGHT_SPIRAL) {
+            val isTrajBridgeActive = lastTraj != null && (
+                lastTraj.classification == app.aaps.plugins.aps.openAPSAIMI.trajectory.TrajectoryType.TIGHT_SPIRAL ||
+                lastTraj.classification == app.aaps.plugins.aps.openAPSAIMI.trajectory.TrajectoryType.FAST_APPROACH
+            )
+            if (isTrajBridgeActive && lastTraj != null) {
+                val isFastApproach = lastTraj.classification ==
+                    app.aaps.plugins.aps.openAPSAIMI.trajectory.TrajectoryType.FAST_APPROACH
 
                 val energy = lastTraj.metrics.energyBalance
                 val curvature = lastTraj.metrics.curvature
@@ -5757,25 +5770,30 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                         delta >= 1.8 &&
                         (cob >= 6.0 || uamConfidence >= 0.45)
 
-                // Escalade selon l'énergie accumulée
-                // > 3.5 U → situation critique, réduction forte
-                // > 2.5 U → stacking modéré, réduction intermédiaire
-                // > 1.5 U → début de spirale, réduction douce
+                // FAST_APPROACH: downward momentum will carry past target regardless of energy.
+                // Override basalFraction based on delta speed, not energy accumulation.
                 val basalFraction = when {
+                    isFastApproach -> when {
+                        strongMealRiseContext       -> 0.80  // meal context: don't over-cut
+                        delta.toDouble() < -10.0   -> 0.20  // very fast fall → near-suspend
+                        delta.toDouble() < -7.0    -> 0.35  // fast fall
+                        else                       -> 0.50  // moderate fast approach
+                    }
+                    // TIGHT_SPIRAL: escalation based on accumulated energy
                     strongMealRiseContext && energy > 3.5 -> 0.70
                     strongMealRiseContext && energy > 2.5 -> 0.85
                     strongMealRiseContext && energy > 1.5 -> 0.95
-                    energy > 3.5 -> 0.25  // Critique : 25% basale (évite l'hypo sévère)
-                    energy > 2.5 -> 0.50  // Modéré   : 50% basale
-                    energy > 1.5 -> 0.70  // Léger    : 70% basale
-                    else         -> 1.0   // Pas assez d'énergie pour agir
+                    energy > 3.5 -> 0.25
+                    energy > 2.5 -> 0.50
+                    energy > 1.5 -> 0.70
+                    else         -> 1.0
                 }
 
                 // Amplification CGate : si le contexte physiologique (sport, stress)
                 // avait déjà réduit l'ISF, la fragilité est double → descendre d'un cran
-                val cgateAmplified = physioMultipliers.isfFactor > 1.05 // ISF augmenté = sensibilité réduite
+                val cgateAmplified = physioMultipliers.isfFactor > 1.05
                 val effectiveFraction = if (cgateAmplified && basalFraction > 0.25) {
-                    (basalFraction - 0.20).coerceAtLeast(0.25) // Descend d'un cran
+                    (basalFraction - 0.20).coerceAtLeast(0.25)
                 } else {
                     basalFraction
                 }
@@ -5784,18 +5802,18 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                     val proactiveBasal = profile.current_basal * effectiveFraction
                     val cgateNote = if (cgateAmplified) " [CGate ISF↑ → amplification]" else ""
                     val mealNote = if (strongMealRiseContext) " [MEAL_PRIORITY_RELAX]" else ""
-                    val reason = "TRAJ_TIGHT_SPIRAL: E=${String.format("%.1f", energy)}U κ=${String.format("%.2f", curvature)} IOB=${String.format("%.2f", iobNow)}U → Basale proactive ${(effectiveFraction * 100).toInt()}%$cgateNote$mealNote"
+                    val bridgeLabel = if (isFastApproach) "TRAJ_FAST_APPROACH" else "TRAJ_TIGHT_SPIRAL"
+                    val reason = "$bridgeLabel: E=${String.format("%.1f", energy)}U κ=${String.format("%.2f", curvature)} IOB=${String.format("%.2f", iobNow)}U → Basale proactive ${(effectiveFraction * 100).toInt()}%$cgateNote$mealNote"
 
                     consoleLog.add("🌀🛡️ TRAJECTORY_SAFETY_BRIDGE: $reason")
 
                     // Appliquer la basale réduite directement (court-circuite le pipeline normal)
                     // MAIS ne bloque PAS les SMBs futurs (smbDamping est déjà appliqué par applyTrajectoryAnalysis)
                     rT.rate = proactiveBasal
-                    rT.duration = if (energy > 3.5) 30 else 15
+                    rT.duration = if (isFastApproach || energy > 3.5) 30 else 15
                     rT.reason.append(" | 🌀 Traj-Bridge: $reason")
 
-                    // Signaler au LGS pipeline pour éviter double-action
-                    lastSafetySource = "TrajBridge_Tier${when { energy > 3.5 -> 1; energy > 2.5 -> 2; else -> 3 }}"
+                    lastSafetySource = "TrajBridge_Tier${when { isFastApproach || energy > 3.5 -> 1; energy > 2.5 -> 2; else -> 3 }}"
                     logDecisionFinal("TRAJ_SAFETY", rT, bg, delta)
                     // NB: On NE retourne PAS ici — on laisse le pipeline LGS confirmer ou renforcer
                     // si la prédiction atteint un seuil critique. Le TBR est posé mais les guards
@@ -9174,14 +9192,11 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             targetRate
         }
 
-        // ── [ML ALIGNMENT] Option 1: Apply adaptiveMult to final T3C rate ───────
-        // This mirrors what setTempBasal() does on the standard path (L.1475-1478)
-        // but is applied *after* the progressive ramp so the safety ramp stays intact.
-        val t3cFinalRate = if (safeRate > 0.0 && Math.abs(adaptiveMult - 1.0) > 0.01) {
-            (safeRate * adaptiveMult).coerceIn(0.0, maxBasalCap)
-        } else {
-            safeRate
-        }
+        // adaptiveMult is already embedded in aggressiveness via Option 2 (adaptiveBoost blend above).
+        // Applying it again here (Option 1) would double-count: at adaptiveMult=1.3 that is
+        // 1.3 × 1.3 = 1.69× — significantly over-aggressive in resistance mode.
+        // Option 1 is intentionally removed; Option 2 is the single authority.
+        val t3cFinalRate = safeRate
 
         val pumpDesc = activePlugin.activePump.pumpDescription
         val pumpCaps = PumpCaps(

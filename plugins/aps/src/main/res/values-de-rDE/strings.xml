@@ -1237,6 +1237,7 @@
     <string name="aimi_trajectory_slow_drift_desc">DRIFT – Langsame Abweichung vom Zielwert</string>
     <string name="aimi_trajectory_closing_converging_desc">SCHLIESSEND – Rückkehr zum Zielwert</string>
     <string name="aimi_trajectory_tight_spiral_desc">KOMPRIMIERT – Überkorrekturrisiko</string>
+    <string name="aimi_trajectory_fast_approach_desc">SCHNELL ANNÄHERND – Überschießen / Hypoglykämie-Risiko</string>
     <string name="aimi_trajectory_stable_orbit_desc">STABIL – Stabile Umlaufbahn beibehalten</string>
     <string name="aimi_trajectory_hovering_desc">SCHWEBEND – Stabil schwebend, aber abseits des Zielwerts</string>
     <string name="aimi_trajectory_uncertain_desc">UNKLAR – Mehr Daten benötigt</string>

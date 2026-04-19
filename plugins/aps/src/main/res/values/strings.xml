@@ -1441,6 +1441,7 @@
     <string name="aimi_trajectory_slow_drift_desc">DRIFT - Slow drift away from target</string>
     <string name="aimi_trajectory_closing_converging_desc">CLOSING - Returning to target</string>
     <string name="aimi_trajectory_tight_spiral_desc">COMPRESSED - over-correction risk</string>
+    <string name="aimi_trajectory_fast_approach_desc">RAPIDLY APPROACHING – Overshoot / Risk of Hypoglycemia</string>
     <string name="aimi_trajectory_stable_orbit_desc">STABLE - Stable orbit maintained</string>
     <string name="aimi_trajectory_hovering_desc">HOVERING - Hovering stable but off-target</string>
     <string name="aimi_trajectory_uncertain_desc">UNCLEAR - need more data</string>

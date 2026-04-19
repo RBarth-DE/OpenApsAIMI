@@ -153,8 +153,9 @@ data class TrajectoryMetrics(
  */
 enum class TrajectoryType {
     OPEN_DIVERGING,        // ↗️ System escaping, insufficient insulin
-    SLOW_DRIFT,            // ↗️ Slow divergence, needs gentle correction
-    CLOSING_CONVERGING,    // ↗️→↘️ Returning to target
+    SLOW_DRIFT,            // 🐌 Slow divergence, needs gentle correction
+    CLOSING_CONVERGING,    // 🔄 Returning to target
+    FAST_APPROACH,         // ⬇️ Closing fast — overshoot/hypo risk
     TIGHT_SPIRAL,          // 🌀 Over-correction risk
     STABLE_ORBIT,          // ⭕ Optimal control achieved
     HOVERING,              // ➖ Stable but off-target
@@ -169,6 +170,7 @@ enum class TrajectoryType {
             OPEN_DIVERGING     -> context.getString(R.string.aimi_trajectory_open_diverging_desc)
             SLOW_DRIFT         -> context.getString(R.string.aimi_trajectory_slow_drift_desc)
             CLOSING_CONVERGING -> context.getString(R.string.aimi_trajectory_closing_converging_desc)
+            FAST_APPROACH      -> context.getString(R.string.aimi_trajectory_fast_approach_desc)
             TIGHT_SPIRAL       -> context.getString(R.string.aimi_trajectory_tight_spiral_desc)
             STABLE_ORBIT       -> context.getString(R.string.aimi_trajectory_stable_orbit_desc)
             HOVERING           -> context.getString(R.string.aimi_trajectory_hovering_desc)
@@ -178,6 +180,7 @@ enum class TrajectoryType {
             OPEN_DIVERGING -> "Trajectory diverging - BG not controlled"
             SLOW_DRIFT -> "Slow drift away from target"
             CLOSING_CONVERGING -> "Trajectory closing - returning to target"
+            FAST_APPROACH -> "Fast approach - overshoot/hypo risk"
             TIGHT_SPIRAL -> "Trajectory compressed - over-correction risk"
             STABLE_ORBIT -> "Stable orbit maintained"
             HOVERING -> "Hovering stable but off-target"
@@ -192,6 +195,7 @@ enum class TrajectoryType {
         OPEN_DIVERGING -> "↗️"
         SLOW_DRIFT -> "🐌"
         CLOSING_CONVERGING -> "🔄"
+        FAST_APPROACH -> "⬇️"
         TIGHT_SPIRAL -> "🌀"
         STABLE_ORBIT -> "⭕"
         HOVERING -> "➖"
@@ -205,6 +209,7 @@ enum class TrajectoryType {
         OPEN_DIVERGING -> "●→●→●→  (diverging)"
         SLOW_DRIFT -> " ● ● ● (drift)"
         CLOSING_CONVERGING -> "●→●→●  (closing)"
+        FAST_APPROACH -> "●↓●↓⚠  (fast/overshoot)"
         TIGHT_SPIRAL -> " ●●●   (spiral)\n      ╱ ╲╱ ╲\n     ● ○ ●"
         STABLE_ORBIT -> "  ●●●\n ●   ●  (orbit)\n  ●●●"
         HOVERING -> " —●—●— (hovering)"

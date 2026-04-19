@@ -1,5 +1,4 @@
 package app.aaps.plugins.aps.openAPSAIMI.trajectory
-import kotlinx.coroutines.runBlocking
 
 import app.aaps.core.interfaces.db.PersistenceLayer
 import app.aaps.core.interfaces.iob.IobCobCalculator
@@ -8,6 +7,8 @@ import app.aaps.core.interfaces.logging.AAPSLogger
 import app.aaps.core.interfaces.logging.LTag
 import app.aaps.plugins.aps.openAPSAIMI.pkpd.ActivityStage
 import app.aaps.plugins.aps.openAPSAIMI.pkpd.InsulinWeibullCurve
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.runBlocking
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.math.max
@@ -63,9 +64,10 @@ class TrajectoryHistoryProvider @Inject constructor(
         cobNow: Double = 0.0,
         effectiveProfile: EffectiveProfile? = null,
         historicalInsulinPeakMinutes: Int? = null,
-    ): List<PhaseSpaceState> = runBlocking(Dispatchers.Default) {
-
-
+    ): List<PhaseSpaceState> {
+        // NOTE: This function is intentionally synchronous (called from a worker thread).
+        // Inner suspend calls use runBlocking(Dispatchers.IO) — NOT the calling dispatcher —
+        // to avoid pool exhaustion / deadlock on Dispatchers.Default.
         val history = mutableListOf<PhaseSpaceState>()
         val fromMillis = nowMillis - (historyMinutes * 60_000L)
         
@@ -80,7 +82,7 @@ class TrajectoryHistoryProvider @Inject constructor(
             if (filteredBgReadings.isEmpty()) {
                 aapsLogger.warn(LTag.APS, "TrajectoryHistory: No BG readings found in last $historyMinutes min")
                 // Return only current state
-                return listOf(createCurrentState(
+                return@buildHistory listOf(createCurrentState(
                     nowMillis, currentBg, currentDelta, currentAccel,
                     insulinActivityNow, iobNow, pkpdStage, timeSinceLastBolus, cobNow
                 ))
@@ -101,14 +103,18 @@ class TrajectoryHistoryProvider @Inject constructor(
                     // Get IOB at this time
                     val iobTotalObj = if (effectiveProfile != null) {
                         try {
-                            iobCobCalculator.calculateFromTreatmentsAndTemps(bg.timestamp, effectiveProfile)
+                            runBlocking(Dispatchers.IO) {
+                                iobCobCalculator.calculateFromTreatmentsAndTemps(bg.timestamp, effectiveProfile)
+                            }
                         } catch (e: Exception) {
                             aapsLogger.error(LTag.APS, "Error getting IOB at t=${bg.timestamp}: ${e.message}")
                             null
                         }
                     } else {
                         try {
-                            iobCobCalculator.calculateIobFromBolus()
+                            runBlocking(Dispatchers.IO) {
+                                iobCobCalculator.calculateIobFromBolus()
+                            }
                         } catch (e: Exception) {
                             aapsLogger.error(LTag.APS, "Error getting IOB for history: ${e.message}")
                             null
@@ -155,9 +161,11 @@ class TrajectoryHistoryProvider @Inject constructor(
 
                     val timeSinceBolus = minsSinceBolus
                     
-                    // Get COB at this time
+                    // Get COB at this time — use IO dispatcher to avoid blocking Default pool
                     val cob = try {
-                        runBlocking { iobCobCalculator.getCobInfo("TrajectoryHistory") }.displayCob ?: 0.0
+                        runBlocking(Dispatchers.IO) {
+                            iobCobCalculator.getCobInfo("TrajectoryHistory")
+                        }.displayCob ?: 0.0
                     } catch (e: Exception) {
                         0.0
                     }
@@ -187,7 +195,7 @@ class TrajectoryHistoryProvider @Inject constructor(
         } catch (e: Exception) {
             aapsLogger.error(LTag.APS, "Error building trajectory history: ${e.message}")
             // Return minimal history with just current state
-            return listOf(createCurrentState(
+            return@buildHistory listOf(createCurrentState(
                 nowMillis, currentBg, currentDelta, currentAccel,
                 insulinActivityNow, iobNow, pkpdStage, timeSinceLastBolus, cobNow
             ))
@@ -270,7 +278,9 @@ class TrajectoryHistoryProvider @Inject constructor(
      */
     private fun estimateTimeSinceLastBolus(timestamp: Long): Int {
         try {
-            val boluses = runBlocking { persistenceLayer.getBolusesFromTime(timestamp - (4 * 3600_000L), false) } // Last 4 hours
+            val boluses = runBlocking(Dispatchers.IO) {
+                persistenceLayer.getBolusesFromTime(timestamp - (4 * 3600_000L), false)
+            }
             
             val lastBolus = boluses
                 .filter { it.timestamp <= timestamp && it.amount > 0.1 }

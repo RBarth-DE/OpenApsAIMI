@@ -139,33 +139,47 @@ object TrajectoryMetricsCalculator {
     
     /**
      * Calculate insulin-glucose coherence (ρ)
-     * 
+     *
      * Measures correlation between insulin activity and BG response.
      * High insulin activity should lead to falling BG (negative correlation with delta).
-     * 
-     * ρ → 1: Perfect response (insulin working as expected)
-     * ρ → 0: No correlation (random)
-     * ρ → -1: Paradoxical (BG rising despite insulin - resistance!)
-     * 
+     *
+     * ρ → 1:  Perfect response (insulin working as expected)
+     * ρ → 0:  No correlation (random)
+     * ρ → -1: Paradoxical (BG rising despite insulin — resistance!)
+     *
+     * Flat-IOB fallback: when effectiveProfile=null, activity = f(iob, delta) with constant
+     * iob — so activity is essentially a monotone transformation of delta, and correlating
+     * it with -delta is a tautology (artificially high ρ). Detected via near-zero IOB
+     * std-dev; fallback uses proportion-of-falling-readings as a real coherence proxy.
+     *
      * @return ρ ∈ [-1, 1]
      */
     fun calculateCoherence(history: List<PhaseSpaceState>): Double {
-        if (history.size < 12) return 0.5 // Need ~60 min for reliable correlation
-        
-        val recent = history.takeLast(12) // Last 60 minutes
-        
-        // Extract time series
-        val activitySeries = recent.map { it.insulinActivity }
-        val deltaSeries = recent.map { it.bgDelta }
-        
-        // Expected: high activity → negative delta (BG falling)
-        // So we correlate activity with (-delta)
-        val negativeDeltaSeries = deltaSeries.map { -it }
-        
-        // Pearson correlation coefficient
-        val correlation = pearsonCorrelation(activitySeries, negativeDeltaSeries)
-        
-        return correlation.coerceIn(-1.0, 1.0)
+        if (history.size < 12) return 0.5  // Need ~60 min for reliable correlation
+
+        val recent = history.takeLast(12)  // Last 60 minutes
+
+        // Detect flat-IOB (effectiveProfile=null → all states have current IOB)
+        val iobValues = recent.map { it.iob }
+        val iobMean   = iobValues.average()
+        val iobStdDev = sqrt(iobValues.map { (it - iobMean).pow(2) }.average())
+
+        if (iobStdDev < 0.05) {
+            // Flat-IOB: Pearson on activity vs -delta is circular (activity = g(delta)).
+            // Fallback: if meaningful IOB is present, check whether BG is actually falling.
+            //   proportion 1.0 → all readings falling → ρ = +1.0 (perfect response)
+            //   proportion 0.5 → half falling       → ρ =  0.0 (no coherence)
+            //   proportion 0.0 → none falling        → ρ = -1.0 (paradoxical / resistance)
+            if (iobMean < 0.3) return 0.5  // negligible IOB → coherence undefined
+            val proportionFalling = recent.count { it.bgDelta < -0.5 }.toDouble() / recent.size
+            return ((proportionFalling * 2.0) - 1.0).coerceIn(-1.0, 1.0)
+        }
+
+        // Normal case: per-timestamp IOB available → genuine activity-vs-response correlation
+        val activitySeries      = recent.map { it.insulinActivity }
+        val negativeDeltaSeries = recent.map { -it.bgDelta }
+
+        return pearsonCorrelation(activitySeries, negativeDeltaSeries).coerceIn(-1.0, 1.0)
     }
     
     /**
@@ -179,6 +193,12 @@ object TrajectoryMetricsCalculator {
      * E ≈ 0: Balanced
      * E < 0: Under-acting
      * 
+     * Flat-IOB fallback: when effectiveProfile=null, all historical states carry the
+     * CURRENT IOB (calculateIobFromBolus() is time-invariant). In this case the
+     * increment approach always gives energyIn=0 and the metric is meaningless.
+     * Detected via near-zero IOB std-dev; fallback treats currentIob as pending
+     * energy and compares it to the BG drop achieved over the history window.
+     * 
      * @return E in "insulin unit equivalents"
      */
     fun calculateEnergyBalance(
@@ -186,18 +206,42 @@ object TrajectoryMetricsCalculator {
         targetBg: Double
     ): Double {
         if (history.size < 2) return 0.0
-        
-        var energyIn = 0.0
+
+        // Detect flat-IOB condition (all states have same IOB → effectiveProfile was null)
+        val iobValues = history.map { it.iob }
+        val iobMean   = iobValues.average()
+        val iobStdDev = sqrt(iobValues.map { (it - iobMean).pow(2) }.average())
+        val iobIsFlat = iobStdDev < 0.05   // threshold: < 0.05 U variance = effectively constant
+
+        if (iobIsFlat) {
+            // Fallback: current IOB = all insulin still pending in the system.
+            // Energy dissipated = BG drop from above target during the window.
+            val currentIob = history.last().iob
+            val energyIn   = currentIob  // pending; not yet converted to BG drop
+
+            val firstBg  = history.first().bg
+            val lastBg   = history.last().bg
+            val energyOut = if (firstBg > targetBg + 10.0 && lastBg < firstBg) {
+                (firstBg - lastBg) / 40.0   // rough ISF 40 mg/dL/U
+            } else {
+                0.0
+            }
+
+            return (energyIn - energyOut).coerceIn(-10.0, 10.0)
+        }
+
+        // Normal case: effectiveProfile was set → per-timestamp IOB available
+        var energyIn  = 0.0
         var energyOut = 0.0
-        
+
         for (i in 1 until history.size) {
-            val current = history[i]
+            val current  = history[i]
             val previous = history[i - 1]
-            
+
             // Energy IN: IOB increase (new insulin delivered)
             val iobIncrease = max(0.0, current.iob - previous.iob)
             energyIn += iobIncrease
-            
+
             // Energy OUT: BG descent when above target
             if (previous.bg > targetBg + 10) {
                 val bgDrop = max(0.0, previous.bg - current.bg)
@@ -205,7 +249,7 @@ object TrajectoryMetricsCalculator {
                 energyOut += bgDrop / 40.0
             }
         }
-        
+
         return (energyIn - energyOut).coerceIn(-10.0, 10.0)
     }
     

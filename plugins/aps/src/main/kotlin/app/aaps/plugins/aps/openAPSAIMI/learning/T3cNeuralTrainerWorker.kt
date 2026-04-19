@@ -65,38 +65,78 @@ class T3cNeuralTrainerWorker(
         val iIob = header.indexOf("iob")
         val iCurrentAgg = header.indexOf("t3cAgg")
 
-        for (line in dataLines) {
-            val cols = line.split(",")
-            if (cols.size < header.size) continue
+        var skippedRows = 0
+        // Use index-based loop: next row's `bg` is the actual measured BG ~30 min later
+        // (T3c runs every 30 min → consecutive rows are ~1 control period apart).
+        // This is far better than using `eventualBg` which is a PKPD prediction —
+        // training on own predictions creates a self-referential loop.
+        // Safety filter: if |bgNext − bgCurrent| > 80 mg/dL, assume a gap in the log
+        // (T3c was paused) and skip the pair rather than train on an invalid outcome.
+        for (i in dataLines.indices) {
+            try {
+                val cols = dataLines[i].split(",")
+                if (cols.size < header.size) { skippedRows++; continue }
 
-            // 1. Prepare Inputs
-            val inputFeatures = floatArrayOf(
-                cols[iBg].toFloat(),
-                cols[iBasal].toFloat(),
-                cols[iAccel].toFloat(),
-                cols[iDuraMin].toFloat(),
-                cols[iDuraAvg].toFloat(),
-                cols[iIob].toFloat()
-            )
-
-            // 2. Labeling (The "Target")
-            // How much should we have adjusted the aggressiveness to hit the target?
-            val bgBefore = cols[iBg].toDouble()
-            val bgAfter = cols[iEventual].toDouble()
-            val targetBg = cols[iTarget].toDouble()
-            val currentAgg = cols[iCurrentAgg].toDouble()
+                // Actual outcome: next row's BG (real measurement, not prediction)
+                val nextCols = dataLines.getOrNull(i + 1)?.split(",")
+                val bgBefore = cols[iBg].toDouble()
+                val bgAfterActual = nextCols
+                    ?.getOrNull(iBg)
+                    ?.toDoubleOrNull()
+                    ?.takeIf { kotlin.math.abs(it - bgBefore) <= 80.0 }  // gap filter
+                if (bgAfterActual == null) { skippedRows++; continue }  // last row or gap
             
-            val actualDelta = bgBefore - bgAfter
-            val neededDelta = bgBefore - targetBg
-            
-            // Label: Ideal Aggressiveness Factor
-            // If neededDelta is 50 and we only got 25 with agg 1.0, ideal was 2.0
-            // Clamped and smoothed to avoid noisy training
-            val weight = if (abs(neededDelta) < 5.0) 1.0 else (neededDelta / actualDelta.coerceAtLeast(1.0))
-            val idealAgg = (currentAgg * weight).coerceIn(0.5, 2.0)
+                // 1. Prepare Inputs
+                val inputFeatures = floatArrayOf(
+                    cols[iBg].toFloat(),
+                    cols[iBasal].toFloat(),
+                    cols[iAccel].toFloat(),
+                    cols[iDuraMin].toFloat(),
+                    cols[iDuraAvg].toFloat(),
+                    cols[iIob].toFloat()
+                )
 
-            inputs.add(inputFeatures)
-            targets.add(doubleArrayOf(idealAgg))
+                // 2. Labeling — use actual measured BG from next record as outcome
+                val targetBg   = cols[iTarget].toDouble()
+                val currentAgg = cols[iCurrentAgg].toDouble()
+
+                val actualDelta = bgBefore - bgAfterActual
+                val neededDelta = bgBefore - targetBg
+            
+                // Label: Ideal Aggressiveness Factor
+                // Goal: scale currentAgg so that actualDelta ≈ neededDelta.
+                //
+                // Edge case: if actualDelta <= 0 (BG moved the wrong direction or stayed flat),
+                // division is undefined / produces nonsense. coerceAtLeast(1.0) was the old
+                // "fix" but it silently turned any adverse BG move into a fake 1 mg/dL drop,
+                // then produced a wildly inflated weight (e.g. neededDelta=60 / 1 = 60).
+                // The signal collapsed to always maxAgg with no magnitude information.
+                //
+                // Correct handling:
+                //   BG went up when it should have dropped → aggressiveness clearly too low,
+                //     but we can't compute a ratio → apply a capped boost.
+                //   BG went up when it should have gone up (over-treatment in hypo region) →
+                //     aggressiveness was too high → apply a capped reduction.
+                val weight = when {
+                    abs(neededDelta) < 5.0 -> 1.0   // already near target, keep current
+                    actualDelta <= 0.0 -> {
+                        // BG did not fall at all (or rose). Ratio formula meaningless.
+                        if (neededDelta > 0.0) 1.5   // needed to fall, didn't → boost
+                        else 0.7                      // needed to rise (hypo), overshot → reduce
+                    }
+                    else -> (neededDelta / actualDelta).coerceIn(0.5, 3.0)
+                }
+                val idealAgg = (currentAgg * weight).coerceIn(0.5, 2.0)
+
+                inputs.add(inputFeatures)
+                targets.add(doubleArrayOf(idealAgg))
+            } catch (e: Exception) {
+                skippedRows++
+                aapsLogger.debug(LTag.APS, "🧠 T3C Trainer: Skipping malformed row (${e.message})")
+            }
+        }
+        if (skippedRows > 0) {
+            aapsLogger.debug(LTag.APS, "🧠 T3C Trainer: Skipped $skippedRows / ${dataLines.size} malformed rows")
         }
 
         if (inputs.isEmpty()) return Result.success()
