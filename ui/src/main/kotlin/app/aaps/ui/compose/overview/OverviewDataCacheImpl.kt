@@ -66,6 +66,7 @@ import app.aaps.core.interfaces.profile.ProfileUtil
 import app.aaps.core.interfaces.resources.ResourceHelper
 import app.aaps.core.interfaces.rx.bus.RxBus
 import app.aaps.core.interfaces.rx.events.EventBucketedDataCreated
+import app.aaps.core.interfaces.rx.events.EventInitializationChanged
 import app.aaps.core.interfaces.rx.events.EventLoopUpdateGui
 import app.aaps.core.interfaces.rx.events.EventNewOpenLoopNotification
 import app.aaps.core.interfaces.rx.events.EventNsClientStatusUpdated
@@ -265,6 +266,13 @@ class OverviewDataCacheImpl @AssistedInject constructor(
                 rxBus.toFlow(EventBucketedDataCreated::class.java).collect {
                     aapsLogger.debug(LTag.UI, "Bucketed data created, refreshing BgInfo for trend arrow")
                     updateBgInfoFromDatabase()
+                }
+            }
+
+            // Retry running mode after app finishes initializing (pump may not be selected at first load)
+            scope.launch {
+                rxBus.toFlow(EventInitializationChanged::class.java).collect {
+                    updateRunningModeFromDatabase()
                 }
             }
 
@@ -519,12 +527,14 @@ class OverviewDataCacheImpl @AssistedInject constructor(
     // =========================================================================
 
     private fun updateRunningModeFromDatabase() {
-        val mode = loop.runningMode
-        val rmRecord = loop.runningModeRecord
-
-        // Store raw data only - ViewModel computes display text
+        val rmRecord = try {
+            loop.runningModeRecord
+        } catch (e: IllegalStateException) {
+            aapsLogger.debug(LTag.UI, "updateRunningModeFromDatabase: pump not ready yet, skipping (${e.message})")
+            return
+        }
         _runningModeFlow.value = RunningModeDisplayData(
-            mode = mode,
+            mode = rmRecord.mode,
             timestamp = rmRecord.timestamp,
             duration = rmRecord.duration
         )

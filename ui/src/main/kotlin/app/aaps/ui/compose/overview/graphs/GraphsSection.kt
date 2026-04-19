@@ -752,9 +752,7 @@ private fun PulsePanel(
             if (state.titleText.isNotEmpty()) {
                 Text(
                     text = state.titleText,
-                    style = MaterialTheme.typography.labelSmall.copy(
-                        fontSize = TextUnit(9f, TextUnitType.Sp)
-                    ),
+                    style = MaterialTheme.typography.labelMedium,
                     fontWeight = FontWeight.Bold,
                     color = if (state.isHypoRisk) hypoColor else MaterialTheme.colorScheme.onSurface
                 )
@@ -763,9 +761,7 @@ private fun PulsePanel(
                 Spacer(Modifier.height(2.dp))
                 Text(
                     text = state.summaryText,
-                    style = MaterialTheme.typography.labelSmall.copy(
-                        fontSize = TextUnit(9f, TextUnitType.Sp)
-                    ),
+                    style = MaterialTheme.typography.labelMedium,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface,
                     maxLines = 4
@@ -775,9 +771,7 @@ private fun PulsePanel(
                 Spacer(Modifier.height(3.dp))
                 Text(
                     text = state.metaText,
-                    style = MaterialTheme.typography.labelSmall.copy(
-                        fontSize = TextUnit(9f, TextUnitType.Sp)
-                    ),
+                    style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                 )
             }
@@ -785,9 +779,7 @@ private fun PulsePanel(
                 Spacer(Modifier.height(2.dp))
                 Text(
                     text = state.hintText,
-                    style = MaterialTheme.typography.labelSmall.copy(
-                        fontSize = TextUnit(8f, TextUnitType.Sp)
-                    ),
+                    style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.75f)
                 )
             }

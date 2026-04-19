@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
@@ -95,6 +96,10 @@ fun OverviewScreenStacked(
                     .height(4.dp),
             )
         }
+
+        // State sammeln
+        val tirState by graphViewModel.tirFlow.collectAsStateWithLifecycle()
+
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -135,6 +140,13 @@ fun OverviewScreenStacked(
                     modifier = Modifier.fillMaxWidth()
                 )
             }
+
+            VerticalTirPanel(
+                state = tirState,
+                modifier = Modifier
+                    .padding(horizontal = 4.dp)
+                    .heightIn(min = 100.dp, max = 200.dp)
+            )
 
             // Right: Auditor indicator + AIMI action buttons
             Column(
@@ -291,8 +303,7 @@ private fun StatusChip(
             )
             Text(
                 text = text,
-                style = MaterialTheme.typography.labelLarge,
-                color = chipColor.copy(alpha = 0.9f),
+                style = MaterialTheme.typography.labelMedium,
                 modifier = Modifier.padding(start = AapsSpacing.small)
             )
         }

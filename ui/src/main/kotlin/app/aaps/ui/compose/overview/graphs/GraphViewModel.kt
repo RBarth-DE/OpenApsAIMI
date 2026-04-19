@@ -634,11 +634,11 @@ class GraphViewModel @AssistedInject constructor(
         val avgMgDl = readings.map { it.value }.average().toFloat()
         val a1c = ((avgMgDl + 46.7) / 28.7).toFloat()
         return TirUiState(
-            veryLow  = veryLow  / total,
-            low      = low      / total,
-            inRange  = inRange  / total,
-            high     = high     / total,
-            veryHigh = veryHigh / total,
+            veryLow  = veryLow  / total * 100f,
+            low      = low      / total * 100f,
+            inRange  = inRange  / total * 100f,
+            high     = high     / total * 100f,
+            veryHigh = veryHigh / total * 100f,
             readingCount = readings.size,
             avgMgDl  = avgMgDl,
             a1c      = a1c

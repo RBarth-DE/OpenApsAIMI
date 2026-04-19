@@ -45,7 +45,7 @@ fun OverviewChipsColumn(
     ) {
         if (trailingContent != null) {
             BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
-                val chipsWidth = (maxWidth * 0.4f).coerceIn(140.dp, 220.dp)
+                val chipsWidth = (maxWidth * 0.4f).coerceIn(100.dp, 160.dp)
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically
@@ -63,7 +63,8 @@ fun OverviewChipsColumn(
                             tempTargetState = tempTargetState,
                             tempTargetProgress = tempTargetProgress,
                             tempTargetReason = tempTargetReason,
-                            onNavigate = onNavigate
+                            onNavigate = onNavigate,
+                            modifier = Modifier.width(chipsWidth),
                         )
                     }
                     Row(
@@ -82,7 +83,8 @@ fun OverviewChipsColumn(
                 tempTargetState = tempTargetState,
                 tempTargetProgress = tempTargetProgress,
                 tempTargetReason = tempTargetReason,
-                onNavigate = onNavigate
+                onNavigate = onNavigate,
+                modifier = Modifier
             )
         }
     }
@@ -98,37 +100,41 @@ private fun NarrowChips(
     tempTargetState: TempTargetChipState,
     tempTargetProgress: Float,
     tempTargetReason: TT.Reason?,
-    onNavigate: (NavigationRequest) -> Unit
+    onNavigate: (NavigationRequest) -> Unit,
+    modifier: Modifier = Modifier
 ) {
-    if (runningModeText.isNotEmpty()) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            RunningModeChip(
-                mode = runningMode,
-                text = runningModeText,
-                progress = runningModeProgress,
-                modifier = Modifier.weight(1f),
-                onClick = { onNavigate(NavigationRequest.Element(ElementType.RUNNING_MODE)) }
-            )
-            if (isSimpleMode) {
-                Icon(
-                    imageVector = IcSettingsOff,
-                    contentDescription = stringResource(app.aaps.core.ui.R.string.simple_mode),
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier
-                        .padding(start = 4.dp)
-                        .size(20.dp)
+    Column(modifier = modifier) {
+        if (runningModeText.isNotEmpty()) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                RunningModeChip(
+                    mode = runningMode,
+                    text = runningModeText,
+                    progress = runningModeProgress,
+                    modifier = Modifier.weight(1f),
+                    onClick = { onNavigate(NavigationRequest.Element(ElementType.RUNNING_MODE)) }
                 )
+                if (isSimpleMode) {
+                    Icon(
+                        imageVector = IcSettingsOff,
+                        contentDescription = stringResource(app.aaps.core.ui.R.string.simple_mode),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier
+                            .padding(start = 4.dp)
+                            .size(20.dp)
+                    )
+                }
             }
         }
-    }
-    if (tempTargetText.isNotEmpty()) {
-        TempTargetChip(
-            targetText = tempTargetText,
-            state = tempTargetState,
-            progress = tempTargetProgress,
-            reason = tempTargetReason,
-            onClick = { onNavigate(NavigationRequest.Element(ElementType.TEMP_TARGET_MANAGEMENT)) }
-        )
+        if (tempTargetText.isNotEmpty()) {
+            TempTargetChip(
+                targetText = tempTargetText,
+                state = tempTargetState,
+                progress = tempTargetProgress,
+                reason = tempTargetReason,
+                onClick = { onNavigate(NavigationRequest.Element(ElementType.TEMP_TARGET_MANAGEMENT)) },
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
     }
 }
 

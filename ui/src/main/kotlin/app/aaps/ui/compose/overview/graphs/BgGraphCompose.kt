@@ -39,7 +39,6 @@ import app.aaps.core.interfaces.overview.graph.BasalGraphData
 import app.aaps.core.interfaces.overview.graph.BgDataPoint
 import app.aaps.core.interfaces.overview.graph.BgType
 import app.aaps.core.interfaces.overview.graph.BolusGraphPoint
-import app.aaps.core.interfaces.overview.graph.BolusType
 import app.aaps.core.interfaces.overview.graph.EpsGraphPoint
 import app.aaps.core.interfaces.overview.graph.SeriesType
 import app.aaps.core.interfaces.overview.graph.TargetLineData
@@ -176,7 +175,8 @@ fun BgGraphCompose(
     // Precompute visible SMB list for hit testing (same filter as rebuildChart)
     val visibleSmbs = remember(treatmentData, showBolus, minTimestamp) {
         if (!showBolus) emptyList()
-        else treatmentData.boluses.filter { it.bolusType == BolusType.SMB && it.isValid }
+        else treatmentData.boluses.filter { it.isValid }
+
     }
 
     suspend fun rebuildChart(
@@ -316,7 +316,7 @@ fun BgGraphCompose(
             lineSeries {
                 val smbX = if (showBolusMarkers) {
                     currentTreatmentData.boluses
-                        .filter { it.bolusType == BolusType.SMB && it.isValid }
+                        .filter { it.isValid }
                         .map { timestampToX(it.timestamp, minTimestamp) }
                         .filter { it in 0.0..maxX }
                 } else emptyList()
@@ -525,7 +525,7 @@ fun BgGraphCompose(
             pointProvider = LineCartesianLayer.PointProvider.single(
                 LineCartesianLayer.Point(
                     component = ShapeComponent(fill = Fill(smbColor), shape = TriangleShape),
-                    size = 12.dp
+                    size = 13.dp
                 )
             )
         )
