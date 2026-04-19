@@ -212,18 +212,18 @@ class OverviewViewModel(
             .observeOn(aapsSchedulers.io)
             .subscribe({ updateStatus() }, fabricPrivacy::logException)
 
-        disposables += activePlugin.activeOverview.overviewBus
+        disposables += rxBus
             .toObservable(EventUpdateOverviewGraph::class.java)
             .observeOn(aapsSchedulers.io)
             .subscribe({ updateGraphMessage() }, fabricPrivacy::logException)
 
-        disposables += activePlugin.activeOverview.overviewBus
+        disposables += rxBus
             .toObservable(EventUpdateOverviewIobCob::class.java)
             .observeOn(aapsSchedulers.io)
             .subscribe({ updateStatus() }, fabricPrivacy::logException)
 
         // Same bus as OverviewFragment.updateSensitivity() — keeps activity % / AIMI metrics in sync after autosens refresh.
-        disposables += activePlugin.activeOverview.overviewBus
+        disposables += rxBus
             .toObservable(EventUpdateOverviewSensitivity::class.java)
             .debounce(1L, TimeUnit.SECONDS)
             .observeOn(aapsSchedulers.io)

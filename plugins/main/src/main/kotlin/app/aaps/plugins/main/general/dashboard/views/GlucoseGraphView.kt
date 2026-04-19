@@ -1,12 +1,11 @@
 package app.aaps.plugins.main.general.dashboard.views
-import kotlinx.coroutines.runBlocking
 
 import android.content.Context
 import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.view.View
+import android.widget.FrameLayout
 import com.google.android.material.card.MaterialCardView
-import com.jjoe64.graphview.GraphView
 import app.aaps.plugins.main.databinding.ViewGlucoseGraphPlaceholderBinding
 
 class GlucoseGraphView @JvmOverloads constructor(
@@ -17,12 +16,11 @@ class GlucoseGraphView @JvmOverloads constructor(
 
     override fun performClick(): Boolean {
         super.performClick()
-        // Hier kannst du zusätzliche Logik einbauen, falls nötig
         return true
     }
     private val binding = ViewGlucoseGraphPlaceholderBinding.inflate(LayoutInflater.from(context), this, true)
 
-    val graph: GraphView get() = binding.graphView
+    val graph: FrameLayout get() = binding.graphView
     val rangeButton: android.widget.Button get() = binding.graphRangeButton
     val chartMenuButton: android.widget.ImageButton get() = binding.chartMenuButton
 

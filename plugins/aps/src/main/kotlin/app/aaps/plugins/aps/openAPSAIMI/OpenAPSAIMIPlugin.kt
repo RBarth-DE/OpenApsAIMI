@@ -16,7 +16,6 @@ import app.aaps.core.data.model.GV
 import app.aaps.core.data.model.TrendArrow
 import app.aaps.core.data.model.SourceSensor
 import app.aaps.core.data.plugin.PluginType
-import app.aaps.plugins.aps.OpenAPSFragment
 import app.aaps.core.data.time.T
 import app.aaps.core.interfaces.aps.APS
 import app.aaps.core.interfaces.aps.APSResult
@@ -146,7 +145,6 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
     private val storageHelper: AimiStorageHelper,
 ) : PluginBaseWithPreferences(
     PluginDescription()
-        .fragmentClass(OpenAPSFragment::class.java.name)
         .composeContent { plugin ->
             app.aaps.plugins.aps.compose.OpenAPSComposeContent(
                 apsPlugin = plugin as APS,

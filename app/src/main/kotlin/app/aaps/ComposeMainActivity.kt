@@ -52,7 +52,7 @@ import androidx.core.net.toUri
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewmodel.initializer
-import androidx.lifecycle.viewmodel.viewModelFactory
+import dagger.hilt.android.lifecycle.withCreationCallback
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -187,7 +187,6 @@ class ComposeMainActivity : AppCompatActivity() {
     @Inject lateinit var commandQueue: CommandQueue
     @Inject lateinit var storageHelper: AimiStorageHelper
     @Inject lateinit var bgQualityCheck: BgQualityCheck
-    @Inject lateinit var graphViewModelFactory: GraphViewModel.Factory
     @Inject lateinit var overviewDataCache: OverviewDataCache
 
     private var accessTree: ActivityResultLauncher<Uri?>? = null
@@ -203,9 +202,13 @@ class ComposeMainActivity : AppCompatActivity() {
     private val treatmentViewModel: TreatmentViewModel by viewModels()
     private val automationViewModel: AutomationViewModel by viewModels()
     private val loopActionViewModel: LoopActionViewModel by viewModels()
-    private val graphViewModel: GraphViewModel by viewModels {
-        viewModelFactory { initializer { graphViewModelFactory.create(overviewDataCache) } }
-    }
+    private val graphViewModel: GraphViewModel by viewModels(
+        extrasProducer = {
+            defaultViewModelCreationExtras.withCreationCallback<GraphViewModel.Factory> { factory ->
+                factory.create(overviewDataCache)
+            }
+        }
+    )
     private val treatmentsViewModel: TreatmentsViewModel by viewModels()
     private val insulinManagementViewModel: InsulinManagementViewModel by viewModels()
     private val tempTargetManagementViewModel: TempTargetManagementViewModel by viewModels()

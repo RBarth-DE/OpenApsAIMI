@@ -17,6 +17,7 @@ import app.aaps.core.interfaces.logging.LTag
 import app.aaps.core.interfaces.notifications.NotificationHolder
 import app.aaps.core.interfaces.plugin.ActivePlugin
 import app.aaps.core.interfaces.resources.ResourceHelper
+import app.aaps.core.interfaces.rx.bus.RxBus
 import app.aaps.core.interfaces.ui.IconsProvider
 import app.aaps.core.interfaces.ui.UiInteraction
 import app.aaps.core.interfaces.utils.DateUtil
@@ -40,7 +41,8 @@ class NotificationStore @Inject constructor(
     private val uiInteraction: UiInteraction,
     private val dateUtil: DateUtil,
     private val notificationHolder: NotificationHolder,
-    private val activePlugin: ActivePlugin
+    private val activePlugin: ActivePlugin,
+    private val rxBus: RxBus
 ) {
 
     private var store: MutableList<Notification> = ArrayList()
@@ -191,7 +193,7 @@ class NotificationStore @Inject constructor(
                 binding.dismiss.setOnClickListener {
                     val notification = it.tag as Notification
                     notification.action?.run()
-                    if (remove(notification.id)) activePlugin.activeOverview.overviewBus.send(EventUpdateOverviewNotification("NotificationCleared"))
+                    if (remove(notification.id)) rxBus.send(EventUpdateOverviewNotification("NotificationCleared"))
                 }
             }
         }

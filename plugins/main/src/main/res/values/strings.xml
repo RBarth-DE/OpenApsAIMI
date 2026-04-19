@@ -246,7 +246,8 @@
     <string name="ebstopsloop">Use of Extended bolus feature will stop closed loop mode for the time of running extended bolus. Do you really want it?</string>
     <string name="statuslights_cannula_age">cannula age</string>
     <string name="statuslights_patch_pump_age">patch pump age</string>
-    <string name="patch_pump">Patch pump</string>
+
+    <string name="chart_menu">Chart menu</string>
 
     <!-- Overview -->
     <string name="show_statuslights">Show status lights on home screen</string>
@@ -282,7 +283,6 @@
     <string name="a11y_graph_scale_12h">graph scale 12 hours</string>
     <string name="a11y_graph_scale_18h">graph scale 18 hours</string>
     <string name="a11y_graph_scale_24h">graph scale 24 hours</string>
-    <string name="patch_pump">Patch pump</string>
 
     <!-- Overview -->
     <string name="a11y_insulin_label">insulin</string>
@@ -346,8 +346,6 @@
     <string name="run_question">Run %s?</string>
 
     <!-- overview moved to core:ui module -->
-
-    <string name="data_status">BG data status</string>
 
     <!--    OverviewMenu-->
     <string name="overview_show_predictions">Predictions</string>

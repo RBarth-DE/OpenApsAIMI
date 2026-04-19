@@ -197,6 +197,7 @@
         <item name="announcementColor">@color/announcement</item>
         <item name="questionColor">@color/question</item>
         <item name="pumpHistoryColor">@color/pumpHistory</item>
+        <item name="userOptionColor">@color/userOption</item>
         <item name="sensColor">@color/sens</item>
         <!---Graph data glucose value point colors-->
         <item name="cobColor">@color/cob</item>
