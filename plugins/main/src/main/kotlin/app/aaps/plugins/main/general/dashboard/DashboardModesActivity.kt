@@ -7,7 +7,7 @@ import androidx.core.view.isVisible
 import android.content.Intent
 import app.aaps.core.interfaces.automation.Automation
 import app.aaps.core.interfaces.resources.ResourceHelper
-import app.aaps.core.ui.activities.TranslatedDaggerAppCompatActivity
+import dagger.android.support.DaggerAppCompatActivity
 
 import app.aaps.plugins.main.R
 import app.aaps.plugins.main.databinding.ActivityDashboardModesBinding
@@ -17,7 +17,7 @@ import javax.inject.Inject
 import app.aaps.core.interfaces.rx.AapsSchedulers
 import app.aaps.core.interfaces.rx.bus.RxBus
 
-class DashboardModesActivity : TranslatedDaggerAppCompatActivity() {
+class DashboardModesActivity : DaggerAppCompatActivity() {
 
     @Inject lateinit var automation: Automation
     @Inject lateinit var resourceHelper: ResourceHelper

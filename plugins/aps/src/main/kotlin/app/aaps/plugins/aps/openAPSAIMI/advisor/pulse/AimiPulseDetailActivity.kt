@@ -14,14 +14,14 @@ import app.aaps.core.interfaces.logging.AAPSLogger
 import app.aaps.core.interfaces.resources.ResourceHelper
 import app.aaps.core.interfaces.utils.DateUtil
 import app.aaps.core.interfaces.utils.DecimalFormatter
-import app.aaps.core.ui.activities.TranslatedDaggerAppCompatActivity
+import dagger.android.support.DaggerAppCompatActivity
 import javax.inject.Inject
 
 /**
  * Full-screen detail view for the last AIMI loop rationale ("pulse").
  * Shows the complete unclipped reason text, key decision numbers, and timing.
  */
-class AimiPulseDetailActivity : TranslatedDaggerAppCompatActivity() {
+class AimiPulseDetailActivity : DaggerAppCompatActivity() {
 
     @Inject lateinit var loop: Loop
     @Inject lateinit var dateUtil: DateUtil

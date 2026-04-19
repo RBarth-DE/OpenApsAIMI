@@ -16,7 +16,7 @@ import androidx.cardview.widget.CardView
 import androidx.core.content.ContextCompat
 import androidx.core.view.WindowCompat
 import app.aaps.core.interfaces.resources.ResourceHelper
-import app.aaps.core.ui.activities.TranslatedDaggerAppCompatActivity
+import dagger.android.support.DaggerAppCompatActivity
 import app.aaps.plugins.aps.R
 import app.aaps.core.keys.BooleanKey
 import app.aaps.plugins.aps.openAPSAIMI.advisor.oref.OrefAnalysisReport
@@ -43,7 +43,7 @@ import java.util.Locale
  * Displays advisor recommendations using localized resources.
  * =============================================================================
  */
-class AimiProfileAdvisorActivity : TranslatedDaggerAppCompatActivity() {
+class AimiProfileAdvisorActivity : DaggerAppCompatActivity() {
     
     @Inject lateinit var rh: ResourceHelper
     @Inject lateinit var profileFunction: app.aaps.core.interfaces.profile.ProfileFunction

@@ -9,7 +9,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import app.aaps.core.interfaces.logging.AAPSLogger
 import app.aaps.core.interfaces.resources.ResourceHelper
 import app.aaps.core.interfaces.sharedPreferences.SP
-import app.aaps.core.ui.activities.TranslatedDaggerAppCompatActivity
+import dagger.android.support.DaggerAppCompatActivity
 import app.aaps.plugins.aps.R
 import app.aaps.plugins.aps.databinding.ActivityContextBinding
 import app.aaps.plugins.aps.openAPSAIMI.context.ContextManager
@@ -28,7 +28,7 @@ import kotlin.time.Duration.Companion.minutes
  * 
  * Simplified version without ViewModel for quick implementation.
  */
-class ContextActivity : TranslatedDaggerAppCompatActivity() {
+class ContextActivity : DaggerAppCompatActivity() {
     
     @Inject lateinit var contextManager: ContextManager
     @Inject lateinit var sp: SP

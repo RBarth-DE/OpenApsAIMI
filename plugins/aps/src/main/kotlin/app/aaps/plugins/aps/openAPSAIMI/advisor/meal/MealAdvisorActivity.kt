@@ -14,7 +14,7 @@ import android.widget.TextView
 import android.widget.Toast
 import android.widget.Space
 import androidx.lifecycle.lifecycleScope
-import app.aaps.core.ui.activities.TranslatedDaggerAppCompatActivity
+import dagger.android.support.DaggerAppCompatActivity
 import app.aaps.plugins.aps.R
 import app.aaps.core.keys.interfaces.Preferences
 import app.aaps.core.interfaces.logging.AAPSLogger
@@ -29,7 +29,7 @@ import app.aaps.core.keys.DoubleKey
  * Meal Advisor UI: "Snap & Go"
  * Allows user to take a photo, estimates carbs, and injects into AIMI.
  */
-class MealAdvisorActivity : TranslatedDaggerAppCompatActivity() {
+class MealAdvisorActivity : DaggerAppCompatActivity() {
 
     @Inject lateinit var preferences: Preferences
     @Inject lateinit var persistenceLayer: app.aaps.core.interfaces.db.PersistenceLayer

@@ -7,7 +7,7 @@ import androidx.lifecycle.lifecycleScope
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.core.view.isVisible
-import app.aaps.core.ui.activities.TranslatedDaggerAppCompatActivity
+import dagger.android.support.DaggerAppCompatActivity
 import app.aaps.plugins.main.R
 import app.aaps.plugins.main.databinding.ActivityAdjustmentDetailsBinding
 import app.aaps.plugins.main.general.dashboard.viewmodel.AdjustmentCardState
@@ -19,7 +19,7 @@ import app.aaps.core.ui.toast.ToastUtils
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-class AdjustmentDetailsActivity : TranslatedDaggerAppCompatActivity() {
+class AdjustmentDetailsActivity : DaggerAppCompatActivity() {
 
     companion object {
         const val EXTRA_ADJUSTMENT_STATE = "extra_adjustment_state"

@@ -15,7 +15,7 @@ import app.aaps.core.interfaces.profile.ProfileFunction
 import app.aaps.core.interfaces.resources.ResourceHelper
 import app.aaps.core.keys.BooleanNonKey
 import app.aaps.core.keys.interfaces.Preferences
-import app.aaps.core.ui.activities.TranslatedDaggerAppCompatActivity
+import dagger.android.support.DaggerAppCompatActivity
 import app.aaps.core.interfaces.ui.UiInteraction
 import app.aaps.plugins.main.R
 import app.aaps.plugins.main.databinding.ActivityLoopStateBinding
@@ -27,7 +27,7 @@ import javax.inject.Inject
 import app.aaps.core.data.time.T
 import androidx.lifecycle.lifecycleScope
 
-class LoopStateActivity : TranslatedDaggerAppCompatActivity() {
+class LoopStateActivity : DaggerAppCompatActivity() {
 
     @Inject lateinit var loop: Loop
     @Inject lateinit var resourceHelper: ResourceHelper
@@ -119,7 +119,8 @@ class LoopStateActivity : TranslatedDaggerAppCompatActivity() {
             if (allowedModes.contains(RM.Mode.RESUME)) {
                 val action = if (runningMode == RM.Mode.DISCONNECTED_PUMP) Action.RECONNECT else Action.RESUME
                 val title = if (runningMode == RM.Mode.DISCONNECTED_PUMP) resourceHelper.gs(app.aaps.plugins.main.R.string.reconnect) else resourceHelper.gs(app.aaps.plugins.main.R.string.resume)
-                addButton(title, app.aaps.core.ui.R.drawable.ic_loop_resume) {
+                addButton(title, app.aaps.core.ui.R.drawable., don't forget to add to vcs.
+                    ic_loop_resume) {
                     loop.handleRunningModeChange(newRM = RM.Mode.RESUME, action = action, source = Sources.LoopDialog, profile = profile)
                     if (runningMode == RM.Mode.DISCONNECTED_PUMP) preferences.put(BooleanNonKey.ObjectivesReconnectUsed, true)
                 }

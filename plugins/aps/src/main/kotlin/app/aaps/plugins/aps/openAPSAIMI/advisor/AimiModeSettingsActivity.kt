@@ -18,7 +18,7 @@ import androidx.cardview.widget.CardView
 import app.aaps.core.keys.DoubleKey
 import app.aaps.core.keys.IntKey
 import app.aaps.core.keys.interfaces.Preferences
-import app.aaps.core.ui.activities.TranslatedDaggerAppCompatActivity
+import dagger.android.support.DaggerAppCompatActivity
 import app.aaps.core.interfaces.automation.Automation
 import app.aaps.core.interfaces.resources.ResourceHelper
 // OKDialog removed - use uiInteraction
@@ -26,7 +26,7 @@ import javax.inject.Inject
 import android.widget.Switch
 
 
-class AimiModeSettingsActivity : TranslatedDaggerAppCompatActivity() {
+class AimiModeSettingsActivity : DaggerAppCompatActivity() {
 
     @Inject lateinit var automation: Automation
     @Inject lateinit var rh: ResourceHelper
