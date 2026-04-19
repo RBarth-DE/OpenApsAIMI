@@ -264,7 +264,6 @@ class OverviewViewModel(
         refreshAdaptiveSmoothingQualityFromPlugin()
         val now = dateUtil.now()
         val lastBg = lastBgData.lastBg()
-        val now = dateUtil.now()
         val gs = glucoseStatusProvider.glucoseStatusData
         val smoothing = activePlugin.activeSmoothing
         val displayMgdl = DashboardCoherentGlucose.displayMgdl(lastBg, gs, smoothing, now)
@@ -488,7 +487,7 @@ class OverviewViewModel(
         val state = StatusCardState(
             glucoseText = glucoseText,
             glucoseColor = DashboardCoherentGlucose.displayBgColor(
-                context,
+                application,
                 displayMgdl,
                 profileFunction,
                 preferences,

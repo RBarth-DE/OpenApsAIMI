@@ -377,7 +377,7 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
             val stage = pkpdRuntimeForActivity?.activity?.stage?.let(::mapInsulinActivityStageToHistoryStage)
                 ?: ActivityStage.PEAK
             val activityNow = pkpdRuntimeForActivity?.activity?.relativeActivity ?: 0.0
-            val iobNow = iobCobCalculator.calculateFromTreatmentsAndTemps(nowMsForPkpd, profile).iob
+            val iobNow = runBlocking(Dispatchers.IO) { iobCobCalculator.calculateFromTreatmentsAndTemps(nowMsForPkpd, profile) }.iob
             val accel = glucoseStatus.delta - glucoseStatus.shortAvgDelta
             val history = trajectoryHistoryProvider.buildHistory(
                 nowMillis = nowMsForPkpd,
@@ -914,7 +914,7 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
             val nowMsForPkpd = dateUtil.now()
             val bgNowForPkpd = glucoseStatus.glucose
             val deltaNowForPkpd = glucoseStatus.delta
-            val iobNowForPkpd = iobCobCalculator.calculateFromTreatmentsAndTemps(nowMsForPkpd, profile).iob
+            val iobNowForPkpd = runBlocking(Dispatchers.IO) { iobCobCalculator.calculateFromTreatmentsAndTemps(nowMsForPkpd, profile) }.iob
             val profileIsfRawForPkpd = profile.getProfileIsfMgdl()
             val iobHeadForPkpd = iobArray.firstOrNull()
             val pkpdWindowSinceDoseMinForPkpd = if (iobHeadForPkpd != null && iobHeadForPkpd.lastBolusTime > 0L) {
@@ -953,7 +953,7 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
             )
             val sitePeakShiftMinutes = TapSitePeakShift.minutesForSiteAge(computeCannulaSiteAgeDays())
             val peakGovernorForActivity = TapPeakGovernor.resolve(
-                insulinPeakMinutes = insulin.iCfg.peak,
+                insulinPeakMinutes = insulin.peak,
                 physioPeakShiftMinutes = physioMults.peakShiftMinutes,
                 sitePeakShiftMinutes = sitePeakShiftMinutes,
                 pkpdLearnedPeak = pkpdRuntimeForActivity?.params?.peakMin,
@@ -1045,8 +1045,10 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
             sensorLagActivity = Round.roundTo(sensorLagActivity, 0.0001)
             historicActivity = Round.roundTo(historicActivity, 0.0001)
             currentActivity = Round.roundTo(currentActivity, 0.0001)
-            val ketoacidosisProtectionIob : Double = iobCobCalculator.calculateIobFromBolus().iob +
-                iobCobCalculator.calculateIobFromTempBasalsIncludingConvertedExtended().basaliob
+            val ketoacidosisProtectionIob : Double = runBlocking(Dispatchers.IO) {
+                iobCobCalculator.calculateIobFromBolus().iob +
+                    iobCobCalculator.calculateIobFromTempBasalsIncludingConvertedExtended().basaliob
+            }
             val tdd4D = tddCalculator.averageTDD(tddCalculator.calculate(4, allowMissingDays = false))
             val oapsProfile = OapsProfileAimi(
                 dia = eff.iCfg.dia,
