@@ -59,6 +59,7 @@ import app.aaps.core.utils.MidnightUtils
 import app.aaps.plugins.aps.openAPSAIMI.steps.UnifiedActivityProviderMTR
 import androidx.compose.ui.graphics.vector.ImageVector
 import app.aaps.plugins.main.R
+import app.aaps.plugins.main.general.overview.DashboardCoherentGlucose
 import io.reactivex.rxjava3.disposables.CompositeDisposable
 import io.reactivex.rxjava3.kotlin.plusAssign
 import java.io.Serializable
@@ -263,10 +264,14 @@ class OverviewViewModel(
         refreshAdaptiveSmoothingQualityFromPlugin()
         val now = dateUtil.now()
         val lastBg = lastBgData.lastBg()
-        val glucoseText = profileUtil.fromMgdlToStringInUnits(lastBg?.recalculated)
+        val now = dateUtil.now()
+        val gs = glucoseStatusProvider.glucoseStatusData
+        val smoothing = activePlugin.activeSmoothing
+        val displayMgdl = DashboardCoherentGlucose.displayMgdl(lastBg, gs, smoothing, now)
+        val displayTs = DashboardCoherentGlucose.displayTimestamp(lastBg, gs, smoothing, now)
+        val glucoseText = profileUtil.fromMgdlToStringInUnits(displayMgdl)
         val trendArrow = trendCalculator.getTrendArrow(iobCobCalculator.ads)?.directionToIcon()
         val trendDescription = trendCalculator.getTrendDescription(iobCobCalculator.ads) ?: ""
-        val gs = glucoseStatusProvider.glucoseStatusData
         val deltaMgdlForDisplay = when {
             gs == null -> null
             gs.shortAvgDelta.isFinite() -> gs.shortAvgDelta
@@ -280,10 +285,17 @@ class OverviewViewModel(
         val cobText = runBlocking { iobCobCalculator.getCobInfo("Dashboard COB") }
             .displayText(resourceHelper, decimalFormatter)
             ?: resourceHelper.gs(app.aaps.core.ui.R.string.value_unavailable_short)
-        val timeAgoLong = dateUtil.minAgoLong(resourceHelper, lastBg?.timestamp)
+        val timeAgo = dateUtil.minAgoShort(displayTs)
+        val timeAgoLong = dateUtil.minAgoLong(resourceHelper, displayTs)
+        val displayBgDescription = DashboardCoherentGlucose.displayBgDescription(
+            displayMgdl,
+            profileFunction,
+            preferences,
+            resourceHelper
+        )
         val contentDescription =
             resourceHelper.gs(R.string.a11y_blood_glucose) + " " +
-                glucoseText + " " + lastBgData.lastBgDescription() + " " + timeAgoLong
+                glucoseText + " " + displayBgDescription + " " + timeAgoLong
 
         // ═══════════════════════════════════════════════════════════════
         // Circle-Top Hybrid Dashboard - Calculate all new fields
@@ -475,31 +487,43 @@ class OverviewViewModel(
 
         val state = StatusCardState(
             glucoseText = glucoseText,
-            glucoseColor = lastBgData.lastBgColor(application),
+            glucoseColor = DashboardCoherentGlucose.displayBgColor(
+                context,
+                displayMgdl,
+                profileFunction,
+                preferences,
+                resourceHelper
+            ),
             trendArrowRes = trendArrow,
             trendDescription = trendDescription,
             deltaText = deltaText,
             cobText = cobText,
             loopStatusText = loopStatusText(loop.runningMode),
             loopIsRunning = !loop.runningMode.isSuspended(),
-            timeAgo = timeAgoSub,
-            timeAgoDescription = lastBolusXMin,
-            isGlucoseActual = lastBgData.isActualBg(),
+            timeAgo = timeAgo,
+            timeAgoDescription = timeAgoLong,
+            isGlucoseActual = DashboardCoherentGlucose.isDisplayActual(
+                lastBg,
+                gs,
+                smoothing,
+                now,
+                T.mins(9).msecs()
+            ),
             contentDescription = contentDescription,
             pumpStatusText = buildPumpLine(dateUtil.now()),
             predictionText = buildPredictionLine(dateUtil.now()),
             unicornImageRes = selectUnicornImage(  // 🦄 Dynamic unicorn image
-                bg = lastBg?.recalculated,
+                bg = displayMgdl,
                 delta = glucoseStatusProvider.glucoseStatusData?.delta
             ),
             isAimiContextActive = preferences.get(app.aaps.core.keys.StringKey.OApsAIMIContextStorage).length > 5,
             // For GlucoseCircleView
-            glucoseValue = lastBg?.recalculated,
+            glucoseValue = displayMgdl,
             targetLow = runBlocking { profileFunction.getProfile() }?.getTargetLowMgdl(),
             targetHigh = runBlocking { profileFunction.getProfile() }?.getTargetHighMgdl(),
 
             // Circle-Top Hybrid Dashboard fields
-            glucoseMgdl = lastBg?.recalculated?.toInt(),
+            glucoseMgdl = displayMgdl?.toInt(),
             noseAngleDeg = noseAngleDeg,
             //left
             stepsText = stepsText,
@@ -599,14 +623,20 @@ class OverviewViewModel(
         val lastBg = lastBgData.lastBg()
         val trendArrow = trendCalculator.getTrendArrow(iobCobCalculator.ads)
         val glucoseStatus = glucoseStatusProvider.glucoseStatusData
+        val displayMgdl = DashboardCoherentGlucose.displayMgdl(
+            lastBg,
+            glucoseStatus,
+            activePlugin.activeSmoothing,
+            now
+        )
         val adjustments = buildActiveAdjustments(now)
         val state = AdjustmentCardState(
-            glycemiaLine = buildGlycemiaLine(lastBg, trendArrow, glucoseStatus),
+            glycemiaLine = buildGlycemiaLine(displayMgdl, trendArrow, glucoseStatus),
             predictionLine = buildPredictionLine(now),
             iobActivityLine = buildIobActivityLine(),
             decisionLine = buildDecisionLine(),
             pumpLine = buildPumpLine(now),
-            safetyLine = buildSafetyLine(lastBg, glucoseStatus),
+            safetyLine = buildSafetyLine(displayMgdl, glucoseStatus),
             modeLine = resolveModeLine(now),
             adjustments = adjustments,
             reason = buildDecisionLine(),
@@ -663,11 +693,11 @@ class OverviewViewModel(
     }
 
     private fun buildGlycemiaLine(
-        lastBg: InMemoryGlucoseValue?,
+        displayMgdl: Double?,
         trendArrow: TrendArrow?,
         glucoseStatus: GlucoseStatus?
     ): String {
-        val glucoseText = profileUtil.fromMgdlToStringInUnits(lastBg?.recalculated)
+        val glucoseText = profileUtil.fromMgdlToStringInUnits(displayMgdl)
         val deltaMgdl = when {
             glucoseStatus == null -> null
             glucoseStatus.shortAvgDelta.isFinite() -> glucoseStatus.shortAvgDelta
@@ -754,8 +784,8 @@ class OverviewViewModel(
         return resourceHelper.gs(R.string.dashboard_adjustment_pump, statusText, siteAge, sensorAge)
     }
 
-    private fun buildSafetyLine(lastBg: InMemoryGlucoseValue?, glucoseStatus: GlucoseStatus?): String {
-        val bgValue = lastBg?.recalculated
+    private fun buildSafetyLine(displayMgdl: Double?, glucoseStatus: GlucoseStatus?): String {
+        val bgValue = displayMgdl
         val level = when {
             bgValue == null              -> null
             bgValue < SAFETY_CRITICAL_BG -> resourceHelper.gs(R.string.dashboard_adjustment_safety_level_critical)

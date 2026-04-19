@@ -135,4 +135,112 @@ class ExponentialSmoothingPlugin @Inject constructor(
 
         return data
     }
+    override fun preferDashboardGlucoseFromGlucoseStatus(): Boolean = true
+
+    /* REMOVED: DANGEROUS AUTO-CALIBRATION
+     * This function was blindly subtracting 20 mg/dL from all values > 220 mg/dL
+     * WITHOUT any validation against IOB, COB, or historical trends.
+     * This masked real hyperglycemia and prevented proper insulin dosing.
+     * 
+     * If sensor calibration is needed, it should be:
+     * 1. User-triggered, not automatic
+     * 2. Context-aware (IOB, COB, trends)
+     * 3. Validated against multiple data points
+     * 4. Logged and reversible
+     * 
+    private fun autoCalibrate(sensorValue: Double): Double {
+        val threshold = 220.0
+        val offset = 20.0
+        return if (sensorValue > threshold) {
+            sensorValue - offset
+        } else {
+            sensorValue
+        }
+    }
+    */
+
+    @Suppress("LocalVariableName")
+    override fun smooth(data: MutableList<InMemoryGlucoseValue>): MutableList<InMemoryGlucoseValue> {
+        val sizeRecords = data.size
+        val o1_sBG: ArrayList<Double> = ArrayList() // Premier ordre de lissage
+        val o2_sBG: ArrayList<Double> = ArrayList() // Second ordre de lissage
+        val o2_sD: ArrayList<Double> = ArrayList() // Delta pour le second ordre
+        val ssBG: ArrayList<Double> = ArrayList() // Résultat final lissé
+        var windowSize = data.size
+        val o1_weight = 0.4
+        val o1_a = 0.5
+        val o2_a = 0.4
+        val o2_b = 1.0
+        var insufficientSmoothingData = false
+
+        // REMOVED: Auto-calibration no longer applied - was dangerous and non-contextual
+        // for (i in data.indices) {
+        //     data[i].value = autoCalibrate(data[i].value)
+        // }
+
+        // Ajuster la fenêtre de lissage pour inclure uniquement les données valides
+        if (sizeRecords <= windowSize) {
+            windowSize = (sizeRecords - 1).coerceAtLeast(0)
+        }
+
+        for (i in 0 until windowSize) {
+            if (round((data[i].timestamp - data[i + 1].timestamp) / (1000.0 * 60)) >= 12) {
+                windowSize = i + 1
+                break
+            } else if (data[i].value == 38.0) {
+                windowSize = i
+                break
+            }
+        }
+
+        // Lissage de premier ordre
+        o1_sBG.clear()
+        if (windowSize >= 4) {
+            o1_sBG.add(data[windowSize - 1].value)
+            for (i in 0 until windowSize) {
+                o1_sBG.add(
+                    0,
+                    o1_sBG[0] + o1_a * (data[windowSize - 1 - i].value - o1_sBG[0])
+                )
+            }
+        } else {
+            insufficientSmoothingData = true
+        }
+
+        // Lissage de second ordre
+        if (windowSize >= 4) {
+            o2_sBG.add(data[windowSize - 1].value)
+            o2_sD.add(data[windowSize - 2].value - data[windowSize - 1].value)
+            for (i in 0 until windowSize - 1) {
+                o2_sBG.add(
+                    0,
+                    o2_a * data[windowSize - 2 - i].value + (1 - o2_a) * (o2_sBG[0] + o2_sD[0])
+                )
+                o2_sD.add(
+                    0,
+                    o2_b * (o2_sBG[0] - o2_sBG[1]) + (1 - o2_b) * o2_sD[0]
+                )
+            }
+        } else {
+            insufficientSmoothingData = true
+        }
+
+        // Calcul des moyennes pondérées
+        if (!insufficientSmoothingData) {
+            for (i in o2_sBG.indices) {
+                ssBG.add(o1_weight * o1_sBG[i] + (1 - o1_weight) * o2_sBG[i])
+            }
+            for (i in 0 until minOf(ssBG.size, data.size)) {
+                data[i].smoothed = max(round(ssBG[i]), 39.0)
+                data[i].trendArrow = TrendArrow.NONE
+            }
+        } else {
+            for (i in 0 until data.size) {
+                data[i].smoothed = max(data[i].value, 39.0)
+                data[i].trendArrow = TrendArrow.NONE
+            }
+        }
+
+        return data
+    }
 }

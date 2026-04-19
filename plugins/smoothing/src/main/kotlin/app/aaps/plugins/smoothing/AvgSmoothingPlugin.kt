@@ -30,6 +30,8 @@ class AvgSmoothingPlugin @Inject constructor(
     aapsLogger, rh
 ), Smoothing {
 
+    override fun preferDashboardGlucoseFromGlucoseStatus(): Boolean = true
+
     override fun smooth(data: MutableList<InMemoryGlucoseValue>): MutableList<InMemoryGlucoseValue> {
         if (data.lastIndex < 4) {
             aapsLogger.debug(LTag.GLUCOSE, "Not enough value's to smooth!")

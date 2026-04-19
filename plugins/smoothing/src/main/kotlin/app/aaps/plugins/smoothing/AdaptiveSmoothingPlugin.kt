@@ -79,6 +79,8 @@ class AdaptiveSmoothingPlugin @Inject constructor(
     aapsLogger, rh
 ), Smoothing {
 
+    override fun preferDashboardGlucoseFromGlucoseStatus(): Boolean = true
+
     override fun lastAdaptiveSmoothingQualitySnapshot(): AdaptiveSmoothingQualitySnapshot? = lastQualitySnapshot
 
     // ============================================================

@@ -19,4 +19,11 @@ interface Smoothing {
      * Updated synchronously during [smooth] on the worker thread.
      */
     fun lastAdaptiveSmoothingQualitySnapshot(): AdaptiveSmoothingQualitySnapshot? = null
+
+    /**
+     * When true, overview / dashboard headline glucose should prefer [app.aaps.core.interfaces.aps.GlucoseStatus.glucose]
+     * (bucket head / APS pipeline) over [app.aaps.core.data.iob.InMemoryGlucoseValue.recalculated] from [app.aaps.core.interfaces.overview.LastBgData]
+     * when the latter can temporarily reflect a newer raw DB reading before smoothing is applied.
+     */
+    fun preferDashboardGlucoseFromGlucoseStatus(): Boolean = false
 }
