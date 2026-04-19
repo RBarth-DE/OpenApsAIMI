@@ -119,8 +119,7 @@ class LoopStateActivity : DaggerAppCompatActivity() {
             if (allowedModes.contains(RM.Mode.RESUME)) {
                 val action = if (runningMode == RM.Mode.DISCONNECTED_PUMP) Action.RECONNECT else Action.RESUME
                 val title = if (runningMode == RM.Mode.DISCONNECTED_PUMP) resourceHelper.gs(app.aaps.plugins.main.R.string.reconnect) else resourceHelper.gs(app.aaps.plugins.main.R.string.resume)
-                addButton(title, app.aaps.core.ui.R.drawable., don't forget to add to vcs.
-                    ic_loop_resume) {
+                addButton(title, app.aaps.core.ui.R.drawable.ic_loop_resume) {
                     loop.handleRunningModeChange(newRM = RM.Mode.RESUME, action = action, source = Sources.LoopDialog, profile = profile)
                     if (runningMode == RM.Mode.DISCONNECTED_PUMP) preferences.put(BooleanNonKey.ObjectivesReconnectUsed, true)
                 }
