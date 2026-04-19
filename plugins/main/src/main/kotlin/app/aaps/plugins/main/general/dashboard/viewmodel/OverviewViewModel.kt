@@ -57,6 +57,7 @@ import app.aaps.core.keys.interfaces.Preferences
 import app.aaps.core.objects.extensions.*
 import app.aaps.core.utils.MidnightUtils
 import app.aaps.plugins.aps.openAPSAIMI.steps.UnifiedActivityProviderMTR
+import androidx.compose.ui.graphics.vector.ImageVector
 import app.aaps.plugins.main.R
 import io.reactivex.rxjava3.disposables.CompositeDisposable
 import io.reactivex.rxjava3.kotlin.plusAssign
@@ -976,7 +977,7 @@ class OverviewViewModel(
 data class StatusCardState(
     val glucoseText: String,
     val glucoseColor: Int,
-    val trendArrowRes: Int?,
+    val trendArrowRes: ImageVector?,
     val trendDescription: String,
     val deltaText: String,
 
