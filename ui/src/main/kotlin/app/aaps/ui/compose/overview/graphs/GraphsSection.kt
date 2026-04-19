@@ -849,7 +849,7 @@ private fun TirPanel(
                     for ((fraction, color) in labels) {
                         if (fraction > 0f) {
                             Box(modifier = Modifier.weight(fraction)) {
-                                val pct = (fraction * 100).toInt()
+                                val pct = (fraction).toInt()
                                 if (fraction >= 0.05f) {
                                     Text(
                                         text = "$pct%",
