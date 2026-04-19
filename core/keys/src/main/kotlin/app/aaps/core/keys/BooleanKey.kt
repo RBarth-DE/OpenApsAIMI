@@ -171,6 +171,12 @@ enum class BooleanKey(
     OApsAIMIWCycleRequireConfirm("key_use_Aimi_wcycle_require_confirm", false),
     OApsAIMINightGrowthEnabled("key_oaps_aimi_ngr_enabled", true),
     OApsAIMIPkpdEnabled("key_aimi_pkpd_enabled", false),
+    OApsAIMIPeakGovernorEnabled(
+        key = "key_aimi_peak_governor_enabled",
+        defaultValue = true,
+        titleResId = R.string.pref_title_aimi_peak_governor_enabled,
+        summaryResId = R.string.pref_summary_aimi_peak_governor_enabled,
+    ),
     OApsAIMIPkpdPragmaticReliefEnabled("key_aimi_pkpd_pragmatic_relief_enabled", true),
     /** Plateau + meaningful IOB + falling prediction → throttle SMB, bias TBR, no Red Carpet restore. */
     OApsAIMIIobSurveillanceGuard("key_aimi_iob_surveillance_guard", true),

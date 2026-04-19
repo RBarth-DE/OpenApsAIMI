@@ -39,6 +39,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import java.util.Locale
 import app.aaps.core.keys.BooleanKey
 import app.aaps.core.keys.DoubleKey
 import app.aaps.core.keys.decimalPlaces
@@ -106,6 +107,8 @@ fun AimiPkpdSettingsScreen(
                         titleResId = R.string.oaps_aimi_pkpd_enabled_title,
                         summaryResId = R.string.oaps_aimi_pkpd_enabled_summary,
                     )
+                    AdaptiveSwitchPreferenceItem(booleanKey = BooleanKey.OApsAIMIPeakGovernorEnabled)
+                    AdaptiveDoublePreferenceItem(doubleKey = DoubleKey.OApsAIMIPeakGovernorLearnedWeight)
 
                     Text(
                         stringResource(R.string.aimi_pkpd_preset_section_title),
@@ -288,6 +291,15 @@ fun AimiPkpdSettingsScreen(
     }
 }
 
+private fun tapPeakBranchAdviceResId(branch: String): Int =
+    when (branch.uppercase(Locale.US)) {
+        "PRIOR" -> R.string.aimi_peak_gov_advice_prior
+        "PHYSIO" -> R.string.aimi_peak_gov_advice_physio
+        "LEARNED" -> R.string.aimi_peak_gov_advice_learned
+        "TRAJECTORY" -> R.string.aimi_peak_gov_advice_trajectory
+        else -> R.string.aimi_peak_gov_advice_generic
+    }
+
 @Composable
 private fun LoopSummaryCard(preferences: Preferences) {
     val dia = preferences.get(DoubleKey.OApsAIMIPkpdStateDiaH)
@@ -306,6 +318,42 @@ private fun LoopSummaryCard(preferences: Preferences) {
                 style = MaterialTheme.typography.bodyMedium,
                 modifier = Modifier.padding(top = AapsSpacing.small),
             )
+            
+            val peakPrior = preferences.get(DoubleKey.OApsAIMIPkpdStatePriorPeak)
+            val peakEffective = preferences.get(DoubleKey.OApsAIMIPkpdStateEffectivePeak)
+            val peakPhysio = preferences.get(DoubleKey.OApsAIMIPkpdStatePhysioPeak)
+            val peakSite = preferences.get(DoubleKey.OApsAIMIPkpdStateSitePeak)
+            val peakTraj = preferences.get(DoubleKey.OApsAIMIPkpdStateTrajectoryPeak)
+            val dominantBranch = preferences.get(app.aaps.plugins.aps.openAPSAIMI.keys.AimiStringKey.OApsAIMIPkpdStateDominantBranch)
+
+            if (dominantBranch.isNotEmpty()) {
+                Text(
+                    text = stringResource(
+                        R.string.aimi_pkpd_tap_g_detail,
+                        dominantBranch,
+                        peakEffective,
+                        peakPrior,
+                        peakPhysio,
+                        peakSite,
+                        peakTraj,
+                    ),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.padding(top = AapsSpacing.small),
+                )
+                val branchAdviceRes = tapPeakBranchAdviceResId(dominantBranch)
+                val branchAdviceText = if (branchAdviceRes == R.string.aimi_peak_gov_advice_generic) {
+                    stringResource(branchAdviceRes, dominantBranch)
+                } else {
+                    stringResource(branchAdviceRes)
+                }
+                Text(
+                    text = branchAdviceText,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(top = AapsSpacing.small),
+                )
+            }
         }
     }
 }

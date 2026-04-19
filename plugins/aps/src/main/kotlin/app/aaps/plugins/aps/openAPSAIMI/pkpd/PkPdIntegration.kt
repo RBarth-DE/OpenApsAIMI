@@ -15,6 +15,14 @@ data class MealAggressionContext(
 
 class PkPdIntegration(private val preferences: Preferences) {
 
+    companion object {
+        /**
+         * Minimum change in learned peak (minutes vs last persisted) required to write prefs again.
+         * Tight values cause noisy UI; TAP-G RFC §9 B.3 — tune with product if needed.
+         */
+        const val PEAK_PERSIST_MIN_DELTA_MIN = 0.5
+    }
+
     private data class Config(
         val enabled: Boolean,
         val bounds: PkPdBounds,
@@ -83,13 +91,24 @@ class PkPdIntegration(private val preferences: Preferences) {
         val tddIsf = computeTddIsf(tdd24h, profileIsf)
         IsfTddProvider.set(tddIsf)
         val epochMin = TimeUnit.MILLISECONDS.toMinutes(epochMillis)
+        val learningWindowMin = windowMin.coerceIn(
+            AdaptivePkPdEstimator.LEARNING_WINDOW_MIN_MIN,
+            AdaptivePkPdEstimator.LEARNING_WINDOW_MAX_MIN,
+        )
+        if (learningWindowMin != windowMin) {
+            consoleLog?.add(
+                "PKPD_LEARN: windowMin=$windowMin clamped to $learningWindowMin for estimator.update " +
+                    "(bounds ${AdaptivePkPdEstimator.LEARNING_WINDOW_MIN_MIN}-${AdaptivePkPdEstimator.LEARNING_WINDOW_MAX_MIN})",
+            )
+        }
+        logPkpdLearningSkipReason(iobU, carbsActiveG, deltaMgDlPer5, exerciseFlag, consoleLog)
         estimator.update(
             epochMin = epochMin,
             bg = bg,
             deltaMgDlPer5 = deltaMgDlPer5,
             iobU = iobU,
             carbsActiveG = carbsActiveG,
-            windowMin = windowMin,
+            windowMin = learningWindowMin,
             exerciseFlag = exerciseFlag
         )
         val params = estimator.params()
@@ -208,11 +227,32 @@ class PkPdIntegration(private val preferences: Preferences) {
     private fun persistStateIfNeeded(params: PkPdParams, bounds: PkPdBounds) {
         val clamped = clampParams(params, bounds)
         val last = lastPersisted
-        val shouldPersist = last == null || abs(last.diaHrs - clamped.diaHrs) > 0.01 || abs(last.peakMin - clamped.peakMin) > 0.5
+        val shouldPersist = last == null ||
+            abs(last.diaHrs - clamped.diaHrs) > 0.01 ||
+            abs(last.peakMin - clamped.peakMin) > PEAK_PERSIST_MIN_DELTA_MIN
         if (shouldPersist) {
             preferences.put(DoubleKey.OApsAIMIPkpdStateDiaH, clamped.diaHrs)
             preferences.put(DoubleKey.OApsAIMIPkpdStatePeakMin, clamped.peakMin)
             lastPersisted = clamped
+        }
+    }
+
+    private fun logPkpdLearningSkipReason(
+        iobU: Double,
+        carbsActiveG: Double,
+        deltaMgDlPer5: Double,
+        exerciseFlag: Boolean,
+        consoleLog: MutableList<String>?,
+    ) {
+        val reason = when {
+            iobU < 0.3 -> "iob<0.3"
+            carbsActiveG > 15.0 -> "cob>15"
+            exerciseFlag -> "exercise"
+            deltaMgDlPer5 > 5.0 -> "delta>5"
+            else -> null
+        }
+        if (reason != null) {
+            consoleLog?.add("PKPD_LEARN skip: $reason (update() returns early in estimator)")
         }
     }
 

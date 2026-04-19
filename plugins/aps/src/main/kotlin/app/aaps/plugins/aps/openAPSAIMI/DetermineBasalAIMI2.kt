@@ -103,6 +103,7 @@ import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.collections.asSequence
+import app.aaps.core.interfaces.profile.EffectiveProfile
 import kotlinx.coroutines.runBlocking
 import kotlin.math.abs
 import kotlin.math.exp
@@ -621,6 +622,9 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         private val pkPdCsvLogger: PkPdCsvLogger
     ) : PkpdPort {
 
+        private fun pkpdLearningWindowMin(ctx: app.aaps.plugins.aps.openAPSAIMI.model.LoopContext): Int =
+            ctx.pkpdWindowMin ?: 90
+
         private fun app.aaps.plugins.aps.openAPSAIMI.model.LoopContext.mealModeActive(): Boolean =
             modes.meal || modes.breakfast || modes.lunch || modes.dinner || modes.highCarb || modes.snack
 
@@ -636,7 +640,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                 deltaMgDlPer5 = ctx.bg.delta5,
                 iobU = ctx.iobU,
                 carbsActiveG = ctx.cobG,
-                windowMin = ctx.settings.smbIntervalMin,
+                windowMin = pkpdLearningWindowMin(ctx),
                 exerciseFlag = false, // remplace par ctx.modes.sport si dispo
                 profileIsf = ctx.profile.isfMgdlPerU,
                 tdd24h = ctx.tdd24hU,
@@ -668,7 +672,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                                                     deltaMgDlPer5 = ctx.bg.delta5,
                                                     iobU = ctx.iobU,
                                                     carbsActiveG = ctx.cobG,
-                                                    windowMin = ctx.settings.smbIntervalMin,
+                                                    windowMin = pkpdLearningWindowMin(ctx),
                                                     exerciseFlag = false, // remplace par ctx.modes.sport si dispo
                                                     profileIsf = ctx.profile.isfMgdlPerU,
                                                     tdd24h = ctx.tdd24hU,
@@ -718,7 +722,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                     delta5 = ctx.bg.delta5,
                     iobU = ctx.iobU,
                     carbsActiveG = ctx.cobG,
-                    windowMin = ctx.settings.smbIntervalMin,
+                    windowMin = pkpdLearningWindowMin(ctx),
                     diaH = pkpd.diaMin / 60.0,
                     peakMin = pkpd.peakMin.toDouble(),
                     fusedIsf = pkpd.fusedIsf,
@@ -4514,6 +4518,13 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         
         if (trajectoryFlagEnabled) {
             try {
+                val effectiveProfileForTrajectory: EffectiveProfile? = runBlocking {
+                    try {
+                        profileFunction.getProfile(currentTime)
+                    } catch (_: Exception) {
+                        null
+                    }
+                }
                 // 1. Build Phase-Space History
                 val trajectoryHistory = trajectoryHistoryProvider.buildHistory(
                     nowMillis = currentTime, historyMinutes = 90, currentBg = bg,
@@ -4521,7 +4532,9 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                     insulinActivityNow = iobActivityNow, iobNow = iob.toDouble(),
                     pkpdStage = insulinActionState.activityStage,
                     timeSinceLastBolus = if (lastBolusAgeMinutes.isFinite()) lastBolusAgeMinutes.toInt() else 120,
-                    cobNow = cob.toDouble()
+                    cobNow = cob.toDouble(),
+                    effectiveProfile = effectiveProfileForTrajectory,
+                    historicalInsulinPeakMinutes = profile.peakTime.toInt().coerceAtLeast(35),
                 )
                 
                 // 2. Run Trajectory Analysis (The "Insight" Gate)
@@ -4999,6 +5012,12 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         rT.eventualBG = earlyPkpdPredictions.eventual
         
         // 4. Compute PkPdRuntime (Critical for Tail Damping)
+        val iobForEarlyPkpd = iob_data_array.firstOrNull()
+        val earlyPkpdWindowSinceDoseMin = if (iobForEarlyPkpd != null && iobForEarlyPkpd.lastBolusTime > 0L) {
+            ((dateUtil.now() - iobForEarlyPkpd.lastBolusTime) / 60000.0).toInt().coerceAtLeast(0)
+        } else {
+            90
+        }
         this.cachedPkpdRuntime = try {
              pkpdIntegration.computeRuntime(
                 epochMillis = dateUtil.now(),
@@ -5006,7 +5025,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                 deltaMgDlPer5 = glucoseStatus.delta,
                 iobU = iobTotal.toDouble(),  // FIX: Use iobTotal from iobActionProfile (line 3614)
                 carbsActiveG = mealData.mealCOB,
-                windowMin = 360, // 6h window
+                windowMin = earlyPkpdWindowSinceDoseMin,
                 exerciseFlag = sportTime,
                 profileIsf = earlySens,
                 tdd24h = profile.max_daily_basal * 24.0, // Sort of
@@ -5071,8 +5090,23 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         val effectiveDiaH = pkpdRuntime?.params?.diaHrs
             ?: profile.dia   // → ou ton DIA ajusté SI PKPD est désactivé
 
-        val effectivePeakMin = pkpdRuntime?.params?.peakMin
-            ?: profile.peakTime  // idem, legacy seulement en fallback
+        // F.2: single model peak for this tick is profile.peakTime (set in OpenAPSAIMIPlugin from TAP-G); do not mix raw learner peak here.
+        val effectivePeakMin = profile.peakTime
+
+        // H.4: surface last TAP-G log line in APS console when present (length-capped, once per distinct line)
+        val peakGovLine = preferences.get(app.aaps.plugins.aps.openAPSAIMI.keys.AimiStringKey.OApsAIMIPkpdLastPeakGovLogLine)
+        if (peakGovLine.isNotBlank()) {
+            val alreadyEchoed =
+                preferences.get(app.aaps.plugins.aps.openAPSAIMI.keys.AimiStringKey.OApsAIMIPkpdLastPeakGovConsoleEchoed)
+            if (peakGovLine != alreadyEchoed) {
+                val clipped = if (peakGovLine.length > 220) peakGovLine.substring(0, 220) + "..." else peakGovLine
+                consoleLog.add(clipped)
+                preferences.put(
+                    app.aaps.plugins.aps.openAPSAIMI.keys.AimiStringKey.OApsAIMIPkpdLastPeakGovConsoleEchoed,
+                    peakGovLine,
+                )
+            }
+        }
 
         if (preferences.get(BooleanKey.OApsAIMIStraightLineTubeAdvisorEnabled)) {
             try {
@@ -5167,7 +5201,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             reasonAimi
         )
         } else {
-            pkpdRuntime.params.peakMin
+            profile.peakTime
         }
         val autodrive = preferences.get(BooleanKey.OApsAIMIautoDrive)
         val isAutodriveV3 = preferences.get(BooleanKey.OApsAIMIautoDriveActive)
@@ -8299,6 +8333,14 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                     
                     // Extract reason tags from finalResult.reason
                     val reasonTags = finalResult.reason.toString().split(". ").map { it.trim() }
+
+                    val auditorEffectiveProfile: EffectiveProfile? = runBlocking {
+                        try {
+                            profileFunction.getProfile(dateUtil.now())
+                        } catch (_: Exception) {
+                            null
+                        }
+                    }
                     
                     // Call auditor (async)
                     auditorOrchestrator.auditDecision(
@@ -8332,7 +8374,8 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                         predictionAvailable = predictionAvailable,
                         predictedBg = this.predictedBg?.toDouble(),
                         eventualBg = rT.eventualBG,
-                        inPrebolusWindow = inPrebolusWindow
+                        inPrebolusWindow = inPrebolusWindow,
+                        effectiveProfile = auditorEffectiveProfile,
                     ) { verdict: AuditorVerdict?, result: DecisionResult ->
                         // Callback executed when audit completes using expert sealed classes
                         

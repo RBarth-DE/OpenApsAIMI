@@ -74,5 +74,6 @@ class MealAdvisorResponseSanitizerTest {
         )
         val secured = MealAdvisorResponseSanitizer.secureEstimationResult(raw)
         assertTrue(secured.needsManualConfirmation)
+        assertEquals(0.0, secured.recommendedCarbsForDose, 0.001)
     }
 }

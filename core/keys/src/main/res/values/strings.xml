@@ -510,6 +510,10 @@
     <string name="pref_summary_aimi_advisor_llm_rich_oref">Adds a plain-language facts block for the coach LLM. Turn off for a shorter cloud prompt.</string>
     <string name="pref_title_aimi_straight_line_tube">Straight-line tube advisor (SMB caps)</string>
     <string name="pref_summary_aimi_straight_line_tube">Discrete short-horizon control on max SMB: keeps predicted minimum BG above a floor using the PKPD min curve, favors larger caps when eventual BG is high, penalizes zig-zag SMB sizing. Does not replace PKPD or safety nets. Off by default.</string>
+    <string name="pref_title_aimi_peak_governor_enabled">TAP-G peak governor</string>
+    <string name="pref_summary_aimi_peak_governor_enabled">When adaptive PK/PD is on, blend the insulin profile peak with the learned PKPD peak for loop peakTime (see research doc TAP_G_PEAK_GOVERNOR_RFC).</string>
+    <string name="pref_title_aimi_peak_governor_learned_weight">TAP-G learned peak blend weight</string>
+    <string name="pref_summary_aimi_peak_governor_learned_weight">0 = insulin anchor only, 1 = learned PKPD peak only. Default 0.55.</string>
     <string name="aimi_tube_advanced_title">Straight-line tube (tuning)</string>
     <string name="aimi_tube_hypo_floor_title">Tube: minimum predicted BG floor (mg/dL)</string>
     <string name="aimi_tube_hypo_floor_summary">Robust hypo constraint: SMB cap scale is only allowed if min predicted BG minus estimated SMB effect stays at or above this value.</string>

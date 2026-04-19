@@ -171,9 +171,11 @@ class AIMIInsulinDecisionAdapterMTR @Inject constructor(
         
         // val trajectoryRelevanceScore = gateOutcome.relevanceScore (Already defined above)
         
+        // TAP-G RFC G.2: Cosine gate peak shift lives only in [PhysioMultipliersMTR.peakShiftMinutes] and is fed
+        // into [TapPeakGovernor] as physioPeakShiftMinutes — it is not re-applied as a second independent peak offset.
         val modulatedMultipliers = rawMultipliers.copy(
             isfFactor = modulatedISF,
-            peakShiftMinutes = gateOutcome.peakTimeShiftMinutes, // Carrier for Phase Shift
+            peakShiftMinutes = gateOutcome.peakTimeShiftMinutes,
             trajectoryRelevanceScore = trajectoryRelevanceScore,
             appliedCaps = if (gateOutcome.dominantKernel != KernelType.REST) 
                             "${rawMultipliers.appliedCaps} + CGate:${gateOutcome.dominantKernel}" 

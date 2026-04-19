@@ -12,6 +12,7 @@ import androidx.core.util.forEach
 import app.aaps.plugins.aps.openAPSAIMI.steps.UnifiedActivityProviderMTR
 import app.aaps.core.data.aps.SMBDefaults
 import app.aaps.core.data.model.GlucoseUnit
+import app.aaps.core.data.model.TE
 import app.aaps.core.data.model.GV
 import app.aaps.core.data.model.TrendArrow
 import app.aaps.core.data.model.SourceSensor
@@ -95,7 +96,17 @@ import kotlin.math.floor
 import app.aaps.plugins.aps.openAPSAIMI.ISF.IsfBlender
 import app.aaps.plugins.aps.openAPSAIMI.pkpd.IsfFusion
 import app.aaps.plugins.aps.openAPSAIMI.pkpd.IsfFusionBounds
+import app.aaps.plugins.aps.openAPSAIMI.pkpd.ActivityStage
+import app.aaps.plugins.aps.openAPSAIMI.pkpd.InsulinActivityStage
 import app.aaps.plugins.aps.openAPSAIMI.pkpd.PkPdIntegration
+import app.aaps.plugins.aps.openAPSAIMI.pkpd.PkPdRuntime
+import app.aaps.plugins.aps.openAPSAIMI.pkpd.TapPeakGovernor
+import app.aaps.plugins.aps.openAPSAIMI.pkpd.TapSitePeakShift
+import app.aaps.plugins.aps.openAPSAIMI.pkpd.TrajectoryPeakBias
+import app.aaps.plugins.aps.openAPSAIMI.pkpd.TrajectoryPeakMismatchScorer
+import app.aaps.plugins.aps.openAPSAIMI.trajectory.StableOrbit
+import app.aaps.plugins.aps.openAPSAIMI.trajectory.TrajectoryGuard
+import app.aaps.plugins.aps.openAPSAIMI.trajectory.TrajectoryHistoryProvider
 import androidx.core.util.isEmpty
 import androidx.core.util.size
 import androidx.core.net.toUri
@@ -143,6 +154,8 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
     private val insulin: Insulin,
     private val ch: ConcentrationHelper,
     private val storageHelper: AimiStorageHelper,
+    private val trajectoryHistoryProvider: TrajectoryHistoryProvider,
+    private val trajectoryGuard: TrajectoryGuard,
 ) : PluginBaseWithPreferences(
     PluginDescription()
         .composeContent { plugin ->
@@ -315,6 +328,95 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
             maxChangePer5Min = preferences.get(DoubleKey.OApsAIMIIsfFusionMaxChangePerTick)
         )
         return IsfFusion(bounds)
+    }
+
+    /**
+     * Age of current infusion site in days (0 if no cannula change in the look-back window).
+     * Same window as main AIMI loop site logic (7 days of therapy events).
+     */
+    private fun computeCannulaSiteAgeDays(): Float {
+        val fromTime = System.currentTimeMillis() - TimeUnit.DAYS.toMillis(7)
+        return try {
+            val siteChanges = runBlocking {
+                persistenceLayer.getTherapyEventDataFromTime(fromTime, TE.Type.CANNULA_CHANGE, true)
+            }
+            if (siteChanges.isNotEmpty()) {
+                val latestChangeTimestamp = siteChanges.last().timestamp
+                ((System.currentTimeMillis() - latestChangeTimestamp).toFloat() / (1000f * 60f * 60f * 24f))
+            } else {
+                0f
+            }
+        } catch (_: Exception) {
+            0f
+        }
+    }
+
+    private fun mapInsulinActivityStageToHistoryStage(stage: InsulinActivityStage): ActivityStage =
+        when (stage) {
+            InsulinActivityStage.PRE_ONSET, InsulinActivityStage.RISING -> ActivityStage.RISING
+            InsulinActivityStage.PEAK -> ActivityStage.PEAK
+            InsulinActivityStage.TAIL, InsulinActivityStage.EXHAUSTED -> ActivityStage.TAIL
+        }
+
+    /**
+     * Trajectory geometry → small bounded peak nudge for [TapPeakGovernor] (TAP-G Phase D, same APS tick).
+     */
+    private suspend fun computeTrajectoryPeakNudgeForGovernor(
+        nowMsForPkpd: Long,
+        profile: EffectiveProfile,
+        glucoseStatus: GlucoseStatus,
+        pkpdRuntimeForActivity: PkPdRuntime?,
+        mealCobForPkpd: Double,
+        pkpdWindowSinceDoseMinForPkpd: Int,
+        currentBasalUph: Double,
+        targetBgMgdl: Double,
+    ): Double {
+        if (!preferences.get(BooleanKey.OApsAIMITrajectoryGuardEnabled)) return 0.0
+        if (!preferences.get(BooleanKey.OApsAIMIPeakGovernorEnabled)) return 0.0
+        return try {
+            val stage = pkpdRuntimeForActivity?.activity?.stage?.let(::mapInsulinActivityStageToHistoryStage)
+                ?: ActivityStage.PEAK
+            val activityNow = pkpdRuntimeForActivity?.activity?.relativeActivity ?: 0.0
+            val iobNow = iobCobCalculator.calculateFromTreatmentsAndTemps(nowMsForPkpd, profile).iob
+            val accel = glucoseStatus.delta - glucoseStatus.shortAvgDelta
+            val history = trajectoryHistoryProvider.buildHistory(
+                nowMillis = nowMsForPkpd,
+                historyMinutes = 90,
+                currentBg = glucoseStatus.glucose,
+                currentDelta = glucoseStatus.delta,
+                currentAccel = accel,
+                insulinActivityNow = activityNow,
+                iobNow = iobNow,
+                pkpdStage = stage,
+                timeSinceLastBolus = pkpdWindowSinceDoseMinForPkpd,
+                cobNow = mealCobForPkpd,
+                effectiveProfile = profile,
+                historicalInsulinPeakMinutes = insulin.iCfg.peak.coerceAtLeast(35),
+            )
+            val orbit = StableOrbit.fromProfile(
+                targetBg = targetBgMgdl,
+                basalRate = currentBasalUph.coerceAtLeast(0.05),
+            )
+            val analysis = trajectoryGuard.analyzeTrajectory(history, orbit) ?: return 0.0
+            val geometryNudge = TrajectoryPeakBias.minutesNudge(
+                analysis = analysis,
+                lastBolusAgeMinutes = pkpdWindowSinceDoseMinForPkpd,
+                cobGrams = mealCobForPkpd,
+            )
+            val mismatchNudge = if (geometryNudge == 0.0) {
+                TrajectoryPeakMismatchScorer.minutesNudgeFromHistoryOrZero(
+                    history = history,
+                    insulinPeakMinutes = insulin.iCfg.peak.coerceAtLeast(35),
+                    lastBolusAgeMinutes = pkpdWindowSinceDoseMinForPkpd,
+                    cobGrams = mealCobForPkpd,
+                )
+            } else {
+                0.0
+            }
+            geometryNudge + mismatchNudge
+        } catch (_: Exception) {
+            0.0
+        }
     }
 
     @SuppressLint("DefaultLocale")
@@ -807,19 +909,88 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
                 aapsLogger.error(LTag.APS, "Failed to apply AIMI Brain factor", e)
             }
 
-            val iobArray = runBlocking { iobCobCalculator.calculateIobArrayForSMB(autosensResult, SMBDefaults.exercise_mode, SMBDefaults.half_basal_exercise_target, isTempTarget) }
-            val mealData = runBlocking { iobCobCalculator.getMealDataWithWaitingForCalculationFinish() }
+            val iobArray = iobCobCalculator.calculateIobArrayForSMB(autosensResult, SMBDefaults.exercise_mode, SMBDefaults.half_basal_exercise_target, isTempTarget)
+            val mealData = iobCobCalculator.getMealDataWithWaitingForCalculationFinish()
+            val nowMsForPkpd = dateUtil.now()
+            val bgNowForPkpd = glucoseStatus.glucose
+            val deltaNowForPkpd = glucoseStatus.delta
+            val iobNowForPkpd = iobCobCalculator.calculateFromTreatmentsAndTemps(nowMsForPkpd, profile).iob
+            val profileIsfRawForPkpd = profile.getProfileIsfMgdl()
+            val iobHeadForPkpd = iobArray.firstOrNull()
+            val pkpdWindowSinceDoseMinForPkpd = if (iobHeadForPkpd != null && iobHeadForPkpd.lastBolusTime > 0L) {
+                ((nowMsForPkpd - iobHeadForPkpd.lastBolusTime) / 60000.0).toInt().coerceAtLeast(0)
+            } else {
+                90
+            }
+            val mealCobForPkpd = mealData.mealCOB.takeIf { it.isFinite() && it >= 0.0 } ?: 0.0
+            val pkpdRuntimeForActivity = pkpdIntegration.computeRuntime(
+                epochMillis = nowMsForPkpd,
+                bg = bgNowForPkpd,
+                deltaMgDlPer5 = deltaNowForPkpd,
+                iobU = iobNowForPkpd,
+                carbsActiveG = mealCobForPkpd,
+                windowMin = pkpdWindowSinceDoseMinForPkpd,
+                exerciseFlag = false,
+                profileIsf = profileIsfRawForPkpd,
+                tdd24h = tdd24Hrs,
+                combinedDelta = deltaNowForPkpd,
+                uamConfidence = AimiUamHandler.confidenceOrZero(),
+            )
+            lastPkpdScale = pkpdRuntimeForActivity?.pkpdScale ?: 1.0
+            aapsLogger.debug(
+                LTag.APS,
+                "PK/PD: pkpdScale=$lastPkpdScale (bg=$bgNowForPkpd, delta=$deltaNowForPkpd, iob=$iobNowForPkpd, tdd24=$tdd24Hrs, isfRaw=$profileIsfRawForPkpd)",
+            )
+            val trajectoryPeakNudgeMinutes = computeTrajectoryPeakNudgeForGovernor(
+                nowMsForPkpd = nowMsForPkpd,
+                profile = profile as EffectiveProfile,
+                glucoseStatus = glucoseStatus,
+                pkpdRuntimeForActivity = pkpdRuntimeForActivity,
+                mealCobForPkpd = mealCobForPkpd,
+                pkpdWindowSinceDoseMinForPkpd = pkpdWindowSinceDoseMinForPkpd,
+                currentBasalUph = profile.getBasal(),
+                targetBgMgdl = targetBg,
+            )
+            val sitePeakShiftMinutes = TapSitePeakShift.minutesForSiteAge(computeCannulaSiteAgeDays())
+            val peakGovernorForActivity = TapPeakGovernor.resolve(
+                insulinPeakMinutes = insulin.iCfg.peak,
+                physioPeakShiftMinutes = physioMults.peakShiftMinutes,
+                sitePeakShiftMinutes = sitePeakShiftMinutes,
+                pkpdLearnedPeak = pkpdRuntimeForActivity?.params?.peakMin,
+                pkpdEnabled = preferences.get(BooleanKey.OApsAIMIPkpdEnabled),
+                governorEnabled = preferences.get(BooleanKey.OApsAIMIPeakGovernorEnabled),
+                peakMinBound = preferences.get(DoubleKey.OApsAIMIPkpdBoundsPeakMinMin),
+                peakMaxBound = preferences.get(DoubleKey.OApsAIMIPkpdBoundsPeakMinMax),
+                learnedBlendWeight = preferences.get(DoubleKey.OApsAIMIPeakGovernorLearnedWeight),
+                trajectoryMinutesNudge = trajectoryPeakNudgeMinutes,
+            )
+            peakGovernorForActivity.logLine?.let { line -> aapsLogger.debug(LTag.APS, line) }
+            preferences.put(
+                AimiStringKey.OApsAIMIPkpdLastPeakGovLogLine,
+                peakGovernorForActivity.logLine.orEmpty(),
+            )
+            if (peakGovernorForActivity.logLine.isNullOrBlank()) {
+                preferences.put(AimiStringKey.OApsAIMIPkpdLastPeakGovConsoleEchoed, "")
+            }
+
+            // H.1: Save detailed peak branch data for UI / PKPD Overview
+            preferences.put(DoubleKey.OApsAIMIPkpdStatePriorPeak, peakGovernorForActivity.peakPrior)
+            preferences.put(DoubleKey.OApsAIMIPkpdStatePhysioPeak, peakGovernorForActivity.peakPhysio)
+            preferences.put(DoubleKey.OApsAIMIPkpdStateSitePeak, peakGovernorForActivity.peakSite)
+            preferences.put(DoubleKey.OApsAIMIPkpdStateTrajectoryPeak, peakGovernorForActivity.peakTrajectory)
+            preferences.put(DoubleKey.OApsAIMIPkpdStateEffectivePeak, peakGovernorForActivity.effectivePeakMinutes)
+            preferences.put(AimiStringKey.OApsAIMIPkpdStateDominantBranch, peakGovernorForActivity.dominantBranch)
+
+            val peakTimeMinutesForProfile = peakGovernorForActivity.effectivePeakMinutes
             var currentActivity = 0.0
             for (i in -4..0) { //MP: -4 to 0 calculates all the insulin active during the last 5 minutes
                 val iob = runBlocking { iobCobCalculator.calculateFromTreatmentsAndTemps(System.currentTimeMillis() - TimeUnit.MINUTES.toMillis(i.toLong()), profile) }
                 currentActivity += iob.activity
             }
             var futureActivity = 0.0
-            
-            // 🌀 Cosine Gate: Apply Peak Shift
-            val activityPredTimePK = insulin.peak + physioMults.peakShiftMinutes
-            // Ensure peak time remains reasonable (min 35m)
-            val safepk = activityPredTimePK.coerceAtLeast(35)
+
+            // Cosine / activity integration uses the same governed peak as OapsProfileAimi.peakTime
+            val safepk = peakTimeMinutesForProfile.toInt().coerceAtLeast(35)
             
             for (i in -4..0) { //MP: calculate 5-minute-insulin activity centering around peakTime
                 val iob = runBlocking { iobCobCalculator.calculateFromTreatmentsAndTemps(System.currentTimeMillis() + TimeUnit.MINUTES.toMillis(safepk.toLong() - i), profile) }
@@ -874,42 +1045,9 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
             sensorLagActivity = Round.roundTo(sensorLagActivity, 0.0001)
             historicActivity = Round.roundTo(historicActivity, 0.0001)
             currentActivity = Round.roundTo(currentActivity, 0.0001)
-            // === PK/PD: calcule un pkpdScale cohérent et le mémorise ===
-            // === PK/PD: calcule un pkpdScale cohérent et le mémorise (SANS dyn ISF) ===
-            val nowMs = dateUtil.now()
-
-// valeurs BG/delta déjà dispo dans invoke (glucoseStatus)
-            val bgNow = glucoseStatus.glucose
-            val deltaNow = glucoseStatus.delta
-
-// IOB instantané
-            val iobNow = runBlocking { iobCobCalculator.calculateFromTreatmentsAndTemps(nowMs, profile) }.iob
-
-// Utilise le TDD 24h que tu as déjà calculé/chargé dans invoke (évite les IO coûteuses)
-            val tdd24ForPk = tdd24Hrs  // garde ta variable existante ici (Double)
-
-// IMPORTANT : passer un ISF "profil brut" pour éviter toute ré-entrée dans dynISF
-            val profileIsfRaw = profile.getProfileIsfMgdl()   // mg/dL/U du profil, SANS dynamique
-
-            val pkpdRuntimeNow = pkpdIntegration.computeRuntime(
-                epochMillis = nowMs,
-                bg = bgNow,
-                deltaMgDlPer5 = deltaNow,
-                iobU = iobNow,
-                carbsActiveG = 0.0,          // branche tes carbs actifs réels si tu les as ici
-                windowMin = 240,             // fenêtre standard (4h) – ajuste si besoin
-                exerciseFlag = false,        // remplace par ton flag 'sportTime' si dispo ICI
-                profileIsf = profileIsfRaw,  // ← **PROFIL BRUT, PAS getIsfMgdl()**
-                tdd24h = tdd24ForPk,
-                combinedDelta = deltaNow,    // Fallback simple car combinedDelta non dispo ici
-                uamConfidence = AimiUamHandler.confidenceOrZero()
-            )
             val ketoacidosisProtectionIob : Double = iobCobCalculator.calculateIobFromBolus().iob +
                 iobCobCalculator.calculateIobFromTempBasalsIncludingConvertedExtended().basaliob
-
-            lastPkpdScale = pkpdRuntimeNow?.pkpdScale ?: 1.0
-            aapsLogger.debug(LTag.APS, "PK/PD: pkpdScale=$lastPkpdScale (bg=$bgNow, delta=$deltaNow, iob=$iobNow, tdd24=$tdd24ForPk, isfRaw=$profileIsfRaw)")
-            val tdd4D = tddCalculator.averageTDD(runBlocking { tddCalculator.calculate(4, allowMissingDays = false) })
+            val tdd4D = tddCalculator.averageTDD(tddCalculator.calculate(4, allowMissingDays = false))
             val oapsProfile = OapsProfileAimi(
                 dia = eff.iCfg.dia,
                 min_5m_carbimpact = 0.0, // not used
@@ -954,7 +1092,7 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
                 variable_sens = variableSensitivity,
                 insulinDivisor = insulinDivisor,
                 TDD = if (tdd4D == null) preferences.get(DoubleKey.OApsAIMITDD7) else tdd,
-                peakTime = activityPredTimePK.toDouble(),
+                peakTime = peakTimeMinutesForProfile,
                 futureActivity = futureActivity,
                 sensorLagActivity = sensorLagActivity,
                 historicActivity = historicActivity,
@@ -1636,6 +1774,8 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
                     )
                 )
                 add(BooleanKey.OApsAIMIPkpdEnabled)
+                add(BooleanKey.OApsAIMIPeakGovernorEnabled)
+                add(DoubleKey.OApsAIMIPeakGovernorLearnedWeight)
                 add(DoubleKey.OApsAIMIPkpdInitialDiaH)
                 add(DoubleKey.OApsAIMIPkpdInitialPeakMin)
                 add(DoubleKey.OApsAIMIPkpdBoundsDiaMinH)

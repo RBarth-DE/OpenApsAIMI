@@ -52,4 +52,33 @@ enum class AimiStringKey(
             UnifiedActivityProviderMTR.MODE_DISABLED to R.string.pref_aimi_steps_source_disabled,
         ),
     ),
+
+    OApsAIMIPkpdStateDominantBranch(
+        key = "aimi_pkpd_state_dominant_branch",
+        defaultValue = "",
+        titleResId = 0,
+        showInApsMode = false,
+        showInNsClientMode = false,
+        showInPumpControlMode = false
+    ),
+
+    /** Last material `PEAK_GOV:` line for APS console / debugging (RFC H.4). */
+    OApsAIMIPkpdLastPeakGovLogLine(
+        key = "aimi_pkpd_state_last_peak_gov_log",
+        defaultValue = "",
+        titleResId = 0,
+        showInApsMode = false,
+        showInNsClientMode = false,
+        showInPumpControlMode = false
+    ),
+
+    /** Last `PEAK_GOV` line echoed to APS console (dedup in DetermineBasalAIMI2). */
+    OApsAIMIPkpdLastPeakGovConsoleEchoed(
+        key = "aimi_pkpd_state_last_peak_gov_console_echoed",
+        defaultValue = "",
+        titleResId = 0,
+        showInApsMode = false,
+        showInNsClientMode = false,
+        showInPumpControlMode = false
+    ),
 }

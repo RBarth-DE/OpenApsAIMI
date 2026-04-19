@@ -24,6 +24,14 @@ class AdaptivePkPdEstimator(
     private val cfg: PkPdLearningConfig = PkPdLearningConfig(),
     initial: PkPdParams = PkPdParams(diaHrs = 4.0, peakMin = 75.0)
 ) {
+
+    companion object {
+        /** Must match [PkPdLearningConfig.minWindowMin] / [PkPdIntegration] learning clamp. */
+        const val LEARNING_WINDOW_MIN_MIN = 20
+        /** Must match [PkPdLearningConfig.maxWindowMin]. */
+        const val LEARNING_WINDOW_MAX_MIN = 180
+    }
+
     private val state = AtomicReference(initial)
     private var lastUpdateEpochMin: Long = 0
 

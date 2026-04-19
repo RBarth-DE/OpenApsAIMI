@@ -227,6 +227,12 @@
     <string name="aimi_pkpd_compose_summary">Guided presets, comfort tuning, and expert parameters in one screen</string>
     <string name="aimi_pkpd_loop_summary_title">Currently used by the loop</string>
     <string name="aimi_pkpd_loop_summary_format">Learned DIA %1$.1f h · peak %2$.0f min</string>
+    <string name="aimi_pkpd_tap_g_detail">TAP-G branch: %1$s\nEffective peak %2$.1f min (insulin prior %3$.1f)\nPhysio offset %4$.1f min, site offset %5$.1f min, trajectory %6$.1f min</string>
+    <string name="aimi_peak_gov_advice_prior">Advisor: the insulin profile peak is driving the effective peak this tick.</string>
+    <string name="aimi_peak_gov_advice_physio">Advisor: the physio / trajectory gate offset (steps, HR, stress kernel) is the main peak adjustment.</string>
+    <string name="aimi_peak_gov_advice_learned">Advisor: adaptive PKPD learning is pulling the governed peak within your bounds.</string>
+    <string name="aimi_peak_gov_advice_trajectory">Advisor: phase-space trajectory geometry added a small bounded peak-time nudge.</string>
+    <string name="aimi_peak_gov_advice_generic">Advisor: dominant branch %1$s — see numeric breakdown above.</string>
     <string name="aimi_pkpd_preset_section_title">Insulin profile preset</string>
     <string name="aimi_pkpd_preset_ultra_fast">Ultra-fast (e.g. Fiasp / Lyumjev)</string>
     <string name="aimi_pkpd_preset_rapid">Rapid (e.g. Humalog / NovoRapid)</string>

@@ -4,6 +4,7 @@ import kotlinx.coroutines.runBlocking
 import app.aaps.core.interfaces.aps.IobTotal
 import app.aaps.core.interfaces.aps.GlucoseStatusAIMI
 import app.aaps.core.interfaces.aps.OapsProfileAimi
+import app.aaps.core.interfaces.profile.EffectiveProfile
 import app.aaps.core.interfaces.db.PersistenceLayer
 import app.aaps.core.interfaces.logging.AAPSLogger
 import app.aaps.core.interfaces.stats.TddCalculator
@@ -71,7 +72,8 @@ class AuditorDataCollector @Inject constructor(
         wcycleFactor: Double?,
         tbrMaxMode: Double?,
         tbrMaxAutoDrive: Double?,
-        physio: PhysioSnapshot? = null
+        physio: PhysioSnapshot? = null,
+        effectiveProfile: EffectiveProfile? = null,
     ): AuditorInput {
         
         val now = dateUtil.now()
@@ -109,6 +111,11 @@ class AuditorDataCollector @Inject constructor(
         )
         
         // Retrieve robust history from TrajectoryHistoryProvider
+        val timeSinceLastBolusMin = if (iob.lastBolusTime > 0L) {
+            ((now - iob.lastBolusTime) / 60000L).toInt().coerceAtLeast(0)
+        } else {
+            0
+        }
         val trajectoryHistory = trajectoryHistoryProvider.buildHistory(
             nowMillis = now,
             historyMinutes = 90, // Increased to 90 to match Guard requirements
@@ -123,8 +130,10 @@ class AuditorDataCollector @Inject constructor(
                 "FALLING" -> app.aaps.plugins.aps.openAPSAIMI.pkpd.ActivityStage.FALLING
                 else -> app.aaps.plugins.aps.openAPSAIMI.pkpd.ActivityStage.TAIL
             },
-            timeSinceLastBolus = 0, 
-            cobNow = cob ?: 0.0
+            timeSinceLastBolus = timeSinceLastBolusMin,
+            cobNow = cob ?: 0.0,
+            effectiveProfile = effectiveProfile,
+            historicalInsulinPeakMinutes = profile.peakTime.toInt().coerceAtLeast(35),
         )
 
         // Build history object

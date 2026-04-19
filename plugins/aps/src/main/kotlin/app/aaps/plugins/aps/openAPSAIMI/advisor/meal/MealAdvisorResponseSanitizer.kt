@@ -34,11 +34,20 @@ object MealAdvisorResponseSanitizer {
         val fpu = raw.fpuEquivalent
             .takeIf { it.isFinite() }?.coerceIn(0.0, MAX_FPU_EQUIVALENT_GRAMS) ?: 0.0
 
-        val recCarbs = raw.recommendedCarbsForDose
-            .takeIf { it.isFinite() }?.coerceIn(
-                carbs.min,
-                minOf(MAX_RECOMMENDED_CARB_GRAMS, maxOf(carbs.max, carbs.estimate)),
-            ) ?: carbs.estimate.coerceIn(carbs.min, minOf(MAX_RECOMMENDED_CARB_GRAMS, carbs.max))
+        // If the model explicitly recommends 0 g for dosing but reports meaningful meal carbs,
+        // do not coerce upward into [min,max] — that would hide the inconsistency.
+        val recCarbs = if (raw.recommendedCarbsForDose <= 0.0 &&
+            raw.recommendedCarbsForDose.isFinite() &&
+            carbs.estimate > 1.0
+        ) {
+            0.0
+        } else {
+            raw.recommendedCarbsForDose
+                .takeIf { it.isFinite() }?.coerceIn(
+                    carbs.min,
+                    minOf(MAX_RECOMMENDED_CARB_GRAMS, maxOf(carbs.max, carbs.estimate)),
+                ) ?: carbs.estimate.coerceIn(carbs.min, minOf(MAX_RECOMMENDED_CARB_GRAMS, carbs.max))
+        }
 
         val visible = raw.visibleItems.asSequence()
             .take(MAX_VISIBLE_ITEMS)
