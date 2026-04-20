@@ -3,8 +3,6 @@ package app.aaps.ui.compose.overview.graphs
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -24,6 +22,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.platform.LocalViewConfiguration
 import androidx.compose.ui.input.pointer.PointerEventPass
@@ -31,6 +30,14 @@ import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.waitForUpOrCancellation
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.clickable
+import androidx.compose.material3.Surface
+import androidx.compose.ui.window.Popup
+import androidx.compose.ui.window.PopupProperties
+
+import kotlinx.coroutines.delay
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.aaps.core.data.configuration.Constants
 import app.aaps.core.graph.vico.Square
@@ -579,6 +586,8 @@ fun BgGraphCompose(
         }
     }
 
+    var smbPopupOffset by remember { mutableStateOf(androidx.compose.ui.unit.IntOffset.Zero) }
+
     val smbTapModifier = if (showBolus && visibleSmbs.isNotEmpty()) {
         Modifier
             .pointerInput(visibleSmbs, minTimestamp, maxX) {
@@ -610,6 +619,11 @@ fun BgGraphCompose(
 
                         if (hit != null) {
                             //haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                            val popupY = (down.position.y - with(density) { 80.dp.toPx() }).toInt()
+                            smbPopupOffset = androidx.compose.ui.unit.IntOffset(
+                                x = (down.position.x - with(density) { 40.dp.toPx() }).toInt().coerceAtLeast(0),
+                                y = popupY.coerceAtLeast(with(density) { 4.dp.toPx() }.toInt())
+                            )
                             selectedSmb = hit
                         }
                     }
@@ -625,21 +639,40 @@ fun BgGraphCompose(
         val timeStr = remember(smb.timestamp) {
             SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(Date(smb.timestamp))
         }
-        AlertDialog(
+
+        // Auto-dismiss nach 3 Sekunden
+        LaunchedEffect(smb) {
+            delay(3000)
+            selectedSmb = null
+        }
+
+        Popup(
+            offset = smbPopupOffset,
             onDismissRequest = { selectedSmb = null },
-            title = { Text("SMB") },
-            text = {
-                Text(
-                    // Adjust field name if TreatmentPoint uses a different property (e.g. units, value)
-                    "Zeit: $timeStr\nMenge: ${"%.2f".format(smb.amount)} U"
-                )
-            },
-            confirmButton = {
-                Button(onClick = { selectedSmb = null }) {
-                    Text("OK")
+            properties = PopupProperties(focusable = false)
+        ) {
+            Surface(
+                shape = MaterialTheme.shapes.medium,
+                tonalElevation = 4.dp,
+                shadowElevation = 4.dp,
+                modifier = Modifier
+                    .padding(16.dp)
+                    .clickable { selectedSmb = null }
+            ) {
+                Column(modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)) {
+                    Text(
+                        text = "${"%.2f".format(smb.amount)} U",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text(
+                        text = timeStr,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                    )
                 }
             }
-        )
+        }
     }
 
     // =========================================================================
