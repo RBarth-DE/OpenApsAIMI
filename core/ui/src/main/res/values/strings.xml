@@ -1109,5 +1109,7 @@
     <string name="aimi_btn_meal">Meal</string>
     <string name="aimi_btn_context">Context</string>
     <string name="aimi_btn_stats">Stats</string>
+    <string name="remove_items">Remove Items</string>
+    <string name="sort_items">Sort Items</string>
 
 </resources>
