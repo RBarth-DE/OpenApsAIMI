@@ -2,6 +2,7 @@ package app.aaps.plugins.constraints.safety
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Shield
+import android.os.Looper
 import app.aaps.core.data.model.advancedFilteringSupported
 import app.aaps.core.data.plugin.PluginType
 import app.aaps.core.data.pump.defs.PumpDescription
@@ -37,6 +38,10 @@ import app.aaps.core.objects.extensions.put
 import app.aaps.core.objects.extensions.store
 import app.aaps.core.ui.compose.preference.PreferenceSubScreenDef
 import app.aaps.plugins.constraints.R
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.JsonObject
 import javax.inject.Inject
@@ -65,6 +70,33 @@ class SafetyPlugin @Inject constructor(
         .icon(Icons.Default.Shield),
     aapsLogger, rh
 ), PluginConstraints, Safety {
+    private val ioScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    @Volatile private var hasActiveExtendedBolusCache: Boolean = false
+    @Volatile private var extendedBolusCacheTimeMs: Long = 0L
+
+    private fun refreshExtendedBolusCacheAsync(now: Long) {
+        ioScope.launch {
+            val active = runCatching { persistenceLayer.getExtendedBolusActiveAt(now) != null }.getOrDefault(false)
+            hasActiveExtendedBolusCache = active
+            extendedBolusCacheTimeMs = now
+        }
+    }
+
+    private fun hasActiveExtendedBolus(now: Long): Boolean {
+        val cacheIsFresh = now - extendedBolusCacheTimeMs <= EXTENDED_BOLUS_CACHE_TTL_MS
+        if (!cacheIsFresh) {
+            refreshExtendedBolusCacheAsync(now)
+        }
+        if (Looper.myLooper() == Looper.getMainLooper()) {
+            // Never block Compose/UI thread while constraints are being read.
+            return hasActiveExtendedBolusCache
+        }
+        val active = runCatching { runBlocking(Dispatchers.IO) { persistenceLayer.getExtendedBolusActiveAt(now) != null } }.getOrDefault(hasActiveExtendedBolusCache)
+        hasActiveExtendedBolusCache = active
+        extendedBolusCacheTimeMs = now
+        return active
+    }
+
 
     /**
      * Constraints interface
@@ -82,7 +114,7 @@ class SafetyPlugin @Inject constructor(
             value.set(false, rh.gs(R.string.closed_loop_disabled_on_dev_branch), this)
         }
         val pump = activePlugin.activePump
-        if (!pump.isFakingTempsByExtendedBoluses && runBlocking { persistenceLayer.getExtendedBolusActiveAt(dateUtil.now()) } != null) {
+        if (!pump.isFakingTempsByExtendedBoluses && hasActiveExtendedBolus(dateUtil.now())) {
             value.set(false, rh.gs(R.string.closed_loop_disabled_with_eb), this)
         }
         return value
@@ -194,4 +226,8 @@ class SafetyPlugin @Inject constructor(
         ),
         icon = pluginDescription.icon
     )
+
+    private companion object {
+        private const val EXTENDED_BOLUS_CACHE_TTL_MS = 15_000L
+    }
 }
