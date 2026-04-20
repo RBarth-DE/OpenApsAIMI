@@ -97,7 +97,7 @@ class LoopStateActivity : DaggerAppCompatActivity() {
             val profile = withContext(Dispatchers.Default) { profileFunction.getProfile() } ?: return@launch
 
             if (allowedModes.contains(RM.Mode.CLOSED_LOOP)) {
-                addButton(resourceHelper.gs(app.aaps.core.ui.R.string.closedloop), app.aaps.core.objects.R.drawable.ic_loop_closed) {
+                addButton(resourceHelper.gs(app.aaps.core.ui.R.string.closedloop), app.aaps.core.ui.R.drawable.ic_loop_closed) {
                     loop.handleRunningModeChange(newRM = RM.Mode.CLOSED_LOOP, action = Action.CLOSED_LOOP_MODE, source = Sources.LoopDialog, profile = profile)
                 }
             }

@@ -256,7 +256,7 @@ internal fun OverviewStatusPanel(
             chipColor = StatusChipStepsColor
         )
         StatusChip(
-            iconRes = app.aaps.core.objects.R.drawable.ic_cp_heart_rate,
+            iconRes = app.aaps.core.ui.R.drawable.ic_cp_heart_rate,
             text = state.hrText,
             chipColor = StatusChipHrColor
         )

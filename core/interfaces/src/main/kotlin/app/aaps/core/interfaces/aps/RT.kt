@@ -189,7 +189,10 @@ data class RT(
 
     companion object {
 
-        private val serializer = Json { ignoreUnknownKeys = true }
+        private val serializer = Json {
+            ignoreUnknownKeys = true
+            encodeDefaults = true
+        }
         fun deserialize(jsonString: String) = serializer.decodeFromString(serializer(), jsonString)
     }
 }
