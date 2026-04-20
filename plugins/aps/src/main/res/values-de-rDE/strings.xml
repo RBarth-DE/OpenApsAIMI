@@ -202,6 +202,7 @@
     <string name="aimi_pkpd_compose_summary">Geführte Voreinstellungen, Komfort-Einstellungen und Expertenparameter auf einem Bildschirm</string>
     <string name="aimi_pkpd_loop_summary_title">Wird derzeit vom Loop verwendet</string>
     <string name="aimi_pkpd_loop_summary_format">Gelernte DIA %1$.1f h · Spitzenwert %2$.0f min</string>
+    <string name="aimi_peak_gov_advice_generic">Hinweis: Dominanter Zweig %1$s – siehe numerische Aufschlüsselung oben.</string>
     <string name="aimi_pkpd_preset_section_title">Voreingestelltes Insulinprofil</string>
     <string name="aimi_pkpd_preset_ultra_fast">Ultraschnell (z. B. Fiasp / Lyumjev)</string>
     <string name="aimi_pkpd_preset_rapid">Schnellwirkend (z. B. Humalog / NovoRapid)</string>
@@ -1106,6 +1107,7 @@
     <string name="aimi_adv_section_obs">BEOBACHTUNGEN</string>
     <string name="aimi_adv_section_pkpd">PKPD-ANPASSUNGEN</string>
     <string name="aimi_adv_section_brain">KOGNITIVER ZUSTAND</string>
+    <string name="aimi_adv_oref_user_personal_ok">Persönliche Signale auf dem Gerät (zur Information, keine Behandlungsempfehlung): hypoglykämiebezogen ≈%1$d%%, hyperglykämiebezogen ≈%2$d%%. Besprechen Sie anhaltende Probleme mit Ihrem Betreuungsteam.</string>
     <string name="aimi_adv_section_coach">AI-COACH</string>
     <string name="aimi_adv_brain_protect">SCHÜTZEND (x%1$.2f)</string>
     <string name="aimi_adv_brain_offense">OFFENSIV (x%1$.2f)</string>
@@ -1230,6 +1232,7 @@
     <string name="aimi_iob_surveillance_applied">IOB-Überwachung: hohes aktives Insulin und fallende Vorhersage — SMB reduziert; TBR bevorzugt. Auf Wirkung des gestapelten Insulins warten.</string>
     <string name="aimi_t3c_settings_title">T3C-Brittle-Modus-Einstellungen</string>
     <string name="oaps_aimi_adaptive_basal_title">Universelle adaptive Basalrate</string>
+    <string name="oaps_aimi_women_child">Einstellungen für Frauen und Kinder</string>
     <string name="oaps_aimi_adaptive_basal_summary">Standardbasalraten automatisch basierend auf neuronalen Erkenntnissen skalieren (für alle Benutzer).</string>
     <string name="oaps_aimi_adaptive_basal_max_scaling_title">Max. adaptive Skalierung</string>
     <string name="oaps_aimi_adaptive_basal_max_scaling_summary">Maximaler erlaubter Multiplikator für adaptive Basalskalierung (z. B. 1,5x).</string>
@@ -1265,4 +1268,24 @@
     <string name="aimi_adv_rec_priority_maxiob_reduce_desc">Der Prioritäts-MaxIOB-Faktor beträgt %1$s bei deutlicher Hypoglykämie-Exposition. Ziehen Sie eine Überwachung bei ~%2$s in Betracht, anstatt den Wert weiter zu erhöhen.</string>
     <string name="aimi_adv_rec_priority_maxiob_extra_reduce_title">Trim-Priorität MaxIOB extra (Hypo-Kontext)</string>
     <string name="aimi_pkpd_hypo_isf_reduce">Häufige Tiefpunkte bei hohem ISF-Fusionsspielraum: Erwägen Sie gemeinsam mit Ihrem Arzt, den maximalen Fusionswert von %1$sx auf ~%2$sx zu senken, um aggressive Korrekturen zu begrenzen.</string>
+    <string name="aimi_pkpd_tap_g_detail">TAP-G Branch: %1$s Effektiver Spitzenwert %2$.1f min (Insulin vor %3$.1f) Physiologischer Offset %4$.1f min, Einstichstelle-Offset %5$.1f min, Verlauf %6$.1f min</string>
+    <string name="aimi_peak_gov_advice_prior">Hinweis: Der Spitzenwert des Insulinprofils bestimmt in diesem Tick den effektiven Spitzenwert.</string>
+    <string name="aimi_peak_gov_advice_physio">Hinweis: Die Anpassung des Physio-/Trajektorie-Gate-Offsets (Schritte, Herzfrequenz, Belastungskernel) ist die wichtigste Spitzenanpassung.</string>
+    <string name="aimi_peak_gov_advice_learned">Hinweis: Durch adaptives PKPD-Lernen wird der geregelte Spitzenwert innerhalb Ihrer Grenzen gehalten.</string>
+    <string name="aimi_peak_gov_advice_trajectory">Hinweis: Die Geometrie der Bahn im Phasenraum wurde um einen kleinen, begrenzten Impuls zur Spitzenzeit ergänzt.</string>
+    <string name="aimi_adv_section_oref">OREF-Analyse (lokal)</string>
+    <string name="aimi_adv_oref_show_chart">CGM-Bereichsdiagramm anzeigen</string>
+    <string name="aimi_adv_oref_hide_chart">Diagramm ausblenden</string>
+    <string name="aimi_adv_oref_chart_title">Zeit im Zielbereich (%)</string>
+    <string name="aimi_adv_oref_bar_low">&lt;70</string>
+    <string name="aimi_adv_oref_bar_in_range">70–180</string>
+    <string name="aimi_adv_oref_bar_high">&gt;180</string>
+    <string name="aimi_adv_oref_user_insight_title">Was das für Sie bedeutet</string>
+    <string name="aimi_adv_oref_user_data_insufficient">Für diesen Zeitraum liegen nicht genügend CGM- und Loop-Daten vor, um eindeutige Schlussfolgerungen zu ziehen. Setzen Sie den Loop-Betrieb fort und öffnen Sie den Advisor erneut, sobald weitere Daten gesammelt wurden.</string>
+    <string name="aimi_adv_oref_user_data_limited">Es liegen zwar einige Daten vor, aber die Aussagekraft ist noch gering. Betrachten Sie Trends lediglich als Anhaltspunkte; wenn Ihnen etwas Sorgen bereitet, klären Sie dies mit Ihren üblichen Kennzahlen und Ihrem Betreuungsteam ab.</string>
+    <string name="aimi_adv_oref_user_data_good">Genügend abgeglichene Loop- und CGM-Messwerte für eine zuverlässige Momentaufnahme der letzten Tage.</string>
+    <string name="aimi_adv_oref_user_priority">Anhaltspunkte anhand einfacher Regeln: %1$s (keine Diagnose).</string>
+    <string name="aimi_adv_oref_user_personal_off">Das lokale Risikomodell ist deaktiviert. Aktivieren Sie es unter „AIMI → AI-Schlüssel“, wenn Sie beim Öffnen von Advisor ein kleines Modell nutzen möchten, das anhand Ihrer aktuellen Merkmale trainiert wurde.</string>
+    <string name="aimi_adv_oref_user_personal_training">Persönliches Modell: Für das Training werden in diesem Zeitfenster mehr beschriftete 4-Stunden-Ergebnisse benötigt.</string>
+    <string name="aimi_adv_oref_user_personal_failed">Das persönliche Modell konnte nicht aktualisiert werden; technische Details finden Sie im folgenden Analyseabschnitt.</string>
 </resources>
