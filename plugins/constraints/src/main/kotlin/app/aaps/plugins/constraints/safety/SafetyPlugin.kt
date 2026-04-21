@@ -102,7 +102,8 @@ class SafetyPlugin @Inject constructor(
      * Constraints interface
      */
     override fun isLoopInvocationAllowed(value: Constraint<Boolean>): Constraint<Boolean> {
-        if (!activePlugin.activePump.pumpDescription.isTempBasalCapable) value.set(false, rh.gs(R.string.pumpisnottempbasalcapable), this)
+        val tempCapable = runCatching { activePlugin.activePump.pumpDescription.isTempBasalCapable }.getOrElse { false }
+        if (!tempCapable) value.set(false, rh.gs(R.string.pumpisnottempbasalcapable), this)
         return value
     }
 
@@ -114,7 +115,8 @@ class SafetyPlugin @Inject constructor(
             value.set(false, rh.gs(R.string.closed_loop_disabled_on_dev_branch), this)
         }
         val pump = activePlugin.activePump
-        if (!pump.isFakingTempsByExtendedBoluses && hasActiveExtendedBolus(dateUtil.now())) {
+        val fakingTemps = runCatching { pump.isFakingTempsByExtendedBoluses }.getOrDefault(false)
+        if (!fakingTemps && hasActiveExtendedBolus(dateUtil.now())) {
             value.set(false, rh.gs(R.string.closed_loop_disabled_with_eb), this)
         }
         return value
