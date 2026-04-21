@@ -147,10 +147,17 @@ class AIMIHealthConnectPermissionActivityMTR : AppCompatActivity() {
      * Uses official Jetpack action (works on Android 14 framework & Android 13 APK)
      */
     private fun openHealthConnectSettings() {
-        val action = HealthConnectClient.ACTION_HEALTH_CONNECT_SETTINGS
-        Log.i(TAG, "HC: Opening settings with action='$action'")
+        val intent = if (android.os.Build.VERSION.SDK_INT >= 34) {
+            // Android 14+: jump directly to this app's Health Connect permissions page.
+            Intent("android.health.connect.action.MANAGE_HEALTH_PERMISSIONS").apply {
+                putExtra(Intent.EXTRA_PACKAGE_NAME, packageName)
+            }
+        } else {
+            Intent(HealthConnectClient.ACTION_HEALTH_CONNECT_SETTINGS)
+        }
+        Log.i(TAG, "HC: Opening settings with action='${intent.action}' sdk=${android.os.Build.VERSION.SDK_INT}")
         try {
-            startActivity(Intent(action))
+            startActivity(intent)
         } catch (e: Exception) {
             Log.e(TAG, "HC: API settings intent failed, falling back to App Details", e)
             try {
