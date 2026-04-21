@@ -440,8 +440,8 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
 
     override fun getAverageIsfMgdl(timestamp: Long, caller: String): Double? {
         if (dynIsfCache.isEmpty()) {
-            //aapsLogger.warn(LTag.APS, "dynIsfCache is empty. Unable to calculate average ISF.")
-            return runBlocking { profileFunction.getProfile()?.getProfileIsfMgdl() } ?: 20.0
+            maybeLogDynIsfCacheEmptyWarning(caller)
+            return null
         }
         var count = 0
         var sum = 0.0
@@ -452,9 +452,26 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
                 sum += value
             }
         }
-        val sensitivity = if (count == 0) runBlocking { profileFunction.getProfile()?.getProfileIsfMgdl() } else sum / count
+        val sensitivity = if (count == 0) null else sum / count
         aapsLogger.debug(LTag.APS, "getAverageIsfMgdl() $sensitivity from $count values ${dateUtil.dateAndTimeAndSecondsString(timestamp)} $caller")
         return sensitivity
+    }
+
+    @Volatile
+    private var lastDynIsfCacheEmptyWarnMs: Long = 0L
+
+    /**
+     * Throttle noisy warning to avoid log storms when cache is cold.
+     * In this branch we return null, and upstream profile logic applies the profile ISF fallback.
+     */
+    private fun maybeLogDynIsfCacheEmptyWarning(caller: String) {
+        val nowMs = dateUtil.now()
+        if (nowMs - lastDynIsfCacheEmptyWarnMs < TimeUnit.MINUTES.toMillis(5)) return
+        lastDynIsfCacheEmptyWarnMs = nowMs
+        aapsLogger.warn(
+            LTag.APS,
+            "dynIsfCache is empty; returning null average ISF (profile fallback upstream). caller=$caller",
+        )
     }
 
     override fun specialEnableCondition(): Boolean {
