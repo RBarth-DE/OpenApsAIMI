@@ -20,6 +20,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -28,6 +29,7 @@ import app.aaps.core.ui.compose.AapsTopAppBar
 import app.aaps.core.ui.compose.ComposeScreenContent
 import app.aaps.core.ui.compose.LocalSnackbarHostState
 import app.aaps.core.ui.R
+import kotlinx.coroutines.launch
 
 /**
  * Full-screen host for a [PreferenceSubScreenDef] tree: main card, inline compose intents, and
@@ -49,6 +51,12 @@ fun PreferenceSubScreenHost(
         PreferenceSectionState()
     }
     val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
+    val onShowMessage: (String) -> Unit = { message ->
+        scope.launch {
+            snackbarHostState.showSnackbar(message)
+        }
+    }
     var composeScreen: ComposeScreenContent? by remember { mutableStateOf(null) }
     var drilledSub: PreferenceSubScreenDef? by remember { mutableStateOf(null) }
 
@@ -126,6 +134,7 @@ fun PreferenceSubScreenHost(
                 ) {
                     addPreferenceContent(
                         content = screenDef,
+                        onShowMessage = onShowMessage,
                         sectionState = sectionState
                     )
                 }

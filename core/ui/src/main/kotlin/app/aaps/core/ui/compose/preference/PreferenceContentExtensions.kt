@@ -45,28 +45,28 @@ import kotlinx.coroutines.delay
  */
 fun LazyListScope.addPreferenceContent(
     content: Any,
+    onShowMessage: (String) -> Unit,
     sectionState: PreferenceSectionState? = null
 ) {
     when (content) {
-        is PreferenceSubScreenDef -> addPreferenceSubScreenDef(content, sectionState)
+        is PreferenceSubScreenDef -> addPreferenceSubScreenDef(content, onShowMessage, sectionState)
     }
 }
 
 /**
  * Helper function to add PreferenceSubScreenDef inline in a LazyListScope.
  * This displays as one collapsible card with main content and nested subscreens inside.
- * Nested paths use slash-separated keys so expansion state stays unique across the whole app.
- *
- * From [treeDepth] 1 onward, nested [PreferenceSubScreenDef] rows use full-screen drill-down when
- * [LocalOpenPreferenceSubScreen] is provided — avoids deep accordion / lazy-column pitfalls.
+ * Content is rendered using the new pattern (no NavigablePreferenceContent interface).
  */
 fun LazyListScope.addPreferenceSubScreenDef(
     def: PreferenceSubScreenDef,
+    onShowMessage: (String) -> Unit,
     sectionState: PreferenceSectionState? = null
 ) {
     val sectionKey = "${def.key}_main"
     item(key = sectionKey) {
         val isExpanded = sectionState?.isExpanded(sectionKey) ?: false
+        // Get visibility context from CompositionLocal
         val visibilityContext = LocalVisibilityContext.current
         CollapsibleCardSectionContent(
             titleResId = def.titleResId,
@@ -76,10 +76,12 @@ fun LazyListScope.addPreferenceSubScreenDef(
             iconResId = def.iconResId,
             icon = def.icon
         ) {
+            // Render items in order, preserving the original structure
             RenderPreferenceItems(
                 items = def.items,
                 pathPrefix = def.key,
                 treeDepth = 0,
+                onShowMessage = onShowMessage,
                 sectionState = sectionState,
                 visibilityContext = visibilityContext
             )
@@ -143,6 +145,7 @@ private fun RenderPreferenceItems(
     items: List<PreferenceItem>,
     pathPrefix: String,
     treeDepth: Int,
+    onShowMessage: (String) -> Unit,
     sectionState: PreferenceSectionState?,
     visibilityContext: PreferenceVisibilityContext?
 ) {
@@ -155,6 +158,7 @@ private fun RenderPreferenceItems(
                     HighlightablePreference(preferenceKey = item.key) {
                         AdaptivePreferenceItem(
                             key = item,
+                            onShowMessage = onShowMessage,
                             visibilityContext = visibilityContext
                         )
                     }
@@ -199,6 +203,7 @@ private fun RenderPreferenceItems(
                                     items = item.items,
                                     pathPrefix = subPath,
                                     treeDepth = treeDepth + 1,
+                                    onShowMessage = onShowMessage,
                                     sectionState = sectionState,
                                     visibilityContext = visibilityContext
                                 )
@@ -250,6 +255,10 @@ private fun shouldShowSubScreenInline(
     return true
 }
 
+/**
+ * Wrapper that highlights a preference if it matches the LocalHighlightKey.
+ * Shows a brief color flash animation to draw attention to the preference.
+ */
 @Composable
 private fun HighlightablePreference(
     preferenceKey: String,
@@ -260,10 +269,11 @@ private fun HighlightablePreference(
 
     var isHighlighted by remember { mutableStateOf(shouldHighlight) }
 
+    // Animate highlight fade out
     LaunchedEffect(shouldHighlight) {
         if (shouldHighlight) {
             isHighlighted = true
-            delay(2000)
+            delay(2000) // Keep highlight for 2 seconds
             isHighlighted = false
         }
     }

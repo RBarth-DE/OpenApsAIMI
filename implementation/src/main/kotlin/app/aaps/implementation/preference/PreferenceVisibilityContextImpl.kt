@@ -1,10 +1,11 @@
 package app.aaps.implementation.preference
 
-import app.aaps.core.data.model.advancedFilteringSupported
-import app.aaps.core.interfaces.iob.IobCobCalculator
+import app.aaps.core.interfaces.constraints.ConstraintsChecker
+import app.aaps.core.interfaces.db.PersistenceLayer
 import app.aaps.core.interfaces.plugin.ActivePlugin
 import app.aaps.core.keys.interfaces.PreferenceVisibilityContext
 import app.aaps.core.keys.interfaces.Preferences
+import kotlinx.coroutines.runBlocking
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -18,7 +19,8 @@ import javax.inject.Singleton
 @Singleton
 class PreferenceVisibilityContextImpl @Inject constructor(
     private val activePlugin: ActivePlugin,
-    private val iobCobCalculator: IobCobCalculator,
+    private val persistenceLayer: PersistenceLayer,
+    private val constraintsChecker: ConstraintsChecker,
     override val preferences: Preferences
 ) : PreferenceVisibilityContext {
 
@@ -32,8 +34,11 @@ class PreferenceVisibilityContextImpl @Inject constructor(
         get() = activePlugin.activePump.isBatteryChangeLoggingEnabled()
 
     override val advancedFilteringSupported: Boolean
-        get() = iobCobCalculator.ads.lastBg()?.sourceSensor?.advancedFilteringSupported() ?: false
+        get() = runBlocking { persistenceLayer.isAdvancedFilteringSupported() }
 
     override val isPumpInitialized: Boolean
         get() = activePlugin.activePump.isInitialized()
+
+    override val isConcentrationEnabled: Boolean
+        get() = constraintsChecker.isConcentrationEnabled().value()
 }
