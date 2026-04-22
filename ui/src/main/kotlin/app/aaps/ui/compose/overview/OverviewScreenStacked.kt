@@ -125,6 +125,7 @@ fun OverviewScreenStacked(
                     .padding(horizontal = 8.dp),
                 verticalArrangement = Arrangement.spacedBy(2.dp)
             ) {
+                // runnning mode + temp target
                 OverviewChipsColumn(
                     runningMode = runningMode,
                     runningModeText = runningModeText,
@@ -136,6 +137,7 @@ fun OverviewScreenStacked(
                     tempTargetReason = tempTargetReason,
                     onNavigate = onNavigate
                 )
+                // HR, Steps,LastSMB, Basal, IOB
                 OverviewStatusPanel(
                     state = statusPanelState,
                     modifier = Modifier.fillMaxWidth()

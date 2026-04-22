@@ -103,7 +103,10 @@ private fun NarrowChips(
     onNavigate: (NavigationRequest) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Column(modifier = modifier) {
+    Column(
+        modifier = modifier,
+        verticalArrangement = Arrangement.spacedBy(2.dp)
+        ) {
         if (runningModeText.isNotEmpty()) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 RunningModeChip(
