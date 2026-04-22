@@ -46,7 +46,6 @@ import app.aaps.core.ui.compose.preference.PreferenceSubScreenDef
 import app.aaps.ui.compose.alertDialogs.AboutAlertDialog
 import app.aaps.ui.compose.alertDialogs.AboutDialogData
 import app.aaps.ui.compose.automationSheet.AutomationBottomSheet
-import app.aaps.ui.compose.automationSheet.AutomationViewModel
 import app.aaps.ui.compose.maintenance.ImportSource
 import app.aaps.ui.compose.maintenance.MaintenanceDialogs
 import app.aaps.ui.compose.maintenance.MaintenanceViewModel
@@ -76,7 +75,7 @@ fun MainScreen(
     maintenanceViewModel: MaintenanceViewModel,
     statusViewModel: StatusViewModel,
     treatmentViewModel: TreatmentViewModel,
-    automationViewModel: AutomationViewModel,
+    automationViewModel: app.aaps.ui.compose.automationSheet.AutomationViewModel,
     loopActionViewModel: app.aaps.ui.compose.loopSheet.LoopActionViewModel,
     // Search
     searchUiState: SearchUiState,
@@ -371,6 +370,7 @@ fun MainScreen(
                 treatmentButtonsDef = treatmentButtonsDef,
             )
         }
+
 
         // Automation bottom sheet
         if (showAutomationSheet) {

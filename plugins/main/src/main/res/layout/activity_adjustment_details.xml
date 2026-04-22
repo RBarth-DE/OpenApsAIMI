@@ -255,7 +255,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="@dimen/dashboard_block_spacing"
-        android:text="Run Loop"
+        android:text="@string/dashboard_run_loop"
         style="@style/Widget.MaterialComponents.Button" />
 
 </LinearLayout>
