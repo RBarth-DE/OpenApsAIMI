@@ -343,6 +343,7 @@
     <string name="temporary_target">Temporary target</string>
     <string name="temporary_targets">Temporary targets</string>
     <string name="running_mode">Running mode</string>
+    <string name="dashboard_run_question">Run %1$s?</string>
     <string name="careportal_temporarytargetvalue">Temporary target value</string>
     <string name="careportal_temporarytargetcancel">Temporary target cancel</string>
     <string name="boluswizard">Bolus wizard</string>
@@ -377,6 +378,7 @@
     <string name="glucosetype_finger">Finger</string>
     <string name="glucosetype_sensor">Sensor</string>
     <string name="manual">Manual</string>
+    <string name="user_manual">User manual</string>
     <string name="unknown">unknown</string>
     <string name="eatingsoon">Eating Soon</string>
     <string name="hypo">Hypo</string>
@@ -835,6 +837,9 @@
     <string name="maintenance_aaps_directory_desc">Select local storage folder</string>
     <string name="maintenance_cloud_directory_desc">Set up cloud storage (Google Drive)</string>
     <string name="maintenance_export_desc">Save encrypted settings backup</string>
+    <string name="maintenance_export_aimi_cloud_title">AIMI cloud backup</string>
+    <string name="maintenance_export_aimi_cloud_desc">When you export settings to the cloud, also upload AIMI backup files under AAPS/export/aimi.</string>
+    <string name="maintenance_export_aimi_cloud_chip">Include AIMI</string>
     <string name="maintenance_import_desc">Restore settings from backup</string>
     <string name="maintenance_export_csv_desc">Export treatment history as spreadsheet</string>
     <string name="maintenance_cleanup_db_desc">Remove old entries from database</string>
@@ -859,6 +864,7 @@
 
     <!-- BluetoothDevicePreference -->
     <string name="need_connect_permission">Application needs bluetooth permission</string>
+    <string name="smscommunicator_missingsmspermission">Missing SMS permission</string>
 
     <!--    Combo-->
     <string name="user_request" comment="26 characters max for translation">User request</string>
@@ -1111,5 +1117,6 @@
     <string name="aimi_btn_stats">Stats</string>
     <string name="remove_items">Remove Items</string>
     <string name="sort_items">Sort Items</string>
+
 
 </resources>

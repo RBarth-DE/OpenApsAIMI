@@ -301,32 +301,32 @@ class AimiModeSettingsActivity : DaggerAppCompatActivity() {
     private fun loadValues(mode: ModeType) {
         when (mode) {
             ModeType.LUNCH -> {
-                inputPrebolus1.setText(preferences.get(DoubleKey.OApsAIMILunchPrebolus).toString())
-                inputPrebolus2.setText(preferences.get(DoubleKey.OApsAIMILunchPrebolus2).toString())
-                inputReactivity.setText(preferences.get(DoubleKey.OApsAIMILunchFactor).toString())
+                inputPrebolus1.setText(getStringPref(DoubleKey.OApsAIMILunchPrebolus))
+                inputPrebolus2.setText(getStringPref(DoubleKey.OApsAIMILunchPrebolus2))
+                inputReactivity.setText(getStringPref(DoubleKey.OApsAIMILunchFactor))
                 inputDuration.setText(sp.getInt("aimi_mode_lunch_duration", 60).toString())
-                inputInterval.setText(preferences.get(IntKey.OApsAIMILunchinterval).toString())
+                inputInterval.setText(getStringPref(IntKey.OApsAIMILunchinterval))
             }
             ModeType.DINNER -> {
-                inputPrebolus1.setText(preferences.get(DoubleKey.OApsAIMIDinnerPrebolus).toString())
-                inputPrebolus2.setText(preferences.get(DoubleKey.OApsAIMIDinnerPrebolus2).toString())
-                inputReactivity.setText(preferences.get(DoubleKey.OApsAIMIDinnerFactor).toString())
+                inputPrebolus1.setText(getStringPref(DoubleKey.OApsAIMIDinnerPrebolus))
+                inputPrebolus2.setText(getStringPref(DoubleKey.OApsAIMIDinnerPrebolus2))
+                inputReactivity.setText(getStringPref(DoubleKey.OApsAIMIDinnerFactor))
                 inputDuration.setText(sp.getInt("aimi_mode_dinner_duration", 60).toString())
-                inputInterval.setText(preferences.get(IntKey.OApsAIMIDinnerinterval).toString())
+                inputInterval.setText(getStringPref(IntKey.OApsAIMIDinnerinterval))
             }
             ModeType.BFAST -> {
-                inputPrebolus1.setText(preferences.get(DoubleKey.OApsAIMIBFPrebolus).toString())
-                inputPrebolus2.setText(preferences.get(DoubleKey.OApsAIMIBFPrebolus2).toString())
-                inputReactivity.setText(preferences.get(DoubleKey.OApsAIMIBFFactor).toString())
+                inputPrebolus1.setText(getStringPref(DoubleKey.OApsAIMIBFPrebolus))
+                inputPrebolus2.setText(getStringPref(DoubleKey.OApsAIMIBFPrebolus2))
+                inputReactivity.setText(getStringPref(DoubleKey.OApsAIMIBFFactor))
                 inputDuration.setText(sp.getInt("aimi_mode_bfast_duration", 60).toString())
-                inputInterval.setText(preferences.get(IntKey.OApsAIMIBFinterval).toString())
+                inputInterval.setText(getStringPref(IntKey.OApsAIMIBFinterval))
             }
             ModeType.HIGHCARB -> {
-                inputPrebolus1.setText(preferences.get(DoubleKey.OApsAIMIHighCarbPrebolus).toString())
-                inputPrebolus2.setText(preferences.get(DoubleKey.OApsAIMIHighCarbPrebolus2).toString())
-                inputReactivity.setText(preferences.get(DoubleKey.OApsAIMIHCFactor).toString())
+                inputPrebolus1.setText(getStringPref(DoubleKey.OApsAIMIHighCarbPrebolus))
+                inputPrebolus2.setText(getStringPref(DoubleKey.OApsAIMIHighCarbPrebolus2))
+                inputReactivity.setText(getStringPref(DoubleKey.OApsAIMIHCFactor))
                 inputDuration.setText(sp.getInt("aimi_mode_hc_duration", 60).toString())
-                inputInterval.setText(preferences.get(IntKey.OApsAIMIHCinterval).toString())
+                inputInterval.setText(getStringPref(IntKey.OApsAIMIHCinterval))
             }
         }
     }
@@ -411,5 +411,19 @@ class AimiModeSettingsActivity : DaggerAppCompatActivity() {
             }
     }
 
+    private fun getStringPref(key: DoubleKey): String {
+        return try {
+            preferences.get(key).toString()
+        } catch (e: Exception) {
+            key.defaultValue.toString()
+        }
+    }
 
+    private fun getStringPref(key: IntKey): String {
+         return try {
+            preferences.get(key).toString()
+        } catch (e: Exception) {
+            key.defaultValue.toString()
+        }
+    }
 }

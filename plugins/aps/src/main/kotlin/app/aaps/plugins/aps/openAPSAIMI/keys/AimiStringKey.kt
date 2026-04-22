@@ -1,5 +1,4 @@
 package app.aaps.plugins.aps.openAPSAIMI.keys
-import kotlinx.coroutines.runBlocking
 
 import app.aaps.core.keys.PreferenceType
 import app.aaps.core.keys.interfaces.StringPreferenceKey

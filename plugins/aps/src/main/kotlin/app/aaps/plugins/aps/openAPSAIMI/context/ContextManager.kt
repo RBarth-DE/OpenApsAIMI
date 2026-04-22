@@ -1,20 +1,20 @@
 package app.aaps.plugins.aps.openAPSAIMI.context
-import kotlinx.coroutines.runBlocking
 
 import app.aaps.core.data.model.GlucoseUnit
 import app.aaps.core.data.model.TE
 import app.aaps.core.interfaces.db.PersistenceLayer
 import app.aaps.core.interfaces.logging.AAPSLogger
 import app.aaps.core.interfaces.logging.LTag
-import app.aaps.core.interfaces.rx.AapsSchedulers
 import app.aaps.core.interfaces.sharedPreferences.SP
 import app.aaps.core.interfaces.utils.DateUtil
 import app.aaps.plugins.aps.openAPSAIMI.context.ContextIntent.*
 import app.aaps.core.data.ue.Action
 import app.aaps.core.data.ue.Sources
-import io.reactivex.rxjava3.kotlin.plusAssign
-import io.reactivex.rxjava3.disposables.CompositeDisposable
 import javax.inject.Inject
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 import javax.inject.Singleton
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.time.Duration.Companion.minutes
@@ -53,8 +53,9 @@ class ContextManager @Inject constructor(
     internal val aapsLogger: AAPSLogger,  // Internal for inline functions
     private val persistenceLayer: PersistenceLayer,  // For NS sync
     private val dateUtil: DateUtil,
-    private val aapsSchedulers: AapsSchedulers
 ) {
+
+    private val ioScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     
     // Thread-safe storage (internal for inline functions)
     internal val activeIntents = ConcurrentHashMap<String, ContextIntent>()
@@ -199,9 +200,15 @@ class ContextManager @Inject constructor(
             aapsLogger.info(LTag.APS, "[ContextManager] Removed intent $id")
             saveToStorage()
             
-            // Invalidate sync record in local DB and Nightscout
-            try { runBlocking { persistenceLayer.invalidateTherapyEventsWithNote("AIMI_CONTEXT:$id", Action.TREATMENT, Sources.Aaps) } } catch (e: Exception) { aapsLogger.error(LTag.APS, "Failed to invalidate: ${e.message}") }
-            
+            ioScope.launch {
+                try {
+                    persistenceLayer.invalidateTherapyEventsWithNote("AIMI_CONTEXT:$id", Action.TREATMENT, Sources.Aaps)
+                    aapsLogger.debug(LTag.APS, "[ContextManager] Synced invalidation for $id")
+                } catch (e: Exception) {
+                    aapsLogger.error(LTag.APS, "[ContextManager] Failed to invalidate sync record for $id: ${e.message}", e)
+                }
+            }
+
             return true
         }
         aapsLogger.warn(LTag.APS, "[ContextManager] Intent $id not found")
@@ -237,8 +244,14 @@ class ContextManager @Inject constructor(
         aapsLogger.info(LTag.APS, "[ContextManager] Cleared all intents (removed $count)")
         saveToStorage()
         
-        // Invalidate ALL AIMI context sync records
-        try { runBlocking { persistenceLayer.invalidateTherapyEventsWithNote("AIMI_CONTEXT:", Action.TREATMENT, Sources.Aaps) } } catch (e: Exception) { aapsLogger.error(LTag.APS, "Failed: ${e.message}") }
+        ioScope.launch {
+            try {
+                persistenceLayer.invalidateTherapyEventsWithNote("AIMI_CONTEXT:", Action.TREATMENT, Sources.Aaps)
+                aapsLogger.debug(LTag.APS, "[ContextManager] Synced invalidation for all contexts")
+            } catch (e: Exception) {
+                aapsLogger.error(LTag.APS, "[ContextManager] Failed to invalidate all sync records: ${e.message}", e)
+            }
+        }
     }
     
     /**
@@ -325,7 +338,7 @@ class ContextManager @Inject constructor(
     // Private helpers
     
     private fun shouldUseLLM(): Boolean {
-        if (!sp.getBoolean(app.aaps.core.keys.BooleanKey.OApsAIMIContextEnabled.key, false)) {
+        if (!sp.getBoolean(app.aaps.core.keys.BooleanKey.OApsAIMIContextLLMEnabled.key, false)) {
             return false
         }
         
@@ -523,10 +536,15 @@ class ContextManager @Inject constructor(
             )
             
             aapsLogger.debug(LTag.APS, "[ContextManager] Syncing context $intentId to NS")
-            
-            runBlocking { persistenceLayer.insertOrUpdateTherapyEvent(therapyEvent) }
-            aapsLogger.debug(LTag.APS, "Context sync: OK")
-                
+
+            ioScope.launch {
+                try {
+                    persistenceLayer.insertOrUpdateTherapyEvent(therapyEvent)
+                    aapsLogger.info(LTag.APS, "[ContextManager] ✅ Context $intentId synced to NS")
+                } catch (e: Exception) {
+                    aapsLogger.error(LTag.APS, "[ContextManager] ❌ Failed to sync context $intentId: ${e.message}", e)
+                }
+            }
         } catch (e: Exception) {
             aapsLogger.error(LTag.APS, "[ContextManager] Exception syncing context $intentId", e)
         }

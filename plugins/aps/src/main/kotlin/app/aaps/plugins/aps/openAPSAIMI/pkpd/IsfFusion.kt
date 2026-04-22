@@ -1,5 +1,4 @@
 package app.aaps.plugins.aps.openAPSAIMI.pkpd
-import kotlinx.coroutines.runBlocking
 
 data class IsfFusionBounds(
     val minFactor: Double = 0.75,

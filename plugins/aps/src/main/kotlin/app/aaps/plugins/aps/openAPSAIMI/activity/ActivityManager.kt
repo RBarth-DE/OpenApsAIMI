@@ -1,5 +1,4 @@
 package app.aaps.plugins.aps.openAPSAIMI.activity
-import kotlinx.coroutines.runBlocking
 
 import javax.inject.Inject
 import kotlin.math.max

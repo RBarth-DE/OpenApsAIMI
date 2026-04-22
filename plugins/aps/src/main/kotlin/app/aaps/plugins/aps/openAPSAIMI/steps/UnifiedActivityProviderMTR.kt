@@ -101,8 +101,8 @@ class UnifiedActivityProviderMTR @Inject constructor(
                 else -> null
             }
         } catch (e: Exception) {
-            aapsLogger.error(LTag.GARMIN, "getLatestSteps error", e)
-            null
+            aapsLogger.error(LTag.APS, "[$TAG] Error fetching steps", e)
+            return null
         }
     }
 
@@ -146,7 +146,7 @@ class UnifiedActivityProviderMTR @Inject constructor(
                 duration = now - startMs
             )
         } catch (e: Exception) {
-            aapsLogger.error(LTag.GARMIN, "[$TAG] Error fetching total steps", e)
+            aapsLogger.error(LTag.APS, "[$TAG] Error fetching total steps", e)
             null
         }
     }
@@ -179,7 +179,7 @@ class UnifiedActivityProviderMTR @Inject constructor(
             }
             
         } catch (e: Exception) {
-            aapsLogger.error(LTag.GARMIN, "[$TAG] Error fetching HR", e)
+            aapsLogger.error(LTag.APS, "[$TAG] Error fetching HR", e)
             return null
         }
     }

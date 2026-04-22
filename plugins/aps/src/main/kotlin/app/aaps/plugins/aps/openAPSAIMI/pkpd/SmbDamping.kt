@@ -1,6 +1,5 @@
 // SmbDamping.kt
 package app.aaps.plugins.aps.openAPSAIMI.pkpd
-import kotlinx.coroutines.runBlocking
 
 data class TailAwareSmbPolicy(
     val tailIobHigh: Double = 0.25,

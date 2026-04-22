@@ -1,10 +1,9 @@
 package app.aaps.plugins.aps.openAPSAIMI.autodrive.learning
-import kotlinx.coroutines.runBlocking
 
 import android.content.Context
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
-import app.aaps.core.interfaces.logging.LTag
+
 
 /**
  * 🌙 Autodrive Neural Trainer Worker (Deep Learning Différé)

@@ -1,5 +1,4 @@
 package app.aaps.plugins.aps.openAPSAIMI.advisor.data
-import kotlinx.coroutines.runBlocking
 
 import android.content.Context
 import android.content.SharedPreferences

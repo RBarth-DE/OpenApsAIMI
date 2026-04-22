@@ -176,6 +176,8 @@ open class APSResultObject(protected val injector: HasAndroidInjector) : APSResu
         newResult.carbsReq = carbsReq
         newResult.carbsReqWithin = carbsReqWithin
         newResult.targetBG = targetBG
+        newResult.isHypoRisk = isHypoRisk
+        newResult.oapsProfileAimi = oapsProfileAimi
     }
 
     override fun json(): JSONObject? {

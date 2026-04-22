@@ -1,5 +1,4 @@
 package app.aaps.plugins.aps.openAPSAIMI.pkpd
-import kotlinx.coroutines.runBlocking
 
 /**
  * 🛡️ PKPD Absorption Guard (FIX 2025-12-30)

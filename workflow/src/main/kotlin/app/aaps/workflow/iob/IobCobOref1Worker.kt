@@ -147,6 +147,7 @@ class IobCobOref1Worker(
                         var past = 1
                         while (past < 12) {
                             val ad = autosensDataTable.valueAt(initialIndex + past)
+                            if (ad == null) break
                             aapsLogger.debug(LTag.AUTOSENS) { ">>>>> past=$past ad=$ad" }
                             // let it here crash on NPE to get more data as i cannot reproduce this bug
                             val deviationSlope = (ad.avgDeviation - avgDeviation) / (ad.time - bgTime) * 1000 * 60 * 5

@@ -1,5 +1,4 @@
 package app.aaps.plugins.aps.openAPSAIMI.learning
-import kotlinx.coroutines.runBlocking
 
 import android.content.Context
 import androidx.work.WorkerParameters

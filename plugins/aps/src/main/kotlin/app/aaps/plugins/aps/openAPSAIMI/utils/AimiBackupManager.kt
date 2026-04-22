@@ -1,11 +1,11 @@
 package app.aaps.plugins.aps.openAPSAIMI.utils
-import kotlinx.coroutines.runBlocking
 
 import android.content.Context
 import android.net.Uri
 import androidx.documentfile.provider.DocumentFile
 import app.aaps.core.interfaces.logging.AAPSLogger
 import app.aaps.core.interfaces.logging.LTag
+import app.aaps.core.interfaces.maintenance.CloudBackupConstants
 import app.aaps.core.interfaces.maintenance.ImportExportPrefs
 import app.aaps.core.interfaces.rx.bus.RxBus
 import app.aaps.core.interfaces.rx.events.EventAimiCloudBackupResult
@@ -89,10 +89,15 @@ class AimiBackupManager @Inject constructor(
                         else -> "application/octet-stream"
                     }
 
-                    log.info(LTag.APS, "[Cloud] AIMI Backup: Uploading ${candidate.name} (${bytes.size} bytes) to ${"aimi_backup"}...")
+                    log.info(LTag.APS, "[Cloud] AIMI Backup: Uploading ${candidate.name} (${bytes.size} bytes) to ${CloudBackupConstants.CLOUD_PATH_AIMI}...")
                     
                     // On s'assure que le chemin est propre (normalizeAapsPath s'en occupe déjà côté GDrive, mais on logue le chemin cible)
-                    val success = false // uploadFileToCloud not available
+                    val success = importExportPrefs.uploadFileToCloud(
+                        fileName = candidate.name,
+                        fileContent = bytes,
+                        mimeType = mimeType,
+                        remotePath = CloudBackupConstants.CLOUD_PATH_AIMI
+                    )
 
                     if (success) {
                         successCount++

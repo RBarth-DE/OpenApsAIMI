@@ -1,5 +1,4 @@
 package app.aaps.plugins.aps.openAPSAIMI.pkpd
-import kotlinx.coroutines.runBlocking
 
 import java.util.concurrent.atomic.AtomicReference
 import kotlin.math.abs

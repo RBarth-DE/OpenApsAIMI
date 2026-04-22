@@ -1,5 +1,4 @@
 package app.aaps.plugins.aps.openAPSAIMI.pkpd
-import kotlinx.coroutines.runBlocking
 
 import android.util.Log
 import app.aaps.plugins.aps.openAPSAIMI.utils.AimiStorageHelper

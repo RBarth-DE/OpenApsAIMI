@@ -7,8 +7,10 @@ import app.aaps.core.interfaces.maintenance.CloudDirectoryManager
 import app.aaps.core.interfaces.resources.ResourceHelper
 import app.aaps.core.keys.BooleanNonKey
 import app.aaps.core.keys.interfaces.Preferences
+import app.aaps.core.interfaces.sharedPreferences.SP
 import app.aaps.core.ui.compose.icons.IcGoogleDrive
 import app.aaps.implementation.R
+import app.aaps.implementation.maintenance.ExportPrefKeys
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -17,6 +19,7 @@ class CloudDirectoryManagerImpl @Inject constructor(
     private val aapsLogger: AAPSLogger,
     private val rh: ResourceHelper,
     private val preferences: Preferences,
+    private val sp: SP,
     private val cloudStorageManager: CloudStorageManager
 ) : CloudDirectoryManager {
 
@@ -62,6 +65,7 @@ class CloudDirectoryManagerImpl @Inject constructor(
         preferences.put(BooleanNonKey.ExportSettingsCloudEnabled, true)
         preferences.put(BooleanNonKey.ExportCsvLocalEnabled, false)
         preferences.put(BooleanNonKey.ExportCsvCloudEnabled, true)
+        sp.putBoolean(ExportPrefKeys.PREF_AIMI_CLOUD_ENABLED, true)
     }
 
     override fun enableLocalStorage() {
@@ -78,6 +82,7 @@ class CloudDirectoryManagerImpl @Inject constructor(
         preferences.put(BooleanNonKey.ExportSettingsCloudEnabled, false)
         preferences.put(BooleanNonKey.ExportCsvLocalEnabled, true)
         preferences.put(BooleanNonKey.ExportCsvCloudEnabled, false)
+        sp.putBoolean(ExportPrefKeys.PREF_AIMI_CLOUD_ENABLED, false)
     }
 
     override suspend fun testConnection(): Boolean {

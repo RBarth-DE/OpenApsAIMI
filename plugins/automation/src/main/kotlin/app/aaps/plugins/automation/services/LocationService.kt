@@ -3,12 +3,15 @@
 package app.aaps.plugins.automation.services
 
 import android.Manifest
+import android.app.Notification
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.location.Location
 import android.location.LocationManager
 import android.os.Binder
 import android.os.IBinder
+import android.os.Build
+import android.content.pm.ServiceInfo
 import androidx.core.app.ActivityCompat
 import app.aaps.core.data.time.T
 import app.aaps.core.interfaces.logging.AAPSLogger
@@ -86,8 +89,24 @@ class LocationService : DaggerService() {
             stopSelf()
             return START_NOT_STICKY
         }
-        aapsLogger.debug("Starting LocationService with ID ${notificationHolder.notificationID} notification ${notificationHolder.notification}")
-        startForeground(notificationHolder.notificationID, notificationHolder.notification)
+        try {
+            aapsLogger.debug("Starting LocationService with ID ${notificationHolder.notificationID} notification ${notificationHolder.notification}")
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                startForeground(
+                    notificationHolder.notificationID,
+                    notificationHolder.notification,
+                    ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION
+                )
+            } else {
+                startForeground(notificationHolder.notificationID, notificationHolder.notification)
+            }
+        } catch (e: Exception) {
+            aapsLogger.error(LTag.LOCATION, "Failed to start foreground service: ${e.message}", e)
+            try {
+                startForeground(4711, Notification())
+            } catch (_: Exception) {
+            }
+        }
         return START_STICKY
     }
 

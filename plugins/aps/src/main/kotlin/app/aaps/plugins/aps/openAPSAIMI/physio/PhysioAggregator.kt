@@ -1,5 +1,4 @@
 package app.aaps.plugins.aps.openAPSAIMI.physio
-import kotlinx.coroutines.runBlocking
 
 import javax.inject.Inject
 import javax.inject.Singleton

@@ -1,5 +1,4 @@
 package app.aaps.plugins.aps.openAPSAIMI
-import kotlinx.coroutines.runBlocking
 
 import app.aaps.core.interfaces.iob.IobCobCalculator
 import app.aaps.core.interfaces.logging.AAPSLogger

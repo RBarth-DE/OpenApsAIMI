@@ -1,5 +1,4 @@
 package app.aaps.plugins.aps.openAPSAIMI.steps
-import kotlinx.coroutines.runBlocking
 
 import app.aaps.core.data.model.SC
 import app.aaps.core.interfaces.db.PersistenceLayer
@@ -13,6 +12,8 @@ import java.util.Timer
 import java.util.TimerTask
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.runBlocking
 
 /**
  * 📱 AIMI Phone Steps Sync Service - MTR Implementation
@@ -113,11 +114,16 @@ class AIMIPhoneStepsSyncServiceMTR @Inject constructor(
                     device = SOURCE_DEVICE
                 )
                 
-                try {
-                    runBlocking { persistenceLayer.insertOrUpdateStepsCount(sc) }
-                    aapsLogger.debug(LTag.APS, "[$TAG] ✅ Steps stored")
-                } catch (e: Exception) {
-                    aapsLogger.error(LTag.APS, "[$TAG] ❌ DB insert failed", e)
+                runBlocking(Dispatchers.IO) {
+                    try {
+                        persistenceLayer.insertOrUpdateStepsCount(sc)
+                        aapsLogger.debug(
+                            LTag.APS,
+                            "[$TAG] ✅ Steps stored: $steps5 steps (5min), 15min=$steps15, 30min=$steps30"
+                        )
+                    } catch (e: Exception) {
+                        aapsLogger.error(LTag.APS, "[$TAG] ❌ DB insert failed", e)
+                    }
                 }
             } else {
                 aapsLogger.debug(LTag.APS, "[$TAG] No steps to sync (StepService returned 0)")

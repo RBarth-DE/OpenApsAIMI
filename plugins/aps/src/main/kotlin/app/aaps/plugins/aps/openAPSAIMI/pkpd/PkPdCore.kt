@@ -1,5 +1,4 @@
 package app.aaps.plugins.aps.openAPSAIMI.pkpd
-import kotlinx.coroutines.runBlocking
 
 import kotlin.math.PI
 import kotlin.math.abs

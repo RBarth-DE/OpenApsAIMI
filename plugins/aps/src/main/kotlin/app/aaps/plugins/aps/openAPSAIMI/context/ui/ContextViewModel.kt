@@ -1,5 +1,4 @@
 package app.aaps.plugins.aps.openAPSAIMI.context.ui
-import kotlinx.coroutines.runBlocking
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -145,7 +144,7 @@ class ContextViewModel(
      */
     fun refreshSettings() {
         _contextEnabled.value = sp.getBoolean(app.aaps.core.keys.BooleanKey.OApsAIMIContextEnabled.key, false)
-        _llmEnabled.value = sp.getBoolean(app.aaps.core.keys.BooleanKey.OApsAIMIContextEnabled.key, false)
+        _llmEnabled.value = sp.getBoolean(app.aaps.core.keys.BooleanKey.OApsAIMIContextLLMEnabled.key, false)
     }
     
     /**
@@ -161,7 +160,7 @@ class ContextViewModel(
      * Toggle LLM parsing on/off.
      */
     fun toggleLLMEnabled(enabled: Boolean) {
-        sp.putBoolean(app.aaps.core.keys.BooleanKey.OApsAIMIContextEnabled.key, enabled)
+        sp.putBoolean(app.aaps.core.keys.BooleanKey.OApsAIMIContextLLMEnabled.key, enabled)
         _llmEnabled.value = enabled
         aapsLogger.info(LTag.APS, "[ContextViewModel] LLM parsing ${if (enabled) "enabled" else "disabled"}")
     }

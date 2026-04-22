@@ -1,5 +1,8 @@
 package app.aaps.core.interfaces.rx.events
 
-import app.aaps.core.interfaces.rx.events.Event
-
-data class EventDismissNotification(val id: Int) : Event()
+/**
+ * Fired to dismiss a notification.
+ *
+ * @param id The ID of the notification to dismiss.
+ */
+class EventDismissNotification(var id: Int) : Event()

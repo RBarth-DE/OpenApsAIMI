@@ -1,5 +1,4 @@
 package app.aaps.plugins.aps.openAPSAIMI.basal
-import kotlinx.coroutines.runBlocking
 
 import app.aaps.core.data.model.TB
 import kotlin.math.max

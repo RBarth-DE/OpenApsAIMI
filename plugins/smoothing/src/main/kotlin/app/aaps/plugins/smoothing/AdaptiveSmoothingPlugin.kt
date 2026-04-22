@@ -22,9 +22,9 @@ import app.aaps.core.interfaces.rx.events.EventAdaptiveSmoothingQuality
 import app.aaps.core.interfaces.rx.events.AdaptiveSmoothingQualitySnapshot
 import app.aaps.core.interfaces.rx.events.AdaptiveSmoothingQualityTier
 import app.aaps.core.interfaces.smoothing.Smoothing
+import app.aaps.core.ui.compose.icons.IcStats
 import app.aaps.core.keys.BooleanKey
 import app.aaps.core.keys.interfaces.Preferences
-import app.aaps.core.ui.compose.icons.IcPluginAdaptiveSmoothing
 import app.aaps.core.interfaces.sharedPreferences.SP
 import io.reactivex.rxjava3.disposables.CompositeDisposable
 import io.reactivex.rxjava3.kotlin.plusAssign
@@ -72,7 +72,7 @@ class AdaptiveSmoothingPlugin @Inject constructor(
 ) : PluginBase(
     PluginDescription()
         .mainType(PluginType.SMOOTHING)
-        .icon(IcPluginAdaptiveSmoothing)
+        .icon(IcStats)
         .pluginName(R.string.adaptive_smoothing_name)
         .shortName(R.string.smoothing_shortname)
         .description(R.string.description_adaptive_smoothing),

@@ -22,6 +22,8 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 @Immutable
@@ -70,7 +72,7 @@ class AutomationViewModel @Inject constructor(
             val pump = activePlugin.activePump
             val profile = profileFunction.getProfile()
 
-            val isSuspended = loop.runningMode.isSuspended()
+            val isSuspended = withContext(Dispatchers.IO) { loop.runningMode.isSuspended() }
             if (isSuspended || !pump.isInitialized() || profile == null || config.isEnabled(ExternalOptions.SHOW_USER_ACTIONS_ON_WATCH_ONLY)) {
                 _uiState.update { it.copy(items = emptyList()) }
                 return@launch

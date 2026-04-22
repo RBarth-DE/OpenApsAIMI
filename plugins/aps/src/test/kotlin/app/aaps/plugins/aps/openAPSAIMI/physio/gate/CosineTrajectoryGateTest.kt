@@ -79,7 +79,6 @@ class CosineTrajectoryGateTest {
 
     @Test
     fun `test ACTIVITY Kernel match`() {
-        // Delta -5.0 (norm -0.5), Steps 1500 (norm 1.0), ActivityDetected
         val input = createInput(
             delta = -5.0,
             steps = 1500,

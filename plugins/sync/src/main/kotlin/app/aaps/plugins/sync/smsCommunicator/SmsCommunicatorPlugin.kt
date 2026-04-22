@@ -1280,6 +1280,7 @@ class SmsCommunicatorPlugin @Inject constructor(
         } == true
     }
 
+
     override fun getPreferenceScreenContent() = PreferenceSubScreenDef(
         key = "smscommunicator_settings",
         titleResId = R.string.smscommunicator,

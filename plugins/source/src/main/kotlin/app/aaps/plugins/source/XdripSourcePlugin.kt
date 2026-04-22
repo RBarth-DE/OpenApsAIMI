@@ -33,6 +33,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.math.abs
 import kotlin.math.round
+import kotlin.text.get
 
 @Singleton
 class XdripSourcePlugin @Inject constructor(

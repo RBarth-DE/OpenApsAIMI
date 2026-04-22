@@ -24,6 +24,8 @@ dependencies {
     implementation(project(":core:ui"))
     implementation(project(":core:utils"))
     implementation(project(":shared:impl"))
+    implementation(project(":plugins:aps"))  // For ContextManager access
+
 
     // Compose
     api(platform(libs.androidx.compose.bom))
@@ -49,6 +51,9 @@ dependencies {
     api(libs.androidx.work.runtime)
     api(libs.androidx.gridlayout)
     api(libs.com.google.android.material)
+    
+    // Security - EncryptedSharedPreferences for Remote Access password
+    api("androidx.security:security-crypto:1.1.0-alpha06")
 
     // NSClient, Tidepool
     api(libs.io.socket.client)

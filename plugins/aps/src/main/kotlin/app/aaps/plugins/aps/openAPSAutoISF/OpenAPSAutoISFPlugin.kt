@@ -218,6 +218,7 @@ open class OpenAPSAutoISFPlugin @Inject constructor(
         }
     }
 
+
     private val autoIsfCache = LongSparseArray<Double>()
 
     private suspend fun calculateVariableIsf(timestamp: Long): Pair<String, Double?> {

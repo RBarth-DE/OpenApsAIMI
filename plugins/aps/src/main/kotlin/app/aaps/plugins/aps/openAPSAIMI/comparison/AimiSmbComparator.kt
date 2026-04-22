@@ -1,5 +1,4 @@
 package app.aaps.plugins.aps.openAPSAIMI.comparison
-import kotlinx.coroutines.runBlocking
 
 import android.content.Context
 import app.aaps.core.interfaces.aps.AutosensResult
@@ -15,12 +14,9 @@ import app.aaps.core.interfaces.constraints.ConstraintsChecker
 import app.aaps.core.interfaces.iob.IobCobCalculator
 import app.aaps.core.interfaces.logging.AAPSLogger
 import app.aaps.core.interfaces.logging.LTag
-import app.aaps.core.interfaces.profile.Profile
 import app.aaps.core.interfaces.profile.ProfileFunction
-import app.aaps.core.objects.constraints.ConstraintObject
 import app.aaps.plugins.aps.openAPSSMB.DetermineBasalSMB
 import app.aaps.plugins.aps.openAPSAIMI.utils.AimiStorageHelper
-import java.io.File
 import java.io.FileWriter
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -111,15 +107,15 @@ class AimiSmbComparator @Inject constructor(
             // Simulation logic: To be realistic, SMB must see the BG it *would* have caused.
             // We use the real BG as anchor and add the virtual deviation.
             val lastSimBg = virtualReservoir.virtualBg ?: glucoseStatus.glucose
-
+            
             // Calculate activity for REAL insulin (that happened in the body)
-            // Note: This is an approximation since we don't have access to the full history
+            // Note: This is an approximation since we don't have access to the full history 
             // of real treatments here in the same format. We use the real IOB data provided.
             val realTotalIob = iobData.firstOrNull() ?: IobTotal(now)
-
+            
             // Calculate activity for SIMULATED insulin
             val simTotalIob = virtualIobCalculator.calculateIobTotalForTime(now, profileSmb)
-
+            
             // VIRTUAL GLUCOSE EVOLUTION
             val virtualBg = virtualGlucoseEngine.calculateNextBg(
                 realBg = glucoseStatus.glucose,
@@ -144,9 +140,9 @@ class AimiSmbComparator @Inject constructor(
             )
             virtualReservoir.virtualBg = virtualBg
             virtualReservoir.virtualDelta = virtualDelta
-
+            
             val smbIobArray = virtualIobCalculator.calculateIobArrayForSMB(
-                profileSmb,
+                profileSmb, 
                 autosens,
                 profileAimi.exercise_mode,
                 profileAimi.half_basal_exercise_target,
@@ -175,7 +171,7 @@ class AimiSmbComparator @Inject constructor(
             )
             
             val smbResult = determineBasalSMB.determine_basal(
-                glucose_status = virtualSmbGlucoseStatus,
+                glucose_status = virtualSmbGlucoseStatus, 
                 currenttemp = currentTemp,
                 iob_data_array = smbIobArray,
                 profile = profileSmb,

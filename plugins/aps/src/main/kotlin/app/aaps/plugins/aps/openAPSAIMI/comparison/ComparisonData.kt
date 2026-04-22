@@ -1,5 +1,4 @@
 package app.aaps.plugins.aps.openAPSAIMI.comparison
-import kotlinx.coroutines.runBlocking
 
 /**
  * =============================================================================

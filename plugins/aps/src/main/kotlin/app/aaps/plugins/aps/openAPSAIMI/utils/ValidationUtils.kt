@@ -1,5 +1,4 @@
 package app.aaps.plugins.aps.openAPSAIMI.utils
-import kotlinx.coroutines.runBlocking
 
 /**
  * 🛡️ ValidationUtils

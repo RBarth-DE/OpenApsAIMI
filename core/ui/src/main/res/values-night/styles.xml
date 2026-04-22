@@ -66,6 +66,7 @@
         <item name="highColor">@color/high</item>
         <item name="bgInRange">@color/inRange</item>
         <!---Profile Helper -->
+        <item name="profileColor">@color/colorPrimary</item>
         <!---Local profile -->
         <!---Warning  -->
         <item name="warningColor">@color/warning</item>
@@ -105,6 +106,7 @@
         <!---Loop Opened Icon Color-->
         <item name="loopOpened">@color/loopOpened</item>
         <!---Loop Super Bolus Icon Color-->
+        <item name="loopSuperBolus">@color/loopSuperBolus</item>
         <!---Action Icons Color-->
         <item name="extBolusColor">@color/extendedBolus</item>
         <item name="basalNoTbrColor">@color/actionBasal</item>

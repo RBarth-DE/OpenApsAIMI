@@ -1,5 +1,4 @@
 package app.aaps.plugins.aps.openAPSAIMI.physio
-import kotlinx.coroutines.runBlocking
 
 /**
  * 📊 Health Connect Fetch Outcome

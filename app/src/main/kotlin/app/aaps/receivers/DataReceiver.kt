@@ -76,6 +76,7 @@ open class DataReceiver : DaggerBroadcastReceiver() {
                         it.copyString("data", bundle)
                     }.build()).build()
 
+            Intents.OTTAI_APP, Intents.OTTAI_APP_CN,
             Intents.SYAI_APP                          ->
                 OneTimeWorkRequest.Builder(SyaiPlugin.SyaiWorker::class.java)
                     .setInputData(Data.Builder().also {

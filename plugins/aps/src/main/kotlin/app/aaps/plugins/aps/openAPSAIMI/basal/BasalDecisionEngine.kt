@@ -1,5 +1,4 @@
 package app.aaps.plugins.aps.openAPSAIMI.basal
-import kotlinx.coroutines.runBlocking
 
 import android.content.Context
 import app.aaps.core.interfaces.aps.CurrentTemp

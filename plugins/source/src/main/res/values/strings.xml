@@ -30,9 +30,6 @@
     <!-- Patched Syai Tag App -->
     <string name="syai_tag_app">Syai</string>
     <string name="description_source_patched_syai_tag_app">Receive glucose data from Syai/Ottai App.</string>
-    <!-- Ottai App -->
-    <string name="ottai_app">Ottai</string>
-    <string name="description_source_patched_ottai_app">Receive glucose data from Ottai App.</string>
     <!-- Patched SI App -->
     <string name="patched_si_app">SI App</string>
     <string name="description_source_patched_si_app">Receive glucose data from Patched Sibionic SI App.</string>
@@ -40,7 +37,10 @@
     <string name="patched_sino_app">Sino App</string>
     <string name="description_source_patched_sino_app">Receive glucose data from Patched Sino App.</string>
 
-<!-- Notification Reader -->
+    <!-- Patched Ottai App -->
+    <string name="ottai_app">Ottai</string>
+    <string name="description_source_patched_ottai_app">Receive glucose data from Ottai App.</string>
+    <!-- Notification Reader -->
     <string name="notification_reader">Notification Reader</string>
     <string name="description_source_notification_reader">Read glucose values from notifications posted by official CGM apps (Dexcom, Medtronic, Eversense, etc.).</string>
     <!-- Permission rationales -->

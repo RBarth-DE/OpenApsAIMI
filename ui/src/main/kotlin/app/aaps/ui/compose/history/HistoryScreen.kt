@@ -42,7 +42,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -66,8 +66,14 @@ fun HistoryScreen(
     modifier: Modifier = Modifier,
     viewModel: HistoryViewModel = hiltViewModel()
 ) {
+    // hiltViewModel(creationCallback) is the correct Hilt 2.49+ API for
+    // @HiltViewModel(assistedFactory = ...). The factory lives inside Hilt's
+    // ViewModelComponent and must NOT be accessed via EntryPoint or direct
+    // injection – only through this creationCallback mechanism.
     val graphViewModel: GraphViewModel = hiltViewModel(
-        creationCallback = { factory: GraphViewModel.Factory -> factory.create(viewModel.cache) }
+        creationCallback = { factory: GraphViewModel.Factory ->
+            factory.create(viewModel.cache)
+        }
     )
 
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()

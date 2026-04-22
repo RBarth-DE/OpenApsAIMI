@@ -1,7 +1,7 @@
 package app.aaps.plugins.aps.openAPSAIMI.comparison
-import kotlinx.coroutines.runBlocking
 
 import app.aaps.core.data.model.BS
+import app.aaps.core.data.model.ICfg
 import app.aaps.core.data.model.TB
 import app.aaps.core.interfaces.aps.AutosensResult
 import app.aaps.core.interfaces.aps.IobTotal
@@ -46,8 +46,9 @@ class VirtualInsulinReservoir {
                 timestamp = timestamp,
                 amount = decision.units!!,
                 type = BS.Type.SMB,
-                isBasalInsulin = false
-            , iCfg = app.aaps.core.data.model.ICfg(insulinLabel = "NovoRapid", insulinEndTime = 18000000L, insulinPeakTime = 4500000L))
+                isBasalInsulin = false,
+                iCfg = ICfg(insulinLabel = "VirtualSMB", peak = 75, dia = 5.0, concentration = 1.0)
+            )
             virtualBoluses.add(bolus)
         }
 
@@ -169,7 +170,12 @@ class VirtualIobCalculator(
                         val term = time - dia * 60 * 60 * 1000
                         if (calcDate > term && calcDate <= time) {
                             val tempBolusSize = netRate * tempBolusSpacing / 60.0
-                            val tempBolusPart = BS(timestamp = calcDate, amount = tempBolusSize, type = BS.Type.NORMAL, iCfg = app.aaps.core.data.model.ICfg(insulinLabel = "NovoRapid", insulinEndTime = 18000000L, insulinPeakTime = 4500000L))
+                            val tempBolusPart = BS(
+                                timestamp = calcDate,
+                                amount = tempBolusSize,
+                                type = BS.Type.NORMAL,
+                                iCfg = ICfg(insulinLabel = "VirtualSMB", peak = 75, dia = profile.dia, concentration = 1.0)
+                            )
                             val aIOB = calculateIobForTreatment(tempBolusPart, time, dia)
                             total.basaliob += aIOB.iobContrib
                             total.activity += aIOB.activityContrib

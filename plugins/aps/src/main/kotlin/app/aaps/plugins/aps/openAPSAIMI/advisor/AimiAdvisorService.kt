@@ -3,7 +3,6 @@ package app.aaps.plugins.aps.openAPSAIMI.advisor
 import android.content.Context
 import app.aaps.core.interfaces.profile.EffectiveProfile
 import kotlinx.coroutines.runBlocking
-
 import kotlin.math.roundToInt
 import app.aaps.plugins.aps.R
 import app.aaps.plugins.aps.openAPSAIMI.advisor.data.AdvisorHistoryRepository
@@ -172,16 +171,17 @@ class AimiAdvisorService {
         val metrics = calculateMetrics(periodDays)
 
         // 2. Snapshot Profile
-        val profile = profileFunction?.let { runBlocking { it.getProfile() } }
+        val profile = runBlocking { profileFunction.getProfile() }
         val profileSnapshot = if (profile != null) {
             val totalBasalCalc = (0 until 24).sumOf { h -> profile.getBasal((h * 3600).toLong()) }
+            val dia = (profile as? EffectiveProfile)?.iCfg?.dia ?: 5.0
 
             AimiProfileSnapshot(
                 nightBasal = profile.getBasal(0L), // 00:00 basal
                 icRatio = calculateWeightedAverage(profile.getIcsValues()),
                 isf = calculateWeightedAverage(profile.getIsfsMgdlValues()),
                 targetBg = calculateWeightedAverage(profile.getSingleTargetsMgdl()),
-                dia = profile.getBasalTimeFromMidnight(0),
+                dia = dia,
                 totalBasal = totalBasalCalc
             )
         } else {
@@ -242,7 +242,7 @@ class AimiAdvisorService {
         return if (totalDuration > 0) totalWeightedValue / totalDuration else 0.0
     }
 
-    private fun calculateMetrics(days: Int): AdvisorMetrics {
+    private fun calculateMetrics(days: Int): AdvisorMetrics = runBlocking {
         // Fallback defaults
         var tir70_180 = 0.65
         var tir70_140 = 0.40
@@ -260,9 +260,9 @@ class AimiAdvisorService {
         if (tirCalculator != null) {
             try {
                 // Main Range (70-180)
-                val tirs = runBlocking { tirCalculator.calculate(days.toLong(), 70.0, 180.0) }
+                val tirs = tirCalculator.calculate(days.toLong(), 70.0, 180.0)
                 val avgTir = tirCalculator.averageTIR(tirs)
-
+                
                 if (avgTir != null) {
                     tir70_180 = (avgTir.inRangePct() ?: 0.0) / 100.0
                     timeBelow70 = (avgTir.belowPct() ?: 0.0) / 100.0
@@ -270,21 +270,21 @@ class AimiAdvisorService {
                 }
 
                 // Very Low (<54) - Calculate with low=54
-                val tirs54 = runBlocking { tirCalculator.calculate(days.toLong(), 54.0, 180.0) }
+                val tirs54 = tirCalculator.calculate(days.toLong(), 54.0, 180.0)
                 val avg54 = tirCalculator.averageTIR(tirs54)
                 if (avg54 != null) {
                     timeBelow54 = (avg54.belowPct() ?: 0.0) / 100.0
                 }
-
+                
                 // Very High (>250) - Calculate with high=250
-                val tirs250 = runBlocking { tirCalculator.calculate(days.toLong(), 70.0, 250.0) }
+                val tirs250 = tirCalculator.calculate(days.toLong(), 70.0, 250.0)
                 val avg250 = tirCalculator.averageTIR(tirs250)
                 if (avg250 != null) {
                     timeAbove250 = (avg250.abovePct() ?: 0.0) / 100.0
                 }
 
                 // Tight Range (70-140)
-                val tirs140 = runBlocking { tirCalculator.calculate(days.toLong(), 70.0, 140.0) }
+                val tirs140 = tirCalculator.calculate(days.toLong(), 70.0, 140.0)
                 val avg140 = tirCalculator.averageTIR(tirs140)
                 if (avg140 != null) {
                     tir70_140 = (avg140.inRangePct() ?: 0.0) / 100.0
@@ -319,7 +319,7 @@ class AimiAdvisorService {
         // 2. Calculate Real TDD
         if (tddCalculator != null) {
             try {
-                val tdds = runBlocking { tddCalculator.calculate(days.toLong(), true) }
+                val tdds = tddCalculator.calculate(days.toLong(), true)
                 val avgTdd = tddCalculator.averageTDD(tdds)
                 
                 if (avgTdd != null) {
@@ -329,7 +329,7 @@ class AimiAdvisorService {
                     }
                 }
                 
-                val today = runBlocking { tddCalculator.calculateToday() }
+                val today = tddCalculator.calculateToday()
                 if (today != null) {
                     todayTdd = today.totalAmount
                 }
@@ -345,7 +345,7 @@ class AimiAdvisorService {
                 // Fetch BG readings directly for the period
                 val now = System.currentTimeMillis()
                 val fromTime = now - (days * 24 * 3600 * 1000L)
-                val bgReadings = runBlocking { persistenceLayer.getBgReadingsDataFromTimeToTime(fromTime, now, ascending = false) }
+                val bgReadings = persistenceLayer.getBgReadingsDataFromTimeToTime(fromTime, now, ascending = false)
                 
                 android.util.Log.d("AIMI_ADVISOR", "📊 Mean BG calculation: fetched ${bgReadings.size} BG readings")
                 
@@ -372,7 +372,7 @@ class AimiAdvisorService {
             android.util.Log.w("AIMI_ADVISOR", "⚠️ PersistenceLayer is null, cannot calculate mean BG. Using fallback $meanBg")
         }
 
-        return AdvisorMetrics(
+        AdvisorMetrics(
             periodLabel = "Last $days days",
             tir70_180 = tir70_180,
             tir70_140 = tir70_140,
@@ -851,7 +851,7 @@ class AimiAdvisorService {
                     )
                 }
             }
-
+            
             sb.append("\n" + rh.gs(R.string.aimi_adv_generated_footer, formatTime(report.generatedAt)))
 
         } else {
@@ -1050,8 +1050,9 @@ class AimiAdvisorService {
             val fromTime = now - (periodDays * 24 * 3600 * 1000L)
             
             val bgReadings = try {
-                runBlocking { persistenceLayer.getBgReadingsDataFromTimeToTime(fromTime, now, false) }
-                    .map { it.value }
+                runBlocking {
+                    persistenceLayer.getBgReadingsDataFromTimeToTime(fromTime, now, false)
+                }.map { it.value }
                     .filter { it > 30.0 }
             } catch (e: Exception) {
                 emptyList<Double>()

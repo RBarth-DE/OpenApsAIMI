@@ -1,5 +1,4 @@
 package app.aaps.plugins.aps.openAPSAIMI.physio
-import kotlinx.coroutines.runBlocking
 
 import org.json.JSONObject
 import java.time.Instant

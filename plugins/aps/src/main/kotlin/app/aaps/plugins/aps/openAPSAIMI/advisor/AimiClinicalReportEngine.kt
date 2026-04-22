@@ -1,5 +1,4 @@
 package app.aaps.plugins.aps.openAPSAIMI.advisor
-import kotlinx.coroutines.runBlocking
 
 import app.aaps.core.interfaces.aps.GlucoseStatusAIMI
 import app.aaps.core.interfaces.stats.TddCalculator

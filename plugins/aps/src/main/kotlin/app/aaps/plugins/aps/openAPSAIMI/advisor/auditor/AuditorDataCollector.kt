@@ -1,6 +1,6 @@
 package app.aaps.plugins.aps.openAPSAIMI.advisor.auditor
-import kotlinx.coroutines.runBlocking
 
+import kotlinx.coroutines.runBlocking
 import app.aaps.core.interfaces.aps.IobTotal
 import app.aaps.core.interfaces.aps.GlucoseStatusAIMI
 import app.aaps.core.interfaces.aps.OapsProfileAimi
@@ -331,13 +331,13 @@ class AuditorDataCollector @Inject constructor(
     /**
      * Build last delivery snapshot from database
      */
-    private fun buildLastDeliverySnapshot(now: Long): LastDeliverySnapshot {
+    private fun buildLastDeliverySnapshot(now: Long): LastDeliverySnapshot = runBlocking {
         val lookbackMs = 60 * 60 * 1000L // 1 hour
         val fromTime = now - lookbackMs
         
         // Last bolus
         val boluses = try {
-            runBlocking { persistenceLayer.getBolusesFromTime(fromTime, ascending = false) }
+            persistenceLayer.getBolusesFromTime(fromTime, ascending = false)
                 .filter { it.type != app.aaps.core.data.model.BS.Type.SMB }
         } catch (e: Exception) {
             aapsLogger.debug(app.aaps.core.interfaces.logging.LTag.APS, "Failed to fetch boluses: ${e.message}")
@@ -347,7 +347,7 @@ class AuditorDataCollector @Inject constructor(
         
         // Last SMB
         val smbs = try {
-            runBlocking { persistenceLayer.getBolusesFromTime(fromTime, ascending = false) }
+            persistenceLayer.getBolusesFromTime(fromTime, ascending = false)
                 .filter { it.type == app.aaps.core.data.model.BS.Type.SMB }
         } catch (e: Exception) {
             aapsLogger.debug(app.aaps.core.interfaces.logging.LTag.APS, "Failed to fetch SMBs: ${e.message}")
@@ -357,14 +357,14 @@ class AuditorDataCollector @Inject constructor(
         
         // Last TBR
         val tbrs = try {
-            runBlocking { persistenceLayer.getTemporaryBasalsStartingFromTime(fromTime, ascending = false) }
+            persistenceLayer.getTemporaryBasalsStartingFromTime(fromTime, ascending = false)
                 .filter { it.duration.toInt() != 0 } // Filter out CANCELs
         } catch (e: Exception) {
             emptyList()
         }
         val lastTbr = tbrs.firstOrNull()
         
-        return LastDeliverySnapshot(
+        LastDeliverySnapshot(
             lastBolusU = lastBolus?.let { it.amount },
             lastBolusTime = lastBolus?.let { it.timestamp },
             lastSmbU = lastSmb?.let { it.amount },
@@ -422,29 +422,24 @@ class AuditorDataCollector @Inject constructor(
     /**
      * Build 7-day stats from TIR calculator
      */
-    private fun buildStats7d(now: Long): Stats7d {
-        val sevenDaysAgo = now - 7 * 24 * 60 * 60 * 1000L
-        
-        // Get TIR stats (using 7 days with standard thresholds)
+    private fun buildStats7d(now: Long): Stats7d = runBlocking {
         val tirData = try {
-            runBlocking { tirCalculator.calculate(7, 70.0, 180.0) }
+            tirCalculator.calculate(7L, 70.0, 180.0)
         } catch (e: Exception) {
             null
         }
-        
-        // Average the TIR data
+
         val tirStats = tirData?.let { tirCalculator.averageTIR(it) }
-        
-        // Get TDD stats
+
         val tdd7d = try {
             tddCalculator.averageTDD(
-                runBlocking { tddCalculator.calculate(7, allowMissingDays = true) }
+                tddCalculator.calculate(7L, allowMissingDays = true)
             )?.data?.totalAmount ?: 0.0
         } catch (e: Exception) {
             0.0
         }
-        
-        return Stats7d(
+
+        Stats7d(
             tir = tirStats?.let { it.inRangePct() } ?: 0.0,
             hypoPct = tirStats?.let { it.belowPct() } ?: 0.0,
             hyperPct = tirStats?.let { it.abovePct() } ?: 0.0,

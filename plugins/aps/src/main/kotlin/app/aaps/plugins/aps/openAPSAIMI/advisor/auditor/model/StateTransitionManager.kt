@@ -1,5 +1,4 @@
 package app.aaps.plugins.aps.openAPSAIMI.advisor.auditor.model
-import kotlinx.coroutines.runBlocking
 
 import app.aaps.plugins.aps.openAPSAIMI.model.AdvisorSeverity
 import java.util.concurrent.ConcurrentLinkedQueue

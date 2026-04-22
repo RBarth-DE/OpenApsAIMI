@@ -1,5 +1,4 @@
 package app.aaps.plugins.aps.openAPSAIMI.physio.thyroid
-import kotlinx.coroutines.runBlocking
 
 /**
  * Models for the Basedow (Hyperthyroidism) integration physiological module.

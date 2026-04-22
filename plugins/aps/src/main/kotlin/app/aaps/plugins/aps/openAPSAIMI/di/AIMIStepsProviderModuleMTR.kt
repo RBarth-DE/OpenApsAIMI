@@ -1,12 +1,9 @@
 package app.aaps.plugins.aps.openAPSAIMI.di
-import kotlinx.coroutines.runBlocking
 
-import app.aaps.plugins.aps.openAPSAIMI.steps.*
 import dagger.Module
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
-import dagger.Provides
-import javax.inject.Singleton
+
 
 /**
  * 🔧 AIMI Steps Provider Module - MTR Dagger Integration

@@ -122,6 +122,11 @@ class MaintenanceViewModel @Inject constructor(
         refreshExportConfig()
     }
 
+    fun toggleAimiCloud(enabled: Boolean) {
+        importExportPrefs.setAimiCloudEnabled(enabled)
+        refreshExportConfig()
+    }
+
     // Log elements for LogSettingBottomSheet
     val logElements: List<LogElement> get() = l.logElements()
 

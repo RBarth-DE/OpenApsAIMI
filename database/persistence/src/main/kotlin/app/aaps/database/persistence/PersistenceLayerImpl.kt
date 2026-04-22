@@ -1003,6 +1003,11 @@ class PersistenceLayerImpl @Inject constructor(
         }
     }
 
+
+    override suspend fun deleteLastEventMatchingKeyword(noteKeyword: String) {
+        repository.deleteLastEventMatchingKeyword(noteKeyword)
+    }
+
     override suspend fun syncNsEffectiveProfileSwitches(effectiveProfileSwitches: List<EPS>, doLog: Boolean): PersistenceLayer.TransactionResult<EPS> = withContext(Dispatchers.IO) {
         try {
             val result = repository.runTransactionForResultSuspend(SyncNsEffectiveProfileSwitchTransaction(effectiveProfileSwitches.map { it.toDb() }))
@@ -1991,20 +1996,6 @@ class PersistenceLayerImpl @Inject constructor(
         }
     }
 
-    override suspend fun deleteLastEventMatchingKeyword(noteKeyword: String): Unit = withContext(Dispatchers.IO) {
-        val lookback = dateUtil.now() - 24 * 60 * 60 * 1000L
-        val match = repository.getTherapyEventDataFromTime(lookback, ascending = false)
-            .firstOrNull { it.note?.contains(noteKeyword, ignoreCase = true) == true }
-        if (match != null) {
-            try {
-                repository.runTransactionForResultSuspend(InvalidateTherapyEventTransaction(match.id))
-                aapsLogger.debug(LTag.DATABASE, "Deleted TherapyEvent matching keyword '$noteKeyword': $match")
-            } catch (e: Exception) {
-                aapsLogger.error(LTag.DATABASE, "Error deleting TherapyEvent matching keyword '$noteKeyword'", e)
-            }
-        }
-    }
-
     override suspend fun invalidateTherapyEvent(id: Long, action: Action, source: Sources, note: String?, listValues: List<ValueWithUnit>)
         : PersistenceLayer.TransactionResult<TE> = withContext(Dispatchers.IO) {
         try {
@@ -2093,10 +2084,6 @@ class PersistenceLayerImpl @Inject constructor(
             result.updatedDuration.forEach { therapyEvent ->
                 aapsLogger.debug(LTag.DATABASE, "Updated duration TherapyEvent from ${Sources.NSClient.name} $therapyEvent")
                 transactionResult.updatedDuration.add(therapyEvent.fromDb())
-            }
-            result.updatedSite.forEach { therapyEvent ->
-                aapsLogger.debug(LTag.DATABASE, "Updated Site Rotation TherapyEvent from ${Sources.NSClient.name} $therapyEvent")
-                transactionResult.updated.add(therapyEvent.fromDb())
             }
             log(ueValues)
             transactionResult

@@ -1,5 +1,4 @@
 package app.aaps.plugins.aps.openAPSAIMI.advisor.meal
-import kotlinx.coroutines.runBlocking
 
 import android.Manifest
 import android.content.Context

@@ -1,5 +1,4 @@
 package app.aaps.plugins.aps.openAPSAIMI.carbs
-import kotlinx.coroutines.runBlocking
 
 object CarbsAdvisor {
     /**

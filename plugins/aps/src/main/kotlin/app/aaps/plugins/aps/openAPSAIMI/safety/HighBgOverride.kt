@@ -1,5 +1,4 @@
 package app.aaps.plugins.aps.openAPSAIMI.safety
-import kotlinx.coroutines.runBlocking
 
 import app.aaps.plugins.aps.openAPSAIMI.model.Constants
 

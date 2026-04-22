@@ -39,6 +39,8 @@ import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import kotlin.math.abs
 
@@ -123,7 +125,7 @@ class TreatmentViewModel @Inject constructor(
         val profile = profileFunction.getProfile()
         val profileName = profileFunction.getProfileName()
         val pump = activePlugin.activePump
-        val runningMode = loop.runningMode
+        val runningMode = withContext(Dispatchers.IO) { loop.runningMode }
 
         return activeEntries.map { entry ->
             when (entry.mode()) {

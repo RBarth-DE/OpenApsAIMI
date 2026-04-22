@@ -145,6 +145,7 @@ class IobCobOrefWorker @Inject internal constructor(
                         // try {
                         while (past < 12) {
                             val ad = autosensDataTable.valueAt(initialIndex + past)
+                            if (ad == null) break
                             aapsLogger.debug(LTag.AUTOSENS) { ">>>>> past=$past ad=$ad" }
                             // if (ad == null) {
                             //     aapsLogger.debug(LTag.AUTOSENS, autosensDataTable.toString())

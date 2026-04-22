@@ -1,5 +1,4 @@
 package app.aaps.plugins.aps.openAPSAIMI.pkpd
-import kotlinx.coroutines.runBlocking
 
 import app.aaps.core.keys.BooleanKey
 import app.aaps.core.keys.DoubleKey

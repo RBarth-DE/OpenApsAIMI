@@ -191,6 +191,7 @@ open class OpenAPSSMBPlugin @Inject constructor(
         }
     }
 
+
     private val dynIsfCache = LongSparseArray<Double>()
 
     private suspend fun calculateVariableIsf(timestamp: Long, multiplier: Double): Pair<String, Double?> {

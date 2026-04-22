@@ -1,5 +1,4 @@
 package app.aaps.plugins.aps.openAPSAIMI.autodrive.learning
-import kotlinx.coroutines.runBlocking
 
 import app.aaps.core.interfaces.logging.AAPSLogger
 import app.aaps.core.interfaces.logging.LTag
@@ -27,7 +26,6 @@ class MechanismAttentionGate @Inject constructor(
     // Cache en mémoire pour ne pas tuer les I/O à chaque tique de 5 minutes
     private var weightsCache: AttentionWeights? = null
     private var lastLoadTime: Long = 0
-    
     // Pour l'UI
     var lastAttentionMultiplier: Double = 1.0
         private set
@@ -45,6 +43,7 @@ class MechanismAttentionGate @Inject constructor(
         
         // Si la V3 n'a pas encore eu le temps de s'entraîner (Data Gate fermée), on reste en V2 = Neutre
         if (weights == null || state.physiologicalStressMask.isEmpty()) {
+            lastAttentionMultiplier = 1.0
             return state
         }
 

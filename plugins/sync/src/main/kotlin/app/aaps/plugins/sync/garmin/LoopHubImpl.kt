@@ -30,7 +30,6 @@ import app.aaps.core.keys.StringKey
 import app.aaps.core.keys.UnitDoubleKey
 import app.aaps.core.keys.interfaces.Preferences
 import app.aaps.core.objects.extensions.convertedToPercent
-import io.reactivex.rxjava3.disposables.CompositeDisposable
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -59,8 +58,6 @@ class LoopHubImpl @Inject constructor(
     private val dateUtil: DateUtil,
     @ApplicationScope private val appScope: CoroutineScope
 ) : LoopHub {
-
-    val disposable = CompositeDisposable()
 
     @VisibleForTesting
     var clock: Clock = Clock.systemUTC()

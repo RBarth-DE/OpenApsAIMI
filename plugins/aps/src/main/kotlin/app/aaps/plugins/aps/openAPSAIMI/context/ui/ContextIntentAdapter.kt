@@ -1,5 +1,4 @@
 package app.aaps.plugins.aps.openAPSAIMI.context.ui
-import kotlinx.coroutines.runBlocking
 
 import android.view.LayoutInflater
 import android.view.ViewGroup

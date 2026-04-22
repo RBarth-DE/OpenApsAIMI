@@ -1,5 +1,4 @@
 package app.aaps.plugins.aps.openAPSAIMI.model
-import kotlinx.coroutines.runBlocking
 
 /**
  * Shared constants describing pump and safety defaults used across the AIMI stack.

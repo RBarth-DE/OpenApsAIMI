@@ -1,5 +1,4 @@
 package app.aaps.plugins.aps.openAPSAIMI.physio.gate
-import kotlinx.coroutines.runBlocking
 
 import app.aaps.core.keys.interfaces.Preferences
 import app.aaps.core.interfaces.logging.AAPSLogger

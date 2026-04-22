@@ -1,5 +1,4 @@
 package app.aaps.plugins.aps.openAPSAIMI.physio
-import kotlinx.coroutines.runBlocking
 
 import androidx.health.connect.client.permission.HealthPermission
 import androidx.health.connect.client.records.HeartRateRecord
@@ -26,7 +25,7 @@ object AIMIHealthConnectPermissions {
         HealthPermission.getReadPermission(SleepSessionRecord::class),
         HealthPermission.getReadPermission(HeartRateVariabilityRmssdRecord::class),
         HealthPermission.getReadPermission(HeartRateRecord::class),
-        // Garmin / several apps record resting heart rate as a separate data point (not just the minimum heart rate in the morning)
+        // Garmin / plusieurs apps écrivent la FC repos comme type dédié (pas seulement min FC le matin)
         HealthPermission.getReadPermission(RestingHeartRateRecord::class)
     )
     

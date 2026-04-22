@@ -11,7 +11,9 @@ import app.aaps.core.interfaces.sync.DataSyncSelectorXdrip
 import app.aaps.core.interfaces.sync.XDripBroadcast
 import app.aaps.plugins.sync.garmin.LoopHub
 import app.aaps.plugins.sync.garmin.LoopHubImpl
+import app.aaps.plugins.sync.nsShared.NSClientFragment
 import app.aaps.plugins.sync.nsShared.StoreDataForDbImpl
+import app.aaps.plugins.sync.wear.activities.CwfInfosActivity
 import app.aaps.plugins.sync.nsShared.compose.NSClientRepositoryImpl
 import app.aaps.plugins.sync.nsclient.data.NSSettingsStatusImpl
 import app.aaps.plugins.sync.nsclient.data.ProcessedDeviceStatusDataImpl
@@ -55,6 +57,8 @@ import dagger.hilt.components.SingletonComponent
 @Suppress("unused")
 abstract class SyncModule {
 
+    @ContributesAndroidInjector abstract fun contributesNSClientFragment(): NSClientFragment
+
     @ContributesAndroidInjector abstract fun contributesNSClientService(): NSClientService
     @ContributesAndroidInjector abstract fun contributesNSClientV3Service(): NSClientV3Service
     @ContributesAndroidInjector abstract fun contributesNSClientWorker(): NSClientAddUpdateWorker
@@ -75,6 +79,7 @@ abstract class SyncModule {
     @ContributesAndroidInjector abstract fun contributesXdripDataSyncWorker(): XdripDataSyncWorker
     @ContributesAndroidInjector abstract fun contributesWearDataReceiver(): WearDataReceiver
     @ContributesAndroidInjector abstract fun contributesWatchUpdaterService(): DataLayerListenerServiceMobile
+    @ContributesAndroidInjector abstract fun contributesCustomWatchfaceInfosActivity(): CwfInfosActivity
 
     @Module
     @InstallIn(SingletonComponent::class)

@@ -81,13 +81,14 @@ class ManageViewModel @Inject constructor(
 
     fun refreshState() {
         viewModelScope.launch {
+            // LoopPlugin.runningMode / runningModeRecord use runBlocking(DB) + preCheck — never invoke from Main.
+            val runningMode = withContext(Dispatchers.IO) { loop.runningMode }
             val profile = profileFunction.getProfile()
             val pump = activePlugin.activePump
             val pumpDescription = pump.pumpDescription
             val isInitialized = pump.isInitialized()
             val isSuspended = pump.isSuspended()
-            val isDisconnected = loop.runningMode == RM.Mode.DISCONNECTED_PUMP
-            loop.runningMode.isLoopRunning()
+            val isDisconnected = runningMode == RM.Mode.DISCONNECTED_PUMP
 
             // Extended bolus visibility
             val showExtendedBolus: Boolean

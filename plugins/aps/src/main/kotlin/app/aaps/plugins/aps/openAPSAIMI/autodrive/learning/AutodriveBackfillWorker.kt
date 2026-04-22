@@ -1,5 +1,4 @@
 package app.aaps.plugins.aps.openAPSAIMI.autodrive.learning
-import kotlinx.coroutines.runBlocking
 
 import android.content.Context
 import androidx.work.CoroutineWorker

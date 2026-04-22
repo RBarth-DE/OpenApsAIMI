@@ -208,11 +208,16 @@ class AIMIHealthConnectSyncServiceMTR @Inject constructor(
                 device = SOURCE_DEVICE // "HealthConnect"
             )
 
-            try {
-                runBlocking { persistenceLayer.insertOrUpdateStepsCount(sc) }
-                aapsLogger.info(LTag.APS, "[$TAG] ✅ Steps stored")
-            } catch (e: Exception) {
-                aapsLogger.error(LTag.APS, "[$TAG] ❌ Steps DB insert failed", e)
+            runBlocking(Dispatchers.IO) {
+                try {
+                    persistenceLayer.insertOrUpdateStepsCount(sc)
+                    aapsLogger.info(
+                        LTag.APS,
+                        "[$TAG] ✅ Steps stored: 5min=${stepsData.steps5min}, 30min=${stepsData.steps30min}. Source=$SOURCE_DEVICE"
+                    )
+                } catch (e: Exception) {
+                    aapsLogger.error(LTag.APS, "[$TAG] ❌ Steps DB insert failed", e)
+                }
             }
         }
     }
@@ -228,11 +233,16 @@ class AIMIHealthConnectSyncServiceMTR @Inject constructor(
                 device = SOURCE_DEVICE
             )
             
-            try {
-                runBlocking { persistenceLayer.insertOrUpdateHeartRate(hr) }
-                aapsLogger.info(LTag.APS, "[$TAG] ✅ Synced HC Heart Rate: ${hr.beatsPerMinute} bpm")
-            } catch (e: Exception) {
-                aapsLogger.error(LTag.APS, "[$TAG] ❌ HR DB insert failed", e)
+            runBlocking(Dispatchers.IO) {
+                try {
+                    persistenceLayer.insertOrUpdateHeartRate(hr)
+                    aapsLogger.info(
+                        LTag.APS,
+                        "[$TAG] ✅ Synced HC Heart Rate: ${hr.beatsPerMinute} bpm. Source=$SOURCE_DEVICE"
+                    )
+                } catch (e: Exception) {
+                    aapsLogger.error(LTag.APS, "[$TAG] ❌ HR DB insert failed", e)
+                }
             }
         }
     }
@@ -338,7 +348,9 @@ class AIMIHealthConnectSyncServiceMTR @Inject constructor(
     )
     private fun logExistingSources(startMs: Long, endMs: Long) {
         try {
-            val recentSteps = runBlocking { persistenceLayer.getStepsCountFromTimeToTime(startMs, endMs) }
+            val recentSteps = runBlocking(Dispatchers.IO) {
+                persistenceLayer.getStepsCountFromTimeToTime(startMs, endMs)
+            }
             val otherSources = recentSteps.map { it.device }.distinct().filter { it != SOURCE_DEVICE }
             
             if (otherSources.isNotEmpty()) {

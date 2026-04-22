@@ -1,5 +1,4 @@
 package app.aaps.plugins.aps.openAPSAIMI.advisor.auditor.ui
-import kotlinx.coroutines.runBlocking
 
 import android.content.Context
 import android.graphics.Color

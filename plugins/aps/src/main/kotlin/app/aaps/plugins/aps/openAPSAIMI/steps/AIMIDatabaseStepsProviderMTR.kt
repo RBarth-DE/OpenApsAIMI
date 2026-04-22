@@ -1,11 +1,12 @@
 package app.aaps.plugins.aps.openAPSAIMI.steps
-import kotlinx.coroutines.runBlocking
 
 import app.aaps.core.interfaces.db.PersistenceLayer
 import app.aaps.core.interfaces.logging.AAPSLogger
 import app.aaps.core.interfaces.logging.LTag
 import java.time.Instant
 import javax.inject.Inject
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.runBlocking
 import javax.inject.Singleton
 
 /**
@@ -41,7 +42,9 @@ class AIMIDatabaseStepsProviderMTR @Inject constructor(
         val searchStartMs = windowStartMs - SEARCH_WINDOW_BUFFER_MS // Add buffer for delayed data
         
         return try {
-            val allStepsCounts = runBlocking { persistenceLayer.getStepsCountFromTimeToTime(searchStartMs, nowMs) }
+            val allStepsCounts = runBlocking(Dispatchers.IO) {
+                persistenceLayer.getStepsCountFromTimeToTime(searchStartMs, nowMs)
+            }
             
             if (allStepsCounts.isEmpty()) {
                 aapsLogger.debug(LTag.APS, "[$SOURCE_NAME] No steps data in DB for {$windowMinutes}min window")
@@ -80,7 +83,9 @@ class AIMIDatabaseStepsProviderMTR @Inject constructor(
         return try {
             val now = System.currentTimeMillis()
             val searchStart = now - 210 * 60 * 1000L // Last 3.5 hours
-            val allSteps = runBlocking { persistenceLayer.getStepsCountFromTimeToTime(searchStart, now) }
+            val allSteps = runBlocking(Dispatchers.IO) {
+                persistenceLayer.getStepsCountFromTimeToTime(searchStart, now)
+            }
             
             allSteps.maxOfOrNull { it.timestamp } ?: 0L
         } catch (e: Exception) {

@@ -42,6 +42,7 @@
     <color name="loopLgs">#800080</color>
     <color name="loopOpened">#4983D7</color>
     <color name="loopDisabled">#FF1313</color>
+    <color name="loopSuperBolus">#FB8C00</color>
 
     <!--    BgReading-->
     <color name="inRange">#00FF00</color>

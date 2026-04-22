@@ -1,5 +1,4 @@
 package app.aaps.plugins.aps.openAPSAIMI.wcycle
-import kotlinx.coroutines.runBlocking
 
 enum class CyclePhase { MENSTRUATION, FOLLICULAR, OVULATION, LUTEAL, UNKNOWN }
 enum class CycleTrackingMode { FIXED_28, CALENDAR_VARIABLE, NO_MENSES_LARC, PERIMENOPAUSE, MENOPAUSE }

@@ -1,5 +1,4 @@
 package app.aaps.plugins.aps.openAPSAIMI.advisor.gestation
-import kotlinx.coroutines.runBlocking
 
 import java.time.LocalDate
 import java.time.temporal.ChronoUnit

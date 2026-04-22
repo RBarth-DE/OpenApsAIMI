@@ -10,6 +10,7 @@ import android.content.IntentFilter
 import android.net.ConnectivityManager
 import android.net.wifi.WifiManager
 import android.os.Build
+import android.os.Environment
 import android.os.Handler
 import android.os.HandlerThread
 import androidx.lifecycle.ProcessLifecycleOwner
@@ -111,7 +112,9 @@ import javax.inject.Inject
 import javax.inject.Provider
 import kotlin.reflect.KMutableProperty
 import kotlin.reflect.full.declaredMemberProperties
-
+import java.io.File
+import java.io.FileOutputStream
+import android.util.Log
 @HiltAndroidApp
 class MainApp : Application(), HasAndroidInjector {
 
@@ -171,6 +174,8 @@ class MainApp : Application(), HasAndroidInjector {
 
         // Here should be everything injected
         aapsLogger.debug("onCreate")
+        copyModelToInternalStorage(this)
+        aapsLogger.debug("onCreate - après copyModelToFileSystem")
         ProcessLifecycleOwner.get().lifecycle.addObserver(processLifecycleListener.get())
         // Configure LeakCanary with Firebase reporting
         // Memory leaks will be uploaded to Firebase Crashlytics via FabricPrivacy.logException
@@ -381,6 +386,62 @@ class MainApp : Application(), HasAndroidInjector {
                 actions = listOf(NotificationAction(R.string.select) {}),
                 validityCheck = { preferences.getIfExists(StringKey.AapsDirectoryUri).isNullOrEmpty() }
             )
+    }
+
+    private fun copyModelToInternalStorage(context: Context) {
+        aapsLogger.debug("copyModelToInternalStorage - début")
+        try {
+            val assetManager = context.assets
+            aapsLogger.debug("copyModelToInternalStorage - assetManager : $assetManager")
+
+            // Définition du répertoire cible dans le stockage externe
+            val externalDir = File(Environment.getExternalStorageDirectory().absolutePath + "/Documents/AAPS/ml")
+            if (!externalDir.exists() && !externalDir.mkdirs()) {
+                Log.e("ModelCopyError", "Impossible de créer le répertoire : ${externalDir.absolutePath}")
+                return
+            }
+
+            // Fonction générique pour copier les fichiers
+            fun copyAssetToFile(assetName: String, destinationFile: File) {
+                try {
+                    aapsLogger.debug("copyModelToInternalStorage - Copie de $assetName vers ${destinationFile.absolutePath}")
+                    assetManager.open(assetName).use { inputStream ->
+                        FileOutputStream(destinationFile).use { outputStream ->
+                            inputStream.copyTo(outputStream)
+                        }
+                    }
+                    Log.d("ModelCopy", "Fichier '$assetName' copié dans ${destinationFile.absolutePath}")
+                } catch (e: Exception) {
+                    Log.e("ModelCopyError", "Erreur lors de la copie de $assetName : ${e.message}")
+                }
+            }
+
+            // Copie des fichiers nécessaires
+            copyAssetToFile("model.tflite", File(externalDir, "model.tflite"))
+            copyAssetToFile("modelUAM.tflite", File(externalDir, "modelUAM.tflite"))
+
+            // Vérification si les fichiers existent après copie
+            val modelFilePath = "${externalDir.absolutePath}/model.tflite"
+            val modelFile = File(modelFilePath)
+            if (modelFile.exists()) {
+                Log.d("FileCheck", "Le fichier existe à l'emplacement $modelFilePath")
+            } else {
+                Log.e("FileCheck", "Le fichier n'existe pas à l'emplacement $modelFilePath")
+            }
+
+            val uamFilePath = "${externalDir.absolutePath}/modelUAM.tflite"
+            val uamFile = File(uamFilePath)
+            if (uamFile.exists()) {
+                Log.d("FileCheck", "Le fichier existe à l'emplacement $uamFilePath")
+            } else {
+                Log.e("FileCheck", "Le fichier n'existe pas à l'emplacement $uamFilePath")
+            }
+
+            aapsLogger.debug("copyModelToInternalStorage - Copie terminée")
+
+        } catch (e: Exception) {
+            Log.e("ModelCopyError", "Erreur globale lors de la copie: ${e.message}")
+        }
     }
 
     private fun setRxErrorHandler() {

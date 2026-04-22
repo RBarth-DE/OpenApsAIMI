@@ -1,5 +1,4 @@
 package app.aaps.plugins.aps.openAPSAIMI.plugins.impl
-import kotlinx.coroutines.runBlocking
 
 import app.aaps.core.keys.DoubleKey
 import app.aaps.plugins.aps.openAPSAIMI.model.AimiAction

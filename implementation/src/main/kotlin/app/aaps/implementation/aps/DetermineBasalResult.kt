@@ -12,8 +12,8 @@ import app.aaps.core.interfaces.aps.GlucoseStatus
 import app.aaps.core.interfaces.aps.IobTotal
 import app.aaps.core.interfaces.aps.MealData
 import app.aaps.core.interfaces.aps.OapsProfile
-import app.aaps.core.interfaces.aps.OapsProfileAutoIsf
 import app.aaps.core.interfaces.aps.OapsProfileAimi
+import app.aaps.core.interfaces.aps.OapsProfileAutoIsf
 import app.aaps.core.interfaces.aps.Predictions
 import app.aaps.core.interfaces.aps.RT
 import app.aaps.core.interfaces.constraints.Constraint
@@ -80,7 +80,7 @@ class DetermineBasalResult @Inject constructor(
     override var variableSens: Double? = null
     override var isfMgdlForCarbs: Double? = null // used only to pass to AAPS client
     override var scriptDebug: List<String>? = null
-    var isHypoRisk: Boolean = false
+    override var isHypoRisk: Boolean = false
     var eventualBG = 0.0
     var snoozeBG = 0.0
 
@@ -97,7 +97,7 @@ class DetermineBasalResult @Inject constructor(
     override var currentTemp: CurrentTemp? = null
     override var oapsProfile: OapsProfile? = null
     override var oapsProfileAutoIsf: OapsProfileAutoIsf? = null
-    override var oapsProfileAimi: OapsProfileAimi? = null
+    override var oapsProfileAimi: OapsProfileAimi? = null   // <-- garde override si l'interface le définit
     override var mealData: MealData? = null
 
     lateinit var result: RT
@@ -144,17 +144,11 @@ class DetermineBasalResult @Inject constructor(
 
             // smb
             if (smb != 0.0) ret += "SMB: ${decimalFormatter.toPumpSupportedBolus(smb, activePlugin.activePump.pumpDescription.bolusStep)} "
-            if (isCarbsRequired) {
-                ret += "$carbsRequiredText "
-            }
-
-            // reason
+            if (isCarbsRequired) ret += "$carbsRequiredText "
             ret += rh.gs(R.string.reason) + ": " + reason
             return ret
         }
-        return if (isCarbsRequired) {
-            carbsRequiredText
-        } else rh.gs(R.string.nochangerequested)
+        return if (isCarbsRequired) carbsRequiredText else rh.gs(R.string.nochangerequested)
     }
 
     override fun resultAsSpanned(): Spanned = HtmlHelper.fromHtml(resultAsHtmlString())
@@ -322,13 +316,11 @@ class DetermineBasalResult @Inject constructor(
     override val isChangeRequested: Boolean
         get() {
             val closedLoopEnabled = constraintChecker.isClosedLoopAllowed()
-            // closed loop mode: handle change at driver level
             if (closedLoopEnabled.value()) {
                 aapsLogger.debug(LTag.APS, "DEFAULT: Closed mode")
                 return isTempBasalRequested || isBolusRequested
             }
 
-            // open loop mode: try to limit request
             if (!isTempBasalRequested && !isBolusRequested) {
                 aapsLogger.debug(LTag.APS, "FALSE: No request")
                 return false
@@ -353,10 +345,7 @@ class DetermineBasalResult @Inject constructor(
                 if (percent == 0) return true
                 if (pump.pumpDescription.tempBasalStyle == PumpDescription.PERCENT) {
                     val pumpLimit = pump.pumpDescription.pumpType.tbrSettings()?.maxDose ?: 0.0
-                    if (percent.toDouble() == pumpLimit) {
-                        aapsLogger.debug(LTag.APS, "TRUE: Pump limit")
-                        return true
-                    }
+                    if (percent.toDouble() == pumpLimit) return true
                 }
                 // report change bigger than 30%
                 var percentMinChangeChange = preferences.get(IntKey.LoopOpenModeMinChange).toDouble()
@@ -381,18 +370,10 @@ class DetermineBasalResult @Inject constructor(
                     aapsLogger.debug(LTag.APS, "FALSE: Temp equal")
                     return false
                 }
-                // always report zero temp
-                if (rate == 0.0) {
-                    aapsLogger.debug(LTag.APS, "TRUE: Zero temp")
-                    return true
-                }
-                // always report high temp
+                if (rate == 0.0) return true
                 if (pump.pumpDescription.tempBasalStyle == PumpDescription.ABSOLUTE) {
                     val pumpLimit = pump.pumpDescription.pumpType.tbrSettings()?.maxDose ?: 0.0
-                    if (rate == pumpLimit) {
-                        aapsLogger.debug(LTag.APS, "TRUE: Pump limit")
-                        return true
-                    }
+                    if (rate == pumpLimit) return true
                 }
                 // report change bigger than 30%
                 var percentMinChangeChange = preferences.get(IntKey.LoopOpenModeMinChange).toDouble()

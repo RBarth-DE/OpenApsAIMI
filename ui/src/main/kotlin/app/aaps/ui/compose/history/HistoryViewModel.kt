@@ -5,7 +5,6 @@ import app.aaps.core.data.configuration.Constants
 import app.aaps.core.data.time.T
 import app.aaps.core.interfaces.utils.DateUtil
 import app.aaps.core.interfaces.workflow.CalculationWorkflow
-import app.aaps.core.interfaces.overview.graph.OverviewDataCache
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -21,9 +20,10 @@ class HistoryViewModel @Inject constructor(
     private val dateUtil: DateUtil,
 ) : ViewModel() {
 
-    val cache: OverviewDataCache get() = historyScope.cache
-
     val progress: StateFlow<Int> = historyScope.signals.progress
+
+    /** Exposed so HistoryScreen can pass it to GraphViewModel.Factory.create(). */
+    val cache get() = historyScope.cache
 
     private val _uiState = MutableStateFlow(buildState())
     val uiState: StateFlow<HistoryUiState> = _uiState.asStateFlow()

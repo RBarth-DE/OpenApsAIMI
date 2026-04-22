@@ -1,5 +1,4 @@
 package app.aaps.plugins.aps.openAPSAIMI.model
-import kotlinx.coroutines.runBlocking
 
 /**
  * 🛡️ AdvisorSeverity

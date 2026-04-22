@@ -102,6 +102,7 @@ enum class NotificationId(
     SMB_FALLBACK(89, NORMAL, LOOP),
     DYN_ISF_FALLBACK(91, NORMAL, LOOP),
     HYPO_RISK_ALARM(95, URGENT, LOOP, allowMultiple = true),
+    APEX_SERVICE_MSG(96, INFO, LOOP),
     PUMP_IS_LOCKED(97, URGENT, LOOP),
 
     // Sync — Nightscout

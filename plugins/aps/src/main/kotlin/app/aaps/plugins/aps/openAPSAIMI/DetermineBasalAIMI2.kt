@@ -1,6 +1,6 @@
 package app.aaps.plugins.aps.openAPSAIMI
-import kotlinx.coroutines.runBlocking
 
+import kotlinx.coroutines.runBlocking
 import android.annotation.SuppressLint
 import android.content.Context
 import app.aaps.core.data.model.BS
@@ -9179,7 +9179,8 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             activationThreshold = activationThreshold,
             aggressiveness = aggressiveness,
             maxBasalCap = maxBasalCap,
-            trajectory = trajectoryContext
+            trajectory = trajectoryContext,
+            anticipationHints = t3cAnticipationHints
         )
 
         // Progressive ramp: move toward target rate without abrupt jumps.

@@ -1,5 +1,4 @@
 package app.aaps.plugins.aps.openAPSAIMI.physio
-import kotlinx.coroutines.runBlocking
 
 import app.aaps.core.interfaces.db.PersistenceLayer
 import app.aaps.core.interfaces.logging.AAPSLogger
@@ -11,6 +10,7 @@ import app.aaps.plugins.aps.openAPSAIMI.physio.KernelType
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.math.abs
+import kotlinx.coroutines.runBlocking
 
 /**
  * 💉 AIMI Insulin Decision Adapter - MTR Implementation
@@ -109,7 +109,7 @@ class AIMIInsulinDecisionAdapterMTR @Inject constructor(
             )
             return PhysioMultipliersMTR.NEUTRAL
         }
-
+        
         // Safety Check 2: Recent hypoglycemia
         if (hasRecentHypoglycemia(recentHypoTimestamp)) {
             aapsLogger.warn(LTag.APS, "[$TAG] ⚠️ Recent hypoglycemia detected - skipping modulation")
@@ -402,6 +402,8 @@ class AIMIInsulinDecisionAdapterMTR @Inject constructor(
             "isValid" to snapshot.isValid.toString()
         )
     }
+
+
 
     /**
      * Returns a detailed formatted log string for user visibility (UI Status)

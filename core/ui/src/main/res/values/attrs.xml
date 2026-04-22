@@ -38,6 +38,7 @@
     <attr name="highColor" format="reference|color" />
     <attr name="bgInRange" format="reference|color" />
     <!---Profile Helper -->
+    <attr name="profileColor" format="reference|color" />
     <!---Local profile -->
     <!---Warning  -->
     <attr name="warningColor" format="reference|color" />
@@ -76,6 +77,7 @@
     <!---Loop Opened Icon Color-->
     <attr name="loopOpened" format="reference|color" />
     <!---Loop Super Bolus Icon Color-->
+    <attr name="loopSuperBolus" format="reference|color" />
     <!---Extended Bolus Icon Color-->
     <attr name="extBolusColor" format="reference|color" />
     <attr name="basalNoTbrColor" format="reference|color" />

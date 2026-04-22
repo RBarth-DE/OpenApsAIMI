@@ -126,10 +126,10 @@ fun AllPreferencesScreen(
             getPreferenceContentIfEnabled(plugin)?.let { add(it) }
         }
 
-        // 11. Automation plugin (found via interface)
+        // 10. Automation plugin (found via interface)
         getPreferenceContentIfEnabled(automationPlugin)?.let { add(it) }
 
-        // 12. Autotune plugin (found via interface)
+        // 11. Autotune plugin (found via interface)
         getPreferenceContentIfEnabled(autotunePlugin)?.let { add(it) }
     }
 

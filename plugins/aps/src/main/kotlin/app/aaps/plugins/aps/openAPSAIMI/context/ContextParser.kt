@@ -1,5 +1,4 @@
 package app.aaps.plugins.aps.openAPSAIMI.context
-import kotlinx.coroutines.runBlocking
 
 import app.aaps.core.interfaces.logging.AAPSLogger
 import app.aaps.core.interfaces.logging.LTag
@@ -80,7 +79,6 @@ class ContextParser @Inject constructor(
         // Meal patterns
         private val MEAL_PATTERNS = listOf(
             Regex("\\b(eating|meal|dinner|lunch|restaurant|repas|manger|dîner|déjeuner)\\b", RegexOption.IGNORE_CASE),
-            Regex("\\b(highcarb|gros repas|big meal|festin|banquet|raclette|pizza)\\b", RegexOption.IGNORE_CASE),
             Regex("\\b(unannounced|non annoncé|surprise)\\b", RegexOption.IGNORE_CASE)
         )
         

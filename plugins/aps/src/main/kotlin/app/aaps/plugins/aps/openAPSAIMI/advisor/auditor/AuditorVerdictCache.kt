@@ -1,5 +1,4 @@
 package app.aaps.plugins.aps.openAPSAIMI.advisor.auditor
-import kotlinx.coroutines.runBlocking
 
 import java.util.concurrent.ConcurrentHashMap
 import app.aaps.plugins.aps.openAPSAIMI.model.DecisionResult

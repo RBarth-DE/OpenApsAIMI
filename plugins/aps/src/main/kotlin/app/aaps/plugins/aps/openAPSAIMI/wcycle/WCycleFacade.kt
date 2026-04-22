@@ -1,5 +1,4 @@
 package app.aaps.plugins.aps.openAPSAIMI.wcycle
-import kotlinx.coroutines.runBlocking
 
 class WCycleFacade(
     private val adjuster: WCycleAdjuster,

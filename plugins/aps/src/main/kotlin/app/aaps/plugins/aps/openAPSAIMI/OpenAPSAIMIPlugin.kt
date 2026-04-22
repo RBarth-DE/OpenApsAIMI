@@ -1,4 +1,5 @@
 package app.aaps.plugins.aps.openAPSAIMI
+
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.Dispatchers
@@ -299,7 +300,6 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
 
         AimiUamHandler.close(context)
     }
-
     // last values
     override var lastAPSRun: Long = 0
     override val algorithm = APSResult.Algorithm.AIMI
@@ -307,13 +307,10 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
     override fun supportsDynamicIsf(): Boolean = preferences.get(BooleanKey.ApsUseDynamicSensitivity)
     private val pkpdIntegration = PkPdIntegration(preferences)
     private var lastPkpdScale: Double = 1.0
-
     // Dans votre classe principale (ou plugin), vous pouvez déclarer :
     private val kalmanISFCalculator = KalmanISFCalculator(tddCalculator, preferences, aapsLogger)
-
     // Fusion lente (TDD/profile) + rate-limit de blend
     private val isfBlender = IsfBlender()
-
     // top-level (à côté de isfBlender / pkpdIntegration)
     private val isfAdjEngine = IsfAdjustmentEngine()
 
@@ -323,6 +320,7 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
     // état EMA persistant (clé Prefs à créer si tu veux le garder entre runs)
     private var tddEma: Double? = null
     private val TDD_EMA_ALPHA = 0.2 // ou pref
+
 
     // Recrée les bornes de la fusion ISF depuis les préférences (mêmes clés que PkPdIntegration)
     private fun isfFusion(): IsfFusion {
@@ -483,7 +481,6 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
         val weightedSum = deltaHistory.zip(weights).sumOf { it.first * it.second }
         return weightedSum / weights.sum()
     }
-
     private fun estimateKalmanTrustFromDelta(delta: Double?): Double {
         val d = kotlin.math.abs(delta ?: 0.0)
         // 0..10 mg/dL/5min -> 0.1..0.9
@@ -499,7 +496,6 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
         val anchored = if (tdd24 > 0.1) 1800.0 / tdd24 else profileIsf
         return anchored.coerceIn(5.0, 400.0)
     }
-
     private fun dynamicDeltaCorrectionFactor(delta: Double?, predicted: Double?, bg: Double?): Double {
         if (delta == null || predicted == null || bg == null) return 1.0
         val combinedDelta = (delta + predicted) / 2.0
@@ -552,7 +548,6 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
         }
         return recent
     }
-
     @SuppressLint("DefaultLocale")
     private suspend fun calculateVariableIsf(timestamp: Long): Pair<String, Double?> {
         if (!preferences.get(BooleanKey.ApsUseDynamicSensitivity)) return "OFF" to null
@@ -655,6 +650,7 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
         return "CALC" to blended
     }
 
+
     override suspend fun invoke(initiator: String, tempBasalFallback: Boolean): Unit = withContext(Dispatchers.Default) {
         aapsLogger.debug(LTag.APS, "invoke from $initiator tempBasalFallback: $tempBasalFallback")
         lastAPSResult = null
@@ -694,23 +690,23 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
         if (!hardLimits.checkHardLimits(ch.fromPump(pump.baseBasalRate), app.aaps.core.ui.R.string.current_basal_value, 0.01, hardLimits.maxBasal())) return@withContext
 
         // End of check, start gathering data
-
+        
         // 🏥 PHYSIO INTEGRATION: Retrieve Context & Multipliers
         val glucoseForPhysio = glucoseStatusProvider.glucoseStatusData?.glucose ?: 100.0
         val deltaForPhysio = glucoseStatusProvider.glucoseStatusData?.delta ?: 0.0
-
+        
         // Calculate IOB/COB early for Physio Adapter
         val nowMs = dateUtil.now()
         val iobCalc = runBlocking { iobCobCalculator.calculateFromTreatmentsAndTemps(nowMs, profile) } // Uses 'profile' from enabled check above
         val mealDataForPhysio = runBlocking { iobCobCalculator.getMealDataWithWaitingForCalculationFinish() }
 
         val physioMults = physioAdapter.getMultipliers(
-            currentBG = glucoseForPhysio,
+            currentBG = glucoseForPhysio, 
             currentDelta = deltaForPhysio,
             iob = iobCalc.iob,
             cob = mealDataForPhysio.carbs
         )
-
+        
         if (!physioMults.isNeutral()) {
             aapsLogger.info(LTag.APS, "🏥 LOOP: Applying Physio Factors: ISF x${physioMults.isfFactor}, Basal x${physioMults.basalFactor}, SMB x${physioMults.smbFactor}")
         }
@@ -862,7 +858,7 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
                     score.coerceIn(0, 100)
                 }
                 val hasFormalMealEvidence = evidenceScore >= 60
-
+                
                 // 🚨 SAFETY OVERRIDE (FCL 10.3) - Refined for "Blind Spot" Removal:
                 // If we are in Hyper (>150) AND Rising/Stable, we MUST NOT be protective (<1.0).
                 // ANTI-LAG: Lower threshold to 110 if rising fast (delta > 3.0)
@@ -870,7 +866,7 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
                 val overrideThreshold = if (isFastRise) 110.0 else 150.0
                 val isHyper = (gsData?.glucose ?: 0.0) > overrideThreshold
                 val isRising = (gsData?.delta ?: 0.0) > -0.5
-
+                
                 if (isHyper && isRising && brainFactor < 1.0) {
                     aapsLogger.debug(LTag.APS, "🧠 Brain Override: IGNORING protective factor ${"%.2f".format(brainFactor)} because BG ${gsData?.glucose ?: 0.0} is > $overrideThreshold & stable/rising.")
                     brainFactor = 1.0
@@ -897,7 +893,7 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
                 if (brainFactor != 1.0) {
                     val originalRatio = autosensResult.ratio
                     val originalISF = variableSensitivity
-
+                    
                     // 1. Modulate Autosens Ratio (Basal/Targets/ISF)
                     // High Brain Factor (Aggressive) -> Ratio decreases (e.g. 0.8 / 1.5 = 0.53) -> More Resistant
                     //autosensResult.ratio = originalRatio / brainFactor
@@ -1028,26 +1024,26 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
 
 // Construit l’objet attendu par determine_basal
             val glucoseStatusAimi = GlucoseStatusAIMI(
-                glucose = gs.glucose,
-                noise = gs.noise,
-                delta = gs.delta,
-                shortAvgDelta = gs.shortAvgDelta,
-                longAvgDelta = gs.longAvgDelta,
-                date = gs.date,
+                glucose         = gs.glucose,
+                noise           = gs.noise,
+                delta           = gs.delta,
+                shortAvgDelta   = gs.shortAvgDelta,
+                longAvgDelta    = gs.longAvgDelta,
+                date            = gs.date,
 
                 // Champs AIMI disponibles
-                duraISFminutes = f?.stable5pctMinutes ?: 0.0,
-                deltaPl = f?.delta5Prev ?: 0.0,
-                deltaPn = f?.delta5Next ?: 0.0,
-                bgAcceleration = f?.accel ?: 0.0,
-                corrSqu = f?.corrR2 ?: 0.0,
+                duraISFminutes  = f?.stable5pctMinutes ?: 0.0,
+                deltaPl         = f?.delta5Prev ?: 0.0,
+                deltaPn         = f?.delta5Next ?: 0.0,
+                bgAcceleration  = f?.accel ?: 0.0,
+                corrSqu         = f?.corrR2 ?: 0.0,
 
                 // Champs non exposés par AimiBgFeatures => valeurs neutres
-                duraISFaverage = 0.0,
+                duraISFaverage  = 0.0,
                 parabolaMinutes = 0.0,
-                a0 = 0.0,
-                a1 = 0.0,
-                a2 = 0.0
+                a0              = 0.0,
+                a1              = 0.0,
+                a2              = 0.0
             )
             futureActivity = Round.roundTo(futureActivity, 0.0001)
             sensorLagActivity = Round.roundTo(sensorLagActivity, 0.0001)
@@ -1142,7 +1138,7 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
                 extraDebug = physioMults.detailedReason
             ).also {
                 val determineBasalResult = apsResultProvider.get().with(it)
-
+                
                 // 🔮 FCL 11.0: Force Copy Predictions via JSON (Manual Construction)
                 // 🔮 FCL 11.0: Force Copy Predictions via JSON (Manual Construction)
                 if (it.predBGs != null) {
@@ -1154,9 +1150,9 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
                         // Note: Using JSONArray constructor or equivalent
                         predJson.put("IOB", org.json.JSONArray(it.predBGs?.IOB))
                         predJson.put("COB", org.json.JSONArray(it.predBGs?.COB))
-                        predJson.put("ZT", org.json.JSONArray(it.predBGs?.ZT))
+                        predJson.put("ZT",  org.json.JSONArray(it.predBGs?.ZT))
                         predJson.put("UAM", org.json.JSONArray(it.predBGs?.UAM))
-
+                        
                         // Inject into the main result JSON
                         determineBasalResult.json()?.put("predBGs", predJson)
                     } catch (e: Exception) {
@@ -1167,17 +1163,17 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
                     // If 'with(RT)' failed to populate the list, we do it manually here.
                     if (determineBasalResult.predictionsAsGv.isEmpty()) {
                         it.predBGs?.IOB?.forEachIndexed { index, value ->
-                            val time = now + index * 300000L // 5 mins
-                            val gv = GV(
-                                timestamp = time,
-                                value = value.toDouble(),
-                                raw = value.toDouble(),
-                                trendArrow = TrendArrow.NONE,
-                                noise = 0.0,
-                                sourceSensor = SourceSensor.IOB_PREDICTION
-                            )
-                            determineBasalResult.predictionsAsGv.add(gv)
-                        }
+                             val time = now + index * 300000L // 5 mins
+                             val gv = GV(
+                                 timestamp = time,
+                                 value = value.toDouble(),
+                                 raw = value.toDouble(),
+                                 trendArrow = TrendArrow.NONE,
+                                 noise = 0.0,
+                                 sourceSensor = SourceSensor.IOB_PREDICTION
+                             )
+                             determineBasalResult.predictionsAsGv.add(gv)
+                         }
                     }
                 }
 
@@ -1212,7 +1208,6 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
         }
         return maxIob
     }
-
     fun detectMealOnset(delta: Float, predictedDelta: Float, acceleration: Float): Boolean {
         val combinedDelta = (delta + predictedDelta) / 2.0f
         return combinedDelta > 3.0f && acceleration > 1.2f
@@ -1225,10 +1220,10 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
         // ────────────────────────────────────────────────────
         // 1️⃣ On détecte si l’on est en mode “meal” ou “early autodrive”
         val therapy = Therapy(persistenceLayer).also { it.updateStatesBasedOnTherapyEvents() }
-
+        
         // 🎯 Context Integration (Remote/AI)
         val contextSnapshot = contextManager.getSnapshot(dateUtil.now())
-
+        
         val isMealMode = therapy.snackTime
             || therapy.highCarbTime
             || therapy.mealTime
@@ -1252,9 +1247,9 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
         // ────────────────────────────────────────────────────
         // 2️⃣ On choisit la bonne pref en fonction du mode
         var maxBasal = when {
-            isMealMode -> preferences.get(DoubleKey.meal_modes_MaxBasal)
+            isMealMode       -> preferences.get(DoubleKey.meal_modes_MaxBasal)
             isEarlyAutodrive -> preferences.get(DoubleKey.autodriveMaxBasal)
-            else -> preferences.get(DoubleKey.ApsMaxBasal)
+            else             -> preferences.get(DoubleKey.ApsMaxBasal)
         }
 
         if (isEnabled()) {
@@ -1433,7 +1428,6 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
     }
 
     private fun aimiComposeUserPreferenceItems(): List<PreferenceItem> = buildList {
-
         add(
             PreferenceSubScreenDef(
                 key = "aimi_compose_ai_keys",
@@ -1491,9 +1485,6 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
                 }
             )
         )
-
-
-
         add(
             PreferenceSubScreenDef(
                 key = "aimi_compose_sos",
@@ -1583,12 +1574,10 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
             titleResId = R.string.aimi_t3c_settings_title,
             //items = listOf(
             items = buildList {
-
-                add(BooleanKey.OApsAIMIT3cBrittleMode)//,
-                add(DoubleKey.OApsAIMIT3cActivationThreshold)//,
-                add(DoubleKey.OApsAIMIT3cAggressiveness)//,
-                add(DoubleKey.OApsAIMIT3cAnticipationStrength)//,
-
+                add(BooleanKey.OApsAIMIT3cBrittleMode)
+                add(DoubleKey.OApsAIMIT3cActivationThreshold)
+                add(DoubleKey.OApsAIMIT3cAggressiveness)
+                add(DoubleKey.OApsAIMIT3cAnticipationStrength)
                 add(BooleanKey.OApsAIMIT3cAdaptiveBasalEnabled)
                 add(DoubleKey.OApsAIMIGovernanceHypoRateEnter)
                 add(DoubleKey.OApsAIMIGovernanceHypoRateExit)
@@ -1606,8 +1595,6 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
                 add(DoubleKey.OApsAIMIGovernanceAnticipationMarginMgdl)
                 add(DoubleKey.OApsAIMIGovernanceAnticipationHypoDamp)
                 add(DoubleKey.OApsAIMIGovernanceAnticipationDecayBlendMax)
-
-                //),
             },
         )
 
@@ -1798,7 +1785,7 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
                         ),
                     )
                 )
-                /*add(
+                add(
                     PreferenceSubScreenDef(
                         key = "aimi_compose_mode_sleep",
                         titleResId = R.string.training_ml_sleep_modes_preferences,
@@ -1807,7 +1794,7 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
                             IntKey.OApsAIMISleepinterval,
                         ),
                     )
-                )*/
+                )
             },
         )
 

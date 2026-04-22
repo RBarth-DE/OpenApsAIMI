@@ -1,5 +1,4 @@
 package app.aaps.plugins.aps.openAPSAIMI.context
-import kotlinx.coroutines.runBlocking
 
 import app.aaps.plugins.aps.openAPSAIMI.model.LoopContext
 import kotlin.time.Duration

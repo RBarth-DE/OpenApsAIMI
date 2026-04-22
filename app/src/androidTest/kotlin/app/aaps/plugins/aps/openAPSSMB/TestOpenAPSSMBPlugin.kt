@@ -116,6 +116,7 @@ open class TestOpenAPSSMBPlugin @Inject constructor(
         return pump.pumpDescription.isTempBasalCapable
     }
 
+
     override suspend fun invoke(initiator: String, tempBasalFallback: Boolean) {
         aapsLogger.debug(LTag.APS, "invoke from $initiator tempBasalFallback: $tempBasalFallback")
         lastAPSResult = null

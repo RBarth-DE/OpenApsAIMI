@@ -404,8 +404,9 @@ class UnifiedReactivityLearner @Inject constructor(
         val start = now - (2 * 60 * 60 * 1000L)  // 2 hours
         
         try {
-            val bgReadingsList = runBlocking { persistenceLayer.getBgReadingsDataFromTime(start, false) }
-
+            val bgReadingsList = runBlocking {
+                persistenceLayer.getBgReadingsDataFromTime(start, ascending = false)
+            }
 
             val bgReadings = bgReadingsList
                 .mapNotNull { gv -> if (gv.value > 39.0) gv.value else null }
