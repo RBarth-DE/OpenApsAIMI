@@ -81,6 +81,7 @@ fun IobGraphCompose(
     val maxX = remember(minTimestamp, maxTimestamp) {
         timestampToX(maxTimestamp, minTimestamp)
     }
+    val showPointDataLabels = remember(maxX) { shouldRenderPointDataLabels(maxX) }
 
     val stableTimeRange = remember(minTimestamp / 60000, maxTimestamp / 60000) {
         minTimestamp to maxTimestamp
@@ -283,7 +284,7 @@ fun IobGraphCompose(
     val bolusValueFormatter = remember {
         CartesianValueFormatter { _, value, _ -> formatBolusLabel(value) }
     }
-    val bolusLine = remember(smbColor, bolusLabelComponent, bolusValueFormatter) {
+    val bolusLine = remember(smbColor, bolusLabelComponent, bolusValueFormatter, showPointDataLabels) {
         LineCartesianLayer.Line(
             fill = LineCartesianLayer.LineFill.single(Fill(Color.Transparent)),
             areaFill = null,
@@ -293,9 +294,9 @@ fun IobGraphCompose(
                     size = 22.dp
                 )
             ),
-            dataLabel = bolusLabelComponent,
+            dataLabel = if (showPointDataLabels) bolusLabelComponent else null,
             dataLabelPosition = Position.Vertical.Top,
-            dataLabelValueFormatter = bolusValueFormatter
+            dataLabelValueFormatter = if (showPointDataLabels) bolusValueFormatter else null
         )
     }
 
@@ -306,13 +307,13 @@ fun IobGraphCompose(
     val extBolusValueFormatter = remember {
         CartesianValueFormatter { _, value, _ -> formatBolusLabel(value) }
     }
-    val extBolusLine = remember(extBolusColor, extBolusLabelComponent, extBolusValueFormatter) {
+    val extBolusLine = remember(extBolusColor, extBolusLabelComponent, extBolusValueFormatter, showPointDataLabels) {
         LineCartesianLayer.Line(
             fill = LineCartesianLayer.LineFill.single(Fill(extBolusColor)),
             areaFill = null,
-            dataLabel = extBolusLabelComponent,
+            dataLabel = if (showPointDataLabels) extBolusLabelComponent else null,
             dataLabelPosition = Position.Vertical.Top,
-            dataLabelValueFormatter = extBolusValueFormatter
+            dataLabelValueFormatter = if (showPointDataLabels) extBolusValueFormatter else null
         )
     }
 

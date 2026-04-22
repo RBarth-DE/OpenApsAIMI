@@ -458,6 +458,8 @@ class DetermineBasalaimiSMB2 @Inject constructor(
     //private val modelFileUAM get() = File(externalDir, "ml/modelUAM.tflite")
     private val csvfile: File get() = File(storageHelper.getAimiDirectory(), "oapsaimiML2_records.csv")
     private val csvfile2: File get() = File(storageHelper.getAimiDirectory(), "oapsaimi2_records.csv")
+    private val appExternalFallbackDir = File(context.getExternalFilesDir(null), "AAPS")
+    private var csvPrimaryStorageDeniedLogged = false
     private val pkpdIntegration = PkPdIntegration(preferences)
     //private val tempFile = File(externalDir, "temp.csv")
     private var bgacc = 0.0
@@ -1619,16 +1621,12 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             "$tdd7DaysPerHour,$tdd2DaysPerHour,$tddPerHour,$tdd24HrsPerHour," +
             "$predictedSMB,$smbToGive," +
             "$peakintermediaire,$latestAdjustedDia"
-
-
-        try {
-            if (!csvfile.exists()) {
-                csvfile.parentFile?.mkdirs()
-                csvfile.createNewFile()
-                csvfile.appendText(headerRow)
-            }
-            csvfile.appendText(valuesToRecord + "\n")
-        } catch (e: Exception) { /* CSV write failed */ }
+        appendCsvSafely(
+            primaryFile = csvfile,
+            fallbackFileName = "oapsaimiML2_records.csv",
+            headerRow = headerRow,
+            valuesRow = valuesToRecord,
+        )
     }
 
     private fun logDataToCsv(predictedSMB: Float, smbToGive: Float) {
@@ -1648,12 +1646,52 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             "$recentSteps5Minutes,$recentSteps10Minutes,$recentSteps15Minutes,$recentSteps30Minutes,$recentSteps60Minutes,$recentSteps180Minutes," +
             "$tags0to60minAgo,$tags60to120minAgo,$tags120to180minAgo,$tags180to240minAgo," +
             "$predictedSMB,$maxIob,$maxSMB,$smbToGive,$peakintermediaire,$latestAdjustedDia"
-        if (!csvfile2.exists()) {
-            csvfile2.parentFile?.mkdirs() // Crée le dossier s'il n'existe pas
-            csvfile2.createNewFile()
-            csvfile2.appendText(headerRow)
+        appendCsvSafely(
+            primaryFile = csvfile2,
+            fallbackFileName = "oapsaimi2_records.csv",
+            headerRow = headerRow,
+            valuesRow = valuesToRecord,
+        )
+    }
+
+    private fun appendCsvSafely(
+        primaryFile: File,
+        fallbackFileName: String,
+        headerRow: String,
+        valuesRow: String,
+    ) {
+        runCatching {
+            appendCsvToFile(primaryFile, headerRow, valuesRow)
+        }.onFailure { primaryError ->
+            if (!csvPrimaryStorageDeniedLogged) {
+                csvPrimaryStorageDeniedLogged = true
+                aapsLogger.warn(
+                    LTag.APS,
+                    "CSV write denied on shared storage (${primaryFile.absolutePath}). " +
+                        "Switching to app-scoped fallback at ${File(appExternalFallbackDir, fallbackFileName).absolutePath}. " +
+                        "Reason=${primaryError.message}",
+                )
+            }
+            runCatching {
+                appendCsvToFile(File(appExternalFallbackDir, fallbackFileName), headerRow, valuesRow)
+            }.onFailure { fallbackError ->
+                aapsLogger.error(
+                    LTag.APS,
+                    "CSV write failed on both primary and fallback paths. primary=${primaryFile.absolutePath}, " +
+                        "fallback=${File(appExternalFallbackDir, fallbackFileName).absolutePath}",
+                    fallbackError,
+                )
+            }
         }
-        csvfile2.appendText(valuesToRecord + "\n")
+    }
+
+    private fun appendCsvToFile(file: File, headerRow: String, valuesRow: String) {
+        if (!file.exists()) {
+            file.parentFile?.mkdirs()
+            file.createNewFile()
+            file.appendText(headerRow)
+        }
+        file.appendText(valuesRow + "\n")
     }
 
     fun removeLast200Lines(csvFile: File) {

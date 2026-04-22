@@ -253,7 +253,16 @@ class PluginStore @Inject constructor(
         get() = activeSensitivityStore ?: checkNotNull(activeSensitivityStore) { "No sensitivity selected" }
 
     override val activeSmoothing: Smoothing
-        get() = activeSmoothingStore ?: checkNotNull(activeSmoothingStore) { "No smoothing selected" }
+        get() = activeSmoothingStore
+            // Same startup-safe pattern as activePumpInternal:
+            // during early initialization, active store may still be null.
+            ?: getTheOneEnabledInArray(getSpecificPluginsList(PluginType.SMOOTHING), PluginType.SMOOTHING) as Smoothing?
+            ?: run {
+                // Ensure a default smoothing plugin is selected if nothing is enabled yet.
+                verifySelectionInCategories()
+                activeSmoothingStore
+            }
+            ?: checkNotNull(activeSmoothingStore) { "No smoothing selected" }
 
     override val activeSafety: Safety
         get() = getSpecificPluginsListByInterface(Safety::class.java).first() as Safety

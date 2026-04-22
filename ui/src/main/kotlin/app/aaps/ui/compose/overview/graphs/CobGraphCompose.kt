@@ -95,6 +95,7 @@ fun CobGraphCompose(
     val maxX = remember(minTimestamp, maxTimestamp) {
         timestampToX(maxTimestamp, minTimestamp)
     }
+    val showPointDataLabels = remember(maxX) { shouldRenderPointDataLabels(maxX) }
 
     // Cache last non-empty treatment data to survive reset() cycles
     val lastTreatmentData = remember { mutableStateOf(treatmentGraphData) }
@@ -208,7 +209,7 @@ fun CobGraphCompose(
     val carbsValueFormatter = remember {
         CartesianValueFormatter { _, value, _ -> formatCarbsLabel(value) }
     }
-    val carbsLine = remember(carbsColor, carbsLabelComponent, carbsValueFormatter) {
+    val carbsLine = remember(carbsColor, carbsLabelComponent, carbsValueFormatter, showPointDataLabels) {
         LineCartesianLayer.Line(
             fill = LineCartesianLayer.LineFill.single(Fill(Color.Transparent)),
             areaFill = null,
@@ -218,9 +219,9 @@ fun CobGraphCompose(
                     size = 22.dp
                 )
             ),
-            dataLabel = carbsLabelComponent,
+            dataLabel = if (showPointDataLabels) carbsLabelComponent else null,
             dataLabelPosition = Position.Vertical.Top,
-            dataLabelValueFormatter = carbsValueFormatter
+            dataLabelValueFormatter = if (showPointDataLabels) carbsValueFormatter else null
         )
     }
 

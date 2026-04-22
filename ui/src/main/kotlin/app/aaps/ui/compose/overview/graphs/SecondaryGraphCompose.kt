@@ -89,6 +89,7 @@ fun SecondaryGraphCompose(
     val maxX = remember(minTimestamp, maxTimestamp) {
         timestampToX(maxTimestamp, minTimestamp)
     }
+    val showPointDataLabels = remember(maxX) { shouldRenderPointDataLabels(maxX) }
     val stableTimeRange = remember(minTimestamp / 60000, maxTimestamp / 60000) {
         minTimestamp to maxTimestamp
     }
@@ -443,8 +444,8 @@ fun SecondaryGraphCompose(
     // =========================================================================
 
     val seriesColors = rememberSeriesColors()
-    val iobLineStyle = rememberIobLineStyles()
-    val cobLineStyle = rememberCobLineStyles()
+    val iobLineStyle = rememberIobLineStyles(showPointDataLabels)
+    val cobLineStyle = rememberCobLineStyles(showPointDataLabels)
     val normalizerLine = remember { createNormalizerLine() }
 
     val activeSlots by activeSlotState
@@ -878,7 +879,7 @@ data class IobLineStyles(
 )
 
 @Composable
-fun rememberIobLineStyles(): IobLineStyles {
+fun rememberIobLineStyles(showPointDataLabels: Boolean): IobLineStyles {
     val iobColor = AapsTheme.generalColors.iobPrediction
     val smbColor = AapsTheme.elementColors.insulin
     val extBolusColor = AapsTheme.elementColors.extendedBolus
@@ -896,7 +897,16 @@ fun rememberIobLineStyles(): IobLineStyles {
         CartesianValueFormatter { _, value, _ -> formatBolusLabel(value) }
     }
 
-    return remember(iobColor, smbColor, extBolusColor, bolusLabelComponent, bolusValueFormatter, extBolusLabelComponent, extBolusValueFormatter) {
+    return remember(
+        iobColor,
+        smbColor,
+        extBolusColor,
+        bolusLabelComponent,
+        bolusValueFormatter,
+        extBolusLabelComponent,
+        extBolusValueFormatter,
+        showPointDataLabels,
+    ) {
         IobLineStyles(
             iobLine = LineCartesianLayer.Line(
                 fill = LineCartesianLayer.LineFill.single(Fill(iobColor)),
@@ -932,16 +942,16 @@ fun rememberIobLineStyles(): IobLineStyles {
                 pointProvider = LineCartesianLayer.PointProvider.single(
                     LineCartesianLayer.Point(component = ShapeComponent(fill = Fill(smbColor), shape = InvertedTriangleShape), size = 22.dp)
                 ),
-                dataLabel = bolusLabelComponent,
+                dataLabel = if (showPointDataLabels) bolusLabelComponent else null,
                 dataLabelPosition = Position.Vertical.Top,
-                dataLabelValueFormatter = bolusValueFormatter
+                dataLabelValueFormatter = if (showPointDataLabels) bolusValueFormatter else null
             ),
             extBolusLine = LineCartesianLayer.Line(
                 fill = LineCartesianLayer.LineFill.single(Fill(extBolusColor)),
                 areaFill = null,
-                dataLabel = extBolusLabelComponent,
+                dataLabel = if (showPointDataLabels) extBolusLabelComponent else null,
                 dataLabelPosition = Position.Vertical.Top,
-                dataLabelValueFormatter = extBolusValueFormatter
+                dataLabelValueFormatter = if (showPointDataLabels) extBolusValueFormatter else null
             )
         )
     }
@@ -958,7 +968,7 @@ data class CobLineStyles(
 )
 
 @Composable
-fun rememberCobLineStyles(): CobLineStyles {
+fun rememberCobLineStyles(showPointDataLabels: Boolean): CobLineStyles {
     val cobColor = AapsTheme.generalColors.cobPrediction
     val carbsColor = AapsTheme.elementColors.carbs
 
@@ -969,7 +979,7 @@ fun rememberCobLineStyles(): CobLineStyles {
         CartesianValueFormatter { _, value, _ -> formatCarbsLabel(value) }
     }
 
-    return remember(cobColor, carbsColor, carbsLabelComponent, carbsValueFormatter) {
+    return remember(cobColor, carbsColor, carbsLabelComponent, carbsValueFormatter, showPointDataLabels) {
         CobLineStyles(
             cobLine = LineCartesianLayer.Line(
                 fill = LineCartesianLayer.LineFill.single(Fill(cobColor)),
@@ -991,9 +1001,9 @@ fun rememberCobLineStyles(): CobLineStyles {
                 pointProvider = LineCartesianLayer.PointProvider.single(
                     LineCartesianLayer.Point(component = ShapeComponent(fill = Fill(carbsColor), shape = InvertedTriangleShape), size = 22.dp)
                 ),
-                dataLabel = carbsLabelComponent,
+                dataLabel = if (showPointDataLabels) carbsLabelComponent else null,
                 dataLabelPosition = Position.Vertical.Top,
-                dataLabelValueFormatter = carbsValueFormatter
+                dataLabelValueFormatter = if (showPointDataLabels) carbsValueFormatter else null
             )
         )
     }

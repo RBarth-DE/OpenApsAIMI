@@ -176,6 +176,20 @@ val NORMALIZER_Y = listOf(0.0, 0.0)
 fun normalizerX(maxX: Double): List<Double> = listOf(0.0, maxX)
 
 /**
+ * Vico data-label guardrail.
+ *
+ * Very large X ranges can make Vico compute oversized text constraints while drawing point labels
+ * (bolus/carbs/ext-bolus), leading to:
+ * "Can't represent a width ... in Constraints".
+ *
+ * We keep point markers visible, but disable text labels when the chart span gets too large.
+ */
+private const val MAX_SAFE_DATA_LABEL_X_SPAN_MINUTES = 10_000.0
+
+fun shouldRenderPointDataLabels(maxX: Double): Boolean =
+    maxX.isFinite() && maxX in 0.0..MAX_SAFE_DATA_LABEL_X_SPAN_MINUTES
+
+/**
  * Triangle shape pointing upward (apex at top center, flat base at bottom).
  *
  * Used for rendering SMB markers on graphs. The triangle sits on the X axis
