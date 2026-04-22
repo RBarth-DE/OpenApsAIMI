@@ -10,11 +10,11 @@
     <string name="tt_label">TT</string>
     <string name="pump_unreachable">Pumpe nicht erreichbar</string>
     <string name="insulin_unit_shortname">IE</string>
-    <string name="pump_base_basal_rate">%1$.2f IE/h</string>
+    <string name="pump_base_basal_rate">%1$.2f U/h</string>
     <string name="pump_not_initialized_profile_not_set">Pumpe nicht initialisiert, Profil nicht gesetzt!</string>
     <string name="failed_update_basal_profile">Fehler beim Aktualisieren des Basalprofils</string>
     <string name="no_valid_basal_rate">Von der Pumpe konnte keine gültige Basalrate eingelesen werden.</string>
-    <string name="limiting_iob">Begrenze IOB auf %1$.1f IE wegen %2$s</string>
+    <string name="limiting_iob">Begrenze IOB auf %1$.1f U wegen %2$s</string>
     <string name="loop_disabled">LOOP DEAKTIVIERT DURCH BESCHRÄNKUNGEN</string>
     <string name="event_type">Ereignistyp</string>
     <string name="reload">Neu laden</string>
@@ -49,10 +49,10 @@
     <string name="paused">Pausiert</string>
     <string name="tdd_total">TDD Gesamt</string>
     <string name="tdd_old_data">Veraltete Daten</string>
-    <string name="goingtodeliver">Werde %1$.2f IE abgeben</string>
+    <string name="goingtodeliver">Werde %1$.2f U abgeben</string>
     <string name="waitingforpump">Warte auf Pumpe</string>
     <string name="androidaps_start">AAPS gestartet</string>
-    <string name="formatsignedinsulinunits">%1$+.2f IE</string>
+    <string name="formatsignedinsulinunits">%1$+.2f U</string>
     <string name="format_carbs">%1$d g</string>
     <string name="format_hours">%1$.2f h</string>
     <string name="format_mins">%1$d min.</string>
@@ -359,9 +359,9 @@
     <string name="basal_value">Basal-Wert</string>
     <!-- Profile validation -->
     <!-- Command Queue + readStatus reasons -->
-    <string name="bolus_u_min">BOLUS %1$.2f IE</string>
+    <string name="bolus_u_min">BOLUS %1$.2f U</string>
     <string name="carbs_g">KH %1$d g</string>
-    <string name="extended_bolus_u_min">VERLÄNGERTER BOLUS %1$.2f IE %2$d min</string>
+    <string name="extended_bolus_u_min">VERLÄNGERTER BOLUS %1$.2f U %2$d min</string>
     <string name="load_events">Lade Ereignisse</string>
     <string name="clear_alarms">ALARME LÖSCHEN</string>
     <string name="deactivate">DEAKTIVIEREN</string>
@@ -370,10 +370,10 @@
     <string name="load_tdds">Lade TDDs</string>
     <string name="set_profile">PROFIL SETZEN</string>
     <string name="set_user_settings">NUTZER-EINSTELLUNGEN SETZEN</string>
-    <string name="smb_bolus_u">SMB BOLUS %1$.2f IE</string>
+    <string name="smb_bolus_u">SMB BOLUS %1$.2f U</string>
     <string name="start_pump">PUMPE STARTEN</string>
     <string name="stop_pump">PUMPE STOPPEN</string>
-    <string name="temp_basal_absolute">TEMP BASAL %1$.2f IE/h %2$d min</string>
+    <string name="temp_basal_absolute">TEMP BASAL %1$.2f U/h %2$d min</string>
     <string name="temp_basal_percent">TEMP BASAL %1$d%% %2$d min</string>
     <string name="insight_set_tbr_over_notification">INSIGHT SET TBR OVER NOTIFICATION</string>
     <string name="read_status" comment="10 characters max for READSTATUS translation">LESESTATUS %1$s</string>
@@ -444,7 +444,7 @@
     <string name="disconnected">Getrennt</string>
     <string name="connecting">Verbinden</string>
     <string name="clicked_connect_to_pump" comment="26 characters max for translation">Verbindung zur Pumpe geklickt</string>
-    <string name="reservoir_value">%1$.0f / %2$d IE</string>
+    <string name="reservoir_value">%1$.0f / %2$d U</string>
     <string name="daily_units">Tägliche Einheiten</string>
     <string name="pump_icon">Pumpen-Symbol</string>
     <string name="view_profile">Profil anzeigen</string>
@@ -463,11 +463,11 @@
     <string name="initializing">Initialisierung...</string>
     <string name="secs" comment="second short">%1$d s</string>
     <!--    Constraints-->
-    <string name="limitingbasalratio">Begrenzung der max. Basalrate auf %1$.2f IE/h wegen %2$s</string>
+    <string name="limitingbasalratio">Begrenzung der max. Basalrate auf %1$.2f U/h wegen %2$s</string>
     <string name="pumplimit">Limit der Pumpe</string>
     <string name="limitingpercentrate">Begrenzung des max. Prozentsatzes auf %1$d%% wegen %2$s</string>
     <string name="itmustbepositivevalue">Es muss ein positiver Wert sein.</string>
-    <string name="limitingbolus">Begrenze Bolusmenge auf %1$.1f IE wegen %2$s</string>
+    <string name="limitingbolus">Begrenze Bolusmenge auf %1$.1f U wegen %2$s</string>
     <!--    Dialogs-->
     <string name="confirmation">Bestätigung</string>
     <string name="message">Nachricht</string>
@@ -534,8 +534,8 @@
     <string name="weekday_tuesday_short">Di</string>
     <string name="weekday_monday_short">Mo</string>
     <!--    DecimalFormatterImpl -->
-    <string name="format_insulin_units1">%1$.1f IE</string>
-    <string name="format_insulin_units">%1$.2f IE</string>
+    <string name="format_insulin_units1">%1$.1f U</string>
+    <string name="format_insulin_units">%1$.2f U</string>
     <!--    Playback-->
     <!-- ProfileEditor -->
     <!--    Search-->
