@@ -221,7 +221,7 @@ fun CobGraphCompose(
             ),
             dataLabel = if (showPointDataLabels) carbsLabelComponent else null,
             dataLabelPosition = Position.Vertical.Top,
-            dataLabelValueFormatter = if (showPointDataLabels) carbsValueFormatter else null
+            dataLabelValueFormatter = carbsValueFormatter
         )
     }
 

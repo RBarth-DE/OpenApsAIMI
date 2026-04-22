@@ -296,7 +296,7 @@ fun IobGraphCompose(
             ),
             dataLabel = if (showPointDataLabels) bolusLabelComponent else null,
             dataLabelPosition = Position.Vertical.Top,
-            dataLabelValueFormatter = if (showPointDataLabels) bolusValueFormatter else null
+            dataLabelValueFormatter = bolusValueFormatter
         )
     }
 
@@ -313,7 +313,7 @@ fun IobGraphCompose(
             areaFill = null,
             dataLabel = if (showPointDataLabels) extBolusLabelComponent else null,
             dataLabelPosition = Position.Vertical.Top,
-            dataLabelValueFormatter = if (showPointDataLabels) extBolusValueFormatter else null
+            dataLabelValueFormatter = extBolusValueFormatter
         )
     }
 
