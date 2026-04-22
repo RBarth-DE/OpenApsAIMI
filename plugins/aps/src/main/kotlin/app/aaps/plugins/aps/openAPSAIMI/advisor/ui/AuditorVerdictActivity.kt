@@ -33,6 +33,7 @@ import javax.inject.Inject
 class AuditorVerdictActivity : DaggerAppCompatActivity() {
 
     @Inject lateinit var preferences: Preferences
+    @Inject lateinit var auditorStatusLiveData: AuditorStatusLiveData
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -45,6 +46,9 @@ class AuditorVerdictActivity : DaggerAppCompatActivity() {
 
         // Cancel notification if opened via tap
         AuditorNotificationManager.cancelNotificationStatic(this)
+
+        // Clear the icon badge/error state now that the user is reading the report
+        auditorStatusLiveData.markAsRead()
 
         renderVerdict()
     }

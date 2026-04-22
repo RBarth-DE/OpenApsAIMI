@@ -14,6 +14,7 @@ import app.aaps.core.keys.StringKey
 import app.aaps.core.keys.interfaces.Preferences
 import app.aaps.plugins.aps.openAPSAIMI.pkpd.PkPdRuntime
 import app.aaps.plugins.aps.openAPSAIMI.model.*
+import app.aaps.plugins.aps.openAPSAIMI.advisor.auditor.ui.AuditorStatusLiveData
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -47,7 +48,8 @@ class AuditorOrchestrator @Inject constructor(
     private val dataCollector: AuditorDataCollector,
     private val aiService: AuditorAIService,
     private val aapsLogger: AAPSLogger,
-    private val physioAdapter: app.aaps.plugins.aps.openAPSAIMI.physio.AIMIInsulinDecisionAdapterMTR
+    private val physioAdapter: app.aaps.plugins.aps.openAPSAIMI.physio.AIMIInsulinDecisionAdapterMTR,
+    private val auditorStatusLiveData: AuditorStatusLiveData
 ) {
     // 🔄 New State Transition Manager
     private val stateManager = AimiStateTransitionManager(aapsLogger)
@@ -178,6 +180,7 @@ class AuditorOrchestrator @Inject constructor(
             aapsLogger.debug(LTag.APS, "AI Auditor: No trigger conditions met")
             AuditorStatusTracker.updateStatus(AuditorStatusTracker.Status.SKIPPED_NO_TRIGGER)
             stateManager.transitionTo(AuditorUIState.Idle, "Conditions not met")
+            auditorStatusLiveData.notifyUpdate()
             callback?.invoke(null, createUnmodulatedDecision(smbProposed, tbrRate, tbrDuration, intervalMin, "No trigger"))
             return
         }
@@ -188,6 +191,7 @@ class AuditorOrchestrator @Inject constructor(
             aapsLogger.warn(LTag.APS, "AI Auditor: Data too stale (${dataAgeMs / 60000} min)")
             AuditorStatusTracker.updateStatus(AuditorStatusTracker.Status.SKIPPED_NO_TRIGGER)
             stateManager.transitionTo(AuditorUIState.Error("Stale CGM Data"), "Security: Exceeded 15m threshold")
+            auditorStatusLiveData.notifyUpdate()
             callback?.invoke(null, createUnmodulatedDecision(smbProposed, tbrRate, tbrDuration, intervalMin, "Stale data"))
             return
         }
@@ -286,16 +290,18 @@ class AuditorOrchestrator @Inject constructor(
         if (triggerType == TriggerType.NONE) {
             aapsLogger.info(LTag.APS, "🌐 External: Skipped (No valid trigger)")
             AuditorStatusTracker.updateStatus(AuditorStatusTracker.Status.SKIPPED_NO_TRIGGER)
+            auditorStatusLiveData.notifyUpdate()
             callback?.invoke(null, createUnmodulatedDecision(smbProposed, tbrRate, tbrDuration, intervalMin, "No Trigger"))
             return
         }
-        
+
         if (!checkSmartRateLimit(now, triggerType)) {
             aapsLogger.info(LTag.APS, "🌐 External: Rate limited ($triggerType), using Sentinel only")
             AuditorStatusTracker.updateStatus(AuditorStatusTracker.Status.SKIPPED_RATE_LIMITED)
             val combined = DualBrainHelpers.combineAdvice(sentinelAdvice, null)
             val modulated = combined.toDecisionResult(smbProposed, tbrRate, tbrDuration, intervalMin)
             aapsLogger.info(LTag.APS, "✅ ${combined.toLogString()}")
+            auditorStatusLiveData.notifyUpdate()
             callback?.invoke(null, modulated)
             return
         }
@@ -384,7 +390,16 @@ class AuditorOrchestrator @Inject constructor(
                     
                     // Update global cache for RT instrumentation
                     AuditorVerdictCache.update(verdict, modulated)
-                    
+
+                    // Update status tracker and notify UI (success path)
+                    val okStatus = when (verdict.verdict) {
+                        VerdictType.Soften -> AuditorStatusTracker.Status.OK_SOFTEN
+                        VerdictType.ShiftToTbr -> AuditorStatusTracker.Status.OK_PREFER_TBR
+                        else -> AuditorStatusTracker.Status.OK_CONFIRM
+                    }
+                    AuditorStatusTracker.updateStatus(okStatus)
+                    auditorStatusLiveData.notifyUpdate()
+
                     callback?.invoke(verdict, modulated)
                 } else {
                     aapsLogger.warn(LTag.APS, "AI Auditor: No verdict received (timeout or error)")
