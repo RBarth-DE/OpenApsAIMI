@@ -1,6 +1,6 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <!-- MedtrumPump -->
+    
     <string name="medtrum">Medtrum</string>
     <string name="medtrum_pump_shortname">MT</string>
     <string name="medtrum_pump_description">Pomp integratie voor Medtrum Nano en Medtrum 300U</string>
@@ -13,13 +13,12 @@
     <string name="patch_not_active">Patch niet geactiveerd</string>
     <string name="pump_setting_failed">Gebruikersinstellingen instellen op de pomp mislukt!</string>
     <string name="pump_sync_error">Fout bij het synchroniseren van de geschiedenis van de pomp: een record is overgeslagen. Controleer in het behandeling tabblad of de bolus correct is gesynchroniseerd. Stel het alarm uit en vervang als de fout blijft terugkomen de patch of pompbasis.</string>
-    <!-- overview fragment -->
+    
     <string name="last_connection_label">Laatste verbinding</string>
     <string name="active_bolus_label">Actieve bolus</string>
     <string name="pump_state_label">Pomp status</string>
     <string name="active_alarms_label">Actieve alarmen</string>
     <string name="basal_type_label">Basaal type</string>
-    <string name="basal_rate_label">Basaal snelheid</string>
     <string name="pump_type_label">Type pomp</string>
     <string name="fw_version_label">FW versie</string>
     <string name="patch_no_label">Patch nr</string>
@@ -29,7 +28,7 @@
     <string name="change_patch_label">Patch verwisselen</string>
     <string name="requested_by_user" comment="26 characters max for translation">Aangevraagd door gebruiker</string>
     <string name="expiry_not_enabled">Niet ingeschakeld</string>
-    <!-- Alarm strings -->
+    
     <string name="alarm_none">Geen</string>
     <string name="alarm_pump_low_battery">Pomp batterij bijna leeg</string>
     <string name="alarm_pump_low_reservoir">Pomp reservoir bijna leeg</string>
@@ -50,7 +49,7 @@
     <string name="alarm_no_calibration">Geen kalibratie</string>
     <string name="pump_time_update_failed">Update van pomp tijdzone mislukt, snooze bericht en vernieuw handmatig.</string>
     <string name="bolus_error">Bolus fout</string>
-    <!-- wizard-->
+    
     <string name="retry">Opnieuw</string>
     <string name="step_prepare_patch">Activeer Patch</string>
     <string name="step_prepare_patch_connect">Verbinden en vullen</string>
@@ -74,12 +73,10 @@
     <string name="do_not_attach_to_body">Plaats de patch nog niet op het lichaam.</string>
     <string name="half_press_needle">Druk de naald knop half in. Druk daarna op <b>Volgende</b> om het voorvullen te starten.</string>
     <string name="wait_for_priming">Wacht alstublieft tot het voorvullen voltooid is.</string>
-    <string name="priming_error">Voorvullen mislukt, druk op <b>Opnieuw</b> om het nogmaals te proberen.</string>
     <string name="press_next">Druk op <b>Volgende</b> om verder te gaan.</string>
     <string name="press_next_to_start_activation">Druk op <b>Volgende</b> om het activeren te starten.</string>
     <string name="remove_safety_lock">Verwijder het veiligheidsslot, Bevestig de pomp aan het lichaam. Druk op de naald knop.</string>
     <string name="activating_pump">Pomp activeren en initiële basaalstand instellen. Even geduld alstublieft.</string>
-    <string name="activating_error">Activeren mislukt, druk op <b>Opnieuw</b> om het nogmaals te proberen.</string>
     <string name="activating_complete">Nieuwe patch geactiveerd. %.2f Eenheden resterend.</string>
     <string name="can_export_settings">Je kunt de instellingen exporteren om deze patch sessie later te kunnen herstellen.</string>
     <string name="press_OK_to_return">Druk op <b>OK</b> om terug te keren naar het hoofdscherm.</string>
@@ -95,7 +92,7 @@
     <string name="activation_in_progress">Oeps! Er ging iets mis, het lijkt erop dat er al een activatie bezig is.</string>
     <string name="press_retry_or_discard">Druk op <b>Volgende</b> om de activering te hervatten of <b>Verwijderen</b> om de activeringsstatus te resetten.</string>
     <string name="reading_activation_status">Een ogenblik geduld, activeringsstatus van de pomp wordt gelezen.</string>
-    <!-- settings-->
+    
     <string name="sn_input_title">Serienummer</string>
     <string name="sn_input_invalid">Ongeldig serienummer!</string>
     <string name="alarm_setting_title">Alarminstellingen</string>
@@ -112,13 +109,13 @@
     <string name="daily_max_insulin_summary">Geef de maximale hoeveelheid insuline per dag op. Indien overschreden zal de pomp de insuline toediening onderbreken.</string>
     <string name="scan_on_connection_error_title">Scan bij verbindingsfout</string>
     <string name="scan_on_connection_error_summary">WAARSCHUWING: Alleen inschakelen als je verbindingsproblemen ondervindt. Indien ingeschakeld zoekt het stuurprogramma opnieuw naar de pomp voordat het opnieuw verbinding probeert te maken met de pomp. Zorg ervoor dat je Locatiemachtiging is ingesteld op \"Altijd toestaan\" </string>
-    <!-- treatment state-->
+    
     <string name="getting_pump_status">Pompstatus aan het ophalen</string>
     <string name="syncing_records">Records synchroniseren, nog %1$d te doen</string>
     <string name="getting_bolus_status">Bolus status aan het ophalen</string>
     <string name="getting_temp_basal_status">Tijdelijke basaal status aan het ophalen</string>
     <string name="setting_pump_settings">Gebruikersopties worden ingesteld</string>
-    <!-- bolus-->
+    
     <string name="bolus_error_reason_user">Bolus afgebroken door gebruiker</string>
     <string name="bolus_error_reason_not_connected">Pomp niet verbonden</string>
     <string name="bolus_error_reason_already_in_progress">Bolus wordt al uitgevoerd</string>

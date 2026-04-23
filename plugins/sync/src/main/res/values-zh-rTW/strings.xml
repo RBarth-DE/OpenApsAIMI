@@ -1,9 +1,9 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <!-- AAPSClient -->
-    <!-- ns_wifi_ssids moved to core:keys module -->
+    
+    
     <string name="connection_settings_title">連線設定</string>
-    <!-- ns_wifi_ssids_summary moved to core:keys module -->
+    
     <string name="description_ns_client">使用 v1 API 將您的資料與 Nightscout 同步。</string>
     <string name="description_ns_client_v3">使用 v3 API 將您的資料與 Nightscout 同步</string>
     <string name="blocked_by_charging">被充電選項阻止</string>
@@ -11,7 +11,7 @@
     <string name="no_connectivity">無連線</string>
     <string name="unsupported_ns_version">不支援的 Nightscout 版本</string>
     <string name="ns_malfunction">NSClient 發生異常。請考慮重新啟動 NS 與 NSClient。</string>
-    <!-- AAPSClient -->
+    
     <string name="no_write_permission">NSCLIENT 沒有寫入權限。API 密碼錯誤？</string>
     <string name="ns_client_v3_short_name">NSv3</string>
     <string name="ns_client">NSClient</string>
@@ -19,12 +19,12 @@
     <string name="ns_client_url">URL:</string>
     <string name="ns_client_title">NSClientV1</string>
     <string name="ns_client_v3_title">NSClientV3</string>
-    <!-- ns_client_url_title moved to core:keys module -->
-    <!-- ns_client_url_summary moved to core:keys module -->
-    <!-- ns_client_secret_title moved to core:keys module -->
-    <!-- ns_client_secret_summary moved to core:keys module -->
-    <!-- nsclient_token_title moved to core:keys module -->
-    <!-- nsclient_token_summary moved to core:keys module -->
+    
+    
+    
+    
+    
+    
     <string name="deliver_now">立即傳送</string>
     <string name="queue">佇列:</string>
     <string name="status">狀態:</string>
@@ -33,7 +33,7 @@
     <string name="full_sync_comment">完全同步？這可能需要很多小時，直到完成前您都不會看到新的資料在 NS 上。</string>
     <string name="ns_sync_options">同步選項</string>
     <string name="ns_alarm_options">警報選項</string>
-    <!-- Tidepool -->
+    
     <string name="summary_tidepool_dev_servers">若啟用，資料上傳將會發送至測試伺服器，而非一般的伺服器。</string>
     <string name="title_tidepool_dev_servers">使用集成（測試）伺服器</string>
     <string name="tidepool">Tidepool</string>
@@ -43,7 +43,7 @@
     <string name="not_connected">未連線</string>
     <string name="read_only">唯讀</string>
     <string name="working">工作中</string>
-    <!-- Xdrip StatusLine -->
+    
     <string name="xdrip">xDrip+</string>
     <string name="xdrip_shortname">XD+</string>
     <string name="description_xdrip">將資料傳送到 xDrip+</string>
@@ -53,22 +53,21 @@
     <string name="calibration_sent">校準已傳送到 xDrip+</string>
     <string name="xdrip_local_broadcasts_summary">將血糖和治療資料傳送到 xDrip+。資料來源必須選擇 \"xDrip+ Sync Follower\"，並且在設置 - 應用間設置 - 接受血糖/治療中啟用接受資料。</string>
     <string name="xdrip_local_broadcasts_title">啟用傳送到 xDrip+。</string>
-    <!--    DataBroadcast-->
+    
     <string name="tizen">三星 Tizen</string>
     <string name="tizen_short">TIZ</string>
     <string name="tizen_description">將資料傳送到三星的 G-Watch Wear 應用程式 (Tizen OS)</string>
-    <!-- GarminPlugin -->
+    
     <string name="garmin">Garmin</string>
     <string name="garmin_description">連線到 Garmin 設備（Fenix，Edge 等）</string>
     <string name="garmin_local_http_server_port">本地 HTTP 伺服器端口</string>
     <string name="garmin_local_http_server">本地 HTTP 伺服器</string>
-    <!--    Wear-->
+    
     <string name="wear_shortname">WEAR</string>
     <string name="description_wear">使用您的 WearOS 手錶監控和控制 AAPS。</string>
     <string name="no_watch_connected">（無手錶連線）</string>
     <string name="pump_status">幫浦狀態</string>
     <string name="loop_status">循環狀態</string>
-    <string name="wizard_result">計算嚮導:\n胰島素: %1$.2fU\n碳水化合物: %2$dg</string>
     <string name="quick_wizard_not_available">所選的快速嚮導不再可用，請重新整理您的資訊方塊</string>
     <string name="quick_wizard_message">快速嚮導: %1$s\n胰島素: %2$.2fU\n碳水化合物: %3$dg</string>
     <string name="user_action_not_available">選定的用戶操作 %1$s 已不再可用，請重新整理您的面版</string>
@@ -81,7 +80,6 @@
     <string name="wear_action_tempt_manual_range_message">臨時目標\n\n最小值：%1$s\n最大值：%2$s\n持續時間：%3$d 分鐘</string>
     <string name="wear_action_tempt_manual_message">臨時目標\n\n目標：%1$s\n持續時間：%2$d 分鐘</string>
     <string name="wear_action_tempt_preset_message">臨時目標\n\n原因：%1$s\n目標：%2$s\n持續時間：%3$d 分鐘</string>
-    <string name="no_success">未成功 - 請檢查手機</string>
     <string name="wear_wizard_settings_summary">嚮導結果中包含的計算:</string>
     <string name="wear_general_settings">一般設定</string>
     <string name="wear_custom_watchface_settings">自訂錶盤設定</string>
@@ -127,10 +125,6 @@
     <string name="today">今天</string>
     <string name="weighted">加權</string>
     <string name="full_xdrip_sync_comment">完全同步？這可能需要一段時間，直到完成前您都不會看到新的資料在 xDrip+ 上。</string>
-    <string name="wear_action_loop_state_no_nsclient">AAPSClient不支援此操作</string>
-    <string name="wear_action_loop_state_requires_duration">此操作需要持續一段時間</string>
-    <string name="wear_action_loop_state_pump_suspended">幫浦已暫停！</string>
-    <string name="wear_action_loop_state_profile_invalid">設定檔無效！</string>
     <string name="wear_action_loop_state_unauthorized">請再試一次。</string>
     <string name="wear_action_loop_state_invalid">請求的循環狀態無效</string>
     <string name="wear_action_running_mode_title">執行模式</string>
@@ -147,7 +141,7 @@
     <string name="wear_action_loop_state_now_pump_disconnected">中斷幫浦連線</string>
     <string name="wear_action_loop_state_now_pump_reconnected">重新連線至幫浦</string>
     <string name="garmin_request_key">請求金鑰</string>
-    <!-- SMS Communicator & OTP Authenticator -->
+    
     <string name="smscommunicator">SMS 通訊器</string>
     <string name="smscommunicator_shortname">SMS</string>
     <string name="description_sms_communicator">使用 SMS 指令遠端控制 AAPS。</string>
@@ -159,10 +153,6 @@
     <string name="smscommunicator_otp_reset_btn">重設驗證器</string>
     <string name="smscommunicator_otp_reset_title">重設驗證器金鑰</string>
     <string name="smscommunicator_otp_reset_prompt">確定要重設驗證器金鑰？這會使所有目前已設定的驗證器失效，您需要重新設定它們。</string>
-    <string name="smscommunicator_otp_reset_successful">已產生新的驗證器金鑰！請使用更新的 QR Code 來設定驗證器。</string>
-    <string name="smscommunicator_otp_export_title">匯出 OTP 祕密金鑰</string>
-    <string name="smscommunicator_otp_export_prompt">確定要將 OTP 祕密金鑰複製到剪貼簿嗎？\n\n僅當您的驗證器應用程式無法掃描 QR Code、您想手動輸入，或您想透過專用應用程式設定硬體 OTP 權杖時，才需要這麼做。</string>
-    <string name="smscommunicator_otp_export_successful">已匯出並複製 OTP 祕密金鑰（Base32 格式）到剪貼簿。將它貼到驗證器或硬體 OTP 燒錄器中！</string>
     <string name="smscommunicator_otp_step1_install_header">1. 安裝驗證器</string>
     <string name="smscommunicator_otp_step2_provisioning_header">2. 掃描代碼以設定 AAPS 的 OTP 代碼</string>
     <string name="smscommunicator_otp_step3_test_header">3. 測試一次性密碼</string>

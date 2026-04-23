@@ -1,6 +1,6 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <!-- Source -->
+    
     <string name="ns_client_bg">NSClient BS</string>
     <string name="ns_client_bg_short">NS BS</string>
     <string name="description_source_ns_client">Last ned BS-verdier fra Nightscout</string>
@@ -25,20 +25,18 @@
     <string name="random_bg">Vilkårlig BS</string>
     <string name="description_source_random_bg">Generer vilkårlige BS-data (kun demo formål)</string>
     <string name="random_bg_short">BS</string>
-    <string name="direction">retning</string>
-    <!-- Patched Syai Tag App -->
     <string name="syai_tag_app">Syai</string>
     <string name="description_source_patched_syai_tag_app">Motta blodsukkerverdier fra Syai/Ottai App.</string>
-    <!-- Patched SI App -->
+    
     <string name="patched_si_app">SI app</string>
     <string name="description_source_patched_si_app">Motta BS-verdier fra den patchede appen Sibionic SI.</string>
-    <!-- Patched Sino App -->
+    
     <string name="patched_sino_app">Sino app</string>
     <string name="description_source_patched_sino_app">Motta BS-verdier fra den patchede appen Sino.</string>
-    <!-- Notification Reader -->
+    
     <string name="notification_reader">Varslingsleser</string>
     <string name="description_source_notification_reader">Les BS-verdier fra varsler lagt ut av offisielle sensor-apper (Dexcom, Medtronic, Eversense osv.).</string>
-    <!-- Permission rationales -->
+    
     <string name="permission_dexcom_title">Dexcom sensor</string>
     <string name="permission_dexcom_description">Appen trenger tillatelse til å motta sensor-data fra Dexcom-appen</string>
     <string name="permission_notification_listener_title">Tilgang til varsler</string>

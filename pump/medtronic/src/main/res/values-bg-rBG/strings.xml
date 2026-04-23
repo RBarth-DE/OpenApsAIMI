@@ -1,8 +1,8 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <!-- Medtronic (MDT) - Base -->
+    
     <string name="description_pump_medtronic">Поддръжка на помпи Медтроник (специфични модели), изисква RileyLink устройство</string>
-    <!-- MDT Configuration -->
+    
     <string name="medtronic_serial_number">Сериен номер на помпа</string>
     <string name="medtronic_pump_type">Тип помпа</string>
     <string name="medtronic_pump_frequency">Честота на помпата</string>
@@ -17,15 +17,14 @@
     <string name="medtronic_pump_battery_lithium">Литиева</string>
     <string name="medtronic_pump_battery_nizn">NiZn батерия</string>
     <string name="medtronic_pump_battery_nimh">NiMH (батерия)</string>
-    <!-- Pump type entries -->
-    <!-- Bolus delay entries -->
-    <!-- MDT Fragment -->
+    
+    
+    
     <string name="rl_battery_label">Батерия на RileyLink</string>
-    <!-- MDT Errors -->
+    
     <string name="medtronic_error_serial_invalid">Грешен сериен номер.</string>
     <string name="medtronic_error_pump_type_not_set">Тип помпа не е зададен.</string>
     <string name="medtronic_error_pump_type_invalid">Този тип помпа не се поддържа.</string>
-    <string name="medtronic_error_pump_frequency_invalid">Честотата не се поддържа.</string>
     <string name="medtronic_error_rileylink_address_invalid">Грешен RileyLink адрес.</string>
     <string name="medtronic_error_pump_type_set_differs_from_detected">Откритата помпа не е идентична с конфигурираната.</string>
     <string name="medtronic_error_pump_basal_profiles_not_enabled">Базалните профили/настройки не са позволен в помпата. Включванете го от настройките на помпата.</string>
@@ -35,15 +34,13 @@
     <string name="medtronic_error_pump_wrong_max_basal_set">Грешен макс мазал в помпата (трябва да е %1$.2f).</string>
     <string name="medtronic_error_operation_not_possible_no_configuration">Забранено действие.\n\n Първо трябва да конфигурурате поомпата, преди да използвате тази операция,.</string>
     <string name="medtronic_error_pump_24h_time_change_requested">Желаната промяна на времето е повече от 24ч.</string>
-    <!-- MDT History -->
-    <!--    <string name="medtronic_history_group_basal">Basals</string>-->
-    <!--    <string name="medtronic_history_group_configuration">Configurations</string>-->
-    <!--    <string name="medtronic_history_group_notification">Notifications</string>-->
-    <!--    <string name="medtronic_history_group_statistic">Statistics</string>-->
-    <!--    <string name="medtronic_history_group_unknown">Unknowns</string>-->
-    <!--    <string name="medtronic_history_group_all">All</string>-->
-    <string name="medtronic_pump_history">История на помпата</string>
-    <!-- <string name="medtronic_cmd_profile_not_set">Remote Basal profile setting is not supported. Please modify Basal profile on your pump manually.</string> -->
+    
+    
+    
+    
+    
+    
+    
     <string name="medtronic_cmd_cancel_bolus_not_supported">Отказали сте болус след като е бил изпратен към помпата. Помпите Медтроник не го поддържат и ще трябва да го направите ръчно. Пуснете Suspend mode и след това Resume (ако оше искате да го откажете). Апликацията ще покаже промените след около 5 мин.</string>
     <string name="medtronic_cmd_cant_read_tbr">Не може да бъде прочетен вр. базал.</string>
     <string name="medtronic_cmd_cant_cancel_tbr_stop_op">Не може да бъде изключен вр. базал. Операцията е спряна.</string>
@@ -71,10 +68,9 @@
     <string name="medtronic_pump_connected_now" comment="Displayed when pump was connected less than a minute ago">Сега</string>
     <string name="ago" comment="Time suffix, e.g. '5 min ago'">преди</string>
     <string name="medtronic_notification_check_time_date">Необходимо е сверяване на часа в помпата</string>
-    <!-- combo_notification_check_time_date -->
+    
     <string name="set_neutral_temps_title">Прилагане на неутрални временни базали</string>
     <string name="set_neutral_temps_summary">Ако е вкл, то ще анулира временен базал на всеки час. Това може да помогне за спиране на  звук/вибрация от някой помпи на всеки час.</string>
-    <string name="mdt_tbr_remaining">%1$.1f Е/ч (%2$d мин остават)</string>
     <string name="invalid_history_data">Открити са невалидни данни за историята на помпата. Отворете \"нов проблем\" и предоставете логове.</string>
     <string name="riley_statistics">Статистика на RL</string>
     <string name="clicked_refresh" comment="26 characters max for translation">Отбелязано обновяване</string>

@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version='1.0' encoding='utf-8'?>
 <resources>
     <string name="automation_short">Oto</string>
     <string name="automation">Otomasyon</string>
@@ -53,7 +53,6 @@
     <string name="location_going_out">Adlı alandan ayrıldığınızda</string>
     <string name="time_range">Zaman aralığı</string>
     <string name="timerange_value">%1$s ile %2$s arasında</string>
-    <string name="between">Arasında </string>
     <string name="add_short">EKLE</string>
     <string name="temptargetcompared">Geçici hedef %1$s</string>
     <string name="btdevicecompared">%1$s %2$s cihazına Bluetooth bağlantısı</string>
@@ -94,28 +93,27 @@
     <string name="edit_short">DÜZENLE</string>
     <string name="preconditions">Ön koşullar:</string>
     <string name="user_action">Kullanıcı onayı ile</string>
-    <string name="remove_selected_items">Seçilen öğeleri kaldır</string>
     <string name="count_selected">%1$d seçildi</string>
     <string name="system_automation">Sistem otomasyonu</string>
     <string name="run_automations">Otomasyonları çalıştır</string>
     <string name="add_automation">Kural ekle</string>
     <string name="stop_processing">İşlemeyi durdur</string>
-    <!--    Reminders-->
+    
     <string name="time_to_eat">Yemek zamanı!\nBolus sihirbazını çalıştırın ve hesaplamayı tekrar yapın.</string>
     <string name="time_to_bolus">Bolus zamanı!\nBolus sihirbazını çalıştırın ve yeniden hesaplama yapın.</string>
     <string name="error_setting_reminder">Gelecek alarmı ayarlanırken hata oluştu</string>
-    <!--    Autotune-->
+    
     <string name="autotune_profile_name">OtoAyar profili %1$s</string>
     <string name="autotune_run">Otoayar\'ı Çalıştır</string>
     <string name="autotune_run_without_autoswitch">OtoAyar profil değiştirme olmadan çalıştı</string>
     <string name="autotune_run_with_autoswitch">OtoAyar çalıştı ve profil otomatik olarak değiştirildi</string>
     <string name="autotune_run_with_error">Son OtoAyar çalışması sırasında hata oluştu</string>
     <string name="autotune_run_cancelled">Başka bir OtoAyar çalıştırması tespit edildi, çalıştırma iptal edildi</string>
-    <!--    Steps count-->
+    
     <string name="triggerStepsCountLabel">Adım Sayacı</string>
     <string name="triggerStepsCountDesc">Her %1$s dakikadaki %2$s %3$.0f Adım sayısı</string>
     <string name="triggerStepsCountDropdownLabel">Ölçüm Süresi</string>
-    <!--    SMB mode-->
-    <!--    Map Picker (OpenStreetMap)-->
-    <!-- Permission rationales -->
+    
+    
+    
 </resources>

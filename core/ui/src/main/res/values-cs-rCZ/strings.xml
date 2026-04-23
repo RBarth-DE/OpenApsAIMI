@@ -1,12 +1,11 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <!--    General-->
+    
     <string name="refresh">Obnovit</string>
     <string name="error">Chyba</string>
     <string name="profile_set_ok">Bazální profil aktualizován</string>
     <string name="invalid_input">Chybná vstupní data</string>
     <string name="constraint_applied">Aplikováno omezení!</string>
-    <string name="tempbasals_iobtotal_label_string">Celkem IOB:</string>
     <string name="tt_label">DC</string>
     <string name="pump_unreachable">Pumpa nedostupná</string>
     <string name="insulin_unit_shortname">U</string>
@@ -17,7 +16,6 @@
     <string name="limiting_iob">IOB omezeno na %1$.1f U: %2$s</string>
     <string name="loop_disabled">SMYČKA ZAKÁZÁNA OMEZENÍM</string>
     <string name="event_type">Typ události</string>
-    <string name="reload">Znovu načíst</string>
     <string name="mgdl">mg/dL</string>
     <string name="mmol">mmol/L</string>
     <string name="save">Uložit</string>
@@ -33,7 +31,7 @@
     <string name="statuslights">Stavové indikátory</string>
     <string name="configbuilder_insulin">Inzulín</string>
     <string name="value_unavailable_short">n/a</string>
-    <!-- master_password moved to core/keys/strings.xml -->
+    
     <string name="ue_export_to_csv">Exportovat uživatelské záznamy do Excelu (csv)</string>
     <string name="confirm">Potvrdit</string>
     <string name="pump">Pumpa</string>
@@ -44,13 +42,11 @@
     <string name="success">Úspěch</string>
     <string name="advanced_settings_title">Rozšířená nastavení</string>
     <string name="extendedbolusdeliveryerror">Chyba spuštění extended bolusu</string>
-    <string name="aps_mode_title">Typ smyčky</string>
     <string name="extended_bolus">Prodloužený bolus</string>
     <string name="paused">Pozastaveno</string>
     <string name="tdd_total">CDD celkem</string>
     <string name="tdd_old_data">Stará data</string>
     <string name="goingtodeliver">Podávání %1$.2f U inzulínu</string>
-    <string name="waitingforpump">Čekání na pumpu</string>
     <string name="androidaps_start">AAPS spuštěno</string>
     <string name="formatsignedinsulinunits">%1$+.2f U</string>
     <string name="format_carbs">%1$d g</string>
@@ -62,7 +58,7 @@
     <string name="carbs">Sacharidy</string>
     <string name="invalid_profile">Neplatný profil!</string>
     <string name="no_profile_set">ŽÁDNÝ PROFIL NENASTAVEN</string>
-    <string name="active"><![CDATA[<Aktivní>]]></string>
+    <string name="active">&lt;Aktivní&gt;</string>
     <string name="date">Datum</string>
     <string name="units_label">Jednotky</string>
     <string name="dia_label">Doba působnosti inzulínu</string>
@@ -77,7 +73,6 @@
     <string name="target_long_label">Cílová glykémie</string>
     <string name="shortgram">g</string>
     <string name="shortpercent">%</string>
-    <string name="bluetooth">Bluetooth</string>
     <string name="virtualpump_resultok">OK</string>
     <string name="pump_time_updated">Čas v pumpě aktualizován</string>
     <string name="exit">Konec</string>
@@ -102,9 +97,6 @@
     <string name="ns_wifi_ssids">WiFi SSID</string>
     <string name="loading">Načítání…</string>
     <string name="notes_label">Poznámky</string>
-    <string name="remove_button">Odstranit</string>
-    <string name="add_new">Přidat nový</string>
-    <string name="addnew_above">Přidat novou nad</string>
     <string name="wrong_pump_data">Data přicházejí z jiné pumpy. Změňte ovladač pro obnovení stavu pumpy.</string>
     <string name="bg_label">Gly</string>
     <string name="calibration">Kalibrace</string>
@@ -117,8 +109,6 @@
     <string name="notconfigured">Není nakonfigurováno</string>
     <string name="loopsuspended">Smyčka pozastavena</string>
     <string name="loop_suspended_by_dst">Smyčka pozastavena kvůli změně času</string>
-    <string name="trend_arrow">Šipka trendu</string>
-    <string name="a11y_autosens_label">Automatická detekce senzitivity</string>
     <string name="required">pož</string>
     <string name="a11y_arrow_double_down">rychle klesající</string>
     <string name="a11y_arrow_single_down">klesající</string>
@@ -133,17 +123,13 @@
     <string name="a11y_inrange">v rozsahu</string>
     <string name="a11y_low">nízká</string>
     <string name="average">Průměr</string>
-    <string name="none"><![CDATA[<prázdný>]]></string>
     <string name="remove_label">ODSTRANIT</string>
     <string name="activate_profile">Aktivovat profil</string>
     <string name="profileswitch_ismissing">Přepnutí profilu chybí. Proveďte přepnutí profilu nebo ho aktivujte na záložce lokálního profilu.</string>
     <string name="profile">Profil</string>
-    <string name="select_for_removal">Vyberte pro odstranění</string>
     <string name="confirm_remove_multiple_items">Opravdu chcete odstranit %1$d položek</string>
     <string name="overview_treatment_label">Ošetření</string>
     <string name="copytolocalprofile">Vytvořit z tohoto profilu nový profil?</string>
-    <string name="bg_trend_label">15min trend</string>
-    <string name="treatments_wizard_cob_label">COB</string>
     <string name="bolus_iob_label">Bolusové IOB</string>
     <string name="treatments_wizard_basaliob_label">IOB z bazálů</string>
     <string name="invalid">NEPLATNÝ</string>
@@ -176,33 +162,31 @@
     <string name="extended_bolus_medium">%1$.2f U/h %2$s/%3$s\'</string>
     <string name="nav_export">Exportovat nastavení</string>
     <string name="location_permission_not_granted">Oprávnění k přístupu k poloze zařízení nebylo uděleno. Povolte v nastavení systému Android.</string>
-    <!--    Protection-->
+    
     <string name="wrongpassword">Chybné heslo</string>
     <string name="wrongpin">Nesprávný PIN</string>
     <string name="passwords_dont_match">Hesla se neshodují</string>
     <string name="pin_dont_match">PIN kódy se neshodují</string>
-    <!--    Profile-->
+    
     <string name="basalprofilenotaligned">Hodnoty bazálů nejsou zarovnané na celé hodiny: %1$s</string>
     <string name="minimalbasalvaluereplaced">Hodnota bazálu byla nahrazena minimální možnou: %1$s</string>
     <string name="maximumbasalvaluereplaced">Hodnota bazálu nahrazena maximální možnou: %1$s</string>
     <string name="profile_per_unit">/U</string>
     <string name="profile_ins_units_per_hour">U/h</string>
     <string name="profile_carbs_per_unit">g/U</string>
-    <!--    ProfileFunction-->
+    
     <string name="startprofile">Spustit profil %1$d%% na %2$d min</string>
-    <!--    APSResult-->
+    
     <string name="cancel_temp">Zrušit dočasný bazál</string>
     <string name="let_temp_basal_run">Nechat běžet aktuální dočasný bazál</string>
     <string name="rate">Hodnota</string>
     <string name="duration">Trvání</string>
     <string name="reason">Zdůvodnění</string>
     <string name="nochangerequested">Změna nepožadována</string>
-    <!--    Insulin / Concentration-->
-    <!--    ProfileSwitch-->
-    <string name="zerovalueinprofile">Chybný profil: %1$s</string>
-    <!--    Temptarget-->
+    
+    
     <string name="mins">%1$d min</string>
-    <!--    Translator-->
+    
     <string name="careportal">Péče</string>
     <string name="careportal_bgcheck">Kontrola glykémie</string>
     <string name="careportal_mbg">Ruční glykémie nebo kalibrace</string>
@@ -212,7 +196,6 @@
     <string name="careportal_question">Otázka</string>
     <string name="careportal_exercise">Cvičení</string>
     <string name="careportal_announcement_message">Oznámení: %1$s</string>
-    <string name="careportal_settings_export_message">Export nastavení: %1$s</string>
     <string name="careportal_note_message">Poznámka : %1$s</string>
     <string name="careportal_question_message">Otázka: %1$s</string>
     <string name="careportal_exercise_message">Cvičení : %1$s</string>
@@ -286,29 +269,21 @@
     <string name="arrow_left">Vlevo</string>
     <string name="arrow_up_left">Vlevo nahoře</string>
     <string name="arrow_center">Uprostřed</string>
-    <!--    Command-->
+    
     <string name="connectiontimedout">Vypršel čas připojování</string>
-    <!--    PumpEnactResult-->
+    
     <string name="enacted">Provedeno</string>
     <string name="comment">Komentář</string>
     <string name="percent">Procenta</string>
     <string name="absolute">Absolutní</string>
     <string name="waitingforpumpresult">Čekání na výsledek</string>
     <string name="smb_shortname">SMB</string>
-    <!--    CarbsReq-->
+    
     <string name="carbsreq">Požadováno dalších %1$d g sacharidů během %2$d minut</string>
     <string name="basalrate">Bazál</string>
     <string name="bolus">Bolus</string>
-    <string name="ratio">Koef</string>
-    <string name="amount_days">Dní</string>
-    <string name="weight">Váha</string>
-    <string name="warning_Message">Pravděpodobně nepřesné při používání bolusů k doplňování</string>
-    <string name="olddata_Message">Zastaralá data. Klepněte na tlačítko „OBNOVIT“.</string>
-    <string name="tbb">Celk. denní bazál</string>
-    <string name="tbb2">CZB * 2</string>
-    <!--    Ntp-->
     <string name="timedetection">Detekce času</string>
-    <!-- User Entry -->
+    
     <string name="uel_bolus">BOLUS</string>
     <string name="uel_bolus_calculator">BOLUS KALKULÁTOR</string>
     <string name="uel_bolus_advisor">POMOCNÍK S BOLUSEM</string>
@@ -379,7 +354,6 @@
     <string name="uel_stat_reset">RESET STATISTIK</string>
     <string name="uel_delete_logs">VYMAZAT LOGY</string>
     <string name="uel_delete_future_treatments">VYMAZAT BUDOUCÍ OŠETŘENÍ</string>
-    <string name="delete_future_treatments">Odstranit ošetření v budoucnu</string>
     <string name="uel_export_settings">EXPORTOVAT NASTAVENÍ</string>
     <string name="uel_import_settings">IMPORTOVAT NASTAVENÍ</string>
     <string name="uel_select_directory">VYBERTE ADRESÁŘ</string>
@@ -396,7 +370,6 @@
     <string name="uel_exit_aaps">KONEC AAPS</string>
     <string name="uel_plugin_enabled">PLUG-IN POVOLEN</string>
     <string name="uel_plugin_disabled">PLUG-IN ZAKÁZÁN</string>
-    <string name="uel_unknown">NEZNÁMÉ</string>
     <string name="ue_string">Text</string>
     <string name="ue_source">Zdroj</string>
     <string name="ue_utc_offset">Posun UTC</string>
@@ -405,11 +378,10 @@
     <string name="ue_none">Žádné jednotky</string>
     <string name="uel_loop_change">SMYČKA ZMĚNĚNA</string>
     <string name="uel_loop_removed">SMYČKA ODEBRÁNA</string>
-    <string name="uel_other">JINÉ</string>
     <string name="uel_running_mode">REŽIM SMYČKY</string>
     <string name="uel_running_mode_removed">REŽIM SMYČKY ODSTRANĚN</string>
     <string name="uel_running_mode_updarted">REŽIM SMYČKY AKTUALIZOVÁN</string>
-    <!-- HardLimits -->
+    
     <string name="profile_low_target">Dolní cíl profilu</string>
     <string name="profile_high_target">Horní cíl profilu</string>
     <string name="temp_target_low_target">Dolní hodnota dočasného cíle</string>
@@ -424,8 +396,8 @@
     <string name="valueoutofrange">»%1$s« je mimo pevně nastavené limity</string>
     <string name="value_out_of_hard_limits">»%1$s« %2$.2f je mimo pevně nastavené limity</string>
     <string name="basal_value">Hodnota bazálu</string>
-    <!-- Profile validation -->
-    <!-- Command Queue + readStatus reasons -->
+    
+    
     <string name="bolus_u_min">BOLUS %1$.2f U</string>
     <string name="carbs_g">SACHARIDY %1$d g</string>
     <string name="extended_bolus_u_min">ROZLOŽENÝ BOLUS %1$.2f U %2$d min</string>
@@ -454,21 +426,17 @@
     <string name="isf_for_carbs">ISF pro kalkulačku a absorbci sacharidů: %1$.1f</string>
     <string name="autosens_long">Hodnota Autosense: %.0f%%</string>
     <string name="algorithm_long">Detekce citlivosti algoritmu: %.0f%%</string>
-    <string name="algorithm_short">Alg: %.0f%%</string>
-    <string name="a11y_file">soubor</string>
-    <string name="a11y_user">uživatel</string>
-    <!-- Autotune -->
     <string name="autotune">Autotune</string>
     <string name="autotune_tune_days">Ladit dní:</string>
     <string name="autotune_select_profile">Vyberte profil pro ladění</string>
-    <!-- Alerts -->
+    
     <string name="urgent_alarm">Urgentní alarm</string>
     <string name="info">INFO</string>
-    <!-- BolusWizard -->
+    
     <string name="bolus_advisor">Poradce pro bolus</string>
     <string name="bolus_advisor_message">Máte vysokou glykémii. Namísto jídla doporučujeme vyčkat na lepší glykémii a připomenout, až bude čas na jídlo. Přejete si poslat korekční bolus a připomenout, až bude čas k jídlu? V tomto případě nebudou zapsané žádné sacharidy, a později opět musíte spustit kalkulátor, jakmile vám to připomeneme.</string>
     <string name="cobvsiob">COB vs. IOB</string>
-    <string name="slowabsorptiondetected"><![CDATA[<font color=\'%1$s\'>!!!!! Detekována pomalá absorbce sacharidů: %2$d%% času. Překontrolujte kalkulaci. COB může být nadhodnocené, a proto může být započítáno více inzulínu !!!!!</font>]]></string>
+    <string name="slowabsorptiondetected">&lt;font color=\'%1$s\'&gt;!!!!! Detekována pomalá absorbce sacharidů: %2$d%% času. Překontrolujte kalkulaci. COB může být nadhodnocené, a proto může být započítáno více inzulínu !!!!!&lt;/font&gt;</string>
     <string name="bolus_constraint_applied_warn">Použito omezení bolusu: %1$.2f U na %2$.2f U</string>
     <string name="bolus_recorded_only">Bolus nebude pumpou vydán, pouze zaznamenán</string>
     <string name="advisoralarm">Spustit alarm, když je čas na jídlo</string>
@@ -491,8 +459,6 @@
     <string name="wizard_explain_tt">Doč. cíl: %1$s</string>
     <string name="wizard_explain_tt_to">%1$s – %2$s</string>
     <string name="wizard_pump_not_available">Pumpa není k dispozici!</string>
-    <string name="quickwizard">Rychlý bolus</string>
-    <!--    Preferences-->
     <string name="child">Dítě</string>
     <string name="teenage">Dospívající</string>
     <string name="adult">Dospělý</string>
@@ -502,9 +468,9 @@
     <string name="max_bolus_title">Maximální povolený bolus [U]</string>
     <string name="max_carbs_title">Maximální počet sacharidů [g]</string>
     <string name="patient_type">Typ pacienta</string>
-    <!--    Protection-->
+    
     <string name="unlock_settings">Odemknout nastavení</string>
-    <!--    Pumps -->
+    
     <string name="battery_label">Baterie</string>
     <string name="reservoir_label">Zásobník</string>
     <string name="last_connection_label">Poslední spojení</string>
@@ -516,17 +482,12 @@
     <string name="disconnected">Odpojeno</string>
     <string name="connecting">Připojuji</string>
     <string name="clicked_connect_to_pump" comment="26 characters max for translation">Kliknuto na připojit k pumpě</string>
-    <string name="reservoir_value">%1$.0f / %2$d U</string>
     <string name="daily_units">Jednotek za den</string>
-    <string name="pump_icon">Ikona pumpy</string>
-    <string name="view_profile">Zobrazit profil</string>
     <string name="pump_history">Historie pumpy</string>
-    <string name="stats">Statistiky</string>
     <string name="pump_driver_change" comment="26 characters max for translation">Změna ovladače pumpy.</string>
     <string name="device_changed" comment="26 characters max for translation">Zařízení změněno</string>
     <string name="bolus_ok" comment="26 characters max for translation">Bolus OK</string>
     <string name="temp_basal_delivery_error">Chyba nastavování dočasného bazálu</string>
-    <string name="not_set_short">Nenastaveno</string>
     <string name="pump_busy">Pumpa je zaneprázdněna</string>
     <string name="connection_error">Chyba připojování pumpy</string>
     <string name="reading_pump_history">Načítání historie pumpy</string>
@@ -534,13 +495,13 @@
     <string name="pairing">Párování</string>
     <string name="initializing">Inicializuji ...</string>
     <string name="secs" comment="second short">%1$d s</string>
-    <!--    Constraints-->
+    
     <string name="limitingbasalratio">Max bazál omezen na %1$.2f U/h: %2$s</string>
     <string name="pumplimit">limit pumpy</string>
     <string name="limitingpercentrate">Bazál omezen na %1$d%%: %2$s</string>
     <string name="itmustbepositivevalue">požadována kladná hodnota</string>
     <string name="limitingbolus">Bolus omezen na %1$.1f U: %2$s</string>
-    <!--    Dialogs-->
+    
     <string name="confirmation">Potvrzení</string>
     <string name="message">Zpráva</string>
     <string name="ok">OK</string>
@@ -548,47 +509,42 @@
     <string name="yes">Ano</string>
     <string name="no">Ne</string>
     <string name="close">Zavřít</string>
-    <!-- TwoMessagesDialog -->
-    <string name="password_preferences_decrypt_prompt">Zobrazí se výzva k zadání hlavního hesla, které bude použito k dešifrování importovaných předvoleb.</string>
-    <!-- <unattended_export> -->
+    
     <string name="export_ok">OK</string>
     <string name="export_warning">Varování</string>
     <string name="export_expired">Vypršelo</string>
     <string name="export_disabled">Zakázáno</string>
     <string name="export_failed">Chyba</string>
     <string name="export_alert">VÝSTRAHA</string>
-    <!-- Export dialog strings -->
-    <!-- <unattended_export result messages> -->
+    
+    
     <string name="export_result_message_exported">Nastavení exportováno</string>
     <string name="export_result_message_failed">Nastavení NEJSOU správně exportována!</string>
     <string name="export_result_message_about_to_expire">Nastavení exportováno: heslo brzy vyprší. Exportujte ručně a (znovu) zadejte heslo.</string>
     <string name="export_result_message_expired">Export nastavení zrušen: heslo vypršelo. Exportujte ručně a (znovu) zadejte heslo!</string>
     <string name="export_result_message_disabled">Varování (automatizace): Není povolen export nastavení!</string>
-    <!-- Cloud export -->
-    <!-- Export destination chip labels -->
-    <!-- Maintenance bottom sheet descriptions -->
-    <!-- Cloud directory dialog (Compose) -->
+    
+    
+    
+    
     <string name="format_hour_minute">%1$dh %2$dm</string>
-    <!-- datetime layout -->
+    
     <string name="event_time_label">Čas</string>
-    <!-- BluetoothDevicePreference -->
+    
     <string name="need_connect_permission">Aplikace potřebuje oprávnění bluetooth</string>
-    <!--    Combo-->
+    
     <string name="user_request" comment="26 characters max for translation">Požadavek uživatele</string>
     <string name="pump_paired" comment="26 characters max for translation">Pumpa spárována</string>
-    <!--    BlePreCheck-->
+    
     <string name="ble_not_supported">Bluetooth Low Energy nepodporováno.</string>
     <string name="ble_not_supported_or_not_paired">Bluetooth Low Energy není podporováno, nebo zařízení není spárováno.</string>
     <string name="ble_not_enabled">Bluetooth není povoleno.</string>
-    <string name="location_not_found_title">Zjišťování polohy není povoleno</string>
-    <string name="location_not_found_message">Pro vyhledání Bluetooth zařízení na novějších telefonech musí být povoleno zjišťování polohy. AAPS vás nesleduje a po provedení párování můžete tuto volbu opět zakázat.</string>
-    <!--    Preferences -->
     <string name="nav_plugin_preferences">Nastavení pluginu</string>
-    <!-- Navigation -->
-    <!-- Alerts -->
-    <!-- Actions Screen -->
-    <!-- Site Rotation -->
-    <!-- About -->
+    
+    
+    
+    
+    
     <string name="cta_dont_kill_my_app_info">Nezabíjet mou aplikaci?</string>
     <string name="fabric_upload_disabled">Nahrávání protokolů o pádech zakázáno!</string>
     <string name="about_link_urls">\n\nDokumentace:\nhttps://wiki.aaps.app\n\nFacebook:\nhttps://www.facebook.com/groups/AndroidAPSUsers</string>
@@ -610,11 +566,11 @@
         <item quantity="many">%1$d minut</item>
         <item quantity="other">%1$d minut</item>
     </plurals>
-    <!--    Maintenance-->
+    
     <string name="cleanup_db_confirm">Chcete vyčistit databázi?\nOdstraní sledované změny a historická data starší než 3 měsíce.</string>
     <string name="cleanup_db_confirm_sync">Chcete vyčistit databázi?\nOdstraní sledované změny a historická data starší než 3 měsíce.\nVýrazně to urychlí plnou synchronizaci.</string>
     <string name="cleared_entries">Vymazané záznamy</string>
-    <!--    Weekday-->
+    
     <string name="weekday_sunday_short">Ne</string>
     <string name="weekday_saturday_short">So</string>
     <string name="weekday_friday_short">Pá</string>
@@ -622,24 +578,24 @@
     <string name="weekday_wednesday_short">St</string>
     <string name="weekday_tuesday_short">Út</string>
     <string name="weekday_monday_short">Po</string>
-    <!--    DecimalFormatterImpl -->
+    
     <string name="format_insulin_units1">%1$.1f U</string>
     <string name="format_insulin_units">%1$.2f U</string>
     <string name="percent_rate_duration">Hodnota: %1$.2f%% (%2$.2f U/h) Trvání: %3$d min</string>
     <string name="rate_percent_duration">Hodnota: %1$.2f U/h (%2$.2f%%) Trvání: %3$d min</string>
-    <string name="percent_rate_duration_formatted"><![CDATA[<b>Hodnota</b>: %1$.2f%% (%2$.2f U/h)<br><b>Trvání</b>: %3$d min<br>]]></string>
-    <string name="rate_percent_duration_formatted"><![CDATA[<b>Hodnota</b>: %1$.2f U/h (%2$.2f%%) <br><b>Trvání</b>: %3$d min<br>]]></string>
-    <!--    Playback-->
+    <string name="percent_rate_duration_formatted">&lt;b&gt;Hodnota&lt;/b&gt;: %1$.2f%% (%2$.2f U/h)&lt;br&gt;&lt;b&gt;Trvání&lt;/b&gt;: %3$d min&lt;br&gt;</string>
+    <string name="rate_percent_duration_formatted">&lt;b&gt;Hodnota&lt;/b&gt;: %1$.2f U/h (%2$.2f%%) &lt;br&gt;&lt;b&gt;Trvání&lt;/b&gt;: %3$d min&lt;br&gt;</string>
+    
     <string name="audio_playback_attribution">"AAPS přehrává zvuk"</string>
-    <!-- ProfileEditor -->
-    <!--    Search-->
-    <!--    Food Management -->
-    <!--    Log Settings-->
-    <!--    Maintenance-->
-    <!-- Import settings screen -->
-    <!--    BLE Scan Step (shared pump pairing) -->
-    <!-- Graph configuration -->
-    <!-- Graph series short names (used as graph labels, keep very short) -->
+    
+    
+    
+    
+    
+    
+    
+    
+    
     <string name="remove_items">Odebrat položky</string>
     <string name="sort_items">Seřadit položky</string>
 

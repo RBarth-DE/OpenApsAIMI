@@ -1,8 +1,8 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <!-- PumpCommon - Pump Abstract -->
+    
     <string name="pump_operation_not_supported_by_pump_driver">Operasjonen støttes ikke av pumpen og/eller driveren.</string>
-    <!-- PumpCommon - Pump Status -->
+    
     <string name="pump_status_not_initialized">Pumpen er ikke startet</string>
     <string name="pump_status_initialized">Pumpen er startet</string>
     <string name="pump_status_encrypt">Krypterer kommunikasjon</string>
@@ -10,7 +10,7 @@
     <string name="pump_status_busy">Opptatt</string>
     <string name="pump_status_suspended">Pauset</string>
     <string name="pump_status_executing_command">Utfører kommando</string>
-    <!-- Commands -->
+    
     <string name="pump_cmd_desc_get_settings">Hent innstillinger</string>
     <string name="pump_cmd_desc_get_firmware">Hent pumpens firmware</string>
     <string name="pump_cmd_desc_get_basal_profile">Hent basalprofil</string>
@@ -29,7 +29,7 @@
     <string name="pump_cmd_desc_get_history">Hent historikk</string>
     <string name="pump_cmd_desc_get_history_params">Hent historikk %s</string>
     <string name="pump_cmd_desc_custom">Egendefinert kommando</string>
-    <!-- PumpCommon - History Group -->
+    
     <string name="history_group_basal">Basaldoser</string>
     <string name="history_group_configuration">Konfigurasjoner</string>
     <string name="history_group_notification">Varsler</string>
@@ -44,7 +44,7 @@
     <string name="history_group_other">Annet</string>
     <string name="history_group_events">Alle hendelser</string>
     <string name="history_group_events_no_stat">Hendelser (ingen stat.)</string>
-    <!-- Time -->
+    
     <string name="time_today">I dag</string>
     <string name="time_last_hour">Siste time</string>
     <string name="time_last_3_hours">Siste 3 timer</string>
@@ -55,6 +55,5 @@
     <string name="time_last_4_days">Siste 4 dager</string>
     <string name="time_last_week">Siste uke</string>
     <string name="time_last_month">Siste måned</string>
-    <!-- Pump History -->
-    <string name="pump_history_type">Type:</string>
-</resources>
+    
+    </resources>

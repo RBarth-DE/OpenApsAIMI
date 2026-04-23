@@ -1,6 +1,6 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <!-- MedtrumPump -->
+    
     <string name="medtrum">Medtrum</string>
     <string name="medtrum_pump_shortname">MT</string>
     <string name="medtrum_pump_description">Integrazione micro per Medtrum Nano e Medtrum 300U</string>
@@ -14,13 +14,12 @@
     <string name="pump_setting_failed">Errore nella configurazione delle impostazioni utente sul micro!</string>
     <string name="pump_sync_error">Errore durante la sincronizzazione della cronologia del micro, un record è stato saltato. Controllare la scheda trattamenti per verificare se il bolo è stato sincronizzato correttamente. Posporre l\'allarme e se l\'errore continua a riproporsi cambiare patch o pompa.</string>
     <string name="patch_reset_after_primed_error">Rilevato ripristino patch dopo il priming! Rimuovere il cerotto e avviare un nuova cerotto.</string>
-    <!-- overview fragment -->
+    
     <string name="last_connection_label">Ultima connessione</string>
     <string name="active_bolus_label">Bolo attivo</string>
     <string name="pump_state_label">Stato micro</string>
     <string name="active_alarms_label">Attiva allarmi</string>
     <string name="basal_type_label">Tipo basale</string>
-    <string name="basal_rate_label">Velocità basale</string>
     <string name="pump_type_label">Tipo micro</string>
     <string name="fw_version_label">Versione FW</string>
     <string name="patch_no_label">Patch no</string>
@@ -30,7 +29,7 @@
     <string name="change_patch_label">Cambia patch</string>
     <string name="requested_by_user" comment="26 characters max for translation">Richiesto da utente</string>
     <string name="expiry_not_enabled">Non abilitato</string>
-    <!-- Alarm strings -->
+    
     <string name="alarm_none">Nessuno</string>
     <string name="alarm_pump_low_battery">Batteria micro quasi scarica</string>
     <string name="alarm_pump_low_reservoir">Serbatoio micro quasi vuoto</string>
@@ -51,7 +50,7 @@
     <string name="alarm_no_calibration">No calibrazione</string>
     <string name="pump_time_update_failed">Impossibile aggiornare il fuso orario del microinfusore, posticipare il messaggio e aggiornare manualmente.</string>
     <string name="bolus_error">Errore bolo</string>
-    <!-- wizard-->
+    
     <string name="retry">Riprova</string>
     <string name="step_prepare_patch">Attiva patch</string>
     <string name="step_prepare_patch_connect">Connetti e riempi</string>
@@ -76,12 +75,10 @@
     <string name="do_not_attach_to_body">Non attaccare ancora la patch al corpo.</string>
     <string name="half_press_needle">Premere a metà il tasto dell\'ago. Poi tocca <b>Avanti</b> per avviare il caricamento.</string>
     <string name="wait_for_priming">Attendi il completamento del caricamento.</string>
-    <string name="priming_error">Impossibile caricare, premi <b>Riprova</b> per riprovare.</string>
     <string name="press_next">Premi <b>Avanti</b> per continuare.</string>
     <string name="press_next_to_start_activation">Premi <b>Avanti</b> per avviare l\'attivazione.</string>
     <string name="remove_safety_lock">Rimuovere il blocco di sicurezza. Fissare il micro al corpo. Premere il tasto dell’ago.</string>
     <string name="activating_pump">Attivazione del micro e impostazione della velocità basale iniziale. Attendere.</string>
-    <string name="activating_error">Impossibile attivare, premi <b>Riprova</b> per riprovare.</string>
     <string name="activating_complete">Nuova patch attivata. %.2f unità rimanenti.</string>
     <string name="can_export_settings">È possibile esportare le impostazioni per poter recuperare questa patch in seguito.</string>
     <string name="press_OK_to_return">Premi <b>OK</b> per tornare alla schermata principale.</string>
@@ -97,7 +94,7 @@
     <string name="activation_in_progress">Oops! Qualcosa è andato storto, sembra ci sia già un\'attivazione in corso.</string>
     <string name="press_retry_or_discard">Premi <b>Avanti</b> per riprendere l\'attivazione o <b>Scarta</b> per resettare lo stato di attivazione.</string>
     <string name="reading_activation_status">Attendere, lettura dello stato di attivazione dal micro.</string>
-    <!-- settings-->
+    
     <string name="sn_input_title">Numero seriale</string>
     <string name="sn_input_invalid">Numero di serie non valido!</string>
     <string name="change_sn">Cambiare</string>
@@ -123,13 +120,13 @@
     <string name="daily_max_insulin_summary">Specificare le unità massime di insulina consentite per giorno. Se superate, il micro sarà sospeso.</string>
     <string name="scan_on_connection_error_title">Scansione in caso di errore di connessione</string>
     <string name="scan_on_connection_error_summary">ATTENZIONE: Abilitare solo in caso di problemi di connessione. Se abilitato, il driver esegue una scansione della pompa prima di tentare di riconnettersi ad essa. Assicurati di avere impostato il permesso di Posizione su \"Consenti sempre\"</string>
-    <!-- treatment state-->
+    
     <string name="getting_pump_status">Ricezione stato micro</string>
     <string name="syncing_records">Sincronizzazione record, %1$d rimasti</string>
     <string name="getting_bolus_status">Ricezione stato bolo</string>
     <string name="getting_temp_basal_status">Ricezione stato basale temporanea</string>
     <string name="setting_pump_settings">Impostazione opzioni utente</string>
-    <!-- bolus-->
+    
     <string name="bolus_error_reason_user">Bolo annullato dall\'utente</string>
     <string name="bolus_error_reason_not_connected">Microinfusore non connesso</string>
     <string name="bolus_error_reason_already_in_progress">Bolo già in corso</string>

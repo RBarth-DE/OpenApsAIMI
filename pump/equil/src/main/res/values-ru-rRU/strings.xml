@@ -1,7 +1,7 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version='1.0' encoding='utf-8'?>
 <resources>
     <string name="equil_pump_description">Помпа Equil Patch 5.3 или новее </string>
-    <!--  start  -->
+    
     <string name="equil_basal_speed">Базовая скорость базала</string>
     <string name="equil_dressing">Замена резервуара</string>
     <string name="equil_dressing_onkey_msg">Плунжер автоматически перемещается в нижнюю часть резервуара. По достижении нижней части он остановится автоматически. Нажмите \'Остановить\', чтобы прервать при необходимости.</string>
@@ -21,7 +21,6 @@
     <string name="equil_tone_mode_shake">Только вибрация</string>
     <string name="equil_tone_mode_tone">Только звук</string>
     <string name="equil_tone_mode_tone_and_shake">Вибрация и звук</string>
-    <string name="equil_unit_u">%1$s ед</string>
     <string name="equil_ble_config_confirmation_title">Выполнить сопряжение с помпой Equil Patch</string>
     <string name="equil_error">Ошибка соединения</string>
     <string name="equil_change">Заменить помпу</string>
@@ -47,7 +46,7 @@
     <string name="equil_shutdown">Автоматическое отключение Equil</string>
     <string name="equil_common_history_tbr_value">Баз Скорость: %1$.2f ед/ч, Продолжительность: %2$d мин</string>
     <string name="equil_common_history_bolus_value">%1$.2f ед</string>
-    <!-- equil - Commands -->
+    
     <string name="equil_common_cmd_set_bolus">Настроить болюс</string>
     <string name="equil_common_cmd_cancel_bolus">Отменить болюс</string>
     <string name="equil_common_cmd_set_tbr">Установить временный базал</string>
@@ -61,7 +60,7 @@
     <string name="equil_common_cmd_unpair">Выполнить разъединение с Equil</string>
     <string name="equil_common_cmd_set_extended_bolus">Настроить пролонгированный болюс</string>
     <string name="equil_common_cmd_cancel_extended_bolus">Отменить пролонгированный болюс</string>
-    <!--    推杆回退-->
+    
     <string name="equil_common_change_insulin">Начать втягивание стержни</string>
     <string name="equil_common_set_alarm_tone">Настроить только звук уведомления</string>
     <string name="equil_common_set_alarm_shake">Настроить только вибрацию</string>

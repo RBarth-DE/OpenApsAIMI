@@ -1,6 +1,6 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <!-- MedtrumPump -->
+    
     <string name="medtrum">Medtrum</string>
     <string name="medtrum_pump_shortname">ΜT</string>
     <string name="medtrum_pump_description">Ενσωμάτωση της αντλίας για Medtrum Nano και Medtrum 300U</string>
@@ -11,13 +11,12 @@
     <string name="pump_is_suspended_day_max">Η αντλία αναστέλλεται λόγω υπέρβασης της ημερήσιας μέγιστης ινσουλίνης</string>
     <string name="patch_not_active">Μη ενεργοποιημένο Patch</string>
     <string name="pump_setting_failed">Η ρύθμιση των ρυθμίσεων χρήστη στην αντλία απέτυχε!</string>
-    <!-- overview fragment -->
+    
     <string name="last_connection_label">Τελευταία σύνδεση</string>
     <string name="active_bolus_label">Ενεργό bolus</string>
     <string name="pump_state_label">Κατάσταση Αντλίας</string>
     <string name="active_alarms_label">Ενεργοί συναγερμοί</string>
     <string name="basal_type_label">Τύπος Βασικού</string>
-    <string name="basal_rate_label">Βασικός Ρυθμός</string>
     <string name="pump_type_label">Τύπος Αντλίας</string>
     <string name="fw_version_label">Έκδοση FW</string>
     <string name="patch_no_label">Patch no</string>
@@ -26,7 +25,7 @@
     <string name="change_patch_label">Αλλαγή Patch</string>
     <string name="requested_by_user" comment="26 characters max for translation">Ζητήθηκε από το χρήστη</string>
     <string name="expiry_not_enabled">Μη ενεργοποιημένο</string>
-    <!-- Alarm strings -->
+    
     <string name="alarm_none">Κανένα</string>
     <string name="alarm_pump_low_battery">Χαμηλή μπαταρία αντλίας</string>
     <string name="alarm_pump_low_reservoir">Χαμηλή δεξαμενή αντλίας</string>
@@ -46,7 +45,7 @@
     <string name="alarm_battery_out">Χωρίς μπαταρία</string>
     <string name="alarm_no_calibration">Χωρίς βαθμονόμηση</string>
     <string name="pump_time_update_failed">Αποτυχία ενημέρωσης της ζώνης ώρας της αντλίας, αναβολή μηνυμάτων και ανανεώστε με μη αυτόματο τρόπο.</string>
-    <!-- wizard-->
+    
     <string name="retry">Επανάληψη</string>
     <string name="step_prepare_patch">Ενεργοποίηση Patch</string>
     <string name="step_prepare_patch_connect">Σύνδεση και γέμισμα</string>
@@ -69,12 +68,10 @@
     <string name="do_not_attach_to_body">Μην τοποθετείτε ακόμη το patch στο σώμα σας.</string>
     <string name="half_press_needle">Μισοπατήστε το κουμπί της βελόνας. Μετά πατήστε <b>Επόμενο</b> για να αρχίσει η πλήρωση.</string>
     <string name="wait_for_priming">Παρακαλώ περιμένετε να ολοκληρωθεί η πλήρωση.</string>
-    <string name="priming_error">Αποτυχία πλήρωσης, πατήστε <b>Επανάληψη</b> για να προσπαθήσετε ξανά.</string>
     <string name="press_next">Πατήστε <b>Επόμενο</b> για να συνεχίσετε.</string>
     <string name="press_next_to_start_activation">Πατήστε <b>Επόμενο</b> για να ξεκινήσετε την ενεργοποίηση.</string>
     <string name="remove_safety_lock">Αφαιρέστε το κλείδωμα ασφάλειας. Τοποθετήστε την αντλία στο σώμα. Πατήστε το κουμπί της βελόνας.</string>
     <string name="activating_pump">Ενεργοποίηση αντλίας και καθορισμός αρχικού βασικού ρυθμού. Παρακαλώ περιμένετε.</string>
-    <string name="activating_error">Αποτυχία ενεργοποίησης, πατήστε <b>Επανάληψη</b> για να προσπαθήσετε ξανά.</string>
     <string name="activating_complete">Νέο patch ενεργοποιήθηκε. Απομένουν %.2f μονάδες.</string>
     <string name="press_OK_to_return">Πατήστε <b>OK</b> για να επιστρέψετε στην κύρια οθόνη.</string>
     <string name="deactivate_sure">Είστε βέβαιοι ότι θέλετε να απενεργοποιήσετε το τρέχον patch;</string>
@@ -89,7 +86,7 @@
     <string name="activation_in_progress">Ωχ! Κάτι πήγε στραβά, φαίνεται ότι υπάρχει ήδη μια ενεργοποίηση σε εξέλιξη.</string>
     <string name="press_retry_or_discard">Πατήστε <b>Επόμενο</b> για να συνεχίσετε την ενεργοποίηση ή <b>Απόρριψη</b> για να επαναφέρετε την κατάσταση ενεργοποίησης.</string>
     <string name="reading_activation_status">Παρακαλώ περιμένετε, ανάγνωση κατάστασης ενεργοποίησης από την αντλία.</string>
-    <!-- settings-->
+    
     <string name="sn_input_title">Σειριακός Αριθμός</string>
     <string name="sn_input_invalid">Μη έγκυρος σειριακός αριθμός!</string>
     <string name="alarm_setting_title">Ρυθμίσεις συναγερμού</string>
@@ -98,10 +95,10 @@
     <string name="patch_expiration_summary">Όταν ενεργοποιηθεί, το patch θα λήξει μετά από 3 ημέρες, με περίοδο χάριτος 8 ώρες μετά από αυτό.</string>
     <string name="hourly_max_insulin_summary">Καθορίστε τις μέγιστες μονάδες ινσουλίνης που επιτρέπονται ανά ώρα. Αν ξεπεραστείη ποσότητα αυτή, η αντλία θα αναστείλει.</string>
     <string name="daily_max_insulin_summary">Καθορίστε τις μέγιστες μονάδες ινσουλίνης που επιτρέπονται ανά ημέρα. Αν ξεπεραστεί η ποσότητα αυτή, η αντλία θα αναστείλει.</string>
-    <!-- treatment state-->
+    
     <string name="getting_pump_status">Φόρτωση κατάστασης αντλίας</string>
     <string name="getting_bolus_status">Φόρτωση κατάστασης bolus</string>
     <string name="getting_temp_basal_status">Λήψη κατάστασης Προσ Ρυθμού</string>
     <string name="setting_pump_settings">Ρύθμιση επιλογών χρήστη</string>
-    <!-- bolus-->
+    
 </resources>

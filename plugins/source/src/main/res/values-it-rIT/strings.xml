@@ -1,6 +1,6 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <!-- Source -->
+    
     <string name="ns_client_bg">BG NSClient</string>
     <string name="ns_client_bg_short">BG NS</string>
     <string name="description_source_ns_client">Scarica dati glicemia da Nightscout</string>
@@ -25,20 +25,18 @@
     <string name="random_bg">BG casuale</string>
     <string name="description_source_random_bg">Genera dati glicemia casuali (solo modalità demo)</string>
     <string name="random_bg_short">BG</string>
-    <string name="direction">direzione</string>
-    <!-- Patched Syai Tag App -->
     <string name="syai_tag_app">Syai</string>
     <string name="description_source_patched_syai_tag_app">Ricevi dati della glicemia dall\'app Ottai.</string>
-    <!-- Patched SI App -->
+    
     <string name="patched_si_app">App SI</string>
     <string name="description_source_patched_si_app">Ricevi i dati di glucosio dall\'app Sibionic SI patchata.</string>
-    <!-- Patched Sino App -->
+    
     <string name="patched_sino_app">App Sino</string>
     <string name="description_source_patched_sino_app">Ricevi i dati di glucosio dall\'app Sino patchata.</string>
-    <!-- Notification Reader -->
+    
     <string name="notification_reader">Lettore Notifiche</string>
     <string name="description_source_notification_reader">Leggi i valori di glucosio dalle notifiche pubblicate dalle app CGM ufficiali (Dexcom, Medtronic, Eversense, ecc.).</string>
-    <!-- Permission rationales -->
+    
     <string name="permission_dexcom_title">Dexcom CGM</string>
     <string name="permission_dexcom_description">L\'applicazione ha bisogno dell\'autorizzazione per ricevere i dati CGM dall\'app Dexcom</string>
     <string name="permission_notification_listener_title">Accesso notifiche</string>

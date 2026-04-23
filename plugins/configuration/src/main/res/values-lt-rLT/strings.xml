@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version='1.0' encoding='utf-8'?>
 <resources>
     <string name="units">Vienetai</string>
     <string name="setupwizard_units_prompt">Pasirinkite glikemijos matavimo vienetus</string>
@@ -17,7 +17,7 @@
     <string name="high_mark_comment">Aukštoji tikslinės glikemijos riba (tik rodymui)</string>
     <string name="storedsettingsfound">Rasti išsaugoti nustatymai</string>
     <string name="master_password_summary">Pagrindinis slaptažodis naudojamas atsarginės nustatymų kopijos šifravimui ir programos saugumui užtikrinti. Atsiminkite jį arba užsirašykite saugioje vietoje.</string>
-    <!-- current_master_password moved to core/ui/protection.xml -->
+    
     <string name="common_values">Naudokite gausiausio patiekalo, kurį paprastai valgote, reikšmes\n</string>
     <string name="syncinfotext">Sinchronizuokite duomenis debesyje. Jūs galite kol kas praleisti šį veiksmą, bet negalėsite baigti mokymosi programos, kol nenustatysite duomenų perdavimo į Nightscout arba Tidepool.</string>
     <string name="status">Statusas:</string>
@@ -32,33 +32,27 @@
     <string name="startobjective">Pradėti Jūsų pirmąjį tikslą</string>
     <string name="setupwizard_pump_riley_link_status">RileyLink statusas:</string>
     <string name="readstatus">Statuso nuskaitymas</string>
-    <!-- Provider-agnostic cloud export/import strings -->
+    
     <string name="request">Užklausa</string>
-    <string name="error_asking_for_permissions">Leidimo užklausos klaida</string>
     <string name="alert_dialog_permission_battery_optimization_failed">Šis įrenginys nepalaiko baterijos optimizavimo išimčių - galite patirti veikimo nesklandumų.</string>
-    <!--    ConfigBuilder-->
+    
     <string name="configbuilder_pump_description">Kokią pompą naudosite su AAPS?</string>
     <string name="configbuilder_aps_description">Kuris DKS algoritmas turėtų koreguoti terapiją?</string>
-    <string name="configbuilder_general_description">Bendrieji įskiepiai, kurie gali praversti.</string>
-    <string name="configbuilder_constraints_description">Kokie apribojimai taikomi?</string>
-    <string name="configbuilder_loop_description">Naudokite, norėdami aktyvuoti AAPS ciklą.</string>
-    <string name="configbuilder_insulin_description">Kokio tipo insuliną naudojate?</string>
     <string name="configbuilder_bgsource_description">Iš kur AAPS gaus duomenis?</string>
-    <string name="configbuilder_smoothing_description">Pasirinkite glodinimo algoritmą</string>
     <string name="configbuilder_sensitivity_description">Kurį jautrumo nustatymo algoritmą naudosite?</string>
     <string name="allow_hardware_pump_text">Dėmesio: jei aktyvuosite ir prijungsite realią pompą, AAPS nukopijuos bazės nustatymus iš profilio į pompą, todėl nustatymai pompoje gali pasikeisti. Įsitikinkite, kad bazės nustatymai AAPS yra teisingi. Jei nesate tikri arba nenorite keisti bazės nustatymų jūsų pompoje, paspauskite Atšaukti ir atlikite prijungimą prie pompos vėliau.</string>
     <string name="nsclient_version_does_not_match">AAPSClient ir AAPS versijos nesutampa. Atnaujinkite.</string>
-    <!--ImportExport-->
-    <!-- password_preferences_encrypt_prompt moved to core:ui -->
-    <!-- preferences_export_canceled moved to core:ui -->
-    <!-- export_to moved to core:ui -->
-    <!-- master_password_missing moved to core:ui -->
-    <!-- Maintenance -->
-    <!-- Maintenance -->
-    <!-- maintenance_email moved to core:keys module -->
-    <!-- Google Drive Storage -->
-    <!-- Import source selection dialog -->
-    <!-- Google Drive error messages (used by GoogleDriveManager) -->
-    <!-- Provider-agnostic cloud storage strings -->
-    <!-- Authorization status strings -->
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
 </resources>

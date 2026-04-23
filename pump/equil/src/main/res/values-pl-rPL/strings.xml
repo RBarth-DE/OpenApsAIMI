@@ -1,7 +1,7 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version='1.0' encoding='utf-8'?>
 <resources>
     <string name="equil_pump_description">Pompa Equil 5.3 lub nowsza </string>
-    <!--  start  -->
+    
     <string name="equil_basal_speed">Baza podstawowa</string>
     <string name="equil_dressing">Zmień zbiornik</string>
     <string name="equil_dressing_onkey_msg">Automatycznie przesuwam tłok na dno zbiornika. Zatrzyma się sam po dotarciu na dół. Kliknij \'Zatrzymaj\', aby w razie potrzeby przerwać.</string>
@@ -21,7 +21,6 @@
     <string name="equil_tone_mode_shake">Tylko wibracje</string>
     <string name="equil_tone_mode_tone">Tylko dźwięk</string>
     <string name="equil_tone_mode_tone_and_shake">Wibracje i dźwięk</string>
-    <string name="equil_unit_u">%1$s U</string>
     <string name="equil_ble_config_confirmation_title">Paruj pompę Equil</string>
     <string name="equil_error">Błąd połączenia</string>
     <string name="equil_change">Zmień pompę</string>
@@ -47,7 +46,7 @@
     <string name="equil_shutdown">Auto wyłączenie Equila</string>
     <string name="equil_common_history_tbr_value">Dawka：%1$.2f U, Czas trwania：%2$d min</string>
     <string name="equil_common_history_bolus_value">%1$.2f U</string>
-    <!-- equil - Commands -->
+    
     <string name="equil_common_cmd_set_bolus">Ustaw bolus</string>
     <string name="equil_common_cmd_cancel_bolus">Anuluj bolus</string>
     <string name="equil_common_cmd_set_tbr">Ustaw tymczasową dawkę bazową</string>
@@ -61,7 +60,7 @@
     <string name="equil_common_cmd_unpair">Rozłącz Equil</string>
     <string name="equil_common_cmd_set_extended_bolus">Ustaw bolus przedłużony</string>
     <string name="equil_common_cmd_cancel_extended_bolus">Anuluj bolus przedłużony</string>
-    <!--    推杆回退-->
+    
     <string name="equil_common_change_insulin">Cofanie tłoczka</string>
     <string name="equil_common_set_alarm_tone">Konfiguruj alarmy: tylko dźwięk</string>
     <string name="equil_common_set_alarm_shake">Konfiguruj alarmy: tylko wibracje</string>

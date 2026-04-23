@@ -1,6 +1,6 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <!-- MedtrumPump -->
+    
     <string name="medtrum">Medtrum</string>
     <string name="medtrum_pump_shortname">MT</string>
     <string name="medtrum_pump_description">Intégration des pompes Medtrum Nano et Medtrum 300U</string>
@@ -13,13 +13,12 @@
     <string name="patch_not_active">Patch non activé</string>
     <string name="pump_setting_failed">La configuration des paramètres de la pompe a échoué!</string>
     <string name="pump_sync_error">Erreur lors de la synchronisation de l\'historique de la pompe, un enregistrement a été ignoré. Vérifiez l\'onglet de traitement pour vérifier si le bolus est correctement synchronisé. Mettez en veille et si l\'erreur continue d\'apparaître, changer le patch ou la pompe.</string>
-    <!-- overview fragment -->
+    
     <string name="last_connection_label">Dernière connexion</string>
     <string name="active_bolus_label">Bolus actif</string>
     <string name="pump_state_label">État de la pompe</string>
     <string name="active_alarms_label">Alarmes actives</string>
     <string name="basal_type_label">Type de Basale</string>
-    <string name="basal_rate_label">Débit de Basal</string>
     <string name="pump_type_label">Type de pompe</string>
     <string name="fw_version_label">Version du FW</string>
     <string name="patch_no_label">N° du Patch</string>
@@ -29,7 +28,7 @@
     <string name="change_patch_label">Changer le Patch</string>
     <string name="requested_by_user" comment="26 characters max for translation">Demandé par l\'utilisateur</string>
     <string name="expiry_not_enabled">Non activé</string>
-    <!-- Alarm strings -->
+    
     <string name="alarm_none">Aucun</string>
     <string name="alarm_pump_low_battery">Batterie de la pompe faible</string>
     <string name="alarm_pump_low_reservoir">Réservoir bas</string>
@@ -50,7 +49,7 @@
     <string name="alarm_no_calibration">Absence d\'étalonnage</string>
     <string name="pump_time_update_failed">Impossible de mettre à jour le fuseau horaire de la pompe, mettre en veille le message et rafraîchir manuellement.</string>
     <string name="bolus_error">Erreur de bolus</string>
-    <!-- wizard-->
+    
     <string name="retry">Réessayer</string>
     <string name="step_prepare_patch">Activer le Patch</string>
     <string name="step_prepare_patch_connect">Connecter et remplir</string>
@@ -74,12 +73,10 @@
     <string name="do_not_attach_to_body">Ne fixez pas encore le Patch sur le corps.</string>
     <string name="half_press_needle">Appuyez à mi-course sur le bouton de l\'aiguille. Puis appuyez sur <b>Suivant</b> pour démarrer l\'amorçage.</string>
     <string name="wait_for_priming">Merci de patienter jusqu\'à la fin de l\'amorçage.</string>
-    <string name="priming_error">Échec d\'amorçage, appuyez sur <b>Réessayez</b> pour éssayer à nouveau.</string>
     <string name="press_next">Appuyez sur <b>Suivant</b> pour continuer.</string>
     <string name="press_next_to_start_activation">Appuyez sur <b>Suivant</b> pour démarrer l\'activation.</string>
     <string name="remove_safety_lock">Retirez le verrou de sécurité. Fixez la pompe au corps. Appuyez sur le bouton de l\'aiguille.</string>
     <string name="activating_pump">Activation de la pompe et du débit de base initial. Veuillez patienter.</string>
-    <string name="activating_error">Échec de l\'activation, appuyez sur <b>Réessayez</b> pour éssayer à nouveau.</string>
     <string name="activating_complete">Nouveau Patch activé. %.2f Unités restantes.</string>
     <string name="can_export_settings">Vous pouvez exporter les paramètres pour pouvoir récupérer cette session de patch plus tard.</string>
     <string name="press_OK_to_return">Appuyez sur <b>OK</b> pour revenir à l\'écran principal.</string>
@@ -95,7 +92,7 @@
     <string name="activation_in_progress">Oups ! Quelque chose s\'est mal passé, il semble qu\'il y ait déjà une activation en cours.</string>
     <string name="press_retry_or_discard">Appuyez sur <b>Suivant</b> pour reprendre l\'activation ou <b>Supprimer</b> pour réinitialiser l\'état d\'activation.</string>
     <string name="reading_activation_status">Veuillez patienter, lecture de l\'état d\'activation de la pompe.</string>
-    <!-- settings-->
+    
     <string name="sn_input_title">Numéro de série</string>
     <string name="sn_input_invalid">Numéro de série invalide !</string>
     <string name="alarm_setting_title">Paramètres d\'Alarme</string>
@@ -112,13 +109,13 @@
     <string name="daily_max_insulin_summary">Spécifiez le nombre maximum d\'unités d\'insuline autorisées par jour. Si ce montant est dépassé, la pompe sera suspendue.</string>
     <string name="scan_on_connection_error_title">Scanner en cas d\'erreur de connexion</string>
     <string name="scan_on_connection_error_summary">AVERTISSEMENT : Activez uniquement en cas de problèmes de connexion. Si activé, le pilote recherche à nouveau la pompe avant de tenter de se reconnecter à la pompe. Assurez-vous d\'avoir défini l\'autorisation d\'emplacement sur \"Toujours autoriser\" </string>
-    <!-- treatment state-->
+    
     <string name="getting_pump_status">Mise à jour de l\'état pompe</string>
     <string name="syncing_records">Synchronisation des enregistrements, %1$d restant</string>
     <string name="getting_bolus_status">Obtenir l\'état du bolus</string>
     <string name="getting_temp_basal_status">Obtenir le statut du basal temporaire</string>
     <string name="setting_pump_settings">Définir les options utilisateur</string>
-    <!-- bolus-->
+    
     <string name="bolus_error_reason_user">Bolus annulé par l\'utilisateur</string>
     <string name="bolus_error_reason_not_connected">Pompe non connectée</string>
     <string name="bolus_error_reason_already_in_progress">Bolus déjà en cours</string>

@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version='1.0' encoding='utf-8'?>
 <resources>
     <string name="units">Unità</string>
     <string name="setupwizard_units_prompt">Seleziona le unità in cui vuoi visualizzare i valori</string>
@@ -17,7 +17,7 @@
     <string name="high_mark_comment">Valore più alto per l\'intervallo di visualizzazione dell\'area \"in range\"</string>
     <string name="storedsettingsfound">Trovate impostazioni memorizzate</string>
     <string name="master_password_summary">La password master viene usata per la crittografia del backup e per gestire la sicurezza nell\'applicazione. Ricordala o conservala in un luogo sicuro.</string>
-    <!-- current_master_password moved to core/ui/protection.xml -->
+    
     <string name="common_values">Usa i valori del cibo più abbondante che mangi di solito\n</string>
     <string name="syncinfotext">Sincronizza i dati nel cloud. Puoi saltare questa parte ora, ma non sarai in grado di superare gli obiettivi fino a quando non avrai impostato il client Nightscout o Tidepool.</string>
     <string name="status">Stato:</string>
@@ -37,37 +37,31 @@
     <string name="setupwizard_permissions_info">AAPS ha bisogno di accesso all\'archivio e di autorizzazioni per funzionare correttamente. Si prega di concedere le autorizzazioni richieste qui sotto.</string>
     <string name="setupwizard_pump_riley_link_status">Stato RileyLink:</string>
     <string name="readstatus">Lettura stato</string>
-    <!-- Provider-agnostic cloud export/import strings -->
+    
     <string name="request">Richiesta</string>
-    <string name="error_asking_for_permissions">Errore nel richiedere le autorizzazioni</string>
     <string name="alert_dialog_permission_battery_optimization_failed">Questo dispositivo non sembra supportare la whitelist dell\'ottimizzazione batteria: potrebbero verificarsi problemi di prestazioni.</string>
-    <!--    ConfigBuilder-->
+    
     <string name="configbuilder_pump_description">Quale micro vorresti usare con AAPS?</string>
     <string name="configbuilder_aps_description">Quale algoritmo APS dovrebbe apportare aggiustamenti terapeutici?</string>
-    <string name="configbuilder_general_description">Questi sono alcuni plugin generali che potresti trovare utili.</string>
     <string name="configbuilder_sync_description">Plugin di caricamento, sincronizzazione e comunicazione dati.</string>
-    <string name="configbuilder_constraints_description">Quali vincoli sono applicati?</string>
-    <string name="configbuilder_loop_description">Usalo per attivare l\'integrazione del loop di AAPS.</string>
-    <string name="configbuilder_insulin_description">Quale tipo di insulina stai usando?</string>
     <string name="configbuilder_bgsource_description">Da dove AAPS dovrebbe ottenere i suoi dati?</string>
-    <string name="configbuilder_smoothing_description">Scegli algoritmo di smoothing</string>
     <string name="configbuilder_sensitivity_description">Quale algoritmo di sensibilità dovrebbe essere usato?</string>
     <string name="allow_hardware_pump_text">Attenzione: se attivi e connetti un micro, AAPS copierà le impostazioni della basale dal profilo al micro, sovrascrivendo la velocità basale esistente memorizzata sul micro. Assicurati di avere la giusta impostazione della basale in AAPS. Se non sei sicuro o non vuoi sovrascrivere le impostazioni della basale sul micro, premi annulla e ripeti il processo in un altro momento.</string>
     <string name="nsclient_version_does_not_match">La versione di AAPSClient non corrisponde alla versione di AAPS. Aggiorna.</string>
-    <!--ImportExport-->
-    <!-- password_preferences_encrypt_prompt moved to core:ui -->
-    <!-- preferences_export_canceled moved to core:ui -->
-    <!-- export_to moved to core:ui -->
-    <!-- master_password_missing moved to core:ui -->
-    <!-- Maintenance -->
-    <!-- Maintenance -->
-    <!-- maintenance_email moved to core:keys module -->
-    <!-- Google Drive Storage -->
-    <!-- Import source selection dialog -->
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
     <string name="loading">Caricamento…</string>
     <string name="warning_wrong_directory_selected">Directory Selezionata Errata</string>
     <string name="warning_wrong_directory_message">Hai selezionato la sottodirectory \"%1$s\" invece della directory AAPS principale. Seleziona la directory AAPS principale. L\'applicazione creerà e gestirà automaticamente le sottodirectory.</string>
-    <!-- Google Drive error messages (used by GoogleDriveManager) -->
-    <!-- Provider-agnostic cloud storage strings -->
-    <!-- Authorization status strings -->
+    
+    
+    
 </resources>

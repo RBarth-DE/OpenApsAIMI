@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version='1.0' encoding='utf-8'?>
 <resources>
     <string name="resetpairing">Återställ parkoppling</string>
     <string name="diaconn_pairing">Diaconn parkoppling</string>
@@ -30,10 +30,8 @@
     <string name="insulinlimitviolation">Insulingräns nådd</string>
     <string name="boluserrorcode">Angivet: %1$.2f enheter. Levererat: %2$.2f enheter. Felkod: %3$s</string>
     <string name="selectedpump">Vald pump</string>
-    <string name="diaconn_g8_bluetooth_status">Bluetooth-status</string>
     <string name="bolus_step">Bolussteg</string>
     <string name="basal_step">Basalsteg</string>
-    <string name="diaconn_g8_user_options">ANVÄNDARALTERNATIV</string>
     <string name="pairfirst">Vänligen parkoppla pumpen med din telefon</string>
     <string name="processinghistory">"Behandlar "</string>
     <string name="diaconn_g8_history_tempbasal">Temp basal</string>

@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version='1.0' encoding='utf-8'?>
 <resources>
     <string name="automation_short">Auto</string>
     <string name="automation">Automatização</string>
@@ -51,7 +51,6 @@
     <string name="location_going_out">Quando sair da área definida</string>
     <string name="time_range">Intervalo de tempo</string>
     <string name="timerange_value">O tempo está entre %1$s e %2$s</string>
-    <string name="between">Entre </string>
     <string name="add_short">ADICIONAR</string>
     <string name="temptargetcompared">Alvo Temp %1$s</string>
     <string name="btdevicecompared">Ligação Bluetooth com o dispositivo %1$s %2$s</string>
@@ -78,19 +77,18 @@
     <string name="edit_short">EDITAR</string>
     <string name="preconditions">Precondições:</string>
     <string name="user_action">Ação do utilizador</string>
-    <string name="remove_selected_items">Remover itens selecionados</string>
     <string name="count_selected">%1$d selecionados</string>
     <string name="system_automation">Automação do sistema</string>
     <string name="run_automations">Executar automações</string>
     <string name="add_automation">Adicionar regra</string>
     <string name="stop_processing">Parar processamento</string>
-    <!--    Reminders-->
+    
     <string name="time_to_eat">Hora de comer!\nExecutar assistente de Bólus e fazer cálculo novamente.</string>
     <string name="time_to_bolus">Hora de fazer o bólus!\nExecute o assistente de bólus e faça o cálculo novamente.</string>
     <string name="error_setting_reminder">Erro ao configurar alarme futuro</string>
-    <!--    Autotune-->
-    <!--    Steps count-->
-    <!--    SMB mode-->
-    <!--    Map Picker (OpenStreetMap)-->
-    <!-- Permission rationales -->
+    
+    
+    
+    
+    
 </resources>

@@ -1,6 +1,6 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <!-- MedtrumPump -->
+    
     <string name="medtrum">Medtrum</string>
     <string name="medtrum_pump_shortname">MT</string>
     <string name="medtrum_pump_description">Integracja z pompami Medtrum Nano i Medtrum 300U</string>
@@ -13,13 +13,12 @@
     <string name="patch_not_active">Patch nie został aktywowany</string>
     <string name="pump_setting_failed">Wpisanie ustawień użytkownika do pompy nie powiodło się!</string>
     <string name="pump_sync_error">Wystąpił błąd podczas synchronizacji historii z pompy, rekord został pominięty. Zajżyj to dialogu Terapia, aby sprawdzić, czy bolus został poprawnie zsynchronizowany. Wycisz to powiadomienie, a jeśli błąd nadal występuje zmień patch lub bazę pompy.</string>
-    <!-- overview fragment -->
+    
     <string name="last_connection_label">Ostatnie połączenie</string>
     <string name="active_bolus_label">Aktywny bolus</string>
     <string name="pump_state_label">Status pompy</string>
     <string name="active_alarms_label">Aktywne alarmy</string>
     <string name="basal_type_label">Typ bazy</string>
-    <string name="basal_rate_label">Dawka bazowa</string>
     <string name="pump_type_label">Typ pompy</string>
     <string name="fw_version_label">Wersja FW</string>
     <string name="patch_no_label">Nr Patcha</string>
@@ -29,7 +28,7 @@
     <string name="change_patch_label">Zmień Patch</string>
     <string name="requested_by_user" comment="26 characters max for translation">Na życzenie użytkownika</string>
     <string name="expiry_not_enabled">Nie włączono</string>
-    <!-- Alarm strings -->
+    
     <string name="alarm_none">Brak</string>
     <string name="alarm_pump_low_battery">Niski poziom baterii pompy</string>
     <string name="alarm_pump_low_reservoir">Niski poziom zbiornika pompy</string>
@@ -50,7 +49,7 @@
     <string name="alarm_no_calibration">Brak kalibracji</string>
     <string name="pump_time_update_failed">Nie udało się zaktualizować strefy czasowej pompy, wycisz to powiadomienie i zaktualizuj ręcznie.</string>
     <string name="bolus_error">Błąd bolusa</string>
-    <!-- wizard-->
+    
     <string name="retry">Spróbuj ponownie</string>
     <string name="step_prepare_patch">Aktywuj Patch</string>
     <string name="step_prepare_patch_connect">Połącz i wypełnij</string>
@@ -74,12 +73,10 @@
     <string name="do_not_attach_to_body">Nie należy jeszcze przymocowywać Patcha do ciała.</string>
     <string name="half_press_needle">Wciśnij do połowy przycisk igły. Następnie naciśnij <b>Dalej</b> aby rozpocząć napełnianie.</string>
     <string name="wait_for_priming">Proszę poczekaj na zakończenie napełniania.</string>
-    <string name="priming_error">Błąd podczas napełniania, naciśnij <b>Spróbuj ponownie</b>, aby spróbować ponownie.</string>
     <string name="press_next">Naciśnij <b>Dalej</b>, aby kontynuować.</string>
     <string name="press_next_to_start_activation">Naciśnij <b>Dalej</b>, aby rozpocząć aktywację.</string>
     <string name="remove_safety_lock">Zdejmij blokadę zabezpieczającą. Przymocuj pompę do ciała. Naciśnij przycisk igły.</string>
     <string name="activating_pump">Aktywowanie pompy i ustawianie początkowej dawki bazowej. Proszę czekać.</string>
-    <string name="activating_error">Błąd podczas aktywacji, naciśnij <b>Spróbuj ponownie</b>, aby spróbować ponownie.</string>
     <string name="activating_complete">Nowy Patch aktywowany. Pozostało %.2f jednostek.</string>
     <string name="can_export_settings">Możesz wyeksportować ustawienia, aby móc odzyskać tę sesję patcha później.</string>
     <string name="press_OK_to_return">Naciśnij <b>OK</b>, aby powrócić do ekranu głównego.</string>
@@ -95,7 +92,7 @@
     <string name="activation_in_progress">Ups! Coś poszło nie tak. Wygląda na to, że aktywacja jest już w toku.</string>
     <string name="press_retry_or_discard">Naciśnij <b>Dalej</b> aby wznowić aktywację lub <b>Odrzuć</b> aby zresetować stan aktywacji.</string>
     <string name="reading_activation_status">Proszę czekać, odczytywanie stanu aktywacji z pompy.</string>
-    <!-- settings-->
+    
     <string name="sn_input_title">Numer seryjny</string>
     <string name="sn_input_invalid">Nieprawidłowy numer seryjny!</string>
     <string name="alarm_setting_title">Ustawienia alarmu</string>
@@ -112,13 +109,13 @@
     <string name="daily_max_insulin_summary">Określ maksymalną dozwoloną ilość jednostek insuliny podanych na dzień. Po przekroczeniu tego limitu pompa zawiesi podaż insuliny.</string>
     <string name="scan_on_connection_error_title">W razie błędów połączenia wykonaj skanowanie</string>
     <string name="scan_on_connection_error_summary">OSTRZEŻENIE: Włącz tylko wtedy, gdy masz problemy z połączeniem. Jeśli włączono, sterownik skanuje w poszukiwaniu pompy przed ponowną próbą podłączenia do pompy. Upewnij się, że masz uprawnienia do lokalizacji ustawione na \"Zawsze zezwalaj\" dla AAPS w ustawieniach Androida </string>
-    <!-- treatment state-->
+    
     <string name="getting_pump_status">Uzyskiwanie statusu pompy</string>
     <string name="syncing_records">Synchronizuję rekordy, pozostało %1$d</string>
     <string name="getting_bolus_status">Uzyskanie statusu bolusa</string>
     <string name="getting_temp_basal_status">Uzyskiwanie statusu bazy tymczasowej</string>
     <string name="setting_pump_settings">Ustawienie opcji użytkownika</string>
-    <!-- bolus-->
+    
     <string name="bolus_error_reason_user">Bolus anulowany przez użytkownika</string>
     <string name="bolus_error_reason_not_connected">Pompa nie podłączona</string>
     <string name="bolus_error_reason_already_in_progress">Bolus jest już w toku</string>

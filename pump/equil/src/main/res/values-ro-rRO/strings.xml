@@ -1,9 +1,9 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version='1.0' encoding='utf-8'?>
 <resources>
     <string name="equil_name">Equil 5.3</string>
     <string name="equil_name_short">EQ</string>
     <string name="equil_pump_description">Pompă plasture Equil 5.3 sau mai nouă </string>
-    <!--  start  -->
+    
     <string name="equil_basal_speed">Bazală de bază</string>
     <string name="equil_dressing">Schimbare rezervor</string>
     <string name="equil_dressing_onkey_msg">Mutarea automată a pistonului în partea de jos a rezervorului. Se va opri automat când ajunge în partea de jos. Apasă pe \'Oprire\' pentru a întrerupe dacă este necesar.</string>
@@ -30,7 +30,6 @@
     <string name="equil_tone_mode_shake">Doar vibrare</string>
     <string name="equil_tone_mode_tone">Doar sunet</string>
     <string name="equil_tone_mode_tone_and_shake">Vibrare și sunet</string>
-    <string name="equil_unit_u">%1$s U</string>
     <string name="equil_unbind_content">Această operațiune va opri infuzia de insulină și va retrage pistonul pompei până la capăt! De asemenea, va șterge legătura!</string>
     <string name="equil_ble_config_confirmation_title">Asociere pompă plasture Equil</string>
     <string name="equil_error">Eroare conexiune</string>
@@ -57,7 +56,7 @@
     <string name="equil_shutdown">Oprire automată Equil</string>
     <string name="equil_common_history_tbr_value">Rată: %1$.2f U/H, durată: %2$d minute</string>
     <string name="equil_common_history_bolus_value">%1$.2f U</string>
-    <!-- equil - Commands -->
+    
     <string name="equil_common_cmd_set_bolus">Setați bolus</string>
     <string name="equil_common_cmd_cancel_bolus">Anulați bolus</string>
     <string name="equil_common_cmd_set_tbr">Setați rată bazală temporară</string>
@@ -71,7 +70,7 @@
     <string name="equil_common_cmd_unpair">Dezasociați Equil</string>
     <string name="equil_common_cmd_set_extended_bolus">Setați bolusul extins</string>
     <string name="equil_common_cmd_cancel_extended_bolus">Anulați bolusul extins</string>
-    <!--    推杆回退-->
+    
     <string name="equil_common_change_insulin">Retragere tijă de împingere</string>
     <string name="equil_common_set_alarm_tone">Configurare doar pentru notificare audio</string>
     <string name="equil_common_set_alarm_shake">Configurare doar pentru vibrații</string>
@@ -117,7 +116,6 @@
     <string name="equil_history_item18">Infuzie anormală oprită</string>
     <string name="equil_common_overview_button_suspend_delivery">Suspendare</string>
     <string name="equil_common_overview_button_resume_delivery">Reluați administrarea</string>
-    <string name="equil_common_overview_tbr_value">%1$s @%2$s (%3$d/%4$d min)</string>
     <string name="equil_common_moments_ago">Momente în urmă</string>
     <string name="equil_common_less_than_a_minute_ago">Mai puțin de un minut în urmă</string>
     <string name="equil_common_time_ago">%1$s în urmă</string>

@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version='1.0' encoding='utf-8'?>
 <resources>
     <string name="resetpairing">Zrušit párování</string>
     <string name="diaconn_pairing">Párování pumpy Diaconn</string>
@@ -30,10 +30,8 @@
     <string name="insulinlimitviolation">Překročen limit inzulínu</string>
     <string name="boluserrorcode">Požadováno: %1$.2fU Doručeno: %2$.2fU Chyba: %3$s</string>
     <string name="selectedpump">Vybraná pumpa</string>
-    <string name="diaconn_g8_bluetooth_status">Stav Bluetooth</string>
     <string name="bolus_step">Krok bolusu</string>
     <string name="basal_step">Krok bazálu</string>
-    <string name="diaconn_g8_user_options">UŽIVATELSKÉ VOLBY</string>
     <string name="pairfirst">Prosím, spárujte pumpu s telefonem!</string>
     <string name="processinghistory">"Zpracovávám Událost "</string>
     <string name="diaconn_g8_history_tempbasal">Dočasný Bazál</string>

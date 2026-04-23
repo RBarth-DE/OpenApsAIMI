@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version='1.0' encoding='utf-8'?>
 <resources>
     <string name="resetpairing">Eşleştirmeyi Sıfırla</string>
     <string name="diaconn_pairing">Diaconn Pompa Eşleştirme</string>
@@ -30,10 +30,8 @@
     <string name="insulinlimitviolation">İnsülin limit ihlali</string>
     <string name="boluserrorcode">İstenen: %1$.2fU Teslim edilen: %2$.2fU Hata kodu: %3$s</string>
     <string name="selectedpump">Seçilen pompa</string>
-    <string name="diaconn_g8_bluetooth_status">Bluetooth Durumu</string>
     <string name="bolus_step">Bolus Adımı</string>
     <string name="basal_step">Bazal Adımı</string>
-    <string name="diaconn_g8_user_options">KULLANICI SEÇENEKLERİ</string>
     <string name="pairfirst">Lütfen pompanızı telefonunuzla eşleştirin!</string>
     <string name="processinghistory">"Etkinlik İşleniyor "</string>
     <string name="diaconn_g8_history_tempbasal">Geçici Bazal</string>

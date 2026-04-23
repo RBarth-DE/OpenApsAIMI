@@ -1,23 +1,23 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <!-- PhoneChecker -->
-    <!-- DST Helper -->
+    
+    
     <string name="dst_in_24h_warning">Mudança do horário de verão em 24h ou menos</string>
     <string name="dst_loop_disabled_warning">Alteração do horário de verão há menos de 3 horas. Circuito fechado desativado</string>
-    <!-- Storage constraint -->
+    
     <string name="disk_full">Libere pelo menos %1$d MB do armazenamento interno! ‘Loop’ desativado!</string>
-    <!-- Version Checker -->
+    
     <string name="application_expired">Aplicativo expirado</string>
     <string name="running_invalid_version">Detectamos que você está executando uma versão inválida. \"Loop\" desativado!</string>
     <string name="versionavailable">Versão %1$s disponível</string>
-    <!-- Signature verifier -->
-    <!-- BG Quality -->
+    
+    
     <string name="recalculated_data_used">Dados recalculados foram utilizados</string>
     <string name="bg_too_close">Glicemia muito próxima:\n%1$s\n%2$s</string>
     <string name="a11y_bg_quality_recalculated">recalculado</string>
     <string name="a11y_bg_quality_doubles">entradas duplicadas</string>
     <string name="a11y_bg_quality_flat">Dados fixos. Considere que podem ser imprecisos.</string>
-    <!-- Safety -->
+    
     <string name="limitingextendedbolus">A limitar bólus estendido para %1$.1f U porque %2$s</string>
     <string name="limitingcarbs">A limitar carboidratos para %1$d g porque %2$s</string>
     <string name="pumpisnottempbasalcapable">A bomba não é capaz de basais temporárias</string>
@@ -27,7 +27,7 @@
     <string name="smbnotallowedinopenloopmode">SMB não permitido no modo open loop</string>
     <string name="maxvalueinpreferences">valor máx nas preferências</string>
     <string name="hardlimit">limite rígido</string>
-    <!-- Objectives -->
+    
     <string name="completed_well_done">Terminado, parabéns!</string>
     <string name="not_completed_yet">Incompleto</string>
     <string name="time_elapsed">Tempo decorrido</string>
@@ -39,8 +39,6 @@
     <string name="objectives_shortname">OBJ</string>
     <string name="description_objectives">Programa de aprendizagem</string>
     <string name="doyouwantresetstart">Deseja reiniciar o objetivo? Pode perder seu progresso.</string>
-    <string name="objectives_next_button">Próxima</string>
-    <string name="objectives_previous_button">Anterior</string>
     <string name="objectives_button_unfinish">Reiniciar objetivo</string>
     <string name="objectives_button_unstart">Reiniciar objetivo</string>
 </resources>

@@ -1,7 +1,7 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version='1.0' encoding='utf-8'?>
 <resources>
     <string name="equil_pump_description">Equil Patch 5.3 ar naujesnė pompa </string>
-    <!--  start  -->
+    
     <string name="equil_basal_speed">Bazinis insulinas</string>
     <string name="equil_dressing">Rezervuaro keitimas</string>
     <string name="equil_dressing_onkey_msg">Stūmoklis automatiškai perkeliamas į rezervuaro dugną. Pasiekus dugną, jis automatiškai sustos. Jei reikia, spustelėkite „Stop“, kad nutrauktumėte veiksmą.</string>
@@ -21,7 +21,6 @@
     <string name="equil_tone_mode_shake">Tik vibravimas</string>
     <string name="equil_tone_mode_tone">Tik garsas</string>
     <string name="equil_tone_mode_tone_and_shake">Vibracija ir garsas</string>
-    <string name="equil_unit_u">%1$s vv</string>
     <string name="equil_ble_config_confirmation_title">Suporuoti Equil patch pompą</string>
     <string name="equil_error">Sujungimo klaida</string>
     <string name="equil_change">Pakeisti pompą</string>
@@ -47,7 +46,7 @@
     <string name="equil_shutdown">Equil automatinis atsijungimas</string>
     <string name="equil_common_history_tbr_value">Dydis： %1$.2f vv/val，trukmė： %2$d minutės</string>
     <string name="equil_common_history_bolus_value">%1$.2f vv</string>
-    <!-- equil - Commands -->
+    
     <string name="equil_common_cmd_set_bolus">Nustatyti bolusą</string>
     <string name="equil_common_cmd_cancel_bolus">Atšaukti bolusą</string>
     <string name="equil_common_cmd_set_tbr">Nustatyti laikiną bazę</string>
@@ -61,7 +60,7 @@
     <string name="equil_common_cmd_unpair">Panaikinti Equil suporavimą</string>
     <string name="equil_common_cmd_set_extended_bolus">Nustatyti ištęstą bolusą</string>
     <string name="equil_common_cmd_cancel_extended_bolus">Atšaukti ištęstą bolusą</string>
-    <!--    推杆回退-->
+    
     <string name="equil_common_change_insulin">Stūmoklio atitraukimas pompoje</string>
     <string name="equil_common_set_alarm_tone">Konfigūruoti tik pranešimo garsui</string>
     <string name="equil_common_set_alarm_shake">Konfigūruoti tik vibracijai</string>

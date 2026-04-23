@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version='1.0' encoding='utf-8'?>
 <resources>
     <string name="automation_short">Автом</string>
     <string name="automation">Автоматизация</string>
@@ -51,7 +51,6 @@
     <string name="location_going_out">Когато напуснете тази зона</string>
     <string name="time_range">Времеви диапазон</string>
     <string name="timerange_value">Часът е между %1$s и %2$s</string>
-    <string name="between">Между </string>
     <string name="add_short">ДОБ</string>
     <string name="temptargetcompared">Временна цел %1$s</string>
     <string name="btdevicecompared">Bluetooth връзка към устройство %1$s %2$s</string>
@@ -78,24 +77,23 @@
     <string name="edit_short">РЕД</string>
     <string name="preconditions">Предварителни условия:</string>
     <string name="user_action">Потребителско действие</string>
-    <string name="remove_selected_items">Премахнете избраните елементи</string>
     <string name="count_selected">%1$d избрани</string>
     <string name="system_automation">Системна автомация</string>
     <string name="run_automations">Стартирай автомаций</string>
     <string name="add_automation">Добавяне на правило</string>
     <string name="stop_processing">Спри изпълнението</string>
-    <!--    Reminders-->
+    
     <string name="time_to_eat">Време за ядене!\Стартирайте болус съветника и направете изчисления отново.</string>
     <string name="time_to_bolus">Време е за болус!\nВключи болус съветника и направи изчисление отново.</string>
     <string name="error_setting_reminder">Грешка при настройка на аларма!</string>
-    <!--    Autotune-->
+    
     <string name="autotune_run">Стартирай Autotune</string>
     <string name="autotune_run_without_autoswitch">Стартиране на Autotune без смяна на профила</string>
     <string name="autotune_run_with_autoswitch">Стартиране на Autotune и автоматична смяна на профила</string>
     <string name="autotune_run_with_error">Възникна грешка по време на последното стартиране на Autotune</string>
     <string name="autotune_run_cancelled">Друго стартиране на Autotune е засечено, текущото е отказано</string>
-    <!--    Steps count-->
-    <!--    SMB mode-->
-    <!--    Map Picker (OpenStreetMap)-->
-    <!-- Permission rationales -->
+    
+    
+    
+    
 </resources>

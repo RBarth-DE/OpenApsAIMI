@@ -1,6 +1,6 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <!-- MedtrumPump -->
+    
     <string name="medtrum">Medtrum</string>
     <string name="medtrum_pump_shortname">MT</string>
     <string name="medtrum_pump_description">Integrácia pumpy Medtrum Nano a Medtrum 300U</string>
@@ -14,13 +14,12 @@
     <string name="pump_setting_failed">Načítanie uživateľského nastavenia do pumpy zlyhalo!</string>
     <string name="pump_sync_error">Chyba pri synchronizácii histórie z pumpy, záznam bol preskočený. Skontrolujte zoznam ošetrení, či je bolus správne synchronizovaný. Potvrďte a pokiaľ sa znovu ukáže chyba, vymeňte patch, alebo základňu pumpy.</string>
     <string name="patch_reset_after_primed_error">Po naplnení Patch bol zistený jeho reset! Odstráňte Patch a aktivujte nový.</string>
-    <!-- overview fragment -->
+    
     <string name="last_connection_label">Naposledy pripojené</string>
     <string name="active_bolus_label">Aktívny bolus</string>
     <string name="pump_state_label">Stav pumpy</string>
     <string name="active_alarms_label">Aktívne alarmy</string>
     <string name="basal_type_label">Typ bazálu</string>
-    <string name="basal_rate_label">Bazálna dávka</string>
     <string name="pump_type_label">Typ pumpy</string>
     <string name="fw_version_label">Verzia FW</string>
     <string name="patch_no_label">Č. Patch</string>
@@ -30,7 +29,7 @@
     <string name="change_patch_label">Vymeniť Patch</string>
     <string name="requested_by_user" comment="26 characters max for translation">Vyžiadané užívateľom</string>
     <string name="expiry_not_enabled">Nepovolené</string>
-    <!-- Alarm strings -->
+    
     <string name="alarm_none">Žiadny</string>
     <string name="alarm_pump_low_battery">Takmer vybitá batéria pumpy</string>
     <string name="alarm_pump_low_reservoir">Takmer prázdny zásobník pumpy</string>
@@ -51,7 +50,7 @@
     <string name="alarm_no_calibration">Žiadna kalibrácia</string>
     <string name="pump_time_update_failed">Nepodarilo sa aktualizovať časové pásmo pumpy, odložiť správu a aktualizovať ručne.</string>
     <string name="bolus_error">Chyba bolusu</string>
-    <!-- wizard-->
+    
     <string name="retry">Opakovať</string>
     <string name="step_prepare_patch">Aktivovať Patch</string>
     <string name="step_prepare_patch_connect">Pripojiť a naplniť</string>
@@ -76,12 +75,10 @@
     <string name="do_not_attach_to_body">Zatiaľ nepripájajte Patch k telu.</string>
     <string name="half_press_needle">Stlačte tlačítko ihly do polovice. Potom stlačte tlačítko <b>Ďalšia</b> pre spustenie plnenia.</string>
     <string name="wait_for_priming">Počkajte prosím na dokončenie plnenia.</string>
-    <string name="priming_error">Nepodarilo sa dokončiť plnenie, skúste to znovu stlačením tlačítka <b>Opakovať</b>.</string>
     <string name="press_next">Stlačte <b>Ďalšia</b> pre pokračovanie.</string>
     <string name="press_next_to_start_activation">Stlačte <b>Ďalšia</b> pre spustenie aktivácie.</string>
     <string name="remove_safety_lock">Odstráňte bezpečnostný zámok. Pripojte pumpu k telu. Stlačte tlačítko ihly.</string>
     <string name="activating_pump">Aktivácia Patch a nastavenie počiatočného bazálu. Počkajte prosím.</string>
-    <string name="activating_error">Chyba pri aktivácii, stlačte <b>Opakovať</b> pre nový pokus.</string>
     <string name="activating_complete">Nový Patch aktivovaný. Zostáva %.2f jednotiek inzulínu.</string>
     <string name="can_export_settings">Môžete exportovať nastavenia, aby ste mohli neskôr obnoviť túto reláciu pumpy.</string>
     <string name="press_OK_to_return">Stlačte <b>OK</b> pre návrat na hlavnú obrazovku.</string>
@@ -97,7 +94,7 @@
     <string name="activation_in_progress">Ups! Niečo sa pokazilo, zdá sa, že už prebieha aktivácia.</string>
     <string name="press_retry_or_discard">Stlačte <b>Ďalšia</b> pre obnovenie aktivácie alebo <b>Zahodiť</b> pre resetovanie stavu aktivácie.</string>
     <string name="reading_activation_status">Počkajte prosím, načítanie stavu aktivácie z Patch.</string>
-    <!-- settings-->
+    
     <string name="sn_input_title">Sériové číslo</string>
     <string name="sn_input_invalid">Neplatné sériové číslo!</string>
     <string name="change_sn">Zmeniť</string>
@@ -123,13 +120,13 @@
     <string name="daily_max_insulin_summary">Zadajte maximálny povolený počet jednotiek inzulínu za deň. Pokiaľ budú prekročené, pumpa bude pozastavená.</string>
     <string name="scan_on_connection_error_title">Vykonať skenovanie pri chybách pripojenia</string>
     <string name="scan_on_connection_error_summary">VAROVANIE: Povoľte iba pokiaľ máte problémy s pripojením. Pokiaľ je to povolené, skenuje pumpu znovu pred pokusom o opätovné pripojenie k pumpe. Uistite sa, že máte oprávnanie k polohe nastavené na \"Vždy povolené\"</string>
-    <!-- treatment state-->
+    
     <string name="getting_pump_status">Načítavam stav pumpy</string>
     <string name="syncing_records">Synchronizujú sa záznamy, zostáva %1$d</string>
     <string name="getting_bolus_status">Načítavam stav bolusov</string>
     <string name="getting_temp_basal_status">Načítavam stav dočasných bazálov</string>
     <string name="setting_pump_settings">Nastavenie uživateľských volieb</string>
-    <!-- bolus-->
+    
     <string name="bolus_error_reason_user">Bolus zrušený používateľom</string>
     <string name="bolus_error_reason_not_connected">Pumpa nie je pripojená</string>
     <string name="bolus_error_reason_already_in_progress">Bolus už prebieha</string>

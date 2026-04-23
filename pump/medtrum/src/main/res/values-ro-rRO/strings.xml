@@ -1,6 +1,6 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <!-- MedtrumPump -->
+    
     <string name="medtrum">Medtrum</string>
     <string name="medtrum_pump_shortname">MT</string>
     <string name="medtrum_pump_description">Integrarea pompei pentru Medtrum Nano și Medtrum 300U</string>
@@ -14,13 +14,12 @@
     <string name="pump_setting_failed">Setarea setărilor utilizatorului pe pompă a eșuat!</string>
     <string name="pump_sync_error">Eroare la sincronizarea istoricului de la pompă, o înregistrare a fost omisă. Verifică fila de tratament pentru a vedea dacă bolusul este sincronizat corect. Amână alarma și, dacă eroarea reapare, schimbă plasturele sau baza pompei.</string>
     <string name="patch_reset_after_primed_error">Resetarea plasturelui detectată după amorsare! Scoateți plasturele și începeți un nou plasture.</string>
-    <!-- overview fragment -->
+    
     <string name="last_connection_label">Ultima conexiune</string>
     <string name="active_bolus_label">Bolus activ</string>
     <string name="pump_state_label">Stare pompă</string>
     <string name="active_alarms_label">Alarme active</string>
     <string name="basal_type_label">Tip bazală</string>
-    <string name="basal_rate_label">Rată bazală</string>
     <string name="pump_type_label">Tip pompă</string>
     <string name="fw_version_label">Versiune FW</string>
     <string name="patch_no_label">Plasture nr.</string>
@@ -30,7 +29,7 @@
     <string name="change_patch_label">Schimbați plasturele</string>
     <string name="requested_by_user" comment="26 characters max for translation">Solicitat de utilizator</string>
     <string name="expiry_not_enabled">Nu este activat</string>
-    <!-- Alarm strings -->
+    
     <string name="alarm_none">Nimic</string>
     <string name="alarm_pump_low_battery">Baterie slabă în pompă</string>
     <string name="alarm_pump_low_reservoir">Rezervor scăzut în pompă</string>
@@ -51,7 +50,7 @@
     <string name="alarm_no_calibration">Fără calibrare</string>
     <string name="pump_time_update_failed">Actualizarea fusului orar al pompei a eșuat, amânați mesajul și actualizați manual.</string>
     <string name="bolus_error">Eroare bolus</string>
-    <!-- wizard-->
+    
     <string name="retry">Încercați din nou</string>
     <string name="step_prepare_patch">Activați plasturele</string>
     <string name="step_prepare_patch_connect">Conectare și umplere</string>
@@ -76,12 +75,10 @@
     <string name="do_not_attach_to_body">Nu atașați plasturele pe corp încă.</string>
     <string name="half_press_needle">Apăsați pe jumătate butonul acului. Apoi apăsați <b>Înainte</b> pentru a începe amorsarea.</string>
     <string name="wait_for_priming">Vă rugăm să așteptați finalizarea amorsării.</string>
-    <string name="priming_error">Amorsarea a eșuat, apăsați <b>Reîncearcă</b> pentru a încerca din nou.</string>
     <string name="press_next">Apăsați <b>Înainte</b> pentru a continua.</string>
     <string name="press_next_to_start_activation">Apăsați <b>Înainte</b> pentru a începe activarea.</string>
     <string name="remove_safety_lock">Înlăturați dispozitivul de siguranță. Atașați pompa la corp. Apăsați butonul acului.</string>
     <string name="activating_pump">Se activează pompa și se setează rata bazală inițială. Vă rog așteptați.</string>
-    <string name="activating_error">Activarea a eșuat, apăsați <b>Reîncearcă</b> pentru a încerca din nou.</string>
     <string name="activating_complete">Plasture nou activat. %.2f unități rămase.</string>
     <string name="can_export_settings">Puteți exporta setările pentru a putea recupera această sesiune de plasture mai târziu.</string>
     <string name="press_OK_to_return"><b>OK</b> pentru a reveni la ecranul principal.</string>
@@ -97,7 +94,7 @@
     <string name="activation_in_progress">Oops! Ceva nu a funcționat, se pare că există deja o activare în desfășurare.</string>
     <string name="press_retry_or_discard">Apăsați <b>Înainte</b> pentru a relua activarea sau <b>Renunțare</b> pentru a reseta statusul activării.</string>
     <string name="reading_activation_status">Vă rog așteptați. Se citește starea de activare din pompă.</string>
-    <!-- settings-->
+    
     <string name="sn_input_title">Număr de serie</string>
     <string name="sn_input_invalid">Număr de serie invalid!</string>
     <string name="change_sn">Schimbați</string>
@@ -123,13 +120,13 @@
     <string name="daily_max_insulin_summary">Specificați numărul maxim de unități de insulină permise pe zi. Dacă sunt depășite, pompa se va suspenda.</string>
     <string name="scan_on_connection_error_title">Scan la eroare conexiune</string>
     <string name="scan_on_connection_error_summary">ATENȚIE: Activați doar dacă aveți probleme de conexiune. Dacă este activat, driverul scanează din nou pentru pompă înainte de a încerca să se reconecteze la pompă. Asigurați-vă că aveți permisiunea de Locație setată ca „Permiteți mereu\" </string>
-    <!-- treatment state-->
+    
     <string name="getting_pump_status">Se primește starea pompei</string>
     <string name="syncing_records">Sincronizare înregistrări, %1$d rămase</string>
     <string name="getting_bolus_status">Se citește starea bolusului</string>
     <string name="getting_temp_basal_status">Se citește starea bazalei temporare</string>
     <string name="setting_pump_settings">Setare opțiuni utilizator</string>
-    <!-- bolus-->
+    
     <string name="bolus_error_reason_user">Bolus anulat de utilizator</string>
     <string name="bolus_error_reason_not_connected">Pompa nu este conectată</string>
     <string name="bolus_error_reason_already_in_progress">Bolusul este deja în desfășurare</string>

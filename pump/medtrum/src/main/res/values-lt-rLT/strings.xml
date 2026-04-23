@@ -1,6 +1,6 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <!-- MedtrumPump -->
+    
     <string name="medtrum">Medtrum</string>
     <string name="medtrum_pump_shortname">MT</string>
     <string name="medtrum_pump_description">Medtrum Nano ir Medtrum 300U pompos integracija</string>
@@ -13,13 +13,12 @@
     <string name="patch_not_active">Rezervuaras neaktyvus</string>
     <string name="pump_setting_failed">Naudotojo nustatymai neįrašyti!</string>
     <string name="pump_sync_error">Klaida įkeliant pompos istoriją, įrašas buvo praleistas. Patikrinkite terapijos skirtuką, kad įsitikintumėte, ar bolusas buvo teisingai sinchronizuotas. Atidėkite pranešimą, ir, jei klaida pasikartos, pakeiskite pompos pagrindą ar rezervuarą.</string>
-    <!-- overview fragment -->
+    
     <string name="last_connection_label">Pask. prijungimas</string>
     <string name="active_bolus_label">Aktyvus bolusas</string>
     <string name="pump_state_label">Pompos būsena</string>
     <string name="active_alarms_label">Aktyvūs aliarmai</string>
     <string name="basal_type_label">Bazės tipas</string>
-    <string name="basal_rate_label">Bazės dydis</string>
     <string name="pump_type_label">Pompos tipas</string>
     <string name="fw_version_label">FW versija</string>
     <string name="patch_no_label">Rezervuaro nr.</string>
@@ -28,7 +27,7 @@
     <string name="change_patch_label">Keisti rezerv.</string>
     <string name="requested_by_user" comment="26 characters max for translation">Inicijuota naudotojo</string>
     <string name="expiry_not_enabled">Neįjungta</string>
-    <!-- Alarm strings -->
+    
     <string name="alarm_none">Nėra</string>
     <string name="alarm_pump_low_battery">Senka pompos baterija</string>
     <string name="alarm_pump_low_reservoir">Senka rezervuaras</string>
@@ -49,7 +48,7 @@
     <string name="alarm_no_calibration">Nėra kalibracijos</string>
     <string name="pump_time_update_failed">Laiko juosta pompoje neatnaujinta, nutildykite ir atnaujinkite rankiniu būdu.</string>
     <string name="bolus_error">Boluso klaida</string>
-    <!-- wizard-->
+    
     <string name="retry">Kartoti</string>
     <string name="step_prepare_patch">Įjungti rezervuarą</string>
     <string name="step_prepare_patch_connect">Prijungti ir užpildyti</string>
@@ -73,12 +72,10 @@
     <string name="do_not_attach_to_body">Kol kas neklijuokite pompos prie kūno.</string>
     <string name="half_press_needle">Spustelėkite adatos mygtuką. Spauskite <b>Toliau</b> pildymui pradėti.</string>
     <string name="wait_for_priming">Palaukite, kol baigsis pildymas.</string>
-    <string name="priming_error">Pildymas nepavyko, spauskite <b>Kartoti</b>.</string>
     <string name="press_next">Norėdami tęsti, spauskite <b>Toliau</b>.</string>
     <string name="press_next_to_start_activation">Aktyvavimui pradėti spauskite <b>Toliau</b>.</string>
     <string name="remove_safety_lock">Pašalinkite apsaugą. Priklijuokite pompą prie kūno. Paspauskite adatos mygtuką.</string>
     <string name="activating_pump">Palaukite, kol bus aktyvuota pompa ir nustatyta pradinė bazė.</string>
-    <string name="activating_error">Aktyvavimas nepavyko, spauskite <b>Kartoti</b>.</string>
     <string name="activating_complete">Naujas rezervuaras įjungtas. Yra %.2f v insulino.</string>
     <string name="can_export_settings">Galite eksportuoti nustatymus, kad vėliau galėtumėte atkurti šios pompos sesiją.</string>
     <string name="press_OK_to_return">Norėdanu grįžti į pradžios ekraną, spauskite <b>OK</b>.</string>
@@ -94,7 +91,7 @@
     <string name="activation_in_progress">Ups! Panašu, kad įjungimo procesas jau vyksta.</string>
     <string name="press_retry_or_discard">Norėdami atnaujinti aktyvavimą, spauskite <b>Toliau</b>, norėdami atšaukti, spauskite <b>Baigti naudoti</b>.</string>
     <string name="reading_activation_status">Palaukite, nuskaitomas pompos aktyvavimo statusas.</string>
-    <!-- settings-->
+    
     <string name="sn_input_title">Serijos numeris</string>
     <string name="sn_input_invalid">Neteisingas serijos numeris!</string>
     <string name="alarm_setting_title">Aliarmų nustatymai</string>
@@ -111,13 +108,13 @@
     <string name="daily_max_insulin_summary">Nustatykite maksimalų insulino kiekį parai. Jį viršijus pompa bus sustabdyta.</string>
     <string name="scan_on_connection_error_title">Skenuoti, jei kyla ryšio klaida</string>
     <string name="scan_on_connection_error_summary">ĮSPĖJIMAS: Įjunkite tik jei patiriate ryšio nesklandumų. Įjungus bus skenuojama pompa prieš bandant prisijungti iš naujo. Įsitikinkite, kad vietos nustatymo leidimas nustatytas „Leisti visada“ </string>
-    <!-- treatment state-->
+    
     <string name="getting_pump_status">Gaunamas pompos statusas</string>
     <string name="syncing_records">Sinchronizuojami įrašai, liko %1$d</string>
     <string name="getting_bolus_status">Gaunamas boluso statusas</string>
     <string name="getting_temp_basal_status">Gaunamas laikinos bazės statusas</string>
     <string name="setting_pump_settings">Naudotojo nustatymai</string>
-    <!-- bolus-->
+    
     <string name="bolus_error_reason_user">Vartotojas atšaukė bolusą</string>
     <string name="bolus_error_reason_not_connected">Pompa neprijungta</string>
     <string name="bolus_error_reason_already_in_progress">Bolusas leidžiamas</string>

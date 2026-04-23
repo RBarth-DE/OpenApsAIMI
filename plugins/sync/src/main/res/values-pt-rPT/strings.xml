@@ -1,19 +1,19 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <!-- AAPSClient -->
-    <!-- ns_wifi_ssids moved to core:keys module -->
+    
+    
     <string name="connection_settings_title">Definições de ligação</string>
-    <!-- ns_wifi_ssids_summary moved to core:keys module -->
+    
     <string name="unsupported_ns_version">Versão sem suporte do Nightscout</string>
-    <!-- AAPSClient -->
+    
     <string name="no_write_permission">ClienteNS sem permissões para alterar dados. Tem a senha API correta?</string>
     <string name="ns_client_url">URL:</string>
-    <!-- ns_client_url_title moved to core:keys module -->
-    <!-- ns_client_url_summary moved to core:keys module -->
-    <!-- ns_client_secret_title moved to core:keys module -->
-    <!-- ns_client_secret_summary moved to core:keys module -->
-    <!-- nsclient_token_title moved to core:keys module -->
-    <!-- nsclient_token_summary moved to core:keys module -->
+    
+    
+    
+    
+    
+    
     <string name="deliver_now">Administrar agora</string>
     <string name="queue">Fila de espera:</string>
     <string name="status">Estado:</string>
@@ -22,30 +22,28 @@
     <string name="full_sync_comment">Sincronização completa? Pode levar muitas horas até terminar e não irá ver dados novos no NS.</string>
     <string name="ns_sync_options">Sincronização</string>
     <string name="ns_alarm_options">Opções Alarme</string>
-    <!-- Tidepool -->
+    
     <string name="title_tidepool_dev_servers">Utilizar servidores de integração (teste)</string>
     <string name="tidepool">Tidepool</string>
     <string name="tidepool_shortname">TDP</string>
     <string name="description_tidepool">Enviar dados para Tidepool</string>
     <string name="upload_now">Fazer o upload agora</string>
-    <!-- Xdrip StatusLine -->
+    
     <string name="disabled_loop">Loop Desactivado</string>
     <string name="xdrip_not_installed">xDrip+ não está instalado</string>
     <string name="calibration_sent">Calibração enviada para xDrip+</string>
-    <!--    DataBroadcast-->
-    <!-- GarminPlugin -->
-    <!--    Wear-->
+    
+    
+    
     <string name="description_wear">Monitorizar e controlar a AndroidAPS utilizando o seu relógio WearOS.</string>
     <string name="no_watch_connected">(Nenhum relógio Conectado)</string>
     <string name="pump_status">Estado da Bomba</string>
     <string name="loop_status">Estado do loop</string>
-    <string name="wizard_result">Calc. Assistente:\nInsulina: %1$.2fU\nHidratos: %2$dg</string>
     <string name="quick_wizard_not_available">O assistente rápido selecionado não está mais disponível, atualize o ecrã</string>
     <string name="quick_wizard_message">Assistente rápido: %1$s\nInsulina: %2$.2fU\nHidratos: %3$dg</string>
     <string name="wear_action_tempt_unit_error">Diferentes unidades usadas no relógio e telefone!</string>
     <string name="wear_action_tempt_min_bg_error">Min-GLIC fora do alvo!</string>
     <string name="wear_action_tempt_max_bg_error">Máx-GLIC fora do alvo!</string>
-    <string name="no_success">sem efeito - por favor verifique no telemóvel</string>
     <string name="wear_wizard_settings_summary">Resultado cálculos incluídos no Assistente:</string>
     <string name="wear_general_settings">Definições Gerais</string>
     <string name="wear_custom_watchface_settings">Definições da watchface predefinida</string>
@@ -64,5 +62,5 @@
     <string name="hour_short">h</string>
     <string name="tdd_line">%1$.2fU %1$.0f%%</string>
     <string name="today">Hoje</string>
-    <!-- SMS Communicator & OTP Authenticator -->
+    
 </resources>

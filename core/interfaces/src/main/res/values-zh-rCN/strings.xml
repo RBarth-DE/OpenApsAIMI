@@ -1,14 +1,14 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <!--    Dialogs-->
+    
     <string name="confirmation">确认</string>
-    <!--    Events-->
+    
     <string name="bolus_delivering">正在输注 %1$.2fU</string>
     <string name="bolus_delivered_so_far">%1$.2fU / %2$.2fU 已输注</string>
     <string name="bolus_delivered_successfully">大剂量 %1$.2f U已经成功输注</string>
-    <!-- PumpPluginBase -->
+    
     <string name="pump_driver_changed" comment="26 characters max for translation">泵驱动程序已变更</string>
-    <!--    DateUtil-->
+    
     <string name="minago">%1$d 分钟前</string>
     <string name="secago">%1$d 秒前</string>
     <string name="minago_long">%1$d 分钟前</string>
@@ -46,14 +46,14 @@
     <string name="tomorrow">明天</string>
     <string name="today">今天</string>
     <string name="yesterday">昨天</string>
-    <!-- Rx -->
+    
     <string name="connecting_for">正在连接 %1$d s</string>
     <string name="handshaking">握手</string>
     <string name="connected">已连接</string>
     <string name="authorized">已授权</string>
     <string name="disconnecting">正在断开连接</string>
     <string name="waiting_for_disconnection">正在等待连接</string>
-    <!-- Custom Watchface -->
+    
     <string name="metadata_label_watchface_created_at">创建于：%1$s</string>
     <string name="metadata_label_watchface_author">作者: %1$s</string>
     <string name="metadata_label_watchface_name">姓名: %1$s</string>
@@ -88,12 +88,10 @@
     <string name="temp_basal_percent_rate">%1$.2f%% @%2$s %3$d/%4$d\'</string>
     <string name="temp_basal_extended_bolus">E %1$.2f U/h @%2$s %3$d/%4$d min</string>
     <string name="forever">永久</string>
-    <!-- Permission rationales (used by PumpPluginBase) -->
+    
     <string name="permission_bluetooth_title">蓝牙</string>
     <string name="permission_bluetooth_description">应用程序需要蓝牙权限才能通过泵进行通信</string>
-    <!-- Insulin -->
-    <string name="insulin_plugin">胰岛素</string>
-    <string name="insulin_shortname">INS</string>
+    
     <string name="unknown">未知</string>
     <string name="rapid_acting_oref">Novorapid(诺和锐)</string>
     <string name="lyumjev">Lyumjev(超速效赖脯)</string>
@@ -102,8 +100,6 @@
     <string name="fast_acting_insulin_comment">Novorapid(诺和锐), Novolog(门冬), Humalog(优泌乐)</string>
     <string name="ultra_fast_acting_insulin_comment">Fiasp(超速效门冬)</string>
     <string name="insulin_peak_time">峰值时间 [min]</string>
-    <string name="insulin_oref_peak">IOB 曲线峰值时间</string>
-    <!-- Concentration -->
     <string name="u10">U10</string>
     <string name="u40">U40</string>
     <string name="u50">U50</string>

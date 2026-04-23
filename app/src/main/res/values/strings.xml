@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version='1.0' encoding='utf-8'?>
 <resources>
     <string name="authorizationfailed">Authorization failed</string>
     <string name="identification_not_set">Identification not set in dev mode</string>
@@ -10,6 +10,4 @@
     <string name="migrating_profile_switches">Migrating profile switches…</string>
     <string name="migrating_effective_profile_switches">Migrating effective profile switches…</string>
     <string name="migrating_boluses">Migrating boluses…</string>
-    <string name="nav_preferences_plugin">%1$s Preferences</string>
-
-</resources>
+    </resources>

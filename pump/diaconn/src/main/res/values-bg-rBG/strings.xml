@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version='1.0' encoding='utf-8'?>
 <resources>
     <string name="resetpairing">Нулиране на сдвояването</string>
     <string name="diaconn_pairing">Сдвояване на помпа Diaconn</string>
@@ -30,10 +30,8 @@
     <string name="insulinlimitviolation">Нарушение на макс дневен инсулин</string>
     <string name="boluserrorcode">Стартирано: %1$.2fЕ Доставено: %2$.2fЕ Код на грешка: %3$s</string>
     <string name="selectedpump">Избрана помпа</string>
-    <string name="diaconn_g8_bluetooth_status">Състояние на Bluetooth</string>
     <string name="bolus_step">Стъпка при болус</string>
     <string name="basal_step">Стъпка при базал</string>
-    <string name="diaconn_g8_user_options">ОПЦИИ НА ПОТРЕБИТЕЛЯ</string>
     <string name="pairfirst">Моля първо свържете помпата с телефона от Bluetooth настройките </string>
     <string name="processinghistory">"Обработва се събитие "</string>
     <string name="diaconn_g8_history_tempbasal">Временен базал</string>

@@ -1,6 +1,6 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <!-- MedtrumPump -->
+    
     <string name="medtrum">Medtrum</string>
     <string name="medtrum_pump_shortname">MT</string>
     <string name="medtrum_pump_description">Pumpeintegrasjon for Medtrum Nano og Medtrum 300U</string>
@@ -14,13 +14,12 @@
     <string name="pump_setting_failed">Kunne ikke sende brukerinnstillinger til pumpen!</string>
     <string name="pump_sync_error">Feil ved synkronisering av historikk fra pumpe, en post har blitt hoppet over. Sjekk behandlingsfanen for å kontrollere om bolusdosen er synkronisert riktig. Slumre og hvis feilen kommer tilbake bytt patch eller pumpebase.</string>
     <string name="patch_reset_after_primed_error">Tilbakestilling ble oppdaget etter priming! Fjern patch og sett på et nytt.</string>
-    <!-- overview fragment -->
+    
     <string name="last_connection_label">Siste tilkobling</string>
     <string name="active_bolus_label">Aktiv bolus</string>
     <string name="pump_state_label">Pumpestatus</string>
     <string name="active_alarms_label">Aktive alarmer</string>
     <string name="basal_type_label">Basal type</string>
-    <string name="basal_rate_label">Basaldose</string>
     <string name="pump_type_label">Pumpetype</string>
     <string name="fw_version_label">FW versjon</string>
     <string name="patch_no_label">Patch nr</string>
@@ -30,7 +29,7 @@
     <string name="change_patch_label">Bytte Patch</string>
     <string name="requested_by_user" comment="26 characters max for translation">Forespurt av bruker</string>
     <string name="expiry_not_enabled">Ikke aktivert</string>
-    <!-- Alarm strings -->
+    
     <string name="alarm_none">Ingen</string>
     <string name="alarm_pump_low_battery">Lavt pumpebatteri</string>
     <string name="alarm_pump_low_reservoir">Lavt pumpereservoar</string>
@@ -51,7 +50,7 @@
     <string name="alarm_no_calibration">Ingen kalibrering</string>
     <string name="pump_time_update_failed">Kunne ikke oppdatere tidssone på pumpen. Bekreft meldingen og oppdater manuelt.</string>
     <string name="bolus_error">Bolus feilet</string>
-    <!-- wizard-->
+    
     <string name="retry">Prøv igjen</string>
     <string name="step_prepare_patch">Aktivere patch</string>
     <string name="step_prepare_patch_connect">Koble til og fyll</string>
@@ -76,12 +75,10 @@
     <string name="do_not_attach_to_body">Ikke koble patch til kroppen enda.</string>
     <string name="half_press_needle">Trykk nål-knappen halvveis. Trykk deretter <b>Neste</b> for å starte priming.</string>
     <string name="wait_for_priming">Vent mens priming fullføres.</string>
-    <string name="priming_error">Kunne ikke prime, trykk <b>Prøv igjen</b> for å prøve igjen.</string>
     <string name="press_next">Trykk <b>Neste</b> for å fortsette.</string>
     <string name="press_next_to_start_activation">Trykk <b>Neste</b> for å starte aktivering.</string>
     <string name="remove_safety_lock">Fjern sikkerhetslåsen. Koble pumpen til kroppen. Trykk nål-knappen.</string>
     <string name="activating_pump">Aktiverer pumpe og setter basaldose. Vennligst vent.</string>
-    <string name="activating_error">Kunne ikke aktivere, trykk <b>Prøv igjen</b> for å prøve igjen.</string>
     <string name="activating_complete">Ny patch aktivert. %.2f enheter gjenstår.</string>
     <string name="can_export_settings">Du kan eksportere innstillingene for å kunne gjenopprette denne patchøkten senere.</string>
     <string name="press_OK_to_return">Trykk <b>OK</b> for å gå tilbake til hovedskjermen.</string>
@@ -97,7 +94,7 @@
     <string name="activation_in_progress">Oops! Noe gikk galt, det ser ut som at det allerede pågår en aktivering.</string>
     <string name="press_retry_or_discard">Trykk <b>Neste</b> for å gjenoppta aktiveringen eller <b>Forkast</b> for å tilbakestille aktiveringsstatusen.</string>
     <string name="reading_activation_status">Vennligst vent, leser aktiveringsstatus fra pumpen.</string>
-    <!-- settings-->
+    
     <string name="sn_input_title">Serienummer</string>
     <string name="sn_input_invalid">Ugyldig serienummer!</string>
     <string name="change_sn">Endre</string>
@@ -123,13 +120,13 @@
     <string name="daily_max_insulin_summary">Angi maksimalt antall enheter insulin tillatt per dag. Hvis overskredet vil pumpen suspendere.</string>
     <string name="scan_on_connection_error_title">Skann ved tilkoblingsfeil</string>
     <string name="scan_on_connection_error_summary">ADVARSEL: Aktiver kun hvis du har tilkoblingsproblemer. Hvis aktivert, skanner driveren etter pumpen på nytt før du prøver å koble til pumpen igjen. Pass på at du har posisjonstillatelse satt til \"Alltid tillat\" </string>
-    <!-- treatment state-->
+    
     <string name="getting_pump_status">Henter pumpestatus</string>
     <string name="syncing_records">Synkroniserer poster, %1$d gjenstår</string>
     <string name="getting_bolus_status">Henter bolus status</string>
     <string name="getting_temp_basal_status">Henter midlertidig basal status</string>
     <string name="setting_pump_settings">Setter brukerinnstillinger</string>
-    <!-- bolus-->
+    
     <string name="bolus_error_reason_user">Bolus avbrutt av bruker</string>
     <string name="bolus_error_reason_not_connected">Pumpe frakoblet</string>
     <string name="bolus_error_reason_already_in_progress">Bolus pågår allerede</string>

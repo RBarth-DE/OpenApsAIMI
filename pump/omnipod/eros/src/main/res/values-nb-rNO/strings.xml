@@ -1,11 +1,11 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <!-- Omnipod Eros - Description -->
+    
     <string name="omnipod_eros_pump_description">Pumpeintegrering for Omnipod Eros (den eldre modellen med en gjennomsiktig kanylehette). Den krever en RileyLink-enhet med firmware minst versjon 2.0.</string>
-    <!-- Omnipod Eros - Overview -->
-    <!-- Omnipod Eros - Errors -->
+    
+    
     <string name="omnipod_eros_error_riley_link_address_invalid">RileyLink adressen er ugyldig.</string>
-    <!-- Omnipod Eros - Preferences -->
+    
     <string name="omnipod_eros_preferences_pulse_log_button_enabled">Vis Pulslogg knappen i Pod menyen</string>
     <string name="omnipod_eros_preferences_riley_link_stats_button_enabled">Vis RileyLink status knapp i Pod menyen</string>
     <string name="omnipod_eros_preferences_battery_change_logging_enabled">Aktiver logging av batteribytte i Handlinger</string>
@@ -13,7 +13,7 @@
     <string name="omnipod_eros_history_bolus_value">%1$.2f E</string>
     <string name="omnipod_eros_history_bolus_value_with_carbs">%1$.2f E, KH=%2$.1f g</string>
     <string name="omnipod_eros_history_tbr_value">Dose: %1$.2f E, varighet: %2$d min</string>
-    <!-- Omnipod Eros - Error -->
+    
     <string name="omnipod_eros_error_crc_mismatch">Kommunikasjonsfeil: klarte ikke å verifisere meldingen</string>
     <string name="omnipod_eros_error_invalid_packet_type">Kommunikasjonsfeil: mottok en ugyldig datapakke fra Pod</string>
     <string name="omnipod_eros_error_invalid_progress_state">Kommunikasjonsfeil: Pod er i feil tilstand</string>
@@ -42,13 +42,12 @@
     <string name="omnipod_eros_error_bolus_failed_uncertain">Kan ikke kontrollere om bolusdosen ble gitt. Kontroller at Pod\'en gir bolus ved å lytte etter klikkk. <b>Dersom du er sikker på at bolusen ikke var vellykket, bør du manuelt slette bolusoppføring fra Behandlingene, selv om du klikker \'Avbryt bolus\' nå!</b></string>
     <string name="omnipod_eros_error_bolus_failed_uncertain_smb">Klarte ikke å bekrefte om SMB bolus (%1$.2f E) ble gitt. <b>Hvis du er helt sikker på at Bolus ikke ble levert, da bør du manuelt slette SMB-oppføringen fra Behandlinger.</b></string>
     <string name="omnipod_eros_error_tbr_running_but_aaps_not_aware">En midlertidig basal utføres på Pod, men AAPS har ingen informasjon om denne midlertidige basalen. Vennligst avbryt midlertidig basal manuelt.</string>
-    <!-- Omnipod Eros - Pod Management -->
+    
     <string name="omnipod_eros_pod_management_button_riley_link_stats">RileyLink statistikk</string>
     <string name="omnipod_eros_pod_management_button_reset_riley_link_config">Tilbakestill RileyLink</string>
-    <string name="omnipod_eros_pod_management_button_read_pulse_log">Les Pulslogg</string>
     <string name="omnipod_eros_pod_management_pulse_log">Pulslogg</string>
     <string name="omnipod_eros_pod_management_pulse_log_value">Pulslogg (kopiert til utklippstavlen)</string>
-    <!-- Omnipod Eros - Pod Activation Wizard -->
+    
     <string name="omnipod_eros_pod_activation_wizard_start_pod_activation_text">Fyll en ny Pod med nok insulin for 3 dager.\n\nLytt etter to lydsignaler fra Pod under fyllingen. Disse indikerer at minimums volum på 80E er fylt opp. Vær nøye med å tømme fyllingssprøyten helt, selv etter at du har hørt de to lydsignalene.\n\nEtter fylling av Pod, vennligst trykk <b>Neste</b>.\n\n<b>Merk:</b> vent med å fjern kanylebeskyttelsen til Pod. \n<b>Merk:</b> plasser RileyLink i en stående posisjon og legg Pod kun noen cm unna denne.</string>
     <string name="omnipod_eros_pod_activation_wizard_initialize_pod_text">Prøver å koble opp mot den nye Pod og sette påfyllingsbolus.\n\nNår alle oppstartstrinn er utført, kan du trykke <b>Neste</b>.\n\n<b>Merk:</b> plasser RileyLink i en stående posisjon og plasser Pod maks noen centimeter unna den.</string>
 </resources>

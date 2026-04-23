@@ -1,7 +1,7 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version='1.0' encoding='utf-8'?>
 <resources>
     <string name="equil_pump_description">Pompa Patch Equil 5.3 o più recente </string>
-    <!--  start  -->
+    
     <string name="equil_basal_speed">Basale originale</string>
     <string name="equil_dressing">Cambia Serbatoio</string>
     <string name="equil_dressing_onkey_msg">Spostare automaticamente lo stantuffo verso il fondo del serbatoio. Si fermerà automaticamente al raggiungimento del fondo. Fare clic su \'Ferma\' per interrompere se necessario.</string>
@@ -28,7 +28,6 @@
     <string name="equil_tone_mode_shake">Solo vibrazione</string>
     <string name="equil_tone_mode_tone">Solo suoneria</string>
     <string name="equil_tone_mode_tone_and_shake">Vibrazione e suoneria</string>
-    <string name="equil_unit_u">%1$s U</string>
     <string name="equil_unbind_content">Questa operazione interromperà l\'infusione di insulina e ritrarrà lo stantuffo della pompa verso il basso! Inoltre, eliminerà lo stato!</string>
     <string name="equil_ble_config_confirmation_title">Accoppiamento Micro Equil Patch</string>
     <string name="equil_error">Errore di connessione</string>
@@ -55,7 +54,7 @@
     <string name="equil_shutdown">Equil auto off</string>
     <string name="equil_common_history_tbr_value">Equil auto OFF</string>
     <string name="equil_common_history_bolus_value">%1$.2f U</string>
-    <!-- equil - Commands -->
+    
     <string name="equil_common_cmd_set_bolus">Imposta bolo</string>
     <string name="equil_common_cmd_cancel_bolus">Cancella bolo</string>
     <string name="equil_common_cmd_set_tbr">Imposta basale temporanea</string>
@@ -69,7 +68,7 @@
     <string name="equil_common_cmd_unpair">Disaccoppia Equil</string>
     <string name="equil_common_cmd_set_extended_bolus">Imposta Bolo Esteso</string>
     <string name="equil_common_cmd_cancel_extended_bolus">Annulla Bolo Esteso</string>
-    <!--    推杆回退-->
+    
     <string name="equil_common_change_insulin">Ritrazione dell\'asta</string>
     <string name="equil_common_set_alarm_tone">Configura per solo notifiche sonore</string>
     <string name="equil_common_set_alarm_shake">Configura solo per la vibrazione</string>
@@ -115,7 +114,6 @@
     <string name="equil_history_item18">Infusione Anomala Fermata</string>
     <string name="equil_common_overview_button_suspend_delivery">Sospendi</string>
     <string name="equil_common_overview_button_resume_delivery">Riprendi erogazione</string>
-    <string name="equil_common_overview_tbr_value">%1$s @%2$s (%3$d/%4$d min)</string>
     <string name="equil_common_moments_ago">Un momento fa</string>
     <string name="equil_common_less_than_a_minute_ago">Meno di 1 minuto fa</string>
     <string name="equil_common_time_ago">%1$sm fa</string>

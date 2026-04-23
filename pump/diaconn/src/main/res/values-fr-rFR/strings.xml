@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version='1.0' encoding='utf-8'?>
 <resources>
     <string name="resetpairing">Réinit. Appairage</string>
     <string name="diaconn_pairing">Appairage pompe Diaconn</string>
@@ -30,10 +30,8 @@
     <string name="insulinlimitviolation">Violation de limite d\'insuline</string>
     <string name="boluserrorcode">Demandé : %1$.2fU Injecté : %2$.2fU code d’erreur : %3$s</string>
     <string name="selectedpump">Pompe sélectionnée</string>
-    <string name="diaconn_g8_bluetooth_status">État Bluetooth</string>
     <string name="bolus_step">Incrément Bolus</string>
     <string name="basal_step">Incrément Basal</string>
-    <string name="diaconn_g8_user_options">OPTIONS UTILISATEUR</string>
     <string name="pairfirst">Veuillez appairer votre pompe avec votre téléphone !</string>
     <string name="processinghistory">"Traitement d'événement "</string>
     <string name="diaconn_g8_history_tempbasal">Basal Temp.</string>

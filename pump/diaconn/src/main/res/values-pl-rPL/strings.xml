@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version='1.0' encoding='utf-8'?>
 <resources>
     <string name="resetpairing">Resetuj parowanie</string>
     <string name="diaconn_pairing">Parowanie pompy Diaconn</string>
@@ -30,10 +30,8 @@
     <string name="insulinlimitviolation">Przekroczono limit insuliny</string>
     <string name="boluserrorcode">Zadano: %1$.2fU Dostarczono: %2$.2fU Kod błędu: %3$s</string>
     <string name="selectedpump">Wybrana pompa</string>
-    <string name="diaconn_g8_bluetooth_status">Status Bluetooth</string>
     <string name="bolus_step">Krok bolusa</string>
     <string name="basal_step">Krok bazy</string>
-    <string name="diaconn_g8_user_options">OPCJE UŻYTKOWNIKA</string>
     <string name="pairfirst">Proszę sparować swoją pompę z telefonem!</string>
     <string name="processinghistory">"Przetwarzanie zdarzenia "</string>
     <string name="diaconn_g8_history_tempbasal">Baza tymczasowa</string>

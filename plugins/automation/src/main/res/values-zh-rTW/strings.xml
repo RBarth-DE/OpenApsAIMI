@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version='1.0' encoding='utf-8'?>
 <resources>
     <string name="automation_short">自動</string>
     <string name="automation">自動化</string>
@@ -73,7 +73,6 @@
     <string name="location_going_out">當您離開名為</string>
     <string name="time_range">時間範圍</string>
     <string name="timerange_value">時間在 %1$s 和 %2$s 之間</string>
-    <string name="between">在...之間</string>
     <string name="add_short">新增</string>
     <string name="temptargetcompared">臨時目標 %1$s</string>
     <string name="btdevicecompared">藍牙連線到設備 %1$s %2$s</string>
@@ -114,38 +113,37 @@
     <string name="edit_short">編輯</string>
     <string name="preconditions">前提條件：</string>
     <string name="user_action">用戶操作</string>
-    <string name="remove_selected_items">移除選擇項目</string>
     <string name="count_selected">已選擇 %1$d 項</string>
     <string name="system_automation">系統自動化</string>
     <string name="run_automations">執行自動化</string>
     <string name="add_automation">新增規則</string>
     <string name="stop_processing">停止處理</string>
-    <!--    Reminders-->
+    
     <string name="time_to_eat">該吃飯了！\n運行注射嚮導並重新計算。</string>
     <string name="time_to_bolus">該注射了！\n運行注射嚮導並重新計算。</string>
     <string name="error_setting_reminder">設置未來警報時出錯</string>
-    <!--    Autotune-->
+    
     <string name="autotune_profile_name">自動調整檔案 %1$s</string>
     <string name="autotune_run">運行自動調整</string>
     <string name="autotune_run_without_autoswitch">自動調整運行無檔案切換</string>
     <string name="autotune_run_with_autoswitch">自動調整運行並自動切換檔案</string>
     <string name="autotune_run_with_error">上次自動調整運行時出錯</string>
     <string name="autotune_run_cancelled">偵測到另一個自動調整運行，運行已取消</string>
-    <!--    Steps count-->
+    
     <string name="triggerStepsCountLabel">步數統計</string>
     <string name="triggerStepsCountDesc">每 %1$s 分鐘的步數統計 %2$s %3$.0f</string>
     <string name="triggerStepsCountDropdownLabel">測量持續時間</string>
-    <!--    SMB mode-->
+    
     <string name="changeSmbState">啟用/停用 SMB</string>
     <string name="changeSmbTo">更改 SMB 為 %1$s</string>
     <string name="newSmbMode">新 SMB 模式：</string>
     <string name="on">開</string>
     <string name="off">關</string>
-    <!--    Map Picker (OpenStreetMap)-->
+    
     <string name="pick_from_map">從地圖選取</string>
     <string name="tap_to_select_location">在地圖上點選以選擇位置</string>
     <string name="selected_coords">已選擇：%1$.6f, %2$.6f</string>
-    <!-- Permission rationales -->
+    
     <string name="permission_location_title">位置</string>
     <string name="permission_location_description">用於位置型自動化觸發與 WiFi 網路識別</string>
     <string name="permission_background_location_description">在應用程式於背景時，讓自動化觸發能運作所需</string>

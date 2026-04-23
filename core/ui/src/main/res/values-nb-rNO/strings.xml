@@ -1,10 +1,8 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version='1.0' encoding='utf-8'?>
 <resources>
     <string name="error_field_must_not_be_empty">Feltet må ikke være tomt</string>
-    <string name="error_url_not_valid">Nettadressen er ikke gyldig</string>
     <string name="error_mustbe4hexadidits">Må være 4 tegn fra ABCDEF0123456789</string>
-    <!--    General-->
-    <string name="temp_basal_overview_short_name">M:</string>
+    
     <string name="treatments">Behandlinger</string>
     <string name="treatments_desc">Vis og administrer behandlingshistorikk</string>
     <string name="nav_configuration">Konfigurasjon</string>
@@ -21,7 +19,6 @@
     <string name="invalid_input">Ugyldige verdier</string>
     <string name="invalid_number">Ugyldig nummer</string>
     <string name="constraint_applied">Begrensning benyttet!</string>
-    <string name="tempbasals_iobtotal_label_string">Totalt IOB:</string>
     <string name="tt_label">TT</string>
     <string name="pump_unreachable">Pumpe er utilgjengelig</string>
     <string name="insulin_unit_shortname">E</string>
@@ -33,7 +30,6 @@
     <string name="limiting_iob">Begrenser IOB til %1$.1f E på grunn av %2$s</string>
     <string name="loop_disabled">LOOP DEAKTIVERT PGA BEGRENSNINGER</string>
     <string name="event_type">Hendelsestype</string>
-    <string name="reload">Last på nytt</string>
     <string name="mgdl">mg/dl</string>
     <string name="mmol">mmol/l</string>
     <string name="save">Lagre</string>
@@ -72,7 +68,7 @@
     <string name="configbuilder_general">Generelt</string>
     <string name="protection">Beskyttelse</string>
     <string name="value_unavailable_short">n/a</string>
-    <!-- master_password moved to core/keys/strings.xml -->
+    
     <string name="ue_export_to_csv">Eksporter brukeroppføringer til Excel (csv)</string>
     <string name="confirm">Bekreft</string>
     <string name="pump">Pumpe</string>
@@ -88,16 +84,12 @@
     <string name="success">Suksess</string>
     <string name="advanced_settings_title">Avanserte innstillinger</string>
     <string name="extendedbolusdeliveryerror">Forlenget bolus leveringsfeil</string>
-    <string name="aps_mode_title">APS modus</string>
     <string name="extended_bolus">Forlenget bolus</string>
     <string name="paused">Pauset</string>
     <string name="running">Kjører</string>
-    <string name="open_menu">Åpne meny</string>
-    <string name="close_menu">Lukk meny</string>
     <string name="tdd_total">TDD Total</string>
     <string name="tdd_old_data">Gammel data</string>
     <string name="goingtodeliver">Leverer %1$.2f enheter</string>
-    <string name="waitingforpump">Venter på pumpen</string>
     <string name="androidaps_start">AAPS startet</string>
     <string name="formatsignedinsulinunits">%1$+.2f E</string>
     <string name="format_carbs">%1$d g</string>
@@ -110,13 +102,11 @@
     <string name="carbs">Karbo</string>
     <string name="invalid_profile">Ugyldig profil!</string>
     <string name="no_profile_set">INGEN PROFIL VALGT</string>
-    <string name="active"><![CDATA[<Aktiv>]]></string>
+    <string name="active">&lt;Aktiv&gt;</string>
     <string name="date">Dato</string>
     <string name="units_label">Enheter</string>
-    <string name="insulin_name_label">Insulinnavn</string>
     <string name="insulin_nickname_label">Kallenavn for insulin</string>
     <string name="concentration_label">Konsentrasjon</string>
-    <string name="format_concentration">E%1$.0f</string>
     <string name="peak_label">Topp</string>
     <string name="dia_label">DIA</string>
     <string name="ic_label">IK</string>
@@ -130,7 +120,6 @@
     <string name="target_long_label">Blodsukkermål</string>
     <string name="shortgram">g</string>
     <string name="shortpercent">%</string>
-    <string name="bluetooth">Bluetooth</string>
     <string name="virtualpump_resultok">OK</string>
     <string name="pump_time_updated">Pumpens tid er oppdatert</string>
     <string name="exit">Avslutt</string>
@@ -157,9 +146,6 @@
     <string name="waiting_for_pump">Venter på pumpen…</string>
     <string name="initialization_failed">Initialiseringen mislyktes</string>
     <string name="notes_label">Merknader</string>
-    <string name="remove_button">Fjern</string>
-    <string name="add_new">Legg til ny</string>
-    <string name="addnew_above">Legg til ny over</string>
     <string name="wrong_pump_data">Data kommer fra forskjellige pumper. Bytt pumpevalg for å nullstille pumpens tilstand.</string>
     <string name="bg_label">BS</string>
     <string name="calibration">Kalibrering</string>
@@ -174,8 +160,6 @@
     <string name="notconfigured">Ikke konfigurert</string>
     <string name="loopsuspended">Loop pauset</string>
     <string name="loop_suspended_by_dst">Loop suspendert av DST (Sommertid)</string>
-    <string name="trend_arrow">Trendpil</string>
-    <string name="a11y_autosens_label">Autosens</string>
     <string name="required">nødv</string>
     <string name="a11y_arrow_double_down">synker raskt</string>
     <string name="a11y_arrow_single_down">synkende</string>
@@ -190,22 +174,17 @@
     <string name="a11y_inrange">i målområdet</string>
     <string name="a11y_low">lavt</string>
     <string name="average">Gjennomsnitt</string>
-    <string name="tir_short">TIR</string>
     <string name="tir">Tid i målområde</string>
-    <string name="none"><![CDATA[<ingen>]]></string>
     <string name="remove_label">FJERN</string>
     <string name="activate_profile">Aktiver profil</string>
     <string name="activate_insulin">Aktiver insulin</string>
     <string name="reset">Tilbakestill</string>
     <string name="profileswitch_ismissing">Profilbytte mangler. Utfør et profilbytte og trykk på \"Aktiver profil\" i din lokale profil.</string>
     <string name="profile">Profil</string>
-    <string name="select_for_removal">Velg hva som skal fjernes</string>
     <string name="confirm_remove_multiple_items">Er du sikker på at du vil fjerne %1$d elementer</string>
     <string name="overview_treatment_label">Behandling</string>
     <string name="copytolocalprofile">Opprett ny profil fra denne profilen?</string>
     <string name="wear_wizard_settings">Innstillinger for boluskalkulator på klokken</string>
-    <string name="bg_trend_label">15 min trend</string>
-    <string name="treatments_wizard_cob_label">COB</string>
     <string name="bolus_iob_label">Bolus IOB</string>
     <string name="treatments_wizard_basaliob_label">Basal IOB</string>
     <string name="invalid">UGYLDIG</string>
@@ -231,14 +210,8 @@
     <string name="pump_suspend">Pause pumpe</string>
     <string name="pump_resume">Gjenoppta pumpe</string>
     <string name="mode_reverted">Modus tilbakestilt</string>
-    <string name="insulin_shortname">INS</string>
     <string name="select_insulin">Velg insulin</string>
-    <string name="select_pump_insulin">Velg pumpeinsulin</string>
-    <string name="select_pen_insulin">Velg insulin</string>
-    <string name="insulin_template">Mal</string>
     <string name="dia">DIA</string>
-    <string name="peak">Topp</string>
-    <string name="concentration">Konsentrasjon</string>
     <string name="ic_short">IK</string>
     <string name="isf_short">ISF</string>
     <string name="canceling_tbr_failed">Kunne ikke avbryte midlertidig basal</string>
@@ -260,43 +233,39 @@
     <string name="engineering_mode_enabled">Engineering mode aktivert</string>
     <string name="back">Bakside</string>
     <string name="show_hide_records">Skjul loop-poster</string>
-    <!--    Protection-->
+    
     <string name="wrongpassword">Feil passord</string>
     <string name="wrongpin">Feil PIN-kode</string>
     <string name="passwords_dont_match">Passord stemmer ikke overens</string>
     <string name="pin_dont_match">PIN-kodene samsvarer ikke</string>
-    <!--    Profile-->
+    
     <string name="basalprofilenotaligned">Basalverdier er ikke angitt på hele timer: %1$s</string>
     <string name="minimalbasalvaluereplaced">Basalverdi erstattet med minste tillate verdi: %1$s</string>
     <string name="maximumbasalvaluereplaced">Basalverdi erstattet med høyeste tillate verdi: %1$s</string>
     <string name="profile_per_unit">/E</string>
     <string name="profile_ins_units_per_hour">E/t</string>
     <string name="profile_carbs_per_unit">g/E</string>
-    <!--    ProfileFunction-->
+    
     <string name="startprofile">Start profil %1$d%% i %2$d min</string>
-    <!--    APSResult-->
+    
     <string name="cancel_temp">Avbryt midl. basal</string>
     <string name="let_temp_basal_run">Fortsett midl. basal</string>
     <string name="rate">Dose</string>
     <string name="duration">Varighet</string>
     <string name="reason">Årsak</string>
     <string name="nochangerequested">Ingen endring behøves</string>
-    <!--    Insulin / Concentration-->
+    
     <string name="ins_concentration_confirmed">Insulin %1$s bekreftet</string>
     <string name="current_insulin">Aktiv for øyeblikket</string>
     <string name="change_insulin">Endre</string>
     <string name="select_insulin_description">Velg insulinet du fyller pumpen med. Et profilbytte vil bli brukt etter aktivering/priming.</string>
-    <string name="bolus_delivered">%1$.2f\u00a0E / %2$.2f\u00a0E</string>
-    <string name="bolus_delivered_CU">%1$.2f\u00a0CU / %2$.2f\u00a0CU</string>
     <string name="pump_insulin_cu">%1$.2f\u00a0CU</string>
     <string name="pump_insulin_cu1">%1$.1f\u00a0CU</string>
     <string name="selected_insulin">Valgt insulin: %1$s</string>
     <string name="record_insulin_hint">Hvis du registrerer insulin som gis med penn, velg riktig insulintype nedenfor. Dosen er alltid i internasjonale enheter.</string>
-    <!--    ProfileSwitch-->
-    <string name="zerovalueinprofile">Ugyldig profil: %1$s</string>
-    <!--    Temptarget-->
+    
     <string name="mins">%1$d min</string>
-    <!--    Translator-->
+    
     <string name="careportal">Helseportal</string>
     <string name="careportal_bgcheck">BS-kontroll</string>
     <string name="careportal_mbg">Manuelt BS eller kalibrering</string>
@@ -306,7 +275,6 @@
     <string name="careportal_question">Spørsmål</string>
     <string name="careportal_exercise">Trening</string>
     <string name="careportal_announcement_message">Kunngjøring: %1$s</string>
-    <string name="careportal_settings_export_message">Eksporter innstillinger: %1$s</string>
     <string name="careportal_note_message">Notat: %1$s</string>
     <string name="careportal_question_message">Spørsmål: %1$s</string>
     <string name="careportal_exercise_message">Aktivitet: %1$s</string>
@@ -378,9 +346,7 @@
     <string name="activation">Aktivering</string>
     <string name="temp_target_management">Midlertidig mål</string>
     <string name="revert_to_defaults">Tilbakestill til standardinnstillinger</string>
-    <string name="confirm_remove_preset">Fjerne forhåndsinnstillingen %1$s?</string>
     <string name="confirm_cancel_temp_target">Avbryt aktivt midlertidig mål?</string>
-    <string name="add_new_preset">Legg til ny forhåndsinnstilling</string>
     <string name="loop">Loop</string>
     <string name="ns">NS</string>
     <string name="record">Registrer</string>
@@ -417,32 +383,24 @@
     <string name="arrow_left">Venstre</string>
     <string name="arrow_up_left">Opp til venstre</string>
     <string name="arrow_center">Midten</string>
-    <!--    Command-->
+    
     <string name="connectiontimedout">Tilkoblingen ble tidsavbrutt</string>
     <string name="pump_not_configured">Pumpe ikke konfigurert</string>
-    <!--    PumpEnactResult-->
+    
     <string name="enacted">Utført</string>
     <string name="comment">Kommentar</string>
     <string name="percent">Prosent</string>
     <string name="absolute">Absolutt</string>
     <string name="waitingforpumpresult">Venter på resultat</string>
     <string name="smb_shortname">SMB</string>
-    <!--    CarbsReq-->
+    
     <string name="carbsreq">%1$d g ekstra karbohydrater kreves innen %2$d minutter</string>
     <string name="basalrate">Basal</string>
     <string name="bolus">Bolus</string>
     <string name="tdd_short">TDD</string>
     <string name="tdd">Total daglig dose</string>
-    <string name="ratio">Ratio</string>
-    <string name="amount_days"># Dager</string>
-    <string name="weight">Vekt</string>
-    <string name="warning_Message">Kan vise feil hvis bolus brukes for priming/fylling!</string>
-    <string name="olddata_Message">Gamle data. Vennligst trykk \"HENT\"</string>
-    <string name="tbb">Total grunnbasal</string>
-    <string name="tbb2">TBB * 2</string>
-    <!--    Ntp-->
     <string name="timedetection">Tidsdetektering</string>
-    <!-- User Entry -->
+    
     <string name="uel_bolus">BOLUS</string>
     <string name="uel_bolus_calculator">BOLUSKALKULATOR</string>
     <string name="uel_bolus_advisor">BOLUSASSISTENT</string>
@@ -513,7 +471,6 @@
     <string name="uel_stat_reset">TILBAKESTILL STATISTIKK</string>
     <string name="uel_delete_logs">SLETT LOGGER</string>
     <string name="uel_delete_future_treatments">SLETT BEHANDLINGER I FREMTIDEN</string>
-    <string name="delete_future_treatments">Slett behandlinger i fremtiden</string>
     <string name="uel_export_settings">EKSPORTER INNSTILLINGER</string>
     <string name="uel_import_settings">IMPORTER INNSTILLINGER</string>
     <string name="uel_select_directory">VELG MAPPE</string>
@@ -530,7 +487,6 @@
     <string name="uel_exit_aaps">AVSLUTT AAPS</string>
     <string name="uel_plugin_enabled">PLUGIN AKTIVERT</string>
     <string name="uel_plugin_disabled">PLUGIN DEAKTIVERT</string>
-    <string name="uel_unknown">UKJENT</string>
     <string name="ue_string">Tekst</string>
     <string name="ue_source">Kilde</string>
     <string name="ue_utc_offset">UTC tidsforskyvning</string>
@@ -544,11 +500,10 @@
     <string name="uel_store_insulin">LAGRE INSULIN</string>
     <string name="uel_change_insulin_concentration">ENDRE INSULINKONSENTRASJON</string>
     <string name="uel_insulin_removed">INSULIN FJERNET</string>
-    <string name="uel_other">ANNET</string>
     <string name="uel_running_mode">KJØREMODUS</string>
     <string name="uel_running_mode_removed">KJØREMODUS SLETTET</string>
     <string name="uel_running_mode_updarted">KJØREMODUS OPPDATERT</string>
-    <!-- HardLimits -->
+    
     <string name="profile_low_target">Profil lavt mål</string>
     <string name="profile_high_target">Profil høyt mål</string>
     <string name="temp_target_low_target">Nedre grense for midlertidig mål</string>
@@ -565,7 +520,7 @@
     <string name="valueoutofrange">»%1$s« er utenfor lovlige grenseverdier</string>
     <string name="value_out_of_hard_limits">»%1$s« %2$.2f er utenfor lovlige grenseverdier</string>
     <string name="basal_value">Basalverdi</string>
-    <!-- Profile validation -->
+    
     <string name="no_profile_selected">Ingen profil valgt</string>
     <string name="missing_profile_name">Mangler profilnavn</string>
     <string name="error_in_ic_values">Feil i IK-forholdstallet</string>
@@ -575,8 +530,6 @@
     <string name="profile_name_contains_dot">Noen av profilnavnene inneholder punktum.\nDette støttes ikke av NS.\nProfiler lastes ikke opp til NS.</string>
     <string name="invalid_profile_not_accepted">Ugyldig profil %1$s ikke akseptert fra NS</string>
     <string name="errors">Feil</string>
-    <string name="view">Vis</string>
-    <!-- Command Queue + readStatus reasons -->
     <string name="bolus_u_min">BOLUS %1$.2f E</string>
     <string name="carbs_g">KARBO %1$d g</string>
     <string name="extended_bolus_u_min">UTVIDET BOLUS %1$.2f E %2$d min</string>
@@ -606,21 +559,17 @@
     <string name="autosens_long">Autosens-verdi: %.0f%%</string>
     <string name="autosens_short">%.0f%%</string>
     <string name="algorithm_long">Algoritmens sensitivitet: %.0f%%</string>
-    <string name="algorithm_short">Alg: %.0f%%</string>
-    <string name="a11y_file">fil</string>
-    <string name="a11y_user">bruker</string>
-    <!-- Autotune -->
     <string name="autotune">Autotune</string>
     <string name="autotune_tune_days">Antall dager:</string>
     <string name="autotune_select_profile">Velg profil du vil justere</string>
-    <!-- Alerts -->
+    
     <string name="urgent_alarm">Viktig varsel</string>
     <string name="info">INFO</string>
-    <!-- BolusWizard -->
+    
     <string name="bolus_advisor">Bolusveiviser</string>
     <string name="bolus_advisor_message">Du har høyt blodsukker. I stedet for å spise nå er det bedre å utsette det til du har et lavere blodsukker. Ønsker du å sette en korreksjonsbolus nå og få en påminnelse om når det er på tide å spise? I dette tilfellet vil ingen karbohydrater registreres nå, og du må bruke boluskalkulatoren igjen når vi gir deg en påminnelse.</string>
     <string name="cobvsiob">COB vs IOB</string>
-    <string name="slowabsorptiondetected"><![CDATA[<font color=\'%1$s\'>!! Advarsel: Oppdaget treg absorpsjon av karbohydrater: %2$d%% av tiden. Dobbeltsjekk din beregning. COB kan være misvisende og du risikerer å få for mye insulin !!</font>]]></string>
+    <string name="slowabsorptiondetected">&lt;font color=\'%1$s\'&gt;!! Advarsel: Oppdaget treg absorpsjon av karbohydrater: %2$d%% av tiden. Dobbeltsjekk din beregning. COB kan være misvisende og du risikerer å få for mye insulin !!&lt;/font&gt;</string>
     <string name="slowabsorptiondetected_plain">!!!!! Langsom karboabsorpsjon oppdaget: %1$d%% av tiden. Dobbeltsjekk beregningen din. COB kan overestimeres, og dermed kan mer insulin gis !!!!!</string>
     <string name="bolus_constraint_applied_warn">Bolus begrensning brukt: %1$.2f E til %2$.2f E</string>
     <string name="bolus_recorded_only">Bolus vil bare bli loggført (ikke levert av pumpe)</string>
@@ -645,7 +594,6 @@
     <string name="wizard_include_trend">Inkluder trend</string>
     <string name="wizard_include_iob">Inkluder IOB</string>
     <string name="wizard_include_cob">Inkluder COB</string>
-    <string name="wizard_advanced">Avansert</string>
     <string name="wizard_calculation">Beregning</string>
     <string name="no_action_selected">Ingen handling valgt. Ingenting endres</string>
     <string name="carb_equal_zero_no_action">Karbo = 0. Ingen handling utført!</string>
@@ -668,9 +616,8 @@
     <string name="wizard_explain_tt">Midl. mål: %1$s</string>
     <string name="wizard_explain_tt_to">%1$s til %2$s</string>
     <string name="wizard_pump_not_available">Ingen pumpe tilgjengelig!</string>
-    <string name="quickwizard">Hurtigknapp</string>
     <string name="quickwizard_managemnt">Hurtigknapp</string>
-    <!--    Preferences-->
+    
     <string name="child">Barn</string>
     <string name="teenage">Tenåring</string>
     <string name="adult">Voksen</string>
@@ -680,9 +627,9 @@
     <string name="max_bolus_title">Maks tillatt bolus [E]</string>
     <string name="max_carbs_title">Maks tillatt karbohydrater [g]</string>
     <string name="patient_type">Pasienttype</string>
-    <!--    Protection-->
+    
     <string name="unlock_settings">Lås opp innstillinger</string>
-    <!--    Pumps -->
+    
     <string name="battery_label">Batteri</string>
     <string name="reservoir_label">Reservoar</string>
     <string name="last_connection_label">Siste tilkobling</string>
@@ -691,23 +638,17 @@
     <string name="tempbasal_label">Midlertidig basal</string>
     <string name="extended_bolus_label">Forlenget bolus</string>
     <string name="serial_number">Serienummer</string>
-    <string name="last_bolus_format">%1$.2f E %2$s</string>
     <string name="disconnected">Frakoblet</string>
     <string name="connecting">Kobler til</string>
     <string name="clicked_connect_to_pump" comment="26 characters max for translation">Trykket på koble til pumpen</string>
-    <string name="reservoir_value">%1$.0f / %2$d E</string>
     <string name="daily_units">Daglige enheter</string>
     <string name="max_daily_units">Maks daglige enheter</string>
-    <string name="pump_icon">Pumpeikon</string>
-    <string name="view_profile">Vis profil</string>
     <string name="pump_history">Pumpehistorikk</string>
-    <string name="stats">Statistikk</string>
     <string name="pump_driver_change" comment="26 characters max for translation">Endre pumpedriver.</string>
     <string name="device_changed" comment="26 characters max for translation">Enheten er endret</string>
     <string name="bolus_ok" comment="26 characters max for translation">Bolus OK</string>
     <string name="temp_basal_delivery_error">Feil ved levering av midlertidig basal</string>
     <string name="ebstopsloop">Bruk av funksjonen Forlenget bolus vil stoppe lukket loop mens den forlengede bolusen kjører. Vil du virkelig at den skal brukes?</string>
-    <string name="not_set_short">Ikke angitt</string>
     <string name="pump_busy">Pumpen er opptatt</string>
     <string name="connection_error">Tilkoblingsfeil til pumpe</string>
     <string name="reading_pump_history">Leser pumpehistorikk</string>
@@ -722,13 +663,13 @@
     <string name="bolusspeed" comment="Speed at which bolus is delivered">Bolushastighet</string>
     <string name="history" comment="Tab/screen title for viewing past events">Historikk</string>
     <string name="overview_reservoir_concentration_value_over">Over %1$s igjen</string>
-    <!--    Constraints-->
+    
     <string name="limitingbasalratio">Begrenser maks basaldose til %1$.2f E/t på grunn av %2$s</string>
     <string name="pumplimit">pumpebegrensning</string>
     <string name="limitingpercentrate">Begrenser maks prosentsats til %1$d%% på grunn av %2$s</string>
     <string name="itmustbepositivevalue">det på være positiv verdi</string>
     <string name="limitingbolus">Begrenser bolus til %1$.1f E på grunn av %2$s</string>
-    <!--    Dialogs-->
+    
     <string name="confirmation">Bekreftelse</string>
     <string name="message">Melding</string>
     <string name="ok">OK</string>
@@ -738,47 +679,34 @@
     <string name="yes">Ja</string>
     <string name="no">Nei</string>
     <string name="close">Lukk</string>
-    <!-- TwoMessagesDialog -->
-    <string name="password_preferences_decrypt_prompt">Du må angi et hovedpassord som vil bli brukt for å lese inn og dekryptere innstillinger.</string>
-    <!-- <unattended_export> -->
+    
     <string name="export_ok">OK</string>
     <string name="export_warning">Advarsel</string>
     <string name="export_expired">Utløpt</string>
     <string name="export_disabled">Deaktivert</string>
     <string name="export_failed">Mislyktes</string>
     <string name="export_alert">Varsel</string>
-    <!-- Export dialog strings -->
+    
     <string name="master_password_missing">Hovedpassordet er ikke angitt!\n\nAngi et hovedpassord først, og prøv deretter på nytt.</string>
     <string name="export_to">Eksporter innstillinger til</string>
     <string name="password_preferences_encrypt_prompt">Du vil bli bedt om å oppgi hovedpassordet, som vil brukes til å kryptere eksporterte innstillinger.</string>
     <string name="preferences_export_canceled">Eksporten ble avbrutt! Innstillingene ble IKKE eksportert!</string>
-    <!-- <unattended_export result messages> -->
+    
     <string name="export_result_message_exported">Innstillinger eksportert</string>
     <string name="export_result_message_failed">Eksport av innstillinger MISLYKTES!</string>
     <string name="export_result_message_about_to_expire">Innstillinger eksportert: passord er i ferd med å utløpe snart. Eksporter manuelt og skriv inn passord på nytt.</string>
     <string name="export_result_message_expired">Eksport av innstillinger avbrutt: passord utløpt. Eksporter manuelt og skriv inn passord på nytt!</string>
     <string name="export_result_message_disabled">Advarsel (automatisering): Eksport av innstillinger er ikke aktivert!</string>
-    <!-- Cloud export -->
+    
     <string name="export_cloud_success">Skyeksporten var vellykket</string>
     <string name="export_cloud_failed">Skyeksport MISLYKKET!</string>
     <string name="csv_exported">Brukeroppføringer eksportert</string>
     <string name="csv_export_failed">Eksport av brukeroppføringer MISLYKKET!</string>
     <string name="logs_sent">Logger sendt via e-post</string>
     <string name="logs_send_failed">Kunne ikke sende logger</string>
-    <string name="export_options">Eksportalternativer</string>
     <string name="cloud_directory">Skymappe</string>
-    <string name="export_settings_local">Eksporter innstillinger (lokalt)</string>
-    <string name="export_settings_cloud">Eksporter innstillinger (sky)</string>
-    <string name="export_settings_both">Eksporter innstillinger (lokalt + sky)</string>
-    <string name="import_settings_local">Importer innstillinger (lokalt)</string>
-    <string name="import_settings_cloud">Importer innstillinger (sky)</string>
-    <string name="import_settings_both">Importer innstillinger (lokalt/sky)</string>
-    <string name="send_logs_to_cloud">Eksporter logger til skyen</string>
-    <string name="export_csv_to_cloud">Eksporter brukeroppføringer til skyen (CSV)</string>
-    <string name="export_csv_to_local">Eksporter brukeroppføringer lokalt (CSV)</string>
-    <string name="setup_cloud_directory_first">Sett opp skymappe først for å bruke Eksportinnstillinger</string>
     <string name="cloud_token_expired_or_invalid">Autorisasjonen for skylagring er utløpt eller ugyldig. Godkjenn på nytt.</string>
-    <!-- Export destination chip labels -->
+    
     <string name="chip_local">Lokal</string>
     <string name="chip_cloud">Sky</string>
     <string name="chip_email">E-post</string>
@@ -787,7 +715,7 @@
     <string name="database_management">Databasebehandling</string>
     <string name="data_choices">Datavalg</string>
     <string name="unattended_settings_export">Uovervåket eksport av innstillinger</string>
-    <!-- Maintenance bottom sheet descriptions -->
+    
     <string name="maintenance_log_settings_desc">Konfigurer loggnivåer</string>
     <string name="maintenance_send_logs_desc">Del loggfiler for feilsøking</string>
     <string name="maintenance_delete_logs_desc">Fjern gamle loggfiler</string>
@@ -799,7 +727,7 @@
     <string name="maintenance_cleanup_db_desc">Fjern gamle oppføringer fra databasen</string>
     <string name="maintenance_reset_aps_results_desc">Fjern lagrede algoritmeresultater</string>
     <string name="maintenance_reset_db_desc">Slett alle databaser og start på nytt</string>
-    <!-- Cloud directory dialog (Compose) -->
+    
     <string name="select_storage_type">Velg lagringstype</string>
     <string name="clear_cloud_action">Tøm innstillinger</string>
     <string name="clear_cloud_settings">Tøm skyinnstillinger</string>
@@ -810,32 +738,28 @@
     <string name="cloud_auth_success">Autentisering av skylagring vellykket</string>
     <string name="authorization_status">Autorisasjonsstatus</string>
     <string name="format_hour_minute">%1$dt %2$dm</string>
-    <!-- datetime layout -->
+    
     <string name="event_time_label">Tidspunkt for hendelse</string>
-    <!-- BluetoothDevicePreference -->
+    
     <string name="need_connect_permission">Appen trenger bluetooth-tillatelse</string>
-    <!--    Combo-->
+    
     <string name="user_request" comment="26 characters max for translation">Brukerforespørsel</string>
     <string name="pump_pair">Paring</string>
     <string name="pump_unpair">Opphev paring</string>
     <string name="pump_paired" comment="26 characters max for translation">Pumpe sammenkoblet</string>
-    <!--    BlePreCheck-->
+    
     <string name="ble_not_supported">Lavenergi Bluetooth er ikke støttet.</string>
     <string name="ble_not_supported_or_not_paired">Lavenergi Bluetooth er ikke støttet eller enheten er ikke sammenkoblet.</string>
     <string name="ble_not_enabled">Bluetooth er ikke aktivert.</string>
     <string name="ble_permissions_missing">Bluetooth-tillatelser er ikke gitt. Gi dem tilgang i appinnstillingene.</string>
-    <string name="location_not_found_title">Stedstjeneste er ikke aktivert</string>
-    <string name="location_not_found_message">Bluetooth søk på nye mobiler virker bare når posisjonstjeneste er aktivert. AAPS lagrer ikke dine posisjonsdata og den kan derfor slås av etter vellykket sammenkobling.</string>
-    <!--    Preferences -->
     <string name="nav_plugin_preferences">Innstillinger for plugin</string>
-    <!-- Navigation -->
+    
     <string name="nav_about">Om</string>
     <string name="nav_about_desc">Se appversjon og informasjon</string>
     <string name="nav_exit">Avslutt</string>
     <string name="open_navigation">Åpne meny</string>
     <string name="nav_history_browser">Historikkleser</string>
     <string name="nav_history_browser_desc">Bla gjennom historiske data og grafer</string>
-    <string name="overview">Oversikt</string>
     <string name="appearance">Utseende</string>
     <string name="manage">Administrer</string>
     <string name="localprofile">Profil</string>
@@ -849,18 +773,16 @@
     <string name="nav_profile_helper_desc">Bygg din profil basert på vekt eller TDD</string>
     <string name="quick_launch_configure">Konfigurer Hurtigstart</string>
     <string name="quick_launch_configure_desc">Tilpass hurtigstartsknapper i oversikten</string>
-    <!-- Alerts -->
+    
     <string name="localalertsettings_title">Lokale varsler</string>
-    <!-- Actions Screen -->
+    
     <string name="add">Legg til</string>
     <string name="remove">Fjern</string>
     <string name="reorder">Endre rekkefølge</string>
-    <string name="actions">Handlinger</string>
     <string name="status">Status</string>
     <string name="pump_actions">Pumpehandlinger</string>
     <string name="tempbasal_button">Midlertidig basal</string>
     <string name="extended_bolus_button">Forlenget bolus</string>
-    <string name="tools">Verktøy</string>
     <string name="device_maintenance">Enhetsvedlikehold</string>
     <string name="from_label">Fra</string>
     <string name="to_label">Til</string>
@@ -869,9 +791,9 @@
     <string name="pb_label">Pumpebatteri</string>
     <string name="cannula">Kanyle</string>
     <string name="patch_pump">Patchpumpe</string>
-    <!-- Site Rotation -->
+    
     <string name="select_location">Klikk nedenfor for å velge stedsplassering</string>
-    <!-- About -->
+    
     <string name="cta_dont_kill_my_app_info">Ikke steng appen min?</string>
     <string name="fabric_upload_disabled">Opplast av krasjlogger er deaktivert!</string>
     <string name="about_link_urls">\n\nDokumentasjon:\nhttps://androidaps.readthedocs.io\n\nFacebook:\nhttps://www.facebook.com/groups/AndroidAPSUsers</string>
@@ -887,13 +809,13 @@
         <item quantity="one">%1$d minutt</item>
         <item quantity="other">%1$d minutter</item>
     </plurals>
-    <!--    Maintenance-->
+    
     <string name="cleanup_db_confirm">Vil du rydde opp i databasen?\nDet vil fjerne sporede endringer og historiske data eldre enn 3 måneder.</string>
     <string name="cleanup_db_confirm_sync">Vil du rydde opp i databasen?\nDet vil fjerne sporede endringer og historiske data eldre enn 3 måneder.\nÅ gjøre dette vil øke hastigheten på synkronisering betydelig.</string>
     <string name="cleared_entries">Fjernet oppføringer</string>
     <string name="reset_db_confirm">Vil du virkelig tilbakestille databasene?</string>
     <string name="reset_aps_results_confirm">Vil du virkelig tilbakestille lagrede APS-resultater?</string>
-    <!--    Weekday-->
+    
     <string name="weekday_sunday_short">Søn</string>
     <string name="weekday_saturday_short">Lør</string>
     <string name="weekday_friday_short">Fre</string>
@@ -901,18 +823,17 @@
     <string name="weekday_wednesday_short">Ons</string>
     <string name="weekday_tuesday_short">Tir</string>
     <string name="weekday_monday_short">Man</string>
-    <!--    DecimalFormatterImpl -->
+    
     <string name="format_insulin_units1">%1$.1f E</string>
     <string name="format_insulin_units">%1$.2f E</string>
     <string name="format_insulin_units_signed">%1$+.2f E</string>
     <string name="percent_rate_duration">Dose: %1$.2f%% (%2$.2f E/t) Varighet: %3$d min</string>
     <string name="rate_percent_duration">Dose: %1$.2f E/t (%2$.2f%%) Varighet: %3$d min</string>
-    <string name="percent_rate_duration_formatted"><![CDATA[<b>Dose</b>: %1$.2f%% (%2$.2f E/t)<br><b>Varighet</b>: %3$d min<br>]]></string>
-    <string name="rate_percent_duration_formatted"><![CDATA[<b>Dose</b>: %1$.2f E/t (%2$.2f%%) <br><b>Varighet</b>: %3$d min<br>]]></string>
-    <!--    Playback-->
+    <string name="percent_rate_duration_formatted">&lt;b&gt;Dose&lt;/b&gt;: %1$.2f%% (%2$.2f E/t)&lt;br&gt;&lt;b&gt;Varighet&lt;/b&gt;: %3$d min&lt;br&gt;</string>
+    <string name="rate_percent_duration_formatted">&lt;b&gt;Dose&lt;/b&gt;: %1$.2f E/t (%2$.2f%%) &lt;br&gt;&lt;b&gt;Varighet&lt;/b&gt;: %3$d min&lt;br&gt;</string>
+    
     <string name="audio_playback_attribution">"AAPS spiller av lyd"</string>
-    <!-- ProfileEditor -->
-    <string name="dia_short">DIA</string>
+    
     <string name="basal_short">BAS</string>
     <string name="target_short">MÅL</string>
     <string name="profile_name">Profilnavn:</string>
@@ -927,13 +848,7 @@
     <string name="remove_entry">Fjern oppføring</string>
     <string name="target_low_label">Lav</string>
     <string name="target_high_label">Høy</string>
-    <string name="select_profile">Velg profil du vil redigere</string>
-    <string name="a11y_add_new_profile">legg til ny profil</string>
-    <string name="a11y_clone_profile">klone gjeldende profil</string>
-    <string name="a11y_delete_current_profile">slett gjeldende profil</string>
-    <!--    Search-->
     <string name="search">Søk</string>
-    <string name="search_preferences">Søk i innstillinger</string>
     <string name="clear">Tøm</string>
     <string name="search_category_categories">Innstillingskategorier</string>
     <string name="search_category_preferences">Innstillinger</string>
@@ -943,7 +858,7 @@
     <string name="wiki_search_offline">Søk etter dokumentasjon krever internettforbindelse</string>
     <string name="no_search_results">Ingen resultater funnet</string>
     <string name="search_plugin_disabled">Plugin %1$s deaktivert</string>
-    <!--    Food Management -->
+    
     <string name="food_management">Mat</string>
     <string name="food_deleted">Mat slettet</string>
     <string name="edit_food">Rediger mat</string>
@@ -953,9 +868,6 @@
     <string name="subcategory">Underkategori</string>
     <string name="portion">Porsjon</string>
     <string name="unit_label">Enhet</string>
-    <string name="fat">Fett</string>
-    <string name="protein">Protein</string>
-    <string name="energy">Energi</string>
     <string name="undo">Angre</string>
     <string name="no_data">Ingen data</string>
     <string name="manage_food_desc">Administrer oppføringer i matdatabasen</string>
@@ -963,20 +875,17 @@
     <string name="label_fat_g">Fett (g)</string>
     <string name="label_protein_g">Protein (g)</string>
     <string name="label_energy_kj">Energi (kJ)</string>
-    <!--    Log Settings-->
+    
     <string name="nav_logsettings">Logginnstillinger</string>
     <string name="resettodefaults">Tilbakestill til standardinnstillinger</string>
-    <!--    Maintenance-->
+    
     <string name="maintenance">Vedlikehold</string>
     <string name="description_maintenance">Tilbyr flere funksjoner for vedlikehold (f.eks. loggsending, loggsletting).</string>
     <string name="log_files">Loggfiler</string>
-    <string name="send_all_logs">Send logger via e-post</string>
     <string name="delete_logs">Slett logger</string>
     <string name="logs_deleted">Logger slettet</string>
     <string name="aaps_directory">AAPS-mappe</string>
     <string name="import_setting">Importer innstillinger</string>
-    <string name="miscellaneous">Annet</string>
-    <!-- Import settings screen -->
     <string name="import_decrypt_review">Dekrypter &amp; Gjennomgå</string>
     <string name="import_decrypt">Dekrypter</string>
     <string name="import_master_password">Hovedpassord</string>
@@ -987,35 +896,28 @@
     <string name="import_anyway_btn">Importer uansett</string>
     <string name="import_restart_title">Innstillinger importert</string>
     <string name="import_restart_message">Innstillingene er importert. Appen må startes på nytt.</string>
-    <string name="import_file_details">Fildetaljer</string>
     <string name="import_source_local">Lokal</string>
     <string name="import_source_cloud">Sky</string>
     <string name="import_load_more">Last inn mer</string>
     <string name="import_no_files">Ingen innstillingsfiler funnet</string>
-    <string name="import_review_summary">Sammendrag av import</string>
     <string name="import_decrypt_ok">Dekryptering vellykket. Klar til import.</string>
     <string name="import_decrypt_warn">Dekrypteringen var vellykket, men det finnes advarsler.</string>
     <string name="import_decrypt_error">Dekrypteringen var vellykket, men importen er ikke mulig.</string>
-    <string name="import_check_before">Vennligst sjekk innstillingene før importering:</string>
-    <string name="import_check_dangerous">Innstillinger skal ikke importeres!</string>
-    <string name="import_check_cannot">Innstillingene kan ikke importeres!</string>
-    <string name="import_explain_issues">Forklar importproblemer\u2026</string>
     <string name="reset_aps_results">Tilbakestill APS-resultater</string>
     <string name="database_cleanup">Opprydding av databasen</string>
     <string name="nav_resetdb">Tilbakestill databaser</string>
-    <!--    BLE Scan Step (shared pump pairing) -->
+    
     <string name="ble_scan_select_pump">Velg pumpen din fra listen nedenfor</string>
     <string name="ble_scan_scanning">Skanner etter enheter…</string>
-    <!-- Graph configuration -->
+    
     <string name="graph_add">Legg til graf</string>
     <string name="graph_new">Ny graf</string>
-    <string name="graph_edit">Rediger graf</string>
     <string name="graph_number">Graf %1$d</string>
     <string name="graph_bg">BS-graf</string>
     <string name="graph_height">Grafhøyde [dp]</string>
     <string name="predictions_shortname" comment="Short label for Predictions graph series">PRED</string>
     <string name="basal_shortname" comment="Short label for Basal, used in graph labels">BAS</string>
-    <!-- Graph series short names (used as graph labels, keep very short) -->
+    
     <string name="deviation_shortname" comment="Short label for Deviations graph series">AVVIK</string>
     <string name="activity_shortname" comment="Short label for Activity graph series">AKT</string>
     <string name="bgi_shortname" comment="Short label for Blood Glucose Impact graph series">BGI</string>

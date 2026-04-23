@@ -1,6 +1,6 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <!-- Source -->
+    
     <string name="ns_client_bg">NSClient BG</string>
     <string name="ns_client_bg_short">NS BG</string>
     <string name="description_source_ns_client">Nightscout에서 다운로드하여 혈당값 받기</string>
@@ -24,10 +24,4 @@
     <string name="random_bg">무작위 BG</string>
     <string name="description_source_random_bg">무작위로 BG 데이터를 생성합니다 (데모 버전 전용)</string>
     <string name="random_bg_short">BG</string>
-    <string name="direction">방향</string>
-    <!-- Patched Syai Tag App -->
-    <!-- Patched SI App -->
-    <!-- Patched Sino App -->
-    <!-- Notification Reader -->
-    <!-- Permission rationales -->
-</resources>
+    </resources>

@@ -1,13 +1,13 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <!-- Omnipod - Pod Management -->
+    
     <string name="omnipod_common_pod_management_button_activate_pod">激活Pod</string>
     <string name="omnipod_common_pod_management_button_deactivate_pod">停用Pod</string>
     <string name="omnipod_common_pod_management_button_discard_pod">丢弃Pod</string>
     <string name="omnipod_common_pod_management_discard_pod_confirmation">如果你丢弃了Pod，你将无法再与它通信。只有当与Pod的所有通信持续失败时，才应该这样做。如果您仍然可以与Pod通信，请使用<b>停用Pod</b>选项。\n\n如果您希望继续，请确保从您的身体上移除Pod！</string>
     <string name="omnipod_common_pod_management_button_play_test_beep">播放Beep测试音</string>
     <string name="omnipod_common_pod_management_button_pod_history">Pod 历史</string>
-    <!-- Omnipod - Error -->
+    
     <string name="omnipod_common_error_pod_not_attached">没有活动的 Pod</string>
     <string name="omnipod_common_error_set_basal_failed">设定基础率配置文件失败。</string>
     <string name="omnipod_common_error_bolus_did_not_succeed">大剂量没有成功。</string>
@@ -28,17 +28,16 @@
     <string name="omnipod_common_error_failed_to_play_test_beep">播放测试蜂鸣声失败</string>
     <string name="omnipod_common_error_time_out_of_sync">Pod上的时间不匹配。请在 Omnipod 选项卡中更新时间。</string>
     <string name="omnipod_common_error_unexpected_exception">发生意外错误。请报告！ (%1$s: %2$s)。</string>
-    <!-- Omnipod - Confirmation -->
+    
     <string name="omnipod_common_confirmation_expiration_alerts_updated">警报配置已在 Pod中更新。</string>
     <string name="omnipod_common_confirmation_time_on_pod_updated">Pod上的时间已更新。</string>
-    <!-- Omnipod - Overview -->
+    
     <string name="omnipod_common_overview_button_set_time">设置时间</string>
     <string name="omnipod_common_overview_button_suspend_delivery">暂停</string>
     <string name="omnipod_common_overview_button_resume_delivery">恢复输注</string>
     <string name="omnipod_common_overview_button_silence_alerts">静默报警</string>
     <string name="omnipod_common_overview_pod_status">Pod状态</string>
     <string name="omnipod_common_overview_total_delivered">输注总量</string>
-    <string name="omnipod_common_overview_total_delivered_value">%1$.2f U</string>
     <string name="omnipod_common_overview_pod_unique_id">唯一 ID</string>
     <string name="omnipod_common_overview_lot_number">批号</string>
     <string name="omnipod_common_overview_pod_sequence_number">序号</string>
@@ -50,13 +49,12 @@
     <string name="omnipod_common_overview_pod_active_alerts">Pod活动提醒</string>
     <string name="omnipod_common_overview_firmware_version">固件版本</string>
     <string name="omnipod_common_overview_time_on_pod">Pod上的时间</string>
-    <string name="omnipod_common_overview_temp_basal_concentration_value">%1$s @%2$s (%3$d/%4$d 分钟)</string>
     <string name="omnipod_common_uncertain">不确定</string>
-    <!-- Omnipod - Wizard Base -->
+    
     <string name="omnipod_common_wizard_button_deactivate_pod">停用Pod</string>
     <string name="omnipod_common_wizard_exit_confirmation_text">您尚未完成所有步骤。您确定要退出吗？</string>
     <string name="omnipod_common_wizard_exit_confirmation_title">退出</string>
-    <!-- Omnipod - Pod Activation Wizard -->
+    
     <string name="omnipod_common_pod_activation_wizard_start_pod_activation_title">Fill 填充Pod</string>
     <string name="omnipod_common_pod_activation_wizard_initialize_pod_title">初始化Pod</string>
     <string name="omnipod_common_pod_activation_wizard_attach_pod_title">粘贴Pod</string>
@@ -66,7 +64,7 @@
     <string name="omnipod_common_pod_activation_wizard_insert_cannula_text">试着设定初始化基础率表并插入输注套管。\n\n成功插入导管后，可以按 <b>下一步</b>。</string>
     <string name="omnipod_common_pod_activation_wizard_pod_activated_title">Pod 已激活</string>
     <string name="omnipod_common_pod_activation_wizard_pod_activated_text">新Pod 现在处于活动状态。\n\n您的基础率已设定，套管已插入。\n\n请检查确保套管已正确插入，如果您认为未正确插入，请更换Pod 。</string>
-    <!-- Omnipod - Pod Deactivation Wizard -->
+    
     <string name="omnipod_common_pod_deactivation_wizard_start_pod_deactivation_title">停用Pod</string>
     <string name="omnipod_common_pod_deactivation_wizard_start_pod_deactivation_text">按 <b>下一步</b>以停用Pod。\n\n<b>注意:</b>这将暂停所有胰岛素输注并停用Pod。</string>
     <string name="omnipod_common_pod_deactivation_wizard_deactivating_pod_title">停用Pod</string>
@@ -77,7 +75,7 @@
     <string name="omnipod_common_pod_deactivation_wizard_pod_discarded_text">Pod状态已被丢弃。因为Pod未正确停用，所以胰岛素输注尚未暂停！\n\n请将Pod从身上移除，并回收它。</string>
     <string name="omnipod_common_pod_deactivation_wizard_discard_pod_confirmation">如果您丢弃Pod，您将无法与它通信。 您只能在Pod 的所有通信持续失败时才这样做。您确定要丢弃Pod吗？</string>
     <string name="omnipod_common_pod_deactivation_wizard_discard_pod">丢弃Pod</string>
-    <!-- Omnipod - Preferences -->
+    
     <string name="omnipod_common_preferences_bolus_beeps_enabled">大剂量蜂鸣音已启用</string>
     <string name="omnipod_common_preferences_basal_beeps_enabled">基础率蜂鸣音已启用</string>
     <string name="omnipod_common_preferences_smb_beeps_enabled">SMB蜂鸣音已启用</string>
@@ -102,7 +100,7 @@
     <string name="omnipod_common_preferences_notification_uncertain_bolus_sound_enabled">常规大剂量不确定时启用声音通知</string>
     <string name="omnipod_common_preferences_notification_delivery_suspended_sound_enabled">输注暂停时开启声音通知</string>
     <string name="omnipod_dash_use_bonding">在安卓15 上配对蓝牙设备</string>
-    <!-- Omnipod - Pod Status -->
+    
     <string name="omnipod_common_pod_status_no_active_pod">没有活动的 Pod</string>
     <string name="omnipod_common_pod_status_waiting_for_activation">正在设置 (等待Pod 激活)</string>
     <string name="omnipod_common_pod_status_waiting_for_cannula_insertion">正在设置 (等待输注导管插入)</string>
@@ -111,13 +109,13 @@
     <string name="omnipod_common_pod_status_pod_fault">Pod 故障</string>
     <string name="omnipod_common_pod_status_inactive">未启用</string>
     <string name="omnipod_common_pod_status_pod_fault_description">Pod 故障: %1$03d %2$s</string>
-    <!-- Omnipod - Alerts -->
+    
     <string name="omnipod_common_alert_expiration">Pod 将很快过期</string>
     <string name="omnipod_common_alert_expiration_advisory">Pod 将很快过期</string>
     <string name="omnipod_common_alert_shutdown_imminent">即将关机</string>
     <string name="omnipod_common_alert_low_reservoir">低药量</string>
     <string name="omnipod_common_alert_unknown_alert">未知警报</string>
-    <!-- Omnipod - Commands -->
+    
     <string name="omnipod_common_cmd_initialize_pod">初始化Pod</string>
     <string name="omnipod_common_cmd_insert_cannula">植入输注导管</string>
     <string name="omnipod_common_cmd_deactivate_pod">停用Pod</string>
@@ -142,11 +140,11 @@
     <string name="omnipod_common_cmd_play_test_beep">播放Beep测试音</string>
     <string name="omnipod_common_cmd_unknown_entry">未知条目</string>
     <string name="omnipod_common_disable_suspend_alerts" comment="Custom command label for disabling suspend alerts">禁用暂停提醒</string>
-    <!-- Omnipod - Alerts -->
+    
     <string name="omnipod_common_alert_finish_pairing_reminder">完成配对提醒</string>
     <string name="omnipod_common_alert_finish_setup_reminder_reminder">完成设置提醒</string>
-    <!-- Omnipod - Other -->
-    <!-- Omnipod - Times -->
+    
+    
     <string name="omnipod_common_moments_ago">刚刚</string>
     <string name="omnipod_common_less_than_a_minute_ago">不到一分钟前</string>
     <string name="omnipod_common_composite_time">%1$s 和 %2$s</string>

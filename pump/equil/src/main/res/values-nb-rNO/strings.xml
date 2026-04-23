@@ -1,7 +1,7 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version='1.0' encoding='utf-8'?>
 <resources>
     <string name="equil_pump_description">Equil 5.3 eller nyere patchpumpe </string>
-    <!--  start  -->
+    
     <string name="equil_basal_speed">Grunnbasal</string>
     <string name="equil_dressing">Bytt reservoar</string>
     <string name="equil_dressing_onkey_msg">Beveger automatisk stempel til bunnen av reservoaret. Den stopper automatisk når bunnen nås. Klikk \"Stopp\" for å avbryte om nødvendig.</string>
@@ -28,7 +28,6 @@
     <string name="equil_tone_mode_shake">Kun vibrering</string>
     <string name="equil_tone_mode_tone">Kun lyd</string>
     <string name="equil_tone_mode_tone_and_shake">Vibrering og lyd</string>
-    <string name="equil_unit_u">%1$s E</string>
     <string name="equil_unbind_content">Denne operasjonen vil stoppe insulininfusjonen og trekke pumpestempelet tilbake til bunnen! Den vil også slette bindingsstatusen!</string>
     <string name="equil_ble_config_confirmation_title">Sammenkoble Equil-patchpumpe</string>
     <string name="equil_error">Tilkoblingsfeil</string>
@@ -55,7 +54,7 @@
     <string name="equil_shutdown">Equil auto-av</string>
     <string name="equil_common_history_tbr_value">Dose： %1$.2f E/t，varighet： %2$d minutter</string>
     <string name="equil_common_history_bolus_value">%1$.2f E</string>
-    <!-- equil - Commands -->
+    
     <string name="equil_common_cmd_set_bolus">Angi bolus</string>
     <string name="equil_common_cmd_cancel_bolus">Avbryt bolus</string>
     <string name="equil_common_cmd_set_tbr">Angi midlertidig basal</string>
@@ -69,7 +68,7 @@
     <string name="equil_common_cmd_unpair">Koble fra Equil</string>
     <string name="equil_common_cmd_set_extended_bolus">Angi forlenget bolus</string>
     <string name="equil_common_cmd_cancel_extended_bolus">Avbryt forlenget bolus</string>
-    <!--    推杆回退-->
+    
     <string name="equil_common_change_insulin">Tilbaketrekking av skyvestangen</string>
     <string name="equil_common_set_alarm_tone">Konfigurer kun for varslingslyd</string>
     <string name="equil_common_set_alarm_shake">Konfigurer kun for vibrasjon</string>
@@ -115,7 +114,6 @@
     <string name="equil_history_item18">Unormal infusjon stoppet</string>
     <string name="equil_common_overview_button_suspend_delivery">Pause</string>
     <string name="equil_common_overview_button_resume_delivery">Gjenoppta tilførselen</string>
-    <string name="equil_common_overview_tbr_value">%1$s @%2$s (%3$d/%4$d min)</string>
     <string name="equil_common_moments_ago">For litt siden</string>
     <string name="equil_common_less_than_a_minute_ago">Mindre enn ett minutt siden</string>
     <string name="equil_common_time_ago">%1$s siden</string>

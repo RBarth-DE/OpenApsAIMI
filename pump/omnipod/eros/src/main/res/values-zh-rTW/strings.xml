@@ -1,11 +1,11 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <!-- Omnipod Eros - Description -->
+    
     <string name="omnipod_eros_pump_description">Omnipod Eros 幫浦整合（舊款，帶有透明針帽）。需要至少韌體版本 2.0 的 RileyLink 裝置。</string>
-    <!-- Omnipod Eros - Overview -->
-    <!-- Omnipod Eros - Errors -->
+    
+    
     <string name="omnipod_eros_error_riley_link_address_invalid">RileyLink 地址無效。</string>
-    <!-- Omnipod Eros - Preferences -->
+    
     <string name="omnipod_eros_preferences_pulse_log_button_enabled">在 Pod 管理選單中顯示脈搏日誌按鈕</string>
     <string name="omnipod_eros_preferences_riley_link_stats_button_enabled">在 Pod 管理選單中顯示 RileyLink 統計按鈕</string>
     <string name="omnipod_eros_preferences_battery_change_logging_enabled">在動作中啟用電池更換日誌</string>
@@ -13,7 +13,7 @@
     <string name="omnipod_eros_history_bolus_value">%1$.2f U</string>
     <string name="omnipod_eros_history_bolus_value_with_carbs">%1$.2f U, CH=%2$.1f g</string>
     <string name="omnipod_eros_history_tbr_value">速率：%1$.2f U，持續時間：%2$d 分鐘</string>
-    <!-- Omnipod Eros - Error -->
+    
     <string name="omnipod_eros_error_crc_mismatch">通訊失敗：訊息完整性驗證失敗</string>
     <string name="omnipod_eros_error_invalid_packet_type">通訊失敗：從 Pod 收到無效封包</string>
     <string name="omnipod_eros_error_invalid_progress_state">通訊失敗：Pod 處於錯誤狀態</string>
@@ -42,13 +42,12 @@
     <string name="omnipod_eros_error_bolus_failed_uncertain">無法確認注射是否成功。請手動確認你的 Pod 是否正在注射，通過聆聽點擊聲。如果你確定注射未成功，你應該手動從治療中刪除注射條目，即使你現在點擊“取消注射”！</string>
     <string name="omnipod_eros_error_bolus_failed_uncertain_smb">無法確認 SMB 注射 (%1$.2f U) 是否成功。如果你確定注射未成功，你應該手動從治療中刪除 SMB 條目。</string>
     <string name="omnipod_eros_error_tbr_running_but_aaps_not_aware">Pod 正在運行臨時基礎輸送，但 AAPS 不知道這個臨時基礎輸送。請手動取消你的臨時基礎輸送。</string>
-    <!-- Omnipod Eros - Pod Management -->
+    
     <string name="omnipod_eros_pod_management_button_riley_link_stats">RileyLink 統計</string>
     <string name="omnipod_eros_pod_management_button_reset_riley_link_config">重設 RileyLink</string>
-    <string name="omnipod_eros_pod_management_button_read_pulse_log">讀取脈搏日誌</string>
     <string name="omnipod_eros_pod_management_pulse_log">脈搏日誌</string>
     <string name="omnipod_eros_pod_management_pulse_log_value">脈搏日誌（已複製到剪貼簿）</string>
-    <!-- Omnipod Eros - Pod Activation Wizard -->
+    
     <string name="omnipod_eros_pod_activation_wizard_start_pod_activation_text">將足夠 3 天的胰島素注入新 Pod。\n\n在加注過程中，請聆聽 Pod 發出的兩聲嗶聲，這表示已注入最低量 80U。即使聽到兩聲嗶聲，也請務必將注射器完全排空。\n\n加注完成後，請按<b>下一步</b>。\n\n<b>注意：</b>此時不要取下 Pod 的針帽。\n<b>注意：</b>請將 RileyLink 豎直放置，並將 Pod 放在其幾英寸之外。</string>
     <string name="omnipod_eros_pod_activation_wizard_initialize_pod_text">嘗試與新 Pod 配對並進行預填充。\n\n初始化過程完成後，請按<b>下一步</b>。\n\n<b>注意：</b>請將 RileyLink 豎直放置，並將 Pod 放在其幾英寸之外。</string>
 </resources>

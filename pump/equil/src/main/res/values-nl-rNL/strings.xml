@@ -1,7 +1,7 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version='1.0' encoding='utf-8'?>
 <resources>
     <string name="equil_pump_description">Equil 5.3 of nieuwere Patch Pomp </string>
-    <!--  start  -->
+    
     <string name="equil_basal_speed">Basis basaal</string>
     <string name="equil_dressing">Vervang reservoir</string>
     <string name="equil_dressing_onkey_msg">De zuiger automatisch naar de bodem van het reservoir aan het verplaatsen. Deze zal automatisch stoppen in de eindstand. Klik op \'Stop\' om te onderbreken indien nodig.</string>
@@ -21,7 +21,6 @@
     <string name="equil_tone_mode_shake">Alleen trillen</string>
     <string name="equil_tone_mode_tone">Alleen toon</string>
     <string name="equil_tone_mode_tone_and_shake">Trillen en geluid</string>
-    <string name="equil_unit_u">%1$s E</string>
     <string name="equil_ble_config_confirmation_title">Koppel Equil patch pomp</string>
     <string name="equil_error">Communicatiefout</string>
     <string name="equil_change">Vervang pomp</string>
@@ -47,7 +46,7 @@
     <string name="equil_shutdown">Equil auto uit</string>
     <string name="equil_common_history_tbr_value">Snelheid: %1$.2f E/u, duur: %2$d minuten</string>
     <string name="equil_common_history_bolus_value">%1$.2f E</string>
-    <!-- equil - Commands -->
+    
     <string name="equil_common_cmd_set_bolus">Bolus instellen</string>
     <string name="equil_common_cmd_cancel_bolus">Annuleer Bolus</string>
     <string name="equil_common_cmd_set_tbr">Tijdelijke basaal instellen</string>
@@ -61,7 +60,7 @@
     <string name="equil_common_cmd_unpair">Ontkoppel Equil</string>
     <string name="equil_common_cmd_set_extended_bolus">Vertraagde bolus instellen</string>
     <string name="equil_common_cmd_cancel_extended_bolus">Annuleer vertraagde bolus</string>
-    <!--    推杆回退-->
+    
     <string name="equil_common_change_insulin">Drukstang terugtrekken</string>
     <string name="equil_common_set_alarm_tone">Alleen voor meldingsgeluid instellen</string>
     <string name="equil_common_set_alarm_shake">Alleen configureren voor trillingen</string>

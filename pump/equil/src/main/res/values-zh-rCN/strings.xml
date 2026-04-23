@@ -1,7 +1,7 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version='1.0' encoding='utf-8'?>
 <resources>
     <string name="equil_pump_description">Equil 5.3或更新版本的贴片泵 </string>
-    <!--  start  -->
+    
     <string name="equil_basal_speed">基础率</string>
     <string name="equil_dressing">更换储药器</string>
     <string name="equil_dressing_onkey_msg">自动将活塞移动到储药器底部。到达底部后会自动停止。如有需要，点击“停止”以中断。</string>
@@ -28,7 +28,6 @@
     <string name="equil_tone_mode_shake">仅振动</string>
     <string name="equil_tone_mode_tone">仅声音</string>
     <string name="equil_tone_mode_tone_and_shake">振动和铃声</string>
-    <string name="equil_unit_u">%1$s U</string>
     <string name="equil_unbind_content">此操作将停止胰岛素输注并将泵活塞缩回底部！同时，它还会删除绑定状态！</string>
     <string name="equil_ble_config_confirmation_title">配对 Equil 贴片泵</string>
     <string name="equil_error">连接错误</string>
@@ -55,7 +54,7 @@
     <string name="equil_shutdown">Equil 自动关闭</string>
     <string name="equil_common_history_tbr_value">速率： %1$.2f U/H，持续时间： %2$d 分钟</string>
     <string name="equil_common_history_bolus_value">%1$.2f U</string>
-    <!-- equil - Commands -->
+    
     <string name="equil_common_cmd_set_bolus">设置大剂量</string>
     <string name="equil_common_cmd_cancel_bolus">取消大剂量</string>
     <string name="equil_common_cmd_set_tbr">设置临时基础率</string>
@@ -69,7 +68,7 @@
     <string name="equil_common_cmd_unpair">取消配对 Equil</string>
     <string name="equil_common_cmd_set_extended_bolus">设置扩展大剂量</string>
     <string name="equil_common_cmd_cancel_extended_bolus">取消扩展大剂量</string>
-    <!--    推杆回退-->
+    
     <string name="equil_common_change_insulin">推杆回缩</string>
     <string name="equil_common_set_alarm_tone">仅配置通知声音</string>
     <string name="equil_common_set_alarm_shake">仅配置振动</string>
@@ -115,7 +114,6 @@
     <string name="equil_history_item18">异常输注停止</string>
     <string name="equil_common_overview_button_suspend_delivery">暂停</string>
     <string name="equil_common_overview_button_resume_delivery">恢复输注</string>
-    <string name="equil_common_overview_tbr_value">%1$s @%2$s (%3$d/%4$d min)</string>
     <string name="equil_common_moments_ago">刚刚</string>
     <string name="equil_common_less_than_a_minute_ago">不到一分钟前</string>
     <string name="equil_common_time_ago">%1$s 前</string>

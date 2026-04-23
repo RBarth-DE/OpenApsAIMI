@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version='1.0' encoding='utf-8'?>
 <resources>
     <string name="resetpairing">מחיקת צימוד</string>
     <string name="diaconn_pairing">צימוד משאבת Diaconn</string>
@@ -30,10 +30,8 @@
     <string name="insulinlimitviolation">כמות אינסולין גבוהה מדי</string>
     <string name="boluserrorcode">התבקש: %1$.2f יח\' הוזרק: %2$.2f יח\' קוד שגיאה: %3$s</string>
     <string name="selectedpump">משאבה נבחרת</string>
-    <string name="diaconn_g8_bluetooth_status">מצב בלוטות\'</string>
     <string name="bolus_step">צעד במינון בולוס</string>
     <string name="basal_step">צעד במינון בזאלי</string>
-    <string name="diaconn_g8_user_options">אפשרויות משתמש</string>
     <string name="pairfirst">נא לצמד את המשאבה עם הטלפון שלכם!</string>
     <string name="processinghistory">"מעבד אירוע "</string>
     <string name="diaconn_g8_history_tempbasal">בזאלי זמני</string>

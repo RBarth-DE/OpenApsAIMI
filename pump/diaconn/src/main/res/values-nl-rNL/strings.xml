@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version='1.0' encoding='utf-8'?>
 <resources>
     <string name="resetpairing">Koppeling verwijderen</string>
     <string name="diaconn_pairing">Diaconn Pomp Koppeling</string>
@@ -30,10 +30,8 @@
     <string name="insulinlimitviolation">Insuline limiet overschrijding</string>
     <string name="boluserrorcode">Gevraagd: %1$.2fE Toegediend: %2$.2fE Error code: %3$s</string>
     <string name="selectedpump">Geselecteerde pomp</string>
-    <string name="diaconn_g8_bluetooth_status">Bluetooth Status</string>
     <string name="bolus_step">Bolus Stap</string>
     <string name="basal_step">Basaal Stap</string>
-    <string name="diaconn_g8_user_options">GEBRUIKER OPTIES</string>
     <string name="pairfirst">A.u.b. de pomp koppelen met je telefoon!</string>
     <string name="processinghistory">"Gebeurtenis wordt uitgevoerd "</string>
     <string name="diaconn_g8_history_tempbasal">Tijdelijk basaal</string>

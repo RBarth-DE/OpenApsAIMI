@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version='1.0' encoding='utf-8'?>
 <resources>
     <string name="resetpairing">Eliminar emparelhamento</string>
     <string name="diaconn_pairing">Emparelhamento de bombas Diaconn</string>
@@ -30,10 +30,8 @@
     <string name="insulinlimitviolation">Transgressão limite insulina</string>
     <string name="boluserrorcode">Pedido: %1$.2fU Administrado: %2$.2fU Código Erro: %3$s</string>
     <string name="selectedpump">Bomba seleccionada</string>
-    <string name="diaconn_g8_bluetooth_status">Estado do Bluetooth</string>
     <string name="bolus_step">Incremento Bólus</string>
     <string name="basal_step">Incremento Basal</string>
-    <string name="diaconn_g8_user_options">OPÇÕES DO UTILIZADOR</string>
     <string name="pairfirst">Emparelhe a sua bomba com o seu telefone!</string>
     <string name="processinghistory">"A processar acção "</string>
     <string name="diaconn_g8_history_tempbasal">Basal temporária</string>

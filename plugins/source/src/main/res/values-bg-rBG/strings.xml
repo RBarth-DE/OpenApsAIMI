@@ -1,6 +1,6 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <!-- Source -->
+    
     <string name="ns_client_bg">КЗ от NS</string>
     <string name="ns_client_bg_short">NS КЗ</string>
     <string name="description_source_ns_client">Изтегля стойности на КЗ от Nightscout</string>
@@ -24,10 +24,4 @@
     <string name="random_bg">Произволна КЗ</string>
     <string name="description_source_random_bg">Генерира произволни захари(демо режим)</string>
     <string name="random_bg_short">КЗ</string>
-    <string name="direction">Посока</string>
-    <!-- Patched Syai Tag App -->
-    <!-- Patched SI App -->
-    <!-- Patched Sino App -->
-    <!-- Notification Reader -->
-    <!-- Permission rationales -->
-</resources>
+    </resources>

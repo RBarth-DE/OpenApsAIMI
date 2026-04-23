@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version='1.0' encoding='utf-8'?>
 <resources>
     <string name="resetpairing">Panaikinti sąsają</string>
     <string name="diaconn_pairing">Diaconn pompos sąsaja</string>
@@ -30,10 +30,8 @@
     <string name="insulinlimitviolation">Pažeistas insulino dozės limitas</string>
     <string name="boluserrorcode">Įvesta: %1$.2fvv Suleista: %2$.2fvv Klaidos kodas: %3$s</string>
     <string name="selectedpump">Pasirinkta pompa</string>
-    <string name="diaconn_g8_bluetooth_status">Bluetooth statusas</string>
     <string name="bolus_step">Boluso žingsnis</string>
     <string name="basal_step">Bazės žingsnis</string>
-    <string name="diaconn_g8_user_options">NAUDOTOJO PARINKTYS</string>
     <string name="pairfirst">Susiekite pompą su telefonu!</string>
     <string name="processinghistory">"Apdorojama "</string>
     <string name="diaconn_g8_history_tempbasal">Laikina bazė</string>

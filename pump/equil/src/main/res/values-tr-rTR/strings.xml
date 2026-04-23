@@ -1,7 +1,7 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version='1.0' encoding='utf-8'?>
 <resources>
     <string name="equil_pump_description">Equil 5.3 veya daha yeni Patch Pompa </string>
-    <!--  start  -->
+    
     <string name="equil_basal_speed">Temel Bazal</string>
     <string name="equil_dressing">Rezervuarı Değiştir</string>
     <string name="equil_dressing_onkey_msg">Pistonu otomatik olarak rezervuar tabanına hareket ettirin. Dibe ulaştığında otomatik olarak duracaktır. Gerekirse kesintiye uğratmak için \'Durdur\'a tıklayın.</string>
@@ -21,7 +21,6 @@
     <string name="equil_tone_mode_shake">Sadece titreşim</string>
     <string name="equil_tone_mode_tone">Sadece ses</string>
     <string name="equil_tone_mode_tone_and_shake">Titreşim ve ses</string>
-    <string name="equil_unit_u">%1$s Ü</string>
     <string name="equil_ble_config_confirmation_title">Equil Patch pompasını eşleştirin</string>
     <string name="equil_error">Bağlantı Hatası</string>
     <string name="equil_change">Pompayı değiştir</string>
@@ -47,7 +46,7 @@
     <string name="equil_shutdown">Equil otomatik kapanma</string>
     <string name="equil_common_history_tbr_value">Oran: %1$.2f Ü/S, süre: %2$d dakika</string>
     <string name="equil_common_history_bolus_value">%1$.2f Ü</string>
-    <!-- equil - Commands -->
+    
     <string name="equil_common_cmd_set_bolus">Bolusu ayarla</string>
     <string name="equil_common_cmd_cancel_bolus">Bolusu İptal et</string>
     <string name="equil_common_cmd_set_tbr">Geçici bazalı ayarla</string>
@@ -61,7 +60,7 @@
     <string name="equil_common_cmd_unpair">Pompa eşleştirmeyi kaldır</string>
     <string name="equil_common_cmd_set_extended_bolus">Yayma bolusu ayarla</string>
     <string name="equil_common_cmd_cancel_extended_bolus">Yayma bolusu İptal et</string>
-    <!--    推杆回退-->
+    
     <string name="equil_common_change_insulin">İtme çubuğunun geri çekilmesi</string>
     <string name="equil_common_set_alarm_tone">Yalnızca bildirim sesi için yapılandırma</string>
     <string name="equil_common_set_alarm_shake">Yalnızca titreşim için yapılandırma</string>

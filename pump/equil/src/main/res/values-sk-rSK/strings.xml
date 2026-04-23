@@ -1,7 +1,7 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version='1.0' encoding='utf-8'?>
 <resources>
     <string name="equil_pump_description">Equil 5.3 alebo novšia pumpa</string>
-    <!--  start  -->
+    
     <string name="equil_basal_speed">Základný bazál</string>
     <string name="equil_dressing">Vymeniť zásobník</string>
     <string name="equil_dressing_onkey_msg">Automatické pretáčanie piestu do východzej polohy. Po dosiahnutí dna sa automaticky zastaví. V prípade potreby akciu prerušte kliknutím na tlačítko \"Stop\".</string>
@@ -28,7 +28,6 @@
     <string name="equil_tone_mode_shake">Iba vibrovať</string>
     <string name="equil_tone_mode_tone">Iba zvuky</string>
     <string name="equil_tone_mode_tone_and_shake">Vibrácie a zvuky</string>
-    <string name="equil_unit_u">%1$s U</string>
     <string name="equil_unbind_content">Táto operácia zastaví vydávanie inzulínu, a zasunie piest pumpy do východzej polohy! Taktiež zruší spárovanie!</string>
     <string name="equil_ble_config_confirmation_title">Spárovať Equil Patch pumpu</string>
     <string name="equil_error">Chyba pripojenia</string>
@@ -55,7 +54,7 @@
     <string name="equil_shutdown">Equil automatické vypnutie</string>
     <string name="equil_common_history_tbr_value">Rýchlosť: %1$.2f U/h, Doba trvania: %2$d minút</string>
     <string name="equil_common_history_bolus_value">%1$.2f U</string>
-    <!-- equil - Commands -->
+    
     <string name="equil_common_cmd_set_bolus">Nastaviť bolus</string>
     <string name="equil_common_cmd_cancel_bolus">Zrušiť bolus</string>
     <string name="equil_common_cmd_set_tbr">Nastaviť dočasný bazál</string>
@@ -69,7 +68,7 @@
     <string name="equil_common_cmd_unpair">Zrušiť párovanie Equil</string>
     <string name="equil_common_cmd_set_extended_bolus">Nastaviť predĺžený bolus</string>
     <string name="equil_common_cmd_cancel_extended_bolus">Zrušiť predĺžený bolus</string>
-    <!--    推杆回退-->
+    
     <string name="equil_common_change_insulin">Přetáčanie piesta</string>
     <string name="equil_common_set_alarm_tone">Nastaviť upozornenie iba zvuk</string>
     <string name="equil_common_set_alarm_shake">Nastaviť iba vibrácie</string>
@@ -115,7 +114,6 @@
     <string name="equil_history_item18">Zastavené abnormálne podávanie izulínu</string>
     <string name="equil_common_overview_button_suspend_delivery">Pozastaviť</string>
     <string name="equil_common_overview_button_resume_delivery">Obnoviť podávanie inzulínu</string>
-    <string name="equil_common_overview_tbr_value">%1$s @%2$s (%3$d/%4$d min)</string>
     <string name="equil_common_moments_ago">Pred chvíľou</string>
     <string name="equil_common_less_than_a_minute_ago">Pred menej ako minútou</string>
     <string name="equil_common_time_ago">pred %1$s</string>

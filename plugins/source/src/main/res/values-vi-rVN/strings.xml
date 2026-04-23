@@ -1,6 +1,6 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <!-- Source -->
+    
     <string name="ns_client_bg">NSClient BG</string>
     <string name="ns_client_bg_short">NS BG</string>
     <string name="description_source_ns_client">Tải dữ liệu đường huyết (BG) từ Nightscout</string>
@@ -25,20 +25,18 @@
     <string name="random_bg">Random BG</string>
     <string name="description_source_random_bg">Tạo dữ liệu đường huyết ngẫu nhiên (chỉ dùng cho chế độ Demo)</string>
     <string name="random_bg_short">Đường huyết</string>
-    <string name="direction">direction</string>
-    <!-- Patched Syai Tag App -->
     <string name="syai_tag_app">Syai</string>
     <string name="description_source_patched_syai_tag_app">Nhận dữ liệu đường huyết từ ứng dụng Syai/Ottai.</string>
-    <!-- Patched SI App -->
+    
     <string name="patched_si_app">Ứng dụng SI</string>
     <string name="description_source_patched_si_app">Nhận dữ liệu đường huyết từ ứng dụng SI.</string>
-    <!-- Patched Sino App -->
+    
     <string name="patched_sino_app">Ứng dụng Sino</string>
     <string name="description_source_patched_sino_app">Nhận dữ liệu đường huyết từ ứng dụng Sino.</string>
-    <!-- Notification Reader -->
+    
     <string name="notification_reader">Đọc thông báo</string>
     <string name="description_source_notification_reader">Đọc giá trị đường huyết từ các thông báo do ứng dụng CGM chính thức gửi (Dexcom, Medtronic, Eversense, v.v.).</string>
-    <!-- Permission rationales -->
+    
     <string name="permission_dexcom_title">Dexcom CGM</string>
     <string name="permission_dexcom_description">Ứng dụng cần quyền để nhận dữ liệu CGM từ ứng dụng Dexcom</string>
     <string name="permission_notification_listener_title">Truy cập thông báo</string>

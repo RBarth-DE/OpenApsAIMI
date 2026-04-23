@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version='1.0' encoding='utf-8'?>
 <resources>
     <string name="resetpairing">Kopplung zurücksetzen</string>
     <string name="diaconn_pairing">Diaconn Pumpe verbinden</string>
@@ -30,10 +30,8 @@
     <string name="insulinlimitviolation">Insulin-Beschränkung verletzt</string>
     <string name="boluserrorcode">Angefragt: %1$.2f IE. Abgegeben: %2$.2f IE. Fehlercode: %3$s</string>
     <string name="selectedpump">Ausgewählte Pumpe</string>
-    <string name="diaconn_g8_bluetooth_status">Bluetooth-Status</string>
     <string name="bolus_step">Bolus-Schritt</string>
     <string name="basal_step">Basal-Schritt</string>
-    <string name="diaconn_g8_user_options">BENUTZER-OPTIONEN</string>
     <string name="pairfirst">Bitte kopple deine Pumpe mit deinem Telefon!</string>
     <string name="processinghistory">"Ereignis wird verarbeitet "</string>
     <string name="diaconn_g8_history_tempbasal">Temporäre Basalrate</string>

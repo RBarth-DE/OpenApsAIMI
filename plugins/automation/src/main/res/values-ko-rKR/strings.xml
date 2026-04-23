@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version='1.0' encoding='utf-8'?>
 <resources>
     <string name="automation_short">자동</string>
     <string name="automation">자동화</string>
@@ -51,7 +51,6 @@
     <string name="location_going_out">당신이 다음 이름의 지역에서 떠날 때</string>
     <string name="time_range">시간 범위</string>
     <string name="timerange_value">시간은 %1$s 와 %2$s사이입니다</string>
-    <string name="between">사이 </string>
     <string name="add_short">추가</string>
     <string name="temptargetcompared">임시 목표 %1$s</string>
     <string name="btdevicecompared">장치에 블루투스 연결 %1$s %2$s</string>
@@ -78,24 +77,23 @@
     <string name="edit_short">편집</string>
     <string name="preconditions">전제 조건:</string>
     <string name="user_action">사용자 동작</string>
-    <string name="remove_selected_items">선택된 항목 제거하기</string>
     <string name="count_selected">%1$d 선택됨</string>
     <string name="system_automation">자동 설정 시스템</string>
     <string name="run_automations">자동 설정 실행하기</string>
     <string name="add_automation">규칙 추가하기</string>
     <string name="stop_processing">처리 중단하기</string>
-    <!--    Reminders-->
+    
     <string name="time_to_eat">식사할 시간입니다! \nBolus 마법사를 켜고 다시 계산하십시오.</string>
     <string name="time_to_bolus">Bolus 주입할 시간입니다! \nBolus 마법사를 켜고 다시 계산하십시오</string>
     <string name="error_setting_reminder">향후 경고 설정 중 오류 발생</string>
-    <!--    Autotune-->
+    
     <string name="autotune_run">Autotune 실행하기</string>
     <string name="autotune_run_without_autoswitch">프로파일 변경 없이 Autotune이 실행되었습니다</string>
     <string name="autotune_run_with_autoswitch">Autotune 및 프로파일 자동 전환이 실행되었습니다</string>
     <string name="autotune_run_with_error">마지막 Autotune 실행시 오류가 발생했습니다</string>
     <string name="autotune_run_cancelled">Autotune의 또 다른 실행이 감지되었습니다, 실행이 취소되었습니다</string>
-    <!--    Steps count-->
-    <!--    SMB mode-->
-    <!--    Map Picker (OpenStreetMap)-->
-    <!-- Permission rationales -->
+    
+    
+    
+    
 </resources>

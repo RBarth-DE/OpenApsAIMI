@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version='1.0' encoding='utf-8'?>
 <resources>
     <string name="automation_short">Auto</string>
     <string name="automation">Automatisierung</string>
@@ -51,7 +51,6 @@
     <string name="location_going_out">Beim Verlassen des angegebenen Gebiets</string>
     <string name="time_range">Zeitraum</string>
     <string name="timerange_value">Für die Zeit zwischen %1$s und %2$s</string>
-    <string name="between">Zwischen </string>
     <string name="add_short">HINZUFÜGEN</string>
     <string name="temptargetcompared">Temporäres Ziel %1$s</string>
     <string name="btdevicecompared">Bluetooth-Verbindung mit Gerät %1$s %2$s</string>
@@ -78,24 +77,23 @@
     <string name="edit_short">BEARBEITEN</string>
     <string name="preconditions">Voraussetzung:</string>
     <string name="user_action">Benutzeraktion</string>
-    <string name="remove_selected_items">Ausgewähltes Objekt löschen</string>
     <string name="count_selected">%1$d ausgewählt</string>
     <string name="system_automation">System-Automatisierung</string>
     <string name="run_automations">Automatisierungen ausführen</string>
     <string name="add_automation">Regel hinzufügen</string>
     <string name="stop_processing">Verarbeitung beenden</string>
-    <!--    Reminders-->
+    
     <string name="time_to_eat">Zeit für den nächsten Bolus!\nFühre den Bolus-Assistenten aus, um die Berechnung erneut durchzuführen.</string>
     <string name="time_to_bolus">Zeit für den nächsten Bolus!\nFühre den Bolus-Assistenten aus, um die Berechnung erneut durchzuführen.</string>
     <string name="error_setting_reminder">Fehler beim Setzen des zukünftigen Alarms</string>
-    <!--    Autotune-->
+    
     <string name="autotune_run">Autotune ausführen</string>
     <string name="autotune_run_without_autoswitch">Autotune wurde ohne Profilwechsel ausgeführt</string>
     <string name="autotune_run_with_autoswitch">Autotune ausgeführt und Profil wurde automatisch gewechselt</string>
     <string name="autotune_run_with_error">Fehler beim letzten Autotune Lauf</string>
     <string name="autotune_run_cancelled">Ein weiterer Lauf von Autotune wurde erkannt, Lauf abgebrochen</string>
-    <!--    Steps count-->
-    <!--    SMB mode-->
-    <!--    Map Picker (OpenStreetMap)-->
-    <!-- Permission rationales -->
+    
+    
+    
+    
 </resources>

@@ -1,7 +1,7 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version='1.0' encoding='utf-8'?>
 <resources>
     <string name="equil_pump_description">Equil 5.3或更新版本貼片幫浦</string>
-    <!--  start  -->
+    
     <string name="equil_basal_speed">基礎速率</string>
     <string name="equil_dressing">更換儲液盒</string>
     <string name="equil_dressing_onkey_msg">自動將活塞移動到儲液盒底部。到達底部後會自動停止。如有需要，點擊“停止”以中斷。</string>
@@ -28,7 +28,6 @@
     <string name="equil_tone_mode_shake">僅震動</string>
     <string name="equil_tone_mode_tone">僅聲音</string>
     <string name="equil_tone_mode_tone_and_shake">聲音和震動</string>
-    <string name="equil_unit_u">%1$s U</string>
     <string name="equil_unbind_content">此操作將停止胰島素輸注，並將幫浦推桿退回至底部！同時也會刪除綁定狀態！</string>
     <string name="equil_ble_config_confirmation_title">配對Equil貼片幫浦</string>
     <string name="equil_error">連線錯誤</string>
@@ -55,7 +54,7 @@
     <string name="equil_shutdown">Equil自動關閉</string>
     <string name="equil_common_history_tbr_value">速率：%1$.2f U/H，持續時間：%2$d 分鐘</string>
     <string name="equil_common_history_bolus_value">%1$.2f U</string>
-    <!-- equil - Commands -->
+    
     <string name="equil_common_cmd_set_bolus">設定注射</string>
     <string name="equil_common_cmd_cancel_bolus">取消注射</string>
     <string name="equil_common_cmd_set_tbr">設定臨時基礎</string>
@@ -69,7 +68,7 @@
     <string name="equil_common_cmd_unpair">取消配對Equil</string>
     <string name="equil_common_cmd_set_extended_bolus">設定延長注射</string>
     <string name="equil_common_cmd_cancel_extended_bolus">取消延長注射</string>
-    <!--    推杆回退-->
+    
     <string name="equil_common_change_insulin">推桿回縮</string>
     <string name="equil_common_set_alarm_tone">僅設定通知聲音</string>
     <string name="equil_common_set_alarm_shake">僅設定震動</string>
@@ -115,7 +114,6 @@
     <string name="equil_history_item18">異常輸液停止</string>
     <string name="equil_common_overview_button_suspend_delivery">暫停</string>
     <string name="equil_common_overview_button_resume_delivery">恢復輸送</string>
-    <string name="equil_common_overview_tbr_value">%1$s 於 %2$s (%3$d/%4$d 分鐘)</string>
     <string name="equil_common_moments_ago">片刻前</string>
     <string name="equil_common_less_than_a_minute_ago">不到一分鐘前</string>
     <string name="equil_common_time_ago">%1$s前</string>

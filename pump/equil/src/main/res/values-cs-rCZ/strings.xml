@@ -1,7 +1,7 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version='1.0' encoding='utf-8'?>
 <resources>
     <string name="equil_pump_description">Equil 5.3 nebo novější pumpa </string>
-    <!--  start  -->
+    
     <string name="equil_basal_speed">Základní bazál</string>
     <string name="equil_dressing">Vyměnit zásobník</string>
     <string name="equil_dressing_onkey_msg">Automatické přetáčení pístu do výchozí polohy. Po dosažení dna se automaticky zastaví. V případě potřeby akci přerušte kliknutím na tlačítko \"Stop\".</string>
@@ -21,7 +21,6 @@
     <string name="equil_tone_mode_shake">Pouze vibrovat</string>
     <string name="equil_tone_mode_tone">Pouze zvuky</string>
     <string name="equil_tone_mode_tone_and_shake">Vibrace a zvuky</string>
-    <string name="equil_unit_u">%1$s U</string>
     <string name="equil_ble_config_confirmation_title">Spárovat Equil patch pumpu</string>
     <string name="equil_error">Chyba připojení</string>
     <string name="equil_change">Vyměnit pumpu</string>
@@ -47,7 +46,7 @@
     <string name="equil_shutdown">Equil auto off</string>
     <string name="equil_common_history_tbr_value">Rychlost： %1$.2f U/h，trvání： %2$d minut</string>
     <string name="equil_common_history_bolus_value">%1$.2f U</string>
-    <!-- equil - Commands -->
+    
     <string name="equil_common_cmd_set_bolus">Poslat bolus</string>
     <string name="equil_common_cmd_cancel_bolus">Zrušit bolus</string>
     <string name="equil_common_cmd_set_tbr">Nastavit dočasný bazál</string>
@@ -61,7 +60,7 @@
     <string name="equil_common_cmd_unpair">Zrušit párování Equil</string>
     <string name="equil_common_cmd_set_extended_bolus">Nastavit prodloužený bolus</string>
     <string name="equil_common_cmd_cancel_extended_bolus">Zrušit prodloužený bolus</string>
-    <!--    推杆回退-->
+    
     <string name="equil_common_change_insulin">Přetáčení trnu</string>
     <string name="equil_common_set_alarm_tone">Nastavit oznámení pouze zvuk</string>
     <string name="equil_common_set_alarm_shake">Nastavit pouze vibrace</string>
