@@ -422,12 +422,20 @@ fun GraphsSection(
                         .height(graphConfig.iobHeight.dp)
                 )
                 Text(
-                    text = stringResource(app.aaps.core.ui.R.string.iob) + " / " + stringResource(app.aaps.core.ui.R.string.basal_shortname),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-                    modifier = Modifier
-                        .align(Alignment.TopStart)
-                        .padding(start = 36.dp, top = 2.dp)
+                   text = buildString {
+                       append(stringResource(app.aaps.core.ui.R.string.iob))
+                       append(" / ")
+                       append(stringResource(app.aaps.core.ui.R.string.basal_shortname))
+                       if (SeriesType.ACTIVITY in graphConfig.iobOverlays) {
+                           append(" / ")
+                           append(stringResource(app.aaps.core.ui.R.string.activity_shortname))
+                       }
+                   },
+                   style = MaterialTheme.typography.labelSmall,
+                   color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                   modifier = Modifier
+                       .align(Alignment.TopStart)
+                       .padding(start = 36.dp, top = 2.dp)
                 )
             }
             if (editingIobOverlays) {

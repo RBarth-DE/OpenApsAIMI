@@ -33,7 +33,7 @@ import app.aaps.core.data.model.RM
 import app.aaps.core.data.model.TT
 import app.aaps.ui.compose.scenes.ActiveSceneBanner
 import app.aaps.core.interfaces.notifications.AapsNotification
-import app.aaps.core.interfaces.overview.AuditorDisplayState
+import app.aaps.core.interfaces.overview.graph.TbrState
 import app.aaps.core.interfaces.pump.BolusProgressState
 import app.aaps.core.keys.IntKey
 import app.aaps.core.ui.compose.AapsTheme
