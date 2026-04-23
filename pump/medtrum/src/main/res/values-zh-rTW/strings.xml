@@ -1,6 +1,6 @@
-<?xml version='1.0' encoding='utf-8'?>
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    
+    <!-- MedtrumPump -->
     <string name="medtrum">Medtrum</string>
     <string name="medtrum_pump_shortname">MT</string>
     <string name="medtrum_pump_description">Medtrum Nano 和 Medtrum 300U 的幫浦整合</string>
@@ -13,7 +13,8 @@
     <string name="patch_not_active">貼片未啟動</string>
     <string name="pump_setting_failed">設定使用者選項到幫浦失敗！</string>
     <string name="pump_sync_error">同步幫浦歷史時發生錯誤，有一筆紀錄已被跳過。請檢查治療標籤以確認是否正確同步了胰島素。如果錯誤持續發生，請更換貼片或幫浦底座。</string>
-    
+    <string name="patch_reset_after_primed_error">在預充後偵測到貼片已重置！請移除該貼片並開始新的貼片。</string>
+    <!-- overview fragment -->
     <string name="last_connection_label">上次連線</string>
     <string name="active_bolus_label">啟用中的胰島素劑量</string>
     <string name="pump_state_label">幫浦狀態</string>
@@ -28,7 +29,7 @@
     <string name="change_patch_label">更換貼片</string>
     <string name="requested_by_user" comment="26 characters max for translation">使用者請求</string>
     <string name="expiry_not_enabled">未啟用</string>
-    
+    <!-- Alarm strings -->
     <string name="alarm_none">無</string>
     <string name="alarm_pump_low_battery">幫浦低電量</string>
     <string name="alarm_pump_low_reservoir">幫浦低儲存量</string>
@@ -49,7 +50,7 @@
     <string name="alarm_no_calibration">無校準</string>
     <string name="pump_time_update_failed">更新幫浦時區失敗，請延後訊息並手動重新整理。</string>
     <string name="bolus_error">胰島素劑量錯誤</string>
-    
+    <!-- wizard-->
     <string name="retry">重試</string>
     <string name="step_prepare_patch">啟動貼片</string>
     <string name="step_prepare_patch_connect">連線並填充</string>
@@ -93,7 +94,7 @@
     <string name="activation_in_progress">糟糕！似乎已經有一個啟動進行中。</string>
     <string name="press_retry_or_discard">按 <b>下一步</b> 繼續啟動或按 <b>捨棄</b> 重置啟動狀態。</string>
     <string name="reading_activation_status">請稍候，從幫浦讀取啟動狀態。</string>
-    
+    <!-- settings-->
     <string name="sn_input_title">序列號</string>
     <string name="sn_input_invalid">無效的序列號！</string>
     <string name="change_sn">變更</string>
@@ -119,13 +120,13 @@
     <string name="daily_max_insulin_summary">指定每日允許的最大胰島素單位。如果超過，幫浦將暫停。</string>
     <string name="scan_on_connection_error_title">重新掃描以便修正連線錯誤</string>
     <string name="scan_on_connection_error_summary">警告：只有在連線有問題時才啟用。如果啟用，此驅動程式會在嘗試重新連線到幫浦之前再次掃描幫浦。請確保位置權限設置為“始終允許”。</string>
-    
+    <!-- treatment state-->
     <string name="getting_pump_status">獲取幫浦狀態</string>
     <string name="syncing_records">同步記錄中，還剩 %1$d</string>
     <string name="getting_bolus_status">獲取胰島素劑量狀態</string>
     <string name="getting_temp_basal_status">獲取臨時基礎率狀態</string>
     <string name="setting_pump_settings">設定使用者選項</string>
-    
+    <!-- bolus-->
     <string name="bolus_error_reason_user">注射已由用戶取消</string>
     <string name="bolus_error_reason_not_connected">幫浦未連線</string>
     <string name="bolus_error_reason_already_in_progress">注射已在進行中</string>

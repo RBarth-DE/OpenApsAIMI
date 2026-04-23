@@ -759,7 +759,7 @@ class ComposeMainActivity : AppCompatActivity() {
                     }
                 },
                 onRefreshPermissions = { permissionsViewModel.refresh() },
-                onExecuteQuickWizard = { guid -> mainViewModel.executeQuickWizard(this@ComposeMainActivity, guid) },
+                onExecuteQuickWizard = { guid -> mainViewModel.executeQuickWizard(guid) },
                 onRequestDirectoryAccess = {
                     try {
                         accessTree?.launch(null)
@@ -917,7 +917,7 @@ class ComposeMainActivity : AppCompatActivity() {
 
             // Dynamic actions — execution-based, not navigation
             is QuickLaunchAction.QuickWizardAction -> withProtection(ElementType.QUICK_WIZARD.protection) {
-                mainViewModel.executeQuickWizard(this, action.guid)
+                mainViewModel.executeQuickWizard(action.guid)
             }
 
             is QuickLaunchAction.AutomationAction  -> mainViewModel.requestAutomationConfirmation(action.automationId)
@@ -945,7 +945,7 @@ class ComposeMainActivity : AppCompatActivity() {
         when (request) {
             is NavigationRequest.Element           -> navigateProtected(request.type, navController)
             is NavigationRequest.QuickWizard       -> withProtection(ElementType.QUICK_WIZARD.protection) {
-                mainViewModel.executeQuickWizard(this@ComposeMainActivity, request.guid)
+                mainViewModel.executeQuickWizard(request.guid)
             }
 
             is NavigationRequest.Plugin            -> {
