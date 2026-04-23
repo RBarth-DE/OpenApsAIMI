@@ -56,6 +56,9 @@ import app.aaps.plugins.aps.openAPSAIMI.pkpd.PkPdRuntime
 import app.aaps.plugins.aps.openAPSAIMI.ports.PkpdPort
 import app.aaps.plugins.aps.openAPSAIMI.prediction.minPredictedAcrossCurves
 import app.aaps.plugins.aps.openAPSAIMI.prediction.sanitizePredictionValues
+import app.aaps.plugins.aps.openAPSAIMI.physio.AimiHormonitorStudyExporterMTR
+import app.aaps.plugins.aps.openAPSAIMI.physio.HormonitorDecisionEventMTR
+import app.aaps.plugins.aps.openAPSAIMI.physio.PhysioDecisionTraceMTR
 import app.aaps.plugins.aps.openAPSAIMI.safety.HypoGuard
 import app.aaps.plugins.aps.openAPSAIMI.safety.signalEventualDrop
 import app.aaps.plugins.aps.openAPSAIMI.safety.signalMinPredDrop
@@ -452,6 +455,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
     private val csvfile: File get() = File(storageHelper.getAimiDirectory(), "oapsaimiML2_records.csv")
     private val csvfile2: File get() = File(storageHelper.getAimiDirectory(), "oapsaimi2_records.csv")
     private val appExternalFallbackDir = File(context.getExternalFilesDir(null), "AAPS")
+    private val hormonitorStudyExporter by lazy { AimiHormonitorStudyExporterMTR(context, aapsLogger) }
     private var csvPrimaryStorageDeniedLogged = false
     private val pkpdIntegration = PkPdIntegration(preferences)
     //private val tempFile = File(externalDir, "temp.csv")
@@ -8635,10 +8639,82 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                 consoleError.add("Failed to save AIMI Decision JSON: ${e.message}")
             }
 
+            try {
+                val fallbackTrace = PhysioDecisionTraceMTR(
+                    timestamp = dateUtil.now(),
+                    finalLoopDecisionType = inferFinalLoopDecisionFromResult(finalResult),
+                    source = "fallback_no_physio_trace"
+                )
+                val latestSnapshot = physioAdapter.getLatestSnapshot()
+                val wCycleInfo = wCycleInfoForRun
+                val traceForExport = physioAdapter.getLastDecisionTrace() ?: fallbackTrace
+                val event = HormonitorDecisionEventMTR(
+                    eventId = decisionCtx.event_id,
+                    eventTimestamp = decisionCtx.timestamp,
+                    trigger = decisionCtx.trigger,
+                    profileIsfMgdl = decisionCtx.baseline_state.profile_isf_mgdl,
+                    profileBasalUph = decisionCtx.baseline_state.profile_basal_uph,
+                    currentBgMgdl = decisionCtx.baseline_state.current_bg_mgdl,
+                    cobG = decisionCtx.baseline_state.cob_g,
+                    iobU = decisionCtx.baseline_state.iob_u,
+                    cyclePhase = wCycleInfo?.phase?.name,
+                    cycleDay = wCycleInfo?.dayInCycle,
+                    cycleTrackingMode = wCyclePreferences.trackingMode().name,
+                    contraceptiveType = wCyclePreferences.contraceptive().name,
+                    wcycleBasalMult = wCycleInfo?.basalMultiplier,
+                    wcycleSmbMult = wCycleInfo?.smbMultiplier,
+                    wcycleIsfMult = if (variableSensitivity != 0.0f) (1.0 / variableSensitivity.toDouble()) else null,
+                    thyroidStatus = currentThyroidEffects.status.name,
+                    inflammationStatus = wCyclePreferences.verneuil().name,
+                    hrNowBpm = latestSnapshot.hrNow,
+                    hrAvg15mBpm = latestSnapshot.hrAvg15m,
+                    rhrRestingBpm = latestSnapshot.rhrResting,
+                    hrvRmssdMs = latestSnapshot.hrvRmssd,
+                    steps5m = latestSnapshot.stepsLast5m,
+                    steps15m = latestSnapshot.stepsLast15m,
+                    steps60m = latestSnapshot.stepsLast60m,
+                    activityState = latestSnapshot.activityState,
+                    sleepDebtMinutes = latestSnapshot.sleepDebtMinutes,
+                    sleepEfficiency = latestSnapshot.sleepEfficiency,
+                    physioSnapshotTimestamp = latestSnapshot.timestamp,
+                    physioSnapshotValidFlag = latestSnapshot.isValid,
+                    physioTrace = if (traceForExport.finalLoopDecisionType.isNullOrBlank()) {
+                        traceForExport.copy(finalLoopDecisionType = inferFinalLoopDecisionFromResult(finalResult))
+                    } else {
+                        traceForExport
+                    }
+                )
+                hormonitorStudyExporter.export(event)
+                hormonitorStudyExporter.exportDailyOutcomes(
+                    event = event,
+                    tirLowPct = currentTIRLow,
+                    tirInRangePct = currentTIRRange,
+                    tirAbovePct = currentTIRAbove,
+                    tdd24hTotalU = determineBasalInvocationCaches.getTdd24hTotalAmountCached(tddCalculator),
+                    snapshotSource = latestSnapshot.source,
+                    snapshotAgeSeconds = ((dateUtil.now() - latestSnapshot.timestamp) / 1000L).coerceAtLeast(0L),
+                    snapshotConfidence = latestSnapshot.confidence
+                )
+            } catch (e: Exception) {
+                consoleError.add("Failed to save HORMONITOR event JSON: ${e.message}")
+            }
+
             return finalResult
         }
         return rT
     }// end runAdaptiveBasalAndSmb
+
+    private fun inferFinalLoopDecisionFromResult(result: RT): String {
+        val units = result.units ?: 0.0
+        val duration = result.duration ?: 0
+        val rate = result.rate ?: 0.0
+        return when {
+            units > 0.0 -> "smb"
+            duration > 0 && rate <= 0.0 -> "suspend"
+            duration > 0 && rate > 0.0 -> "tbr_up"
+            else -> "none"
+        }
+    }
 
     /**
      * Applies a safety floor to the basal rate to prevent unnecessary cutoffs (0 U/h)

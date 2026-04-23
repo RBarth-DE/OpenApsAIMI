@@ -484,6 +484,7 @@ data class PhysioDecisionTraceMTR(
     val physioState: String = PhysioStateMTR.UNKNOWN.name,
     val physioConfidence: Double = 0.0,
     val physioDataQuality: Double = 0.0,
+    val sleepQualityScore: Double? = null,
     val isfFactor: Double = 1.0,
     val basalFactor: Double = 1.0,
     val smbFactor: Double = 1.0,
@@ -497,6 +498,7 @@ data class PhysioDecisionTraceMTR(
         put("physio_state", physioState)
         put("physio_confidence", physioConfidence)
         put("physio_data_quality", physioDataQuality)
+        put("sleep_quality_score", sleepQualityScore ?: JSONObject.NULL)
         put("isf_factor", isfFactor)
         put("basal_factor", basalFactor)
         put("smb_factor", smbFactor)

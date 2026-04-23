@@ -120,6 +120,7 @@ class AIMIInsulinDecisionAdapterMTR @Inject constructor(
                 state = "UNKNOWN",
                 confidence = 0.0,
                 dataQuality = 0.0,
+                sleepQualityScore = null,
                 multipliers = PhysioMultipliersMTR.NEUTRAL,
                 vetoReason = "bg_below_min_threshold"
             )
@@ -133,6 +134,7 @@ class AIMIInsulinDecisionAdapterMTR @Inject constructor(
                 state = "UNKNOWN",
                 confidence = 0.0,
                 dataQuality = 0.0,
+                sleepQualityScore = null,
                 multipliers = PhysioMultipliersMTR.NEUTRAL,
                 vetoReason = "recent_hypoglycemia"
             )
@@ -153,6 +155,7 @@ class AIMIInsulinDecisionAdapterMTR @Inject constructor(
                 state = physioContext.state.name,
                 confidence = physioContext.confidence,
                 dataQuality = physioContext.features?.dataQuality ?: 0.0,
+                sleepQualityScore = physioContext.features?.sleepQualityScore,
                 multipliers = PhysioMultipliersMTR.NEUTRAL,
                 vetoReason = "invalid_snapshot"
             )
@@ -166,6 +169,7 @@ class AIMIInsulinDecisionAdapterMTR @Inject constructor(
                 state = physioContext.state.name,
                 confidence = snapshot.confidence,
                 dataQuality = physioContext.features?.dataQuality ?: 0.0,
+                sleepQualityScore = physioContext.features?.sleepQualityScore,
                 multipliers = PhysioMultipliersMTR.NEUTRAL,
                 vetoReason = "snapshot_confidence_below_threshold"
             )
@@ -244,6 +248,7 @@ class AIMIInsulinDecisionAdapterMTR @Inject constructor(
             state = physioContext.state.name,
             confidence = physioContext.confidence,
             dataQuality = physioContext.features?.dataQuality ?: 0.0,
+            sleepQualityScore = physioContext.features?.sleepQualityScore,
             multipliers = cappedMultipliers,
             vetoReason = null
         )
@@ -255,6 +260,7 @@ class AIMIInsulinDecisionAdapterMTR @Inject constructor(
         state: String,
         confidence: Double,
         dataQuality: Double,
+        sleepQualityScore: Double? = null,
         multipliers: PhysioMultipliersMTR,
         vetoReason: String?
     ) {
@@ -263,6 +269,7 @@ class AIMIInsulinDecisionAdapterMTR @Inject constructor(
             physioState = state,
             physioConfidence = confidence,
             physioDataQuality = dataQuality,
+            sleepQualityScore = sleepQualityScore,
             isfFactor = multipliers.isfFactor,
             basalFactor = multipliers.basalFactor,
             smbFactor = multipliers.smbFactor,
@@ -276,6 +283,7 @@ class AIMIInsulinDecisionAdapterMTR @Inject constructor(
             "PHYSIO_DECISION state=$state conf=${confidence.format(2)} " +
                 "quality=${dataQuality.format(2)} isf=${multipliers.isfFactor.format(3)} " +
                 "basal=${multipliers.basalFactor.format(3)} smb=${multipliers.smbFactor.format(3)} " +
+                "sleepQ=${sleepQualityScore?.format(3) ?: "na"} " +
                 "react=${multipliers.reactivityFactor.format(3)} " +
                 "veto=${vetoReason ?: "none"} source=${multipliers.source}"
         )

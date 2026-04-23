@@ -440,3 +440,71 @@ Done criteria:
 Done criteria:
 - preuve d'utilite clinique ou rollback objectivable.
 
+## 11) Execution plan 2 sprints (MVP export etude)
+
+### Sprint 1 - Export decisionnel structure (MVP)
+
+Objectif:
+- produire un flux local etude standardise, non bloquant pour la boucle.
+
+Tickets:
+1. **HM-EXP-01 - Contrat v1 event stream**
+   - definir `schema_version=1.0.0` pour un enregistrement loop:
+     - `dataset_id`, `generated_at`, `app_version`, `schema_version`,
+     - `event_id`, `timestamp`,
+     - `physio_state`, `physio_confidence`, `physio_data_quality`,
+     - `isf_factor`, `basal_factor`, `smb_factor`, `reactivity_factor`,
+     - `physio_veto_reason`, `final_loop_decision_type`, `source`.
+2. **HM-EXP-02 - Writer local JSONL etude**
+   - fichier local dedie (separe des logs produit),
+   - append tolerant aux erreurs avec fallback app-scoped storage.
+3. **HM-EXP-03 - Emission depuis la decision finale**
+   - emission d'un enregistrement sur le chemin final loop,
+   - conserver les signatures et la logique de decision existantes.
+4. **HM-EXP-04 - Qualite/fiabilite minimale**
+   - ajouter flags de qualite source: age donnees, stale, confidence.
+5. **HM-EXP-05 - Validation technique**
+   - verifier absence de `loop=pending` final sur chemins principaux,
+   - verifier zero crash/echec silencieux d'ecriture.
+
+Done criteria sprint 1:
+- fichier JSONL etude present et rempli,
+- schema v1 stable et documente,
+- aucune regression sur SMB/TBR/meal modes,
+- aucun impact perceptible sur la latence loop.
+
+### Sprint 2 - Outcomes et readiness clinique
+
+Objectif:
+- rendre le dataset directement exploitable pour l'analyse HORMONITOR.
+
+Tickets:
+1. **HM-OUT-01 - Daily outcomes consolides**
+   - produire table journaliere: TIR/TBR/TAR, hypo nocturne, variabilite, charge intervention.
+2. **HM-OUT-02 - Liaison exposition -> outcome**
+   - relier les expositions physio/hormonales de la nuit aux outcomes du lendemain.
+3. **HM-OUT-03 - Pseudonymisation et gouvernance**
+   - identifiant patient pseudonymise stable,
+   - separation stricte export etude vs logs produit.
+4. **HM-OUT-04 - QA dataset**
+   - checks de completude, doublons, incoherences temporelles.
+5. **HM-OUT-05 - Package de revue clinique**
+   - echantillon anonymise + dictionnaire de donnees + exemples de cas.
+
+Done criteria sprint 2:
+- dataset nightly + daily outcomes exploitable sans retraitement manuel majeur,
+- filtres qualite disponibles pour analyses cliniques,
+- package pret pour revue investigateur.
+
+### Gate go/no-go pour demarrage collecte
+
+GO collecte:
+- champs obligatoires presents >= 98% des ticks eligibles,
+- `final_loop_decision_type` renseigne sur toutes les sorties finales couvertes,
+- pipeline ecriture stable (pas d'echec silencieux).
+
+NO-GO collecte:
+- schema instable entre builds,
+- trous frequents sur champs decisionnels critiques,
+- ambiguite sur consentement/pseudonymisation.
+
