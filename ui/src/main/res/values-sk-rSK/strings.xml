@@ -1,4 +1,4 @@
-<?xml version='1.0' encoding='utf-8'?>
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="carbs_constraint_applied">Aplikované obmedzenie sacharidov</string>
     <string name="temp_target_short">TT</string>
@@ -6,9 +6,10 @@
     <string name="start_eating_soon_tt">Spustiť Dočasný cieľ Blížiace sa jedlo</string>
     <string name="start_hypo_tt">Spustiť doč. cieľ Hypo</string>
     <string name="time_offset">Časový posun</string>
+    <!--    Widget-->
     <string name="configure">Konfigurovať priehľadnosť</string>
     <string name="widget_description">AAPS widget</string>
-    
+    <!--     Activities-->
     <string name="activity_monitor">Monitor aktivity</string>
     <string name="time_range">Časový rozsah</string>
     <string name="dexcom_tir">Čas v rozsahu Dexcom</string>
@@ -35,7 +36,8 @@
     <string name="bg_other">Iné</string>
     <string name="bg_meter">Glukomer</string>
     <string name="bg_sensor">Senzor</string>
-    
+    <!-- WizardDialog -->
+    <!-- SiteRotationDialog -->
     <string name="site_man">Muž</string>
     <string name="site_woman">Žena</string>
     <string name="site_child">Dieťa</string>
@@ -49,14 +51,15 @@
     <string name="record_site_arrow">Šípka miesta aplikácie: %1$s</string>
     <string name="record_site_note">Poznámka: %1$s</string>
     <string name="delete_site_note">Poznámka odstránená</string>
-    <string name="site_filter_info">Zvoľ typ udalosti ošetrenia, ktorú chceš vidieť: Výmena setu a/alebo Výmena senzora</string>
-    
+    <!-- FillDialog -->
     <string name="fill_warning">Prosím uistite sa, že hodnota zodpovedá špecifikácií Vášho setu!</string>
     <string name="record_pump_site_change">Zaznamenať výmenu setu</string>
     <string name="record_insulin_cartridge_change">Zaznamenať výmenu inzulínu</string>
     <string name="fill_prime_amount">Množstvo naplnenia</string>
     <string name="fill_pump_units_note">Množstvo náplne v pumpe v jednotkách</string>
     <string name="fill_insulin_change">Prepni inzulín na: %1$s (bude vykonané prepnutie profilu)</string>
+    <!-- InsulinDialog -->
+    <!-- Insulin Management -->
     <string name="missing_insulin_name">Chýba názov inzulínu</string>
     <string name="insulin_name_exists">Inzulín s názvom %1$s už existuje, zvoľ iný názov</string>
     <string name="a11y_add_new_insulin">Pridaj nový inzulín</string>
@@ -71,7 +74,7 @@
     <string name="reuse_profile_pct_hours">Znovu použiť %1$d%% %2$dh</string>
     <string name="timeshift_label">Posun času</string>
     <string name="percentage_label">% zmena</string>
-    
+    <!-- LoopDialog -->
     <string name="suspendloopfor1h">Pozastaviť uzavretý okruh na 1 h</string>
     <string name="suspendloopfor2h">Pozastaviť uzavretý okruh na 2 h</string>
     <string name="suspendloopfor3h">Pozastaviť uzavretý okruh na 3 h</string>
@@ -90,11 +93,12 @@
     <string name="duration2h">2 hodiny</string>
     <string name="duration3h">3 hodiny</string>
     <string name="duration10h">10 hodiny</string>
-    
+    <!-- WizardDialog -->
     <string name="missing_carbs">Chýba %1$d g</string>
     <string name="wizard_carbs_type_bread_desc">100% okamžité sacharidy, žiadne predĺžené sacharidy (eCarbs)</string>
     <string name="wizard_carbs_type_desc">Sacharidy redukované podľa %1$d%%, pridané eCarbs %2$d%% oneskorené %3$dmin na %4$dh</string>
     <string name="wizard_include_info">Stlač pre zahrnutie/vyňatie z kalkulácie:\n• BG - glykémia (ZAP na začiatku)\n• TT - dočasný cieľ (ZAP na začiatku)\n• Trend - Trend glykémie (posledný zapamätaný stav)\n• IOB - aktívny inzulín (ZAP na začiatku)\n• COB - aktívne sacharidy (posledný zapamätaný stav)</string>
+    <!-- Treatments -->
     <string name="no_records_available">Nie sú k dispozícii žiadne záznamy</string>
     <string name="treatments_iob_label_string">IOB:</string>
     <string name="carbs_and_bolus">Sacharidy a bolusy</string>
@@ -115,7 +119,7 @@
     <string name="tbr_type_flag_suspended">S</string>
     <string name="tbr_type_flag_emulated_suspended">ES</string>
     <string name="tbr_type_flag_superbolus">SB</string>
-    
+    <!-- ProfileHelperActivity -->
     <string name="profile_type">Typ profilu</string>
     <string name="profile_parameters">Parametre profilu</string>
     <string name="active_profile">Aktívny profil</string>
@@ -133,12 +137,15 @@
     <string name="format_with_tdd_and_pct">Vek: %1$d CDD: %2$.0f U %3$d%%</string>
     <string name="format_with_weight">Vek: %1$.0f Hmotnosť: %2$.0f kg</string>
     <string name="dpv_default_profile">Predvolený DPV profil</string>
+    <!-- Other dialogs -->
+    <!--QuickWizard-->
     <string name="overview_edit_quickwizard_button_text">Text tlačidla</string>
     <string name="quick_wizard_mode_wizard">Sprievodca</string>
     <string name="quick_wizard_mode_insulin">Inzulín</string>
     <string name="quick_wizard_mode_carbs">Sacharidy</string>
     <string name="overview_edit_quickwizard_use_positive_iob_only">Iba kladný IOB</string>
     <string name="overview_edit_quickwizard_superbolus">Superbolus</string>
+    <!--    History browser-->
     <string name="history_now">Teraz</string>
     <string name="a11y_history_previous_window">Predchádzajúce okno</string>
     <string name="a11y_history_next_window">Nasledujúce okno</string>
@@ -165,11 +172,11 @@
     <string name="insulin_constraint_violation">Inzulín limitovaný obmedzeniami</string>
     <string name="confirm_treatment">Prosím potvrďte ošetrenie</string>
     <string name="recalculate">Prepočítať</string>
-    
+    <!--    Widget-->
     <string name="use_black_color">Použiť čiernu farbu</string>
     <string name="widget_configuration">Konfiguráciu widgetu</string>
     <string name="until_changed">Dokiaľ sa nezmení</string>
-    
+    <!--    Permissions-->
     <string name="permission_sheet_title">Požadované povolenie</string>
     <string name="permission_sheet_subtitle">Sú potrebné určité povolenia na korektný chod aplikácie</string>
     <string name="permission_grant">Povoliť</string>
@@ -178,7 +185,7 @@
     <string name="permission_open_settings">Nastavenia</string>
     <string name="permission_directory_picker_error">Nepodarilo sa spustiť výber adresára. Zvyčajne ide o problém OS Android, alebo službou Family Link.</string>
     <string name="permission_nav_label">Povolenia</string>
-    
+    <!--    TDD Cycle Pattern -->
     <string name="cycle_offset">Posun cyklu</string>
     <string name="raw_tdd">Celková denná dávka (CDD)</string>
     <string name="cleaned_tdd">Celková denná dávka (CDD) - vyčistená</string>
@@ -193,7 +200,7 @@
         <item>Iba kladné</item>
         <item>Iba záporné</item>
     </string-array>
-    
+    <!-- Toolbar configuration -->
     <string name="quick_launch_selected_actions">Zvolené akcie</string>
     <string name="quick_launch_no_dynamic_items">Žiadne položky nie sú dostupné</string>
     <string name="quick_launch_category_treatment">Ošetrenie</string>
@@ -215,7 +222,7 @@
     <string name="loop_accept_nav_label">Uzavretý okruh</string>
     <string name="loop_accept_set_basal_question">Povoliť nový dočasný bazál:</string>
     <string name="loop_accept_perform">Vykonať</string>
-    
+    <!-- Widget chip labels for RM.Mode, kept terse to fit the pill -->
     <string name="widget_rm_lgs">LGS</string>
     <string name="widget_rm_disabled">Vypnutý</string>
     <string name="widget_rm_suspended">Pozastavený</string>

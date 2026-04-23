@@ -1,6 +1,6 @@
-<?xml version='1.0' encoding='utf-8'?>
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    
+    <!-- Source -->
     <string name="ns_client_bg">Glycémie NSClient</string>
     <string name="ns_client_bg_short">Gly NS</string>
     <string name="description_source_ns_client">Télécharge les glycémies depuis Nightscout</string>
@@ -25,14 +25,21 @@
     <string name="random_bg">Gly Aléatoire</string>
     <string name="description_source_random_bg">Générer des glycémies aléatoires (mode démo uniquement)</string>
     <string name="random_bg_short">Gly</string>
+    <!-- Patched Syai Tag App -->
     <string name="syai_tag_app">Syai</string>
     <string name="description_source_patched_syai_tag_app">Recevoir les glycémies de l’application Syai/Ottai.</string>
-    
+    <!-- Patched SI App -->
     <string name="patched_si_app">Application SI</string>
     <string name="description_source_patched_si_app">Recevoir des données de glucose de l\'application Patched Sibionic SI.</string>
-    
+    <!-- Patched Sino App -->
     <string name="patched_sino_app">Application Sino</string>
     <string name="description_source_patched_sino_app">Recevoir des données de glucose de l\'application Patched Sino.</string>
-    
-    
+    <!-- Notification Reader -->
+    <string name="notification_reader">Lecteur de notifications</string>
+    <string name="description_source_notification_reader">Lire les valeurs de glycémie à partir des notifications publiées par les applications CGM officielles (Dexcom, Medtronic, Eversense, etc.).</string>
+    <!-- Permission rationales -->
+    <string name="permission_dexcom_title">MGC Dexcom</string>
+    <string name="permission_dexcom_description">L\'application a besoin d\'une autorisation pour recevoir les données MGC de l\'application Dexcom</string>
+    <string name="permission_notification_listener_title">Accès aux notifications</string>
+    <string name="permission_notification_listener_description">Requis pour lire les valeurs de glycémie à partir des notifications de l\'application MGC</string>
 </resources>

@@ -1,6 +1,6 @@
-<?xml version='1.0' encoding='utf-8'?>
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    
+    <!-- Source -->
     <string name="ns_client_bg">NSClient 血糖</string>
     <string name="ns_client_bg_short">NS 血糖</string>
     <string name="description_source_ns_client">从 Nightscout 下载 血糖数据</string>
@@ -25,18 +25,19 @@
     <string name="random_bg">随机血糖</string>
     <string name="description_source_random_bg">生成随机血糖数据（仅限demo演示模式）</string>
     <string name="random_bg_short">血糖</string>
+    <!-- Patched Syai Tag App -->
     <string name="syai_tag_app">Syai</string>
     <string name="description_source_patched_syai_tag_app">从 Syai/欧态 App 接收血糖数据。</string>
-    
+    <!-- Patched SI App -->
     <string name="patched_si_app">SI App</string>
     <string name="description_source_patched_si_app">从补丁 Sibionic SI 应用接收血糖数据。</string>
-    
+    <!-- Patched Sino App -->
     <string name="patched_sino_app">Sino App</string>
     <string name="description_source_patched_sino_app">从补丁 Sino App 应用接收血糖数据。</string>
-    
+    <!-- Notification Reader -->
     <string name="notification_reader">通知读取器</string>
     <string name="description_source_notification_reader">读取官方 CGM 应用程序（Dexcom、Medtronic、Eversense 等）发布的通知中的血糖值。</string>
-    
+    <!-- Permission rationales -->
     <string name="permission_dexcom_title">Dexcom CGM</string>
     <string name="permission_dexcom_description">应用程序需要权限才能从 Dexcom 应用程序接收CGM 数据</string>
     <string name="permission_notification_listener_title">通知权限</string>

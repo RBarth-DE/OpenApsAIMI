@@ -12,25 +12,6 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ExpandLess
-import androidx.compose.material.icons.filled.ExpandMore
-import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ElevatedCard
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilledTonalButton
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.LinearProgressIndicator
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.Text
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -46,8 +27,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import app.aaps.core.data.model.ActiveSceneState
 import app.aaps.core.data.model.RM
 import app.aaps.core.data.model.TT
+import app.aaps.ui.compose.scenes.ActiveSceneBanner
 import app.aaps.core.interfaces.notifications.AapsNotification
 import app.aaps.core.interfaces.overview.AuditorDisplayState
 import app.aaps.core.interfaces.pump.BolusProgressState
@@ -80,13 +64,19 @@ private val SPLIT_LAYOUT_MIN_WIDTH: Dp = 720.dp
 
 @Composable
 fun OverviewScreen(
+    profileName: String,
+    profilePsId: Long = 0,
+    isProfileModified: Boolean,
+    profileProgress: Float,
     tempTargetText: String,
     tempTargetState: TempTargetChipState,
     tempTargetProgress: Float,
     tempTargetReason: TT.Reason?,
+    tempTargetRecordId: Long = 0,
     runningMode: RM.Mode,
     runningModeText: String,
     runningModeProgress: Float,
+    runningModeRecordId: Long = 0,
     isSimpleMode: Boolean,
     calcProgress: Int,
     graphViewModel: GraphViewModel,
@@ -99,6 +89,11 @@ fun OverviewScreen(
     onNotificationActionClick: (AapsNotification) -> Unit,
     autoShowNotificationSheet: Boolean,
     onAutoShowConsumed: () -> Unit,
+    activeSceneState: ActiveSceneState? = null,
+    sceneExpired: Boolean = false,
+    onEndScene: () -> Unit = {},
+    onDismissScene: () -> Unit = {},
+    formatDuration: (Long) -> String = { ms -> "${(ms / 60000L).toInt()}m" },
     paddingValues: PaddingValues,
     fabBottomOffset: Dp = 0.dp,
     bolusState: BolusProgressState? = null,
@@ -123,17 +118,30 @@ fun OverviewScreen(
         }
     }
 
+    val runningModeSceneManaged = activeSceneState?.priorState?.sceneRunningModeId
+        ?.let { it == runningModeRecordId && it > 0 } == true
+    val tempTargetSceneManaged = activeSceneState?.priorState?.sceneTtId
+        ?.let { it == tempTargetRecordId && it > 0 } == true
+    val profileSceneManaged = activeSceneState?.priorState?.scenePsId
+        ?.let { it == profilePsId && it > 0 } == true
+
     Box(modifier = modifier.fillMaxSize()) {
         BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
             if (maxWidth >= SPLIT_LAYOUT_MIN_WIDTH) {
                 OverviewScreenSplit(
+                    profileName = profileName,
+                    isProfileModified = isProfileModified,
+                    profileProgress = profileProgress,
+                    profileSceneManaged = profileSceneManaged,
                     tempTargetText = tempTargetText,
                     tempTargetState = tempTargetState,
                     tempTargetProgress = tempTargetProgress,
                     tempTargetReason = tempTargetReason,
+                    tempTargetSceneManaged = tempTargetSceneManaged,
                     runningMode = runningMode,
                     runningModeText = runningModeText,
                     runningModeProgress = runningModeProgress,
+                    runningModeSceneManaged = runningModeSceneManaged,
                     isSimpleMode = isSimpleMode,
                     calcProgress = calcProgress,
                     graphViewModel = graphViewModel,
@@ -141,17 +149,28 @@ fun OverviewScreen(
                     statusViewModel = statusViewModel,
                     statusLightsDef = statusLightsDef,
                     onNavigate = onNavigate,
-                    paddingValues = paddingValues
+                    paddingValues = paddingValues,
+                    activeSceneState = activeSceneState,
+                    sceneExpired = sceneExpired,
+                    onEndScene = onEndScene,
+                    onDismissScene = onDismissScene,
+                    formatDuration = formatDuration
                 )
             } else {
                 OverviewScreenStacked(
+                    profileName = profileName,
+                    isProfileModified = isProfileModified,
+                    profileProgress = profileProgress,
+                    profileSceneManaged = profileSceneManaged,
                     tempTargetText = tempTargetText,
                     tempTargetState = tempTargetState,
                     tempTargetProgress = tempTargetProgress,
                     tempTargetReason = tempTargetReason,
+                    tempTargetSceneManaged = tempTargetSceneManaged,
                     runningMode = runningMode,
                     runningModeText = runningModeText,
                     runningModeProgress = runningModeProgress,
+                    runningModeSceneManaged = runningModeSceneManaged,
                     isSimpleMode = isSimpleMode,
                     calcProgress = calcProgress,
                     graphViewModel = graphViewModel,
@@ -159,7 +178,12 @@ fun OverviewScreen(
                     statusViewModel = statusViewModel,
                     statusLightsDef = statusLightsDef,
                     onNavigate = onNavigate,
-                    paddingValues = paddingValues
+                    paddingValues = paddingValues,
+                    activeSceneState = activeSceneState,
+                    sceneExpired = sceneExpired,
+                    onEndScene = onEndScene,
+                    onDismissScene = onDismissScene,
+                    formatDuration = formatDuration
                 )
             }
         }

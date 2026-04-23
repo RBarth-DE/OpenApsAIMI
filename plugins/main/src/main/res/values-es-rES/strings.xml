@@ -1,4 +1,4 @@
-<?xml version='1.0' encoding='utf-8'?>
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="disabled_loop">Lazo desactivado</string>
     <string name="nav_history_browser">Historial</string>
@@ -7,9 +7,12 @@
     <string name="pb_label">Batería de bomba</string>
     <string name="cannula">Cánula</string>
     <string name="patch_pump">Bomba parche</string>
-    
-    <string name="a11y_blood_glucose">glucosa en sangre</string>
+    <!-- Overview -->
+    <!-- overview moved to core:ui module -->
+    <!--    OverviewMenu-->
     <string name="basal_shortname">BAS</string>
+    <!--    Iob-->
+    <!--    PersistentNotification-->
     <string name="description_persistent_notification">Muestra una notificación en curso con un breve resumen de lo que está haciendo tu lazo</string>
     <string name="old_data">DATOS CADUCADOS</string>
-    </resources>
+</resources>

@@ -1,6 +1,6 @@
-<?xml version='1.0' encoding='utf-8'?>
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    
+    <!--    General-->
     <string name="refresh">Vernieuwen</string>
     <string name="error">Fout</string>
     <string name="profile_set_ok">Basaal profiel in pomp bijgewerkt</string>
@@ -31,7 +31,7 @@
     <string name="statuslights">Statusindicatoren</string>
     <string name="configbuilder_insulin">Insuline</string>
     <string name="value_unavailable_short">n/a</string>
-    
+    <!-- master_password moved to core/keys/strings.xml -->
     <string name="ue_export_to_csv">Exporteer gebruikersinvoer naar Excel (csv)</string>
     <string name="confirm">Bevestig</string>
     <string name="pump">Pomp</string>
@@ -58,7 +58,7 @@
     <string name="carbs">Koolhydraten</string>
     <string name="invalid_profile">Ongeldig profiel!</string>
     <string name="no_profile_set">GEEN PROFIEL INGESTELD</string>
-    <string name="active">&lt;Huidig&gt;</string>
+    <string name="active"><![CDATA[<Huidig>]]></string>
     <string name="date">Datum</string>
     <string name="units_label">Eenheden</string>
     <string name="dia_label">DIA</string>
@@ -123,7 +123,6 @@
     <string name="a11y_inrange">binnen bereik</string>
     <string name="a11y_low">laag</string>
     <string name="average">Gemiddelde</string>
-    <string name="remove_label">VERWIJDER</string>
     <string name="activate_profile">Activeer profiel</string>
     <string name="profileswitch_ismissing">Profiel wissel ontbreekt. Doe aub een profiel wissel of duw op Activeer Profiel in het Lokale profiel.</string>
     <string name="profile">Profiel</string>
@@ -162,31 +161,32 @@
     <string name="extended_bolus_medium">%1$.2f E/u %2$s/%3$s\'</string>
     <string name="nav_export">Exporteer instellingen</string>
     <string name="location_permission_not_granted">Locatiemachtiging niet verleend. Toestaan in android instellingen.</string>
-    
+    <!--    Protection-->
     <string name="wrongpassword">Verkeerd wachtwoord</string>
     <string name="wrongpin">Onjuiste PIN-code</string>
     <string name="passwords_dont_match">Wachtwoorden komen niet overeen</string>
     <string name="pin_dont_match">PIN-codes komen niet overeen</string>
-    
+    <!--    Profile-->
     <string name="basalprofilenotaligned">Basaalstanden niet ingesteld in hele uren: %1$s</string>
     <string name="minimalbasalvaluereplaced">Minimum basaalwaarde is vervangen door minimaal ondersteunde waarde: %1$s</string>
     <string name="maximumbasalvaluereplaced">Basale waarde vervangen door maximale ondersteunde waarde: %1$s</string>
     <string name="profile_per_unit">/E</string>
     <string name="profile_ins_units_per_hour">E/u</string>
     <string name="profile_carbs_per_unit">g/E</string>
-    
+    <!--    ProfileFunction-->
     <string name="startprofile">Start profiel %1$d%% voor %2$d min</string>
-    
+    <!--    APSResult-->
     <string name="cancel_temp">Annuleer tijdelijk basaal</string>
     <string name="let_temp_basal_run">Laat tijdelijk basaal lopen</string>
     <string name="rate">Dosis</string>
     <string name="duration">Gedurende</string>
     <string name="reason">Reden</string>
     <string name="nochangerequested">Geen aanpassing noodzakelijk</string>
-    
-    
+    <!--    Insulin / Concentration-->
+    <!--    ProfileSwitch-->
+    <!--    Temptarget-->
     <string name="mins">%1$d min</string>
-    
+    <!--    Translator-->
     <string name="careportal">Zorgportaal</string>
     <string name="careportal_bgcheck">BG Controle</string>
     <string name="careportal_mbg">Handmatige BG of calibratie</string>
@@ -225,7 +225,6 @@
     <string name="glucosetype_finger">Vingerprik</string>
     <string name="glucosetype_sensor">Sensor</string>
     <string name="manual">Manueel</string>
-    <string name="unknown">onbekend</string>
     <string name="eatingsoon">Eet Binnenkort</string>
     <string name="hypo">Hypo</string>
     <string name="activity">Activiteit</string>
@@ -269,21 +268,22 @@
     <string name="arrow_left">Links</string>
     <string name="arrow_up_left">Omhoog links</string>
     <string name="arrow_center">Midden</string>
-    
+    <!--    Command-->
     <string name="connectiontimedout">Connectie verlopen</string>
-    
+    <!--    PumpEnactResult-->
     <string name="enacted">Uitgevoerd</string>
     <string name="comment">Commentaar</string>
     <string name="percent">Procent</string>
     <string name="absolute">Absoluut</string>
     <string name="waitingforpumpresult">Wachtend op resultaat</string>
     <string name="smb_shortname">SMB</string>
-    
+    <!--    CarbsReq-->
     <string name="carbsreq">%1$d g extra koolhydraten nodig binnen %2$d minuten</string>
     <string name="basalrate">Basaal</string>
     <string name="bolus">Bolus</string>
+    <!--    Ntp-->
     <string name="timedetection">Tijd detectie</string>
-    
+    <!-- User Entry -->
     <string name="uel_bolus">BOLUS</string>
     <string name="uel_bolus_calculator">BOLUS CALCULATOR</string>
     <string name="uel_bolus_advisor">BOLUS ADVISEUR</string>
@@ -381,7 +381,7 @@
     <string name="uel_running_mode">BEDRIJFSMODE</string>
     <string name="uel_running_mode_removed">BEDRIJFSMODE VERWIJDERD</string>
     <string name="uel_running_mode_updarted">BEDRIJFSMODE GEWIJZIGD</string>
-    
+    <!-- HardLimits -->
     <string name="profile_low_target">Profiel laag doel</string>
     <string name="profile_high_target">Profiel hoog doel</string>
     <string name="temp_target_low_target">Tijdelijk streefdoel ondergrens</string>
@@ -396,8 +396,8 @@
     <string name="valueoutofrange">»%1$s« is buiten de harde limiet</string>
     <string name="value_out_of_hard_limits">»%1$s« %2$.2f is buiten de harde limiet</string>
     <string name="basal_value">Basaal waarde</string>
-    
-    
+    <!-- Profile validation -->
+    <!-- Command Queue + readStatus reasons -->
     <string name="bolus_u_min">BOLUS %1$.2f E</string>
     <string name="carbs_g">KOOLHYDRATEN %1$d gr</string>
     <string name="extended_bolus_u_min">VERLENDE BOLUS %1$.2f E %2$d min</string>
@@ -410,8 +410,6 @@
     <string name="set_profile">PROFIEL INSTELLEN</string>
     <string name="set_user_settings">GEBRUIKERSINSTELLINGEN</string>
     <string name="smb_bolus_u">SMB BOLUS %1$.2f E</string>
-    <string name="start_pump">START POMP</string>
-    <string name="stop_pump">STOP POMP</string>
     <string name="temp_basal_absolute">TIJDELIJK BASAAL %1$.2f E/u %2$d min</string>
     <string name="temp_basal_percent">TIJDELIJK BASAAL %1$d%% %2$d min</string>
     <string name="insight_set_tbr_over_notification">INSIGHT MELDING EINDE TBR</string>
@@ -426,23 +424,23 @@
     <string name="isf_for_carbs">ISF voor Bolus Calculator en Koolhydraten Absorptie: %1$.1f</string>
     <string name="autosens_long">Autosens Waarde: %.0f%%</string>
     <string name="algorithm_long">Autosens in algoritme: %.0f%%</string>
+    <!-- Autotune -->
     <string name="autotune">Autotune</string>
     <string name="autotune_tune_days">Afstemmen dagen :</string>
     <string name="autotune_select_profile">Selecteer profiel om aan te passen</string>
-    
+    <!-- Alerts -->
     <string name="urgent_alarm">Dringend alarm</string>
     <string name="info">INFO</string>
-    
+    <!-- BolusWizard -->
     <string name="bolus_advisor">Bolusadviseur</string>
     <string name="bolus_advisor_message">Je hebt een hoge bloedglucose. In plaats van te eten, is het nu aan te raden om te wachten op een betere bloedglucose. Wil je nu een correctiebolus uitvoeren en je laten weten wanneer het tijd is om te eten? In dit geval worden er geen koolhydraten opgenomen en moet je de wizard opnieuw gebruiken wanneer we je er aan herinneren.</string>
     <string name="cobvsiob">COB vs IOB</string>
-    <string name="slowabsorptiondetected">&lt;font color=\'%1$s\'&gt;!!! Trage koolhydraat absorptie gedetecteerd: %2$d%% van de tijd. Controleer je berekening nogmaals. COB kan zijn overschat waardoor er misschien meer insuline wordt afgegeven!!!&lt;/font&gt; zijn</string>
+    <string name="slowabsorptiondetected"><![CDATA[<font color=\'%1$s\'>!!! Trage koolhydraat absorptie gedetecteerd: %2$d%% van de tijd. Controleer je berekening nogmaals. COB kan zijn overschat waardoor er misschien meer insuline wordt afgegeven!!!</font> zijn]]></string>
     <string name="bolus_constraint_applied_warn">Bolusbeperking toegepast: %1$.2f E naar %2$.2f E</string>
     <string name="bolus_recorded_only">Bolus wordt alleen geregistreerd (niet toegediend door pomp)</string>
     <string name="advisoralarm">Start alarm wanneer het tijd is om te eten</string>
     <string name="no_action_selected">Geen actie geselecteerd, er zal niets uitgevoerd worden</string>
     <string name="carb_equal_zero_no_action">Koolhydraten = 0. Geen actie!</string>
-    <string name="wizard_no_insulin_required">Geen insuline nodig!</string>
     <string name="wizard_no_actual_bg">Geen recente BG om de berekening op te baseren!</string>
     <string name="wizard_no_active_profile">Geen actief profiel ingesteld!</string>
     <string name="wizard_no_cob">Onbekende COB! BG uitlezing ontbreekt of de recente app herstart?</string>
@@ -459,6 +457,7 @@
     <string name="wizard_explain_tt">Tijdelijk Doel: %1$s</string>
     <string name="wizard_explain_tt_to">%1$s tot %2$s</string>
     <string name="wizard_pump_not_available">Geen pomp beschikbaar!</string>
+    <!--    Preferences-->
     <string name="child">Kind</string>
     <string name="teenage">Tiener</string>
     <string name="adult">Volwassene</string>
@@ -468,9 +467,9 @@
     <string name="max_bolus_title">Max toegestane bolus [E]</string>
     <string name="max_carbs_title">Max toegestane koolhydraten [g]</string>
     <string name="patient_type">Type patiënt</string>
-    
+    <!--    Protection-->
     <string name="unlock_settings">Instellingen ontgrendelen</string>
-    
+    <!--    Pumps -->
     <string name="battery_label">Batterij</string>
     <string name="reservoir_label">Reservoir</string>
     <string name="last_connection_label">Laatste verbinding</string>
@@ -493,15 +492,14 @@
     <string name="reading_pump_history">Lezen van pomp historie</string>
     <string name="password_cleared">Wachtwoord gewist!</string>
     <string name="pairing">Koppelen</string>
-    <string name="initializing">Initialiseren...</string>
     <string name="secs" comment="second short">%1$d s</string>
-    
+    <!--    Constraints-->
     <string name="limitingbasalratio">Beperken van basaal tot max %1$.2f E/uur wegens de %2$s</string>
     <string name="pumplimit">Pomp limiet</string>
     <string name="limitingpercentrate">Begrezen van max procentuele wijzigen tot %1$d%% wegens de %2$s</string>
     <string name="itmustbepositivevalue">dit moet een positieve waarde zijn</string>
     <string name="limitingbolus">Bolus beperkt tot %1$.1f E doordat %2$s</string>
-    
+    <!--    Dialogs-->
     <string name="confirmation">Bevestiging</string>
     <string name="message">Bericht</string>
     <string name="ok">OK</string>
@@ -509,42 +507,44 @@
     <string name="yes">Ja</string>
     <string name="no">Nee</string>
     <string name="close">Sluiten</string>
-    
+    <!-- TwoMessagesDialog -->
+    <!-- <unattended_export> -->
     <string name="export_ok">OK</string>
     <string name="export_warning">Waarschuwing</string>
     <string name="export_expired">Verlopen</string>
     <string name="export_disabled">Uitgeschakeld</string>
     <string name="export_failed">Mislukt</string>
     <string name="export_alert">WAARSCHUWING</string>
-    
-    
+    <!-- Export dialog strings -->
+    <!-- <unattended_export result messages> -->
     <string name="export_result_message_exported">Instellingen geëxporteerd</string>
     <string name="export_result_message_failed">Instellingen exporteren MISLUKT!</string>
     <string name="export_result_message_about_to_expire">Instellingen geëxporteerd: wachtwoord verloopt binnenkort. Exporteer handmatig en voer het wachtwoord (opnieuw) in.</string>
     <string name="export_result_message_expired">Export instellingen geannuleerd: wachtwoord is verlopen. Exporteer handmatig en geef (opnieuw) in!</string>
     <string name="export_result_message_disabled">Waarschuwing (automatisering): Instellingen export niet ingeschakeld!</string>
-    
-    
-    
-    
+    <!-- Cloud export -->
+    <!-- Export destination chip labels -->
+    <!-- Maintenance bottom sheet descriptions -->
+    <!-- Cloud directory dialog (Compose) -->
     <string name="format_hour_minute">%1$du %2$dm</string>
-    
+    <!-- datetime layout -->
     <string name="event_time_label">Gebeurtenis tijdstip</string>
-    
+    <!-- BluetoothDevicePreference -->
     <string name="need_connect_permission">Applicatie heeft bluetooth toestemming nodig</string>
-    
+    <!--    Combo-->
     <string name="user_request" comment="26 characters max for translation">Gebruikers verzoek</string>
     <string name="pump_paired" comment="26 characters max for translation">Pomp gekoppeld</string>
-    
+    <!--    BlePreCheck-->
     <string name="ble_not_supported">Bluetooth Low Energy wordt niet ondersteund.</string>
     <string name="ble_not_supported_or_not_paired">Bluetooth Low Energy wordt niet ondersteund of het apparaat is niet gekoppeld.</string>
     <string name="ble_not_enabled">Bluetooth niet ingeschakeld.</string>
+    <!--    Preferences -->
     <string name="nav_plugin_preferences">Plugin instellingen</string>
-    
-    
-    
-    
-    
+    <!-- Navigation -->
+    <!-- Alerts -->
+    <!-- Actions Screen -->
+    <!-- Site Rotation -->
+    <!-- About -->
     <string name="cta_dont_kill_my_app_info">Don\'t kill my app?</string>
     <string name="fabric_upload_disabled">Upload van crashrapporten is uitgeschakeld!</string>
     <string name="about_link_urls">\n\nDocumentatie:\nhttps://wiki.aaps.app\n\nFacebook:\nhttps://www.facebook.com/groups/AndroidAPSUsers</string>
@@ -560,11 +560,11 @@
         <item quantity="one">%1$d minuut</item>
         <item quantity="other">%1$d minuten</item>
     </plurals>
-    
+    <!--    Maintenance-->
     <string name="cleanup_db_confirm">Wil je de database opschonen?\nHet zal bijgehouden wijzigingen en historische gegevens ouder dan 3 maanden verwijderen.</string>
     <string name="cleanup_db_confirm_sync">Wil je de database opschonen?\nHet zal bijgehouden wijzigingen en historische gegevens ouder dan 3 maanden verwijderen.\nDit zal de volledige synchronisatie drastisch versnellen.</string>
     <string name="cleared_entries">Invoer gewist</string>
-    
+    <!--    Weekday-->
     <string name="weekday_sunday_short">Zo</string>
     <string name="weekday_saturday_short">Za</string>
     <string name="weekday_friday_short">Vr</string>
@@ -572,25 +572,22 @@
     <string name="weekday_wednesday_short">Wo</string>
     <string name="weekday_tuesday_short">Di</string>
     <string name="weekday_monday_short">Ma</string>
-    
+    <!--    DecimalFormatterImpl -->
     <string name="format_insulin_units1">%1$.1f E</string>
     <string name="format_insulin_units">%1$.2f E</string>
     <string name="percent_rate_duration">Basaal: %1$.2f%% (%2$.2f E/h) Duur: %3$d min</string>
     <string name="rate_percent_duration">Basaal: %1$.2f E/h (%2$.2f%%) Duur: %3$d min</string>
-    <string name="percent_rate_duration_formatted">&lt;b&gt;Basaal&lt;/b&gt;: %1$.2f%% (%2$.2f E/h)&lt;br&gt;&lt;b&gt;Duur&lt;/b&gt;: %3$d min&lt;br&gt;</string>
-    <string name="rate_percent_duration_formatted">&lt;b&gt;Basaal&lt;/b&gt;: %1$.2f E/h (%2$.2f%%) &lt;br&gt;&lt;b&gt;Duur&lt;/b&gt;: %3$d min&lt;br&gt;</string>
-    
+    <string name="percent_rate_duration_formatted"><![CDATA[<b>Basaal</b>: %1$.2f%% (%2$.2f E/h)<br><b>Duur</b>: %3$d min<br>]]></string>
+    <string name="rate_percent_duration_formatted"><![CDATA[<b>Basaal</b>: %1$.2f E/h (%2$.2f%%) <br><b>Duur</b>: %3$d min<br>]]></string>
+    <!--    Playback-->
     <string name="audio_playback_attribution">"AAPS speelt geluid"</string>
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    <string name="remove_items">Items verwijderen</string>
-    <string name="sort_items">Sorteer items</string>
-
+    <!-- ProfileEditor -->
+    <!--    Search-->
+    <!--    Food Management -->
+    <!--    Log Settings-->
+    <!--    Maintenance-->
+    <!-- Import settings screen -->
+    <!--    BLE Scan Step (shared pump pairing) -->
+    <!-- Graph configuration -->
+    <!-- Graph series short names (used as graph labels, keep very short) -->
 </resources>

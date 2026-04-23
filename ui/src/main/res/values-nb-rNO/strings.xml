@@ -1,4 +1,4 @@
-<?xml version='1.0' encoding='utf-8'?>
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="carbs_constraint_applied">Karbohydrat-begrensning utført</string>
     <string name="temp_target_short">Midlertidig mål</string>
@@ -6,11 +6,12 @@
     <string name="start_eating_soon_tt">Start midlertidig mål for Spise snart</string>
     <string name="start_hypo_tt">Start midlertidig mål for Hypo</string>
     <string name="time_offset">Tidsforskyvning</string>
+    <!--    Widget-->
     <string name="configure">Konfigurer gjennomsiktighet</string>
     <string name="widget_description">AAPS widget</string>
     <string name="widget_bg_graph_description">AAPS BS-graf</string>
     <string name="widget_compact_bg_description">AAPS BS + IOB + COB (kompakt)</string>
-    
+    <!--     Activities-->
     <string name="activity_monitor">Aktivitetsmonitor</string>
     <string name="time_range">Tidsrom</string>
     <string name="dexcom_tir">Dexcom TIR</string>
@@ -37,7 +38,8 @@
     <string name="bg_other">Annet</string>
     <string name="bg_meter">Måler</string>
     <string name="bg_sensor">Sensor</string>
-    
+    <!-- WizardDialog -->
+    <!-- SiteRotationDialog -->
     <string name="site_man">Mann</string>
     <string name="site_woman">Kvinne</string>
     <string name="site_child">Barn</string>
@@ -51,14 +53,15 @@
     <string name="record_site_arrow">Områdepil: %1$s</string>
     <string name="record_site_note">Notat: %1$s</string>
     <string name="delete_site_note">Notat slettet</string>
-    <string name="site_filter_info">Velg hvilken type behandlingshendelse du vil se: Kanylebytte og/eller sensorbytte</string>
-    
+    <!-- FillDialog -->
     <string name="fill_warning">Kontroller at mengden samsvarer med spesifikasjonen for slangesettet ditt!</string>
     <string name="record_pump_site_change">Logg bytte av slangesett</string>
     <string name="record_insulin_cartridge_change">Logg bytte av insulinampull</string>
     <string name="fill_prime_amount">Prime-mengde</string>
     <string name="fill_pump_units_note">Prime-mengden er i pumpeenheter</string>
     <string name="fill_insulin_change">Bytt insulin til: %1$s (profilbytte vil bli brukt)</string>
+    <!-- InsulinDialog -->
+    <!-- Insulin Management -->
     <string name="missing_insulin_name">Mangler insulinnavn</string>
     <string name="insulin_name_exists">Insulinnavnet %1$s finnes allerede. Velg et nytt navn</string>
     <string name="a11y_add_new_insulin">Legg til nytt insulin</string>
@@ -73,7 +76,7 @@
     <string name="reuse_profile_pct_hours">Gjenbruk %1$d%% %2$dt</string>
     <string name="timeshift_label">Tidsforskyving</string>
     <string name="percentage_label">Prosent</string>
-    
+    <!-- LoopDialog -->
     <string name="suspendloopfor1h">Pause loop i 1t</string>
     <string name="suspendloopfor2h">Pause loop i 2t</string>
     <string name="suspendloopfor3h">Pause loop i 3t</string>
@@ -92,11 +95,12 @@
     <string name="duration2h">2 timer</string>
     <string name="duration3h">3 timer</string>
     <string name="duration10h">10 timer</string>
-    
+    <!-- WizardDialog -->
     <string name="missing_carbs">Mangler %1$d g</string>
     <string name="wizard_carbs_type_bread_desc">100% karbo umiddelbart, ingen forlenget karbo</string>
     <string name="wizard_carbs_type_desc">Karbo redusert med %1$d%%, tillagt eKarbo %2$d%% forsinket %3$dmin for %4$dt</string>
     <string name="wizard_include_info">Trykk for å inkludere/ekskludere fra beregning:\n• BS — blodsukker (på ved start)\n• TT — midl. mål (på ved start)\n• Trend — BS-trend (siste huskede tilstand)\n• IOB — insulin ombord (på ved start)\n• COB — karbo ombord (siste huskede tilstand)</string>
+    <!-- Treatments -->
     <string name="no_records_available">Ingen registreringer tilgjengelig</string>
     <string name="treatments_iob_label_string">IOB:</string>
     <string name="carbs_and_bolus">Karbo og bolus</string>
@@ -117,7 +121,7 @@
     <string name="tbr_type_flag_suspended">S</string>
     <string name="tbr_type_flag_emulated_suspended">ES</string>
     <string name="tbr_type_flag_superbolus">SB</string>
-    
+    <!-- ProfileHelperActivity -->
     <string name="profile_type">Profiltype</string>
     <string name="profile_parameters">Profilparametere</string>
     <string name="active_profile">Aktiv profil</string>
@@ -135,12 +139,15 @@
     <string name="format_with_tdd_and_pct">Alder: %1$d TDD: %2$.0f E %3$d%%</string>
     <string name="format_with_weight">Alder: %1$d Vekt: %2$.0f kg</string>
     <string name="dpv_default_profile">DPV standardprofil</string>
+    <!-- Other dialogs -->
+    <!--QuickWizard-->
     <string name="overview_edit_quickwizard_button_text">Knappetekst</string>
     <string name="quick_wizard_mode_wizard">Hurtigknapp</string>
     <string name="quick_wizard_mode_insulin">Insulin</string>
     <string name="quick_wizard_mode_carbs">Karbo</string>
     <string name="overview_edit_quickwizard_use_positive_iob_only">Kun positiv IOB</string>
     <string name="overview_edit_quickwizard_superbolus">Superbolus</string>
+    <!--    History browser-->
     <string name="history_now">Nå</string>
     <string name="a11y_history_previous_window">Forrige vindu</string>
     <string name="a11y_history_next_window">Neste vindu</string>
@@ -167,11 +174,11 @@
     <string name="insulin_constraint_violation">Insulin begrenset av begrensninger</string>
     <string name="confirm_treatment">Bekreft behandling</string>
     <string name="recalculate">Rekalkuler</string>
-    
+    <!--    Widget-->
     <string name="use_black_color">Bruk svart farge</string>
     <string name="widget_configuration">Widget konfigurasjon</string>
     <string name="until_changed">Inntil endret</string>
-    
+    <!--    Permissions-->
     <string name="permission_sheet_title">Tillatelser kreves</string>
     <string name="permission_sheet_subtitle">Noen tillatelser er nødvendige for at appen skal fungere ordentlig</string>
     <string name="permission_grant">Tillat</string>
@@ -180,7 +187,7 @@
     <string name="permission_open_settings">Innstillinger</string>
     <string name="permission_directory_picker_error">Kan ikke starte mappe-velgeren. Vanligvis et problem med Android eller Family Link.</string>
     <string name="permission_nav_label">Tillatelser</string>
-    
+    <!--    TDD Cycle Pattern -->
     <string name="cycle_offset">Syklusforskyvning</string>
     <string name="raw_tdd">Rå TDD</string>
     <string name="cleaned_tdd">Renset TDD</string>
@@ -195,7 +202,7 @@
         <item>Kun positiv</item>
         <item>Kun negativ</item>
     </string-array>
-    
+    <!-- Toolbar configuration -->
     <string name="quick_launch_selected_actions">Valgte handlinger</string>
     <string name="quick_launch_no_dynamic_items">Ingen ting tilgjengelig</string>
     <string name="quick_launch_category_treatment">Behandling</string>
@@ -217,7 +224,7 @@
     <string name="loop_accept_nav_label">Loop</string>
     <string name="loop_accept_set_basal_question">Godta ny midlertidig basal:</string>
     <string name="loop_accept_perform">Utfør</string>
-    
+    <!-- Widget chip labels for RM.Mode, kept terse to fit the pill -->
     <string name="widget_rm_lgs">LGS</string>
     <string name="widget_rm_disabled">Deaktivert</string>
     <string name="widget_rm_suspended">Pauset</string>

@@ -1,4 +1,4 @@
-<?xml version='1.0' encoding='utf-8'?>
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="automation_short">Auto</string>
     <string name="automation">Automatizacija</string>
@@ -93,27 +93,26 @@
     <string name="edit_short">Keisti</string>
     <string name="preconditions">Išankstinės sąlygos:</string>
     <string name="user_action">Naudotojo veiksmas</string>
-    <string name="count_selected">%1$d pasirinkta</string>
     <string name="system_automation">Sistemos automatizacija</string>
     <string name="run_automations">Paleisti automatizacijas</string>
     <string name="add_automation">Pridėti taisyklę</string>
     <string name="stop_processing">Stabdyti apdorojimą</string>
-    
+    <!--    Reminders-->
     <string name="time_to_eat">Laikas valgyti!\nĮjunkite Boluso patarėją ir atlikite skaičiavimą dar kartą.</string>
     <string name="time_to_bolus">Laikas bolusui!\nĮjunkite Skaičiuotuvą ir pakartokite skaičiavimus.</string>
     <string name="error_setting_reminder">Klaida nustatant ateities perspėjimus</string>
-    
+    <!--    Autotune-->
     <string name="autotune_profile_name">Autotune profilis %1$s</string>
     <string name="autotune_run">Paleisti Autotune</string>
     <string name="autotune_run_without_autoswitch">Autotune veikė be profilio keitimo</string>
     <string name="autotune_run_with_autoswitch">Autotune veikė ir profilis automatiškai pakeistas</string>
     <string name="autotune_run_with_error">Paskutinio Autotune klaida</string>
     <string name="autotune_run_cancelled">Nustatytas kitas Autotune veikimas, jis atšauktas</string>
-    
+    <!--    Steps count-->
     <string name="triggerStepsCountLabel">Žingsniai</string>
     <string name="triggerStepsCountDesc">Žingsnių skaičius per %1$s min %2$s %3$.0f</string>
     <string name="triggerStepsCountDropdownLabel">Trukmė</string>
-    
-    
-    
+    <!--    SMB mode-->
+    <!--    Map Picker (OpenStreetMap)-->
+    <!-- Permission rationales -->
 </resources>

@@ -1,6 +1,6 @@
-<?xml version='1.0' encoding='utf-8'?>
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    
+    <!-- Source -->
     <string name="ns_client_bg">נתוני סוכר מ-NSClient</string>
     <string name="ns_client_bg_short">נתוני סוכר מ-NS</string>
     <string name="description_source_ns_client">הורדת ערכי סוכר בדם מ-Nightscout</string>
@@ -25,4 +25,9 @@
     <string name="random_bg">נתוני סוכר אקראיים</string>
     <string name="description_source_random_bg">הפקת נתוני גלוקוז אקראיים (מצב הדגמה בלבד)</string>
     <string name="random_bg_short">נתוני סוכר</string>
-    </resources>
+    <!-- Patched Syai Tag App -->
+    <!-- Patched SI App -->
+    <!-- Patched Sino App -->
+    <!-- Notification Reader -->
+    <!-- Permission rationales -->
+</resources>

@@ -1,4 +1,4 @@
-<?xml version='1.0' encoding='utf-8'?>
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="units">Единицы</string>
     <string name="setupwizard_units_prompt">Выберите единицы, в которых вы хотите отображать значения</string>
@@ -17,7 +17,7 @@
     <string name="high_mark_comment">Большее значение диапазона целевых значений (только для дисплея)</string>
     <string name="storedsettingsfound">Найдены сохраненные параметры</string>
     <string name="master_password_summary">Главный пароль используется для шифрования резервных копий и для переопределения защиты в приложении. Запомните его или храните в безопасном месте.</string>
-    
+    <!-- current_master_password moved to core/ui/protection.xml -->
     <string name="common_values">Введите максимальные значения вашего приема пищи \n</string>
     <string name="syncinfotext">Синхронизировать данные в облако. Сейчас можно пропустить эту часть, но без клиента Nightscout или Tidepool не получится пройти все цели.</string>
     <string name="status">состояние:</string>
@@ -32,30 +32,29 @@
     <string name="startobjective">Начните первую Цель</string>
     <string name="setupwizard_pump_riley_link_status">Статус RileyLink:</string>
     <string name="readstatus">Статус \'чтение\'</string>
-    
-    <string name="request">Запрос</string>
+    <!-- Provider-agnostic cloud export/import strings -->
     <string name="alert_dialog_permission_battery_optimization_failed">Это устройство не поддерживает меню оптимизации батареи - могут быть проблемы с производительностью.</string>
-    
+    <!--    ConfigBuilder-->
     <string name="configbuilder_pump_description">Какой помпой вы хотели бы пользоваться с AAPS?</string>
     <string name="configbuilder_aps_description">Какой алгоритм ИПЖ должен выполнять подстройку терапии?</string>
     <string name="configbuilder_bgsource_description">Откуда должен получать данные AAPS?</string>
     <string name="configbuilder_sensitivity_description">Какой алгоритм чувствительности следует использовать?</string>
     <string name="allow_hardware_pump_text">Внимание: Если вы активируете подключение к невиртуальной помпе, AAPS скопирует настройки базала в профиль помпы, перезаписывая существующие настройки, хранящиеся в ней. Убедитесь, что настройки базала в AAPS корректны. Если вы не уверены или не хотите перезаписать настройки базала на помпу, нажмите отменить и повторите подключение в другое время.</string>
     <string name="nsclient_version_does_not_match">Версия AAPSClient не совпадает с версией AAPS. Обновите версию.</string>
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
+    <!--ImportExport-->
+    <!-- password_preferences_encrypt_prompt moved to core:ui -->
+    <!-- preferences_export_canceled moved to core:ui -->
+    <!-- export_to moved to core:ui -->
+    <!-- master_password_missing moved to core:ui -->
+    <!-- Maintenance -->
+    <!-- Maintenance -->
+    <!-- maintenance_email moved to core:keys module -->
+    <!-- Google Drive Storage -->
+    <!-- Import source selection dialog -->
     <string name="loading">Загрузка…</string>
     <string name="warning_wrong_directory_selected">Выбрана неверная директория</string>
     <string name="warning_wrong_directory_message">Вы выбрали поддиректорию \"%1$s\" вместо корневой директории AAPS. Выберите корневой каталог AAPS. Приложение будет автоматически создавать и управлять подкаталогами.</string>
-    
-    
-    
+    <!-- Google Drive error messages (used by GoogleDriveManager) -->
+    <!-- Provider-agnostic cloud storage strings -->
+    <!-- Authorization status strings -->
 </resources>

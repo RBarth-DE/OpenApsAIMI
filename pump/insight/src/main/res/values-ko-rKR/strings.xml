@@ -1,4 +1,4 @@
-<?xml version='1.0' encoding='utf-8'?>
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="enable_tbr_over_notification">임시Basal 종료 알림 활성\n(펌프설정)</string>
     <string name="disable_tbr_over_notification">임시Basal 종료 알림 비활성\n(펌프설정)</string>
@@ -44,4 +44,4 @@
     <string name="max_recovery_duration">최대 재연결 시간 [초]</string>
     <string name="min_recovery_duration">최소 재연결 시간 [초]</string>
     <string name="pump_alert">펌프 경고</string>
-    </resources>
+</resources>

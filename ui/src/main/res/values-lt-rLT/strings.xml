@@ -1,4 +1,4 @@
-<?xml version='1.0' encoding='utf-8'?>
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="carbs_constraint_applied">Pritaikytas AV apribojimas</string>
     <string name="temp_target_short">LT</string>
@@ -6,9 +6,10 @@
     <string name="start_eating_soon_tt">Pradėti Netrukus valgysiu LT</string>
     <string name="start_hypo_tt">Pradėti \"Hipo\" LT</string>
     <string name="time_offset">Laiko poslinkis</string>
+    <!--    Widget-->
     <string name="configure">Derinti skaidrumą</string>
     <string name="widget_description">AAPS valdiklis</string>
-    
+    <!--     Activities-->
     <string name="activity_monitor">Aktyvumo stebėjimas</string>
     <string name="do_you_want_reset_stats">Ar norite iš naujo nustatyti aktyvumo statistiką?</string>
     <string name="do_you_want_recalculate_tdd_stats">Ar norite iš perskaičiuoti BPD statistiką?</string>
@@ -19,15 +20,18 @@
     <string name="bg_other">Kiti</string>
     <string name="bg_meter">Matuoklis</string>
     <string name="bg_sensor">Sensorius</string>
-    
+    <!-- WizardDialog -->
+    <!-- SiteRotationDialog -->
+    <!-- FillDialog -->
     <string name="fill_warning">Įsitikinkite, kad nurodytas kiekis atitinka Jūsų infuzijos rinkinio specifikaciją!</string>
     <string name="record_pump_site_change">Įrašas apie infuzijos rinkinio keitimą</string>
     <string name="record_insulin_cartridge_change">Įrašas apie rezervuaro keitimą</string>
-    
+    <!-- InsulinDialog -->
+    <!-- Insulin Management -->
     <string name="reuse_profile_pct_hours">Pakartotinai naudoti %1$d%% %2$dh</string>
     <string name="timeshift_label">Laiko perstūmimas</string>
     <string name="percentage_label">Procentais</string>
-    
+    <!-- LoopDialog -->
     <string name="suspendloopfor1h">Sustabdyti ciklą 1 val</string>
     <string name="suspendloopfor2h">Sustabdyti ciklą 2 val</string>
     <string name="suspendloopfor3h">Sustabdyti ciklą 3 val</string>
@@ -46,8 +50,9 @@
     <string name="duration2h">2 val.</string>
     <string name="duration3h">3 val.</string>
     <string name="duration10h">10 val.</string>
-    
+    <!-- WizardDialog -->
     <string name="missing_carbs">Trūksta %1$d g</string>
+    <!-- Treatments -->
     <string name="no_records_available">Nėra įrašų</string>
     <string name="treatments_iob_label_string">AIO:</string>
     <string name="carbs_and_bolus">AV ir bolusai</string>
@@ -56,7 +61,7 @@
     <string name="careportal_remove_started_events">Ištrinti AAPS paleidimo žymas</string>
     <string name="user_entry">Naudotojo įrašas</string>
     <string name="clone_label">Klonuoti</string>
-    
+    <!-- ProfileHelperActivity -->
     <string name="profile_type">Profilio tipas</string>
     <string name="basal_pct_from_tdd_label">% bazės</string>
     <string name="selected_profile">Parinkta:</string>
@@ -67,20 +72,23 @@
     <string name="format_with_tdd_and_pct">Laikas: %1$d BPD: %2$.0f U %3$d%%</string>
     <string name="format_with_weight">Laikas: %1$d Svoris: %2$.0f kg</string>
     <string name="dpv_default_profile">Numatytasis profilis</string>
+    <!-- Other dialogs -->
+    <!--QuickWizard-->
     <string name="overview_edit_quickwizard_button_text">Mygtuko tekstas</string>
     <string name="overview_edit_quickwizard_use_positive_iob_only">Tik teigiamas AIO</string>
     <string name="overview_edit_quickwizard_superbolus">Superbolusas</string>
+    <!--    History browser-->
     <string name="additional_ecarbs">Pridėti ištęstus angliavandenius</string>
     <string name="confirm_treatment">Patvirtinkite terapiją</string>
     <string name="recalculate">Perskaičiuoti</string>
-    
-    
-    
+    <!--    Widget-->
+    <!--    Permissions-->
+    <!--    TDD Cycle Pattern -->
     <string-array name="yes_no_positiveonly_negativeonly">
         <item>Abu</item>
         <item>Tik teigiamas</item>
         <item>Tik neigiamas</item>
     </string-array>
-    
-    
+    <!-- Toolbar configuration -->
+    <!-- Widget chip labels for RM.Mode, kept terse to fit the pill -->
 </resources>

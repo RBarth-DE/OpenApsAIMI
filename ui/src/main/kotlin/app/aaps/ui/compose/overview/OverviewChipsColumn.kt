@@ -30,11 +30,17 @@ fun OverviewChipsColumn(
     runningMode: RM.Mode,
     runningModeText: String,
     runningModeProgress: Float,
+    runningModeSceneManaged: Boolean = false,
     isSimpleMode: Boolean,
+    profileName: String,
+    isProfileModified: Boolean,
+    profileProgress: Float,
+    profileSceneManaged: Boolean = false,
     tempTargetText: String,
     tempTargetState: TempTargetChipState,
     tempTargetProgress: Float,
     tempTargetReason: TT.Reason?,
+    tempTargetSceneManaged: Boolean = false,
     onNavigate: (NavigationRequest) -> Unit,
     modifier: Modifier = Modifier,
     trailingContent: @Composable (RowScope.() -> Unit)? = null
@@ -58,11 +64,17 @@ fun OverviewChipsColumn(
                             runningMode = runningMode,
                             runningModeText = runningModeText,
                             runningModeProgress = runningModeProgress,
+                            runningModeSceneManaged = runningModeSceneManaged,
                             isSimpleMode = isSimpleMode,
+                            profileName = profileName,
+                            isProfileModified = isProfileModified,
+                            profileProgress = profileProgress,
+                            profileSceneManaged = profileSceneManaged,
                             tempTargetText = tempTargetText,
                             tempTargetState = tempTargetState,
                             tempTargetProgress = tempTargetProgress,
                             tempTargetReason = tempTargetReason,
+                            tempTargetSceneManaged = tempTargetSceneManaged,
                             onNavigate = onNavigate,
                             modifier = Modifier.width(chipsWidth),
                         )
@@ -78,11 +90,17 @@ fun OverviewChipsColumn(
                 runningMode = runningMode,
                 runningModeText = runningModeText,
                 runningModeProgress = runningModeProgress,
+                runningModeSceneManaged = runningModeSceneManaged,
                 isSimpleMode = isSimpleMode,
+                profileName = profileName,
+                isProfileModified = isProfileModified,
+                profileProgress = profileProgress,
+                profileSceneManaged = profileSceneManaged,
                 tempTargetText = tempTargetText,
                 tempTargetState = tempTargetState,
                 tempTargetProgress = tempTargetProgress,
                 tempTargetReason = tempTargetReason,
+                tempTargetSceneManaged = tempTargetSceneManaged,
                 onNavigate = onNavigate,
                 modifier = Modifier
             )
@@ -95,11 +113,17 @@ private fun NarrowChips(
     runningMode: RM.Mode,
     runningModeText: String,
     runningModeProgress: Float,
+    runningModeSceneManaged: Boolean,
     isSimpleMode: Boolean,
+    profileName: String,
+    isProfileModified: Boolean,
+    profileProgress: Float,
+    profileSceneManaged: Boolean,
     tempTargetText: String,
     tempTargetState: TempTargetChipState,
     tempTargetProgress: Float,
     tempTargetReason: TT.Reason?,
+    tempTargetSceneManaged: Boolean,
     onNavigate: (NavigationRequest) -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -114,6 +138,7 @@ private fun NarrowChips(
                     text = runningModeText,
                     progress = runningModeProgress,
                     modifier = Modifier.weight(1f),
+                    sceneManaged = runningModeSceneManaged,
                     onClick = { onNavigate(NavigationRequest.Element(ElementType.RUNNING_MODE)) }
                 )
                 if (isSimpleMode) {
@@ -135,7 +160,8 @@ private fun NarrowChips(
                 progress = tempTargetProgress,
                 reason = tempTargetReason,
                 onClick = { onNavigate(NavigationRequest.Element(ElementType.TEMP_TARGET_MANAGEMENT)) },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                sceneManaged = tempTargetSceneManaged
             )
         }
     }

@@ -37,10 +37,13 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import app.aaps.core.data.model.ActiveSceneState
 import app.aaps.core.data.model.RM
 import app.aaps.core.data.model.TT
 import app.aaps.core.interfaces.overview.AuditorDisplayState
 import app.aaps.core.ui.compose.AapsSpacing
+import app.aaps.ui.compose.scenes.ActiveSceneBanner
+import app.aaps.core.interfaces.overview.graph.TbrState
 import app.aaps.core.ui.compose.AapsTheme
 import app.aaps.core.ui.compose.LocalConfig
 import app.aaps.core.ui.compose.navigation.ElementType
@@ -56,13 +59,19 @@ import app.aaps.ui.compose.overview.statusLights.StatusViewModel
 
 @Composable
 fun OverviewScreenStacked(
+    profileName: String,
+    isProfileModified: Boolean,
+    profileProgress: Float,
+    profileSceneManaged: Boolean = false,
     tempTargetText: String,
     tempTargetState: TempTargetChipState,
     tempTargetProgress: Float,
     tempTargetReason: TT.Reason?,
+    tempTargetSceneManaged: Boolean = false,
     runningMode: RM.Mode,
     runningModeText: String,
     runningModeProgress: Float,
+    runningModeSceneManaged: Boolean = false,
     isSimpleMode: Boolean,
     calcProgress: Int,
     graphViewModel: GraphViewModel,
@@ -71,6 +80,11 @@ fun OverviewScreenStacked(
     statusLightsDef: PreferenceSubScreenDef,
     onNavigate: (NavigationRequest) -> Unit,
     paddingValues: PaddingValues,
+    activeSceneState: ActiveSceneState? = null,
+    sceneExpired: Boolean = false,
+    onEndScene: () -> Unit = {},
+    onDismissScene: () -> Unit = {},
+    formatDuration: (Long) -> String = { ms -> "${(ms / 60000L).toInt()}m" },
     modifier: Modifier = Modifier
 ) {
     val config = LocalConfig.current
@@ -97,6 +111,13 @@ fun OverviewScreenStacked(
                     .height(4.dp),
             )
         }
+        ActiveSceneBanner(
+            activeState = activeSceneState,
+            expired = sceneExpired,
+            onEndClick = onEndScene,
+            onDismiss = onDismissScene,
+            formatDuration = formatDuration
+        )
 
         // State sammeln
         val tirState by graphViewModel.tirFlow.collectAsStateWithLifecycle()
@@ -105,9 +126,8 @@ fun OverviewScreenStacked(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 8.dp, vertical = 8.dp),
-            verticalAlignment = Alignment.Top
+            verticalAlignment = Alignment.Bottom
         ) {
-            // Left: BG Info + sensitivity chip
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
@@ -130,11 +150,17 @@ fun OverviewScreenStacked(
                     runningMode = runningMode,
                     runningModeText = runningModeText,
                     runningModeProgress = runningModeProgress,
+                    runningModeSceneManaged = runningModeSceneManaged,
                     isSimpleMode = isSimpleMode,
+                    profileName = profileName,
+                    isProfileModified = isProfileModified,
+                    profileProgress = profileProgress,
+                    profileSceneManaged = profileSceneManaged,
                     tempTargetText = tempTargetText,
                     tempTargetState = tempTargetState,
                     tempTargetProgress = tempTargetProgress,
                     tempTargetReason = tempTargetReason,
+                    tempTargetSceneManaged = tempTargetSceneManaged,
                     onNavigate = onNavigate
                 )
                 // HR, Steps,LastSMB, Basal, IOB

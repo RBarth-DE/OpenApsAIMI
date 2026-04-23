@@ -1,8 +1,8 @@
-<?xml version='1.0' encoding='utf-8'?>
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    
+    <!-- Medtronic (MDT) - Base -->
     <string name="description_pump_medtronic">Integração para Bombas Medtronic, requer um RileyLink e um Modelo de Bomba específico</string>
-    
+    <!-- MDT Configuration -->
     <string name="medtronic_serial_number">Número de série da Bomba</string>
     <string name="medtronic_pump_type">Modelo de Bomba</string>
     <string name="medtronic_pump_frequency">Frequência da Bomba</string>
@@ -17,11 +17,11 @@
     <string name="medtronic_pump_battery_lithium">Lítio (Visualização estendida)</string>
     <string name="medtronic_pump_battery_nizn">NiZn (Visualização estendida)</string>
     <string name="medtronic_pump_battery_nimh">NiMH (Visualização estendida)</string>
-    
-    
-    
+    <!-- Pump type entries -->
+    <!-- Bolus delay entries -->
+    <!-- MDT Fragment -->
     <string name="rl_battery_label">Bateria RileyLink</string>
-    
+    <!-- MDT Errors -->
     <string name="medtronic_error_serial_invalid">Núm. Série inválido.</string>
     <string name="medtronic_error_pump_type_not_set">Modelo de Bomba não definido.</string>
     <string name="medtronic_error_pump_type_invalid">Modelo de Bomba não suportado.</string>
@@ -34,13 +34,14 @@
     <string name="medtronic_error_pump_wrong_max_basal_set">Índice Basal máximo definido na Bomba está incorrecto (deve ser %1$.2f).</string>
     <string name="medtronic_error_operation_not_possible_no_configuration">Operação não é possível.\n\n Necessário configurar a Bomba Medtronic antes de poder utilizar esta operação.</string>
     <string name="medtronic_error_pump_24h_time_change_requested">Solicitada uma alteração de tempo de mais de 24h.</string>
-    
-    
-    
-    
-    
-    
-    
+    <!-- MDT History -->
+    <!--    <string name="medtronic_history_group_basal">Basals</string>-->
+    <!--    <string name="medtronic_history_group_configuration">Configurations</string>-->
+    <!--    <string name="medtronic_history_group_notification">Notifications</string>-->
+    <!--    <string name="medtronic_history_group_statistic">Statistics</string>-->
+    <!--    <string name="medtronic_history_group_unknown">Unknowns</string>-->
+    <!--    <string name="medtronic_history_group_all">All</string>-->
+    <!-- <string name="medtronic_cmd_profile_not_set">Remote Basal profile setting is not supported. Please modify Basal profile on your pump manually.</string> -->
     <string name="medtronic_cmd_cancel_bolus_not_supported">Cancelou o Bólus, depois de ele já ter sido definido na Bomba. Uma vez que a Bomba Medtronic não suporta cancelamento, precisará de cancelar manualmente. Coloque a Bomba no modo de Suspender e depois Retome (se ainda quiser cancelar). A aplicação irá captar as alterações, na próxima atualização (em menos de 5 minutos).</string>
     <string name="medtronic_cmd_cant_read_tbr">Não foi possível ler a DBT actual.</string>
     <string name="medtronic_cmd_cant_cancel_tbr_stop_op">Não foi possível cancelar a DBT actual. A parar a operação.</string>
@@ -68,7 +69,7 @@
     <string name="medtronic_pump_connected_now" comment="Displayed when pump was connected less than a minute ago">Agora</string>
     <string name="ago" comment="Time suffix, e.g. '5 min ago'">atrás</string>
     <string name="medtronic_notification_check_time_date">Necessário atualizar relógio da bomba</string>
-    
+    <!-- combo_notification_check_time_date -->
     <string name="set_neutral_temps_title">Definir basais temporárias neutras</string>
     <string name="set_neutral_temps_summary">Se activado, cancela a basal temporária antes de perfazer uma hora. Este método evita que as bombas Medtronic emitam um sinal sonoro e/ou vibrem quando a basal temporária se estende por mais de uma hora.</string>
     <string name="invalid_history_data">Detetados dados de histórico de bomba inválidos. Abra um novo problema e forneça registos.</string>

@@ -1,4 +1,4 @@
-<?xml version='1.0' encoding='utf-8'?>
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="carbs_constraint_applied">已套用碳水化合物限制</string>
     <string name="temp_target_short">臨時目標</string>
@@ -6,9 +6,10 @@
     <string name="start_eating_soon_tt">即將開始用餐 (臨時目標)</string>
     <string name="start_hypo_tt">開始低血糖(臨時目標)</string>
     <string name="time_offset">時間偏移</string>
+    <!--    Widget-->
     <string name="configure">配置透明度</string>
     <string name="widget_description">AAPS 小工具</string>
-    
+    <!--     Activities-->
     <string name="activity_monitor">活動監視器</string>
     <string name="time_range">時間範圍</string>
     <string name="dexcom_tir">Dexcom 目標範圍內</string>
@@ -35,7 +36,8 @@
     <string name="bg_other">其他</string>
     <string name="bg_meter">血糖機</string>
     <string name="bg_sensor">傳感器</string>
-    
+    <!-- WizardDialog -->
+    <!-- SiteRotationDialog -->
     <string name="site_man">男性</string>
     <string name="site_woman">女性</string>
     <string name="site_child">兒童</string>
@@ -49,14 +51,15 @@
     <string name="record_site_arrow">位置箭頭：%1$s</string>
     <string name="record_site_note">備註：%1$s</string>
     <string name="delete_site_note">備註已刪除</string>
-    <string name="site_filter_info">選擇你想查看的治療事件類型：套管更換 與/或 傳感器更換</string>
-    
+    <!-- FillDialog -->
     <string name="fill_warning">請確保數量符合您的輸液套件規範！</string>
     <string name="record_pump_site_change">紀錄幫浦位置更換</string>
     <string name="record_insulin_cartridge_change">紀錄胰島素匣更換</string>
     <string name="fill_prime_amount">預注量</string>
     <string name="fill_pump_units_note">預注量以幫浦單位表示</string>
     <string name="fill_insulin_change">將胰島素切換為：%1$s（將套用設定檔切換）</string>
+    <!-- InsulinDialog -->
+    <!-- Insulin Management -->
     <string name="missing_insulin_name">缺少胰島素名稱</string>
     <string name="insulin_name_exists">胰島素名稱 %1$s 已存在，請選擇新的名稱</string>
     <string name="a11y_add_new_insulin">新增胰島素</string>
@@ -71,7 +74,7 @@
     <string name="reuse_profile_pct_hours">重新使用 %1$d%% %2$小時</string>
     <string name="timeshift_label">時間偏移</string>
     <string name="percentage_label">百分比</string>
-    
+    <!-- LoopDialog -->
     <string name="suspendloopfor1h">暫停循環 1 小時</string>
     <string name="suspendloopfor2h">暫停循環 2 小時</string>
     <string name="suspendloopfor3h">暫停循環 3 小時</string>
@@ -90,11 +93,12 @@
     <string name="duration2h">2 小時</string>
     <string name="duration3h">3 小時</string>
     <string name="duration10h">10 小時</string>
-    
+    <!-- WizardDialog -->
     <string name="missing_carbs">缺少 %1$d g</string>
     <string name="wizard_carbs_type_bread_desc">100% 立即碳水，無延長碳水</string>
     <string name="wizard_carbs_type_desc">碳水減少 %1$d%%，並新增 eCarbs %2$d%%，延遲 %3$d 分鐘，持續 %4$d 小時</string>
     <string name="wizard_include_info">輕觸以在計算中納入/排除：\n• 血糖 — 血糖（起始為開啟）\n• 臨時目標 — 臨時目標（起始為開啟）\n• 趨勢 — 血糖趨勢（會記住上次狀態）\n• IOB — 活性胰島素（起始為開啟）\n• COB — 活性碳水化合物（會記住上次狀態）</string>
+    <!-- Treatments -->
     <string name="no_records_available">無可用紀錄</string>
     <string name="treatments_iob_label_string">IOB：</string>
     <string name="carbs_and_bolus">碳水化合物與注射</string>
@@ -115,7 +119,7 @@
     <string name="tbr_type_flag_suspended">S</string>
     <string name="tbr_type_flag_emulated_suspended">ES</string>
     <string name="tbr_type_flag_superbolus">SB</string>
-    
+    <!-- ProfileHelperActivity -->
     <string name="profile_type">設定檔類型</string>
     <string name="profile_parameters">設定檔參數</string>
     <string name="active_profile">啟用中的設定檔</string>
@@ -133,12 +137,15 @@
     <string name="format_with_tdd_and_pct">時間：%1$d 每日總劑量：%2$.0f U %3$d%%</string>
     <string name="format_with_weight">年齡：%1$d 體重：%2$.0f kg</string>
     <string name="dpv_default_profile">DPV 預設設定檔</string>
+    <!-- Other dialogs -->
+    <!--QuickWizard-->
     <string name="overview_edit_quickwizard_button_text">按鈕文字</string>
     <string name="quick_wizard_mode_wizard">嚮導</string>
     <string name="quick_wizard_mode_insulin">胰島素</string>
     <string name="quick_wizard_mode_carbs">碳水化合物</string>
     <string name="overview_edit_quickwizard_use_positive_iob_only">僅使用正 IOB</string>
     <string name="overview_edit_quickwizard_superbolus">超級注射</string>
+    <!--    History browser-->
     <string name="additional_ecarbs">新增 eCarbs</string>
     <string name="calculator_options">計算機選項</string>
     <string name="use_bg">使用 血糖</string>
@@ -162,11 +169,11 @@
     <string name="insulin_constraint_violation">胰島素受限制條件限制</string>
     <string name="confirm_treatment">請確認治療</string>
     <string name="recalculate">重新計算</string>
-    
+    <!--    Widget-->
     <string name="use_black_color">使用黑色</string>
     <string name="widget_configuration">小工具設定</string>
     <string name="until_changed">直到更改</string>
-    
+    <!--    Permissions-->
     <string name="permission_sheet_title">需要權限</string>
     <string name="permission_sheet_subtitle">此應用程式需要部分權限才能正常運作</string>
     <string name="permission_grant">允許</string>
@@ -175,7 +182,7 @@
     <string name="permission_open_settings">設定</string>
     <string name="permission_directory_picker_error">無法開啟目錄選擇器。通常是 Android 或 Family Link 的問題。</string>
     <string name="permission_nav_label">權限</string>
-    
+    <!--    TDD Cycle Pattern -->
     <string name="cycle_offset">循環偏移</string>
     <string name="raw_tdd">原始 TDD</string>
     <string name="cleaned_tdd">清理後 TDD</string>
@@ -190,7 +197,7 @@
         <item>僅正值</item>
         <item>僅負值</item>
     </string-array>
-    
+    <!-- Toolbar configuration -->
     <string name="quick_launch_selected_actions">已選擇的動作</string>
     <string name="quick_launch_no_dynamic_items">無可用項目</string>
     <string name="quick_launch_category_treatment">治療</string>
@@ -212,5 +219,5 @@
     <string name="loop_accept_nav_label">循環</string>
     <string name="loop_accept_set_basal_question">接受新的臨時基礎率：</string>
     <string name="loop_accept_perform">執行</string>
-    
+    <!-- Widget chip labels for RM.Mode, kept terse to fit the pill -->
 </resources>

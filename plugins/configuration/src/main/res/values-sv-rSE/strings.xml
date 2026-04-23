@@ -1,4 +1,4 @@
-<?xml version='1.0' encoding='utf-8'?>
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="units">Enheter</string>
     <string name="setupwizard_units_prompt">Välj enheter du vill visa värden i</string>
@@ -17,7 +17,7 @@
     <string name="high_mark_comment">Övre värdet för målområde (endast visning)</string>
     <string name="storedsettingsfound">Tidigare sparade inställningar hittade</string>
     <string name="master_password_summary">Huvudlösenordet används för att kryptera backuper och för att åsidosätta vissa säkerhetsfunktioner i applikationen. Kom ihåg det eller förvara det på ett säkert ställe.</string>
-    
+    <!-- current_master_password moved to core/ui/protection.xml -->
     <string name="common_values">Använd värden för den största måltiden som du vanligen äter\n</string>
     <string name="syncinfotext">Synkronisera data till molnet. Du kan hoppa över detta steg nu, men du kommer inte att kunna klara inlärningsmålen förrän du ansluter Nightscout eller Tidepool.</string>
     <string name="status">Status:</string>
@@ -31,27 +31,26 @@
     <string name="startobjective">Påbörja ditt första mål</string>
     <string name="setupwizard_pump_riley_link_status">Riley Link-status:</string>
     <string name="readstatus">Läs status</string>
-    
-    <string name="request">Begäran</string>
+    <!-- Provider-agnostic cloud export/import strings -->
     <string name="alert_dialog_permission_battery_optimization_failed">Denna enhet verkar inte ha stöd för vitlistning från batterioptimering. Du eventuellt råka ut för problem pga detta.</string>
-    
+    <!--    ConfigBuilder-->
     <string name="configbuilder_pump_description">Vilken pump vill du använda med AAPS?</string>
     <string name="configbuilder_aps_description">Vilken algoritm ska användas för behandlingar?</string>
     <string name="configbuilder_bgsource_description">Var ska AAPS få sitt data ifrån?</string>
     <string name="configbuilder_sensitivity_description">Vilken algoritm vill du använda för känslighetsavkänning?</string>
     <string name="allow_hardware_pump_text">Varning: Om du aktiverar och ansluter en pump kommer AAPS skriva över pumpens basalprofil med den aktiva profilen i AAPS. Se till att ha rätt inställningar i appen innan du ansluter. Om du är osäker, tryck på Avbryt och anslut pumpen på nytt vid ett senare tillfälle.</string>
     <string name="nsclient_version_does_not_match">Följarversionen matchar inte AAPS-versionen. Vänligen uppdatera.</string>
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
+    <!--ImportExport-->
+    <!-- password_preferences_encrypt_prompt moved to core:ui -->
+    <!-- preferences_export_canceled moved to core:ui -->
+    <!-- export_to moved to core:ui -->
+    <!-- master_password_missing moved to core:ui -->
+    <!-- Maintenance -->
+    <!-- Maintenance -->
+    <!-- maintenance_email moved to core:keys module -->
+    <!-- Google Drive Storage -->
+    <!-- Import source selection dialog -->
+    <!-- Google Drive error messages (used by GoogleDriveManager) -->
+    <!-- Provider-agnostic cloud storage strings -->
+    <!-- Authorization status strings -->
 </resources>

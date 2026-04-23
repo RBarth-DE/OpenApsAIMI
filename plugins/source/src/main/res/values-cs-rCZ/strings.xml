@@ -1,6 +1,6 @@
-<?xml version='1.0' encoding='utf-8'?>
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    
+    <!-- Source -->
     <string name="ns_client_bg">Glykémie z NS</string>
     <string name="ns_client_bg_short">NSGL</string>
     <string name="description_source_ns_client">Příjem glykémií z Nightscoutu</string>
@@ -25,14 +25,21 @@
     <string name="random_bg">Náhodná glykémie</string>
     <string name="description_source_random_bg">Generovat náhodná data glykémie (pouze režim Demo)</string>
     <string name="random_bg_short">Gly</string>
+    <!-- Patched Syai Tag App -->
     <string name="syai_tag_app">Syai</string>
     <string name="description_source_patched_syai_tag_app">Přijímat glykémie z aplikace Syai/Ottai.</string>
-    
+    <!-- Patched SI App -->
     <string name="patched_si_app">Aplikace SI</string>
     <string name="description_source_patched_si_app">Přijímat glykémie z upravené aplikace Sibionic SI.</string>
-    
+    <!-- Patched Sino App -->
     <string name="patched_sino_app">Aplikace Sino</string>
     <string name="description_source_patched_sino_app">Přijímat glykémie z upravené aplikace Sino.</string>
-    
-    
+    <!-- Notification Reader -->
+    <string name="notification_reader">Čtečka oznámení</string>
+    <string name="description_source_notification_reader">Čte hodnoty glykémie z oznámení zasílaných oficiálními CGM aplikacemi (Dexcom, Medtronic, Eversense atd.).</string>
+    <!-- Permission rationales -->
+    <string name="permission_dexcom_title">Dexcom CGM</string>
+    <string name="permission_dexcom_description">Aplikace potřebuje oprávnění k přijímání dat CGM z aplikace Dexcom</string>
+    <string name="permission_notification_listener_title">Přístup k oznámením</string>
+    <string name="permission_notification_listener_description">Vyžadováno pro čtení hodnot glykémie z oznámení CGM aplikace</string>
 </resources>

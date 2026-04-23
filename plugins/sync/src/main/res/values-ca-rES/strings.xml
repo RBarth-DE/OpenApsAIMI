@@ -1,19 +1,19 @@
-<?xml version='1.0' encoding='utf-8'?>
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    
-    
+    <!-- AAPSClient -->
+    <!-- ns_wifi_ssids moved to core:keys module -->
     <string name="connection_settings_title">Configuració de connexió</string>
-    
+    <!-- ns_wifi_ssids_summary moved to core:keys module -->
     <string name="unsupported_ns_version">Versió no compatible de Nightscout</string>
-    
+    <!-- AAPSClient -->
     <string name="no_write_permission">L\'NSCLIENT no te permisos d\'escriptura. Secret d\'API incorrecte?</string>
     <string name="ns_client_url">URL:</string>
-    
-    
-    
-    
-    
-    
+    <!-- ns_client_url_title moved to core:keys module -->
+    <!-- ns_client_url_summary moved to core:keys module -->
+    <!-- ns_client_secret_title moved to core:keys module -->
+    <!-- ns_client_secret_summary moved to core:keys module -->
+    <!-- nsclient_token_title moved to core:keys module -->
+    <!-- nsclient_token_summary moved to core:keys module -->
     <string name="deliver_now">Lliurar ara</string>
     <string name="queue">Cua:</string>
     <string name="status">Estat:</string>
@@ -22,21 +22,21 @@
     <string name="full_sync_comment">Sincronització completa? Pot tardar hores i fins que no es completi, no veuràs dades noves a NS.</string>
     <string name="ns_sync_options">Sincronització</string>
     <string name="ns_alarm_options">Configuració alarmes</string>
-    
+    <!-- Tidepool -->
     <string name="title_tidepool_dev_servers">Utilitzar servidors d\'integració (test)</string>
     <string name="tidepool">Tidepool</string>
     <string name="tidepool_shortname">TDP</string>
     <string name="description_tidepool">Envia dades a Tidepool</string>
-    
+    <!-- Xdrip StatusLine -->
     <string name="disabled_loop">Llaç desactivat</string>
     <string name="xdrip_not_installed">xDrip+ no instal·lat</string>
     <string name="calibration_sent">Calibració enviada a xDrip+</string>
-    
-    
-    
+    <!--    DataBroadcast-->
+    <!-- GarminPlugin -->
+    <!--    Wear-->
     <string name="wear_wizard_settings_summary">Càlculs inclosos al resultat de l\'assistent:</string>
     <string name="wear_general_settings">Configuració general</string>
     <string name="resend_all_data">Reenviar totes les dades</string>
     <string name="open_settings_on_wear">Obrir Configuració a Wear</string>
-    
+    <!-- SMS Communicator & OTP Authenticator -->
 </resources>

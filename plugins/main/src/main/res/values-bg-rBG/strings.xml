@@ -1,4 +1,4 @@
-<?xml version='1.0' encoding='utf-8'?>
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="disabled_loop">Loop изключен</string>
     <string name="nav_history_browser">История</string>
@@ -7,9 +7,12 @@
     <string name="pb_label">Батерия на помпата</string>
     <string name="cannula">Канюла</string>
     <string name="patch_pump">Пач помпа</string>
-    
-    <string name="a11y_blood_glucose">кръвна захар</string>
+    <!-- Overview -->
+    <!-- overview moved to core:ui module -->
+    <!--    OverviewMenu-->
     <string name="basal_shortname">БАЗА</string>
+    <!--    Iob-->
+    <!--    PersistentNotification-->
     <string name="description_persistent_notification">Показва известие с резюме на това, което прави вашия APS</string>
     <string name="old_data">СТАРИ ДАННИ</string>
 </resources>

@@ -1,6 +1,6 @@
-<?xml version='1.0' encoding='utf-8'?>
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    
+    <!--    General-->
     <string name="refresh">Actualizar</string>
     <string name="error">Erro</string>
     <string name="profile_set_ok">Perfil Basal actualizado na bomba</string>
@@ -31,7 +31,7 @@
     <string name="statuslights">Luzes de Estado</string>
     <string name="configbuilder_insulin">Insulina</string>
     <string name="value_unavailable_short">n/a</string>
-    
+    <!-- master_password moved to core/keys/strings.xml -->
     <string name="ue_export_to_csv">Exportar Entradas do Utilizador para o Excel (csv)</string>
     <string name="confirm">Confirmar</string>
     <string name="pump">Bomba</string>
@@ -57,7 +57,7 @@
     <string name="carbs">Hidratos</string>
     <string name="invalid_profile">Perfil inválido!</string>
     <string name="no_profile_set">SEM PERFIL DEFINIDO</string>
-    <string name="active">&lt;Activo&gt;</string>
+    <string name="active"><![CDATA[<Activo>]]></string>
     <string name="date">Data</string>
     <string name="units_label">Unidades</string>
     <string name="dia_label">DIA</string>
@@ -116,7 +116,6 @@
     <string name="a11y_inrange">no alvo</string>
     <string name="a11y_low">hipo</string>
     <string name="average">Média</string>
-    <string name="remove_label">REMOVER</string>
     <string name="activate_profile">Activar perfil</string>
     <string name="profileswitch_ismissing">Troca de Perfil em falta. Por favor faça uma troca de perfil ou pressione \"Activar Perfil\" em Perfil Local.</string>
     <string name="profile">Perfil</string>
@@ -140,31 +139,32 @@
     <string name="canceling_eb_failed">Não foi possível cancelar o bólus prolongado</string>
     <string name="virtualpump_uploadstatus_title">Enviar o estado da bomba para NS ou Tidepool</string>
     <string name="iob_label">Insulina ativa (IA )</string>
-    
+    <!--    Protection-->
     <string name="wrongpassword">Palavra-passe incorreta</string>
     <string name="wrongpin">PIN incorreto</string>
     <string name="passwords_dont_match">Palavras-passe não correspondem</string>
     <string name="pin_dont_match">Os PINs não correspondem</string>
-    
+    <!--    Profile-->
     <string name="basalprofilenotaligned">Valores das basais não definidos por horas: %1$s</string>
     <string name="minimalbasalvaluereplaced">Valor da basal alterado para o valor mínimo suportado: %1$s</string>
     <string name="maximumbasalvaluereplaced">Valor da basal alterado para o valor máximo suportado: %1$s</string>
     <string name="profile_per_unit">/U</string>
     <string name="profile_ins_units_per_hour">U/h</string>
     <string name="profile_carbs_per_unit">g/U</string>
-    
+    <!--    ProfileFunction-->
     <string name="startprofile">Iniciar perfil %1$d%% para %2$d min</string>
-    
+    <!--    APSResult-->
     <string name="cancel_temp">Cancelar Basal Temporária</string>
     <string name="let_temp_basal_run">Permitir Basal Temp Correr</string>
     <string name="rate">Rácio</string>
     <string name="duration">Duração</string>
     <string name="reason">Motivo</string>
     <string name="nochangerequested">Nenhuma alteração solicitada</string>
-    
-    
+    <!--    Insulin / Concentration-->
+    <!--    ProfileSwitch-->
+    <!--    Temptarget-->
     <string name="mins">%1$d min</string>
-    
+    <!--    Translator-->
     <string name="careportal">Careportal</string>
     <string name="careportal_bgcheck">Verificar Glicose</string>
     <string name="careportal_mbg">Glicose Manual or Calibração</string>
@@ -199,7 +199,6 @@
     <string name="glucosetype_finger">Dedo</string>
     <string name="glucosetype_sensor">Sensor</string>
     <string name="manual">Manual</string>
-    <string name="unknown">desconhecido</string>
     <string name="eatingsoon">Comer Brevemente</string>
     <string name="hypo">Hipo</string>
     <string name="activity">Atividade</string>
@@ -209,21 +208,22 @@
     <string name="loop">Loop</string>
     <string name="ns">NS</string>
     <string name="record">Registo</string>
-    
+    <!--    Command-->
     <string name="connectiontimedout">Ligação expirou</string>
-    
+    <!--    PumpEnactResult-->
     <string name="enacted">Realizado</string>
     <string name="comment">Comentário</string>
     <string name="percent">Percentagem</string>
     <string name="absolute">Absoluto</string>
     <string name="waitingforpumpresult">À espera de resultado</string>
     <string name="smb_shortname">SMB</string>
-    
+    <!--    CarbsReq-->
     <string name="carbsreq">%1$d g Hidratos Adicionais Necessários Dentro de %2$d Minutos</string>
     <string name="basalrate">Basal</string>
     <string name="bolus">Bólus</string>
+    <!--    Ntp-->
     <string name="timedetection">Detecção de tempo</string>
-    
+    <!-- User Entry -->
     <string name="uel_bolus">BÓLUS</string>
     <string name="uel_bolus_calculator">CALCULADOR DE BÓLUS</string>
     <string name="uel_bolus_advisor">ASSISTENTE DE BÓLUS</string>
@@ -312,6 +312,7 @@
     <string name="ue_none">Nenhuma Unidade</string>
     <string name="uel_loop_change">LOOP ALTERADO</string>
     <string name="uel_loop_removed">LOOP REMOVIDO</string>
+    <!-- HardLimits -->
     <string name="profile_low_target">Valor mínimo alvo do perfil</string>
     <string name="profile_high_target">Valor máximo alvo do perfil</string>
     <string name="temp_target_low_target">Valor inferior do alvo temporário</string>
@@ -326,8 +327,8 @@
     <string name="valueoutofrange">»%1$s« está fora dos limites máximos</string>
     <string name="value_out_of_hard_limits">»%1$s« %2$.2f está fora dos limites permitidos</string>
     <string name="basal_value">Valor da Basal</string>
-    
-    
+    <!-- Profile validation -->
+    <!-- Command Queue + readStatus reasons -->
     <string name="bolus_u_min">BOLUS %1$.2f U</string>
     <string name="carbs_g">Hidratos de Carbono %1$d g</string>
     <string name="extended_bolus_u_min">BOLUS EXTENDIDO %1$.2f U %2$d min</string>
@@ -340,27 +341,28 @@
     <string name="set_profile">DEFINIR PERFIL</string>
     <string name="set_user_settings">DEFINIR CONFIGURAÇÕES DO UTILIZADOR</string>
     <string name="smb_bolus_u">SMB BOLUS %1$.2f U</string>
-    <string name="start_pump">INICIAR BOMBA</string>
-    <string name="stop_pump">PARAR BOMBA</string>
     <string name="temp_basal_absolute">TEMP BASAL %1$.2f U/h %2$d minuto</string>
     <string name="sms" comment="26 characters max for translation">SMS</string>
     <string name="formatPercent">%1$.0f%%</string>
     <string name="basal">Basal</string>
     <string name="basalpct">Basal %</string>
+    <!-- Autotune -->
+    <!-- Alerts -->
     <string name="urgent_alarm">Alarme Urgente</string>
     <string name="info">INFO</string>
-    
+    <!-- BolusWizard -->
     <string name="cobvsiob">HCA vs IA</string>
-    <string name="slowabsorptiondetected">&lt;font color=\'%1$s\'&gt;!!!!! Absorção lenta de hidratos detetada: %2$d%% do tempo. Verifique o seu cálculo. HCA podem estar sobrestimados, assim mais insulina pode ser dada !!!&lt;/font&gt;</string>
+    <string name="slowabsorptiondetected"><![CDATA[<font color=\'%1$s\'>!!!!! Absorção lenta de hidratos detetada: %2$d%% do tempo. Verifique o seu cálculo. HCA podem estar sobrestimados, assim mais insulina pode ser dada !!!</font>]]></string>
     <string name="advisoralarm">Executar alarme quando for tempo de comer</string>
     <string name="no_action_selected">Nenhuma ação seleccionada, nada irá acontecer</string>
     <string name="wizard_explain_iob">IOB: %1$.2fU</string>
+    <!--    Preferences-->
     <string name="teenage">Adolescente</string>
     <string name="adult">Adulto</string>
     <string name="pregnant">Gravidez</string>
-    
+    <!--    Protection-->
     <string name="unlock_settings">Definições Desbloqueio</string>
-    
+    <!--    Pumps -->
     <string name="battery_label">Bateria</string>
     <string name="reservoir_label">Reservatório</string>
     <string name="last_connection_label">Última ligação</string>
@@ -380,14 +382,13 @@
     <string name="reading_pump_history">A ler histórico da bomba</string>
     <string name="password_cleared">Senha limpa!</string>
     <string name="pairing">A Emparelhar</string>
-    <string name="initializing">A inicializar ...</string>
-    
+    <!--    Constraints-->
     <string name="limitingbasalratio">A basal máx está limitada a %1$.2f U/h por %2$s</string>
     <string name="pumplimit">limite bomba</string>
     <string name="limitingpercentrate">A limitar rácio percentagem máx para %1$d%% porque %2$s</string>
     <string name="itmustbepositivevalue">deve ser valor positivo</string>
     <string name="limitingbolus">A limitar bólus para %1$.1f U porque %2$s</string>
-    
+    <!--    Dialogs-->
     <string name="confirmation">Confirmação</string>
     <string name="message">Mensagem</string>
     <string name="ok">OK</string>
@@ -395,25 +396,33 @@
     <string name="yes">Sim</string>
     <string name="no">Não</string>
     <string name="close">Fechar</string>
-    
+    <!-- TwoMessagesDialog -->
+    <!-- <unattended_export> -->
+    <!-- Export dialog strings -->
+    <!-- <unattended_export result messages> -->
+    <!-- Cloud export -->
+    <!-- Export destination chip labels -->
+    <!-- Maintenance bottom sheet descriptions -->
+    <!-- Cloud directory dialog (Compose) -->
     <string name="format_hour_minute">%1$dh %2$dm</string>
-    
+    <!-- datetime layout -->
     <string name="event_time_label">Tempo do evento</string>
-    
+    <!-- BluetoothDevicePreference -->
     <string name="need_connect_permission">Aplicação precisa de permissão Bluetooth</string>
-    
+    <!--    Combo-->
     <string name="user_request" comment="26 characters max for translation">Pedido do Utilizador</string>
     <string name="pump_paired" comment="26 characters max for translation">Bomba Emparelhada</string>
-    
+    <!--    BlePreCheck-->
     <string name="ble_not_supported">Bluetooth Low Energy não suportado.</string>
     <string name="ble_not_supported_or_not_paired">Bluetooth Low Energy não suportado ou dispositivo não emparalhado.</string>
     <string name="ble_not_enabled">Bluetooth não está activado.</string>
+    <!--    Preferences -->
     <string name="nav_plugin_preferences">Preferências plugin</string>
-    
-    
-    
-    
-    
+    <!-- Navigation -->
+    <!-- Alerts -->
+    <!-- Actions Screen -->
+    <!-- Site Rotation -->
+    <!-- About -->
     <string name="fabric_upload_disabled">Envio de registos de erro desativado!</string>
     <plurals name="days">
         <item quantity="one">%1$d dia</item>
@@ -427,28 +436,25 @@
         <item quantity="one">%1$d minuto</item>
         <item quantity="other">%1$d minutos</item>
     </plurals>
-    
-    
+    <!--    Maintenance-->
+    <!--    Weekday-->
     <string name="weekday_saturday_short">Sáb</string>
     <string name="weekday_friday_short">Sex</string>
     <string name="weekday_thursday_short">Qui</string>
     <string name="weekday_wednesday_short">Qua</string>
     <string name="weekday_tuesday_short">Ter</string>
     <string name="weekday_monday_short">Seg</string>
-    
+    <!--    DecimalFormatterImpl -->
     <string name="format_insulin_units1">%1$.1f U</string>
     <string name="format_insulin_units">%1$.2f U</string>
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    <string name="remove_items">Remover itens</string>
-    <string name="sort_items">Ordenar itens</string>
-
+    <!--    Playback-->
+    <!-- ProfileEditor -->
+    <!--    Search-->
+    <!--    Food Management -->
+    <!--    Log Settings-->
+    <!--    Maintenance-->
+    <!-- Import settings screen -->
+    <!--    BLE Scan Step (shared pump pairing) -->
+    <!-- Graph configuration -->
+    <!-- Graph series short names (used as graph labels, keep very short) -->
 </resources>

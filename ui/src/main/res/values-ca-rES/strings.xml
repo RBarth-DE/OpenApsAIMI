@@ -1,4 +1,4 @@
-<?xml version='1.0' encoding='utf-8'?>
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="carbs_constraint_applied">Restricció de carbs. aplicada</string>
     <string name="temp_target_short">OT</string>
@@ -6,6 +6,8 @@
     <string name="start_eating_soon_tt">Iniciar OT: Menjar aviat</string>
     <string name="start_hypo_tt">Iniciar OT: Hipo</string>
     <string name="time_offset">Decalatge horari</string>
+    <!--    Widget-->
+    <!--     Activities-->
     <string name="activity_monitor">Monitor d\'activitat</string>
     <string name="do_you_want_reset_stats">Voleu restablir les estadístiques d\'activitat?</string>
     <string name="calculation_in_progress">Càlculs en procés</string>
@@ -15,15 +17,18 @@
     <string name="bg_other">Altres</string>
     <string name="bg_meter">Glucòmetre</string>
     <string name="bg_sensor">Sensor</string>
-    
+    <!-- WizardDialog -->
+    <!-- SiteRotationDialog -->
+    <!-- FillDialog -->
     <string name="fill_warning">Assegureu-vos que la quantitat coincideix amb la indicada pel vostre set d\'infusió!</string>
     <string name="record_pump_site_change">Anotar canvi de cànula</string>
     <string name="record_insulin_cartridge_change">Anotar canvi reservori d\'insulina</string>
-    
+    <!-- InsulinDialog -->
+    <!-- Insulin Management -->
     <string name="reuse_profile_pct_hours">Reutilitzar %1$d%% %2$dh</string>
     <string name="timeshift_label">Decalatge horari</string>
     <string name="percentage_label">Percentatge</string>
-    
+    <!-- LoopDialog -->
     <string name="suspendloopfor1h">Aturar el llaç 1h</string>
     <string name="suspendloopfor2h">Aturar el llaç 2h</string>
     <string name="suspendloopfor3h">Aturar el llaç 3h</string>
@@ -42,12 +47,13 @@
     <string name="duration2h">2 hores</string>
     <string name="duration3h">3 hores</string>
     <string name="duration10h">10 hores</string>
-    
+    <!-- WizardDialog -->
     <string name="missing_carbs">Falten %1$d g</string>
+    <!-- Treatments -->
     <string name="treatments_iob_label_string">IOB:</string>
     <string name="user_entry">Entrada d\'usuari</string>
     <string name="clone_label">Duplicar</string>
-    
+    <!-- ProfileHelperActivity -->
     <string name="profile_type">Tipus de perfil</string>
     <string name="basal_pct_from_tdd_label">% de basal</string>
     <string name="selected_profile">Seleccionat:</string>
@@ -58,4 +64,12 @@
     <string name="format_with_tdd_and_pct">Edat: %1$d TDD: %2$.0f U %3$d%%</string>
     <string name="format_with_weight">Edat: %1$d Weight: %2$.0f kg</string>
     <string name="dpv_default_profile">Perfil DPV per defecte</string>
-    </resources>
+    <!-- Other dialogs -->
+    <!--QuickWizard-->
+    <!--    History browser-->
+    <!--    Widget-->
+    <!--    Permissions-->
+    <!--    TDD Cycle Pattern -->
+    <!-- Toolbar configuration -->
+    <!-- Widget chip labels for RM.Mode, kept terse to fit the pill -->
+</resources>

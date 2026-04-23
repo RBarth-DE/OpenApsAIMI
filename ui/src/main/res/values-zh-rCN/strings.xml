@@ -1,4 +1,4 @@
-<?xml version='1.0' encoding='utf-8'?>
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="carbs_constraint_applied">碳水化合物约束条件应用了</string>
     <string name="temp_target_short">临时目标</string>
@@ -6,11 +6,12 @@
     <string name="start_eating_soon_tt">开始很快吃饭TT(临时目标)</string>
     <string name="start_hypo_tt">开始低的临时目标</string>
     <string name="time_offset">时区偏移</string>
+    <!--    Widget-->
     <string name="configure">配置透明度</string>
     <string name="widget_description">AAPS 小部件</string>
     <string name="widget_bg_graph_description">AAPS 血糖图表</string>
     <string name="widget_compact_bg_description">AAPS 血糖 + IOB+COB（紧凑）</string>
-    
+    <!--     Activities-->
     <string name="activity_monitor">活动监视器</string>
     <string name="time_range">时间范围</string>
     <string name="dexcom_tir">Dexcom TIR</string>
@@ -37,7 +38,8 @@
     <string name="bg_other">其他</string>
     <string name="bg_meter">血糖仪</string>
     <string name="bg_sensor">传感器</string>
-    
+    <!-- WizardDialog -->
+    <!-- SiteRotationDialog -->
     <string name="site_man">男性</string>
     <string name="site_woman">女性</string>
     <string name="site_child">儿童</string>
@@ -51,14 +53,15 @@
     <string name="record_site_arrow">部位箭头: %1$s</string>
     <string name="record_site_note">备注： %1$s</string>
     <string name="delete_site_note">备注已删除</string>
-    <string name="site_filter_info">选择要查看的治疗事件类型：管路更换和/或传感器更换</string>
-    
+    <!-- FillDialog -->
     <string name="fill_warning">请确保数量和输液器里的药量匹配</string>
     <string name="record_pump_site_change">记录泵管路更换</string>
     <string name="record_insulin_cartridge_change">记录胰岛素储药器变化</string>
     <string name="fill_prime_amount">预注剂量</string>
     <string name="fill_pump_units_note">预注剂量以泵单位表示</string>
     <string name="fill_insulin_change">将胰岛素切换为：%1$s（将套用配置切换）</string>
+    <!-- InsulinDialog -->
+    <!-- Insulin Management -->
     <string name="missing_insulin_name">缺少胰岛素名称</string>
     <string name="insulin_name_exists">胰岛素名称 %1$s 已存在，请选择新的名称</string>
     <string name="a11y_add_new_insulin">新增胰岛素</string>
@@ -73,7 +76,7 @@
     <string name="reuse_profile_pct_hours">重新使用%1$d%% %2$d小时</string>
     <string name="timeshift_label">时间偏移</string>
     <string name="percentage_label">百分比</string>
-    
+    <!-- LoopDialog -->
     <string name="suspendloopfor1h">暂停闭环一个小时</string>
     <string name="suspendloopfor2h">暂停闭环2个小时</string>
     <string name="suspendloopfor3h">暂停闭环3个小时</string>
@@ -92,11 +95,12 @@
     <string name="duration2h">2 小时</string>
     <string name="duration3h">3 小时</string>
     <string name="duration10h">10 小时</string>
-    
+    <!-- WizardDialog -->
     <string name="missing_carbs">缺少 %1$d 克</string>
     <string name="wizard_carbs_type_bread_desc">100% 即时碳水，无扩展碳水</string>
     <string name="wizard_carbs_type_desc">碳水减少了 %1$d%%，添加了eCarbs %2$d%%，延迟了 %3$d 分钟，持续 %4$d 小时</string>
     <string name="wizard_include_info">轻触以在计算中包含/排除：\n•血糖—血糖（起始为开启）\n•临时目标—临时目标（起始为开启）\n•趋势—血糖趋势（会记住上次状态）\n•IOB—活性胰岛素（起始为开启）\n•COB—活性碳水化合物（会记住上次状态）</string>
+    <!-- Treatments -->
     <string name="no_records_available">当前暂无记录</string>
     <string name="treatments_iob_label_string">IOB活性胰岛素:</string>
     <string name="carbs_and_bolus">碳水与大剂量</string>
@@ -117,7 +121,7 @@
     <string name="tbr_type_flag_suspended">S</string>
     <string name="tbr_type_flag_emulated_suspended">ES</string>
     <string name="tbr_type_flag_superbolus">SB</string>
-    
+    <!-- ProfileHelperActivity -->
     <string name="profile_type">配置文件类型</string>
     <string name="profile_parameters">配置文件参数</string>
     <string name="active_profile">激活配置文件</string>
@@ -135,12 +139,15 @@
     <string name="format_with_tdd_and_pct">年龄: %1$d TDD: %2$.0f U %3$d%%</string>
     <string name="format_with_weight">年龄: %1$d 体重: %2$.0f 千克</string>
     <string name="dpv_default_profile">DPV默认个人配置</string>
+    <!-- Other dialogs -->
+    <!--QuickWizard-->
     <string name="overview_edit_quickwizard_button_text">按钮文本</string>
     <string name="quick_wizard_mode_wizard">向导</string>
     <string name="quick_wizard_mode_insulin">胰岛素</string>
     <string name="quick_wizard_mode_carbs">碳水化合物</string>
     <string name="overview_edit_quickwizard_use_positive_iob_only">仅限正IOB</string>
     <string name="overview_edit_quickwizard_superbolus">超级大剂量Superbolus</string>
+    <!--    History browser-->
     <string name="history_now">当前</string>
     <string name="a11y_history_previous_window">上一窗口</string>
     <string name="a11y_history_next_window">下一窗口</string>
@@ -167,11 +174,11 @@
     <string name="insulin_constraint_violation">胰岛素受限</string>
     <string name="confirm_treatment">请确认治疗</string>
     <string name="recalculate">重新计算</string>
-    
+    <!--    Widget-->
     <string name="use_black_color">使用黑色</string>
     <string name="widget_configuration">小组件配置</string>
     <string name="until_changed">直到更改</string>
-    
+    <!--    Permissions-->
     <string name="permission_sheet_title">需要权限</string>
     <string name="permission_sheet_subtitle">应用正常运行需要获取部分权限</string>
     <string name="permission_grant">允许</string>
@@ -180,7 +187,7 @@
     <string name="permission_open_settings">设置</string>
     <string name="permission_directory_picker_error">无法启动目录选择器。通常是 Android 或 Family Link问题。</string>
     <string name="permission_nav_label">权限</string>
-    
+    <!--    TDD Cycle Pattern -->
     <string name="cycle_offset">循环偏移</string>
     <string name="raw_tdd">原始 TDD</string>
     <string name="cleaned_tdd">净 TDD</string>
@@ -195,7 +202,7 @@
         <item>仅正数</item>
         <item>仅负数</item>
     </string-array>
-    
+    <!-- Toolbar configuration -->
     <string name="quick_launch_selected_actions">已选操作</string>
     <string name="quick_launch_no_dynamic_items">无可用项目</string>
     <string name="quick_launch_category_treatment">治疗</string>
@@ -217,7 +224,7 @@
     <string name="loop_accept_nav_label">闭环</string>
     <string name="loop_accept_set_basal_question">接受新的临时基础率：</string>
     <string name="loop_accept_perform">执行</string>
-    
+    <!-- Widget chip labels for RM.Mode, kept terse to fit the pill -->
     <string name="widget_rm_lgs">LGS</string>
     <string name="widget_rm_disabled">已禁用</string>
     <string name="widget_rm_suspended">已暂停</string>

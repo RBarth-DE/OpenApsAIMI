@@ -41,7 +41,8 @@ fun TempTargetChip(
     progress: Float,
     reason: TT.Reason?,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    sceneManaged: Boolean = false
 ) {
     val iconColor = when (state) {
         TempTargetChipState.Active   -> reason.toIconColor()
@@ -83,6 +84,9 @@ fun TempTargetChip(
                     color = textColor,
                     modifier = Modifier.padding(start = AapsSpacing.small)
                 )
+                if (sceneManaged) {
+                    SceneBadge(modifier = Modifier.padding(start = AapsSpacing.small))
+                }
             }
             Box(
                 modifier = Modifier

@@ -1,4 +1,4 @@
-<?xml version='1.0' encoding='utf-8'?>
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="enable_tbr_over_notification">Ενεργοποίηση ειδοποίησης TBR τέλος\n (ρύθμιση αντλίας)</string>
     <string name="disable_tbr_over_notification">Απενεργοποίηση ειδοποίησης TBR τέλος\n (ρύθμιση αντλίας)</string>
@@ -44,4 +44,4 @@
     <string name="max_recovery_duration">Μέγ. διάρκεια αποκατάστασης [s]</string>
     <string name="min_recovery_duration">Ελάχ. διάρκεια αποκατάστασης [s]</string>
     <string name="pump_alert">Συναγερμός αντλίας</string>
-    </resources>
+</resources>

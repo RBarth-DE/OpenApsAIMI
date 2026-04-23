@@ -1,8 +1,8 @@
-<?xml version='1.0' encoding='utf-8'?>
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    
+    <!-- Medtronic (MDT) - Base -->
     <string name="description_pump_medtronic">Integrácia pre pumpu Medtronic, požaduje sa RileyLink zariadenie a špecifický model pumpy.</string>
-    
+    <!-- MDT Configuration -->
     <string name="medtronic_serial_number">Sériové číslo pumpy</string>
     <string name="medtronic_pump_type">Typ pumpy</string>
     <string name="medtronic_pump_frequency">Frekvencia pumpy</string>
@@ -18,7 +18,7 @@
     <string name="medtronic_pump_battery_lithium">Líthiové (rozšírené zobrazenie)</string>
     <string name="medtronic_pump_battery_nizn">NiZn (Rozšírené)</string>
     <string name="medtronic_pump_battery_nimh">NiMH (Rozšírené zobrazenie)</string>
-    
+    <!-- Pump type entries -->
     <string name="medtronic_pump_type_unsupported">Iné (nepodporované)</string>
     <string name="medtronic_pump_type_512">512</string>
     <string name="medtronic_pump_type_712">712</string>
@@ -32,13 +32,13 @@
     <string name="medtronic_pump_type_754_eu">754 (EU Fw. &lt;= 2.6A)</string>
     <string name="medtronic_pump_type_554_ca">554 (CA Fw. &lt;= 2.7A)</string>
     <string name="medtronic_pump_type_754_ca">754 (CA Fw. &lt;= 2.7A)</string>
-    
+    <!-- Bolus delay entries -->
     <string name="medtronic_bolus_delay_5s">5 s</string>
     <string name="medtronic_bolus_delay_10s">10 s</string>
     <string name="medtronic_bolus_delay_15s">15 s</string>
-    
+    <!-- MDT Fragment -->
     <string name="rl_battery_label">Batéria RileyLinku</string>
-    
+    <!-- MDT Errors -->
     <string name="medtronic_error_serial_invalid">Sériové číslo neplatné.</string>
     <string name="medtronic_error_pump_type_not_set">Nenastavený typ pumpy.</string>
     <string name="medtronic_error_pump_type_invalid">Nepodporovaný typ pumpy.</string>
@@ -51,13 +51,14 @@
     <string name="medtronic_error_pump_wrong_max_basal_set">Chybný max. bazál na pumpe (musí byť %1$.2f).</string>
     <string name="medtronic_error_operation_not_possible_no_configuration">Operácia nie je možná.\n\nNajskôr je nutné nakonfigurovať pumpu, než bude možné túto funkciu použiť.</string>
     <string name="medtronic_error_pump_24h_time_change_requested">Požadovaná zmena času väčšia ako 24h.</string>
-    
-    
-    
-    
-    
-    
-    
+    <!-- MDT History -->
+    <!--    <string name="medtronic_history_group_basal">Basals</string>-->
+    <!--    <string name="medtronic_history_group_configuration">Configurations</string>-->
+    <!--    <string name="medtronic_history_group_notification">Notifications</string>-->
+    <!--    <string name="medtronic_history_group_statistic">Statistics</string>-->
+    <!--    <string name="medtronic_history_group_unknown">Unknowns</string>-->
+    <!--    <string name="medtronic_history_group_all">All</string>-->
+    <!-- <string name="medtronic_cmd_profile_not_set">Remote Basal profile setting is not supported. Please modify Basal profile on your pump manually.</string> -->
     <string name="medtronic_cmd_cancel_bolus_not_supported">Zrušili ste bolus po tom, čo bol nastavený na pumpe. Pretože Medtronic nepodporuje zrušenie bolusu, musíte ho zrušiť ručne. Pozastavte pumpu a znovu spustite (pokiaľ naďalej trváte na zrušení). Aplikácia prevezme zmeny pri ďalšom pripojení (do 5 min).</string>
     <string name="medtronic_cmd_cant_read_tbr">Nie je možné načítať aktuálny dočasný bazál.</string>
     <string name="medtronic_cmd_cant_cancel_tbr_stop_op">Nie je možné zastaviť aktuálny dočasný bazál. Ukončujem operáciu.</string>
@@ -85,7 +86,7 @@
     <string name="medtronic_pump_connected_now" comment="Displayed when pump was connected less than a minute ago">Teraz</string>
     <string name="ago" comment="Time suffix, e.g. '5 min ago'">pred</string>
     <string name="medtronic_notification_check_time_date">Je vyžadovaná aktualizácia času v pumpe</string>
-    
+    <!-- combo_notification_check_time_date -->
     <string name="set_neutral_temps_title">Nastaviť neutrálny dočasný bazál</string>
     <string name="set_neutral_temps_summary">Ak je povolená táto možnosť, zastaví sa dočasný bazál pred koncom každej hodiny. To môže u niektorých púmp pomôcť zastaviť pípanie/vibrácie na celú hodinu.</string>
     <string name="invalid_history_data">Zistené chybné dáta v histórii pumpy. Otvor nový incident a poskytni logy.</string>

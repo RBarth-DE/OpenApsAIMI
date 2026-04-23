@@ -1,4 +1,4 @@
-<?xml version='1.0' encoding='utf-8'?>
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="carbs_constraint_applied">Giới hạn Carbs đã bật</string>
     <string name="temp_target_short">TT</string>
@@ -6,11 +6,12 @@
     <string name="start_eating_soon_tt">Sắp ăn (TT)</string>
     <string name="start_hypo_tt">Bắt đầu hạ đường huyết (TT)</string>
     <string name="time_offset">Lệch thời gian</string>
+    <!--    Widget-->
     <string name="configure">Cấu hình độ trong suốt</string>
     <string name="widget_description">AAPS widget</string>
     <string name="widget_bg_graph_description">Biểu đồ đường huyết AAPS</string>
     <string name="widget_compact_bg_description">AAPS BG + IOB + COB (thu gọn)</string>
-    
+    <!--     Activities-->
     <string name="activity_monitor">Màn hình hoạt động</string>
     <string name="time_range">Khoảng thời gian</string>
     <string name="dexcom_tir">Dexcom TIR</string>
@@ -37,7 +38,8 @@
     <string name="bg_other">Khác</string>
     <string name="bg_meter">Máy đo</string>
     <string name="bg_sensor">Cảm biến</string>
-    
+    <!-- WizardDialog -->
+    <!-- SiteRotationDialog -->
     <string name="site_man">Nam</string>
     <string name="site_woman">Nữ</string>
     <string name="site_child">Trẻ em</string>
@@ -51,14 +53,15 @@
     <string name="record_site_arrow">Hướng vị trí: %1$s</string>
     <string name="record_site_note">Ghi chú: %1$s</string>
     <string name="delete_site_note">Đã xóa ghi chú</string>
-    <string name="site_filter_info">Chọn loại sự kiện: Thay Cannula / Thay Sensor</string>
-    
+    <!-- FillDialog -->
     <string name="fill_warning">Hãy chắc chắn rằng liều lượng phù hợp với thông số của bộ dây truyền!</string>
     <string name="record_pump_site_change">Ghi lại việc thay vị trí tiêm</string>
     <string name="record_insulin_cartridge_change">Ghi lại việc thay ống insulin</string>
     <string name="fill_prime_amount">Lượng insulin mồi</string>
     <string name="fill_pump_units_note">Lượng insulin mồi tính theo đơn vị của bơm</string>
     <string name="fill_insulin_change">Chuyển insulin sang: %1$s (sẽ áp dụng chuyển hồ sơ)</string>
+    <!-- InsulinDialog -->
+    <!-- Insulin Management -->
     <string name="missing_insulin_name">Thiếu tên insulin</string>
     <string name="insulin_name_exists">Tên insulin %1$s đã tồn tại, vui lòng chọn tên khác</string>
     <string name="a11y_add_new_insulin">Thêm insulin mới</string>
@@ -73,7 +76,7 @@
     <string name="reuse_profile_pct_hours">Tái sử dụng %1$d%% %2$dh</string>
     <string name="timeshift_label">Dịch chuyển thời gian</string>
     <string name="percentage_label">Phần trăm</string>
-    
+    <!-- LoopDialog -->
     <string name="suspendloopfor1h">Tạm dừng vòng lặp 1 giờ</string>
     <string name="suspendloopfor2h">Tạm dừng vòng lặp 2 giờ</string>
     <string name="suspendloopfor3h">Tạm dừng vòng lặp 3 giờ</string>
@@ -92,11 +95,12 @@
     <string name="duration2h">2 giờ</string>
     <string name="duration3h">3 giờ</string>
     <string name="duration10h">10 giờ</string>
-    
+    <!-- WizardDialog -->
     <string name="missing_carbs">Còn thiếu %1$d g</string>
     <string name="wizard_carbs_type_bread_desc">100% carbs ngay, không kéo dài</string>
     <string name="wizard_carbs_type_desc">Giảm %1$d%% carbs, thêm %2$d%% eCarbs, trễ %3$d phút, trong %4$dh</string>
     <string name="wizard_include_info">Chạm để tính hoặc bỏ không tính toán:\n• BG — đường huyết (mặc định bật)\n• TT — mục tiêu tạm thời (mặc định bật)\n• Trend — xu hướng BG (ghi nhớ lần trước)\n• IOB — insulin đang hoạt động (mặc định bật)\n• COB — carbs đang hoạt động (ghi nhớ lần trước)</string>
+    <!-- Treatments -->
     <string name="no_records_available">Không có bản ghi nào</string>
     <string name="treatments_iob_label_string">IOB:</string>
     <string name="carbs_and_bolus">Carb và liều bolus</string>
@@ -117,7 +121,7 @@
     <string name="tbr_type_flag_suspended">S</string>
     <string name="tbr_type_flag_emulated_suspended">ES</string>
     <string name="tbr_type_flag_superbolus">SB</string>
-    
+    <!-- ProfileHelperActivity -->
     <string name="profile_type">Loại hồ sơ</string>
     <string name="profile_parameters">Tham số hồ sơ</string>
     <string name="active_profile">Hồ sơ đang hoạt động</string>
@@ -135,12 +139,15 @@
     <string name="format_with_tdd_and_pct">Age: %1$d TDD: %2$.0f U %3$d%%</string>
     <string name="format_with_weight">Age: %1$d Weight: %2$.0f kg</string>
     <string name="dpv_default_profile">Hồ sơ mặc định DPV</string>
+    <!-- Other dialogs -->
+    <!--QuickWizard-->
     <string name="overview_edit_quickwizard_button_text">Button text</string>
     <string name="quick_wizard_mode_wizard">Wizard</string>
     <string name="quick_wizard_mode_insulin">Insulin</string>
     <string name="quick_wizard_mode_carbs">Carbs</string>
-    <string name="overview_edit_quickwizard_use_positive_iob_only">Chỉ tính IOB &gt; 0</string>
+    <string name="overview_edit_quickwizard_use_positive_iob_only">Chỉ tính IOB > 0</string>
     <string name="overview_edit_quickwizard_superbolus">Superbolus</string>
+    <!--    History browser-->
     <string name="history_now">Hiện tại</string>
     <string name="a11y_history_previous_window">Cửa sổ trước</string>
     <string name="a11y_history_next_window">Cửa sổ tiếp theo</string>
@@ -167,11 +174,11 @@
     <string name="insulin_constraint_violation">Lượng insulin bị giới hạn bởi các giới hạn an toàn</string>
     <string name="confirm_treatment">Vui lòng xác nhận điều trị</string>
     <string name="recalculate">Tính toán lại</string>
-    
+    <!--    Widget-->
     <string name="use_black_color">Sử dụng màu đen</string>
     <string name="widget_configuration">Cấu hình tiện ích</string>
     <string name="until_changed">Cho đến khi thay đổi</string>
-    
+    <!--    Permissions-->
     <string name="permission_sheet_title">Yêu cầu quyền truy cập</string>
     <string name="permission_sheet_subtitle">Một số quyền truy cập là cần thiết để ứng dụng hoạt động đúng cách</string>
     <string name="permission_grant">Cấp quyền</string>
@@ -180,7 +187,7 @@
     <string name="permission_open_settings">Cài đặt</string>
     <string name="permission_directory_picker_error">Không thể mở trình chọn thư mục. Thường là do sự cố với Android hoặc Family Link.</string>
     <string name="permission_nav_label">Quyền truy cập</string>
-    
+    <!--    TDD Cycle Pattern -->
     <string name="cycle_offset">Độ lệch chu kỳ</string>
     <string name="raw_tdd">Raw TDD</string>
     <string name="cleaned_tdd">TDD đã được làm sạch</string>
@@ -195,7 +202,7 @@
         <item>Chỉ cho phép giá trị dương</item>
         <item>Chỉ cho phép giá trị âm</item>
     </string-array>
-    
+    <!-- Toolbar configuration -->
     <string name="quick_launch_selected_actions">Hành động đã chọn</string>
     <string name="quick_launch_no_dynamic_items">Không mục nào sẵn có</string>
     <string name="quick_launch_category_treatment">Điều trị</string>
@@ -217,7 +224,7 @@
     <string name="loop_accept_nav_label">Vòng lặp</string>
     <string name="loop_accept_set_basal_question">Chấp nhận liều nền tạm thời mới:</string>
     <string name="loop_accept_perform">Thực hiện</string>
-    
+    <!-- Widget chip labels for RM.Mode, kept terse to fit the pill -->
     <string name="widget_rm_lgs">LGS</string>
     <string name="widget_rm_disabled">Vô hiệu hoá</string>
     <string name="widget_rm_suspended">Bị tạm dừng</string>

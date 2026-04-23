@@ -1,8 +1,8 @@
-<?xml version='1.0' encoding='utf-8'?>
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    
+    <!-- Medtronic (MDT) - Base -->
     <string name="description_pump_medtronic">Pumpintegration för Medtronic. Kräver Riley Link-enhet och fungerar bara mot vissa pumpmodeller</string>
-    
+    <!-- MDT Configuration -->
     <string name="medtronic_serial_number">Serienummer på pumpen</string>
     <string name="medtronic_pump_type">Pumptyp</string>
     <string name="medtronic_pump_frequency">Pumpfrekvens</string>
@@ -17,11 +17,11 @@
     <string name="medtronic_pump_battery_lithium">Litium</string>
     <string name="medtronic_pump_battery_nizn">NiZn (utökad vy)</string>
     <string name="medtronic_pump_battery_nimh">NiMH (utökad vy)</string>
-    
-    
-    
+    <!-- Pump type entries -->
+    <!-- Bolus delay entries -->
+    <!-- MDT Fragment -->
     <string name="rl_battery_label">RileyLink-batteri</string>
-    
+    <!-- MDT Errors -->
     <string name="medtronic_error_serial_invalid">Serienummer felaktigt.</string>
     <string name="medtronic_error_pump_type_not_set">Pumptyp ej vald.</string>
     <string name="medtronic_error_pump_type_invalid">Pumptypen stöds inte.</string>
@@ -34,13 +34,14 @@
     <string name="medtronic_error_pump_wrong_max_basal_set">Fel max basal i pumpen (måste vara %1$.2f).</string>
     <string name="medtronic_error_operation_not_possible_no_configuration">Operationen inte möjlig. \n\n Du måste konfigurera Medtronicpump innan du kan använda denna funktion.</string>
     <string name="medtronic_error_pump_24h_time_change_requested">Mer än 24 timmars tidsändring efterfrågades.</string>
-    
-    
-    
-    
-    
-    
-    
+    <!-- MDT History -->
+    <!--    <string name="medtronic_history_group_basal">Basals</string>-->
+    <!--    <string name="medtronic_history_group_configuration">Configurations</string>-->
+    <!--    <string name="medtronic_history_group_notification">Notifications</string>-->
+    <!--    <string name="medtronic_history_group_statistic">Statistics</string>-->
+    <!--    <string name="medtronic_history_group_unknown">Unknowns</string>-->
+    <!--    <string name="medtronic_history_group_all">All</string>-->
+    <!-- <string name="medtronic_cmd_profile_not_set">Remote Basal profile setting is not supported. Please modify Basal profile on your pump manually.</string> -->
     <string name="medtronic_cmd_cancel_bolus_not_supported">Du avbröt bolusen efter att kommandot skickats till pumpen. Detta stöds inte av Medtronicpumpar, så därför måste du avbryta på själva pumpen. Det kan man göra genom att pausa insulintillförseln tillfälligt och sedan starta den igen. Appen kommer att uppdatera bolusmängd vid nästa anslutning (inom 5 min).</string>
     <string name="medtronic_cmd_cant_read_tbr">Kunde inte hämta nuvarande temp basal.</string>
     <string name="medtronic_cmd_cant_cancel_tbr_stop_op">Kunde inte avbryta nuvarande temp basal. Avbryter kommandot.</string>
@@ -68,7 +69,7 @@
     <string name="medtronic_pump_connected_now" comment="Displayed when pump was connected less than a minute ago">Nu</string>
     <string name="ago" comment="Time suffix, e.g. '5 min ago'">sedan</string>
     <string name="medtronic_notification_check_time_date">Pumpens klocka behöver ställas om</string>
-    
+    <!-- combo_notification_check_time_date -->
     <string name="set_neutral_temps_title">Sätt neutrala temp basaler</string>
     <string name="set_neutral_temps_summary">Om aktiverad, kommer en eventuell temporär basal automatiskt avbrytas före utgången av varje timme. Denna metod kan förhindra att vissa pumpar piper/vibrerar.</string>
     <string name="invalid_history_data">Ogiltig pumpdata upptäckt. Öppna nytt ärende och bifoga loggar.</string>

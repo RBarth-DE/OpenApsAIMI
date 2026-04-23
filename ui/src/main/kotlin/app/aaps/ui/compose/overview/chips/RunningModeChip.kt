@@ -26,6 +26,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import app.aaps.core.data.model.RM
 import app.aaps.core.ui.compose.AapsSpacing
 import app.aaps.core.ui.compose.AapsTheme
+import app.aaps.core.ui.compose.navigation.ElementType
+import app.aaps.core.ui.compose.navigation.color
 import app.aaps.core.ui.compose.icons.IcLoopClosed
 import app.aaps.core.ui.compose.icons.IcLoopDisabled
 import app.aaps.core.ui.compose.icons.IcLoopDisconnected
@@ -42,6 +44,7 @@ fun RunningModeChip(
     text: String,
     progress: Float,
     modifier: Modifier = Modifier,
+    sceneManaged: Boolean = false,
     onClick: () -> Unit = {}
 ) {
     val isTemporary = mode.mustBeTemporary()
@@ -77,6 +80,9 @@ fun RunningModeChip(
                     color = textColor,
                     modifier = Modifier.padding(start = AapsSpacing.small)
                 )
+                if (sceneManaged) {
+                    SceneBadge(modifier = Modifier.padding(start = AapsSpacing.small))
+                }
             }
             Box(
                 modifier = Modifier

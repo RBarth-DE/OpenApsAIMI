@@ -1,14 +1,14 @@
-<?xml version='1.0' encoding='utf-8'?>
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    
+    <!--    Dialogs-->
     <string name="confirmation">Potvrdenie</string>
-    
+    <!--    Events-->
     <string name="bolus_delivering">Podávanie %1$.2fU</string>
     <string name="bolus_delivered_so_far">%1$.2fU / %2$.2fU podaných</string>
     <string name="bolus_delivered_successfully">Bolus %1$.2fU podaný úspešne</string>
-    
+    <!-- PumpPluginBase -->
     <string name="pump_driver_changed" comment="26 characters max for translation">Ovládač pumpy zmenený.</string>
-    
+    <!--    DateUtil-->
     <string name="minago">pred %1$dm</string>
     <string name="secago">pred %1$ds</string>
     <string name="minago_long">pred %1$d minútami</string>
@@ -55,14 +55,14 @@
     <string name="tomorrow">Zajtra</string>
     <string name="today">Dnes</string>
     <string name="yesterday">včera</string>
-    
+    <!-- Rx -->
     <string name="connecting_for">Pripájanie %1$d sek</string>
     <string name="handshaking">Overovanie</string>
     <string name="connected">Pripojené</string>
     <string name="authorized">Autorizované</string>
     <string name="disconnecting">Odpájanie</string>
     <string name="waiting_for_disconnection">Čakám na odpojenie</string>
-    
+    <!-- Custom Watchface -->
     <string name="metadata_label_watchface_created_at">Vytvorené: %1$s</string>
     <string name="metadata_label_watchface_author">Autor: %1$s</string>
     <string name="metadata_label_watchface_name">Meno: %1$s</string>
@@ -97,10 +97,10 @@
     <string name="temp_basal_percent_rate">%1$.2f%% @%2$s %3$d/%4$d</string>
     <string name="temp_basal_extended_bolus">E %1$.2f U/h @%2$s %3$d/%4$d min</string>
     <string name="forever">Navždy</string>
-    
+    <!-- Permission rationales (used by PumpPluginBase) -->
     <string name="permission_bluetooth_title">Bluetooth</string>
     <string name="permission_bluetooth_description">Aplikácia potrebuje povolenie pre Bluetooth na komunikáciu s pumpou</string>
-    
+    <!-- Insulin -->
     <string name="unknown">Neznámy</string>
     <string name="rapid_acting_oref">Novorapid</string>
     <string name="lyumjev">Lyumjev</string>
@@ -109,6 +109,7 @@
     <string name="fast_acting_insulin_comment">Novorapid, Novolog, Humalog</string>
     <string name="ultra_fast_acting_insulin_comment">Fiasp</string>
     <string name="insulin_peak_time">Vrchol krivky [min]</string>
+    <!-- Concentration -->
     <string name="u10">U10</string>
     <string name="u40">U40</string>
     <string name="u50">U50</string>

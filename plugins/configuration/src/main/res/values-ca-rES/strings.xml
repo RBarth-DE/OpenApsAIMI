@@ -1,4 +1,4 @@
-<?xml version='1.0' encoding='utf-8'?>
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="units">Unitats</string>
     <string name="setupwizard_units_prompt">Seleccioneu en quines unitats voleu mostrar els valors</string>
@@ -16,7 +16,7 @@
     <string name="high_mark_comment">Valor superior de l\'area \"en rang\" (només visualització)</string>
     <string name="storedsettingsfound">Trobada configuració emmagatzemada</string>
     <string name="master_password_summary">La clau mestra es fa servir per encriptar la còpia de seguretat i per editar la seguretat a l\'aplicació. Recordeu-la o emmagatzemeu-la en un lloc segur.</string>
-    
+    <!-- current_master_password moved to core/ui/protection.xml -->
     <string name="common_values">Utilitzeu valors del vostre àpat més gros habitualment\n</string>
     <string name="status">Estat:</string>
     <string name="diawarning">Si us plau recordeu: els nous perfils d\'insulina requereixen una DIA de al menys 5h. Una DIA de 5-6h a un perfil nou és equivalent a DIA de 3h d\'un perfil antic.</string>
@@ -29,23 +29,22 @@
     <string name="startobjective">Iniciar primer objectiu</string>
     <string name="setupwizard_pump_riley_link_status">Estat RileyLink:</string>
     <string name="readstatus">Estat lectura</string>
-    
-    <string name="request">Petició</string>
+    <!-- Provider-agnostic cloud export/import strings -->
     <string name="alert_dialog_permission_battery_optimization_failed">Sembla que aquest dispositiu no permet optimitzar la bateria amb llistes blanques, això pot provocar problemes de rendiment.</string>
-    
+    <!--    ConfigBuilder-->
     <string name="configbuilder_aps_description">Quin algoritme APS ha d\'anar fent ajustos de teràpia?</string>
     <string name="configbuilder_sensitivity_description">Quin algoritme de sensibilitat voleu utilitzar?</string>
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
+    <!--ImportExport-->
+    <!-- password_preferences_encrypt_prompt moved to core:ui -->
+    <!-- preferences_export_canceled moved to core:ui -->
+    <!-- export_to moved to core:ui -->
+    <!-- master_password_missing moved to core:ui -->
+    <!-- Maintenance -->
+    <!-- Maintenance -->
+    <!-- maintenance_email moved to core:keys module -->
+    <!-- Google Drive Storage -->
+    <!-- Import source selection dialog -->
+    <!-- Google Drive error messages (used by GoogleDriveManager) -->
+    <!-- Provider-agnostic cloud storage strings -->
+    <!-- Authorization status strings -->
 </resources>

@@ -16,6 +16,7 @@ import app.aaps.core.interfaces.rx.events.EventAutomationDataChanged
 import app.aaps.core.interfaces.rx.events.EventRefreshOverview
 import app.aaps.core.interfaces.rx.events.EventAppInitialized
 import app.aaps.core.interfaces.rx.events.EventInitializationChanged
+import app.aaps.ui.compose.scenes.SceneRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -43,8 +44,16 @@ data class AutomationActionItem(
 )
 
 @Immutable
+data class SceneSheetItem(
+    val id: String,
+    val name: String,
+    val actionCount: Int
+)
+
+@Immutable
 data class AutomationSheetState(
-    val items: List<AutomationActionItem> = emptyList()
+    val items: List<AutomationActionItem> = emptyList(),
+    val sceneItems: List<SceneSheetItem> = emptyList()
 )
 
 @HiltViewModel
@@ -55,7 +64,8 @@ class AutomationViewModel @Inject constructor(
     private val loop: Loop,
     private val profileFunction: ProfileFunction,
     private val config: Config,
-    private val rxBus: RxBus
+    private val rxBus: RxBus,
+    private val sceneRepository: SceneRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(AutomationSheetState())
@@ -85,15 +95,15 @@ class AutomationViewModel @Inject constructor(
         viewModelScope.launch {
             val pump = activePlugin.activePump
             val profile = profileFunction.getProfile()
-            val isSuspended = withContext(Dispatchers.IO) { loop.runningMode.isSuspended() }
-            val watchOnly = config.isEnabled(ExternalOptions.SHOW_USER_ACTIONS_ON_WATCH_ONLY)
 
-            if (isSuspended || !pump.isInitialized() || profile == null || watchOnly) {
-                _uiState.update { it.copy(items = emptyList()) }
+            val isSuspended = loop.runningMode.isSuspended()
+            if (isSuspended || !pump.isInitialized() || profile == null || config.isEnabled(ExternalOptions.SHOW_USER_ACTIONS_ON_WATCH_ONLY)) {
+                _uiState.update { it.copy(items = emptyList(), sceneItems = emptyList()) }
                 return@launch
             }
 
             val events = automation.userEvents().filter { it.isEnabled && it.canRun() }
+
             val items = events.map { event ->
                 AutomationActionItem(
                     eventId = event.id,
@@ -104,7 +114,14 @@ class AutomationViewModel @Inject constructor(
                     actionIcons = event.actionIcons().toList()
                 )
             }
-            _uiState.update { it.copy(items = items) }
+            val scenes = sceneRepository.getScenes().map { scene ->
+                SceneSheetItem(
+                    id = scene.id,
+                    name = scene.name,
+                    actionCount = scene.actions.size
+                )
+            }
+            _uiState.update { it.copy(items = items, sceneItems = scenes) }
         }
     }
 

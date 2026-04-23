@@ -1,4 +1,4 @@
-<?xml version='1.0' encoding='utf-8'?>
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="label_watchface_circle">AAPS(Círculo)</string>
     <string name="label_watchface_digital_style">AAPS(DigitalStyle)</string>
@@ -140,4 +140,4 @@
     <string name="week_short">s</string>
     <string name="day_short">d</string>
     <string name="hour_short">h</string>
-    </resources>
+</resources>

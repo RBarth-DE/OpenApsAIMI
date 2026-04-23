@@ -1,6 +1,6 @@
-<?xml version='1.0' encoding='utf-8'?>
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    
+    <!-- Source -->
     <string name="ns_client_bg">NSClient KŞ</string>
     <string name="ns_client_bg_short">NS KŞ</string>
     <string name="description_source_ns_client">Nightscout\'tan KŞ verilerini yükler</string>
@@ -24,4 +24,9 @@
     <string name="random_bg">Rastgele KŞ</string>
     <string name="description_source_random_bg">Rastgele KŞ verileri oluşturun (Yalnızca demo modunda)</string>
     <string name="random_bg_short">KŞ</string>
-    </resources>
+    <!-- Patched Syai Tag App -->
+    <!-- Patched SI App -->
+    <!-- Patched Sino App -->
+    <!-- Notification Reader -->
+    <!-- Permission rationales -->
+</resources>

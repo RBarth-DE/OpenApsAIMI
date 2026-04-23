@@ -1,6 +1,6 @@
-<?xml version='1.0' encoding='utf-8'?>
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    
+    <!-- Source -->
     <string name="ns_client_bg">Nightscout-Client BZ</string>
     <string name="ns_client_bg_short">NS BZ</string>
     <string name="description_source_ns_client">Lade Blutzuckerdaten von Nightscout</string>
@@ -24,4 +24,9 @@
     <string name="random_bg">Zufalls-BZ</string>
     <string name="description_source_random_bg">Zufalls-BZ: Generiert zufällige Blutzuckerdaten (nur im Demo-Modus)</string>
     <string name="random_bg_short">BZ</string>
-    </resources>
+    <!-- Patched Syai Tag App -->
+    <!-- Patched SI App -->
+    <!-- Patched Sino App -->
+    <!-- Notification Reader -->
+    <!-- Permission rationales -->
+</resources>

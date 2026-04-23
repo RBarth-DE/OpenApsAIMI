@@ -1,4 +1,4 @@
-<?xml version='1.0' encoding='utf-8'?>
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="automation_short">Auto</string>
     <string name="automation">Automatizare</string>
@@ -113,37 +113,36 @@
     <string name="edit_short">EDITAȚI</string>
     <string name="preconditions">Condiții pre-existente:</string>
     <string name="user_action">Acțiunea utilizatorului</string>
-    <string name="count_selected">%1$d selectat(e)</string>
     <string name="system_automation">Automatizare sistem</string>
     <string name="run_automations">Rulați automatizările</string>
     <string name="add_automation">Adăugați regulă</string>
     <string name="stop_processing">Oprire procesare</string>
-    
+    <!--    Reminders-->
     <string name="time_to_eat">E timpul pentru a mânca!\nRulați asistentul de bolusare și refaceți calculele.</string>
     <string name="time_to_bolus">Timpul să bolusați!\nAcționați Calculatorul de Bolus pentru a face calculele din nou.</string>
     <string name="error_setting_reminder">Eroare la setarea alarmei viitoare</string>
-    
+    <!--    Autotune-->
     <string name="autotune_profile_name">Profil reglare automată (Autotune) %1$s</string>
     <string name="autotune_run">Rulați Autotune</string>
     <string name="autotune_run_without_autoswitch">Autotune a rulat fără schimbarea profilului</string>
     <string name="autotune_run_with_autoswitch">Autotune a rulat și profilul a fost automat schimbat</string>
     <string name="autotune_run_with_error">Eroare în timpul ultimei rulări Autotune</string>
     <string name="autotune_run_cancelled">O altă rulare Autotune este detectată, rularea este anulată</string>
-    
+    <!--    Steps count-->
     <string name="triggerStepsCountLabel">Număr de pași</string>
     <string name="triggerStepsCountDesc">Număr de pași per %1$s minute %2$s %3$.0f</string>
     <string name="triggerStepsCountDropdownLabel">Durata de măsurare</string>
-    
+    <!--    SMB mode-->
     <string name="changeSmbState">Activați/dezactivați SMB</string>
     <string name="changeSmbTo">Schimbați SMB la %1$s</string>
     <string name="newSmbMode">Noul mod SMB:</string>
     <string name="on">PORNIT</string>
     <string name="off">OPRIT</string>
-    
+    <!--    Map Picker (OpenStreetMap)-->
     <string name="pick_from_map">Alegeți de pe hartă</string>
     <string name="tap_to_select_location">Apăsați pe hartă pentru a selecta un loc</string>
     <string name="selected_coords">Selectat: %1$.6f, %2$.6f</string>
-    
+    <!-- Permission rationales -->
     <string name="permission_location_title">Locație</string>
     <string name="permission_location_description">Necesar pentru declanșarea automatizării bazate pe locație și identificarea rețelei Wi-Fi</string>
     <string name="permission_background_location_description">Necesar pentru declanșatorii automatizărilor să funcționeze atunci când aplicația este în fundal</string>

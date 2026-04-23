@@ -1,4 +1,4 @@
-<?xml version='1.0' encoding='utf-8'?>
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="disabled_loop">Loop er deaktivert</string>
     <string name="nav_history_browser">Historikk</string>
@@ -7,9 +7,12 @@
     <string name="pb_label">Pumpebatteri</string>
     <string name="cannula">Kanyle</string>
     <string name="patch_pump">Pumpe</string>
-    
-    <string name="a11y_blood_glucose">blodsukker</string>
+    <!-- Overview -->
+    <!-- overview moved to core:ui module -->
+    <!--    OverviewMenu-->
     <string name="basal_shortname">BAS</string>
+    <!--    Iob-->
+    <!--    PersistentNotification-->
     <string name="description_persistent_notification">Viser en konstant melding med en kort oppsummering av hva loop gjør</string>
     <string name="old_data">GAMLE DATA</string>
-    </resources>
+</resources>

@@ -24,8 +24,10 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import app.aaps.core.data.model.ActiveSceneState
 import app.aaps.core.data.model.RM
 import app.aaps.core.data.model.TT
+import app.aaps.ui.compose.scenes.ActiveSceneBanner
 import app.aaps.core.ui.compose.AapsTheme
 import app.aaps.core.ui.compose.LocalConfig
 import app.aaps.core.ui.compose.navigation.ElementType
@@ -40,13 +42,19 @@ import app.aaps.ui.compose.overview.statusLights.StatusViewModel
 
 @Composable
 fun OverviewScreenSplit(
+    profileName: String,
+    isProfileModified: Boolean,
+    profileProgress: Float,
+    profileSceneManaged: Boolean = false,
     tempTargetText: String,
     tempTargetState: TempTargetChipState,
     tempTargetProgress: Float,
     tempTargetReason: TT.Reason?,
+    tempTargetSceneManaged: Boolean = false,
     runningMode: RM.Mode,
     runningModeText: String,
     runningModeProgress: Float,
+    runningModeSceneManaged: Boolean = false,
     isSimpleMode: Boolean,
     calcProgress: Int,
     graphViewModel: GraphViewModel,
@@ -55,6 +63,11 @@ fun OverviewScreenSplit(
     statusLightsDef: PreferenceSubScreenDef,
     onNavigate: (NavigationRequest) -> Unit,
     paddingValues: PaddingValues,
+    activeSceneState: ActiveSceneState? = null,
+    sceneExpired: Boolean = false,
+    onEndScene: () -> Unit = {},
+    onDismissScene: () -> Unit = {},
+    formatDuration: (Long) -> String = { ms -> "${(ms / 60000L).toInt()}m" },
     modifier: Modifier = Modifier
 ) {
     val config = LocalConfig.current
@@ -80,6 +93,13 @@ fun OverviewScreenSplit(
                     .height(4.dp),
             )
         }
+        ActiveSceneBanner(
+            activeState = activeSceneState,
+            expired = sceneExpired,
+            onEndClick = onEndScene,
+            onDismiss = onDismissScene,
+            formatDuration = formatDuration
+        )
 
         Row(
             modifier = Modifier
@@ -121,11 +141,17 @@ fun OverviewScreenSplit(
                             runningMode = runningMode,
                             runningModeText = runningModeText,
                             runningModeProgress = runningModeProgress,
+                            runningModeSceneManaged = runningModeSceneManaged,
                             isSimpleMode = isSimpleMode,
+                            profileName = profileName,
+                            isProfileModified = isProfileModified,
+                            profileProgress = profileProgress,
+                            profileSceneManaged = profileSceneManaged,
                             tempTargetText = tempTargetText,
                             tempTargetState = tempTargetState,
                             tempTargetProgress = tempTargetProgress,
                             tempTargetReason = tempTargetReason,
+                            tempTargetSceneManaged = tempTargetSceneManaged,
                             onNavigate = onNavigate,
                             trailingContent = {
                                 LargeClock(

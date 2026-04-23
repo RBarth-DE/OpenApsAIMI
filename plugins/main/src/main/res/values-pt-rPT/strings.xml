@@ -1,4 +1,4 @@
-<?xml version='1.0' encoding='utf-8'?>
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="disabled_loop">Loop Desactivado</string>
     <string name="nav_history_browser">Navegador do histórico</string>
@@ -6,9 +6,12 @@
     <string name="insulin_label">Insulina</string>
     <string name="pb_label">Bateria da Bomba</string>
     <string name="cannula">Cânula</string>
-    
-    <string name="a11y_blood_glucose">Glicose no Sangue</string>
+    <!-- Overview -->
+    <!-- overview moved to core:ui module -->
+    <!--    OverviewMenu-->
     <string name="basal_shortname">BAS</string>
+    <!--    Iob-->
+    <!--    PersistentNotification-->
     <string name="description_persistent_notification">Mostra uma notificação em curso com um breve resumo do que o seu loop está a fazer</string>
     <string name="old_data">DADOS ANTIGOS</string>
 </resources>

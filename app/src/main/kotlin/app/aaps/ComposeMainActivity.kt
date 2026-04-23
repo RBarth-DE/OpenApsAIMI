@@ -907,6 +907,10 @@ class ComposeMainActivity : AppCompatActivity() {
                 mainViewModel.requestProfileConfirmation(action.profileName, action.percentage, action.durationMinutes)
             }
 
+            is QuickLaunchAction.SceneAction       -> withProtection(ElementType.SCENE.protection) {
+                mainViewModel.requestSceneConfirmation(action.sceneId)
+            }
+
             is QuickLaunchAction.PluginAction      -> {
                 val pluginIndex = activePlugin.getPluginsList().indexOfFirst { it.javaClass.simpleName == action.className }
                 if (pluginIndex >= 0) navController.navigate(AppRoute.PluginContent.createRoute(pluginIndex))
@@ -1036,6 +1040,7 @@ class ComposeMainActivity : AppCompatActivity() {
             ElementType.QUICK_WIZARD_MANAGEMENT -> navController.navigate(AppRoute.QuickWizardManagement.createRoute(mode))
             ElementType.FOOD_MANAGEMENT         -> navController.navigate(AppRoute.FoodManagement.route)
             ElementType.RUNNING_MODE            -> navController.navigate(AppRoute.RunningMode.route)
+            ElementType.SCENE_MANAGEMENT        -> navController.navigate(AppRoute.SceneList.route)
             ElementType.QUICK_LAUNCH_CONFIG     -> navController.navigate(AppRoute.QuickLaunchConfig.route)
 
             // Treatment dialogs
@@ -1078,6 +1083,7 @@ class ComposeMainActivity : AppCompatActivity() {
 
             // Non-searchable types — listed explicitly so the compiler catches new enum values
             ElementType.QUICK_WIZARD,
+            ElementType.SCENE,
             ElementType.AUTOMATION,
             ElementType.COB,
             ElementType.SENSITIVITY,

@@ -1,6 +1,6 @@
-<?xml version='1.0' encoding='utf-8'?>
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    
+    <!-- Source -->
     <string name="ns_client_bg">NSClient</string>
     <string name="ns_client_bg_short">NS Glik</string>
     <string name="description_source_ns_client">Gauti glikemijos duomenis iš Nightscout</string>
@@ -24,4 +24,9 @@
     <string name="random_bg">Atsitiktinė glikemija</string>
     <string name="description_source_random_bg">Generuoti atsitiktinę glikemiją (tik demo režime)</string>
     <string name="random_bg_short">AG</string>
-    </resources>
+    <!-- Patched Syai Tag App -->
+    <!-- Patched SI App -->
+    <!-- Patched Sino App -->
+    <!-- Notification Reader -->
+    <!-- Permission rationales -->
+</resources>

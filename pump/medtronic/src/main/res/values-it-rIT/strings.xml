@@ -1,8 +1,8 @@
-<?xml version='1.0' encoding='utf-8'?>
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    
+    <!-- Medtronic (MDT) - Base -->
     <string name="description_pump_medtronic">Integrazione del microinfusore Medtronic, richiede un dispositivo RileyLink e uno specifico modello di microinfusore</string>
-    
+    <!-- MDT Configuration -->
     <string name="medtronic_serial_number">Numero seriale micro</string>
     <string name="medtronic_pump_type">Tipo micro</string>
     <string name="medtronic_pump_frequency">Frequenza micro</string>
@@ -18,7 +18,7 @@
     <string name="medtronic_pump_battery_lithium">Litio (Extended view)</string>
     <string name="medtronic_pump_battery_nizn">NiZn (Extended view)</string>
     <string name="medtronic_pump_battery_nimh">NiMH (Extended view)</string>
-    
+    <!-- Pump type entries -->
     <string name="medtronic_pump_type_unsupported">Altro (non supportato)</string>
     <string name="medtronic_pump_type_512">512</string>
     <string name="medtronic_pump_type_712">712</string>
@@ -32,13 +32,13 @@
     <string name="medtronic_pump_type_754_eu">754 (EU Fw. &lt;= 2.6A)</string>
     <string name="medtronic_pump_type_554_ca">554 (CA Fw. &lt;= 2.7A)</string>
     <string name="medtronic_pump_type_754_ca">754 (CA Fw. &lt;= 2.7A)</string>
-    
+    <!-- Bolus delay entries -->
     <string name="medtronic_bolus_delay_5s">5 s</string>
     <string name="medtronic_bolus_delay_10s">10 s</string>
     <string name="medtronic_bolus_delay_15s">15 s</string>
-    
+    <!-- MDT Fragment -->
     <string name="rl_battery_label">Batteria RileyLink</string>
-    
+    <!-- MDT Errors -->
     <string name="medtronic_error_serial_invalid"># seriale non valido.</string>
     <string name="medtronic_error_pump_type_not_set">Tipo micro non impostato.</string>
     <string name="medtronic_error_pump_type_invalid">Tipo micro non supportato.</string>
@@ -51,13 +51,14 @@
     <string name="medtronic_error_pump_wrong_max_basal_set">Max basale errata impostata sul micro (deve essere %1$.2f).</string>
     <string name="medtronic_error_operation_not_possible_no_configuration">Operazione non possibile.\n\n Devi prima configurare il micro Medtronic.</string>
     <string name="medtronic_error_pump_24h_time_change_requested">È stata richiesta una modifica oraria di oltre 24h.</string>
-    
-    
-    
-    
-    
-    
-    
+    <!-- MDT History -->
+    <!--    <string name="medtronic_history_group_basal">Basals</string>-->
+    <!--    <string name="medtronic_history_group_configuration">Configurations</string>-->
+    <!--    <string name="medtronic_history_group_notification">Notifications</string>-->
+    <!--    <string name="medtronic_history_group_statistic">Statistics</string>-->
+    <!--    <string name="medtronic_history_group_unknown">Unknowns</string>-->
+    <!--    <string name="medtronic_history_group_all">All</string>-->
+    <!-- <string name="medtronic_cmd_profile_not_set">Remote Basal profile setting is not supported. Please modify Basal profile on your pump manually.</string> -->
     <string name="medtronic_cmd_cancel_bolus_not_supported">Hai cancellato il bolo dopo che era già stato impostato sul micro. Dal momento che il micro Medtronic non supporta la cancellazione, avrai bisogno di cancellare il bolo manualmente. Metti il micro in modalità sospensione e poi fallo ripartire (se vuoi ancora cancellare il bolo). L\'applicazione rileverà le modifiche al prossimo aggiornamento (in meno di 5 minuti).</string>
     <string name="medtronic_cmd_cant_read_tbr">Impossibile leggere il TBR corrente.</string>
     <string name="medtronic_cmd_cant_cancel_tbr_stop_op">Impossibile cancellare il TBR corrente. Arresto dell\'operazione.</string>
@@ -85,7 +86,7 @@
     <string name="medtronic_pump_connected_now" comment="Displayed when pump was connected less than a minute ago">Adesso</string>
     <string name="ago" comment="Time suffix, e.g. '5 min ago'">fa</string>
     <string name="medtronic_notification_check_time_date">Necessario aggiornare orologio micro</string>
-    
+    <!-- combo_notification_check_time_date -->
     <string name="set_neutral_temps_title">Imposta basali temporanee neutre</string>
     <string name="set_neutral_temps_summary">Se abilitato, cancellerà una basale temporanea prima della fine di ogni ora. Questo metodo può aiutare a fermare alcuni micro dall\'emettere un suono/vibrare allo scoccare dell\'ora.</string>
     <string name="invalid_history_data">Rilevati dati non validi dallo storico del micro. Apri una segnalazione e fornisci i log.</string>

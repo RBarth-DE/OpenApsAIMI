@@ -1,8 +1,8 @@
-<?xml version='1.0' encoding='utf-8'?>
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    
+    <!-- Medtronic (MDT) - Base -->
     <string name="description_pump_medtronic">חיבור משאבת Medtronic, נדרש התקן ריילילינק ודגמי משאבה ספציפיים</string>
-    
+    <!-- MDT Configuration -->
     <string name="medtronic_serial_number">מספר סידורי של המשאבה</string>
     <string name="medtronic_pump_type">סוג המשאבה</string>
     <string name="medtronic_pump_frequency">תדר המשאבה</string>
@@ -17,11 +17,11 @@
     <string name="medtronic_pump_battery_lithium">ליתיום (תצוגה מורחבת)</string>
     <string name="medtronic_pump_battery_nizn">NiZn (תצוגה מורחבת)</string>
     <string name="medtronic_pump_battery_nimh">NiMH (תצוגה מורחבת)</string>
-    
-    
-    
+    <!-- Pump type entries -->
+    <!-- Bolus delay entries -->
+    <!-- MDT Fragment -->
     <string name="rl_battery_label">סוללת ריילילינק</string>
-    
+    <!-- MDT Errors -->
     <string name="medtronic_error_serial_invalid">מס\' סידורי לא חוקי.</string>
     <string name="medtronic_error_pump_type_not_set">סוג המשאבה לא הוגדר.</string>
     <string name="medtronic_error_pump_type_invalid">סוג המשאבה לא נתמך.</string>
@@ -34,13 +34,14 @@
     <string name="medtronic_error_pump_wrong_max_basal_set">המינון הבזאלי המרבי המוגדר במשאבה אינו נכון (חייב להיות %1$.2f).</string>
     <string name="medtronic_error_operation_not_possible_no_configuration">הפעולה אינה אפשרית.\n\n יש להגדיר קודם את המשאבה על מנת לבצע פעולה זו.</string>
     <string name="medtronic_error_pump_24h_time_change_requested">התבקש שינוי זמן העולה על 24 שעות.</string>
-    
-    
-    
-    
-    
-    
-    
+    <!-- MDT History -->
+    <!--    <string name="medtronic_history_group_basal">Basals</string>-->
+    <!--    <string name="medtronic_history_group_configuration">Configurations</string>-->
+    <!--    <string name="medtronic_history_group_notification">Notifications</string>-->
+    <!--    <string name="medtronic_history_group_statistic">Statistics</string>-->
+    <!--    <string name="medtronic_history_group_unknown">Unknowns</string>-->
+    <!--    <string name="medtronic_history_group_all">All</string>-->
+    <!-- <string name="medtronic_cmd_profile_not_set">Remote Basal profile setting is not supported. Please modify Basal profile on your pump manually.</string> -->
     <string name="medtronic_cmd_cancel_bolus_not_supported">ביטלתם את הבולוס אחרי שכבר נקבע במשאבה. מאחר שמשאבות Medtronic אינן תומכות בביטול, תצטרכו לבטלו ידנית. הכניסו את המשאבה למצב השהיה ולאחר מכן צאו ממצב ההשהיה (אם אתם עדיין רוצים לבטל). היישום יאסוף שינויים בעדכון הבא (תוך פחות מ-5 דקות).</string>
     <string name="medtronic_cmd_cant_read_tbr">לא ניתן לקרוא את הבזאלי הזמני הנוכחי.</string>
     <string name="medtronic_cmd_cant_cancel_tbr_stop_op">לא ניתן לבטל את הבזאלי הזמני הנוכחי. עוצר את הפעולה.</string>
@@ -68,7 +69,7 @@
     <string name="medtronic_pump_connected_now" comment="Displayed when pump was connected less than a minute ago">עכשיו</string>
     <string name="ago" comment="Time suffix, e.g. '5 min ago'">לפני</string>
     <string name="medtronic_notification_check_time_date">דרוש עדכון שעון המשאבה</string>
-    
+    <!-- combo_notification_check_time_date -->
     <string name="set_neutral_temps_title">הגדרת מינון בזאלי ניטרלי</string>
     <string name="set_neutral_temps_summary">אם תופעל, היא תבטל בזאלי זמני לפני תום כל שעה. שיטה זו יכולה לעזור לבטל ציפצופים ורטט רבים בחלק מהמשאבות.</string>
     <string name="invalid_history_data">זוהתה היסטוריית משאבה פסולה. נא לפתוח תלונה ולספק רישומים (לוג).</string>

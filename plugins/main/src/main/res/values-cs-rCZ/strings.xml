@@ -1,4 +1,4 @@
-<?xml version='1.0' encoding='utf-8'?>
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="disabled_loop">Smyčka zakázána</string>
     <string name="nav_history_browser">Prohlížeč historie</string>
@@ -7,9 +7,12 @@
     <string name="pb_label">Baterie pumpy</string>
     <string name="cannula">Kanyla</string>
     <string name="patch_pump">Náplasťová pumpa</string>
-    
-    <string name="a11y_blood_glucose">glykémie</string>
+    <!-- Overview -->
+    <!-- overview moved to core:ui module -->
+    <!--    OverviewMenu-->
     <string name="basal_shortname">BAZ</string>
+    <!--    Iob-->
+    <!--    PersistentNotification-->
     <string name="description_persistent_notification">Zobrazení průběžného oznámení v Androidu s krátkým přehledem, co smyčka právě dělá</string>
     <string name="old_data">ZASTARALÉ</string>
-    </resources>
+</resources>

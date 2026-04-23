@@ -1,4 +1,4 @@
-<?xml version='1.0' encoding='utf-8'?>
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="carbs_constraint_applied">Karbonhidrat kısıtlaması uygulandı</string>
     <string name="temp_target_short">GH</string>
@@ -6,9 +6,10 @@
     <string name="start_eating_soon_tt">Yakında Yemek GH</string>
     <string name="start_hypo_tt">Hipo GH başlat</string>
     <string name="time_offset">Saat farkı</string>
+    <!--    Widget-->
     <string name="configure">Şeffaflığı yapılandır</string>
     <string name="widget_description">AAPS widget</string>
-    
+    <!--     Activities-->
     <string name="activity_monitor">Aktivite monitörü</string>
     <string name="do_you_want_reset_stats">Etkinlik istatistiklerini sıfırlamak istiyor musunuz?</string>
     <string name="do_you_want_recalculate_tdd_stats">GTD istatistiklerini tekrar hesaplamak istiyor musunuz?</string>
@@ -19,15 +20,25 @@
     <string name="bg_other">Diğer</string>
     <string name="bg_meter">GlkMetre</string>
     <string name="bg_sensor">Sensör</string>
-    
+    <!-- WizardDialog -->
+    <!-- SiteRotationDialog -->
+    <string name="site_man">Erkek</string>
+    <string name="site_woman">Kadın</string>
+    <string name="site_child">Çocuk</string>
+    <string name="user_profile">Kullanıcı Profili</string>
+    <string name="user_profile_description">Kullanıcı Profili Açıklaması, bir erkek, bir kadın veya bir çocuk için en sık erişilebilen yerleri göstermek için kullanılır</string>
+    <string name="site_management">Yer Yönetim Profili</string>
+    <string name="site_management_description">Pompa yerini, CGM yerini veya her ikisini birden yönetmek isteyip istemediğinizi buradan ayarlayabilirsiniz. Bu ayar, algılanan her yeni girişte yer yönetimi iletişim kutusunu otomatik olarak göndermek için kullanılacaktır.</string>
+    <!-- FillDialog -->
     <string name="fill_warning">Lütfen miktarın infüzyon setinizin özelliklerine uygun olduğundan emin olun!</string>
     <string name="record_pump_site_change">İnfüzyon seti değişimini kaydet</string>
     <string name="record_insulin_cartridge_change">Rezervuar değişimini kaydet</string>
-    
+    <!-- InsulinDialog -->
+    <!-- Insulin Management -->
     <string name="reuse_profile_pct_hours">%1$d%% %2$dsa yeniden kullan</string>
     <string name="timeshift_label">Zaman kaydırma</string>
     <string name="percentage_label">Yüzde</string>
-    
+    <!-- LoopDialog -->
     <string name="suspendloopfor1h">Döngüyü 1saat duraklat</string>
     <string name="suspendloopfor2h">Döngüyü 2saat duraklat</string>
     <string name="suspendloopfor3h">Döngüyü 3saat duraklat</string>
@@ -46,8 +57,9 @@
     <string name="duration2h">2 saat</string>
     <string name="duration3h">3 saat</string>
     <string name="duration10h">10 saat</string>
-    
+    <!-- WizardDialog -->
     <string name="missing_carbs">%1$d g eksik</string>
+    <!-- Treatments -->
     <string name="no_records_available">Kayıt mevcut değil</string>
     <string name="treatments_iob_label_string">AİNS:</string>
     <string name="carbs_and_bolus">Karbonhidrat ve bolus</string>
@@ -56,7 +68,7 @@
     <string name="careportal_remove_started_events">AAPS tarafından başlatılmış girdileri kaldırın</string>
     <string name="user_entry">Kullanıcı girişi</string>
     <string name="clone_label">Klon</string>
-    
+    <!-- ProfileHelperActivity -->
     <string name="profile_type">Profil tipi</string>
     <string name="basal_pct_from_tdd_label">% bazalın</string>
     <string name="selected_profile">Seçildi:</string>
@@ -67,22 +79,26 @@
     <string name="format_with_tdd_and_pct">Yaş: %1$d GTD: %2$.0f Ü %3$d%%</string>
     <string name="format_with_weight">Yaş: %1$d Ağırlık: %2$.0f kg</string>
     <string name="dpv_default_profile">DPV Varsayılan profil</string>
+    <!-- Other dialogs -->
+    <!--QuickWizard-->
     <string name="overview_edit_quickwizard_button_text">Buton Metni</string>
     <string name="overview_edit_quickwizard_use_positive_iob_only">Yalnızca pozitif AİNS</string>
     <string name="overview_edit_quickwizard_superbolus">Süperbolus</string>
+    <!--    History browser-->
     <string name="additional_ecarbs">yKarb ekle</string>
     <string name="confirm_treatment">Lütfen tedaviyi onaylayın</string>
     <string name="recalculate">Tekrar Hesapla</string>
-    
+    <!--    Widget-->
     <string name="use_black_color">Siyah renk kullanın</string>
     <string name="widget_configuration">Araç yapılandırması</string>
-    
-    
+    <string name="until_changed">Değiştirilene kadar</string>
+    <!--    Permissions-->
+    <!--    TDD Cycle Pattern -->
     <string-array name="yes_no_positiveonly_negativeonly">
         <item>İkisi de</item>
         <item>Sadece pozitif</item>
         <item>Sadece negatif</item>
     </string-array>
-    
-    
+    <!-- Toolbar configuration -->
+    <!-- Widget chip labels for RM.Mode, kept terse to fit the pill -->
 </resources>

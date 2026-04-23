@@ -1,4 +1,4 @@
-<?xml version='1.0' encoding='utf-8'?>
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="units">Jednotky</string>
     <string name="setupwizard_units_prompt">Vyberte jednotky, v ktorých chcete zobraziť hodnoty</string>
@@ -17,7 +17,7 @@
     <string name="high_mark_comment">Horná hodnota v oblasti cieľového rozsahu (iba zobrazovanie)</string>
     <string name="storedsettingsfound">Nájdené uložené nastavenia</string>
     <string name="master_password_summary">Hlavné heslo sa používa na šifrovanie zálohy a na \"prebitie\" zabezpečenia v aplikácii. Dobre si ho zapamätajte, alebo uložte na bezpečnom mieste.</string>
-    
+    <!-- current_master_password moved to core/ui/protection.xml -->
     <string name="common_values">Použite hodnoty pre najväčšie jedlo, aké obvykle jete\n</string>
     <string name="syncinfotext">Synchronizujte dáta s cloudom. Túto časť teraz môžete preskočit, ale nebudete schopní dokončiť ciele, pokiaľ nebude synchronizácia nastavená do NS, alebo Tidepool.</string>
     <string name="status">Stav:</string>
@@ -36,10 +36,9 @@
     <string name="setupwizard_permissions_info">AAPS potrebuje prístup k úložisku a povolenia na to, aby pracovalo správne. Prosím udeľte potrebné povolenia nižšie.</string>
     <string name="setupwizard_pump_riley_link_status">Stav RileyLinku:</string>
     <string name="readstatus">Načítať stav</string>
-    
-    <string name="request">Požiadavka</string>
+    <!-- Provider-agnostic cloud export/import strings -->
     <string name="alert_dialog_permission_battery_optimization_failed">Toto zariadenie zrejme neumožňuje vypnúť optimalizáciu batérie - môže dochádzať k problémom s výkonom.</string>
-    
+    <!--    ConfigBuilder-->
     <string name="configbuilder_pump_description">Akú pumpu chcete používať s AndroidAPS?</string>
     <string name="configbuilder_aps_description">Aký APS algoritmus má byť použitý pre prispôsobenie liečby?</string>
     <string name="configbuilder_sync_description">Nahrávanie dát, synchronizácia a komunikácia pluginov.</string>
@@ -47,20 +46,20 @@
     <string name="configbuilder_sensitivity_description">Aký druh algoritmu pre detekciu citlivosti má byť použitý?</string>
     <string name="allow_hardware_pump_text">POZOR: Pokiaľ aktivujete a pripojíte skutočnú pumpu, AndroidAPS nakopíruje nastavenie bazálu z aktívneho profilu do pumpy. Overte si, že máte v AAPS korektný bazálny profil. Pokiaľ si nieste istí, alebo nechcete prepísať bazály v pumpe, stlačte Zrušiť a opakujte prepnutie na inú pumpu neskôr.</string>
     <string name="nsclient_version_does_not_match">Verzia NSClienta nesúhlasí z verziou AndroidAPS. Prosím aktualizujte si ju.</string>
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
+    <!--ImportExport-->
+    <!-- password_preferences_encrypt_prompt moved to core:ui -->
+    <!-- preferences_export_canceled moved to core:ui -->
+    <!-- export_to moved to core:ui -->
+    <!-- master_password_missing moved to core:ui -->
+    <!-- Maintenance -->
+    <!-- Maintenance -->
+    <!-- maintenance_email moved to core:keys module -->
+    <!-- Google Drive Storage -->
+    <!-- Import source selection dialog -->
     <string name="loading">Načítavanie…</string>
     <string name="warning_wrong_directory_selected">Bol vybratý nesprávny adresár</string>
     <string name="warning_wrong_directory_message">Namiesto koreňového adresára AAPS ste vybrali podadresár „%1$s“. Vyberte prosím hlavný adresár AAPS. Podadresáre sú automaticky vytvorené a spravované aplikáciou.</string>
-    
-    
-    
+    <!-- Google Drive error messages (used by GoogleDriveManager) -->
+    <!-- Provider-agnostic cloud storage strings -->
+    <!-- Authorization status strings -->
 </resources>

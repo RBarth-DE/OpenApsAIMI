@@ -1,4 +1,4 @@
-<?xml version='1.0' encoding='utf-8'?>
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="disabled_loop">Vòng lặp đã tắt</string>
     <string name="nav_history_browser">Xem lịch sử</string>
@@ -7,9 +7,12 @@
     <string name="pb_label">Pin Bơm</string>
     <string name="cannula">Kim truyền</string>
     <string name="patch_pump">Patch pump</string>
-    
-    <string name="a11y_blood_glucose">đường máu</string>
+    <!-- Overview -->
+    <!-- overview moved to core:ui module -->
+    <!--    OverviewMenu-->
     <string name="basal_shortname">BAS</string>
+    <!--    Iob-->
+    <!--    PersistentNotification-->
     <string name="description_persistent_notification">Hiển thị thông báo liên tục với tóm tắt ngắn gọn về hoạt động của vòng lặp</string>
     <string name="old_data">DỮ LIỆU CŨ</string>
-    </resources>
+</resources>

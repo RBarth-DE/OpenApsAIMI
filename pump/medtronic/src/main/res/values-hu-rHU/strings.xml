@@ -1,8 +1,8 @@
-<?xml version='1.0' encoding='utf-8'?>
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    
+    <!-- Medtronic (MDT) - Base -->
     <string name="description_pump_medtronic">Medtronic pumpakapcsolat, egy RileyLink típusú eszköz és megfelelő típusú pumpa szükséges</string>
-    
+    <!-- MDT Configuration -->
     <string name="medtronic_serial_number">Pumpa sorozatszáma</string>
     <string name="medtronic_pump_type">Pumpa típusa</string>
     <string name="medtronic_pump_frequency">Pumpa frekvencia</string>
@@ -17,11 +17,11 @@
     <string name="medtronic_pump_battery_lithium">Lítium (Kiterjesztett nézet)</string>
     <string name="medtronic_pump_battery_nizn">NiZn (Kiterjesztett nézet)</string>
     <string name="medtronic_pump_battery_nimh">NiMH (kiterjesztett nézet)</string>
-    
-    
-    
+    <!-- Pump type entries -->
+    <!-- Bolus delay entries -->
+    <!-- MDT Fragment -->
     <string name="rl_battery_label">RileyLink elem</string>
-    
+    <!-- MDT Errors -->
     <string name="medtronic_error_serial_invalid">Sorozatszám hibás.</string>
     <string name="medtronic_error_pump_type_not_set">Pumpa típusa hiányzik.</string>
     <string name="medtronic_error_pump_type_invalid">Pumpa típusa nem támogatott.</string>
@@ -34,13 +34,14 @@
     <string name="medtronic_error_pump_wrong_max_basal_set">Hibás a pumpán beállított Max. Bázis (%1$.2f kell legyen).</string>
     <string name="medtronic_error_operation_not_possible_no_configuration">Művelet nem végrehajtható.\n\n Először be kell állítani a Medtronic pumpát, mielőtt használni lehet ezt a műveletet.</string>
     <string name="medtronic_error_pump_24h_time_change_requested">24 óránál nagyobb időmódosítás szükséges.</string>
-    
-    
-    
-    
-    
-    
-    
+    <!-- MDT History -->
+    <!--    <string name="medtronic_history_group_basal">Basals</string>-->
+    <!--    <string name="medtronic_history_group_configuration">Configurations</string>-->
+    <!--    <string name="medtronic_history_group_notification">Notifications</string>-->
+    <!--    <string name="medtronic_history_group_statistic">Statistics</string>-->
+    <!--    <string name="medtronic_history_group_unknown">Unknowns</string>-->
+    <!--    <string name="medtronic_history_group_all">All</string>-->
+    <!-- <string name="medtronic_cmd_profile_not_set">Remote Basal profile setting is not supported. Please modify Basal profile on your pump manually.</string> -->
     <string name="medtronic_cmd_cancel_bolus_not_supported">A bólus a pumpára való elküldés után lett törölve. Mivel a Medtronic pumpa nem támogatja a törlést, ezért manuálisan kell törölni. Felfüggesztett módba kell állítani a pumpát, majd utána újraindítani (ha továbbra is meg akarja szakítani). Az alkalmazás a következő frissítéskor (kevesebb, mint 5 percen belül) veszi át a változásokat.</string>
     <string name="medtronic_cmd_cant_read_tbr">Jelenlegi ÁB lekérése nem sikerült.</string>
     <string name="medtronic_cmd_cant_cancel_tbr_stop_op">Jelenlegi ÁB törlése nem sikerült. Művelet megszakítása.</string>
@@ -68,7 +69,7 @@
     <string name="medtronic_pump_connected_now" comment="Displayed when pump was connected less than a minute ago">Most</string>
     <string name="ago" comment="Time suffix, e.g. '5 min ago'">ezelőtt</string>
     <string name="medtronic_notification_check_time_date">Pumpa idő frissítése szükséges</string>
-    
+    <!-- combo_notification_check_time_date -->
     <string name="set_neutral_temps_title">Semleges átmeneti bázis beállítása</string>
     <string name="set_neutral_temps_summary">Ha be van kapcsolva, akkor minden óra végén törli az átmeneti bázist. Ez a módszer segíthet elkerülni bizonyos pumpákon az óránkénti hangjelzést/rezgést.</string>
-    </resources>
+</resources>

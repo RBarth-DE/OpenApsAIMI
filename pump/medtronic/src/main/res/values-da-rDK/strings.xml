@@ -1,8 +1,8 @@
-<?xml version='1.0' encoding='utf-8'?>
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    
+    <!-- Medtronic (MDT) - Base -->
     <string name="description_pump_medtronic">Pumpeintegration til Medtronic, kræver RileyLink-enhed og specifik Pumpemodel</string>
-    
+    <!-- MDT Configuration -->
     <string name="medtronic_serial_number">Pumpe Serienummer</string>
     <string name="medtronic_pump_type">Pumpe Type</string>
     <string name="medtronic_pump_frequency">Pumpe Frekvens</string>
@@ -17,11 +17,11 @@
     <string name="medtronic_pump_battery_lithium">Lithium</string>
     <string name="medtronic_pump_battery_nizn">NiZn</string>
     <string name="medtronic_pump_battery_nimh">NiMH</string>
-    
-    
-    
+    <!-- Pump type entries -->
+    <!-- Bolus delay entries -->
+    <!-- MDT Fragment -->
     <string name="rl_battery_label">RileyLink Batteri</string>
-    
+    <!-- MDT Errors -->
     <string name="medtronic_error_serial_invalid">Serienummer ugyldig.</string>
     <string name="medtronic_error_pump_type_not_set">Pumpetype ikke angivet.</string>
     <string name="medtronic_error_pump_type_invalid">Pumpetype understøttes ikke.</string>
@@ -34,13 +34,14 @@
     <string name="medtronic_error_pump_wrong_max_basal_set">Forkert Max Basal sat på Pump (skal være %1$.2f).</string>
     <string name="medtronic_error_operation_not_possible_no_configuration">Handlingen er ikke mulig.\n\n Du skal først konfigurere Medtronic Pumpe før du kan bruge denne operation.</string>
     <string name="medtronic_error_pump_24h_time_change_requested">Der blev anmodet om ændring af tiden på mere end 24t.</string>
-    
-    
-    
-    
-    
-    
-    
+    <!-- MDT History -->
+    <!--    <string name="medtronic_history_group_basal">Basals</string>-->
+    <!--    <string name="medtronic_history_group_configuration">Configurations</string>-->
+    <!--    <string name="medtronic_history_group_notification">Notifications</string>-->
+    <!--    <string name="medtronic_history_group_statistic">Statistics</string>-->
+    <!--    <string name="medtronic_history_group_unknown">Unknowns</string>-->
+    <!--    <string name="medtronic_history_group_all">All</string>-->
+    <!-- <string name="medtronic_cmd_profile_not_set">Remote Basal profile setting is not supported. Please modify Basal profile on your pump manually.</string> -->
     <string name="medtronic_cmd_cancel_bolus_not_supported">Du annullerede Bolus, efter at det allerede var sat på Pumpe. Da Medtronic Pumpe ikke understøtter annullering, skal du annullere det manuelt. Vælg Stop Afgivelse og derefter Genoptag på pumpen (hvis du stadig vil annullere). Applikationen vil fange ændringerne, ved næste opdatering (i mindre end 5 minutter).</string>
     <string name="medtronic_cmd_cant_read_tbr">Kunne ikke læse den aktuelle TBR.</string>
     <string name="medtronic_cmd_cant_cancel_tbr_stop_op">Kunne ikke annullere den aktuelle TBR. Stop kommandoen.</string>
@@ -68,7 +69,7 @@
     <string name="medtronic_pump_connected_now" comment="Displayed when pump was connected less than a minute ago">Nu</string>
     <string name="ago" comment="Time suffix, e.g. '5 min ago'">siden</string>
     <string name="medtronic_notification_check_time_date">Pumpeur opdatering nødvendig</string>
-    
+    <!-- combo_notification_check_time_date -->
     <string name="set_neutral_temps_title">Indstil neutrale midlertidige basaler</string>
     <string name="set_neutral_temps_summary">Hvis aktiveret, vil det annullere en midlertidig basal inden udgangen af hver time. Denne metode kan hjælpe med at stoppe nogle pumper i at bippe/vibrere hver time.</string>
     <string name="invalid_history_data">Ugyldig pumpehistorikdata registreret. Åbn nyt problem og upload logfiler.</string>

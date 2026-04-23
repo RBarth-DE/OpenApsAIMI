@@ -1,4 +1,4 @@
-<?xml version='1.0' encoding='utf-8'?>
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="disabled_loop">Κύκλωμα απενεργοποιημένο</string>
     <string name="nav_history_browser">Ιστορικό περιήγησης</string>
@@ -7,9 +7,12 @@
     <string name="pb_label">Μπαταρία αντλίας</string>
     <string name="cannula">Καθετήρας</string>
     <string name="patch_pump">Αυτοκόλλητη αντλία</string>
-    
-    <string name="a11y_blood_glucose">γλυκόζη αίματος</string>
+    <!-- Overview -->
+    <!-- overview moved to core:ui module -->
+    <!--    OverviewMenu-->
     <string name="basal_shortname">BAS</string>
+    <!--    Iob-->
+    <!--    PersistentNotification-->
     <string name="description_persistent_notification">Εμφανίζει μία τρέχουσα ειδοποίηση με σύντομη επισκόπηση του τι κάνει το κύκλωμα τώρα</string>
     <string name="old_data">Παλιά Δεδομένα</string>
 </resources>

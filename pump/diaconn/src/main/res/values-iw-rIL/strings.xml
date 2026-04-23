@@ -11,11 +11,9 @@
     <string name="gettingpumpsettings">מאחזר הגדרות משאבה</string>
     <string name="gettingpumptime">מאחזר שעון המשאבה</string>
     <string name="largetimediff">הפרש זמנים גדול:\nשעון המשאבה לא מכוון במעלה משעה וחצי.\n נא להתאים את שעון המשאבה באופן ידני ולוודא כי קריאת ההיסטוריה מהמשאבה אינה גורמת להתנהגות בלתי צפויה.\nבמידת האפשר, מחקו את ההיסטוריה מהמשאבה לפני שתשנו את השעה או השביתו את הלולאה הסגורה למשך פעילות אינסולין (DIA) לאחר רשומת ההיסטוריה השגויה האחרונה אך לפחות DIA אחד מעכשיו.</string>
-    <string name="largetimedifftitle">הפרש זמן גדול</string>
     <string name="approachingdailylimit">מתקרב למגבלת האינסולין היומית</string>
     <string name="startingbolus">מתחיל מתן בולוס</string>
     <string name="waitingforestimatedbolusend">ממתין לסיום הבולוס</string>
-    <string name="gettingbolusstatus">מקבל סטטוס בולוס</string>
     <string name="stoppingtempbasal">מפסיק בזאלי זמני</string>
     <string name="settingtempbasal">מגדיר בזאלי זמני</string>
     <string name="settingextendedbolus">מגדיר בולוס ממושך</string>

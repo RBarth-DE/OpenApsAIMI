@@ -1,4 +1,4 @@
-<?xml version='1.0' encoding='utf-8'?>
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="automation_short">Auto</string>
     <string name="automation">Automatisering</string>
@@ -113,37 +113,36 @@
     <string name="edit_short">REDIGER</string>
     <string name="preconditions">Forutsetninger:</string>
     <string name="user_action">Brukerhandling</string>
-    <string name="count_selected">%1$d valgt</string>
     <string name="system_automation">Systemautomatisering</string>
     <string name="run_automations">Kjør automatiseringer</string>
     <string name="add_automation">Legg til regel</string>
     <string name="stop_processing">Stopp prosessering</string>
-    
+    <!--    Reminders-->
     <string name="time_to_eat">Nå må du spise!\nBruk boluskalkulator og gjør beregning på nytt.</string>
     <string name="time_to_bolus">Tid for bolus!\nStart boluskalkulator og gjør beregning på nytt.</string>
     <string name="error_setting_reminder">Feil under innstilling av fremtidig alarm</string>
-    
+    <!--    Autotune-->
     <string name="autotune_profile_name">Autotune profil %1$s</string>
     <string name="autotune_run">Kjør Autotune</string>
     <string name="autotune_run_without_autoswitch">Autotune ble kjørt uten profilbytte</string>
     <string name="autotune_run_with_autoswitch">Autotune utført og profil ble automatisk skiftet ut</string>
     <string name="autotune_run_with_error">Feil oppdaget under siste Autotune kjøring</string>
     <string name="autotune_run_cancelled">Autotune kjører allerede. Kjøring avbrutt</string>
-    
+    <!--    Steps count-->
     <string name="triggerStepsCountLabel">Antall skritt</string>
     <string name="triggerStepsCountDesc">Antall skritt per %1$s minutter %2$s %3$.0f</string>
     <string name="triggerStepsCountDropdownLabel">Varighet for måling</string>
-    
+    <!--    SMB mode-->
     <string name="changeSmbState">Aktiver/deaktiver SMB</string>
     <string name="changeSmbTo">Endre SMB til %1$s</string>
     <string name="newSmbMode">Ny SMB-modus:</string>
     <string name="on">PÅ</string>
     <string name="off">AV</string>
-    
+    <!--    Map Picker (OpenStreetMap)-->
     <string name="pick_from_map">Velg fra kart</string>
     <string name="tap_to_select_location">Trykk på kartet for å velge et sted</string>
     <string name="selected_coords">Valgt: %1$.6f, %2$.6f</string>
-    
+    <!-- Permission rationales -->
     <string name="permission_location_title">Sted</string>
     <string name="permission_location_description">Nødvendig for stedsbaserte automatiseringstriggere og identifisering av WiFi-nettverk</string>
     <string name="permission_background_location_description">Nødvendig for at automatiseringstriggere skal fungere når appen er i bakgrunnen</string>

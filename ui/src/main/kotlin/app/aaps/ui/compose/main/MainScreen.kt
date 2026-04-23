@@ -52,6 +52,7 @@ import app.aaps.ui.compose.loopSheet.LoopActionBottomSheet
 import app.aaps.ui.compose.maintenance.ImportSource
 import app.aaps.ui.compose.maintenance.MaintenanceDialogs
 import app.aaps.ui.compose.maintenance.MaintenanceViewModel
+import app.aaps.core.data.model.ActiveSceneState
 import app.aaps.ui.compose.manageSheet.ManageSheetState
 import app.aaps.ui.compose.manageSheet.ManageViewModel
 import app.aaps.ui.compose.overview.OverviewScreen
@@ -220,16 +221,24 @@ fun MainScreen(
                         )
                     }
 
+                    val activeSceneState by mainViewModel.activeSceneState.collectAsStateWithLifecycle()
+                    val sceneExpired by mainViewModel.sceneExpired.collectAsStateWithLifecycle()
                     Box(modifier = Modifier.fillMaxSize()) {
                         // Main content
                         OverviewScreen(
+                            profileName = uiState.profileName,
+                            profilePsId = uiState.profilePsId,
+                            isProfileModified = uiState.isProfileModified,
+                            profileProgress = uiState.profileProgress,
                             tempTargetText = uiState.tempTargetText,
                             tempTargetState = uiState.tempTargetState,
                             tempTargetProgress = uiState.tempTargetProgress,
                             tempTargetReason = uiState.tempTargetReason,
+                            tempTargetRecordId = uiState.tempTargetRecordId,
                             runningMode = uiState.runningMode,
                             runningModeText = uiState.runningModeText,
                             runningModeProgress = uiState.runningModeProgress,
+                            runningModeRecordId = uiState.runningModeRecordId,
                             isSimpleMode = uiState.isSimpleMode,
                             calcProgress = calcProgress,
                             graphViewModel = graphViewModel,
@@ -242,6 +251,11 @@ fun MainScreen(
                             onNotificationActionClick = onNotificationActionClick,
                             autoShowNotificationSheet = autoShowNotificationSheet,
                             onAutoShowConsumed = onAutoShowConsumed,
+                            activeSceneState = activeSceneState,
+                            sceneExpired = sceneExpired,
+                            onEndScene = { mainViewModel.requestSceneDeactivation() },
+                            onDismissScene = { mainViewModel.dismissExpiredScene() },
+                            formatDuration = mainViewModel::formatDuration,
                             paddingValues = contentPadding,
                             fabBottomOffset = if (hasToolbar && showChrome) 56.dp else 0.dp,
                             bolusState = bolusState,
@@ -312,7 +326,8 @@ fun MainScreen(
                                     automationViewModel.refreshState()
                                     showAutomationSheet = true
                                 },
-                                automationCount = automationCount,
+                                automationCount = automationViewModel.uiState.collectAsStateWithLifecycle().value.items.size +
+                                    automationViewModel.uiState.collectAsStateWithLifecycle().value.sceneItems.size,
                                 pumpSetupPlugin = pumpSetupPlugin,
                                 bgSetupPlugin = bgSetupPlugin,
                                 bgQualityBadgeIcon = bgQualityBadgeIcon,
@@ -382,7 +397,6 @@ fun MainScreen(
             )
         }
 
-
         // Automation bottom sheet
         if (showAutomationSheet) {
             //val automationState by automationViewModel.uiState.collectAsStateWithLifecycle()
@@ -390,14 +404,16 @@ fun MainScreen(
             AutomationBottomSheet(
                 onDismiss = { showAutomationSheet = false },
                 automationItems = automationState.items,
-                onItemClick = { item -> mainViewModel.requestAutomationConfirmation(item.eventId) }
+                onItemClick = { item -> mainViewModel.requestAutomationConfirmation(item.eventId) },
+                sceneItems = automationState.sceneItems,
+                onSceneClick = { sceneId -> mainViewModel.requestSceneConfirmation(sceneId) }
             )
         }
 
         // Loop accept action bottom sheet
         if (showLoopActionSheet) {
             val loopState by loopActionViewModel.uiState.collectAsStateWithLifecycle()
-            LoopActionBottomSheet(
+            app.aaps.ui.compose.loopSheet.LoopActionBottomSheet(
                 state = loopState,
                 onPerform = { mainViewModel.performLoopAccept() },
                 onDismiss = { showLoopActionSheet = false }

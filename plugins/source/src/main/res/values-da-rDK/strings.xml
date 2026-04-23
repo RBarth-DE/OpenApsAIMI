@@ -1,6 +1,6 @@
-<?xml version='1.0' encoding='utf-8'?>
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    
+    <!-- Source -->
     <string name="ns_client_bg">NSClient BS</string>
     <string name="ns_client_bg_short">NS BS</string>
     <string name="description_source_ns_client">Downloader BG data fra Nightscout</string>
@@ -24,4 +24,9 @@
     <string name="random_bg">Tilfældigt BS</string>
     <string name="description_source_random_bg">Generér tilfældig BS-data (kun demotilstand)</string>
     <string name="random_bg_short">BS</string>
-    </resources>
+    <!-- Patched Syai Tag App -->
+    <!-- Patched SI App -->
+    <!-- Patched Sino App -->
+    <!-- Notification Reader -->
+    <!-- Permission rationales -->
+</resources>

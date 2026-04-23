@@ -1,4 +1,4 @@
-<?xml version='1.0' encoding='utf-8'?>
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="automation_short">Auto</string>
     <string name="automation">Automazione</string>
@@ -113,37 +113,36 @@
     <string name="edit_short">MODIFICA</string>
     <string name="preconditions">Presupposti:</string>
     <string name="user_action">Azione utente</string>
-    <string name="count_selected">%1$d selezionato</string>
     <string name="system_automation">Automazione sistema</string>
     <string name="run_automations">Esegui automazioni</string>
     <string name="add_automation">Aggiungi regola</string>
     <string name="stop_processing">Interrompere l\'elaborazione</string>
-    
+    <!--    Reminders-->
     <string name="time_to_eat">Tempo di mangiare!\nEsegui il calcolatore e fai di nuovi i calcoli.</string>
     <string name="time_to_bolus">Tempo di fare un bolo!\nEsegui il calcolatore e fai di nuovi i calcoli.</string>
     <string name="error_setting_reminder">Errore nell\'impostare l\'allarme futuro</string>
-    
+    <!--    Autotune-->
     <string name="autotune_profile_name">Profilo Autotune %1$s</string>
     <string name="autotune_run">Esegui Autotune</string>
     <string name="autotune_run_without_autoswitch">Autotune eseguito senza cambio profilo</string>
     <string name="autotune_run_with_autoswitch">Autotune eseguito e profilo cambiato automaticamente</string>
     <string name="autotune_run_with_error">Errore durante l\'ultima esecuzione di Autotune</string>
     <string name="autotune_run_cancelled">È stata rilevata un\'altra esecuzione di Autotune, esecuzione annullata</string>
-    
+    <!--    Steps count-->
     <string name="triggerStepsCountLabel">Conteggio Passi</string>
     <string name="triggerStepsCountDesc">Conteggio passi per %1$s minuti %2$s %3$.0f</string>
     <string name="triggerStepsCountDropdownLabel">Durata Della Misurazione</string>
-    
+    <!--    SMB mode-->
     <string name="changeSmbState">Attiva/disattiva SMB</string>
     <string name="changeSmbTo">Modifica SMB in %1$s</string>
     <string name="newSmbMode">Nuova modalità SMB:</string>
     <string name="on">ON</string>
     <string name="off">OFF</string>
-    
+    <!--    Map Picker (OpenStreetMap)-->
     <string name="pick_from_map">Scegli dalla mappa</string>
     <string name="tap_to_select_location">Tocca la mappa per selezionare una posizione</string>
     <string name="selected_coords">Selezionato: %1$.6f, %2$.6f</string>
-    
+    <!-- Permission rationales -->
     <string name="permission_location_title">Posizione</string>
     <string name="permission_location_description">Necessario per automazione basata sulla posizione e sulla identificazione della rete WiFi</string>
     <string name="permission_background_location_description">Necessario per attivare l\'automazione per funzionare quando l\'applicazione è in background</string>

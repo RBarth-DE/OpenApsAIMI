@@ -1,23 +1,24 @@
-<?xml version='1.0' encoding='utf-8'?>
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    
-    
+    <!-- PhoneChecker -->
+    <!-- DST Helper -->
     <string name="dst_in_24h_warning">Sẽ đổi sang giờ mùa hè trong vòng 24 giờ tới</string>
     <string name="dst_loop_disabled_warning">Thay đổi giờ mùa hè cách đây chưa đến 3 giờ - Vòng lặp kín đã bị vô hiệu</string>
+    <!-- Storage constraint -->
     <string name="disk_full">Giải phóng ít nhất %1$d MB từ bộ nhớ trong! Đã tắt vòng lặp!</string>
-    
+    <!-- Version Checker -->
     <string name="application_expired">Ứng dụng hết hạn</string>
     <string name="running_invalid_version">Chúng tôi phát hiện bạn đang chạy phiên bản không hợp lệ. Vòng lặp đã bị vô hiệu hóa!</string>
     <string name="versionavailable">Phiên bản %1$s khả dụng</string>
     <string name="version_expire">Phiên bản %1$s sẽ hết hạn vào %2$s và sẽ chuyển sang chế độ LGS</string>
-    
-    
+    <!-- Signature verifier -->
+    <!-- BG Quality -->
     <string name="recalculated_data_used">Dữ liệu được tính toán lại đã sử dụng</string>
     <string name="bg_too_close">Giá trị BG quá sát nhau:\n%1$s\n%2$s</string>
     <string name="a11y_bg_quality_recalculated">tính toán lại</string>
     <string name="a11y_bg_quality_doubles">mục nhập kép</string>
     <string name="a11y_bg_quality_flat">Dữ liệu bằng phẳng. Được coi là sai</string>
-    
+    <!-- Safety -->
     <string name="limitingextendedbolus">Giới hạn liều bolus kéo dài ở %1$.1f U bởi vì %2$s</string>
     <string name="limitingcarbs">Hạn chế carbs ở mức %1$d g vì %2$s</string>
     <string name="pumpisnottempbasalcapable">Bơm không hỗ trợ liều nền tạm thời</string>
@@ -27,7 +28,7 @@
     <string name="smbnotallowedinopenloopmode">SMB không được phép trong chế độ vòng lặp mở</string>
     <string name="maxvalueinpreferences">giá trị tối đa trong phần Tùy chọn</string>
     <string name="hardlimit">giới hạn cứng</string>
-    
+    <!-- Objectives -->
     <string name="completed_well_done">Đã hoàn thành, làm tốt lắm!</string>
     <string name="not_completed_yet">Chưa hoàn thành</string>
     <string name="time_elapsed">Thời gian đã qua</string>

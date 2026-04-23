@@ -1,4 +1,4 @@
-<?xml version='1.0' encoding='utf-8'?>
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="carbs_constraint_applied">Kohlenhydrat-Beschränkung erreicht</string>
     <string name="temp_target_short">TT</string>
@@ -6,9 +6,10 @@
     <string name="start_eating_soon_tt">Starte Essens-TT</string>
     <string name="start_hypo_tt">Starte Hypo-TT</string>
     <string name="time_offset">Zeitversatz</string>
+    <!--    Widget-->
     <string name="configure">Deckkraft konfigurieren</string>
     <string name="widget_description">AAPS Widget</string>
-    
+    <!--     Activities-->
     <string name="activity_monitor">Aktivitätsmonitor</string>
     <string name="do_you_want_reset_stats">Willst Du die Aktivitätsstatistik zurücksetzen?</string>
     <string name="calculation_in_progress">Kalkulation wird gerade durchgeführt</string>
@@ -18,15 +19,18 @@
     <string name="bg_other">Anderes</string>
     <string name="bg_meter">Messgerät</string>
     <string name="bg_sensor">Sensor</string>
-    
+    <!-- WizardDialog -->
+    <!-- SiteRotationDialog -->
+    <!-- FillDialog -->
     <string name="fill_warning">Bitte vergewissere Dich, dass die Füllmenge den Eigenschaften des Katheters entspricht!</string>
     <string name="record_pump_site_change">Katheter-Wechsel erfassen</string>
     <string name="record_insulin_cartridge_change">Reservoir-Wechsel erfassen</string>
-    
+    <!-- InsulinDialog -->
+    <!-- Insulin Management -->
     <string name="reuse_profile_pct_hours">Erneut verwenden %1$d%% %2$dh</string>
     <string name="timeshift_label">Zeitverschiebung</string>
     <string name="percentage_label">Prozentsatz</string>
-    
+    <!-- LoopDialog -->
     <string name="suspendloopfor1h">Pausiere Loop für 1 h</string>
     <string name="suspendloopfor2h">Pausiere Loop für 2 h</string>
     <string name="suspendloopfor3h">Pausiere Loop für 3 h</string>
@@ -45,8 +49,9 @@
     <string name="duration2h">2 Std.</string>
     <string name="duration3h">3 Std.</string>
     <string name="duration10h">10 Std.</string>
-    
+    <!-- WizardDialog -->
     <string name="missing_carbs">%1$d g fehlen</string>
+    <!-- Treatments -->
     <string name="no_records_available">Keine Datensätze verfügbar</string>
     <string name="treatments_iob_label_string">IOB:</string>
     <string name="carbs_and_bolus">Kohlenhydrate &amp; Bolus</string>
@@ -55,7 +60,7 @@
     <string name="careportal_remove_started_events">AAPS gestartete Einträge entfernen</string>
     <string name="user_entry">Benutzereingabe</string>
     <string name="clone_label">Klonen</string>
-    
+    <!-- ProfileHelperActivity -->
     <string name="profile_type">Profil-Typ</string>
     <string name="basal_pct_from_tdd_label">% der Basalrate</string>
     <string name="selected_profile">Ausgewählt:</string>
@@ -66,4 +71,12 @@
     <string name="format_with_tdd_and_pct">Alter: %1$d TDD: %2$.0f IE %3$d%%</string>
     <string name="format_with_weight">Alter: %1$d Gewicht: %2$.0f kg</string>
     <string name="dpv_default_profile">DPV-Standard-Profil</string>
-    </resources>
+    <!-- Other dialogs -->
+    <!--QuickWizard-->
+    <!--    History browser-->
+    <!--    Widget-->
+    <!--    Permissions-->
+    <!--    TDD Cycle Pattern -->
+    <!-- Toolbar configuration -->
+    <!-- Widget chip labels for RM.Mode, kept terse to fit the pill -->
+</resources>

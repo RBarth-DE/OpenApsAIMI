@@ -1,4 +1,4 @@
-<?xml version='1.0' encoding='utf-8'?>
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="disabled_loop">Loop is uitgeschakeld</string>
     <string name="nav_history_browser">Historiek venster</string>
@@ -7,9 +7,12 @@
     <string name="pb_label">Pomp batterij</string>
     <string name="cannula">Canule</string>
     <string name="patch_pump">Patchpomp</string>
-    
-    <string name="a11y_blood_glucose">bloed glucose</string>
+    <!-- Overview -->
+    <!-- overview moved to core:ui module -->
+    <!--    OverviewMenu-->
     <string name="basal_shortname">BAS</string>
+    <!--    Iob-->
+    <!--    PersistentNotification-->
     <string name="description_persistent_notification">Toont een permanente melding met een beknopt overzicht van hetgeen de Loop momenteel doet</string>
     <string name="old_data">Oude gegevens</string>
-    </resources>
+</resources>

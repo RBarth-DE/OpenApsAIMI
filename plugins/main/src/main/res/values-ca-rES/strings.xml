@@ -1,4 +1,4 @@
-<?xml version='1.0' encoding='utf-8'?>
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="disabled_loop">Llaç desactivat</string>
     <string name="nav_history_browser">Historial</string>
@@ -6,8 +6,12 @@
     <string name="insulin_label">Insulina</string>
     <string name="pb_label">Pila de la bomba</string>
     <string name="cannula">Cànula</string>
-    
+    <!-- Overview -->
+    <!-- overview moved to core:ui module -->
+    <!--    OverviewMenu-->
     <string name="basal_shortname">BAS</string>
+    <!--    Iob-->
+    <!--    PersistentNotification-->
     <string name="description_persistent_notification">Va mostrant avisos amb un petit resum del que el llaç està fent</string>
     <string name="old_data">DADES ANTIGUES</string>
 </resources>

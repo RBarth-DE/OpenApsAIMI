@@ -1,8 +1,8 @@
-<?xml version='1.0' encoding='utf-8'?>
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    
+    <!-- Medtronic (MDT) - Base -->
     <string name="description_pump_medtronic">Medtronic 泵的集成，需要 RileyLink 设备和特定泵模型</string>
-    
+    <!-- MDT Configuration -->
     <string name="medtronic_serial_number">泵序列号</string>
     <string name="medtronic_pump_type">泵类型</string>
     <string name="medtronic_pump_frequency">泵频率</string>
@@ -18,7 +18,7 @@
     <string name="medtronic_pump_battery_lithium">锂(扩展视图)</string>
     <string name="medtronic_pump_battery_nizn">锂(扩展视图)</string>
     <string name="medtronic_pump_battery_nimh">镍氢电池 (扩展视图)</string>
-    
+    <!-- Pump type entries -->
     <string name="medtronic_pump_type_unsupported">其他 (不支持)</string>
     <string name="medtronic_pump_type_512">512</string>
     <string name="medtronic_pump_type_712">712</string>
@@ -32,13 +32,13 @@
     <string name="medtronic_pump_type_754_eu">754 (欧盟固件 &lt;= 2.6A)</string>
     <string name="medtronic_pump_type_554_ca">554 (加拿大固件 &lt;= 2.7A)</string>
     <string name="medtronic_pump_type_754_ca">754 (加拿大固件 &lt;= 2.7A)</string>
-    
+    <!-- Bolus delay entries -->
     <string name="medtronic_bolus_delay_5s">5 s</string>
     <string name="medtronic_bolus_delay_10s">10 s</string>
     <string name="medtronic_bolus_delay_15s">15 s</string>
-    
+    <!-- MDT Fragment -->
     <string name="rl_battery_label">RileyLink 电池</string>
-    
+    <!-- MDT Errors -->
     <string name="medtronic_error_serial_invalid">序列号无效。</string>
     <string name="medtronic_error_pump_type_not_set">未设置泵类型。</string>
     <string name="medtronic_error_pump_type_invalid">不支持该泵类型。</string>
@@ -51,13 +51,14 @@
     <string name="medtronic_error_pump_wrong_max_basal_set">泵上设置的错误的最大大剂量数 (必须为 %1$.2f)。</string>
     <string name="medtronic_error_operation_not_possible_no_configuration">操作是不可能的。\n\n 您首先需要配置美敦力泵 ，然后才能使用此操作。</string>
     <string name="medtronic_error_pump_24h_time_change_requested">请求了超过 24 小时的时间更改。</string>
-    
-    
-    
-    
-    
-    
-    
+    <!-- MDT History -->
+    <!--    <string name="medtronic_history_group_basal">Basals</string>-->
+    <!--    <string name="medtronic_history_group_configuration">Configurations</string>-->
+    <!--    <string name="medtronic_history_group_notification">Notifications</string>-->
+    <!--    <string name="medtronic_history_group_statistic">Statistics</string>-->
+    <!--    <string name="medtronic_history_group_unknown">Unknowns</string>-->
+    <!--    <string name="medtronic_history_group_all">All</string>-->
+    <!-- <string name="medtronic_cmd_profile_not_set">Remote Basal profile setting is not supported. Please modify Basal profile on your pump manually.</string> -->
     <string name="medtronic_cmd_cancel_bolus_not_supported">大剂量在泵上设置之后，取消大剂量。由于 美敦力泵 不支持取消，因此您需要手动将其取消。 将泵置于暂停状态，然后执行恢复 (如果仍要取消)。 应用程序将在下次更新 ( 不到 5 分钟) 中提取更改。</string>
     <string name="medtronic_cmd_cant_read_tbr">无法读取当前 TBR。</string>
     <string name="medtronic_cmd_cant_cancel_tbr_stop_op">无法取消当前 TBR。 停止操作。</string>
@@ -85,7 +86,7 @@
     <string name="medtronic_pump_connected_now" comment="Displayed when pump was connected less than a minute ago">现在</string>
     <string name="ago" comment="Time suffix, e.g. '5 min ago'">之前</string>
     <string name="medtronic_notification_check_time_date">泵的时间需要更新</string>
-    
+    <!-- combo_notification_check_time_date -->
     <string name="set_neutral_temps_title">设置中性临时基础率</string>
     <string name="set_neutral_temps_summary">如果启用，它将在每小时结束前取消临时基础率。 此方法可帮助阻止某些泵在一小时内进行蜂鸣/振动。</string>
     <string name="invalid_history_data">检测到无效的泵历史数据。打开新问题并提供日志。</string>

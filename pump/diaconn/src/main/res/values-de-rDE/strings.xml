@@ -11,11 +11,9 @@
     <string name="gettingpumpsettings">Pumpen-Einstellungen werden ermittelt</string>
     <string name="gettingpumptime">Zeiteinstellung der Pumpe wird ermittelt</string>
     <string name="largetimediff">Großer Zeitunterschied:\nDie Zeit in der Pumpe weicht um mindestens 1,5 Stunden ab.\nPasse die Zeit auf der Pumpe manuell an und lösche zuvor - falls möglich - die Pumpenhistorie.\nAlternativ kannst Du den Loop für die Stunden der Insulinwirkzeit (DIA) deaktivieren.</string>
-    <string name="largetimedifftitle">Großer Zeitunterschied Titel</string>
     <string name="approachingdailylimit">Tagesinsulin-Limit wird bald erreicht</string>
     <string name="startingbolus">Bolus-Abgabe gestartet</string>
     <string name="waitingforestimatedbolusend">Warte auf das geschätze Bolus-Ende</string>
-    <string name="gettingbolusstatus">Status des Bolus wird ermittelt</string>
     <string name="stoppingtempbasal">TBR wird abgebrochen</string>
     <string name="settingtempbasal">TBR wird gesetzt</string>
     <string name="settingextendedbolus">Verzögerter Bolus wird gesetzt</string>

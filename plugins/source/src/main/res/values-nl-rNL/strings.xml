@@ -1,6 +1,6 @@
-<?xml version='1.0' encoding='utf-8'?>
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    
+    <!-- Source -->
     <string name="ns_client_bg">NSClient BG</string>
     <string name="ns_client_bg_short">NS BG</string>
     <string name="description_source_ns_client">Download BG waardes van Nightscout</string>
@@ -25,14 +25,15 @@
     <string name="random_bg">Willekeurige BG</string>
     <string name="description_source_random_bg">Willekeurige BG data genereren (alleen Demo modus)</string>
     <string name="random_bg_short">BG</string>
+    <!-- Patched Syai Tag App -->
     <string name="syai_tag_app">Syai</string>
     <string name="description_source_patched_syai_tag_app">Ontvang glucose-gegevens van de Syai/Ottai App.</string>
-    
+    <!-- Patched SI App -->
     <string name="patched_si_app">SI App</string>
     <string name="description_source_patched_si_app">Ontvang glucose gegevens van Patched Sibionic SI App.</string>
-    
+    <!-- Patched Sino App -->
     <string name="patched_sino_app">Sino App</string>
     <string name="description_source_patched_sino_app">Ontvang glucose gegevens van Patched Sino App.</string>
-    
-    
+    <!-- Notification Reader -->
+    <!-- Permission rationales -->
 </resources>

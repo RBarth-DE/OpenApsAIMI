@@ -1,4 +1,4 @@
-<?xml version='1.0' encoding='utf-8'?>
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="carbs_constraint_applied">Koolhydraten beperking ingesteld</string>
     <string name="temp_target_short">TT</string>
@@ -6,9 +6,10 @@
     <string name="start_eating_soon_tt">Start binnenkort eten TT</string>
     <string name="start_hypo_tt">Start Hypo TT</string>
     <string name="time_offset">Tijdverschuiving</string>
+    <!--    Widget-->
     <string name="configure">Configureer transparantie</string>
     <string name="widget_description">AAPS widget</string>
-    
+    <!--     Activities-->
     <string name="activity_monitor">Activiteitsmonitor</string>
     <string name="do_you_want_reset_stats">Wil je de activiteitenstatistieken resetten?</string>
     <string name="do_you_want_recalculate_tdd_stats">Wilt u de TDD statistieken opnieuw berekenen?</string>
@@ -19,7 +20,8 @@
     <string name="bg_other">Andere</string>
     <string name="bg_meter">Meter</string>
     <string name="bg_sensor">Sensor</string>
-    
+    <!-- WizardDialog -->
+    <!-- SiteRotationDialog -->
     <string name="site_man">Man</string>
     <string name="site_woman">Vrouw</string>
     <string name="site_child">Kind</string>
@@ -32,15 +34,16 @@
     <string name="record_site_arrow">Site pijl %1$s</string>
     <string name="record_site_note">Notitie: %1$s</string>
     <string name="delete_site_note">Notitie verwijderd</string>
-    
+    <!-- FillDialog -->
     <string name="fill_warning">Zorg ervoor dat de hoeveelheid overeenkomt met de specificatie van uw infusieset!</string>
     <string name="record_pump_site_change">Markeer een infuuswissel in NS</string>
     <string name="record_insulin_cartridge_change">Markeer een insuline ampul wissel in NS</string>
-    
+    <!-- InsulinDialog -->
+    <!-- Insulin Management -->
     <string name="reuse_profile_pct_hours">Hergebruik %1$d%% %2$dh</string>
     <string name="timeshift_label">Tijd verschuiving</string>
     <string name="percentage_label">Percentage</string>
-    
+    <!-- LoopDialog -->
     <string name="suspendloopfor1h">Onderbreek loop voor 1u</string>
     <string name="suspendloopfor2h">Onderbreek loop voor 2u</string>
     <string name="suspendloopfor3h">Onderbreek loop voor 3u</string>
@@ -59,8 +62,9 @@
     <string name="duration2h">2 uur</string>
     <string name="duration3h">3 uur</string>
     <string name="duration10h">10 uur</string>
-    
+    <!-- WizardDialog -->
     <string name="missing_carbs">Er ontbreekt %1$d g</string>
+    <!-- Treatments -->
     <string name="no_records_available">Geen records beschikbaar</string>
     <string name="treatments_iob_label_string">IOB:</string>
     <string name="carbs_and_bolus">Koolhydraten en bolus</string>
@@ -69,7 +73,7 @@
     <string name="careportal_remove_started_events">Verwijder AAPS is gestart items</string>
     <string name="user_entry">Gebruikersinvoer</string>
     <string name="clone_label">Dupliceren</string>
-    
+    <!-- ProfileHelperActivity -->
     <string name="profile_type">Profieltype</string>
     <string name="basal_pct_from_tdd_label">% van basaal</string>
     <string name="selected_profile">Geselecteerd:</string>
@@ -80,23 +84,26 @@
     <string name="format_with_tdd_and_pct">Leeftijd: %1$d TDD: %2$.0f E %3$d%%</string>
     <string name="format_with_weight">Leeftijd: %1$d Gewicht: %2$.0f kg</string>
     <string name="dpv_default_profile">DPV Basis profiel</string>
+    <!-- Other dialogs -->
+    <!--QuickWizard-->
     <string name="overview_edit_quickwizard_button_text">Knop tekst</string>
     <string name="overview_edit_quickwizard_use_positive_iob_only">Alleen positieve IOB</string>
     <string name="overview_edit_quickwizard_superbolus">Superbolus</string>
+    <!--    History browser-->
     <string name="additional_ecarbs">Voeg eCarbs toe</string>
     <string name="confirm_treatment">Bevestig alstublieft de behandeling</string>
     <string name="recalculate">Herberekenen</string>
-    
+    <!--    Widget-->
     <string name="use_black_color">Gebruik zwarte kleur</string>
     <string name="widget_configuration">Widget configuratie</string>
     <string name="until_changed">Totdat gewijzigd</string>
-    
-    
+    <!--    Permissions-->
+    <!--    TDD Cycle Pattern -->
     <string-array name="yes_no_positiveonly_negativeonly">
         <item>Beide</item>
         <item>Alleen positief</item>
         <item>Alleen negatief</item>
     </string-array>
-    
-    
+    <!-- Toolbar configuration -->
+    <!-- Widget chip labels for RM.Mode, kept terse to fit the pill -->
 </resources>

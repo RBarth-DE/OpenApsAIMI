@@ -1,4 +1,4 @@
-<?xml version='1.0' encoding='utf-8'?>
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="enable_tbr_over_notification">Aktiver notifikation af MBR afslutning\n(pump setting)</string>
     <string name="disable_tbr_over_notification">Deaktiver notifikation af MBR afslutning\n(pump setting)</string>
@@ -41,4 +41,4 @@
     <string name="max_recovery_duration">Max pause mellem forbindelsesforsøg [s]</string>
     <string name="min_recovery_duration">Min pause mellem forbindelsesforsøg [s]</string>
     <string name="pump_alert">Pumpe advarsel</string>
-    </resources>
+</resources>

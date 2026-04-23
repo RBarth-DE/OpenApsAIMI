@@ -1,6 +1,6 @@
-<?xml version='1.0' encoding='utf-8'?>
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    
+    <!--    General-->
     <string name="refresh">Osvježi</string>
     <string name="error">Greška</string>
     <string name="profile_set_ok">Ažuriran bazalni profil u pumpi</string>
@@ -20,7 +20,7 @@
     <string name="settings">Postavke</string>
     <string name="configbuilder_insulin">Inzulin</string>
     <string name="value_unavailable_short">n/a</string>
-    
+    <!-- master_password moved to core/keys/strings.xml -->
     <string name="ue_export_to_csv">Izvoz korisničkih unosa u Excel (csv)</string>
     <string name="confirm">Potvrdi</string>
     <string name="pump">Pumpa</string>
@@ -41,7 +41,7 @@
     <string name="please_wait">Molimo pričekajte…</string>
     <string name="stop">Zaustavi</string>
     <string name="carbs">UH</string>
-    <string name="active">&lt;Active&gt;</string>
+    <string name="active"><![CDATA[<Active>]]></string>
     <string name="date">Datum</string>
     <string name="units_label">Jedinice</string>
     <string name="dia_label">DIA</string>
@@ -79,7 +79,6 @@
     <string name="a11y_inrange">u rasponu</string>
     <string name="a11y_low">nisko</string>
     <string name="average">Prosječno</string>
-    <string name="remove_label">UKLONITI</string>
     <string name="activate_profile">Aktiviraj profil</string>
     <string name="profileswitch_ismissing">ProfileSwitch nedostaje. Promijenite profil ili pritisnite \"Aktiviraj profil\" u lokalnom profilu.</string>
     <string name="profile">Profil</string>
@@ -93,44 +92,45 @@
     <string name="dia">DIA</string>
     <string name="ic_short">IC</string>
     <string name="isf_short">ISF</string>
-    
+    <!--    Protection-->
     <string name="wrongpassword">Pogrešna lozinka</string>
     <string name="wrongpin">Pogrešan PIN</string>
     <string name="passwords_dont_match">Lozinke se ne podudaraju</string>
     <string name="pin_dont_match">PIN-ovi se ne podudaraju</string>
-    
+    <!--    Profile-->
     <string name="basalprofilenotaligned">Bazalne vrijednosti nisu usklađene sa satima: %1$s</string>
     <string name="minimalbasalvaluereplaced">Bazalna vrijednost zamijenjena minimalnom podržanom vrijednošću: %1$s</string>
     <string name="maximumbasalvaluereplaced">Bazalna vrijednost zamijenjena maksimalnom podržanom vrijednošću: %1$s</string>
     <string name="profile_per_unit">/U</string>
     <string name="profile_ins_units_per_hour">U/h</string>
     <string name="profile_carbs_per_unit">g/U</string>
-    
+    <!--    ProfileFunction-->
     <string name="startprofile">Pokrenite profil %1$d%% na %2$d min</string>
-    
+    <!--    APSResult-->
     <string name="let_temp_basal_run">Pustite privremeni bazal da radi</string>
     <string name="rate">Stopa</string>
     <string name="duration">Trajanje</string>
     <string name="reason">Razlog</string>
-    
-    
-    
-    
+    <!--    Insulin / Concentration-->
+    <!--    ProfileSwitch-->
+    <!--    Temptarget-->
+    <!--    Translator-->
     <string name="careportal_profileswitch">Zamjena profila</string>
     <string name="glucosetype_sensor">Senzor</string>
     <string name="wear">Wear</string>
-    
-    
+    <!--    Command-->
+    <!--    PumpEnactResult-->
     <string name="percent">Postotak</string>
     <string name="absolute">Apsolutna</string>
     <string name="waitingforpumpresult">Čekanje rezultata</string>
     <string name="smb_shortname">SMB</string>
-    
+    <!--    CarbsReq-->
     <string name="carbsreq">%1$d g dodatnih ugljikohidrata potrebnih unutar %2$d minuta</string>
     <string name="basalrate">Bazal</string>
     <string name="bolus">Bolus</string>
+    <!--    Ntp-->
     <string name="timedetection">Detekcija vremena</string>
-    
+    <!-- User Entry -->
     <string name="uel_bolus">BOLUS</string>
     <string name="uel_bolus_calculator">BOLUS KALKULATOR</string>
     <string name="uel_treatment_removed">TRETMAN UKLONJEN</string>
@@ -170,6 +170,7 @@
     <string name="ue_none">Nema uređaja</string>
     <string name="uel_loop_change">PETLJA PROMIJENJENA</string>
     <string name="uel_loop_removed">PETLJA UKLONJENA</string>
+    <!-- HardLimits -->
     <string name="profile_low_target">Profil niski cilj</string>
     <string name="profile_high_target">Profil visoki cilj</string>
     <string name="temp_target_low_target">Privremena ciljana donja vrijednost</string>
@@ -180,24 +181,25 @@
     <string name="profile_max_daily_basal_value">Maksimalna bazalna vrijednost profila</string>
     <string name="current_basal_value">Trenutna bazalna vrijednost</string>
     <string name="profile_carbs_ratio_value">Vrijednost omjera ugljikohidrata profila</string>
-    
-    
+    <!-- Profile validation -->
+    <!-- Command Queue + readStatus reasons -->
     <string name="formatPercent">%1$.0f%%</string>
+    <!-- Autotune -->
     <string name="autotune_tune_days">Dani prilagodbe:</string>
     <string name="autotune_select_profile">Odaberite profil za podešavanje</string>
-    
+    <!-- Alerts -->
     <string name="urgent_alarm">Hitan alarm</string>
     <string name="info">INFO</string>
-    
+    <!-- BolusWizard -->
     <string name="bolus_advisor">Savjetnik za bolus</string>
     <string name="bolus_advisor_message">Imate visoku glikemiju. Umjesto da jedete sada, preporuča se pričekati bolju glikemiju. Želite li sada napraviti korekcijski bolus i podsjetiti vas kada je vrijeme za jelo? U ovom slučaju neće biti zabilježeni ugljikohidrati i morate ponovno koristiti čarobnjaka kada vas podsjetimo.</string>
     <string name="no_action_selected">Nije odabrana radnja, ništa se neće dogoditi</string>
     <string name="wizard_explain_calc">Calc (IC: %1$.1f, ISF: %2$.1f)</string>
     <string name="wizard_explain_iob">IOB: %1$.2fU</string>
-    
-    
+    <!--    Preferences-->
+    <!--    Protection-->
     <string name="unlock_settings">Otključaj postavke</string>
-    
+    <!--    Pumps -->
     <string name="battery_label">Baterija</string>
     <string name="last_connection_label">Zadnja uspostava veze</string>
     <string name="last_bolus_label">Zadnji bolus</string>
@@ -207,52 +209,57 @@
     <string name="temp_basal_delivery_error">Pogreška isporuke temp bazala</string>
     <string name="pump_busy">Pumpa je zauzeta</string>
     <string name="connection_error">Greška u spajanju pumpe</string>
-    <string name="initializing">Pokretanje...</string>
-    
+    <!--    Constraints-->
     <string name="limitingbasalratio">Ograničavanje maksimalne bazalne doze na %1$.2f U/h zbog %2$s</string>
     <string name="pumplimit">ograničenje pumpe</string>
     <string name="limitingpercentrate">Ograničavanje maksimalne postotne stope na %1$d%% zbog %2$s</string>
     <string name="itmustbepositivevalue">mora biti pozitivna vrijednost</string>
     <string name="limitingbolus">Ograničavanje bolusa na %1$.1f U zbog %2$s</string>
-    
+    <!--    Dialogs-->
     <string name="confirmation">Potvrda</string>
     <string name="message">Poruka</string>
     <string name="ok">U redu</string>
     <string name="cancel">Otkaži</string>
     <string name="close">Zatvori</string>
-    
-    
-    
-    
-    
-    
-    
-    
+    <!-- TwoMessagesDialog -->
+    <!-- <unattended_export> -->
+    <!-- Export dialog strings -->
+    <!-- <unattended_export result messages> -->
+    <!-- Cloud export -->
+    <!-- Export destination chip labels -->
+    <!-- Maintenance bottom sheet descriptions -->
+    <!-- Cloud directory dialog (Compose) -->
     <string name="format_hour_minute">%1$dh %2$dm</string>
-    
-    
+    <!-- datetime layout -->
+    <!-- BluetoothDevicePreference -->
     <string name="need_connect_permission">Aplikacija treba bluetooth dozvolu</string>
-    
-    
+    <!--    Combo-->
+    <!--    BlePreCheck-->
     <string name="ble_not_supported">Bluetooth Low Energy nije podržan.</string>
     <string name="ble_not_supported_or_not_paired">Bluetooth Low Energy nije podržan ili uređaj nije uparen.</string>
     <string name="ble_not_enabled">Bluetooth nije omogućen.</string>
+    <!--    Preferences -->
+    <!-- Navigation -->
+    <!-- Alerts -->
+    <!-- Actions Screen -->
+    <!-- Site Rotation -->
+    <!-- About -->
     <plurals name="days">
         <item quantity="one">%1$d dan</item>
         <item quantity="few">%1$d dana</item>
         <item quantity="other">%1$d dana</item>
     </plurals>
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
+    <!--    Maintenance-->
+    <!--    Weekday-->
+    <!--    DecimalFormatterImpl -->
+    <!--    Playback-->
+    <!-- ProfileEditor -->
+    <!--    Search-->
+    <!--    Food Management -->
+    <!--    Log Settings-->
+    <!--    Maintenance-->
+    <!-- Import settings screen -->
+    <!--    BLE Scan Step (shared pump pairing) -->
+    <!-- Graph configuration -->
+    <!-- Graph series short names (used as graph labels, keep very short) -->
 </resources>

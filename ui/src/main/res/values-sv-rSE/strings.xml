@@ -1,4 +1,4 @@
-<?xml version='1.0' encoding='utf-8'?>
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="carbs_constraint_applied">Kolhydratsspärr aktiverad</string>
     <string name="temp_target_short">TT</string>
@@ -6,9 +6,10 @@
     <string name="start_eating_soon_tt">Starta \"Äta snart\"</string>
     <string name="start_hypo_tt">Starta \"Hypo\"</string>
     <string name="time_offset">KH-tid</string>
+    <!--    Widget-->
     <string name="configure">Konfigurera opacitet</string>
     <string name="widget_description">AAPS-widget</string>
-    
+    <!--     Activities-->
     <string name="activity_monitor">Aktivitetsövervakare</string>
     <string name="do_you_want_reset_stats">Vill du återställa aktivitetsstatistiken?</string>
     <string name="calculation_in_progress">Beräkning pågår</string>
@@ -18,15 +19,18 @@
     <string name="bg_other">Annat</string>
     <string name="bg_meter">Mätare</string>
     <string name="bg_sensor">Sensor</string>
-    
+    <!-- WizardDialog -->
+    <!-- SiteRotationDialog -->
+    <!-- FillDialog -->
     <string name="fill_warning">Försäkra dig om att mängden motsvarar det som är specificerat för just ditt infusionsset.</string>
     <string name="record_pump_site_change">Logga byte av kanyl</string>
     <string name="record_insulin_cartridge_change">Logga byte av insulinreservoar</string>
-    
+    <!-- InsulinDialog -->
+    <!-- Insulin Management -->
     <string name="reuse_profile_pct_hours">Återanvänd %1$d%% %2$dtim</string>
     <string name="timeshift_label">Tidsförskjutning</string>
     <string name="percentage_label">Procent</string>
-    
+    <!-- LoopDialog -->
     <string name="suspendloopfor1h">Pausa loop i 1 timme</string>
     <string name="suspendloopfor2h">Pausa loop i 2 timmar</string>
     <string name="suspendloopfor3h">Pausa loop i 3 timmar</string>
@@ -45,8 +49,9 @@
     <string name="duration2h">2 tim</string>
     <string name="duration3h">3 tim</string>
     <string name="duration10h">10 tim</string>
-    
+    <!-- WizardDialog -->
     <string name="missing_carbs">Saknar %1$dg</string>
+    <!-- Treatments -->
     <string name="no_records_available">Inga poster tillgängliga</string>
     <string name="treatments_iob_label_string">IOB:</string>
     <string name="carbs_and_bolus">Kolhydrater och bolus</string>
@@ -55,7 +60,7 @@
     <string name="careportal_remove_started_events">Ta bort \"AAPS startade\"</string>
     <string name="user_entry">Angivet av användare</string>
     <string name="clone_label">Kopiera</string>
-    
+    <!-- ProfileHelperActivity -->
     <string name="profile_type">Profiltyp</string>
     <string name="basal_pct_from_tdd_label">% av basal</string>
     <string name="selected_profile">Valt:</string>
@@ -66,4 +71,12 @@
     <string name="format_with_tdd_and_pct">Ålder: %1$d TDD: %2$.0f U %3$d%%</string>
     <string name="format_with_weight">Ålder: %1$d Vikt: %2$.0f kg</string>
     <string name="dpv_default_profile">DPV-standardprofil</string>
-    </resources>
+    <!-- Other dialogs -->
+    <!--QuickWizard-->
+    <!--    History browser-->
+    <!--    Widget-->
+    <!--    Permissions-->
+    <!--    TDD Cycle Pattern -->
+    <!-- Toolbar configuration -->
+    <!-- Widget chip labels for RM.Mode, kept terse to fit the pill -->
+</resources>

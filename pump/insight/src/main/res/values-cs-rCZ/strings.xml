@@ -1,4 +1,4 @@
-<?xml version='1.0' encoding='utf-8'?>
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="enable_tbr_over_notification">Povolit oznamování konce dočasného bazálu\n(nastavení pumpy)</string>
     <string name="disable_tbr_over_notification">Zakázat oznamování konce dočasného bazálu\n(nastavení pumpy)</string>
@@ -49,4 +49,7 @@
     <string name="min_recovery_duration">Min. doba čekání na obnovení spojení [s]</string>
     <string name="pump_alert">Výstraha pumpy</string>
     <string name="last_connection">%1$s (%2$s)</string>
+    <string name="unpair">Odpárovat</string>
+    <string name="reset_pairing">Resetovat informace o párování?</string>
+    <string name="reservoir_level">Stav zásobníku</string>
 </resources>

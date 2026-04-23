@@ -1,4 +1,4 @@
-<?xml version='1.0' encoding='utf-8'?>
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="carbs_constraint_applied">Vincolo CHO applicato</string>
     <string name="temp_target_short">TT</string>
@@ -6,11 +6,12 @@
     <string name="start_eating_soon_tt">Avvia TT Pasto a breve</string>
     <string name="start_hypo_tt">Avvia TT Ipoglicemia</string>
     <string name="time_offset">Offset</string>
+    <!--    Widget-->
     <string name="configure">Configura opacità</string>
     <string name="widget_description">AAPS widget</string>
     <string name="widget_bg_graph_description">Grafico di glicemia AAPS</string>
     <string name="widget_compact_bg_description">AAPS BG + IOB + COB (compatto)</string>
-    
+    <!--     Activities-->
     <string name="activity_monitor">Monitor attività</string>
     <string name="time_range">Intervallo di tempo</string>
     <string name="dexcom_tir">Dexcom TIR</string>
@@ -30,7 +31,6 @@
     <string name="cgp_pgr_extremely_high">Rischio estremamente elevato</string>
     <string name="do_you_want_reset_stats">Vuoi resettare le statistiche sull\'attività?</string>
     <string name="do_you_want_recalculate_tdd_stats">Vuoi ricalcolare le statistiche TDD?</string>
-    <string name="statistics">Statistiche</string>
     <string name="calculation_in_progress">Calcolo in corso</string>
     <string name="age">Età</string>
     <string name="weight_label">Peso</string>
@@ -38,7 +38,8 @@
     <string name="bg_other">Altro</string>
     <string name="bg_meter">Glucometro</string>
     <string name="bg_sensor">Sensore</string>
-    
+    <!-- WizardDialog -->
+    <!-- SiteRotationDialog -->
     <string name="site_man">Uomo</string>
     <string name="site_woman">Donna</string>
     <string name="site_child">Bambino</string>
@@ -52,14 +53,15 @@
     <string name="record_site_arrow">Freccia Del Sito: %1$s</string>
     <string name="record_site_note">Note: %1$s</string>
     <string name="delete_site_note">Nota eliminata</string>
-    <string name="site_filter_info">Selezionare il tipo di evento Terapia che si desidera visualizzare: Cambio Cannula e/o Cambio Sensore</string>
-    
+    <!-- FillDialog -->
     <string name="fill_warning">Assicurati che la quantità corrisponda alla specifica del tuo set di infusione!</string>
     <string name="record_pump_site_change">Registra cambio posizione cannula</string>
     <string name="record_insulin_cartridge_change">Registra cambio cartuccia insulina</string>
     <string name="fill_prime_amount">Quantità inizializzazione</string>
     <string name="fill_pump_units_note">La quantità iniziale è nelle unità del micro</string>
     <string name="fill_insulin_change">Cambia insulina a: %1$s (verrà applicato lo switch del profilo)</string>
+    <!-- InsulinDialog -->
+    <!-- Insulin Management -->
     <string name="missing_insulin_name">Nome Insulina Mancante</string>
     <string name="insulin_name_exists">Il nome dell\'insulina %1$s esiste già, seleziona un nuovo nome</string>
     <string name="a11y_add_new_insulin">Aggiungi nuova insulina</string>
@@ -74,7 +76,7 @@
     <string name="reuse_profile_pct_hours">Riusa %1$d%% %2$dh</string>
     <string name="timeshift_label">Time shift</string>
     <string name="percentage_label">Percentuale</string>
-    
+    <!-- LoopDialog -->
     <string name="suspendloopfor1h">Sospendi loop per 1h</string>
     <string name="suspendloopfor2h">Sospendi loop per 2h</string>
     <string name="suspendloopfor3h">Sospendi loop per 3h</string>
@@ -93,11 +95,12 @@
     <string name="duration2h">2 ore</string>
     <string name="duration3h">3 ore</string>
     <string name="duration10h">10 ore</string>
-    
+    <!-- WizardDialog -->
     <string name="missing_carbs">Mancanti %1$d g</string>
     <string name="wizard_carbs_type_bread_desc">100% carboidrati immediati, senza carboidrati estesi</string>
     <string name="wizard_carbs_type_desc">Carboidrati ridotti di %1$d%%, aggiunto eCarbs %2$d%% ritardato %3$dmin per %4$dh</string>
     <string name="wizard_include_info">Tocca per includere/escludere dal calcolo:\n• BG — glucosio nel sangue (ON all\'inizio)\n• TT — obiettivo temporaneo (ON all\'inizio)\n• Tendenza — Tendenza glicemica (ultima condizione ricordata)\n• IOB — insulina a bordo (ON all\'inizio)\n• COB — carboidrati a bordo (ultimo stato ricordato)</string>
+    <!-- Treatments -->
     <string name="no_records_available">Nessun record disponibile</string>
     <string name="treatments_iob_label_string">IOB:</string>
     <string name="carbs_and_bolus">CHO e boli</string>
@@ -118,8 +121,7 @@
     <string name="tbr_type_flag_suspended">S</string>
     <string name="tbr_type_flag_emulated_suspended">ES</string>
     <string name="tbr_type_flag_superbolus">SB</string>
-    <string name="show_hide_records">Nascondi record di loop</string>
-    
+    <!-- ProfileHelperActivity -->
     <string name="profile_type">Tipo profilo</string>
     <string name="profile_parameters">Parametri Del Profilo</string>
     <string name="active_profile">Attiva profilo</string>
@@ -127,7 +129,6 @@
     <string name="profile_switches">Cambi profilo</string>
     <string name="basal_pct_from_tdd_label">% di basale</string>
     <string name="selected_profile">Selezionato:</string>
-    <string name="nav_profile_helper">Assistente profilo</string>
     <string name="comparation">Confronto</string>
     <string name="profile_tab_1">Profilo 1</string>
     <string name="profile_tab_2">Profilo 2</string>
@@ -138,14 +139,15 @@
     <string name="format_with_tdd_and_pct">Età: %1$d TDD: %2$.0f U %3$d%%</string>
     <string name="format_with_weight">Età: %1$d Peso: %2$.0f kg</string>
     <string name="dpv_default_profile">Profilo DPV predefinito</string>
-    <string name="stop_pressed">STOP PREMUTO</string>
-    
+    <!-- Other dialogs -->
+    <!--QuickWizard-->
     <string name="overview_edit_quickwizard_button_text">Testo del pulsante</string>
     <string name="quick_wizard_mode_wizard">Procedura guidata</string>
     <string name="quick_wizard_mode_insulin">Insulina</string>
     <string name="quick_wizard_mode_carbs">Carboidrati</string>
     <string name="overview_edit_quickwizard_use_positive_iob_only">Solo IOB positivo</string>
     <string name="overview_edit_quickwizard_superbolus">Superbolo</string>
+    <!--    History browser-->
     <string name="history_now">Adesso</string>
     <string name="a11y_history_previous_window">Finestra precedente</string>
     <string name="a11y_history_next_window">Finestra successiva</string>
@@ -172,11 +174,11 @@
     <string name="insulin_constraint_violation">Insulina limitata da vincoli</string>
     <string name="confirm_treatment">Si prega di confermare il trattamento</string>
     <string name="recalculate">Ricalcola</string>
-    
+    <!--    Widget-->
     <string name="use_black_color">Usa colore nero</string>
     <string name="widget_configuration">Configurazione widget</string>
     <string name="until_changed">Fino a Modifica</string>
-    
+    <!--    Permissions-->
     <string name="permission_sheet_title">Permessi richiesti</string>
     <string name="permission_sheet_subtitle">Sono necessari alcuni permessi affinché l\'app funzioni correttamente</string>
     <string name="permission_grant">Concedi</string>
@@ -185,7 +187,7 @@
     <string name="permission_open_settings">Impostazioni</string>
     <string name="permission_directory_picker_error">Impossibile avviare il selettore di directory. Solitamente problema di Android o Family Link.</string>
     <string name="permission_nav_label">Permessi</string>
-    
+    <!--    TDD Cycle Pattern -->
     <string name="cycle_offset">Scostamento ciclo</string>
     <string name="raw_tdd">Tdd Grezzo</string>
     <string name="cleaned_tdd">Tdd Pulito</string>
@@ -200,7 +202,7 @@
         <item>Solo positivo</item>
         <item>Solo negativo</item>
     </string-array>
-    
+    <!-- Toolbar configuration -->
     <string name="quick_launch_selected_actions">Azioni selezionate</string>
     <string name="quick_launch_no_dynamic_items">Nessun elemento disponibile</string>
     <string name="quick_launch_category_treatment">Trattamento</string>
@@ -222,7 +224,7 @@
     <string name="loop_accept_nav_label">Loop</string>
     <string name="loop_accept_set_basal_question">Accetta nuova basale temporanea:</string>
     <string name="loop_accept_perform">Esegui</string>
-    
+    <!-- Widget chip labels for RM.Mode, kept terse to fit the pill -->
     <string name="widget_rm_lgs">LGS</string>
     <string name="widget_rm_disabled">Disabilitato</string>
     <string name="widget_rm_suspended">Sospeso</string>
