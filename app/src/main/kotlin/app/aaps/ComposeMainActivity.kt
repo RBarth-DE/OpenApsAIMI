@@ -599,6 +599,7 @@ class ComposeMainActivity : AppCompatActivity() {
                     )
                 }
 
+                val pumpRefresh by pumpCommunicationStatus.refreshTrigger.collectAsStateWithLifecycle()
 
                 MainScreen(
                     mainViewModel = mainViewModel,
@@ -690,9 +691,9 @@ class ComposeMainActivity : AppCompatActivity() {
                     treatmentButtonsDef = builtInSearchables.treatmentButtons,
                     // Pump activity
                     bolusState = bolusState,
-                    pumpStatusText = pumpCommunicationStatus.statusBanner()?.text ?: "",
-                    queueStatusText = pumpCommunicationStatus.queueStatus(),
-                    isPumpCommunicating = pumpCommunicationStatus.statusBanner() != null,
+                    pumpStatusText = remember(pumpRefresh) { pumpCommunicationStatus.statusBanner()?.text ?: "" },
+                    queueStatusText = remember(pumpRefresh) { pumpCommunicationStatus.queueStatus() },
+                    isPumpCommunicating = remember(pumpRefresh) { pumpCommunicationStatus.statusBanner() != null },
                     onStopBolus = {
                         commandQueue.cancelAllBoluses(null)
                     }

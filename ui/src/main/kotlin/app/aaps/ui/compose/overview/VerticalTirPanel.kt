@@ -19,6 +19,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.material3.Text
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.text.font.FontWeight
 import app.aaps.ui.compose.overview.graphs.TirUiState
 import kotlin.math.roundToInt
 
@@ -75,8 +76,9 @@ internal fun VerticalTirPanel(
                     if (pct >= 8f) {
                         Text(
                             text = "${pct.roundToInt()}%",
-                            style = MaterialTheme.typography.labelSmall.copy(fontSize = 7.sp),
-                            color = Color.White,
+                            style = MaterialTheme.typography.labelSmall.copy(fontSize = 8.sp),
+                            color = MaterialTheme.colorScheme.surface,   //inverse color behind colored TIR
+                            fontWeight = FontWeight.Bold
                         )
                     }
                 }
@@ -85,10 +87,10 @@ internal fun VerticalTirPanel(
 
         // Footer
         // Text("A1C", style = MaterialTheme.typography.labelSmall,
-        //      color = MaterialTheme.colorScheme.onSurfaceVariant)
+        //      color = MaterialTheme.colorScheme.onSurface)
         Text("${"%.1f".format(state.a1c)}%",
              style = MaterialTheme.typography.labelMedium,
-             color = MaterialTheme.colorScheme.onSurfaceVariant)
+             color = MaterialTheme.colorScheme.onSurface)
 
     }
 }

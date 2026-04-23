@@ -14,6 +14,8 @@ import app.aaps.core.interfaces.profile.ProfileFunction
 import app.aaps.core.interfaces.rx.bus.RxBus
 import app.aaps.core.interfaces.rx.events.EventAutomationDataChanged
 import app.aaps.core.interfaces.rx.events.EventRefreshOverview
+import app.aaps.core.interfaces.rx.events.EventAppInitialized
+import app.aaps.core.interfaces.rx.events.EventInitializationChanged
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -21,10 +23,14 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
+
 
 @Immutable
 data class AutomationActionItem(
@@ -37,7 +43,7 @@ data class AutomationActionItem(
 )
 
 @Immutable
-data class AutomationUiState(
+data class AutomationSheetState(
     val items: List<AutomationActionItem> = emptyList()
 )
 
@@ -52,8 +58,12 @@ class AutomationViewModel @Inject constructor(
     private val rxBus: RxBus
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(AutomationUiState())
-    val uiState: StateFlow<AutomationUiState> = _uiState.asStateFlow()
+    private val _uiState = MutableStateFlow(AutomationSheetState())
+    val uiState: StateFlow<AutomationSheetState> = _uiState.asStateFlow()
+
+    val automationCount: StateFlow<Int> = _uiState
+        .map { it.items.size }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, 0)
 
     init {
         setupEventListeners()
@@ -65,21 +75,25 @@ class AutomationViewModel @Inject constructor(
             .onEach { refreshState() }.launchIn(viewModelScope)
         rxBus.toFlow(EventAutomationDataChanged::class.java)
             .onEach { refreshState() }.launchIn(viewModelScope)
+        rxBus.toFlow(EventAppInitialized::class.java)
+            .onEach { refreshState() }.launchIn(viewModelScope)
+        rxBus.toFlow(EventInitializationChanged::class.java)
+            .onEach { refreshState() }.launchIn(viewModelScope)
     }
 
     fun refreshState() {
         viewModelScope.launch {
             val pump = activePlugin.activePump
             val profile = profileFunction.getProfile()
-
             val isSuspended = withContext(Dispatchers.IO) { loop.runningMode.isSuspended() }
-            if (isSuspended || !pump.isInitialized() || profile == null || config.isEnabled(ExternalOptions.SHOW_USER_ACTIONS_ON_WATCH_ONLY)) {
+            val watchOnly = config.isEnabled(ExternalOptions.SHOW_USER_ACTIONS_ON_WATCH_ONLY)
+
+            if (isSuspended || !pump.isInitialized() || profile == null || watchOnly) {
                 _uiState.update { it.copy(items = emptyList()) }
                 return@launch
             }
 
             val events = automation.userEvents().filter { it.isEnabled && it.canRun() }
-
             val items = events.map { event ->
                 AutomationActionItem(
                     eventId = event.id,

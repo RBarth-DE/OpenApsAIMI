@@ -46,6 +46,9 @@ import app.aaps.core.ui.compose.preference.PreferenceSubScreenDef
 import app.aaps.ui.compose.alertDialogs.AboutAlertDialog
 import app.aaps.ui.compose.alertDialogs.AboutDialogData
 import app.aaps.ui.compose.automationSheet.AutomationBottomSheet
+import app.aaps.ui.compose.automationSheet.AutomationViewModel
+import app.aaps.ui.compose.loopSheet.LoopActionViewModel
+import app.aaps.ui.compose.loopSheet.LoopActionBottomSheet
 import app.aaps.ui.compose.maintenance.ImportSource
 import app.aaps.ui.compose.maintenance.MaintenanceDialogs
 import app.aaps.ui.compose.maintenance.MaintenanceViewModel
@@ -75,8 +78,8 @@ fun MainScreen(
     maintenanceViewModel: MaintenanceViewModel,
     statusViewModel: StatusViewModel,
     treatmentViewModel: TreatmentViewModel,
-    automationViewModel: app.aaps.ui.compose.automationSheet.AutomationViewModel,
-    loopActionViewModel: app.aaps.ui.compose.loopSheet.LoopActionViewModel,
+    automationViewModel: AutomationViewModel,
+    loopActionViewModel: LoopActionViewModel,
     // Search
     searchUiState: SearchUiState,
     onSearchQueryChange: (String) -> Unit,
@@ -135,6 +138,14 @@ fun MainScreen(
     var showAutomationSheet by remember { mutableStateOf(false) }
     var showLoopActionSheet by remember { mutableStateOf(false) }
     val snackbarHostState = remember { SnackbarHostState() }
+
+    // vor allen LaunchedEffects
+    val automationCount by automationViewModel.automationCount.collectAsStateWithLifecycle()
+
+    // Sync automation state (otherwise missed after start)
+    LaunchedEffect(Unit) {
+        automationViewModel.refreshState()
+    }
 
     // Sync drawer state with ui state
     LaunchedEffect(uiState.isDrawerOpen) {
@@ -301,7 +312,7 @@ fun MainScreen(
                                     automationViewModel.refreshState()
                                     showAutomationSheet = true
                                 },
-                                automationCount = automationViewModel.uiState.collectAsStateWithLifecycle().value.items.size,
+                                automationCount = automationCount,
                                 pumpSetupPlugin = pumpSetupPlugin,
                                 bgSetupPlugin = bgSetupPlugin,
                                 bgQualityBadgeIcon = bgQualityBadgeIcon,
@@ -374,6 +385,7 @@ fun MainScreen(
 
         // Automation bottom sheet
         if (showAutomationSheet) {
+            //val automationState by automationViewModel.uiState.collectAsStateWithLifecycle()
             val automationState by automationViewModel.uiState.collectAsStateWithLifecycle()
             AutomationBottomSheet(
                 onDismiss = { showAutomationSheet = false },
@@ -385,7 +397,7 @@ fun MainScreen(
         // Loop accept action bottom sheet
         if (showLoopActionSheet) {
             val loopState by loopActionViewModel.uiState.collectAsStateWithLifecycle()
-            app.aaps.ui.compose.loopSheet.LoopActionBottomSheet(
+            LoopActionBottomSheet(
                 state = loopState,
                 onPerform = { mainViewModel.performLoopAccept() },
                 onDismiss = { showLoopActionSheet = false }
