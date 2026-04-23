@@ -40,6 +40,8 @@ class AIMIInsulinDecisionAdapterMTR @Inject constructor(
     private val relevanceGate: CosineTrajectoryGate, // 🌀 Relevance Gate (Trajectory Filter)
     private val aapsLogger: AAPSLogger
 ) {
+    @Volatile
+    private var lastDecisionTrace: PhysioDecisionTraceMTR? = null
     
     companion object {
         private const val TAG = "InsulinDecisionAdapter"
@@ -66,6 +68,13 @@ class AIMIInsulinDecisionAdapterMTR @Inject constructor(
      */
     fun getLatestSnapshot(): HealthContextSnapshot {
         return repo.getLastSnapshot()
+    }
+
+    fun getLastDecisionTrace(): PhysioDecisionTraceMTR? = lastDecisionTrace
+
+    fun setFinalLoopDecisionType(decisionType: String) {
+        val current = lastDecisionTrace ?: return
+        lastDecisionTrace = current.copy(finalLoopDecisionType = decisionType)
     }
     
     /**
@@ -107,12 +116,26 @@ class AIMIInsulinDecisionAdapterMTR @Inject constructor(
                 LTag.APS,
                 "[$TAG] ⚠️ BG too low (${currentBG.toInt()} mg/dL) - skipping physio modulation"
             )
+            logDecisionTrace(
+                state = "UNKNOWN",
+                confidence = 0.0,
+                dataQuality = 0.0,
+                multipliers = PhysioMultipliersMTR.NEUTRAL,
+                vetoReason = "bg_below_min_threshold"
+            )
             return PhysioMultipliersMTR.NEUTRAL
         }
         
         // Safety Check 2: Recent hypoglycemia
         if (hasRecentHypoglycemia(recentHypoTimestamp)) {
             aapsLogger.warn(LTag.APS, "[$TAG] ⚠️ Recent hypoglycemia detected - skipping modulation")
+            logDecisionTrace(
+                state = "UNKNOWN",
+                confidence = 0.0,
+                dataQuality = 0.0,
+                multipliers = PhysioMultipliersMTR.NEUTRAL,
+                vetoReason = "recent_hypoglycemia"
+            )
             return PhysioMultipliersMTR.NEUTRAL
         }
         
@@ -126,12 +149,26 @@ class AIMIInsulinDecisionAdapterMTR @Inject constructor(
 
         if (!snapshot.isValid) {
             //aapsLogger.debug(LTag.APS, "[$TAG] No valid snapshot - returning NEUTRAL")
+            logDecisionTrace(
+                state = physioContext.state.name,
+                confidence = physioContext.confidence,
+                dataQuality = physioContext.features?.dataQuality ?: 0.0,
+                multipliers = PhysioMultipliersMTR.NEUTRAL,
+                vetoReason = "invalid_snapshot"
+            )
             return PhysioMultipliersMTR.NEUTRAL
         }
         
         // Safety Check 3: Confidence too low
         if (snapshot.confidence < MIN_CONFIDENCE_THRESHOLD) {
              // Silently ignore low confidence
+            logDecisionTrace(
+                state = physioContext.state.name,
+                confidence = snapshot.confidence,
+                dataQuality = physioContext.features?.dataQuality ?: 0.0,
+                multipliers = PhysioMultipliersMTR.NEUTRAL,
+                vetoReason = "snapshot_confidence_below_threshold"
+            )
             return PhysioMultipliersMTR.NEUTRAL
         }
 
@@ -203,8 +240,45 @@ class AIMIInsulinDecisionAdapterMTR @Inject constructor(
                  aapsLogger.info(LTag.APS, "🌀 CGate: ${gateOutcome.debug}")
             }
         }
+        logDecisionTrace(
+            state = physioContext.state.name,
+            confidence = physioContext.confidence,
+            dataQuality = physioContext.features?.dataQuality ?: 0.0,
+            multipliers = cappedMultipliers,
+            vetoReason = null
+        )
         
         return cappedMultipliers
+    }
+
+    private fun logDecisionTrace(
+        state: String,
+        confidence: Double,
+        dataQuality: Double,
+        multipliers: PhysioMultipliersMTR,
+        vetoReason: String?
+    ) {
+        lastDecisionTrace = PhysioDecisionTraceMTR(
+            timestamp = System.currentTimeMillis(),
+            physioState = state,
+            physioConfidence = confidence,
+            physioDataQuality = dataQuality,
+            isfFactor = multipliers.isfFactor,
+            basalFactor = multipliers.basalFactor,
+            smbFactor = multipliers.smbFactor,
+            reactivityFactor = multipliers.reactivityFactor,
+            vetoReason = vetoReason,
+            finalLoopDecisionType = null,
+            source = multipliers.source
+        )
+        aapsLogger.info(
+            LTag.APS,
+            "PHYSIO_DECISION state=$state conf=${confidence.format(2)} " +
+                "quality=${dataQuality.format(2)} isf=${multipliers.isfFactor.format(3)} " +
+                "basal=${multipliers.basalFactor.format(3)} smb=${multipliers.smbFactor.format(3)} " +
+                "react=${multipliers.reactivityFactor.format(3)} " +
+                "veto=${vetoReason ?: "none"} source=${multipliers.source}"
+        )
     }
     
     // ═══════════════════════════════════════════════════════════════════════

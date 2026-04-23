@@ -108,6 +108,7 @@ data class PhysioFeaturesMTR(
     val sleepDurationHours: Double = 0.0,
     val sleepEfficiency: Double = 0.0, // 0-1
     val sleepFragmentation: Double = 0.0, // 0-1, higher = worse
+    val sleepQualityScore: Double = 0.0, // 0-1, higher = better
     val deepSleepPercent: Double = 0.0, // 0-1
     
     // HRV metrics
@@ -131,6 +132,7 @@ data class PhysioFeaturesMTR(
     fun toJSON(): JSONObject = JSONObject().apply {
         put("sleepDuration", sleepDurationHours)
         put("sleepEfficiency", sleepEfficiency)
+        put("sleepQuality", sleepQualityScore)
         put("hrvMean", hrvMeanRMSSD)
         put("hrvTrend", hrvTrend)
         put("rhrDeviation", rhrDeviation)
@@ -146,6 +148,7 @@ data class PhysioFeaturesMTR(
             PhysioFeaturesMTR(
                 sleepDurationHours = json.optDouble("sleepDuration", 0.0),
                 sleepEfficiency = json.optDouble("sleepEfficiency", 0.0),
+                sleepQualityScore = json.optDouble("sleepQuality", 0.0),
                 hrvMeanRMSSD = json.optDouble("hrvMean", 0.0),
                 hrvTrend = json.optDouble("hrvTrend", 0.0),
                 rhrDeviation = json.optDouble("rhrDeviation", 0.0),
@@ -471,3 +474,35 @@ data class AimiPhysioInputs(
     val isMealActive: Boolean = false,
     val activityState: String = "IDLE" // e.g., "WALKING", "RUNNING"
 )
+
+/**
+ * Standardized trace payload for study/export pipelines.
+ * Captures a single physio decision event from adapter runtime.
+ */
+data class PhysioDecisionTraceMTR(
+    val timestamp: Long = System.currentTimeMillis(),
+    val physioState: String = PhysioStateMTR.UNKNOWN.name,
+    val physioConfidence: Double = 0.0,
+    val physioDataQuality: Double = 0.0,
+    val isfFactor: Double = 1.0,
+    val basalFactor: Double = 1.0,
+    val smbFactor: Double = 1.0,
+    val reactivityFactor: Double = 1.0,
+    val vetoReason: String? = null,
+    val finalLoopDecisionType: String? = null,
+    val source: String = "Deterministic"
+) {
+    fun toJSON(): JSONObject = JSONObject().apply {
+        put("timestamp", timestamp)
+        put("physio_state", physioState)
+        put("physio_confidence", physioConfidence)
+        put("physio_data_quality", physioDataQuality)
+        put("isf_factor", isfFactor)
+        put("basal_factor", basalFactor)
+        put("smb_factor", smbFactor)
+        put("reactivity_factor", reactivityFactor)
+        put("physio_veto_reason", vetoReason ?: JSONObject.NULL)
+        put("final_loop_decision_type", finalLoopDecisionType ?: JSONObject.NULL)
+        put("source", source)
+    }
+}

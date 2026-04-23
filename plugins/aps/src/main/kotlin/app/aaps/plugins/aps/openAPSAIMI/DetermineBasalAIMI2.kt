@@ -47,12 +47,10 @@ import app.aaps.core.data.model.HR
 import app.aaps.plugins.aps.openAPSAIMI.model.DecisionResult
 import app.aaps.plugins.aps.openAPSAIMI.advisor.auditor.AuditorVerdict
 import app.aaps.plugins.aps.openAPSAIMI.advisor.oref.OrefPredictionReasonSuffix
-import app.aaps.plugins.aps.openAPSAIMI.model.LoopContext
 import app.aaps.plugins.aps.openAPSAIMI.model.PumpCaps
 import app.aaps.plugins.aps.openAPSAIMI.pkpd.PkPdCsvLogger
 import app.aaps.plugins.aps.openAPSAIMI.pkpd.MealAggressionContext
 import app.aaps.plugins.aps.openAPSAIMI.pkpd.PkPdIntegration
-// 🧬 Physio Extensions removed - functionality moved to Adapter
 import app.aaps.plugins.aps.openAPSAIMI.pkpd.PkPdLogRow
 import app.aaps.plugins.aps.openAPSAIMI.pkpd.PkPdRuntime
 import app.aaps.plugins.aps.openAPSAIMI.ports.PkpdPort
@@ -83,11 +81,7 @@ import app.aaps.plugins.aps.openAPSAIMI.wcycle.CycleTrackingMode
 import app.aaps.plugins.aps.openAPSAIMI.pkpd.AdvancedPredictionEngine
 import app.aaps.plugins.aps.openAPSAIMI.pkpd.InsulinActionProfiler
 import app.aaps.plugins.aps.openAPSAIMI.pkpd.PkpdAbsorptionGuard
-import app.aaps.plugins.aps.openAPSAIMI.trajectory.StableOrbit  // 🌀 Trajectory Control
-import app.aaps.plugins.aps.openAPSAIMI.trajectory.WarningSeverity  // 🌀 Trajectory Warnings
-import app.aaps.plugins.aps.openAPSAIMI.context.ContextMode  // 🎯 Context Mode
 import app.aaps.plugins.aps.openAPSAIMI.autodrive.AutodriveEngine // 🧠 Autodrive
-import app.aaps.plugins.aps.openAPSAIMI.autodrive.models.AutoDriveState // 🧠 Autodrive
 import app.aaps.plugins.aps.openAPSAIMI.keys.AimiLongKey
 import java.io.File
 import java.text.DecimalFormat
@@ -111,7 +105,6 @@ import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.pow
 import kotlin.math.roundToInt
-import kotlin.math.sqrt
 
 internal data class AimiDecisionContext(
     val event_id: String,
@@ -1412,6 +1405,21 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         consoleError.add(msg)
     }
 
+    private fun markFinalLoopDecisionFromRT(rT: RT, currenttemp: CurrentTemp? = null) {
+        val units = rT.units ?: 0.0
+        val duration = rT.duration ?: 0
+        val rate = rT.rate ?: 0.0
+        val decisionType = when {
+            units > 0.0 -> "smb"
+            duration > 0 && rate <= 0.0 -> "suspend"
+            duration > 0 && currenttemp != null && rate > currenttemp.rate -> "tbr_up"
+            duration > 0 && currenttemp != null && rate < currenttemp.rate -> "tbr_down"
+            duration > 0 && rate > 0.0 -> "tbr_up"
+            else -> "none"
+        }
+        physioAdapter.setFinalLoopDecisionType(decisionType)
+    }
+
     fun setTempBasal(
         _rate: Double,
         duration: Int,
@@ -1440,6 +1448,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             rT.reason.append(context.getString(R.string.lgs_triggered, "%.0f".format(bg), "%.0f".format(hypoGuard)))
             rT.duration = maxOf(duration, 30)
             rT.rate = ketoProtection(0.0, profile, rT, pumpCaps )
+            physioAdapter.setFinalLoopDecisionType("suspend")
             return rT
         }
         val isLgsEnabled = profile.lgsThreshold != null && profile.lgsThreshold!! > 0
@@ -1461,6 +1470,13 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             )
             rT.duration = duration
             rT.rate = ketoProtection(rate, profile, rT, pumpCaps)
+            val decisionType = when {
+                rate == 0.0 -> "suspend"
+                rate > currenttemp.rate -> "tbr_up"
+                rate < currenttemp.rate -> "tbr_down"
+                else -> "none"
+            }
+                 physioAdapter.setFinalLoopDecisionType(decisionType)
             return rT
         }
 
@@ -1583,6 +1599,13 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         rT.reason.append(context.getString(R.string.temp_basal_pose, "%.2f".format(rate), duration))
         rT.duration = duration
         rT.rate = ketoProtection(rate, profile, rT, pumpCaps)
+        val decisionType = when {
+            rate == 0.0 -> "suspend"
+            rate > currenttemp.rate -> "tbr_up"
+            rate < currenttemp.rate -> "tbr_down"
+            else -> "none"
+        }
+        physioAdapter.setFinalLoopDecisionType(decisionType)
         return rT
     }
 
@@ -2118,6 +2141,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         }
 
         rT.units = finalUnits.coerceAtLeast(0.0)
+        physioAdapter.setFinalLoopDecisionType(if (finalUnits > 0.0) "smb" else "none")
         rT.reason.append(reasonHeader)
 
          val audit = SmbGateAudit(
@@ -2957,61 +2981,107 @@ class DetermineBasalaimiSMB2 @Inject constructor(
     /**
      * Détermine les conditions critiques à partir du contexte fourni
      */
-    private fun determineCriticalConditions(ctx:Context,context: SafetyContext): List<String> {
+    private fun determineCriticalConditions(ctx: Context, context: SafetyContext): List<String> {
         val conditions = mutableListOf<String>()
 
-        // Fallback Logic usage
-        // Note: SafetyContext does not have profile objects, but it has maxIob, targetBg.
-        // We reconstruct the fallback check locally.
+        // Fallback condition: intentional temporary bypass for selected blockers in strong-rise context
         val fallback = (context.bg > context.targetBg + 30.0) &&
-                       (context.delta >= 2.0) &&
-                       (context.iob < context.maxIob * 0.8)
+            (context.delta >= 2.0) &&
+            (context.iob < context.maxIob * 0.8)
 
-        if (fallback) {
-             // Log fallback active in logs? context object doesn't have logger, 
-             // but caller checks conditions. We can rely on emptiness or specific code.
-             // We just skip adding the BLOCKING condition.
+        fun addIfActive(
+            active: Boolean,
+            conditionLabel: String,
+            bypassedByFallback: Boolean = false,
+            bypassTag: String
+        ) {
+            if (!active) return
+            if (fallback && bypassedByFallback) {
+                consoleLog.add("SMB_FALLBACK_BYPASS: $bypassTag")
+                return
+            }
+            conditions.add(conditionLabel)
         }
 
-        // Vérification des conditions critiques avec des noms explicites
-        //if (isHypoBlocked(context)) conditions.add("hypoGuard")
-        if (isHypoBlocked(context) && !fallback) conditions.add(ctx.getString(R.string.condition_hypoguard))
-        else if (fallback && isHypoBlocked(context)) {
-             // If it WAS blocked but we bypassed it:
-             // Maybe we want a trace?
-        }
-
-        //if (isNosmbHm(context)) conditions.add("nosmbHM")
-        // REMOVED: Caused strict SMB block in Honeymoon mode (IOB > 0.7).
-        // if (isNosmbHm(context)) conditions.add(ctx.getString(R.string.condition_nosmbhm))
-        //if (isHoneysmb(context)) conditions.add("honeysmb")
-        if (isHoneysmb(context)) conditions.add(ctx.getString(R.string.condition_honeysmb))
-        //if (isNegDelta(context)) conditions.add("negdelta")
-        if (isNegDelta(context)) conditions.add(ctx.getString(R.string.condition_negdelta))
-        //if (isNosmb(context)) conditions.add("nosmb")
-        if (isNosmb(context)) conditions.add(ctx.getString(R.string.condition_nosmb))
-        //if (isFasting(context)) conditions.add("fasting")
-        if (isFasting(context)) conditions.add(ctx.getString(R.string.condition_fasting))
-        //if (isBelowMinThreshold(context)) conditions.add("belowMinThreshold")
-        if (isBelowMinThreshold(context)) conditions.add(ctx.getString(R.string.condition_belowminthreshold))
-        if (isNewCalibration(context)) conditions.add("isNewCalibration")
-        //if (isNewCalibration(context)) conditions.add(ctx.getString(R.string.condition_newcalibration))
-        //if (isBelowTargetAndDropping(context)) conditions.add("belowTargetAndDropping")
-        if (isBelowTargetAndDropping(context)) conditions.add(ctx.getString(R.string.condition_belowtarget_dropping))
-        //if (isBelowTargetAndStableButNoCob(context)) conditions.add("belowTargetAndStableButNoCob")
-        if (isBelowTargetAndStableButNoCob(context)) conditions.add(ctx.getString(R.string.condition_belowtarget_stable_nocob))
-        //if (isDroppingFast(context)) conditions.add("droppingFast")
-        if (isDroppingFast(context)) conditions.add(ctx.getString(R.string.condition_droppingfast))
-        //if (isDroppingFastAtHigh(context)) conditions.add("droppingFastAtHigh")
-        if (isDroppingFastAtHigh(context)) conditions.add(ctx.getString(R.string.condition_droppingfastathigh))
-        //if (isDroppingVeryFast(context)) conditions.add("droppingVeryFast")
-        if (isDroppingVeryFast(context)) conditions.add(ctx.getString(R.string.condition_droppingveryfast))
-        //if (isPrediction(context)) conditions.add("prediction")
-        if (isPrediction(context) && !fallback) conditions.add(ctx.getString(R.string.condition_prediction))
-        //if (isBg90(context)) conditions.add("bg90")
-        if (isBg90(context)) conditions.add(ctx.getString(R.string.condition_bg90))
-        //if (isAcceleratingDown(context)) conditions.add("acceleratingDown")
-        if (isAcceleratingDown(context)) conditions.add(ctx.getString(R.string.condition_acceleratingdown))
+        // Blocking conditions
+        addIfActive(
+            active = isHypoBlocked(context),
+            conditionLabel = ctx.getString(R.string.condition_hypoguard),
+            bypassedByFallback = true,
+            bypassTag = "hypoGuard"
+        )
+        // REMOVED intentionally: isNosmbHm() strict block in honeymoon mode
+        addIfActive(
+            active = isHoneysmb(context),
+            conditionLabel = ctx.getString(R.string.condition_honeysmb),
+            bypassTag = "honeysmb"
+        )
+        addIfActive(
+            active = isNegDelta(context),
+            conditionLabel = ctx.getString(R.string.condition_negdelta),
+            bypassTag = "negdelta"
+        )
+        addIfActive(
+            active = isNosmb(context),
+            conditionLabel = ctx.getString(R.string.condition_nosmb),
+            bypassTag = "nosmb"
+        )
+        addIfActive(
+            active = isFasting(context),
+            conditionLabel = ctx.getString(R.string.condition_fasting),
+            bypassTag = "fasting"
+        )
+        addIfActive(
+            active = isBelowMinThreshold(context),
+            conditionLabel = ctx.getString(R.string.condition_belowminthreshold),
+            bypassTag = "belowMinThreshold"
+        )
+        addIfActive(
+            active = isNewCalibration(context),
+            conditionLabel = ctx.getString(R.string.condition_newcalibration),
+            bypassTag = "newCalibration"
+        )
+        addIfActive(
+            active = isBelowTargetAndDropping(context),
+            conditionLabel = ctx.getString(R.string.condition_belowtarget_dropping),
+            bypassTag = "belowTargetAndDropping"
+        )
+        addIfActive(
+            active = isBelowTargetAndStableButNoCob(context),
+            conditionLabel = ctx.getString(R.string.condition_belowtarget_stable_nocob),
+            bypassTag = "belowTargetAndStableButNoCob"
+        )
+        addIfActive(
+            active = isDroppingFast(context),
+            conditionLabel = ctx.getString(R.string.condition_droppingfast),
+            bypassTag = "droppingFast"
+        )
+        addIfActive(
+            active = isDroppingFastAtHigh(context),
+            conditionLabel = ctx.getString(R.string.condition_droppingfastathigh),
+            bypassTag = "droppingFastAtHigh"
+        )
+        addIfActive(
+            active = isDroppingVeryFast(context),
+            conditionLabel = ctx.getString(R.string.condition_droppingveryfast),
+            bypassTag = "droppingVeryFast"
+        )
+        addIfActive(
+            active = isPrediction(context),
+            conditionLabel = ctx.getString(R.string.condition_prediction),
+            bypassedByFallback = true,
+            bypassTag = "prediction"
+        )
+        addIfActive(
+            active = isBg90(context),
+            conditionLabel = ctx.getString(R.string.condition_bg90),
+            bypassTag = "bg90"
+        )
+        addIfActive(
+            active = isAcceleratingDown(context),
+            conditionLabel = ctx.getString(R.string.condition_acceleratingdown),
+            bypassTag = "acceleratingDown"
+        )
 
         return conditions
     }
@@ -4250,6 +4320,10 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             return null
         }
 
+        fun markLegacyMealDecision() {
+            physioAdapter.setFinalLoopDecisionType(if ((rT.units ?: 0.0) > 0.0) "smb" else "none")
+        }
+
         // ─────────────────────────────────────────────────────────────────────
         // 📈 PROGRESSIVE MEAL TBR — active en permanence pendant le mode repas
         //
@@ -4290,6 +4364,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             rT.units = rbf(DoubleKey.OApsAIMIMealPrebolus)
             rT.reason.append(context.getString(R.string.manual_meal_prebolus, rT.units))
             consoleLog.add("🍱 LEGACY_MODE_MEAL P1=${"%.2f".format(rT.units ?: 0.0)}U")
+            markLegacyMealDecision()
             return rT
         }
         if (isbfastModeCondition()) {
@@ -4297,6 +4372,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             rT.units = rbf(DoubleKey.OApsAIMIBFPrebolus)
             rT.reason.append(context.getString(R.string.reason_prebolus_bfast1, rT.units))
             consoleLog.add("🍱 LEGACY_MODE_BFAST P1=${"%.2f".format(rT.units ?: 0.0)}U")
+            markLegacyMealDecision()
             return rT
         }
         if (isbfast2ModeCondition()) {
@@ -4304,6 +4380,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             rT.units = rbf(DoubleKey.OApsAIMIBFPrebolus2)
             rT.reason.append(context.getString(R.string.reason_prebolus_bfast2, rT.units))
             consoleLog.add("🍱 LEGACY_MODE_BFAST P2=${"%.2f".format(rT.units ?: 0.0)}U")
+            markLegacyMealDecision()
             return rT
         }
         if (isLunchModeCondition()) {
@@ -4311,6 +4388,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             rT.units = rbf(DoubleKey.OApsAIMILunchPrebolus)
             rT.reason.append(context.getString(R.string.reason_prebolus_lunch1, rT.units))
             consoleLog.add("🍱 LEGACY_MODE_LUNCH P1=${"%.2f".format(rT.units ?: 0.0)}U")
+            markLegacyMealDecision()
             return rT
         }
         if (isLunch2ModeCondition()) {
@@ -4318,6 +4396,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             rT.units = rbf(DoubleKey.OApsAIMILunchPrebolus2)
             rT.reason.append(context.getString(R.string.reason_prebolus_lunch2, rT.units))
             consoleLog.add("🍱 LEGACY_MODE_LUNCH P2=${"%.2f".format(rT.units ?: 0.0)}U")
+            markLegacyMealDecision()
             return rT
         }
         if (isDinnerModeCondition()) {
@@ -4325,6 +4404,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             rT.units = rbf(DoubleKey.OApsAIMIDinnerPrebolus)
             rT.reason.append(context.getString(R.string.reason_prebolus_dinner1, rT.units))
             consoleLog.add("🍱 LEGACY_MODE_DINNER P1=${"%.2f".format(rT.units ?: 0.0)}U")
+            markLegacyMealDecision()
             return rT
         }
         if (isDinner2ModeCondition()) {
@@ -4332,6 +4412,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             rT.units = rbf(DoubleKey.OApsAIMIDinnerPrebolus2)
             rT.reason.append(context.getString(R.string.reason_prebolus_dinner2, rT.units))
             consoleLog.add("🍱 LEGACY_MODE_DINNER P2=${"%.2f".format(rT.units ?: 0.0)}U")
+            markLegacyMealDecision()
             return rT
         }
         if (isHighCarbModeCondition()) {
@@ -4339,6 +4420,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             rT.units = rbf(DoubleKey.OApsAIMIHighCarbPrebolus)
             rT.reason.append(context.getString(R.string.reason_prebolus_highcarb, rT.units))
             consoleLog.add("🍱 LEGACY_MODE_HIGHCARB P1=${"%.2f".format(rT.units ?: 0.0)}U")
+            markLegacyMealDecision()
             return rT
         }
         if (isHighCarb2ModeCondition()) {
@@ -4346,6 +4428,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             rT.units = rbf(DoubleKey.OApsAIMIHighCarbPrebolus2)
             rT.reason.append(context.getString(R.string.reason_prebolus_highcarb, rT.units))
             consoleLog.add("🍱 LEGACY_MODE_HIGHCARB P2=${"%.2f".format(rT.units ?: 0.0)}U")
+            markLegacyMealDecision()
             return rT
         }
         if (issnackModeCondition()) {
@@ -4353,6 +4436,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             rT.units = rbf(DoubleKey.OApsAIMISnackPrebolus)
             rT.reason.append(context.getString(R.string.reason_prebolus_snack, rT.units))
             consoleLog.add("🍱 LEGACY_MODE_SNACK P1=${"%.2f".format(rT.units ?: 0.0)}U")
+            markLegacyMealDecision()
             return rT
         }
         return null
@@ -4943,6 +5027,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             return rT.also {
                 it.reason.append("no GS")
                 ensurePredictionFallback(it, bg)
+                markFinalLoopDecisionFromRT(it)
             } // ou ton handling habituel
         }
 
@@ -5025,6 +5110,15 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         try {
              val physioLog = physioAdapter.getDetailedLogString()
              consoleError.add(physioLog)
+             physioAdapter.getLastDecisionTrace()?.let { trace ->
+                 consoleLog.add(
+                     "PHYSIO_TRACE state=${trace.physioState} conf=${String.format("%.2f", trace.physioConfidence)} " +
+                         "q=${String.format("%.2f", trace.physioDataQuality)} " +
+                         "isf=${String.format("%.3f", trace.isfFactor)} basal=${String.format("%.3f", trace.basalFactor)} " +
+                         "smb=${String.format("%.3f", trace.smbFactor)} veto=${trace.vetoReason ?: "none"} " +
+                         "loop=${trace.finalLoopDecisionType ?: "pending"}"
+                 )
+             }
         } catch (e: Exception) {
              consoleError.add("❌ Physio Log Error: ${e.message}")
         }
@@ -5708,7 +5802,10 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             reason.append("⚠️ Data Stale (${minAgo.toInt()}m) -> Logic Paused\n")
             consoleError.add("Data Stale (${minAgo}m) -> Logic Paused")
             logDecisionFinal("STALE_DATA", rT, bg, delta)
-            return rT.also { ensurePredictionFallback(it, bg) }
+            return rT.also {
+                ensurePredictionFallback(it, bg)
+                markFinalLoopDecisionFromRT(it)
+            }
         }
         val windowSinceDoseMin = if (iob_data.lastBolusTime > 0 || internalLastSmbMillis > 0) {
             val effectiveLastBolusTime = kotlin.math.max(iob_data.lastBolusTime, internalLastSmbMillis)
@@ -5967,6 +6064,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             rT.reason.append(" | ⚠ Safety Halt: ${safetyRes.reason}")
             lastDecisionSource = safetyRes.source
             logDecisionFinal("SAFETY", rT, bg, delta)
+            markFinalLoopDecisionFromRT(rT, currenttemp)
             return rT
         }
 
@@ -6023,6 +6121,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             )
             // Keep Meal Advisor behavior aligned with explicit meal modes:
             // once applied, return immediately so later SMB/TBR stages cannot override prebolus intent.
+            markFinalLoopDecisionFromRT(rT, currenttemp)
             return rT
         }
 
@@ -6042,6 +6141,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             setTempBasal(0.0, 30, profile, rT, currenttemp, overrideSafetyLimits = true, adaptiveMultiplier = adaptiveMult)
             lastSafetySource = "HardBrake"
             logDecisionFinal("HARD_BRAKE", rT, bg, delta)
+            markFinalLoopDecisionFromRT(rT, currenttemp)
             return rT
         }
         // -----------------------------------------------------
@@ -6260,6 +6360,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         if (isCompression) {
              // Hard Stop on Sensor Error
              logDecisionFinal("COMPRESSION", rT, bg, delta)
+             markFinalLoopDecisionFromRT(rT, currenttemp)
              return rT
         }
         
@@ -6292,6 +6393,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             consoleLog.add("AD_SMALL_PREBOLUS_TRIGGER amount=$terminatortap reason=DriftTerminator")
             finalizeAndCapSMB(rT, terminatortap, reason.toString(), mealData, threshold, decisionSource = "DriftTerminator")
             logDecisionFinal("DRIFT_TERMINATOR", rT, bg, delta)
+            markFinalLoopDecisionFromRT(rT, currenttemp)
             return rT
         }
         
@@ -9282,6 +9384,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         )
 
         consoleLog.add(rT.reason.toString())
+        markFinalLoopDecisionFromRT(rT, currenttemp)
         return rT
     }
 }
