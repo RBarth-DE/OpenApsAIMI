@@ -39,3 +39,11 @@ tmpclaude-*
 /app/.idea/*
 /.tmp/gradle_*
 .venv_onnx/
+.tmp
+caches
+daemon
+jdks
+kotlin-profile
+native
+wrapper
+
