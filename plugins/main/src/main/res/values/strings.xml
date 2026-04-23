@@ -283,7 +283,10 @@
     <string name="a11y_graph_scale_24h">graph scale 24 hours</string>
 
     <!-- Overview -->
-
+    <string name="a11y_insulin_label">insulin</string>
+    <string name="a11y_bg_quality">blood glucose quality</string>
+    <string name="a11y_blood_glucose">blood glucose</string>
+    <string name="a11y_bg_outdated">outdated</string>
     <!-- overview moved to core:ui module -->
 
 
