@@ -73,19 +73,22 @@ class LoopStateActivity : DaggerAppCompatActivity() {
                     iconGravity = MaterialButton.ICON_GRAVITY_TEXT_START
                     iconPadding = spacing
                     setOnClickListener {
-                        uiInteraction.showOkCancelDialog(
-                            this@LoopStateActivity,
-                            message = "${resourceHelper.gs(app.aaps.core.ui.R.string.confirm)}: $title",
-                            ok = {
+                        android.app.AlertDialog.Builder(this@LoopStateActivity)
+                            .setMessage("${resourceHelper.gs(app.aaps.core.ui.R.string.confirm)}: $title")
+                            .setPositiveButton(android.R.string.ok) { _, _ ->
                                 lifecycleScope.launch {
                                     withContext(Dispatchers.Default) { onClick() }
                                     finish()
                                 }
                             }
-                        )
+                            .setNegativeButton(android.R.string.cancel, null)
+                            .show()
                     }
                 }
-                icon?.mutate()?.setTint(resourceHelper.gac(this@LoopStateActivity, app.aaps.core.ui.R.attr.userOptionColor))
+                //icon?.mutate()?.setTint(resourceHelper.gac(this@LoopStateActivity, app.aaps.core.ui.R.attr.userOptionColor))
+                val tv = android.util.TypedValue()
+                this@LoopStateActivity.theme.resolveAttribute(app.aaps.core.ui.R.attr.userOptionColor, tv, true)
+                icon?.mutate()?.setTint(tv.data)
                 button.icon = icon
                 val params = LinearLayout.LayoutParams(
                     ViewGroup.LayoutParams.MATCH_PARENT,

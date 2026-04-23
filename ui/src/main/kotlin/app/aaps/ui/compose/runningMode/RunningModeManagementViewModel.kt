@@ -16,10 +16,11 @@ import app.aaps.core.interfaces.logging.AAPSLogger
 import app.aaps.core.interfaces.logging.LTag
 import app.aaps.core.interfaces.plugin.ActivePlugin
 import app.aaps.core.interfaces.profile.ProfileFunction
+import app.aaps.core.interfaces.rx.bus.RxBus
+import app.aaps.core.interfaces.rx.events.EventShowSnackbar
 import app.aaps.core.interfaces.utils.Translator
 import app.aaps.core.keys.BooleanNonKey
 import app.aaps.core.keys.interfaces.Preferences
-import app.aaps.core.ui.compose.SnackbarMessage
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -48,7 +49,8 @@ class RunningModeManagementViewModel @Inject constructor(
     private val translator: Translator,
     private val preferences: Preferences,
     private val persistenceLayer: PersistenceLayer,
-    private val aapsLogger: AAPSLogger
+    private val aapsLogger: AAPSLogger,
+    private val rxBus: RxBus
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(RunningModeManagementUiState())
@@ -89,7 +91,8 @@ class RunningModeManagementViewModel @Inject constructor(
                 }
             } catch (e: Exception) {
                 aapsLogger.error(LTag.UI, "Failed to load running mode state", e)
-                _uiState.update { it.copy(isLoading = false, snackbarMessage = SnackbarMessage.Error(e.message ?: "Failed to load running mode state")) }
+                _uiState.update { it.copy(isLoading = false) }
+                rxBus.send(EventShowSnackbar(e.message ?: "Failed to load running mode state", EventShowSnackbar.Type.Error))
             }
         }
     }
@@ -152,12 +155,6 @@ class RunningModeManagementViewModel @Inject constructor(
         }
     }
 
-    /**
-     * Clear error state
-     */
-    fun clearSnackbar() {
-        _uiState.update { it.copy(snackbarMessage = null) }
-    }
 }
 
 /**
@@ -172,6 +169,5 @@ data class RunningModeManagementUiState(
     val isApsMode: Boolean = false,
     val tempDurationStep15mAllowed: Boolean = false,
     val tempDurationStep30mAllowed: Boolean = false,
-    val isLoading: Boolean = true,
-    val snackbarMessage: SnackbarMessage? = null
+    val isLoading: Boolean = true
 )

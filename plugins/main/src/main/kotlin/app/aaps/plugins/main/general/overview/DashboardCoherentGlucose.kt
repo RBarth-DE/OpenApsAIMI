@@ -71,6 +71,8 @@ object DashboardCoherentGlucose {
         return v > preferences.get(UnitDoubleKey.OverviewHighMark)
     }
 
+
+
     @ColorInt
     fun displayBgColor(
         context: Context?,
@@ -78,15 +80,25 @@ object DashboardCoherentGlucose {
         profileFunction: ProfileFunction,
         preferences: Preferences,
         rh: ResourceHelper
-    ): Int =
-        when {
-            isDisplayLow(displayMgdl, profileFunction, preferences) ->
-                rh.gac(context, app.aaps.core.ui.R.attr.bgLow)
-            isDisplayHigh(displayMgdl, profileFunction, preferences) ->
-                rh.gac(context, app.aaps.core.ui.R.attr.highColor)
-            else ->
-                rh.gac(context, app.aaps.core.ui.R.attr.bgInRange)
+    ): Int {
+        val ctx = context ?: return 0
+
+        fun resolveAttrColor(context: Context , attr: Int): Int {
+            val tv = android.util.TypedValue()
+            context.theme.resolveAttribute(attr, tv, true)
+            return tv.data
         }
+        return when {
+            isDisplayLow(displayMgdl, profileFunction, preferences)  ->
+                resolveAttrColor(ctx, app.aaps.core.ui.R.attr.bgLow)
+
+            isDisplayHigh(displayMgdl, profileFunction, preferences) ->
+                resolveAttrColor(ctx, app.aaps.core.ui.R.attr.highColor)
+
+            else                                                     ->
+                resolveAttrColor(ctx, app.aaps.core.ui.R.attr.bgInRange)
+        }
+    }
 
     fun displayBgDescription(
         displayMgdl: Double?,

@@ -172,12 +172,19 @@ class NotificationStore @Inject constructor(
             else holder.binding.dismiss.setText(app.aaps.core.ui.R.string.snooze)
             @Suppress("SetTextI18n")
             holder.binding.text.text = dateUtil.timeString(notification.date) + " " + notification.text
+
+            fun resolveAttrColor(attr: Int): Int {
+                val tv = android.util.TypedValue()
+                holder.itemView.context.theme.resolveAttribute(attr, tv, true)
+                return tv.data
+            }
+
             when (notification.level) {
-                Notification.URGENT       -> holder.binding.cv.setBackgroundColor(rh.gac(app.aaps.core.ui.R.attr.notificationUrgent))
-                Notification.NORMAL       -> holder.binding.cv.setBackgroundColor(rh.gac(app.aaps.core.ui.R.attr.notificationNormal))
-                1          -> holder.binding.cv.setBackgroundColor(rh.gac(app.aaps.core.ui.R.attr.notificationLow))
-                0         -> holder.binding.cv.setBackgroundColor(rh.gac(app.aaps.core.ui.R.attr.notificationInfo))
-                Notification.ANNOUNCEMENT -> holder.binding.cv.setBackgroundColor(rh.gac(app.aaps.core.ui.R.attr.notificationAnnouncement))
+                Notification.URGENT       -> holder.binding.cv.setBackgroundColor(resolveAttrColor(app.aaps.core.ui.R.attr.notificationUrgent))
+                Notification.NORMAL       -> holder.binding.cv.setBackgroundColor(resolveAttrColor(app.aaps.core.ui.R.attr.notificationNormal))
+                1                         -> holder.binding.cv.setBackgroundColor(resolveAttrColor(app.aaps.core.ui.R.attr.notificationLow))
+                0                         -> holder.binding.cv.setBackgroundColor(resolveAttrColor(app.aaps.core.ui.R.attr.notificationInfo))
+                Notification.ANNOUNCEMENT -> holder.binding.cv.setBackgroundColor(resolveAttrColor(app.aaps.core.ui.R.attr.notificationAnnouncement))
             }
         }
 

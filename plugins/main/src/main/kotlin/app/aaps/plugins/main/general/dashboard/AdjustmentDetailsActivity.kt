@@ -15,7 +15,6 @@ import app.aaps.core.interfaces.aps.Loop
 import app.aaps.core.interfaces.logging.AAPSLogger
 import app.aaps.core.interfaces.logging.LTag
 import app.aaps.core.interfaces.resources.ResourceHelper
-import app.aaps.core.ui.toast.ToastUtils
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -74,7 +73,8 @@ class AdjustmentDetailsActivity : DaggerAppCompatActivity() {
         renderDecisions(state.adjustments)
 
         binding.runLoopButton.setOnClickListener {
-            ToastUtils.infoToast(this, resourceHelper.gs(R.string.dashboard_loop_run_requested))
+            //ToastUtils.infoToast(this, resourceHelper.gs(R.string.dashboard_loop_run_requested))
+            android.widget.Toast.makeText(this, resourceHelper.gs(R.string.dashboard_loop_run_requested), android.widget.Toast.LENGTH_SHORT).show()
             lifecycleScope.launch {
                 try {
                     runBlocking { loop.invoke("AdjustmentDetails", true) }

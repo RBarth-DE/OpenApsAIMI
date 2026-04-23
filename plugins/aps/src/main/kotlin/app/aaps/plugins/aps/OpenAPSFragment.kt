@@ -64,10 +64,16 @@ class OpenAPSFragment : DaggerFragment(), MenuProvider {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        fun resolveAttrColor(attr: Int): Int {
+            val tv = android.util.TypedValue()
+            requireContext().theme.resolveAttribute(attr, tv, true)
+            return tv.data
+        }
+
         binding.swipeRefresh.setColorSchemeColors(
-            rh.gac(context, android.R.attr.colorPrimaryDark),
-            rh.gac(context, android.R.attr.colorPrimary),
-            rh.gac(context, com.google.android.material.R.attr.colorSecondary)
+            resolveAttrColor(android.R.attr.colorPrimaryDark),
+            resolveAttrColor(android.R.attr.colorPrimary),
+            resolveAttrColor(com.google.android.material.R.attr.colorSecondary)
         )
         binding.swipeRefresh.setOnRefreshListener {
             binding.lastrun.text = "Running..."

@@ -25,7 +25,6 @@ import app.aaps.core.interfaces.resources.ResourceHelper
 import javax.inject.Inject
 import android.widget.Switch
 
-
 class AimiModeSettingsActivity : DaggerAppCompatActivity() {
 
     @Inject lateinit var automation: Automation
@@ -402,10 +401,12 @@ class AimiModeSettingsActivity : DaggerAppCompatActivity() {
 
                  try {
                      runBlocking { persistenceLayer.insertOrUpdateTherapyEvent(te) }
-                     app.aaps.core.ui.toast.ToastUtils.okToast(this, "$modeNote Mode Activated ($durationMin min)!")
+                     //app.aaps.core.ui.toast.ToastUtils.okToast(this, "$modeNote Mode Activated ($durationMin min)!")
+                     android.widget.Toast.makeText(this, "$modeNote Mode Activated ($durationMin min)!", android.widget.Toast.LENGTH_SHORT).show()
                      finish()
                  } catch (e: Exception) {
-                     app.aaps.core.ui.toast.ToastUtils.errorToast(this, "Error: ${e.message}")
+                     //app.aaps.core.ui.toast.ToastUtils.errorToast(this, "Error: ${e.message}")
+                     android.widget.Toast.makeText(this, "Error: ${e.message}", android.widget.Toast.LENGTH_SHORT).show()
                      e.printStackTrace()
                  }
             }

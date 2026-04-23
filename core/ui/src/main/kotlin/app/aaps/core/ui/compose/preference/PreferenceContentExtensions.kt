@@ -73,7 +73,6 @@ fun LazyListScope.addPreferenceSubScreenDef(
             summaryItems = def.effectiveSummaryItems(),
             expanded = isExpanded,
             onToggle = { sectionState?.toggle(sectionKey, SectionLevel.TOP_LEVEL) },
-            iconResId = def.iconResId,
             icon = def.icon
         ) {
             // Render items in order, preserving the original structure
@@ -192,7 +191,6 @@ private fun RenderPreferenceItems(
                             expanded = isSubExpanded,
                             onToggle = { sectionState?.toggle(subPath, SectionLevel.SUB_SECTION, parentKey = pathPrefix) },
                             insideCard = true,
-                            iconResId = null
                         )
 
                         if (isSubExpanded && item.items.isNotEmpty()) {

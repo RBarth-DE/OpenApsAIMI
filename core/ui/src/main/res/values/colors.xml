@@ -159,32 +159,10 @@
     <color name="aaps_theme_dark_secondary">#17DECA</color>
     <color name="aaps_theme_dark_surface">#0F0F0F</color>
 
-    <!-- widget theme color -->
-    <!-- This section describes the widget theme colors
-     Because the implementation of google has no idea of a light/dark mode until now
-     we generate extra colornames only used for the widget
-     Colors for the widget are always taken from the default color.xml-->
+    <!-- Widget runtime has no dark mode; these are always read from the default colors.xml. -->
     <color name="widget_inrange">#00FF00</color>
     <color name="widget_low">#FF0000</color>
     <color name="widget_high">#FFFF00</color>
-    <color name="widget_ribbonWarning">#f4d700</color>
-    <color name="widget_ribbonTextDefault">#FFFFFF</color>
-    <color name="widget_ribbonCritical">#ff0400</color>
-    <color name="widget_basal">#00ffff</color>
-
-    <!-- Maintenance -->
-    <color name="metadataTextWarning">#FF8C00</color>
-    <color name="metadataTextError">#FF5555</color>
-
-    <!--    Toasts-->
-    <color name="toastBorder">#666666</color>
-    <color name="toastBase">#000000</color>
-    <color name="toastOk">#77dd77</color>
-    <color name="toastError">#ff0400</color>
-    <color name="toastWarn">#FF8C00</color>
-    <color name="toastInfo">#03A9F4</color>
-
-    <!--    Automations-->
 
     <!--    Comparator-->
     <color name="aimi_color">#4CAF50</color>
