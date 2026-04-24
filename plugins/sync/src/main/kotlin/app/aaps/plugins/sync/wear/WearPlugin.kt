@@ -57,6 +57,7 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.onEach
+import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -146,12 +147,16 @@ class WearPlugin @Inject constructor(
             dataHandlerMobile.resendData("PreferenceChange")
             checkCustomWatchfacePreferences()
         }.launchIn(newScope)
+        // Full wear resend (DB + treatments + getIsfMgdl / AIMI) is very heavy. Loop GUI can fire in bursts;
+        // without throttling it starves IO/DB and can make the phone UI hang until restart.
         disposable += rxBus
             .toObservable(EventAutosensCalculationFinished::class.java)
+            .throttleFirst(10, TimeUnit.SECONDS)
             .observeOn(aapsSchedulers.io)
             .subscribe({ dataHandlerMobile.resendData("EventAutosensCalculationFinished") }, fabricPrivacy::logException)
         disposable += rxBus
             .toObservable(EventLoopUpdateGui::class.java)
+            .throttleFirst(12, TimeUnit.SECONDS)
             .observeOn(aapsSchedulers.io)
             .subscribe({ dataHandlerMobile.resendData("EventLoopUpdateGui") }, fabricPrivacy::logException)
         // Push status to watch quickly when a TT changes, without waiting for the loop's 10s debounce
