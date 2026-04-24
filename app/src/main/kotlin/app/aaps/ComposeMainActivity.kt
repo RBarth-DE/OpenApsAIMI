@@ -463,10 +463,25 @@ class ComposeMainActivity : AppCompatActivity() {
             preferences = preferences,
             checkPassword = cryptoUtil::checkPassword,
             showBiometric = { activity, titleRes, onGranted, onCancelled, onDenied ->
-                BiometricCheck.biometricPrompt(activity, titleRes, rxBus, onGranted, onCancelled, onDenied, passwordCheck)
+                BiometricCheck.biometricPrompt(
+                    activity = activity,
+                    title = titleRes,
+                    rxBus = rxBus,
+                    ok = Runnable { onGranted() },
+                    cancel = Runnable { onCancelled() },
+                    fail = Runnable { onDenied() },
+                    passwordCheck = passwordCheck
+                )
             },
             showBiometricSimple = { activity, titleRes, onSuccess, onFallback, onCancel ->
-                BiometricCheck.biometricPromptSimple(activity, titleRes, rxBus, onSuccess, onFallback, onCancel)
+                BiometricCheck.biometricPromptSimple(
+                    activity = activity,
+                    title = titleRes,
+                    rxBus = rxBus,
+                    onSuccess = Runnable { onSuccess() },
+                    onFallback = Runnable { onFallback() },
+                    onCancel = Runnable { onCancel() }
+                )
             }
         )
 

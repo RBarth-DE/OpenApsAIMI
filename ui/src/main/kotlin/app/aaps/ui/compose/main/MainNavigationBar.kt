@@ -37,7 +37,7 @@ fun MainNavigationBar(
     modifier: Modifier = Modifier,
     quickWizardCount: Int = 0,
     onAutomationClick: () -> Unit = {},
-    automationCount: Int = 0,
+    sceneCount: Int = 0,
     pumpSetupPlugin: PluginBase? = null,
     bgSetupPlugin: PluginBase? = null,
     bgQualityBadgeIcon: ImageVector? = null,
@@ -92,14 +92,14 @@ fun MainNavigationBar(
         NavigationBarItem(
             selected = false,
             onClick = onAutomationClick,
-            enabled = automationCount > 0,
+            enabled = sceneCount > 0,
             modifier = Modifier.animateContentSize(),
             icon = {
                 BadgedBox(
                     badge = {
-                        if (automationCount > 0) {
+                        if (sceneCount > 0) {
                             Badge(containerColor = AapsTheme.generalColors.statusNormal, contentColor = Color.Black) {
-                                Text(text = automationCount.toString())
+                                Text(text = sceneCount.toString())
                             }
                         }
                     }
@@ -109,14 +109,14 @@ fun MainNavigationBar(
                         contentDescription = stringResource(CoreUiR.string.scenes),
                         modifier = Modifier
                             .size(24.dp)
-                            .graphicsLayer { alpha = if (automationCount > 0) 1f else 0f }
+                            .graphicsLayer { alpha = if (sceneCount > 0) 1f else 0f }
                     )
                 }
             },
             label = {
                 Text(
                     text = stringResource(CoreUiR.string.scenes),
-                    modifier = Modifier.graphicsLayer { alpha = if (automationCount > 0) 1f else 0f }
+                    modifier = Modifier.graphicsLayer { alpha = if (sceneCount > 0) 1f else 0f }
                 )
             },
             colors = navColors

@@ -133,7 +133,6 @@ fun MainScreen(
     var showTreatmentSheet by remember { mutableStateOf(false) }
     var showAutomationSheet by remember { mutableStateOf(false) }
     var showLoopActionSheet by remember { mutableStateOf(false) }
-    val automationState by scenesViewModel.uiState.collectAsStateWithLifecycle()
     val snackbarHostState = LocalSnackbarHostState.current
 
     // Sync automation state (otherwise missed after start)
@@ -312,7 +311,8 @@ fun MainScreen(
                                 scenesViewModel.refreshState()
                                 showAutomationSheet = true
                             },
-                            automationCount = automationState.items.size + automationState.sceneItems.size,
+                            sceneCount = scenesViewModel.uiState.collectAsStateWithLifecycle().value.items.size +
+                                scenesViewModel.uiState.collectAsStateWithLifecycle().value.sceneItems.size,
                             pumpSetupPlugin = pumpSetupPlugin,
                             bgSetupPlugin = bgSetupPlugin,
                             bgQualityBadgeIcon = bgQualityBadgeIcon,
@@ -387,9 +387,9 @@ fun MainScreen(
         val sceneState by scenesViewModel.uiState.collectAsStateWithLifecycle()
         ScenesBottomSheet(
             onDismiss = { showAutomationSheet = false },
-            automationItems = automationState.items,
+            automationItems = sceneState.items,
             onItemClick = { item -> mainViewModel.requestAutomationConfirmation(item.eventId) },
-            sceneItems = automationState.sceneItems,
+            sceneItems = sceneState.sceneItems,
             onSceneClick = { sceneId -> mainViewModel.requestSceneConfirmation(sceneId) }
         )
     }

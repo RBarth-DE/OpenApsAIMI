@@ -73,10 +73,6 @@ class ScenesViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(ScenesUiState())
     val uiState: StateFlow<ScenesUiState> = _uiState.asStateFlow()
 
-    val sceneCount: StateFlow<Int> = _uiState
-        .map { it.items.size }
-        .stateIn(viewModelScope, SharingStarted.Eagerly, 0)
-
     init {
         setupEventListeners()
         refreshState()
@@ -88,6 +84,8 @@ class ScenesViewModel @Inject constructor(
         rxBus.toFlow(EventAutomationDataChanged::class.java)
             .drop(1).onEach { refreshState() }.launchIn(viewModelScope)
         rxBus.toFlow(EventAppInitialized::class.java)
+            .onEach { refreshState() }.launchIn(viewModelScope)
+        rxBus.toFlow(EventInitializationChanged::class.java)
             .onEach { refreshState() }.launchIn(viewModelScope)
         sceneRepository.scenesFlow
             .drop(1).onEach { refreshState() }.launchIn(viewModelScope)

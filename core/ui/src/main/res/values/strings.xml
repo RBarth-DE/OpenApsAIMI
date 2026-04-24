@@ -853,8 +853,10 @@
 
     <string name="event_time_label">Event time</string>
 
-
+    <!-- BluetoothDevicePreference -->
     <string name="need_connect_permission">Application needs bluetooth permission</string>
+    <string name="smscommunicator_missingsmspermission">Missing SMS permission</string>
+
     <string name="user_request" comment="26 characters max for translation">User request</string>
     <string name="pump_pair">Pair</string>
     <string name="pump_unpair">Unpair</string>

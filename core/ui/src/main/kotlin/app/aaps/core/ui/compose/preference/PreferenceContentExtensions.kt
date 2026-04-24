@@ -190,7 +190,7 @@ private fun RenderPreferenceItems(
                             summaryItems = item.effectiveSummaryItems(),
                             expanded = isSubExpanded,
                             onToggle = { sectionState?.toggle(subPath, SectionLevel.SUB_SECTION, parentKey = pathPrefix) },
-                            insideCard = true,
+                            insideCard = true
                         )
 
                         if (isSubExpanded && item.items.isNotEmpty()) {

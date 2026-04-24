@@ -7,6 +7,7 @@ import android.content.res.Configuration
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.drawable.Drawable
+import android.util.TypedValue
 import android.util.DisplayMetrics
 import androidx.annotation.ArrayRes
 import androidx.annotation.BoolRes
@@ -90,6 +91,22 @@ class ResourceHelperImpl @Inject constructor(var context: Context, private val f
         }
 
     override fun gc(@ColorRes id: Int): Int = ContextCompat.getColor(context, id)
+
+    override fun gac(attributeId: Int): Int = gac(context, attributeId)
+
+    override fun gac(context: Context?, attributeId: Int): Int {
+        val baseContext = context ?: this.context
+        val typedValue = TypedValue()
+        if (!baseContext.theme.resolveAttribute(attributeId, typedValue, true)) {
+            return ContextCompat.getColor(baseContext, android.R.color.white)
+        }
+        // Theme attrs can be literal ARGB (data) or a referenced color resource (resourceId).
+        return if (typedValue.resourceId != 0) {
+            ContextCompat.getColor(baseContext, typedValue.resourceId)
+        } else {
+            typedValue.data
+        }
+    }
 
     override fun gd(@DrawableRes id: Int): Drawable? = AppCompatResources.getDrawable(context, id)
 
