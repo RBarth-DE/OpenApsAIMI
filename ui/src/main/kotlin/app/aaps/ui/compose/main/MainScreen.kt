@@ -135,9 +135,6 @@ fun MainScreen(
     var showLoopActionSheet by remember { mutableStateOf(false) }
     val snackbarHostState = LocalSnackbarHostState.current
 
-    // vor allen LaunchedEffects
-    val automationCount by automationViewModel.automationCount.collectAsStateWithLifecycle()
-
     // Sync automation state (otherwise missed after start)
     LaunchedEffect(Unit) {
         automationViewModel.refreshState()
@@ -218,10 +215,6 @@ fun MainScreen(
                     Box(modifier = Modifier.fillMaxSize()) {
                         // Main content
                         OverviewScreen(
-                            profileName = uiState.profileName,
-                            profilePsId = uiState.profilePsId,
-                            isProfileModified = uiState.isProfileModified,
-                            profileProgress = uiState.profileProgress,
                             tempTargetText = uiState.tempTargetText,
                             tempTargetState = uiState.tempTargetState,
                             tempTargetProgress = uiState.tempTargetProgress,

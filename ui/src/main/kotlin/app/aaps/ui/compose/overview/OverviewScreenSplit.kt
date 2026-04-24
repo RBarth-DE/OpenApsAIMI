@@ -42,10 +42,6 @@ import app.aaps.ui.compose.overview.statusLights.StatusViewModel
 
 @Composable
 fun OverviewScreenSplit(
-    profileName: String,
-    isProfileModified: Boolean,
-    profileProgress: Float,
-    profileSceneManaged: Boolean = false,
     tempTargetText: String,
     tempTargetState: TempTargetChipState,
     tempTargetProgress: Float,
@@ -149,12 +145,6 @@ fun OverviewScreenSplit(
                             tempTargetReason = tempTargetReason,
                             tempTargetSceneManaged = tempTargetSceneManaged,
                             onNavigate = onNavigate,
-                            trailingContent = {
-                                LargeClock(
-                                    bgTimestamp = bgInfoState.bgInfo?.timestamp,
-                                    modifier = Modifier.padding(start = 8.dp)
-                                )
-                            }
                         )
                         OverviewStatusPanel(
                             state = statusPanelState,

@@ -167,7 +167,12 @@ enum class BooleanKey(
     OApsAIMIforcelimits("key_use_AimiForceLimits",false),
     OApsAIMInight("OApsAIMI_Enable_night",false),
     OApsAIMIhoneymoon("key_use_Aimi_honeymoon",false),
-    OApsxdriponeminute(key = "key_use_Aimi_xdripOM",defaultValue = false),
+    OApsxdriponeminute(
+        key = "key_use_Aimi_xdripOM",
+        defaultValue = false,
+        titleResId = R.string.pref_title_xdripOM,
+        summaryResId = R.string.pref_summary_xdripOM,
+    ),
     OApsAIMIautoDrive(key = "key_use_Aimi_autoDrive",defaultValue = false),
     OApsAIMIT3cAdaptiveBasalEnabled("key_use_aimi_t3c_adaptive_basal", false),
     OApsAIMIAutodriveV3EnhancedGater("key_use_aimi_autodrive_v3_enhanced_gater", false),
@@ -186,7 +191,12 @@ enum class BooleanKey(
     OApsAIMIPkpdPragmaticReliefEnabled("key_aimi_pkpd_pragmatic_relief_enabled", true),
     /** Plateau + meaningful IOB + falling prediction → throttle SMB, bias TBR, no Red Carpet restore. */
     OApsAIMIIobSurveillanceGuard("key_aimi_iob_surveillance_guard", true),
-    OApsAIMIUnifiedReactivityEnabled("key_use_unified_reactivity", true),  // 🎯 NEW: Enable UnifiedReactivityLearner
+    OApsAIMIUnifiedReactivityEnabled(
+        key = "key_use_unified_reactivity",
+        defaultValue = true,
+        titleResId = R.string.pref_title_unified_reactivity,
+        summaryResId = R.string.pref_summary_unified_reactivity
+    ),  // 🎯 NEW: Enable UnifiedReactivityLearner
     AimiAuditorEnabled("aimi_auditor_enabled", false),  // 🧠 AI Decision Auditor
     OApsAIMITrajectoryGuardEnabled("key_aimi_trajectory_guard_enabled", false),  // 🌀 Phase-Space Trajectory Control
     /** Discrete tube + straight-command regularizer on max SMB (uses PKPD min-pred curve). Off by default. */

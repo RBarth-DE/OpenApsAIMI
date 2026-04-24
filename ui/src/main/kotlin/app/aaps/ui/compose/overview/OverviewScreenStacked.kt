@@ -59,10 +59,6 @@ import app.aaps.ui.compose.overview.statusLights.StatusViewModel
 
 @Composable
 fun OverviewScreenStacked(
-    profileName: String,
-    isProfileModified: Boolean,
-    profileProgress: Float,
-    profileSceneManaged: Boolean = false,
     tempTargetText: String,
     tempTargetState: TempTargetChipState,
     tempTargetProgress: Float,

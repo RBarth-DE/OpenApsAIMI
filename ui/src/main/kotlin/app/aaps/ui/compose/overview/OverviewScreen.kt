@@ -64,10 +64,6 @@ private val SPLIT_LAYOUT_MIN_WIDTH: Dp = 720.dp
 
 @Composable
 fun OverviewScreen(
-    profileName: String,
-    profilePsId: Long = 0,
-    isProfileModified: Boolean,
-    profileProgress: Float,
     tempTargetText: String,
     tempTargetState: TempTargetChipState,
     tempTargetProgress: Float,
@@ -122,17 +118,11 @@ fun OverviewScreen(
         ?.let { it == runningModeRecordId && it > 0 } == true
     val tempTargetSceneManaged = activeSceneState?.priorState?.sceneTtId
         ?.let { it == tempTargetRecordId && it > 0 } == true
-    val profileSceneManaged = activeSceneState?.priorState?.scenePsId
-        ?.let { it == profilePsId && it > 0 } == true
 
     Box(modifier = modifier.fillMaxSize()) {
         BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
             if (maxWidth >= SPLIT_LAYOUT_MIN_WIDTH) {
                 OverviewScreenSplit(
-                    profileName = profileName,
-                    isProfileModified = isProfileModified,
-                    profileProgress = profileProgress,
-                    profileSceneManaged = profileSceneManaged,
                     tempTargetText = tempTargetText,
                     tempTargetState = tempTargetState,
                     tempTargetProgress = tempTargetProgress,
@@ -158,10 +148,6 @@ fun OverviewScreen(
                 )
             } else {
                 OverviewScreenStacked(
-                    profileName = profileName,
-                    isProfileModified = isProfileModified,
-                    profileProgress = profileProgress,
-                    profileSceneManaged = profileSceneManaged,
                     tempTargetText = tempTargetText,
                     tempTargetState = tempTargetState,
                     tempTargetProgress = tempTargetProgress,

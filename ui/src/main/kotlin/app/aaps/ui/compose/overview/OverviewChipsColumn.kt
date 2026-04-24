@@ -71,10 +71,10 @@ fun OverviewChipsColumn(
                             modifier = Modifier.width(chipsWidth),
                         )
                     }
-                    Row(
-                        modifier = Modifier.weight(1f),
-                        content = trailingContent
-                    )
+                    // Row(
+                    //     modifier = Modifier.weight(1f),
+                    //     content = trailingContent
+                    // )
                 }
             }
         } else {
