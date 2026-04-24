@@ -61,9 +61,13 @@ class DataWorkerStorage @Inject constructor(
             .putLong(STORE_KEY, store(value))
             .putString(ACTION_KEY, action).build()
 
-    fun enqueue(request: OneTimeWorkRequest) {
+    fun enqueue(
+        request: OneTimeWorkRequest,
+        groupName: String = jobGroupName,
+        policy: ExistingWorkPolicy = ExistingWorkPolicy.APPEND_OR_REPLACE
+    ) {
         WorkManager.getInstance(context)
-            .enqueueUniqueWork(jobGroupName, ExistingWorkPolicy.APPEND_OR_REPLACE, request)
+            .enqueueUniqueWork(groupName, policy, request)
     }
 
     companion object {

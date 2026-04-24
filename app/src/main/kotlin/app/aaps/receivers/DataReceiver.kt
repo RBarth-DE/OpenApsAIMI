@@ -5,6 +5,7 @@ import android.content.Intent
 import android.provider.Telephony
 import androidx.annotation.VisibleForTesting
 import androidx.work.Data
+import androidx.work.ExistingWorkPolicy
 import androidx.work.OneTimeWorkRequest
 import app.aaps.core.interfaces.logging.AAPSLogger
 import app.aaps.core.interfaces.logging.LTag
@@ -102,9 +103,19 @@ open class DataReceiver : DaggerBroadcastReceiver() {
                 OneTimeWorkRequest.Builder(SmsCommunicatorPlugin.SmsCommunicatorWorker::class.java)
                     .setInputData(dataWorkerStorage.storeInputData(bundle, intent.action)).build()
 
-            Intents.DEXCOM_BG, Intents.DEXCOM_G7_BG   ->
-                OneTimeWorkRequest.Builder(DexcomPlugin.DexcomWorker::class.java)
-                    .setInputData(dataWorkerStorage.storeInputData(bundle, intent.action)).build()
+            Intents.DEXCOM_BG, Intents.DEXCOM_G7_BG   -> {
+                val request = OneTimeWorkRequest.Builder(DexcomPlugin.DexcomWorker::class.java)
+                    .setInputData(dataWorkerStorage.storeInputData(bundle, intent.action))
+                    .build()
+                // Keep Dexcom ingestion isolated from generic receiver queue to avoid
+                // head-of-line blocking when another receiver worker stalls.
+                dataWorkerStorage.enqueue(
+                    request = request,
+                    groupName = DEXCOM_JOB_GROUP_NAME,
+                    policy = ExistingWorkPolicy.REPLACE
+                )
+                null
+            }
 
             else                                      -> null
         }?.let { request -> dataWorkerStorage.enqueue(request) }
@@ -112,5 +123,9 @@ open class DataReceiver : DaggerBroadcastReceiver() {
         // Verify KeepAlive is running
         // Sometimes the schedule fail
         KeepAliveWorker.scheduleIfNotRunning(context, aapsLogger, fabricPrivacy)
+    }
+
+    companion object {
+        private const val DEXCOM_JOB_GROUP_NAME = "data_dexcom"
     }
 }

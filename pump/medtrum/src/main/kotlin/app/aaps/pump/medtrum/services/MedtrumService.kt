@@ -70,8 +70,10 @@ import io.reactivex.rxjava3.disposables.CompositeDisposable
 import io.reactivex.rxjava3.kotlin.plusAssign
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
@@ -113,6 +115,8 @@ class MedtrumService : DaggerService(), BLECommCallback {
         private const val ALARM_DAILY_MAX_CLEAR_CODE = 5
 
         private const val CHECK_EXPIRY_WARNING_TIME_MS = 5 * 60 * 1000L
+        private val AUTO_RECONNECT_BACKOFF_SEC = longArrayOf(5, 15, 30, 60, 120)
+        private const val AUTO_RECONNECT_MAX_ATTEMPTS = 10
     }
 
     private val disposable = CompositeDisposable()
@@ -122,6 +126,8 @@ class MedtrumService : DaggerService(), BLECommCallback {
     private var mPacket: MedtrumPacket? = null
 
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
+    private var autoReconnectJob: Job? = null
+    private var autoReconnectAttempts = 0
 
     val isConnected: Boolean
         get() = medtrumPump.connectionState == ConnectionState.CONNECTED
@@ -227,6 +233,7 @@ class MedtrumService : DaggerService(), BLECommCallback {
     override fun onDestroy() {
         super.onDestroy()
         disposable.clear()
+        autoReconnectJob?.cancel()
         scope.cancel()
     }
 
@@ -792,7 +799,10 @@ class MedtrumService : DaggerService(), BLECommCallback {
     private fun handleConnectionStateChange(connectionState: ConnectionState) {
         if (medtrumPlugin.isInitialized()) {
             when (connectionState) {
-                ConnectionState.CONNECTED     -> rxBus.send(EventPumpStatusChanged(EventPumpStatusChanged.Status.CONNECTED))
+                ConnectionState.CONNECTED     -> {
+                    resetAutoReconnectState("pump connected")
+                    rxBus.send(EventPumpStatusChanged(EventPumpStatusChanged.Status.CONNECTED))
+                }
                 ConnectionState.DISCONNECTED  -> rxBus.send(EventPumpStatusChanged(EventPumpStatusChanged.Status.DISCONNECTED))
                 ConnectionState.CONNECTING    -> rxBus.send(EventPumpStatusChanged(EventPumpStatusChanged.Status.CONNECTING))
                 ConnectionState.DISCONNECTING -> rxBus.send(EventPumpStatusChanged(EventPumpStatusChanged.Status.DISCONNECTING))
@@ -848,7 +858,13 @@ class MedtrumService : DaggerService(), BLECommCallback {
 
     override fun onBLEDisconnected() {
         aapsLogger.debug(LTag.PUMPCOMM, "<<<<< onBLEDisconnected")
+        val wasIntentionalDisconnect = medtrumPump.connectionState == ConnectionState.DISCONNECTING
         currentState.onDisconnected()
+        if (!wasIntentionalDisconnect) {
+            scheduleAutoReconnect("unexpected BLE disconnect")
+        } else {
+            resetAutoReconnectState("intentional disconnect")
+        }
     }
 
     override fun onNotification(notification: ByteArray) {
@@ -879,6 +895,61 @@ class MedtrumService : DaggerService(), BLECommCallback {
 
     override fun onStartCommand(intent: Intent, flags: Int, startId: Int): Int {
         return START_STICKY
+    }
+
+    private fun shouldAutoReconnect(): Boolean {
+        if (!medtrumPlugin.isInitialized()) return false
+        if (medtrumPump.pumpSN <= 0L) return false
+        return medtrumPump.pumpState != MedtrumPumpState.NONE && medtrumPump.pumpState != MedtrumPumpState.STOPPED
+    }
+
+    private fun scheduleAutoReconnect(reason: String) {
+        if (!shouldAutoReconnect()) {
+            aapsLogger.debug(LTag.PUMPCOMM, "Auto-reconnect skipped ($reason): pump not eligible")
+            return
+        }
+        if (autoReconnectJob?.isActive == true) return
+
+        autoReconnectJob = scope.launch {
+            while (autoReconnectAttempts < AUTO_RECONNECT_MAX_ATTEMPTS) {
+                if (medtrumPump.connectionState == ConnectionState.CONNECTED) return@launch
+                if (medtrumPump.connectionState == ConnectionState.CONNECTING) {
+                    delay(1_000)
+                    continue
+                }
+                if (!shouldAutoReconnect()) return@launch
+
+                val backoffSec = AUTO_RECONNECT_BACKOFF_SEC[minOf(autoReconnectAttempts, AUTO_RECONNECT_BACKOFF_SEC.lastIndex)]
+                aapsLogger.warn(
+                    LTag.PUMPCOMM,
+                    "Auto-reconnect attempt ${autoReconnectAttempts + 1}/$AUTO_RECONNECT_MAX_ATTEMPTS in ${backoffSec}s ($reason)"
+                )
+                delay(backoffSec * 1_000)
+
+                if (medtrumPump.connectionState == ConnectionState.DISCONNECTED) {
+                    val started = connect("auto-reconnect")
+                    if (!started) {
+                        autoReconnectAttempts++
+                    } else {
+                        // Connection state flow will reset attempts on CONNECTED.
+                        delay(2_000)
+                        if (medtrumPump.connectionState != ConnectionState.CONNECTED) {
+                            autoReconnectAttempts++
+                        }
+                    }
+                }
+            }
+            aapsLogger.error(LTag.PUMPCOMM, "Auto-reconnect exhausted after $AUTO_RECONNECT_MAX_ATTEMPTS attempts")
+        }
+    }
+
+    private fun resetAutoReconnectState(reason: String) {
+        autoReconnectJob?.cancel()
+        autoReconnectJob = null
+        if (autoReconnectAttempts > 0) {
+            aapsLogger.debug(LTag.PUMPCOMM, "Auto-reconnect reset ($reason), attempts=$autoReconnectAttempts")
+        }
+        autoReconnectAttempts = 0
     }
 
     /**
