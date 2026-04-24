@@ -9,7 +9,6 @@ import app.aaps.core.data.pump.defs.PumpDescription
 import app.aaps.core.data.ue.Action
 import app.aaps.core.data.ue.Sources
 import app.aaps.core.interfaces.aps.Loop
-import app.aaps.core.interfaces.configuration.Config
 import app.aaps.core.interfaces.db.PersistenceLayer
 import app.aaps.core.interfaces.db.observeChanges
 import app.aaps.core.interfaces.logging.AAPSLogger
@@ -45,7 +44,6 @@ class RunningModeManagementViewModel @Inject constructor(
     private val loop: Loop,
     private val profileFunction: ProfileFunction,
     private val activePlugin: ActivePlugin,
-    private val config: Config,
     private val translator: Translator,
     private val preferences: Preferences,
     private val persistenceLayer: PersistenceLayer,
@@ -83,7 +81,6 @@ class RunningModeManagementViewModel @Inject constructor(
                         currentModeText = translator.translate(currentMode),
                         reasons = runningModeRecord.reasons,
                         allowedNextModes = allowedModes,
-                        isApsMode = config.APS,
                         tempDurationStep15mAllowed = pumpDescription.tempDurationStep15mAllowed,
                         tempDurationStep30mAllowed = pumpDescription.tempDurationStep30mAllowed,
                         isLoading = false
@@ -166,7 +163,6 @@ data class RunningModeManagementUiState(
     val currentModeText: String = "",
     val reasons: String? = null,
     val allowedNextModes: List<RM.Mode> = emptyList(),
-    val isApsMode: Boolean = false,
     val tempDurationStep15mAllowed: Boolean = false,
     val tempDurationStep30mAllowed: Boolean = false,
     val isLoading: Boolean = true

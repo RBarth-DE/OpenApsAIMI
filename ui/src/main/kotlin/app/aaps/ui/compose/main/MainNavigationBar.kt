@@ -106,7 +106,7 @@ fun MainNavigationBar(
                 ) {
                     Icon(
                         imageVector = IcAutomation,
-                        contentDescription = stringResource(CoreUiR.string.automation),
+                        contentDescription = stringResource(CoreUiR.string.scenes),
                         modifier = Modifier
                             .size(24.dp)
                             .graphicsLayer { alpha = if (automationCount > 0) 1f else 0f }
@@ -115,7 +115,7 @@ fun MainNavigationBar(
             },
             label = {
                 Text(
-                    text = stringResource(CoreUiR.string.automation),
+                    text = stringResource(CoreUiR.string.scenes),
                     modifier = Modifier.graphicsLayer { alpha = if (automationCount > 0) 1f else 0f }
                 )
             },

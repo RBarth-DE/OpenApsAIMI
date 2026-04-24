@@ -42,8 +42,8 @@ import app.aaps.core.ui.compose.navigation.NavigationRequest
 import app.aaps.core.ui.compose.preference.PreferenceSubScreenDef
 import app.aaps.ui.compose.alertDialogs.AboutAlertDialog
 import app.aaps.ui.compose.alertDialogs.AboutDialogData
-import app.aaps.ui.compose.automationSheet.AutomationBottomSheet
-import app.aaps.ui.compose.automationSheet.AutomationViewModel
+import app.aaps.ui.compose.scenesSheet.ScenesBottomSheet
+import app.aaps.ui.compose.scenesSheet.ScenesViewModel
 import app.aaps.ui.compose.loopSheet.LoopActionViewModel
 import app.aaps.ui.compose.maintenance.ImportSource
 import app.aaps.ui.compose.maintenance.MaintenanceDialogs
@@ -74,7 +74,7 @@ fun MainScreen(
     maintenanceViewModel: MaintenanceViewModel,
     statusViewModel: StatusViewModel,
     treatmentViewModel: TreatmentViewModel,
-    automationViewModel: AutomationViewModel,
+    scenesViewModel: ScenesViewModel,
     loopActionViewModel: LoopActionViewModel,
     // Search
     searchUiState: SearchUiState,
@@ -133,11 +133,12 @@ fun MainScreen(
     var showTreatmentSheet by remember { mutableStateOf(false) }
     var showAutomationSheet by remember { mutableStateOf(false) }
     var showLoopActionSheet by remember { mutableStateOf(false) }
+    val automationState by scenesViewModel.uiState.collectAsStateWithLifecycle()
     val snackbarHostState = LocalSnackbarHostState.current
 
     // Sync automation state (otherwise missed after start)
     LaunchedEffect(Unit) {
-        automationViewModel.refreshState()
+        scenesViewModel.refreshState()
     }
 
     // Sync drawer state with ui state
@@ -210,45 +211,45 @@ fun MainScreen(
                     )
                 }
 
-                    val activeSceneState by mainViewModel.activeSceneState.collectAsStateWithLifecycle()
-                    val sceneExpired by mainViewModel.sceneExpired.collectAsStateWithLifecycle()
-                    Box(modifier = Modifier.fillMaxSize()) {
-                        // Main content
-                        OverviewScreen(
-                            tempTargetText = uiState.tempTargetText,
-                            tempTargetState = uiState.tempTargetState,
-                            tempTargetProgress = uiState.tempTargetProgress,
-                            tempTargetReason = uiState.tempTargetReason,
-                            tempTargetRecordId = uiState.tempTargetRecordId,
-                            runningMode = uiState.runningMode,
-                            runningModeText = uiState.runningModeText,
-                            runningModeProgress = uiState.runningModeProgress,
-                            runningModeRecordId = uiState.runningModeRecordId,
-                            isSimpleMode = uiState.isSimpleMode,
-                            calcProgress = calcProgress,
-                            graphViewModel = graphViewModel,
-                            manageViewModel = manageViewModel,
-                            statusViewModel = statusViewModel,
-                            statusLightsDef = statusLightsDef,
-                            onNavigate = onNavigate,
-                            notifications = notifications,
-                            onDismissNotification = onDismissNotification,
-                            onNotificationActionClick = onNotificationActionClick,
-                            autoShowNotificationSheet = autoShowNotificationSheet,
-                            onAutoShowConsumed = onAutoShowConsumed,
-                            activeSceneState = activeSceneState,
-                            sceneExpired = sceneExpired,
-                            onEndScene = { mainViewModel.requestSceneDeactivation() },
-                            onDismissScene = { mainViewModel.dismissExpiredScene() },
-                            formatDuration = mainViewModel::formatDuration,
-                            paddingValues = contentPadding,
-                            fabBottomOffset = if (hasToolbar && showChrome) 56.dp else 0.dp,
-                            bolusState = bolusState,
-                            pumpStatusText = pumpStatusText,
-                            queueStatusText = queueStatusText,
-                            isPumpCommunicating = isPumpCommunicating,
-                            onStopBolus = onStopBolus
-                        )
+                val activeSceneState by mainViewModel.activeSceneState.collectAsStateWithLifecycle()
+                val sceneExpired by mainViewModel.sceneExpired.collectAsStateWithLifecycle()
+                Box(modifier = Modifier.fillMaxSize()) {
+                    // Main content
+                    OverviewScreen(
+                        tempTargetText = uiState.tempTargetText,
+                        tempTargetState = uiState.tempTargetState,
+                        tempTargetProgress = uiState.tempTargetProgress,
+                        tempTargetReason = uiState.tempTargetReason,
+                        tempTargetRecordId = uiState.tempTargetRecordId,
+                        runningMode = uiState.runningMode,
+                        runningModeText = uiState.runningModeText,
+                        runningModeProgress = uiState.runningModeProgress,
+                        runningModeRecordId = uiState.runningModeRecordId,
+                        isSimpleMode = uiState.isSimpleMode,
+                        calcProgress = calcProgress,
+                        graphViewModel = graphViewModel,
+                        manageViewModel = manageViewModel,
+                        statusViewModel = statusViewModel,
+                        statusLightsDef = statusLightsDef,
+                        onNavigate = onNavigate,
+                        notifications = notifications,
+                        onDismissNotification = onDismissNotification,
+                        onNotificationActionClick = onNotificationActionClick,
+                        autoShowNotificationSheet = autoShowNotificationSheet,
+                        onAutoShowConsumed = onAutoShowConsumed,
+                        activeSceneState = activeSceneState,
+                        sceneExpired = sceneExpired,
+                        onEndScene = { mainViewModel.requestSceneDeactivation() },
+                        onDismissScene = { mainViewModel.dismissExpiredScene() },
+                        formatDuration = mainViewModel::formatDuration,
+                        paddingValues = contentPadding,
+                        fabBottomOffset = if (hasToolbar && showChrome) 56.dp else 0.dp,
+                        bolusState = bolusState,
+                        pumpStatusText = pumpStatusText,
+                        queueStatusText = queueStatusText,
+                        isPumpCommunicating = isPumpCommunicating,
+                        onStopBolus = onStopBolus
+                    )
 
                     // Search results overlay
                     if (searchUiState.isSearchActive) {
@@ -290,44 +291,43 @@ fun MainScreen(
                             )
                         }
 
-                        // Bottom bar overlay
-                        AnimatedVisibility(
-                            visible = showChrome,
-                            enter = slideInVertically { it },
-                            exit = slideOutVertically { it },
-                            modifier = Modifier
-                                .align(Alignment.BottomCenter)
-                                .padding(bottom = scaffoldPadding.calculateBottomPadding())
-                        ) {
-                            val loopActionState = loopActionViewModel.uiState.collectAsStateWithLifecycle().value
-                            MainNavigationBar(
-                                onManageClick = { manageSheetState.show() },
-                                onTreatmentClick = {
-                                    treatmentViewModel.refreshState()
-                                    showTreatmentSheet = true
-                                },
-                                quickWizardCount = uiState.quickWizardItems.size,
-                                onAutomationClick = {
-                                    automationViewModel.refreshState()
-                                    showAutomationSheet = true
-                                },
-                                automationCount = automationViewModel.uiState.collectAsStateWithLifecycle().value.items.size +
-                                    automationViewModel.uiState.collectAsStateWithLifecycle().value.sceneItems.size,
-                                pumpSetupPlugin = pumpSetupPlugin,
-                                bgSetupPlugin = bgSetupPlugin,
-                                bgQualityBadgeIcon = bgQualityBadgeIcon,
-                                bgQualityBadgeTint = bgQualityBadgeTint,
-                                bgQualityBadgeDescription = bgQualityBadgeDescription,
-                                objectivesSetupPlugin = objectivesSetupPlugin,
-                                objectivesProgressText = objectivesProgressText,
-                                onNavigate = onNavigate,
-                                permissionsMissing = permissionsMissing,
-                                onPermissionsClick = onPermissionsClick,
-                                loopActionAvailable = loopActionState.actionAvailable,
-                                onLoopActionClick = { showLoopActionSheet = true },
-                                modifier = Modifier.onSizeChanged { bottomBarHeightPx = it.height }
-                            )
-                        }
+                    // Bottom bar overlay
+                    AnimatedVisibility(
+                        visible = showChrome,
+                        enter = slideInVertically { it },
+                        exit = slideOutVertically { it },
+                        modifier = Modifier
+                            .align(Alignment.BottomCenter)
+                            .padding(bottom = scaffoldPadding.calculateBottomPadding())
+                    ) {
+                        val loopActionState = loopActionViewModel.uiState.collectAsStateWithLifecycle().value
+                        MainNavigationBar(
+                            onManageClick = { manageSheetState.show() },
+                            onTreatmentClick = {
+                                treatmentViewModel.refreshState()
+                                showTreatmentSheet = true
+                            },
+                            quickWizardCount = uiState.quickWizardItems.size,
+                            onAutomationClick = {
+                                scenesViewModel.refreshState()
+                                showAutomationSheet = true
+                            },
+                            automationCount = automationState.items.size + automationState.sceneItems.size,
+                            pumpSetupPlugin = pumpSetupPlugin,
+                            bgSetupPlugin = bgSetupPlugin,
+                            bgQualityBadgeIcon = bgQualityBadgeIcon,
+                            bgQualityBadgeTint = bgQualityBadgeTint,
+                            bgQualityBadgeDescription = bgQualityBadgeDescription,
+                            objectivesSetupPlugin = objectivesSetupPlugin,
+                            objectivesProgressText = objectivesProgressText,
+                            onNavigate = onNavigate,
+                            permissionsMissing = permissionsMissing,
+                            onPermissionsClick = onPermissionsClick,
+                            loopActionAvailable = loopActionState.actionAvailable,
+                            onLoopActionClick = { showLoopActionSheet = true },
+                            modifier = Modifier.onSizeChanged { bottomBarHeightPx = it.height }
+                        )
+                    }
 
                     // Quick launch toolbar overlay
                     AnimatedVisibility(
@@ -382,18 +382,17 @@ fun MainScreen(
         )
     }
 
-        // Automation bottom sheet
-        if (showAutomationSheet) {
-            //val automationState by automationViewModel.uiState.collectAsStateWithLifecycle()
-            val automationState by automationViewModel.uiState.collectAsStateWithLifecycle()
-            AutomationBottomSheet(
-                onDismiss = { showAutomationSheet = false },
-                automationItems = automationState.items,
-                onItemClick = { item -> mainViewModel.requestAutomationConfirmation(item.eventId) },
-                sceneItems = automationState.sceneItems,
-                onSceneClick = { sceneId -> mainViewModel.requestSceneConfirmation(sceneId) }
-            )
-        }
+    // Automation bottom sheet
+    if (showAutomationSheet) {
+        val sceneState by scenesViewModel.uiState.collectAsStateWithLifecycle()
+        ScenesBottomSheet(
+            onDismiss = { showAutomationSheet = false },
+            automationItems = automationState.items,
+            onItemClick = { item -> mainViewModel.requestAutomationConfirmation(item.eventId) },
+            sceneItems = automationState.sceneItems,
+            onSceneClick = { sceneId -> mainViewModel.requestSceneConfirmation(sceneId) }
+        )
+    }
 
     // Loop accept action bottom sheet
     if (showLoopActionSheet) {

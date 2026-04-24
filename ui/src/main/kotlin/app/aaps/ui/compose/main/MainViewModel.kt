@@ -50,6 +50,9 @@ import app.aaps.core.keys.BooleanKey
 import app.aaps.core.keys.StringNonKey
 import app.aaps.core.keys.interfaces.Preferences
 import app.aaps.core.objects.constraints.ConstraintObject
+import app.aaps.core.objects.extensions.toStringFull
+import app.aaps.core.objects.runningMode.RunningModeGuard
+import app.aaps.core.objects.runningMode.TbrGate
 import app.aaps.core.objects.wizard.QuickWizard
 import app.aaps.core.objects.wizard.QuickWizardEntry
 import app.aaps.core.objects.wizard.QuickWizardMode
@@ -108,7 +111,8 @@ class MainViewModel @Inject constructor(
     private val sceneRepository: SceneRepository,
     private val sceneExecutor: SceneExecutor,
     private val activeSceneManager: ActiveSceneManager,
-    private val rxBus: RxBus
+    private val rxBus: RxBus,
+    private val runningModeGuard: RunningModeGuard
 ) : ViewModel() {
 
     // Event-driven state (drawer, dialogs, simple-mode preference). Imperative .update{} calls
@@ -423,23 +427,25 @@ class MainViewModel @Inject constructor(
                 title = entry.buttonText(),
                 message = message,
                 onOk = {
-                    uel.log(
-                        Action.BOLUS, Sources.QuickWizard,
-                        entry.buttonText(),
-                        ValueWithUnit.Insulin(insulinAfterConstraints)
-                    )
-                    val detailedBolusInfo = DetailedBolusInfo().apply {
-                        eventType = app.aaps.core.data.model.TE.Type.CORRECTION_BOLUS
-                        this.insulin = insulinAfterConstraints
-                    }
-                    commandQueue.bolus(detailedBolusInfo, object : Callback() {
-                        override fun run() {
-                            if (!result.success) {
-                                uiInteraction.runAlarm(result.comment, rh.gs(app.aaps.core.ui.R.string.treatmentdeliveryerror), app.aaps.core.ui.R.raw.boluserror)
-                            }
+                    if (!runningModeGuard.checkWithSnackbar(TbrGate.CommandKind.BOLUS)) {
+                        uel.log(
+                            Action.BOLUS, Sources.QuickWizard,
+                            entry.buttonText(),
+                            ValueWithUnit.Insulin(insulinAfterConstraints)
+                        )
+                        val detailedBolusInfo = DetailedBolusInfo().apply {
+                            eventType = app.aaps.core.data.model.TE.Type.CORRECTION_BOLUS
+                            this.insulin = insulinAfterConstraints
                         }
-                    })
-                    entry.markAsUsed()
+                        commandQueue.bolus(detailedBolusInfo, object : Callback() {
+                            override fun run() {
+                                if (!result.success) {
+                                    uiInteraction.runAlarm(result.comment, rh.gs(app.aaps.core.ui.R.string.treatmentdeliveryerror), app.aaps.core.ui.R.raw.boluserror)
+                                }
+                            }
+                        })
+                        entry.markAsUsed()
+                    }
                 }
             )
         )
