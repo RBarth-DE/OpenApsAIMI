@@ -1480,6 +1480,15 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
         )
         add(
             PreferenceSubScreenDef(
+                key = "aimi_compose_remote_security",
+                titleResId = R.string.OApsAIMI_RemoteControlPin_title,
+                items = listOf(
+                    AimiStringKey.RemoteControlPin,
+                ),
+            )
+        )
+        add(
+            PreferenceSubScreenDef(
                 key = "aimi_compose_sos",
                 titleResId = R.string.aimi_sos_title,
                 items = buildList {

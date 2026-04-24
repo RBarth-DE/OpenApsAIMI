@@ -8,6 +8,7 @@ import app.aaps.core.interfaces.logging.LTag
 import app.aaps.core.interfaces.sharedPreferences.SP
 import app.aaps.core.interfaces.utils.DateUtil
 import app.aaps.plugins.aps.openAPSAIMI.context.ContextIntent.*
+import app.aaps.plugins.aps.openAPSAIMI.keys.AimiStringKey
 import app.aaps.core.data.ue.Action
 import app.aaps.core.data.ue.Sources
 import javax.inject.Inject
@@ -76,7 +77,11 @@ class ContextManager @Inject constructor(
      * @param forceLLM Force LLM even if disabled (for testing)
      * @return List of added intent IDs
      */
-    suspend fun addIntent(userText: String, forceLLM: Boolean = false): List<String> {
+    suspend fun addIntent(
+        userText: String,
+        forceLLM: Boolean = false,
+        remotePin: String? = null
+    ): List<String> {
         if (userText.isBlank()) {
             aapsLogger.warn(LTag.APS, "[ContextManager] Empty text, ignoring")
             return emptyList()
@@ -115,7 +120,7 @@ class ContextManager @Inject constructor(
             aapsLogger.debug(LTag.APS, "[ContextManager] Stored intent $id: $intent")
             
             // Sync to Nightscout via TherapyEvent wrapper
-            syncContextToNS(id, intent)
+            syncContextToNS(id, intent, remotePin)
         }
         
         if (ids.isEmpty()) {
@@ -523,15 +528,20 @@ class ContextManager @Inject constructor(
      * Sync ContextIntent to Nightscout via TherapyEvent wrapper.
      * Creates a NOTE TherapyEvent with AIMI_CONTEXT prefix.
      */
-    private fun syncContextToNS(intentId: String, intent: ContextIntent) {
+    private fun syncContextToNS(intentId: String, intent: ContextIntent, remotePin: String? = null) {
         try {
             val intentJson = serializeContextIntent(intent)
+            val note = if (!remotePin.isNullOrBlank()) {
+                "AIMI_CONTEXT:$intentId:PIN:${remotePin.trim()}:$intentJson"
+            } else {
+                "AIMI_CONTEXT:$intentId:$intentJson"
+            }
             
             val therapyEvent = TE(
                 timestamp = intent.startTimeMs,
                 type = TE.Type.NOTE,
                 glucoseUnit = GlucoseUnit.MGDL,
-                note = "AIMI_CONTEXT:$intentId:$intentJson",
+                note = note,
                 duration = intent.durationMs
             )
             
@@ -568,7 +578,18 @@ class ContextManager @Inject constructor(
      * Skips local parsing, direct injection.
      */
     @Synchronized
-    fun injectContextFromNS(intentId: String, intent: ContextIntent) {
+    fun injectContextFromNS(intentId: String, intent: ContextIntent, receivedPin: String? = null) {
+        val configuredPin = sp.getString(AimiStringKey.RemoteControlPin.key, "").trim()
+        val incomingPin = receivedPin?.trim().orEmpty()
+        if (configuredPin.isBlank()) {
+            aapsLogger.warn(LTag.APS, "[ContextManager] Rejecting NS context $intentId: AIMI remote PIN not configured")
+            return
+        }
+        if (incomingPin != configuredPin) {
+            aapsLogger.warn(LTag.APS, "[ContextManager] Rejecting NS context $intentId: invalid or missing PIN")
+            return
+        }
+
         // Check if already exists (deduplication)
         if (activeIntents.containsKey(intentId)) {
             aapsLogger.debug(LTag.APS, "[ContextManager] Context $intentId already exists, skipping NS injection")

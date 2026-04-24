@@ -208,25 +208,28 @@ class NsIncomingDataProcessor @Inject constructor(
                                 if (note.startsWith("AIMI_CONTEXT:")) {
                                     aapsLogger.info(LTag.NSCLIENT, "[NS] ✅ AIMI_CONTEXT detected: ${note.take(60)}...")
                                     try {
-                                        // Parse: "AIMI_CONTEXT:ctx_123:{json}"
-                                        val parts = note.split(":", limit = 3)
-                                        if (parts.size == 3) {
-                                            val intentId = parts[1]
-                                            val intentJson = parts[2]
+                                        // New format: AIMI_CONTEXT:<id>:PIN:<pin>:<json>
+                                        // Legacy format: AIMI_CONTEXT:<id>:<json>
+                                        val withPin = Regex("^AIMI_CONTEXT:([^:]+):PIN:([^:]*):(.*)$").matchEntire(note)
+                                        val legacy = Regex("^AIMI_CONTEXT:([^:]+):(.*)$").matchEntire(note)
+                                        val intentId = withPin?.groupValues?.get(1) ?: legacy?.groupValues?.get(1)
+                                        val receivedPin = withPin?.groupValues?.get(2)
+                                        val intentJson = withPin?.groupValues?.get(3) ?: legacy?.groupValues?.get(2)
 
+                                        if (intentId != null && intentJson != null) {
                                             aapsLogger.debug(LTag.NSCLIENT, "[NS] Parsing AIMI context: $intentId")
 
                                             val intent = app.aaps.plugins.aps.openAPSAIMI.context.ContextIntentDeserializer
                                                 .deserialize(intentJson, aapsLogger)
 
                                             if (intent != null) {
-                                                contextManager.injectContextFromNS(intentId, intent)
+                                                contextManager.injectContextFromNS(intentId, intent, receivedPin)
                                                 aapsLogger.info(LTag.NSCLIENT, "[NS] ✅ Injected AIMI context: $intentId")
                                             } else {
                                                 aapsLogger.warn(LTag.NSCLIENT, "[NS] Failed to deserialize AIMI context")
                                             }
                                         } else {
-                                            aapsLogger.warn(LTag.NSCLIENT, "[NS] AIMI note wrong format (parts=${parts.size})")
+                                            aapsLogger.warn(LTag.NSCLIENT, "[NS] AIMI note wrong format")
                                         }
                                     } catch (e: Exception) {
                                         aapsLogger.error(LTag.NSCLIENT, "[NS] Exception parsing AIMI context: ${e.message}", e)
