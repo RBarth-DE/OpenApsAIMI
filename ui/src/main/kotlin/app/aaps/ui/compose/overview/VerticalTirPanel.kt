@@ -79,10 +79,10 @@ internal fun VerticalTirPanel(
                         Text(
                             text = "${pct.roundToInt()}",
                             style = MaterialTheme.typography.labelSmall.copy(
-                                fontSize = 10.sp,
+                                //fontSize = 10.sp,
                                 shadow = Shadow(
                                     color = Color.Black.copy(alpha = 0.8f),
-                                    offset = Offset(0.5f, 0.5f),
+                                    offset = Offset(0.9f, 0.9f),
                                     blurRadius = 2f
                                 )
                             ),
