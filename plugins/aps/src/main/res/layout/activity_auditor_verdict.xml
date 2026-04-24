@@ -30,7 +30,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
-            android:text="No Auditor Report Available"
+            android:text="@string/aimi_auditor_no_report_title"
             android:textAppearance="?attr/textAppearanceHeadline6"
             android:textColor="?attr/colorOnSurface" />
 
@@ -39,7 +39,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
             android:gravity="center"
-            android:text="No verdict has been received yet,\nor the last report has expired (>5 min)."
+            android:text="@string/aimi_auditor_no_report_body"
             android:textColor="?attr/colorOnSurface" />
 
         <TextView
@@ -48,7 +48,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
             android:gravity="center"
-            android:text="Empty message"
+            android:text="@string/aimi_auditor_empty_message"
             android:textColor="?attr/colorOnSurface" />
 
     </LinearLayout>
@@ -96,7 +96,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginBottom="4dp"
-            android:text="BOUNDED ADJUSTMENTS"
+            android:text="@string/aimi_auditor_section_adjustments"
             android:textColor="?attr/colorOnSurface"
             android:textSize="11sp"
             android:letterSpacing="0.1" />
@@ -130,7 +130,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="4dp"
-                android:text="RISK FLAGS"
+                android:text="@string/aimi_auditor_section_risk"
                 android:textColor="?attr/colorOnSurface"
                 android:textSize="11sp"
                 android:letterSpacing="0.1" />
@@ -156,7 +156,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginBottom="4dp"
-            android:text="EVIDENCE"
+            android:text="@string/aimi_auditor_section_evidence"
             android:textColor="?attr/colorOnSurface"
             android:textSize="11sp"
             android:letterSpacing="0.1" />
@@ -189,7 +189,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="4dp"
-                android:text="DEBUG CHECKS"
+                android:text="@string/aimi_auditor_section_debug"
                 android:textColor="?attr/colorOnSurface"
                 android:textSize="11sp"
                 android:letterSpacing="0.1" />

@@ -1,12 +1,13 @@
 package app.aaps.plugins.aps.openAPSAIMI.advisor.auditor.ui
-import kotlinx.coroutines.runBlocking
 
+import kotlinx.coroutines.runBlocking
 import android.os.Bundle
 import android.view.MenuItem
 import android.view.View
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.core.content.ContextCompat
+import androidx.annotation.StringRes
 import app.aaps.core.keys.BooleanKey
 import app.aaps.core.keys.interfaces.Preferences
 import dagger.android.support.DaggerAppCompatActivity
@@ -18,6 +19,7 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import javax.inject.Inject
+
 
 /**
  * AuditorVerdictActivity
@@ -55,7 +57,7 @@ class AuditorVerdictActivity : DaggerAppCompatActivity() {
 
     private fun renderVerdict() {
         if (!preferences.get(BooleanKey.AimiAuditorEnabled)) {
-            showEmpty("AI Auditor is disabled. Enable it in AIMI settings.")
+            showEmpty(R.string.aimi_auditor_verdict_disabled)
             return
         }
 
@@ -63,35 +65,35 @@ class AuditorVerdictActivity : DaggerAppCompatActivity() {
 
         if (cached == null) {
             val (status, _) = AuditorStatusTracker.getStatus()
-            val message = when {
+            val message: String = when {
                 status == AuditorStatusTracker.Status.OFF ->
-                    "Auditor enabled — waiting for first cycle."
+                    getString(R.string.aimi_auditor_verdict_enabled)
                 status.isOffline() -> when (status) {
                     AuditorStatusTracker.Status.OFFLINE_NO_APIKEY ->
-                        "No API key configured.\nAdd your AI provider key in AIMI → Auditor settings."
+                        getString(R.string.aimi_auditor_verdict_offline_noapikey)
                     AuditorStatusTracker.Status.OFFLINE_NO_NETWORK ->
-                        "No network connection.\nCheck device connectivity."
+                        getString(R.string.aimi_auditor_verdict_offline_no_network)
                     AuditorStatusTracker.Status.OFFLINE_NO_ENDPOINT ->
-                        "AI API endpoint unavailable."
+                        getString(R.string.aimi_auditor_verdict_offline_no_endpoint)
                     AuditorStatusTracker.Status.OFFLINE_DNS_FAIL ->
-                        "DNS resolution failed. Check network."
-                    else -> "Auditor offline: ${status.message}"
+                        getString(R.string.aimi_auditor_verdict_offline_dns_fail)
+                    else -> getString(R.string.aimi_auditor_verdict_offline, status.message)
                 }
                 status.isError() -> when (status) {
                     AuditorStatusTracker.Status.ERROR_TIMEOUT ->
-                        "Last audit timed out.\nThe AI server did not respond in time."
+                        getString(R.string.aimi_auditor_verdict_error_timeout)
                     AuditorStatusTracker.Status.ERROR_PARSE ->
-                        "Last audit failed: could not parse AI response."
+                        getString(R.string.aimi_auditor_verdict_error_parse)
                     AuditorStatusTracker.Status.ERROR_HTTP ->
-                        "Last audit failed: HTTP error from AI server."
+                        getString(R.string.aimi_auditor_verdict_error_http)
                     AuditorStatusTracker.Status.ERROR_EXCEPTION ->
-                        "Last audit failed with an unexpected error."
-                    else -> "Auditor error: ${status.message}"
+                        getString(R.string.aimi_auditor_verdict_error_exception)
+                    else -> getString(R.string.aimi_auditor_verdict_error, status.message)
                 }
                 status.isSkipped() ->
-                    "Sentinel monitoring active – situation normal, no AI review needed this cycle."
+                    getString(R.string.aimi_auditor_verdict_skipped)
                 else ->
-                    "No audit report yet.\nStatus: ${status.message}"
+                    getString(R.string.aimi_auditor_verdict_noreport, status.message)
             }
             showEmpty(message)
             return
@@ -103,21 +105,21 @@ class AuditorVerdictActivity : DaggerAppCompatActivity() {
 
         // ── Timestamp ────────────────────────────────────────────────────────
         findViewById<TextView>(R.id.auditor_timestamp).text =
-            "Report from: ${formatTimestamp(cached.timestamp)} (${ageMin}m ago)"
+            getString(R.string.aimi_auditor_verdict_timestamp, formatTimestamp(cached.timestamp), ageMin)
 
         // ── Verdict Badge ─────────────────────────────────────────────────────
         val verdictView = findViewById<TextView>(R.id.auditor_verdict_badge)
         when (verdict.verdict) {
             is VerdictType.Confirm -> {
-                verdictView.text = "✅ CONFIRM"
+                verdictView.setText( R.string.aimi_auditor_verdict_confirm )
                 verdictView.setBackgroundColor(ContextCompat.getColor(this, app.aaps.core.ui.R.color.inRange))
             }
             is VerdictType.Soften -> {
-                verdictView.text = "⚠️ SOFTEN"
+                verdictView.setText( R.string.aimi_auditor_verdict_soften )
                 verdictView.setBackgroundColor(ContextCompat.getColor(this, app.aaps.core.ui.R.color.warning))
             }
             is VerdictType.ShiftToTbr -> {
-                verdictView.text = "🔄 SHIFT TO TBR"
+                verdictView.setText( R.string.aimi_auditor_verdict_shifttotbr )
                 verdictView.setBackgroundColor(ContextCompat.getColor(this, app.aaps.core.ui.R.color.examinedProfile))
             }
         }
@@ -125,7 +127,10 @@ class AuditorVerdictActivity : DaggerAppCompatActivity() {
         // ── Confidence ────────────────────────────────────────────────────────
         val confidencePct = (verdict.confidence * 100).toInt()
         findViewById<TextView>(R.id.auditor_confidence).text =
-            "Confidence: $confidencePct%${if (verdict.degradedMode) "  ⚠️ Degraded Mode" else ""}"
+            if (verdict.degradedMode)
+                getString(R.string.aimi_auditor_verdict_confidence, confidencePct)
+            else
+                getString(R.string.aimi_auditor_verdict_confidence_empty)
 
         // ── Bounded Adjustments ───────────────────────────────────────────────
         val adj = verdict.boundedAdjustments
@@ -167,6 +172,13 @@ class AuditorVerdictActivity : DaggerAppCompatActivity() {
         // ── Hide empty state ───────────────────────────────────────────────────
         findViewById<View>(R.id.auditor_empty_state).visibility = View.GONE
         findViewById<View>(R.id.auditor_content).visibility = View.VISIBLE
+    }
+
+    private fun showEmpty(@StringRes reason: Int) {
+        findViewById<View>(R.id.auditor_content).visibility = View.GONE
+        val emptyView = findViewById<View>(R.id.auditor_empty_state)
+        emptyView.visibility = View.VISIBLE
+        emptyView.findViewById<TextView?>(R.id.auditor_empty_message)?.setText(reason)
     }
 
     private fun showEmpty(reason: String) {

@@ -661,4 +661,35 @@
     <string name="aimi_trajectory_uncertain_desc">UNCLEAR - need more data</string>
     <string name="aimi_tube_advanced_title">Straight-line tube (tuning)</string>
 
+    <!-- Auditor Verdict Screen -->
+    <string name="aimi_auditor_verdict_title">🧠 AI Auditor Report</string>
+    <string name="aimi_auditor_verdict_disabled">AI Auditor is disabled. Enable it in AIMI settings.</string>
+    <string name="aimi_auditor_verdict_enabled">Auditor enabled — waiting for first cycle.</string>
+    <string name="aimi_auditor_verdict_offline_noapikey">No API key configured. Add your AI provider key in AIMI → Auditor settings.</string>
+    <string name="aimi_auditor_verdict_offline_no_network">No network connection. Check device connectivity.</string>
+    <string name="aimi_auditor_verdict_offline_no_endpoint">AI API endpoint unavailable.</string>
+    <string name="aimi_auditor_verdict_offline_dns_fail">DNS resolution failed. Check network.</string>
+    <string name="aimi_auditor_verdict_offline">Auditor offline: %1$s</string>
+    <string name="aimi_auditor_verdict_error_timeout">Last audit timed out.\n The AI server did not respond in time.</string>
+    <string name="aimi_auditor_verdict_error_parse">Last audit failed: could not parse AI response.</string>
+    <string name="aimi_auditor_verdict_error_http">Last audit failed: HTTP error from AI server.</string>
+    <string name="aimi_auditor_verdict_error_exception">Last audit failed with an unexpected error.</string>
+    <string name="aimi_auditor_verdict_error">Auditor error: %1$s</string>
+    <string name="aimi_auditor_verdict_skipped">Sentinel monitoring active – situation normal, no AI review needed this cycle.</string>
+    <string name="aimi_auditor_verdict_noreport">No audit report yet.\n Status: %1$s</string>
+    <string name="aimi_auditor_verdict_timestamp">Report from: %1$s (%2$d min ago)</string>
+    <string name="aimi_auditor_verdict_confirm">✅ CONFIRM</string>
+    <string name="aimi_auditor_verdict_soften">⚠️ SOFTEN</string>
+    <string name="aimi_auditor_verdict_shifttotbr">🔄 SHIFT TO TBR</string>
+    <string name="aimi_auditor_verdict_confidence">Confidence: %1$d%% ⚠️ Degraded Mode</string>
+    <string name="aimi_auditor_verdict_confidence_empty">Confidence: none"</string>
+    <string name="aimi_auditor_verdict_no_evidence">No evidence provided</string>
+    <string name="aimi_auditor_no_report_title">No Auditor Report Available</string>
+    <string name="aimi_auditor_no_report_body">No verdict has been received yet,\nor the last report has expired (&gt;5 min).</string>
+    <string name="aimi_auditor_empty_message">Empty message</string>
+    <string name="aimi_auditor_section_adjustments">BOUNDED ADJUSTMENTS</string>
+    <string name="aimi_auditor_section_risk">RISK FLAGS</string>
+    <string name="aimi_auditor_section_evidence">EVIDENCE</string>
+    <string name="aimi_auditor_section_debug">DEBUG CHECKS</string>
+
 </resources>

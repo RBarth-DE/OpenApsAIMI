@@ -1,7 +1,6 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    
-    <string name="dyn_isf_adjust_summary">Anpassungsfaktor für DynamicISF. Stellen Sie einen Wert von mehr als 100 % ein, um aggressivere Korrekturdosen zu erzielen, und einen Wert von weniger als 100 %, um weniger aggressive Korrekturen zu erzielen.</string>
+
     <string name="openapssmb">OpenAPS SMB</string>
     <string name="openaps_smb_dynamic_isf">Dynamischer ISF</string>
     <string name="openaps_auto_isf">Auto ISF</string>
@@ -96,7 +95,6 @@
     <string name="dyn_isf_adjust_title">Dynamischer ISF-Anpassungsfaktor in %</string>
     <string name="fallback_to_isf_no_tdd">Auf die Empfindlichkeit des Profils zurückgreifen. Nicht genügend Daten. Grund: %1$s</string>
     <string name="pump_disconnected">Pumpe abgeschaltet</string>
-    <string name="half_basal_exercise_target_summary">Stellen Sie einen Wert ein, z. B. 160. Das bedeutet: Wenn der Zielwert 160 mg/dl beträgt und bei einem hohen Zielwert die Empfindlichkeit auf „true“ gesetzt ist, wird bei diesem Wert 50%% der Basalrate abgegeben (120 = 75%%; 140 = 60%%).</string>
     <string name="autoISF_settings_title">AutoISF-Einstellungen</string>
     <string name="smb_delivery_settings_title">SMB Abgabeeinstellungen</string>
     <string name="openapsama_autoISF_max_summary">Ähnlich wie bei „autosens_max“ legt dieser Wert fest, wie stark der ISF-Effekt werden kann.  Der Standardwert 1,0 deaktiviert diesen Effekt praktisch vollständig.  WARNUNG: Seien Sie äußerst vorsichtig, wenn Sie Werte über 2,5 verwenden.</string>
@@ -429,6 +427,7 @@
     <string name="aimi_advisor_title">AIMI Advisor</string>
     <string name="aimi_adv_loading">Analyse läuft...</string>
     <string name="aimi_adv_error_prefix">Fehler: </string>
+    <string name="aimi_adv_error_oom">Nicht genügend Speicherplatz, um den Vorgang abzuschließen. Schließe andere Apps und versuche es erneut.</string>
     <string name="aimi_adv_report_weekly">Wochenbericht</string>
     <string name="aimi_adv_score_label">Score: %1$.1f/10</string>
     <string name="aimi_adv_apply_btn">ANWENDEN</string>
@@ -554,4 +553,35 @@
     <string name="aimi_adv_oref_user_personal_off">Das lokale Risikomodell ist deaktiviert. Aktivieren Sie es unter „AIMI → AI-Schlüssel“, wenn Sie beim Öffnen von Advisor ein kleines Modell nutzen möchten, das anhand Ihrer aktuellen Merkmale trainiert wurde.</string>
     <string name="aimi_adv_oref_user_personal_training">Persönliches Modell: Für das Training werden in diesem Zeitfenster mehr beschriftete 4-Stunden-Ergebnisse benötigt.</string>
     <string name="aimi_adv_oref_user_personal_failed">Das persönliche Modell konnte nicht aktualisiert werden; technische Details finden Sie im folgenden Analyseabschnitt.</string>
+
+    <!-- Bildschirm „Auditor-Befund“ -->
+    <string name="aimi_auditor_verdict_title">🧠 AI-Auditor-Bericht</string>
+    <string name="aimi_auditor_verdict_disabled">Der AI-Auditor ist deaktiviert. Aktivieren Sie ihn in den AIMI-Einstellungen.</string>
+    <string name="aimi_auditor_verdict_enabled">Auditor aktiviert – Warten auf ersten Zyklus.</string>
+    <string name="aimi_auditor_verdict_offline_noapikey">Kein API-Schlüssel konfiguriert. Fügen Sie den Schlüssel Ihres KI-Anbieters in den AIMI-Einstellungen unter „Auditor“ hinzu.</string>
+    <string name="aimi_auditor_verdict_offline_no_network">Keine Netzwerkverbindung. Überprüfen Sie die Geräteverbindung.</string>
+    <string name="aimi_auditor_verdict_offline_no_endpoint">AI-API-Endpunkt nicht verfügbar.</string>
+    <string name="aimi_auditor_verdict_offline_dns_fail">DNS-Auflösung fehlgeschlagen. Überprüfen Sie das Netzwerk.</string>
+    <string name="aimi_auditor_verdict_offline">Auditor offline: %1$s</string>
+    <string name="aimi_auditor_verdict_error_timeout">Zeitüberschreitung bei der letzten Prüfung.\n Der AI-Server hat nicht rechtzeitig geantwortet.</string>
+    <string name="aimi_auditor_verdict_error_parse">Letzte Prüfung fehlgeschlagen: AI-Antwort konnte nicht geparst werden.</string>
+    <string name="aimi_auditor_verdict_error_http">Letzte Prüfung fehlgeschlagen: HTTP-Fehler vom AI-Server.</string>
+    <string name="aimi_auditor_verdict_error_exception">Letzte Prüfung ist mit einem unerwarteten Fehler fehlgeschlagen.</string>
+    <string name="aimi_auditor_verdict_error">Auditor-Fehler: %1$s</string>
+    <string name="aimi_auditor_verdict_skipped">Sentinel-Überwachung aktiv – Situation normal, in diesem Zyklus ist keine KI-Überprüfung erforderlich.</string>
+    <string name="aimi_auditor_verdict_noreport">Noch kein Prüfbericht.\n Status: %1$s</string>
+    <string name="aimi_auditor_verdict_timestamp">Bericht von: %1$s (vor %2$d Minuten)</string>
+    <string name="aimi_auditor_verdict_confirm">✅ BESTÄTIGEN</string>
+    <string name="aimi_auditor_verdict_soften">⚠️ ABWÄRTIG KORRIGIEREN</string>
+    <string name="aimi_auditor_verdict_shifttotbr">🔄 ZU TBR WECHSELN</string>
+    <string name="aimi_auditor_verdict_confidence">Vertrauenswürdigkeit: %1$d%% ⚠️ Herabgestufter Modus</string>
+    <string name="aimi_auditor_verdict_confidence_empty">Vertrauenswürdigkeit: keine"</string>
+    <string name="aimi_auditor_verdict_no_evidence">Keine Beweise vorgelegt</string>
+    <string name="aimi_auditor_no_report_title">Kein Bericht verfügbar</string>
+    <string name="aimi_auditor_no_report_body">Es liegt noch kein Ergebnis vor, und der letzte Bericht ist noch nicht abgelaufen (&gt;5 Min.).</string>
+    <string name="aimi_auditor_empty_message">Leere Meldung</string>
+    <string name="aimi_auditor_section_adjustments">BEGRENZTE ANPASSUNGEN</string>
+    <string name="aimi_auditor_section_risk">RISIKO-FLAGS</string>
+    <string name="aimi_auditor_section_evidence">BEWEISE</string>
+    <string name="aimi_auditor_section_debug">DEBUG-PRÜFUNGEN</string>
 </resources>

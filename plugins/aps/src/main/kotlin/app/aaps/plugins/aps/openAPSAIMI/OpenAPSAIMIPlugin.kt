@@ -1474,31 +1474,7 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
                     add(BooleanKey.OApsAIMIAdvisorPersonalOrefMl)
                     add(BooleanKey.OApsAIMIAdvisorLlmRichOref)
 
-                    // 🔹 Subscreen Auditor (annidato DENTRO Assistant AI)
-                    add(
-                        PreferenceSubScreenDef(
-                            key = "aimi_compose_ai_auditor",
-                            titleResId = R.string.aimi_ai_auditor_section_title,
-                            items = buildList {
-
-                                add(BooleanKey.AimiAuditorEnabled)
-
-                                add(
-                                    StringKey.AimiAuditorMode.withEntries(
-                                        mapOf(
-                                            "AUDIT_ONLY" to "Audit only (log verdicts)",
-                                            "SOFT_MODULATION" to "Soft modulation (apply if confident)",
-                                            "HIGH_RISK_ONLY" to "High risk only (apply with risk flags)",
-                                        )
-                                    )
-                                )
-
-                                add(IntKey.AimiAuditorMaxPerHour)
-                                add(IntKey.AimiAuditorTimeoutSeconds)
-                                add(IntKey.AimiAuditorMinConfidence)
-                            }
-                        )
-                    )
+                    add(aimiComposeAiAuditorSubScreen())
                 }
             )
         )
@@ -1536,7 +1512,6 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
         add(aimiComposeAdaptiveBasalSubScreen())
         add(aimiComposeT3cSubScreen())
         add(aimiComposeTrajectorySubScreen())
-        add(aimiComposeAiAuditorSubScreen())
         add(aimiComposeWomenChildSubScreen())
         add(BooleanKey.OApsAIMIUnifiedReactivityEnabled)
         add(BooleanKey.OApsxdriponeminute)

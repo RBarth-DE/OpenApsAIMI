@@ -98,4 +98,35 @@
     <!--    autoISF -->
     <string name="autoISF_settings_title">Impostazioni AutoISF</string>
     <string name="smb_delivery_settings_title">Impostazioni di erogazione SMB</string>
+
+    <string name="aimi_auditor_verdict_title">🧠 Rapporto dell\'Auditor AI</string>
+    <string name="aimi_auditor_verdict_disabled">L\'Auditor AI è disattivato. Attivalo nelle impostazioni di AIMI.</string>
+    <string name="aimi_auditor_verdict_enabled">Auditor abilitato — in attesa del primo ciclo.</string>
+    <string name="aimi_auditor_verdict_offline_noapikey">Nessuna chiave API configurata. Aggiungi la chiave del tuo provider AI in AIMI → Impostazioni Auditor.</string>
+    <string name="aimi_auditor_verdict_offline_no_network">Nessuna connessione di rete. Controlla la connettività del dispositivo.</string>
+    <string name="aimi_auditor_verdict_offline_no_endpoint">Endpoint API AI non disponibile.</string>
+    <string name="aimi_auditor_verdict_offline_dns_fail">Risoluzione DNS fallita. Controlla la rete.</string>
+    <string name="aimi_auditor_verdict_offline">Auditor offline: %1$s</string>
+    <string name="aimi_auditor_verdict_error_timeout">Timeout dell\'ultimo audit.\n Il server AI non ha risposto in tempo.</string>
+    <string name="aimi_auditor_verdict_error_parse">L\'ultimo audit non è andato a buon fine: impossibile analizzare la risposta dell\'IA.</string>
+    <string name="aimi_auditor_verdict_error_http">L\'ultimo audit non è andato a buon fine: errore HTTP dal server IA.</string>
+    <string name="aimi_auditor_verdict_error_exception">L\'ultimo controllo è fallito a causa di un errore imprevisto.</string>
+    <string name="aimi_auditor_verdict_error">Errore dell\'auditor: %1$s</string>
+    <string name="aimi_auditor_verdict_skipped">Monitoraggio Sentinel attivo – situazione normale, non è necessaria alcuna revisione da parte dell\'IA in questo ciclo.</string>
+    <string name="aimi_auditor_verdict_noreport">Nessun rapporto di audit ancora disponibile.\n Stato: %1$s</string>
+    <string name="aimi_auditor_verdict_timestamp">Segnalazione inviata da: %1$s (%2$d minuti fa)</string>
+    <string name="aimi_auditor_verdict_confirm">✅ CONFERMA</string>
+    <string name="aimi_auditor_verdict_soften">⚠️ ATTENUARE</string>
+    <string name="aimi_auditor_verdict_shifttotbr">🔄 PASSA A TBR</string>
+    <string name="aimi_auditor_verdict_confidence">Affidabilità: %1$d%% ⚠️ Modalità degradata</string>
+    <string name="aimi_auditor_verdict_confidence_empty">Affidabilità: nessuna</string>
+    <string name="aimi_auditor_verdict_no_evidence">Nessuna prova fornita</string>
+    <string name="aimi_adv_error_oom">Memoria insufficiente per completare l\'operazione. Chiudi le altre app e riprova.</string>
+    <string name="aimi_auditor_no_report_title">Nessuna relazione del revisore disponibile</string>
+    <string name="aimi_auditor_no_report_body">Non è stato ancora ricevuto alcun verdetto, né l\'ultima relazione è scaduta (&gt;5 min).</string>
+    <string name="aimi_auditor_empty_message">Messaggio vuoto</string>
+    <string name="aimi_auditor_section_adjustments">ADEGUAMENTI LIMITATI</string>
+    <string name="aimi_auditor_section_risk">SEGNALI DI RISCHIO</string>
+    <string name="aimi_auditor_section_evidence">PROVE</string>
+    <string name="aimi_auditor_section_debug">CONTROLLI DI DEBUG</string>
 </resources>
