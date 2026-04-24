@@ -164,7 +164,11 @@ class DanaRPlugin @Inject constructor(
         if (detailedBolusInfo.insulin > 0) resultOK = executionService?.bolus(detailedBolusInfo) == true
         val result = pumpEnactResultProvider.get()
         val delivered = bolusProgressData.state.value?.delivered ?: 0.0
-        result.success(resultOK && (abs(detailedBolusInfo.insulin - delivered) < pumpDescription.bolusStep || danaPump.bolusStopped))
+        // result.success(resultOK && (abs(detailedBolusInfo.insulin - delivered) < pumpDescription.bolusStep || danaPump.bolusStopped))
+        //     .bolusDelivered(delivered)
+        // bolusStopped is always an error if no user stop is possible
+        val deliveredCorrectly = abs(detailedBolusInfo.insulin - delivered) < pumpDescription.bolusStep
+        result.success(resultOK && deliveredCorrectly)
             .bolusDelivered(delivered)
         if (!result.success) result.comment(
             rh.gs(

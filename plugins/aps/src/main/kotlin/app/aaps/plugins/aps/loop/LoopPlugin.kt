@@ -704,7 +704,6 @@ class LoopPlugin @Inject constructor(
                                     if (resultAfterConstraints.isBolusRequested)
                                         applySMBRequest(resultAfterConstraints, object : Callback() {
                                             override fun run() {
-                                                // Callback is only called if a bolus was actually requested
                                                 aapsLogger.debug(
                                                     LTag.APS,
                                                     "SMB enact result: requested=%.2fU enacted=%s success=%s comment=%s".format(
@@ -720,7 +719,25 @@ class LoopPlugin @Inject constructor(
                                                     lastRun.lastSMBEnact = dateUtil.now()
                                                     scheduleBuildAndStoreDeviceStatus("applySMBRequest")
                                                 } else {
-                                                    handler?.postDelayed({ runBlocking { invoke("tempBasalFallback", allowNotification, true) } }, 1000)
+                                                    // Partial delivery check — if pump delivered something, don't retry
+                                                    val delivered = result.bolusDelivered
+                                                    if (delivered > 0.0) {
+                                                        aapsLogger.warn(
+                                                            LTag.APS,
+                                                            "SMB partial delivery: requested=%.2fU delivered=%.2fU → no retry to avoid overdose".format(
+                                                                resultAfterConstraints.smb, delivered
+                                                            )
+                                                        )
+                                                        lastRun.smbSetByPump = result
+                                                        lastRun.lastSMBEnact = dateUtil.now()
+                                                        // Block next SMB for full interval to account for delivered insulin
+                                                        scheduleBuildAndStoreDeviceStatus("applySMBRequest_partial")
+                                                    } else {
+                                                        handler?.postDelayed(
+                                                            { runBlocking { invoke("tempBasalFallback", allowNotification, true) } },
+                                                            1000
+                                                        )
+                                                    }
                                                 }
                                                 rxBus.send(EventLoopUpdateGui())
                                             }
