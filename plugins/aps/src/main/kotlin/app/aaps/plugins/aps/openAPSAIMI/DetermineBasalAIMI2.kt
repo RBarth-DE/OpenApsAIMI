@@ -1308,7 +1308,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         } else {
             PhysioMultipliersMTR.NEUTRAL
         }
-        
+
         // Log physio modulation if active
         if (!physioMultipliers.isNeutral()) {
             consoleLog.add(
@@ -1318,7 +1318,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                 "Conf=${(physioMultipliers.confidence * 100).toInt()}%"
             )
         }
-        
+
         // Detailed physio log + optional decision trace (adapter may throw — same as historical).
         try {
             val physioLog = physioAdapter.getDetailedLogString()
