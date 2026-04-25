@@ -8547,28 +8547,42 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                                 if (verdict != null) {
                                     consoleLog.add(sanitizeForJson("   Verdict: ${verdict.verdict}, Conf: ${"%.2f".format(verdict.confidence)}"))
                                 }
-                                
-                                // Apply modulated decision to the loop result
+
+                                // ── NEU: strukturierte Felder befüllen ──────────────────────
+                                finalResult.aiAuditorVerdict     = verdict?.verdict?.name
+                                finalResult.aiAuditorConfidence  = verdict?.confidence
+                                finalResult.aiAuditorModulation  = result.bolusU?.let { "smb×${"%.2f".format(it)}" }
+                                finalResult.aiAuditorRiskFlags   = result.reason
+                                // ────────────────────────────────────────────────────────────
+
                                 finalResult.units = result.bolusU ?: 0.0
-                                if (result.tbrUph != null) {
-                                    finalResult.rate = result.tbrUph
-                                }
-                                if (result.tbrMin != null) {
-                                    finalResult.duration = result.tbrMin
-                                }
+                                if (result.tbrUph != null) finalResult.rate = result.tbrUph
+                                if (result.tbrMin != null) finalResult.duration = result.tbrMin
                             }
                             is DecisionResult.Rejected -> {
                                 consoleLog.add(sanitizeForJson("🧠 AI Auditor: 🛑 REJECTED - ${result.reason}"))
                                 consoleLog.add(sanitizeForJson("   Severity: ${result.severity}"))
-                                
-                                // Safety: Fallback to basal-only or zero SMB if rejected
+
+                                // ── NEU ─────────────────────────────────────────────────────
+                                finalResult.aiAuditorVerdict     = "REJECTED"
+                                finalResult.aiAuditorConfidence  = 1.0
+                                finalResult.aiAuditorModulation  = "smb×0.00"
+                                finalResult.aiAuditorRiskFlags   = result.reason
+                                // ────────────────────────────────────────────────────────────
+
                                 finalResult.units = 0.0
                                 finalResult.reason.setLength(0)
                                 finalResult.reason.append("Auditor Rejected: ${result.reason}")
                             }
                             is DecisionResult.Skipped -> {
-                                // No modulation applied, keep original finalResult
                                 consoleLog.add(sanitizeForJson("🧠 AI Auditor: ⏸ SKIPPED - ${result.reason}"))
+
+                                // ── NEU ─────────────────────────────────────────────────────
+                                finalResult.aiAuditorVerdict     = "SKIPPED"
+                                finalResult.aiAuditorConfidence  = null
+                                finalResult.aiAuditorModulation  = null
+                                finalResult.aiAuditorRiskFlags   = result.reason
+                                // ────────────────────────────────────────────────────────────
                             }
                             else -> {}
                         }
