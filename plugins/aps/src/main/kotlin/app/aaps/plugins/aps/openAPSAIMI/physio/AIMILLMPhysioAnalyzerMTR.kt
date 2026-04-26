@@ -263,7 +263,7 @@ class AIMILLMPhysioAnalyzerMTR @Inject constructor(
         val prompt = buildPrompt(features, baseline, context)
         
         val requestBody = JSONObject().apply {
-            put("model", "claude-3-5-sonnet-20241022")
+            put("model", "claude-sonnet-4-6")
             put("max_tokens", 150)
             put("messages", org.json.JSONArray().apply {
                 put(JSONObject().apply {

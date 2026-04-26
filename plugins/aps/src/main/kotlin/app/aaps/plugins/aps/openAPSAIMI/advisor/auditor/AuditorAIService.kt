@@ -319,7 +319,7 @@ class AuditorAIService @Inject constructor(
      * Call Claude API
      */
     private fun callClaude(apiKey: String, prompt: String, useHighPerf: Boolean): String {
-        val model = if (useHighPerf) "claude-3-5-sonnet-20241022" else "claude-3-haiku-20240307"
+        val model = if (useHighPerf) "claude-sonnet-4-6" else "claude-haiku-4-5"
         val url = URL(CLAUDE_URL)
         val connection = (url.openConnection() as HttpURLConnection).apply {
             requestMethod = "POST"
