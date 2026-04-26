@@ -189,7 +189,13 @@ enum class BooleanKey(
     OApsAIMIforcelimits("key_use_AimiForceLimits",false),
     OApsAIMInight("OApsAIMI_Enable_night",false),
     OApsAIMIhoneymoon("key_use_Aimi_honeymoon",false),
-    OApsxdriponeminute(key = "key_use_Aimi_xdripOM",defaultValue = false),
+    OApsxdriponeminute(
+        key = "key_use_Aimi_xdripOM",
+        defaultValue = false,
+        titleResId = R.string.pref_title_xdripOM,
+        summaryResId = R.string.pref_summary_xdripOM,
+    ),
+
     OApsAIMIautoDrive(key = "key_use_Aimi_autoDrive",defaultValue = false),
     OApsAIMIT3cAdaptiveBasalEnabled("key_use_aimi_t3c_adaptive_basal", false),
     OApsAIMIAutodriveV3EnhancedGater("key_use_aimi_autodrive_v3_enhanced_gater", false),
