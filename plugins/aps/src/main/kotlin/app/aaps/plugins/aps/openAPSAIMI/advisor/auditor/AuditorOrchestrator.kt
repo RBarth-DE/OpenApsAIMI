@@ -12,6 +12,7 @@ import app.aaps.core.keys.StringKey
 import app.aaps.core.keys.interfaces.Preferences
 import app.aaps.plugins.aps.openAPSAIMI.pkpd.PkPdRuntime
 import app.aaps.plugins.aps.openAPSAIMI.model.*
+import app.aaps.plugins.aps.openAPSAIMI.advisor.auditor.ui.AuditorStatusLiveData
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -45,7 +46,8 @@ class AuditorOrchestrator @Inject constructor(
     private val dataCollector: AuditorDataCollector,
     private val aiService: AuditorAIService,
     private val aapsLogger: AAPSLogger,
-    private val physioAdapter: app.aaps.plugins.aps.openAPSAIMI.physio.AIMIInsulinDecisionAdapterMTR
+    private val physioAdapter: app.aaps.plugins.aps.openAPSAIMI.physio.AIMIInsulinDecisionAdapterMTR,
+    private val auditorStatusLiveData: AuditorStatusLiveData
 ) {
     // 🔄 New State Transition Manager
     private val stateManager = AimiStateTransitionManager(aapsLogger)
@@ -150,6 +152,7 @@ class AuditorOrchestrator @Inject constructor(
         // Check if auditor is enabled
         if (!isAuditorEnabled()) {
             aapsLogger.debug(LTag.APS, "AI Auditor: Disabled")
+            AuditorStatusTracker.updateStatus(AuditorStatusTracker.Status.OFF)
             stateManager.transitionTo(AuditorUIState.Idle, "Auditor preference disabled")
             callback?.invoke(null, createUnmodulatedDecision(smbProposed, tbrRate, tbrDuration, intervalMin, "Auditor disabled"))
             return
@@ -173,7 +176,9 @@ class AuditorOrchestrator @Inject constructor(
         
         if (!shouldTrigger) {
             aapsLogger.debug(LTag.APS, "AI Auditor: No trigger conditions met")
+            AuditorStatusTracker.updateStatus(AuditorStatusTracker.Status.SKIPPED_NO_TRIGGER)
             stateManager.transitionTo(AuditorUIState.Idle, "Conditions not met")
+            auditorStatusLiveData.notifyUpdate()
             callback?.invoke(null, createUnmodulatedDecision(smbProposed, tbrRate, tbrDuration, intervalMin, "No trigger"))
             return
         }
@@ -182,7 +187,9 @@ class AuditorOrchestrator @Inject constructor(
         val dataAgeMs = now - (glucoseStatus?.date ?: 0L)
         if (dataAgeMs > 15 * 60 * 1000L) {
             aapsLogger.warn(LTag.APS, "AI Auditor: Data too stale (${dataAgeMs / 60000} min)")
+            AuditorStatusTracker.updateStatus(AuditorStatusTracker.Status.SKIPPED_NO_TRIGGER)
             stateManager.transitionTo(AuditorUIState.Error("Stale CGM Data"), "Security: Exceeded 15m threshold")
+            auditorStatusLiveData.notifyUpdate()
             callback?.invoke(null, createUnmodulatedDecision(smbProposed, tbrRate, tbrDuration, intervalMin, "Stale data"))
             return
         }
@@ -255,6 +262,22 @@ class AuditorOrchestrator @Inject constructor(
             
             val combined = DualBrainHelpers.combineAdvice(sentinelAdvice, null)
             val modulated = combined.toDecisionResult(smbProposed, tbrRate, tbrDuration, intervalMin)
+
+            // Map Sentinel recommendation to the correct tracker status
+            val trackerStatus = when (sentinelAdvice.recommendation) {
+                LocalSentinel.Recommendation.CONFIRM          -> AuditorStatusTracker.Status.SKIPPED_NO_TRIGGER
+                LocalSentinel.Recommendation.REDUCE_SMB       -> AuditorStatusTracker.Status.OK_REDUCE
+                LocalSentinel.Recommendation.HOLD_SOFT        -> AuditorStatusTracker.Status.OK_SOFTEN
+                LocalSentinel.Recommendation.INCREASE_INTERVAL -> AuditorStatusTracker.Status.OK_INCREASE_INTERVAL
+                LocalSentinel.Recommendation.PREFER_BASAL     -> AuditorStatusTracker.Status.OK_PREFER_TBR
+            }
+            AuditorStatusTracker.updateStatus(trackerStatus)
+
+            // Cache actionable Sentinel verdicts so AuditorVerdictActivity can display them
+            if (sentinelAdvice.recommendation != LocalSentinel.Recommendation.CONFIRM) {
+                AuditorVerdictCache.update(buildSentinelVerdict(sentinelAdvice), modulated)
+            }
+
             aapsLogger.info(LTag.APS, "✅ ${combined.toLogString()}")
             
             callback?.invoke(null, modulated)
@@ -269,6 +292,7 @@ class AuditorOrchestrator @Inject constructor(
         if (triggerType == TriggerType.NONE) {
             aapsLogger.info(LTag.APS, "🌐 External: Skipped (No valid trigger)")
             AuditorStatusTracker.updateStatus(AuditorStatusTracker.Status.SKIPPED_NO_TRIGGER)
+            auditorStatusLiveData.notifyUpdate()
             callback?.invoke(null, createUnmodulatedDecision(smbProposed, tbrRate, tbrDuration, intervalMin, "No Trigger"))
             return
         }
@@ -279,6 +303,7 @@ class AuditorOrchestrator @Inject constructor(
             val combined = DualBrainHelpers.combineAdvice(sentinelAdvice, null)
             val modulated = combined.toDecisionResult(smbProposed, tbrRate, tbrDuration, intervalMin)
             aapsLogger.info(LTag.APS, "✅ ${combined.toLogString()}")
+            auditorStatusLiveData.notifyUpdate()
             callback?.invoke(null, modulated)
             return
         }
@@ -367,7 +392,16 @@ class AuditorOrchestrator @Inject constructor(
                     
                     // Update global cache for RT instrumentation
                     AuditorVerdictCache.update(verdict, modulated)
-                    
+
+                    // Update status tracker and notify UI (success path)
+                    val okStatus = when (verdict.verdict) {
+                        VerdictType.Soften -> AuditorStatusTracker.Status.OK_SOFTEN
+                        VerdictType.ShiftToTbr -> AuditorStatusTracker.Status.OK_PREFER_TBR
+                        else -> AuditorStatusTracker.Status.OK_CONFIRM
+                    }
+                    AuditorStatusTracker.updateStatus(okStatus)
+                    auditorStatusLiveData.notifyUpdate()
+
                     callback?.invoke(verdict, modulated)
                 } else {
                     aapsLogger.warn(LTag.APS, "AI Auditor: No verdict received (timeout or error)")
@@ -519,8 +553,40 @@ class AuditorOrchestrator @Inject constructor(
         }
     }
 
-    /** 
-     * Performance: Cached bucket calculation 
+    /**
+     * Builds a synthetic AuditorVerdict from a Sentinel-only result.
+     * Used when External AI is skipped so the activity still has something to display.
+     */
+    private fun buildSentinelVerdict(advice: LocalSentinel.SentinelAdvice): AuditorVerdict {
+        val verdictType = when (advice.recommendation) {
+            LocalSentinel.Recommendation.CONFIRM            -> VerdictType.Confirm
+            LocalSentinel.Recommendation.REDUCE_SMB         -> VerdictType.Soften
+            LocalSentinel.Recommendation.HOLD_SOFT          -> VerdictType.Soften
+            LocalSentinel.Recommendation.INCREASE_INTERVAL  -> VerdictType.Soften
+            LocalSentinel.Recommendation.PREFER_BASAL       -> VerdictType.ShiftToTbr
+        }
+        return AuditorVerdict(
+            verdict = verdictType,
+            confidence = advice.score / 100.0,
+            degradedMode = false,
+            riskFlags = if (advice.tier != LocalSentinel.Tier.NONE) listOf("Sentinel: ${advice.reason}") else emptyList(),
+            evidence = advice.details,
+            boundedAdjustments = BoundedAdjustments(
+                smbFactorClamp = advice.smbFactor,
+                intervalAddMin = advice.extraIntervalMin,
+                preferTbr = advice.preferBasal,
+                tbrFactorClamp = 1.0
+            ),
+            debugChecks = listOf(
+                "Source: Local Sentinel (offline, no AI call)",
+                "Tier: ${advice.tier}  Score: ${advice.score}/100",
+                "Recommendation: ${advice.recommendation}"
+            )
+        )
+    }
+
+    /**
+     * Performance: Cached bucket calculation
      */
     private fun getCurrentTimeBucket(): Long {
         val now = System.currentTimeMillis()

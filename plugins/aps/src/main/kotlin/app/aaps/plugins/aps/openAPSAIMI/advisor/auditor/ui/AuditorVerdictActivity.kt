@@ -7,6 +7,7 @@ import android.view.View
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.core.content.ContextCompat
+import app.aaps.core.ui.activities.TranslatedDaggerAppCompatActivity
 import androidx.annotation.StringRes
 import app.aaps.core.keys.BooleanKey
 import app.aaps.core.keys.interfaces.Preferences
@@ -32,7 +33,7 @@ import javax.inject.Inject
  * - DashboardFragment auditor indicator click
  * - OverviewFragment auditor indicator click
  */
-class AuditorVerdictActivity : DaggerAppCompatActivity() {
+class AuditorVerdictActivity : TranslatedDaggerAppCompatActivity() {
 
     @Inject lateinit var preferences: Preferences
     @Inject lateinit var auditorStatusLiveData: AuditorStatusLiveData
