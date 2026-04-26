@@ -186,7 +186,6 @@
     <string name="nochangerequested">Keine Anpassung benötigt</string>
     <!--    Insulin / Concentration-->
     <!--       Stats -->
-    <string name="average">Durchschnitt</string>
     <!--    ProfileSwitch-->
     <!--    Temptarget-->
     <string name="record_insulin_hint">Wenn Sie Insulin eingeben, das mit einem Pen verabreicht wird, wählen Sie unten den richtigen Insulintyp aus. Die Dosis wird immer in Internationalen Einheiten angegeben.</string>
