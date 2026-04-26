@@ -236,7 +236,29 @@
     <string name="aimi_ai_auditor_section_title">AI Decision Auditor</string>
     <string name="aimi_trajectory_section_title">Trajectory Guard</string>
 
+    <string name="sos_log_monitoring_start">⚠️ BG dropped below threshold (%1$.1f &lt; %2$.1f). Starting 30 min monitoring...</string>
+    <string name="sos_log_sending">🚨 Sending SOS SMS (BG: %1$.1f, Delta: %2$s)</string>
+    <string name="sos_log_error_send">SMS send failed</string>
 
+    <string name="sos_sms_title_stale">⚠️ AAPS: MISSING DATA ⚠️</string>
+    <string name="sos_sms_title_critical">🚨 SOS: CRITICAL HYPO 🚨</string>
+    <string name="sos_sms_title_recovery">⚠️ SOS HYPO: RECOVERY PHASE ⚠️</string>
+    <string name="sos_sms_title_low">⚠️ SOS LOW BLOOD SUGAR ALERT ⚠️</string>
+
+    <string name="sos_sms_label_bg">BLOOD SUGAR</string>
+    <string name="sos_sms_label_last_bg">LAST BG</string>
+    <string name="sos_sms_label_trend">TREND</string>
+    <string name="sos_sms_label_iob">ACTIVE INSULIN</string>
+    <string name="sos_sms_label_time">TIME</string>
+    <string name="sos_sms_label_pos">Pos</string>
+    <string name="sos_sms_pos_not_available">Not available</string>
+
+    <string name="sos_sms_footer_stale">\nCHECK SENSOR CONNECTION.</string>
+    <string name="sos_sms_footer_critical">\nTAKE ACTION NOW!</string>
+    <string name="sos_sms_footer_recovery">\nBLOOD SUGAR IS SLOWLY RISING — WAIT FOR CONFIRMATION</string>
+    <string name="sos_sms_footer_low">\nWAITING FOR RECOVERY OR USER ACTION</string>
+
+    
     <string name="oaps_aimi_thyroid_title">🦋 Hyperthyroidism (Basedow) Module</string>
     <string-array name="oaps_aimi_thyroid_mode_entries">
         <item>Manual Selection</item>

@@ -272,4 +272,5 @@ enum class StringKey(
 
     // 🚨 Emergency SOS (Hypo)
     AimiEmergencySosPhone("aimi_emergency_sos_phone", ""),
+    AimiEmergencySosPhone2("aimi_emergency_sos_phone2", ""),
 }

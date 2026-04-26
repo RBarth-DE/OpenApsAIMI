@@ -323,5 +323,6 @@ enum class IntKey(
 
     // 🚨 Emergency SOS (Hypo)
     AimiEmergencySosThreshold("aimi_emergency_sos_threshold", 55, 40, 100),
-
+    AimiEmergencySosImmediateThreshold("aimi_emergency_sos_immediate_threshold", 50, 40, 100),
+    AimiEmergencySosStaleThreshold("aimi_emergency_sos_stale_threshold", 30, 5, 120),
 }
