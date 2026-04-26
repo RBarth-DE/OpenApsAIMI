@@ -2,7 +2,7 @@
 <resources>
     <string name="error_field_must_not_be_empty">The field must not be empty</string>
     <string name="error_mustbe4hexadidits">Must be 4 characters of ABCDEF0123456789</string>
-
+    <!--    General-->
     <string name="temp_basal_overview_short_name">T:</string>
     <string name="treatments">Treatments</string>
     <string name="treatments_history">Treatments history</string>
@@ -77,7 +77,7 @@
     <string name="configbuilder_general">General</string>
     <string name="protection">Protection</string>
     <string name="value_unavailable_short">n/a</string>
-
+    <!-- master_password moved to core/keys/strings.xml -->
     <string name="ue_export_to_csv">Export User Entries to Excel (csv)</string>
     <string name="confirm">Confirm</string>
     <string name="pump">Pump</string>
@@ -252,13 +252,13 @@
     <string name="next">Next</string>
     <string name="show_hide_records">Hide loop records</string>
 
-
+    <!--    Protection-->
     <string name="wrongpassword">Wrong password</string>
     <string name="wrongpin">Wrong PIN</string>
     <string name="passwords_dont_match">Passwords don\'t match</string>
     <string name="pin_dont_match">PINs don\'t match</string>
 
-
+    <!--    Profile-->
     <string name="basalprofilenotaligned">Basal values not aligned to hours: %1$s</string>
     <string name="minimalbasalvaluereplaced">Basal value replaced by minimum supported value: %1$s</string>
     <string name="maximumbasalvaluereplaced">Basal value replaced by maximum supported value: %1$s</string>
@@ -266,10 +266,10 @@
     <string name="profile_ins_units_per_hour">U/h</string>
     <string name="profile_carbs_per_unit">g/U</string>
 
-
+    <!--    ProfileFunction-->
     <string name="startprofile">Start profile %1$d%% for %2$d min</string>
 
-
+    <!--    APSResult-->
     <string name="cancel_temp">Cancel temp basal</string>
     <string name="let_temp_basal_run">Let temp basal run</string>
     <string name="rate">Rate</string>
@@ -277,7 +277,7 @@
     <string name="reason">Reason</string>
     <string name="nochangerequested">No change requested</string>
 
-
+    <!--    Insulin / Concentration-->
     <string name="ins_concentration_confirmed">Insulin %1$s confirmed</string>
     <string name="current_insulin">Currently active</string>
     <string name="change_insulin">Change</string>
@@ -311,7 +311,7 @@
     <!--    Temptarget-->
     <string name="mins">%1$d min</string>
 
-
+    <!--    Translator-->
     <string name="careportal">Careportal</string>
     <string name="careportal_bgcheck">BG Check</string>
     <string name="careportal_mbg">Manual BG or Calibration</string>
@@ -492,11 +492,11 @@
     <string name="arrow_center">Center</string>
 
 
-
+    <!--    Command-->
     <string name="connectiontimedout">Connection timed out</string>
     <string name="pump_not_configured">Pump not configured</string>
 
-
+    <!--    PumpEnactResult-->
     <string name="enacted">Enacted</string>
     <string name="comment">Comment</string>
     <string name="percent">Percent</string>
@@ -504,7 +504,7 @@
     <string name="waitingforpumpresult">Waiting for result</string>
     <string name="smb_shortname">SMB</string>
 
-
+    <!--    CarbsReq-->
     <string name="carbsreq">%1$d g additional carbs required within %2$d minutes</string>
 
     <string name="basalrate">Basal</string>
@@ -513,7 +513,7 @@
     <string name="tdd">Total Daily Dose</string>
     <string name="timedetection">Time detection</string>
 
-
+    <!-- User Entry -->
     <string name="uel_bolus">BOLUS</string>
     <string name="uel_bolus_calculator">BOLUS CALCULATOR</string>
     <string name="uel_bolus_advisor">BOLUS ADVISOR</string>
@@ -620,7 +620,7 @@
     <string name="uel_scene_activated">SCENE ACTIVATED</string>
     <string name="uel_scene_deactivated">SCENE DEACTIVATED</string>
 
-
+    <!-- HardLimits -->
     <string name="profile_low_target">Profile low target</string>
     <string name="profile_high_target">Profile high target</string>
     <string name="temp_target_low_target">Temporary target bottom value</string>
@@ -638,7 +638,7 @@
     <string name="value_out_of_hard_limits">»%1$s« %2$.2f is out of hard limits</string>
     <string name="basal_value">Basal value</string>
 
-
+    <!-- Profile validation -->
     <string name="no_profile_selected">No profile selected</string>
     <string name="missing_profile_name">Missing profile name</string>
     <string name="profile_not_saved_activate">Profile not saved. Please save the profile before activating.</string>
@@ -687,11 +687,11 @@
     <string name="autotune_select_profile">Select profile to tune</string>
 
 
-
+    <!-- Alerts -->
     <string name="urgent_alarm">Urgent Alarm</string>
     <string name="info">INFO</string>
 
-
+    <!-- BolusWizard -->
     <string name="bolus_advisor">Bolus advisor</string>
     <string name="bolus_advisor_message">You have high glycemia. Instead of eating now it\'s recommended to wait for better glycemia. Do you want to do a correction bolus now and remind you when it\'s time to eat? In this case no carbs will be recorded and you must use wizard again when we remind you.</string>
 
@@ -745,7 +745,7 @@
     <string name="quickwizard_managemnt">QuickWizard</string>
 
 
-
+    <!--    Preferences-->
     <string name="child">Child</string>
     <string name="teenage">Teenage</string>
     <string name="adult">Adult</string>
@@ -756,10 +756,10 @@
     <string name="max_carbs_title">Max allowed carbs [g]</string>
     <string name="patient_type">Patient type</string>
 
-
+    <!--    Protection-->
     <string name="unlock_settings">Unlock settings</string>
 
-
+    <!--    Pumps -->
     <string name="battery_label">Battery</string>
     <string name="reservoir_label">Reservoir</string>
     <string name="last_connection_label">Last connection</string>
@@ -794,14 +794,14 @@
     <string name="history" comment="Tab/screen title for viewing past events">History</string>
     <string name="overview_reservoir_concentration_value_over">Over %1$s left</string>
 
-
+    <!--    Constraints-->
     <string name="limitingbasalratio">Limiting max basal rate to %1$.2f U/h because of %2$s</string>
     <string name="pumplimit">pump limit</string>
     <string name="limitingpercentrate">Limiting max percent rate to %1$d%% because of %2$s</string>
     <string name="itmustbepositivevalue">it must be positive value</string>
     <string name="limitingbolus">Limiting bolus to %1$.1f U because of %2$s</string>
 
-
+    <!--    Dialogs-->
     <string name="confirmation">Confirmation</string>
     <string name="message">Message</string>
     <string name="ok">OK</string>
@@ -811,7 +811,10 @@
     <string name="no">No</string>
     <string name="close">Close</string>
 
+    <!-- TwoMessagesDialog -->
+    <string name="password_preferences_decrypt_prompt">You will be asked for master password, which is needed to decrypt imported preferences.</string>
 
+    <!-- <unattended_export> -->
     <string name="export_ok">OK</string>
     <string name="export_warning">Warning</string>
     <string name="export_expired">Expired</string>
@@ -819,20 +822,20 @@
     <string name="export_failed">Failed</string>
     <string name="export_alert">ALERT</string>
 
-
+    <!-- Export dialog strings -->
     <string name="master_password_missing">Master password is not set!\n\nPlease set a master password first, then try again.</string>
     <string name="export_to">Export settings to</string>
     <string name="password_preferences_encrypt_prompt">You will be asked for master password, which will be used to encrypt exported preferences.</string>
     <string name="preferences_export_canceled">Export canceled! Preferences were NOT exported!</string>
 
-
+    <!-- <unattended_export result messages> -->
     <string name="export_result_message_exported">Settings exported</string>
     <string name="export_result_message_failed">Settings export FAILED!</string>
     <string name="export_result_message_about_to_expire">Settings exported: password about to expire soon. Export manually and (re)enter password.</string>
     <string name="export_result_message_expired">Settings export canceled: password expired. Export manually and (re)enter!</string>
     <string name="export_result_message_disabled">Warning (automation): Settings export not enabled!</string>
 
-
+    <!-- Cloud export -->
     <string name="export_cloud_success">Cloud export successful</string>
     <string name="export_cloud_failed">Cloud export FAILED!</string>
     <string name="csv_exported">User entries exported</string>
@@ -842,7 +845,7 @@
     <string name="cloud_directory">Cloud Directory</string>
     <string name="cloud_token_expired_or_invalid">Cloud storage authorization has expired or is invalid. Please re-authorize.</string>
 
-
+    <!-- Export destination chip labels -->
     <string name="chip_local">Local</string>
     <string name="chip_cloud">Cloud</string>
     <string name="chip_email">Email</string>
@@ -853,7 +856,7 @@
     <string name="data_choices">Data Choices</string>
     <string name="unattended_settings_export">Unattended Settings Export</string>
 
-
+    <!-- Maintenance bottom sheet descriptions -->
     <string name="maintenance_log_settings_desc">Configure log verbosity levels</string>
     <string name="maintenance_send_logs_desc">Share log files for troubleshooting</string>
     <string name="maintenance_delete_logs_desc">Remove old log files</string>
@@ -869,7 +872,7 @@
     <string name="maintenance_reset_aps_results_desc">Clear stored algorithm results</string>
     <string name="maintenance_reset_db_desc">Erase all databases and reload</string>
 
-
+    <!-- Cloud directory dialog (Compose) -->
     <string name="select_storage_type">Select Storage Type</string>
     <string name="clear_cloud_action">Clear Settings</string>
     <string name="clear_cloud_settings">Clear Cloud Settings</string>
@@ -882,14 +885,14 @@
 
     <string name="format_hour_minute">%1$dh %2$dm</string>
 
-
+    <!-- datetime layout -->
     <string name="event_time_label">Event time</string>
 
-
+    <!-- BluetoothDevicePreference -->
     <string name="need_connect_permission">Application needs bluetooth permission</string>
     <string name="smscommunicator_missingsmspermission">Missing SMS permission</string>
 
-
+    <!--    Combo-->
     <string name="user_request" comment="26 characters max for translation">User request</string>
 
     <!--    Pump pair/unpair (shared) -->
@@ -898,14 +901,14 @@
     <string name="pump_unpair_confirm_title">Unpair pump?</string>
     <string name="pump_paired" comment="26 characters max for translation">Pump paired</string>
 
-
+    <!--    BlePreCheck-->
     <string name="ble_not_supported">Bluetooth Low Energy not supported.</string>
     <string name="ble_not_supported_or_not_paired">Bluetooth Low Energy not supported or device not paired.</string>
     <string name="ble_not_enabled">Bluetooth not enabled.</string>
     <string name="ble_permissions_missing">Bluetooth permissions are not granted. Please grant them in the app settings.</string>
     <string name="nav_plugin_preferences">Plugin preferences</string>
 
-
+    <!-- Navigation -->
     <string name="nav_about">About</string>
     <string name="nav_about_desc">View app version and information</string>
     <string name="nav_exit">Exit</string>
@@ -927,10 +930,10 @@
     <string name="quick_launch_configure">Configure QuickLaunch</string>
     <string name="quick_launch_configure_desc">Customize quick-action buttons on overview</string>
 
-
+    <!-- Alerts -->
     <string name="localalertsettings_title">Local alerts</string>
 
-
+    <!-- Actions Screen -->
     <string name="add">Add</string>
     <string name="remove">Remove</string>
     <string name="reorder">Reorder</string>
@@ -947,10 +950,10 @@
     <string name="cannula">Cannula</string>
     <string name="patch_pump">Patch pump</string>
 
-
+    <!-- Site Rotation -->
     <string name="select_location">Click below to select Site</string>
 
-
+    <!-- About -->
     <string name="cta_dont_kill_my_app_info">Don\'t kill my app?</string>
     <string name="fabric_upload_disabled">Crash logs upload disabled!</string>
     <string name="about_link_urls">\n\nDocumentation:\nhttps://wiki.aaps.app\n\nFacebook:\nhttps://www.facebook.com/groups/AndroidAPSUsers</string>
@@ -968,14 +971,14 @@
         <item quantity="other">%1$d minutes</item>
     </plurals>
 
-
+    <!--    Maintenance-->
     <string name="cleanup_db_confirm">Do you want to cleanup the database?\nIt will remove tracked changes and historic data older than 3 months.</string>
     <string name="cleanup_db_confirm_sync">Do you want to cleanup the database?\nIt will remove tracked changes and historic data older than 3 months.\nDoing it will speedup full synchronization dramatically.</string>
     <string name="cleared_entries">Cleared entries</string>
     <string name="reset_db_confirm">Do you really want to reset the databases?</string>
     <string name="reset_aps_results_confirm">Do you really want to reset stored APS results?</string>
 
-
+    <!--    Weekday-->
     <string name="weekday_sunday_short">Sun</string>
     <string name="weekday_saturday_short">Sat</string>
     <string name="weekday_friday_short">Fri</string>
@@ -984,7 +987,7 @@
     <string name="weekday_tuesday_short">Tue</string>
     <string name="weekday_monday_short">Mon</string>
 
-
+    <!--    DecimalFormatterImpl -->
     <string name="format_insulin_units1">%1$.1f U</string>
     <string name="format_insulin_units">%1$.2f U</string>
     <string name="format_insulin_units_signed">%1$+.2f U</string>
@@ -993,10 +996,11 @@
     <string name="percent_rate_duration_formatted">&lt;b&gt;Rate&lt;/b&gt;: %1$.2f%% (%2$.2f U/h)&lt;br&gt;&lt;b&gt;Duration&lt;/b&gt;: %3$d min&lt;br&gt;</string>
     <string name="rate_percent_duration_formatted">&lt;b&gt;Rate&lt;/b&gt;: %1$.2f U/h (%2$.2f%%) &lt;br&gt;&lt;b&gt;Duration&lt;/b&gt;: %3$d min&lt;br&gt;</string>
 
-
+    <!--    Playback-->
     <string name="audio_playback_attribution">"AAPS plays audio"</string>
 
-
+    <!-- ProfileEditor -->
+    <string name="dia_short">DIA</string>
     <string name="basal_short">BAS</string>
     <string name="target_short">TARG</string>
     <string name="profile_name">Profile name:</string>
@@ -1022,7 +1026,7 @@
     <string name="no_search_results">No results found</string>
     <string name="search_plugin_disabled">Plugin %1$s disabled</string>
 
-
+    <!--    Food Management -->
     <string name="food_management">Food</string>
     <string name="food_deleted">Food deleted</string>
     <string name="edit_food">Edit Food</string>
@@ -1040,11 +1044,11 @@
     <string name="label_protein_g">Protein (g)</string>
     <string name="label_energy_kj">Energy (kJ)</string>
 
-
+    <!--    Log Settings-->
     <string name="nav_logsettings">Log settings</string>
     <string name="resettodefaults">Reset to defaults</string>
 
-
+    <!--    Maintenance-->
     <string name="maintenance">Maintenance</string>
     <string name="description_maintenance">Provides several functions for maintenance (eg. log sending, log deletion).</string>
     <string name="log_files">Log files</string>
@@ -1078,7 +1082,7 @@
     <string name="ble_scan_select_pump">Select your pump from the list below</string>
     <string name="ble_scan_scanning">Scanning for devices…</string>
 
-
+    <!-- Graph configuration -->
     <string name="graph_add">Add graph</string>
     <string name="graph_new">New graph</string>
     <string name="graph_number">Graph %1$d</string>
@@ -1086,7 +1090,7 @@
     <string name="graph_height">Graph height [dp]</string>
     <string name="predictions_shortname" comment="Short label for Predictions graph series">PRED</string>
     <string name="basal_shortname" comment="Short label for Basal, used in graph labels">BAS</string>
-
+    <!-- Graph series short names (used as graph labels, keep very short) -->
     <string name="deviation_shortname" comment="Short label for Deviations graph series">DEV</string>
     <string name="activity_shortname" comment="Short label for Activity graph series">ACT</string>
     <string name="bgi_shortname" comment="Short label for Blood Glucose Impact graph series">-BGI</string>
