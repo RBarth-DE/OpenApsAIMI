@@ -1,6 +1,6 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <!--    General-->
+
     <string name="more_options">Weitere Optionen</string>
     <string name="refresh">Aktualisieren</string>
     <string name="no_history_records">Es wurden keine Einträge gefunden</string>
@@ -39,7 +39,7 @@
     <string name="configbuilder_insulin">Insulin</string>
     <string name="protection">Schutz</string>
     <string name="value_unavailable_short">N/A</string>
-    <!-- master_password moved to core/keys/strings.xml -->
+
     <string name="ue_export_to_csv">Benutzereinträge nach Excel exportieren (csv)</string>
     <string name="confirm">Bestätigen</string>
     <string name="pump">Pumpe</string>
@@ -67,7 +67,7 @@
     <string name="carbs">Kohlenhydrate</string>
     <string name="invalid_profile">Ungültiges Profil!</string>
     <string name="no_profile_set">KEIN PROFIL GESETZT</string>
-    <string name="active"><![CDATA[<Aktiv>]]></string>
+    <string name="active">&lt;Aktiv&gt;</string>
     <string name="date">Datum</string>
     <string name="units_label">Einheiten</string>
     <string name="dia_label">DIA</string>
@@ -131,6 +131,7 @@
     <string name="a11y_inrange">im Zielbereich</string>
     <string name="a11y_low">niedrig</string>
     <string name="average">Durchschnitt</string>
+    <string name="remove_label">Entfernen</string>
     <string name="activate_profile">Aktiviere Profil</string>
     <string name="reset">Zurücksetzen</string>
     <string name="profileswitch_ismissing">Profil-Wechsel fehlt, bitte nimm einen Profil-Wechsel vor oder drücke \"AKTIVIERE PROFIL\" im lokalen Profil.</string>
@@ -161,22 +162,22 @@
     <string name="iob_label">Aktives Insulin (IOB)</string>
     <string name="loopstatus_targets">ZIELE:</string>
     <string name="loopstatus_OAPS_result">OAPS ERGEBNIS:</string>
-    <!--    Protection-->
+
     <string name="show_hide_records">Loop Einträge ausblenden</string>
     <string name="wrongpassword">Falsches Passwort</string>
     <string name="wrongpin">Falsche PIN</string>
     <string name="passwords_dont_match">Die Passwörter stimmen nicht überein.</string>
     <string name="pin_dont_match">PINs stimmen nicht überein</string>
-    <!--    Profile-->
+
     <string name="basalprofilenotaligned">Basalraten beginnen nicht zur vollen Stunde: %1$s</string>
     <string name="minimalbasalvaluereplaced">Basal-Wert wurde durch den kleinst möglichen Wert ersetzt: %1$s</string>
     <string name="maximumbasalvaluereplaced">Basal-Wert wurde durch größt möglichen Wert ersetzt: %1$s</string>
     <string name="profile_per_unit">/IE</string>
     <string name="profile_ins_units_per_hour">IE/h</string>
     <string name="profile_carbs_per_unit">g/IE</string>
-    <!--    ProfileFunction-->
+
     <string name="startprofile">Profil %1$d%% für %2$d Min. starten</string>
-    <!--    APSResult-->
+
     <string name="cancel_temp">Temporäre Basalrate abbrechen</string>
     <string name="let_temp_basal_run">Temporäre Basalrate aktiv lassen</string>
     <string name="rate">Rate</string>
@@ -190,7 +191,7 @@
     <!--    Temptarget-->
     <string name="record_insulin_hint">Wenn Sie Insulin eingeben, das mit einem Pen verabreicht wird, wählen Sie unten den richtigen Insulintyp aus. Die Dosis wird immer in Internationalen Einheiten angegeben.</string>
     <string name="mins">%1$d min.</string>
-    <!--    Translator-->
+
     <string name="careportal">Careportal</string>
     <string name="careportal_bgcheck">BZ-Test</string>
     <string name="careportal_mbg">Manueller BZ oder Kalibrierung</string>
@@ -237,10 +238,10 @@
     <string name="loop">Loop</string>
     <string name="ns">NS</string>
     <string name="record">Eintrag</string>
-    <!--    Command-->
+
     <string name="arrow_center">mittig</string>
     <string name="connectiontimedout">Zeitüberschreitung bei Verbindung</string>
-    <!--    PumpEnactResult-->
+
     <string name="pump_not_configured">Pumpe nicht konfiguriert</string>
     <string name="enacted">Ausgeführt</string>
     <string name="comment">Kommentar</string>
@@ -248,13 +249,13 @@
     <string name="absolute">Absolut</string>
     <string name="waitingforpumpresult">Auf Pumpenergebnis warten</string>
     <string name="smb_shortname">SMB</string>
-    <!--    CarbsReq-->
+
     <string name="carbsreq">%1$d g zusätzliche Kohlenhydrate innerhalb von %2$d Minuten erforderlich</string>
     <string name="basalrate">Basal</string>
     <string name="bolus">Bolus</string>
-    <!--    Ntp-->
+
     <string name="timedetection">Zeiterkennung</string>
-    <!-- User Entry -->
+
     <string name="uel_bolus">BOLUS</string>
     <string name="uel_bolus_calculator">BOLUS-KALKULATOR</string>
     <string name="uel_bolus_advisor">BOLUS RATGEBER</string>
@@ -345,7 +346,7 @@
     <string name="ue_none">Keine Einheit</string>
     <string name="uel_loop_change">LOOP GEÄNDERT</string>
     <string name="uel_loop_removed">LOOP ENTFERNT</string>
-    <!-- HardLimits -->
+
     <string name="profile_low_target">Profil unteres Ziel</string>
     <string name="profile_high_target">Profil oberes Ziel</string>
     <string name="temp_target_low_target">Temp. Ziel unterer Wert</string>
@@ -360,8 +361,8 @@
     <string name="valueoutofrange">»%1$s« ist außerhalb der fest programmierten Grenzen</string>
     <string name="value_out_of_hard_limits">»%1$s« %2$.2f ist außerhalb der fest programmierten Grenzen</string>
     <string name="basal_value">Basal-Wert</string>
-    <!-- Profile validation -->
-    <!-- Command Queue + readStatus reasons -->
+
+
     <string name="errors">Fehler</string>
     <string name="bolus_u_min">BOLUS %1$.2f IE</string>
     <string name="carbs_g">KH %1$d g</string>
@@ -386,19 +387,18 @@
     <string name="formatPercent">%1$.0f%%</string>
     <string name="basal">Basal</string>
     <string name="basalpct">Basal %</string>
-    <!-- Autotune -->
+
     <string name="algorithm_long">Autosens im Algorithmus: %.0f%%</string>
     <string name="autotune">Autotune</string>
     <string name="autotune_tune_days">Anpassungstage :</string>
     <string name="autotune_select_profile">Wähle das Profil zum Anpassen aus</string>
-    <!-- Alerts -->
+
     <string name="urgent_alarm">Wichtiger Alarm</string>
     <string name="info">INFO</string>
-    <!-- BolusWizard -->
+
     <string name="bolus_advisor">Bolus-Rechner</string>
     <string name="bolus_advisor_message">Deine BZ-Werte sind hoch. Statt jetzt zu essen solltest Du abwarten, bis die Werte gesunken sind. Willst du jetzt einen Korrekturbolus abgeben und erinnert werden, wenn es Zeit zum Essen ist? In diesem Fall werden die Kohlenhydrate nicht übernommen und Du musst nach der Erinnerung den Bolus-Rechner erneut verwenden.</string>
     <string name="cobvsiob">COB vs IOB</string>
-    <string name="slowabsorptiondetected"><![CDATA[<font color=\'%1$s\'>!!!!! Langsamer Kohlenhydrat-Abbau erkannt: %2$d%% der Zeit. Überprüfe Deine Berechnung. COB könnte zu hoch sein und deswegen zu viel Insulin abgegeben werden!!!!!</font>]]></string>
     <string name="bolus_constraint_applied_warn">Bolus Einschränkung angewendet: %1$.2f U bis %2$.2f U</string>
     <string name="bolus_recorded_only">Bolus wird nur aufgezeichnet (Die Pumpe gibt kein Insulin ab!)</string>
     <string name="advisoralarm">Alarmiere mich, wenn es Zeit zum Essen ist. </string>
@@ -422,7 +422,7 @@
     <string name="wizard_explain_tt">TempT: %1$s</string>
     <string name="wizard_explain_tt_to">%1$s zu %2$s</string>
     <string name="wizard_pump_not_available">Keine Pumpe verfügbar!</string>
-    <!--    Preferences-->
+
     <string name="child">Kind</string>
     <string name="teenage">Teenager</string>
     <string name="adult">Erwachsener</string>
@@ -432,9 +432,9 @@
     <string name="max_bolus_title">Max. erlaubter Bolus [IE]</string>
     <string name="max_carbs_title">Max erlaubte KH [g]</string>
     <string name="patient_type">Patiententyp</string>
-    <!--    Protection-->
+
     <string name="unlock_settings">Einstellungen freischalten</string>
-    <!--    Pumps -->
+
     <string name="battery_label">Batterie</string>
     <string name="reservoir_label">Reservoir</string>
     <string name="last_connection_label">Letzte Verbindung</string>
@@ -460,14 +460,14 @@
     <string name="pairing">Koppeln</string>
     <string name="initializing">Initialisierung…</string>
     <string name="secs" comment="second short">%1$d s</string>
-    <!--    Constraints-->
+
     <string name="overview_reservoir_concentration_value_over">Noch über 1$ übrig</string>
     <string name="limitingbasalratio">Begrenzung der max. Basalrate auf %1$.2f IE/h wegen %2$s</string>
     <string name="pumplimit">Limit der Pumpe</string>
     <string name="limitingpercentrate">Begrenzung des max. Prozentsatzes auf %1$d%% wegen %2$s</string>
     <string name="itmustbepositivevalue">Es muss ein positiver Wert sein.</string>
     <string name="limitingbolus">Begrenze Bolusmenge auf %1$.1f IE wegen %2$s</string>
-    <!--    Dialogs-->
+
     <string name="confirmation">Bestätigung</string>
     <string name="message">Nachricht</string>
     <string name="ok">OK</string>
@@ -476,36 +476,36 @@
     <string name="yes">Ja</string>
     <string name="no">Nein</string>
     <string name="close">Schließen</string>
-    <!-- TwoMessagesDialog -->
-    <!-- <unattended_export> -->
-    <!-- Export dialog strings -->
-    <!-- <unattended_export result messages> -->
-    <!-- Cloud export -->
-    <!-- Export destination chip labels -->
-    <!-- Maintenance bottom sheet descriptions -->
-    <!-- Cloud directory dialog (Compose) -->
+
+
+
+
+
+
+
+
     <string name="authorization_status">Autorisierungsstatus</string>
     <string name="format_hour_minute">%1$dh %2$dm</string>
-    <!-- datetime layout -->
+
     <string name="event_time_label">Ereignis-Zeit</string>
-    <!-- BluetoothDevicePreference -->
+
     <string name="need_connect_permission">App benötigt Bluetooth-Berechtigung</string>
-    <!--    Combo-->
+
     <string name="user_request" comment="26 characters max for translation">Benutzeranfrage</string>
     <!--    Pump pair/unpair (shared) -->
     <string name="pump_paired" comment="26 characters max for translation">Pumpe gekoppelt</string>
-    <!--    BlePreCheck-->
+
     <string name="ble_not_supported">Bluetooth-Low-Energy nicht unterstützt.</string>
     <string name="ble_not_supported_or_not_paired">Bluetooth Low Energy nicht unterstützt oder Gerät nicht verbunden.</string>
     <string name="ble_not_enabled">Bluetooth nicht aktiviert.</string>
-    <!--    Preferences -->
+
     <string name="ble_permissions_missing">Die Bluetooth-Berechtigungen wurden nicht erteilt. Bitte erteilen Sie diese in den App-Einstellungen.</string>
     <string name="nav_plugin_preferences">Plugin-Einstellungen</string>
-    <!-- Navigation -->
-    <!-- Alerts -->
-    <!-- Actions Screen -->
-    <!-- Site Rotation -->
-    <!-- About -->
+
+
+
+
+
     <string name="select_location">Klicken Sie unten, um eine Seite auszuwählen</string>
     <string name="cta_dont_kill_my_app_info">Meine App nicht beenden?</string>
     <string name="fabric_upload_disabled">Absturzprotokolle hochladen deaktiviert!</string>
@@ -522,11 +522,11 @@
         <item quantity="one">%1$d Minute</item>
         <item quantity="other">%1$d Minuten</item>
     </plurals>
-    <!--    Maintenance-->
+
     <string name="cleanup_db_confirm">Möchten Sie die Datenbank bereinigen?\nEs werden gespeicherte Änderungen und historische Daten gelöscht, die älter als 3 Monate sind.</string>
     <string name="cleanup_db_confirm_sync">Möchten Sie die Datenbank bereinigen?\nEs werden gespeicherte Änderungen und historische Daten gelöscht, die älter als 3 Monate sind.\nDies beschleunigt die vollständige Synchronisierung dramatisch.</string>
     <string name="cleared_entries">Gelöschte Einträge</string>
-    <!--    Weekday-->
+
     <string name="reset_aps_results_confirm">Möchten Sie die gespeicherten APS-Ergebnisse wirklich zurücksetzen?</string>
     <string name="weekday_sunday_short">So</string>
     <string name="weekday_saturday_short">Sa</string>
@@ -535,7 +535,7 @@
     <string name="weekday_wednesday_short">Mi</string>
     <string name="weekday_tuesday_short">Di</string>
     <string name="weekday_monday_short">Mo</string>
-    <!--    DecimalFormatterImpl -->
+
     <string name="format_insulin_units1">%1$.1f U</string>
     <string name="format_insulin_units">%1$.2f U</string>
     <string name="error_field_must_not_be_empty">Das Feld darf nicht leer sein</string>
@@ -620,7 +620,6 @@
     <string name="scene_management_desc">Szenen erstellen, bearbeiten und verwalten</string>
     <string name="scene_action_count">%1$d Aktionen</string>
     <string name="scene_start_from_template">Mit einer Vorlage beginnen</string>
-    <string name="scene_editor_reason">Grund</string>
     <string name="scene_editor_target">Ziel</string>
     <string name="scene_editor_tt_preset">TT-Voreinstellung</string>
     <string name="scene_editor_no_tt_presets">Es sind keine TT-Voreinstellungen konfiguriert</string>
@@ -903,14 +902,14 @@
     <string name="pulse_panel_hint">Tippen Sie hier, um die vollständige Begründung und den Verlauf anzuzeigen</string>
     <string name="remove_items">Elemente entfernen</string>
     <string name="sort_items">Elemente sortieren</string>
-    <!--    Playback-->
-    <!-- ProfileEditor -->
-    <!--    Search-->
-    <!--    Food Management -->
-    <!--    Log Settings-->
-    <!--    Maintenance-->
-    <!-- Import settings screen -->
-    <!--    BLE Scan Step (shared pump pairing) -->
-    <!-- Graph configuration -->
-    <!-- Graph series short names (used as graph labels, keep very short) -->
+
+
+
+
+
+
+
+
+
+
 </resources>

@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8" ?>
+<?xml version='1.0' encoding='utf-8'?>
 <resources>
     <string name="apex_plugin_name">APEX TruCare III</string>
     <string name="apex_plugin_shortname">APEX</string>
@@ -89,15 +89,12 @@
     <string name="connection_status">Connection status</string>
     <string name="status_label">Pump status</string>
     <string name="updated_at">Last update</string>
-    <string name="suspend">Suspend</string>
     <string name="auto">Auto</string>
     <string name="pump_is_locked">Pump is locked! Cannot issue boluses.</string>
 
     <string name="pump_special_mode">Special mode</string>
     <string name="bolus_error_pump_special_mode">Pump is in special mode (either suspended or in refill mode). Please disconnect the pump in AAPS BEFORE entering such modes. Bolus cannot be issued.</string>
 
-    <string name="action_label">Current action</string>
-    <string name="action_driver_error">Driver error: %1$s</string>
     <string name="action_canceling_bolus">Canceling bolus</string>
     <string name="action_canceling_tbr">Canceling TBR</string>
     <string name="action_setting_bolus">Setting bolus %1$.3fU</string>
@@ -111,13 +108,11 @@
     <string name="action_setting_basal_profile">Setting basal</string>
     <string name="action_setting_basal_no">Setting № of basal</string>
     <string name="action_updating_settings">Updating settings</string>
-    <string name="action_updating_settings_v">Updating settings v%1$d</string>
     <string name="action_updating_connection">Updating connection</string>
     <string name="action_updating_sys_state">Updating system state</string>
     <string name="action_getting_version">Getting version</string>
     <string name="action_getting_tdds">Getting TDDs</string>
     <string name="action_getting_boluses">Getting boluses</string>
-    <string name="action_getting_refills">Getting refills</string>
     <string name="action_getting_status">Getting status</string>
     <string name="action_getting_status_v">Getting status v%1$d</string>
     <string name="action_getting_basal">Getting basal</string>
