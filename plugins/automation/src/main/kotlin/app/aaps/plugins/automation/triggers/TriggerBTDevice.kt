@@ -75,7 +75,10 @@ class TriggerBTDevice(injector: HasAndroidInjector) : Trigger(injector) {
     }
 
     private fun eventExists(): Boolean {
-        ArrayList(automationPlugin.btConnects).forEach {
+        val snapshot = synchronized(automationPlugin.btConnects) {
+            automationPlugin.btConnects.toList()
+        }
+        snapshot.forEach {
             if (btDevice.value == it.deviceName) {
                 if (comparator.value == ComparatorConnect.Compare.ON_CONNECT && it.state == EventBTChange.Change.CONNECT) return true
                 if (comparator.value == ComparatorConnect.Compare.ON_DISCONNECT && it.state == EventBTChange.Change.DISCONNECT) return true

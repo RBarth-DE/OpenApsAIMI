@@ -158,7 +158,8 @@ class AutomationPlugin @Inject constructor(
 
     private val automationEvents = ArrayList<AutomationEventObject>()
     var executionLog: MutableList<String> = ArrayList()
-    var btConnects: MutableList<EventBTChange> = ArrayList()
+    // ArrayList replaces by thread-secure list
+    var btConnects: MutableList<EventBTChange> = Collections.synchronizedList(ArrayList())
 
     companion object {
 
@@ -334,7 +335,7 @@ class AutomationPlugin @Inject constructor(
          * TriggerBTDevice can pick up and process these events
          * after processing clear events to prevent repeated actions
          */
-        btConnects.clear()
+        synchronized(btConnects) { btConnects.clear() }
 
         storeToSP() // save last run time
     }
