@@ -50,17 +50,15 @@ dependencies {
     api(libs.com.squareup.retrofit2.retrofit)
     api(libs.androidx.browser)
     api(libs.androidx.work.runtime)
-    api(libs.androidx.gridlayout)
     api(libs.com.google.android.material)
-    
+
     // Security - EncryptedSharedPreferences for Remote Access password
     api("androidx.security:security-crypto:1.1.0-alpha06")
 
     // NSClient, Tidepool
     api(libs.io.socket.client)
-    api(libs.com.squareup.okhttp3.logging.interceptor)
-    api(libs.com.squareup.retrofit2.adapter.rxjava3)
-    api(libs.com.squareup.retrofit2.converter.gson)
+    implementation(libs.com.squareup.okhttp3.logging.interceptor)
+    implementation(libs.com.squareup.retrofit2.converter.gson)
     api(libs.com.google.code.gson)
     api(libs.net.openid.appauth)
 
@@ -68,8 +66,8 @@ dependencies {
     api(libs.com.google.android.gms.playservices.wearable)
 
     // SMS Communicator (OTP + QR code)
-    api(libs.com.eatthepath.java.otp)
-    api(libs.com.github.kenglxn.qrgen.android)
+    implementation(libs.com.eatthepath.java.otp)
+    implementation(libs.com.github.kenglxn.qrgen.android)
 
     // Garmin
     api(libs.com.garmin.connectiq) { artifact { type = "aar" } }
@@ -77,6 +75,7 @@ dependencies {
 
     implementation(libs.com.google.dagger.hilt.android)
     implementation(libs.androidx.hilt.navigation.compose)
+
     ksp(libs.com.google.dagger.compiler)
     ksp(libs.com.google.dagger.hilt.compiler)
     ksp(libs.com.google.dagger.android.processor)
