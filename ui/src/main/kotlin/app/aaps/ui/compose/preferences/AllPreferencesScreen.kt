@@ -25,7 +25,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import kotlinx.coroutines.launch
 import app.aaps.core.data.plugin.PluginType
 import app.aaps.core.interfaces.automation.Automation
 import app.aaps.core.interfaces.autotune.Autotune
@@ -46,6 +45,7 @@ import app.aaps.core.ui.compose.preference.addPreferenceContent
 import app.aaps.core.ui.compose.preference.rememberPreferenceSectionState
 import app.aaps.core.ui.compose.preference.verticalScrollIndicators
 import app.aaps.ui.search.BuiltInSearchables
+import kotlinx.coroutines.launch
 
 /**
  * Screen for displaying all preferences from all plugins.
@@ -101,6 +101,9 @@ fun AllPreferencesScreen(
     }
 
     val pluginContents = buildList {
+        // 1. Overview plugin (always enabled)
+        getPreferenceContentIfEnabled(activePlugin.activeOverview as PluginBase)?.let { add(it) }
+
         // 2. Safety plugin (always enabled)
         getPreferenceContentIfEnabled(activePlugin.activeSafety as PluginBase)?.let { add(it) }
 
@@ -121,28 +124,28 @@ fun AllPreferencesScreen(
         // 7. Pump plugin
         getPreferenceContentIfEnabled(activePlugin.activePumpInternal as PluginBase)?.let { add(it) }
 
-        // 8. Overview plugin (Compose-applicable settings)
-        getPreferenceContentIfEnabled(activePlugin.activeOverview as PluginBase)?.let { add(it) }
-
-        // 9. SYNC type plugins
+        // 8. SYNC type plugins
         activePlugin.getSpecificPluginsList(PluginType.SYNC).forEach { plugin ->
             getPreferenceContentIfEnabled(plugin)?.let { add(it) }
         }
 
-        // 10. Automation plugin (found via interface)
+        // 11. Automation plugin (found via interface)
         getPreferenceContentIfEnabled(automationPlugin)?.let { add(it) }
 
-        // 11. Autotune plugin (found via interface)
+        // 12. Autotune plugin (found via interface)
         getPreferenceContentIfEnabled(autotunePlugin)?.let { add(it) }
     }
 
-    val snackbarHostState = remember { SnackbarHostState() }
+    val snackbarHostState = LocalSnackbarHostState.current
     val snackbarScope = rememberCoroutineScope()
     val onShowMessage: (String) -> Unit = { message ->
         snackbarScope.launch { snackbarHostState.showSnackbar(message) }
     }
     var composeScreen: ComposeScreenContent? by remember { mutableStateOf(null) }
     var drilledSubScreen: PreferenceSubScreenDef? by remember { mutableStateOf(null) }
+    // Hoist outside the early-return block so state survives drill-down/back cycles.
+    val listState = rememberLazyListState()
+    val sectionState = rememberPreferenceSectionState()
 
     BackHandler(enabled = composeScreen != null) {
         composeScreen = null
@@ -197,11 +200,8 @@ fun AllPreferencesScreen(
                             }
                         }
                     )
-                },
-                snackbarHost = { SnackbarHost(snackbarHostState) }
+                }
             ) { paddingValues ->
-                val listState = rememberLazyListState()
-                val sectionState = rememberPreferenceSectionState()
                 LazyColumn(
                     modifier = Modifier
                         .fillMaxSize()

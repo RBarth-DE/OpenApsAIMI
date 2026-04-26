@@ -51,9 +51,11 @@ fun PreferenceSubScreenHost(
         PreferenceSectionState()
     }
     val snackbarHostState = remember { SnackbarHostState() }
-    val snackbarScope = rememberCoroutineScope()
+    val scope = rememberCoroutineScope()
     val onShowMessage: (String) -> Unit = { message ->
-        snackbarScope.launch { snackbarHostState.showSnackbar(message) }
+        scope.launch {
+            snackbarHostState.showSnackbar(message)
+        }
     }
     var composeScreen: ComposeScreenContent? by remember { mutableStateOf(null) }
     var drilledSub: PreferenceSubScreenDef? by remember { mutableStateOf(null) }
@@ -65,8 +67,16 @@ fun PreferenceSubScreenHost(
         }
     }
 
+    // Lowest priority: always intercepts back so we never fall through to the nav stack.
+    // Higher-priority handlers below override this when composeScreen or drilledSub is active.
+    BackHandler(enabled = true) {
+        onBackClick()
+    }
     BackHandler(enabled = composeScreen != null) {
         composeScreen = null
+    }
+    BackHandler(enabled = drilledSub != null) {
+        drilledSub = null
     }
 
     composeScreen?.let { screen ->
@@ -112,6 +122,9 @@ fun PreferenceSubScreenHost(
                 snackbarHost = { SnackbarHost(snackbarHostState) }
             ) { paddingValues ->
                 val listState = rememberLazyListState()
+                LaunchedEffect(screenDef.key) {
+                    listState.scrollToItem(0)
+                }
                 LazyColumn(
                     modifier = Modifier
                         .fillMaxSize()

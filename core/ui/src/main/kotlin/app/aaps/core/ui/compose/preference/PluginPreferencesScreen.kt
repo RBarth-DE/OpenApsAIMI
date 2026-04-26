@@ -54,6 +54,21 @@ fun PluginPreferencesScreen(
     val preferenceScreenContent = plugin.getPreferenceScreenContent()
     val title = plugin.name
 
+    // Hoist sectionState here so it survives drill-down/back cycles.
+    // (SinglePluginPreferencesRenderer is conditionally composed — its own rememberSaveable
+    // resets every time it re-enters the composition after a drill-back.)
+    val screenKey = (preferenceScreenContent as? PreferenceSubScreenDef)?.key ?: ""
+    val sectionState = rememberSaveable(screenKey, saver = PreferenceSectionState.Saver) {
+        PreferenceSectionState()
+    }
+    // Expand the plugin card the first time (do not toggle — avoids collapsing restored state).
+    LaunchedEffect(screenKey) {
+        val mainKey = "${screenKey}_main"
+        if (!sectionState.isExpanded(mainKey)) {
+            sectionState.toggle(mainKey, SectionLevel.TOP_LEVEL)
+        }
+    }
+
     // State for inline Compose screen navigation
     var composeScreen: ComposeScreenContent? by remember { mutableStateOf(null) }
     var drilledSubScreen: PreferenceSubScreenDef? by remember { mutableStateOf(null) }
@@ -92,6 +107,7 @@ fun PluginPreferencesScreen(
                         screen = preferenceScreenContent,
                         title = title,
                         plugin = plugin,
+                        sectionState = sectionState,
                         visibilityContext = visibilityContext,
                         onBackClick = onBackClick,
                         onOpenLegacyXmlPreferences = onOpenLegacyXmlPreferences
@@ -153,6 +169,7 @@ private fun SinglePluginPreferencesRenderer(
     screen: PreferenceSubScreenDef,
     title: String,
     plugin: PluginBase,
+    sectionState: PreferenceSectionState,
     visibilityContext: PreferenceVisibilityContext?,
     onBackClick: () -> Unit,
     onOpenLegacyXmlPreferences: (() -> Unit)? = null
@@ -198,21 +215,10 @@ private fun SinglePluginPreferencesRenderer(
         return
     }
 
-    val sectionState = rememberSaveable(screen.key, saver = PreferenceSectionState.Saver) {
-        PreferenceSectionState()
-    }
     val snackbarHostState = remember { SnackbarHostState() }
     val snackbarScope = rememberCoroutineScope()
     val onShowMessage: (String) -> Unit = { message ->
         snackbarScope.launch { snackbarHostState.showSnackbar(message) }
-    }
-
-    // Expand the plugin card once when opening (do not toggle — avoids collapsing restored state).
-    LaunchedEffect(screen.key) {
-        val mainKey = "${screen.key}_main"
-        if (!sectionState.isExpanded(mainKey)) {
-            sectionState.toggle(mainKey, SectionLevel.TOP_LEVEL)
-        }
     }
 
     Scaffold(
@@ -243,7 +249,6 @@ private fun SinglePluginPreferencesRenderer(
         containerColor = MaterialTheme.colorScheme.background
     ) { paddingValues ->
         val listState = rememberLazyListState()
-
         // Provide visibility context via CompositionLocal (same as AllPreferencesScreen)
         CompositionLocalProvider(
             LocalVisibilityContext provides visibilityContext
