@@ -20,7 +20,7 @@ import java.util.TimeZone
 @Serializable
 data class RT(
     var algorithm: APSResult.Algorithm = APSResult.Algorithm.UNKNOWN,
-    var runningDynamicIsf: Boolean,
+    var runningDynamicIsf: Boolean = false,
     @Serializable(with = TimestampToIsoSerializer::class)
     var timestamp: Long? = null,
     val temp: String = "absolute",
