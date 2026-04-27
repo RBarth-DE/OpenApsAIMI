@@ -24,7 +24,6 @@ import app.aaps.core.interfaces.overview.AuditorDisplayState
 import app.aaps.core.interfaces.automation.Automation
 import app.aaps.core.interfaces.db.ProcessedTbrEbData
 import app.aaps.core.objects.extensions.convertedToAbsolute
-import app.aaps.core.objects.extensions.toStringShort
 import java.time.LocalDate
 import java.time.ZoneId
 import app.aaps.core.interfaces.overview.graph.SeriesType
@@ -685,7 +684,7 @@ class GraphViewModel @AssistedInject constructor(
         val unavail = rh.gs(R.string.value_unavailable_short)
         val tbr = processedTbrEbData.getTempBasalIncludingConvertedExtended(now)
         val (basalPctText, basalRateText) = if (tbr?.isValid == true) {
-            val pct = rh.gs(R.string.formatPercent, tbr) //tbr.toStringShort(rh)
+            val pct = rh.gs(R.string.formatPercent, tbr.rate)
             val profile = profileFunction.getProfile()
             val rate = profile?.let { rh.gs(R.string.format_insulin_units, tbr.convertedToAbsolute(now, it)) } ?: unavail
             pct to rate

@@ -1,6 +1,8 @@
 package app.aaps.ui.compose.overview
 
+import android.content.Intent
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -19,31 +21,30 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.aaps.core.data.model.ActiveSceneState
 import app.aaps.core.data.model.RM
 import app.aaps.core.data.model.TT
-import app.aaps.core.interfaces.overview.graph.TbrState
+import app.aaps.ui.compose.scenes.ActiveSceneBanner
 import app.aaps.core.ui.compose.AapsTheme
 import app.aaps.core.ui.compose.LocalConfig
+import app.aaps.core.ui.compose.navigation.ElementType
 import app.aaps.core.ui.compose.navigation.NavigationRequest
+import app.aaps.core.ui.compose.navigation.color
+import app.aaps.core.ui.compose.navigation.icon
 import app.aaps.core.ui.compose.preference.PreferenceSubScreenDef
 import app.aaps.ui.compose.main.TempTargetChipState
 import app.aaps.ui.compose.manageSheet.ManageViewModel
 import app.aaps.ui.compose.overview.aapsClient.AapsClientStatusCard
-import app.aaps.ui.compose.overview.chips.ChipsViewModel
 import app.aaps.ui.compose.overview.graphs.GraphViewModel
 import app.aaps.ui.compose.overview.graphs.GraphsSection
 import app.aaps.ui.compose.overview.statusLights.StatusViewModel
-import app.aaps.ui.compose.scenes.ActiveSceneBanner
 
 @Composable
 fun OverviewScreenSplit(
-    profileName: String,
-    isProfileModified: Boolean,
-    profileProgress: Float,
-    profileSceneManaged: Boolean = false,
     tempTargetText: String,
     tempTargetState: TempTargetChipState,
     tempTargetProgress: Float,
@@ -53,19 +54,14 @@ fun OverviewScreenSplit(
     runningModeText: String,
     runningModeProgress: Float,
     runningModeSceneManaged: Boolean = false,
-    tbrState: TbrState,
-    smbEnabled: Boolean,
     isSimpleMode: Boolean,
     calcProgress: Int,
     graphViewModel: GraphViewModel,
-    chipsViewModel: ChipsViewModel,
     manageViewModel: ManageViewModel,
     statusViewModel: StatusViewModel,
     statusLightsDef: PreferenceSubScreenDef,
     onNavigate: (NavigationRequest) -> Unit,
-    onTbrChipClick: () -> Unit,
     paddingValues: PaddingValues,
-    useRingHeroHome: Boolean = false,
     activeSceneState: ActiveSceneState? = null,
     sceneExpired: Boolean = false,
     onEndScene: () -> Unit = {},
@@ -75,10 +71,11 @@ fun OverviewScreenSplit(
 ) {
     val config = LocalConfig.current
     val bgInfoState by graphViewModel.bgInfoState.collectAsStateWithLifecycle()
-    val sensitivityUiState by chipsViewModel.sensitivityUiState.collectAsStateWithLifecycle()
-    val iobUiState by chipsViewModel.iobUiState.collectAsStateWithLifecycle()
-    val cobUiState by chipsViewModel.cobUiState.collectAsStateWithLifecycle()
+    val sensitivityUiState by graphViewModel.sensitivityUiState.collectAsStateWithLifecycle()
     val statusState by statusViewModel.uiState.collectAsStateWithLifecycle()
+    val statusPanelState by graphViewModel.statusPanelFlow.collectAsStateWithLifecycle()
+    val auditorState by graphViewModel.auditorStateFlow.collectAsStateWithLifecycle()
+    val context = LocalContext.current
 
     var statusExpanded by rememberSaveable { mutableStateOf(true) }
 
@@ -121,54 +118,104 @@ fun OverviewScreenSplit(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 4.dp),
-                    verticalAlignment = Alignment.Bottom
+                    verticalAlignment = Alignment.Top
                 ) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        if (useRingHeroHome) {
-                            RingHeroHomeSection(
-                                bgInfo = bgInfoState.bgInfo,
-                                timeAgoText = bgInfoState.timeAgoText
-                            )
-                        } else {
+                    // Left: BG Info + sensitivity chip
+                    Box {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             BgInfoSection(
                                 bgInfo = bgInfoState.bgInfo,
                                 timeAgoText = bgInfoState.timeAgoText
                             )
+                            SensitivityChipBlock(state = sensitivityUiState)
                         }
-                        SensitivityChipBlock(state = sensitivityUiState)
+                        AuditorIconButton(
+                            state = auditorState,
+                            modifier = Modifier.align(Alignment.TopEnd),
+                        ) {
+                            try {
+                                context.startActivity(
+                                    Intent().setClassName(
+                                        context,
+                                        "app.aaps.plugins.aps.openAPSAIMI.advisor.auditor.ui.AuditorVerdictActivity"
+                                    )
+                                )
+                            } catch (_: Exception) {}
+                        }
                     }
 
-                    OverviewChipsColumn(
-                        runningMode = runningMode,
-                        runningModeText = runningModeText,
-                        runningModeProgress = runningModeProgress,
-                        runningModeSceneManaged = runningModeSceneManaged,
-                        smbEnabled = smbEnabled,
-                        isSimpleMode = isSimpleMode,
-                        profileName = profileName,
-                        isProfileModified = isProfileModified,
-                        profileProgress = profileProgress,
-                        profileSceneManaged = profileSceneManaged,
-                        tempTargetText = tempTargetText,
-                        tempTargetState = tempTargetState,
-                        tempTargetProgress = tempTargetProgress,
-                        tempTargetReason = tempTargetReason,
-                        tempTargetSceneManaged = tempTargetSceneManaged,
-                        tbrState = tbrState,
-                        iobUiState = iobUiState,
-                        cobUiState = cobUiState,
-                        onNavigate = onNavigate,
-                        onTbrChipClick = onTbrChipClick,
+                    // Middle: chips + status panel
+                    Column(
                         modifier = Modifier
                             .weight(1f)
-                            .padding(start = 8.dp),
-                        trailingContent = {
-                            LargeClock(
-                                bgTimestamp = bgInfoState.bgInfo?.timestamp,
-                                modifier = Modifier.padding(start = 8.dp)
-                            )
+                            .padding(horizontal = 8.dp),
+                        verticalArrangement = Arrangement.spacedBy(2.dp)
+                    ) {
+                        OverviewChipsColumn(
+                            runningMode = runningMode,
+                            runningModeText = runningModeText,
+                            runningModeProgress = runningModeProgress,
+                            runningModeSceneManaged = runningModeSceneManaged,
+                            isSimpleMode = isSimpleMode,
+                            tempTargetText = tempTargetText,
+                            tempTargetState = tempTargetState,
+                            tempTargetProgress = tempTargetProgress,
+                            tempTargetReason = tempTargetReason,
+                            tempTargetSceneManaged = tempTargetSceneManaged,
+                            onNavigate = onNavigate,
+                        )
+                        OverviewStatusPanel(
+                            state = statusPanelState,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+
+                    // Right: AIMI quick action tiles
+                    Column(
+                        modifier = Modifier.padding(start = 4.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(2.dp)
+                    ) {
+                        AimiQuickTile(
+                            elementType = ElementType.PROFILE_HELPER,
+                            label = stringResource(app.aaps.core.ui.R.string.aimi_btn_advisor),
+                        ) {
+                            try {
+                                context.startActivity(
+                                    Intent().setClassName(
+                                        context,
+                                        "app.aaps.plugins.aps.openAPSAIMI.advisor.AimiProfileAdvisorActivity"
+                                    )
+                                )
+                            } catch (_: Exception) {}
                         }
-                    )
+                        AimiQuickTile(
+                            elementType = ElementType.QUICK_WIZARD_MANAGEMENT,
+                            label = stringResource(app.aaps.core.ui.R.string.aimi_btn_meal),
+                        ) {
+                            try {
+                                context.startActivity(
+                                    Intent().setClassName(
+                                        context,
+                                        "app.aaps.plugins.aps.openAPSAIMI.advisor.meal.MealAdvisorActivity"
+                                    )
+                                )
+                            } catch (_: Exception) {}
+                        }
+                        AimiActionButton(label = stringResource(app.aaps.core.ui.R.string.aimi_btn_context)) {
+                            try {
+                                context.startActivity(
+                                    Intent().setClassName(
+                                        context,
+                                        "app.aaps.plugins.aps.openAPSAIMI.context.ui.ContextActivity"
+                                    )
+                                )
+                            } catch (_: Exception) {}
+                        }
+                        AimiActionButton(label = stringResource(app.aaps.core.ui.R.string.aimi_btn_stats)) {
+                            onNavigate(NavigationRequest.Element(ElementType.STATISTICS))
+                        }
+                    }
                 }
 
                 OverviewStatusSection(
