@@ -631,8 +631,9 @@ class AIMIPhysioDataRepositoryMTR @Inject constructor(
         val client = healthConnectClient ?: return 0
 
         return try {
-            withTimeout(API_TIMEOUT_MS) {
-                withContext(Dispatchers.IO) {
+            runBlocking {
+                withTimeout(API_TIMEOUT_MS) {
+                    withContext(Dispatchers.IO) {
                         val now = Instant.now()
                         val safeDaysBack = daysBack.coerceAtLeast(1)
                         val startTime = now.minusSeconds((safeDaysBack * 24L * 60 * 60))
@@ -651,6 +652,7 @@ class AIMIPhysioDataRepositoryMTR @Inject constructor(
                         cache[cacheKey] = CachedData(avgSteps, System.currentTimeMillis())
                         aapsLogger.info(LTag.APS, "[$TAG] ✅ Steps (HC Aggregated, Garmin-only): total=$totalSteps, avg=$avgSteps/day")
                         avgSteps
+                    }
                 }
             }
         } catch (e: SecurityException) {
