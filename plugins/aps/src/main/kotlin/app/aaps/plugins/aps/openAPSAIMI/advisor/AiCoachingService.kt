@@ -43,7 +43,7 @@ class AiCoachingService @Inject constructor() {
         
         // Claude Haiku (Fast & Cheap)
         private const val CLAUDE_URL = "https://api.anthropic.com/v1/messages"
-        private const val CLAUDE_MODEL = "claude-3-haiku-20240307"
+        private const val CLAUDE_MODEL = "claude-haiku-4-5"
     }
 
     /**

@@ -11,8 +11,9 @@ import java.net.HttpURLConnection
 import java.net.URL
 
 class ClaudeVisionProvider : AIVisionProvider {
-    override val displayName = "Claude (3.5 Sonnet)"
+    override val displayName = "Claude (4.6 Sonnet)"
     override val providerId = "CLAUDE"
+    val model = "claude-sonnet-4-6"
     
     override suspend fun estimateFromImage(bitmap: Bitmap, userDescription: String, apiKey: String): EstimationResult = withContext(Dispatchers.IO) {
         try {
@@ -44,7 +45,7 @@ class ClaudeVisionProvider : AIVisionProvider {
         val userPrompt = MealVisionUserPrompt.buildAnalysisUserPrompt(userDescription)
 
         val jsonBody = JSONObject().apply {
-            put("model", "claude-sonnet-4-6")
+            put("model", model)
             put("max_tokens", 2048)
             put("temperature", 0.0)
             put("system", FoodAnalysisPrompt.SYSTEM_PROMPT)

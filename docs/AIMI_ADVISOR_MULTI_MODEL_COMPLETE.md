@@ -54,7 +54,7 @@ private const val DEEPSEEK_MODEL = "deepseek-chat"
 
 // Claude 3.5 Sonnet
 private const val CLAUDE_URL = "https://api.anthropic.com/v1/messages"
-private const val CLAUDE_MODEL = "claude-3-5-sonnet-20241022"
+private const val CLAUDE_MODEL = "claude-sonnet-4-6"
 ```
 
 #### **Fonctions ajoutées:**
