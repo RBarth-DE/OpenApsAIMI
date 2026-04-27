@@ -235,8 +235,18 @@ class SearchIndexBuilder @Inject constructor(
             }
         }
 
-        // From plugins
+        // From plugins — active APS plugin is skipped here and processed last so it wins for shared keys
+        val activeApsPlugin = activePlugin.activeAPS as? PluginBase
         activePlugin.getPluginsList().forEach { plugin ->
+            if (plugin === activeApsPlugin) return@forEach
+            val content = plugin.getPreferenceScreenContent()
+            if (content is PreferenceSubScreenDef) {
+                collectPreferenceKeysFromScreen(content, content.key, plugin, map)
+            }
+        }
+
+        // Active APS plugin processed last — its screen mappings override all others for shared keys
+        activeApsPlugin?.let { plugin ->
             val content = plugin.getPreferenceScreenContent()
             if (content is PreferenceSubScreenDef) {
                 collectPreferenceKeysFromScreen(content, content.key, plugin, map)
