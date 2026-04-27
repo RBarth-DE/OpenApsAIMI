@@ -685,7 +685,7 @@ class GraphViewModel @AssistedInject constructor(
         val unavail = rh.gs(R.string.value_unavailable_short)
         val tbr = processedTbrEbData.getTempBasalIncludingConvertedExtended(now)
         val (basalPctText, basalRateText) = if (tbr?.isValid == true) {
-            val pct = tbr.toStringShort(rh)
+            val pct = rh.gs(R.string.formatPercent, tbr) //tbr.toStringShort(rh)
             val profile = profileFunction.getProfile()
             val rate = profile?.let { rh.gs(R.string.format_insulin_units, tbr.convertedToAbsolute(now, it)) } ?: unavail
             pct to rate
