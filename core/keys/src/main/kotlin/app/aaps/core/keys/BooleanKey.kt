@@ -280,6 +280,22 @@ enum class BooleanKey(
     AimiEndometriosisPainFlare("aimi_endo_flare", false),
     OApsAIMIMealAdvisorTrigger("aimi_meal_advisor_trigger", false), // Trigger for one-shot MAX-SMB bypass
 
+    //Ketoacidosis Protection
+    ApsKetoacidosisProtection(
+        key ="ketoacidosis_protection",
+        defaultValue =false,
+        defaultedBySM = true,
+        titleResId = R.string.ketoacidosis_protection_summary,
+        summaryResId = R.string.ketoacidosis_protection_title
+    ),
+    ApsKetoacidosisProtectionStrategy(
+        key ="ketoacidosis_protection_strategy",
+        defaultValue = false,
+        defaultedBySM = true,
+        titleResId = R.string.ketoacidosis_protection_strategy_title,
+        summaryResId = R.string.ketoacidosis_protection_strategy_summary,
+    ),
+
     // 🌀 Adaptive Kernel Bank (Cosine Gate)
     AimiCosineGateEnabled("aimi_cosine_gate_enabled", true),
 

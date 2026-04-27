@@ -540,4 +540,11 @@
     <!-- UnitDoubleKey: APS preferences -->
     <!-- IntentKey preferences -->
     <!--    Appearance preferences-->
+
+    <string name="ketoacidosis_protection_title">Ketoazidose-Schutz</string>
+    <string name="ketoacidosis_protection_summary">Aktiviert eine kleine Sicherheits-TBR anstelle von null TBR, um das Risiko einer Ketoazidose zu verringern.</string>
+    <string name="ketoacidosis_protection_strategy_title">Variable Strategie?</string>
+    <string name="ketoacidosis_protection_strategy_summary">Wenn diese Funktion aktiviert ist, wird die kleine Sicherheits-TBR aktiviert, wenn der IOB im negativen Bereich liegt, als ob eine halbe Stunde lang kein Basalinsulin abgegeben worden wäre. Wenn diese Funktion deaktiviert ist, wird jeder Zero Temp durch die kleine TBR ersetzt.</string>
+    <string name="ketoacidosis_protection_basal_title">Sicherheits-TBR in [%]</string>
+    <string name="ketoacidosis_protection_basal_summary">Standard: 10</string>
 </resources>

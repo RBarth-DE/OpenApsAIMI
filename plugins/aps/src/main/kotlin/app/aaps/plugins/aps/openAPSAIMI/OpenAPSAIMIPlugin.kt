@@ -1108,6 +1108,10 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
             sensorLagActivity = Round.roundTo(sensorLagActivity, 0.0001)
             historicActivity = Round.roundTo(historicActivity, 0.0001)
             currentActivity = Round.roundTo(currentActivity, 0.0001)
+            val ketoacidosisProtectionIob: Double = runBlocking(Dispatchers.IO) {
+                iobCobCalculator.calculateIobFromBolus().iob +
+                    iobCobCalculator.calculateIobFromTempBasalsIncludingConvertedExtended().basaliob
+            }
             val tdd4D = tddCalculator.averageTDD(tddCalculator.calculate(4, allowMissingDays = false))
             val oapsProfile = OapsProfileAimi(
                 dia = eff.iCfg.dia,
@@ -1157,7 +1161,11 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
                 futureActivity = futureActivity,
                 sensorLagActivity = sensorLagActivity,
                 historicActivity = historicActivity,
-                currentActivity = currentActivity
+                currentActivity = currentActivity,
+                ketoacidosisProtection = preferences.get(BooleanKey.ApsKetoacidosisProtection),
+                ketoacidosisProtectionStrategy = preferences.get(BooleanKey.ApsKetoacidosisProtectionStrategy),
+                ketoacidosisProtectionBasal = preferences.get(IntKey.ApsKetoacidosisProtectionBasal),
+                ketoacidosisProtectionIob = ketoacidosisProtectionIob
             )
 
             val microBolusAllowed = constraintsChecker.isSMBModeEnabled(ConstraintObject(tempBasalFallback.not(), aapsLogger)).also { inputConstraints.copyReasons(it) }.value()
@@ -1534,6 +1542,7 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
         add(aimiComposeTrajectorySubScreen())
         add(BooleanKey.OApsxdriponeminute)
         add(aimiComposeWomenCycleSubScreen())
+        add(aimiComposeKetoProtectionSubScreen())
         add(aimiComposeInflammatorySubScreen())
         add(aimiComposeThyroidModuleSubScreen())
         add(BooleanKey.OApsAIMIpregnancy)
@@ -1623,6 +1632,20 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
                 add(DoubleKey.OApsAIMIWCycleClampMax)
             },
         )
+
+    private fun aimiComposeKetoProtectionSubScreen(): PreferenceSubScreenDef =
+        PreferenceSubScreenDef(
+            key = "Ketoacidosis_Protection",
+            titleResId = app.aaps.core.keys.R.string.ketoacidosis_protection_title,
+            summaryResId = app.aaps.core.keys.R.string.ketoacidosis_protection_summary,
+            items = buildList {
+                add(BooleanKey.ApsKetoacidosisProtection)
+                add(BooleanKey.ApsKetoacidosisProtectionStrategy)
+                add(IntKey.ApsKetoacidosisProtectionBasal)
+            },
+        )
+
+    // ketoScreen.addPreference(AdaptiveIntPreference(ctx = context, intKey = IntKey.ApsKetoacidosisProtectionBasal, dialogMessage = R.string.ketoacidosis_protection_basal_summary, title = R.string.ketoacidosis_protection_basal_title))
 
     private fun aimiComposeInflammatorySubScreen(): PreferenceSubScreenDef =
         PreferenceSubScreenDef(

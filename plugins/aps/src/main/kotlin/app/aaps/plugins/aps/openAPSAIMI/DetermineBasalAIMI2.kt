@@ -6533,13 +6533,23 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         adaptiveMultiplier: Double = 1.0
     ): RT {
         // 0) LGS kill-switch (sans récursion)
+
+        val pumpDesc = activePlugin.activePump.pumpDescription
+        val pumpCaps = PumpCaps(
+            basalStep = if (pumpDesc.basalStep > 0) pumpDesc.basalStep else 0.05,
+            bolusStep = if (pumpDesc.bolusStep > 0) pumpDesc.bolusStep else 0.05,
+            minDurationMin = 30,
+            maxBasal = profile.max_basal,
+            maxSmb = 3.0
+        )
+
         val lgsPref = profile.lgsThreshold
         val hypoGuard = HypoThresholdMath.computeHypoThreshold(minBg = profile.min_bg, lgsThreshold = lgsPref)
         val blockLgs = HypoGuard.isBelowHypoThreshold(bg, predictedBg.toDouble(), eventualBG, hypoGuard, delta.toDouble())
         if (blockLgs) {
             rT.reason.append(context.getString(R.string.lgs_triggered, "%.0f".format(bg), "%.0f".format(hypoGuard)))
             rT.duration = maxOf(duration, 30)
-            rT.rate = 0.0
+            rT.rate = ketoProtection(0.0, profile, rT, pumpCaps )
             physioAdapter.setFinalLoopDecisionType("suspend")
             return rT
         }
@@ -6561,7 +6571,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                 )
             )
             rT.duration = duration
-            rT.rate = rate
+            rT.rate = ketoProtection(rate, profile, rT, pumpCaps)
             val decisionType = when {
                 rate == 0.0 -> "suspend"
                 rate > currenttemp.rate -> "tbr_up"
@@ -6690,7 +6700,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
 
         rT.reason.append(context.getString(R.string.temp_basal_pose, "%.2f".format(rate), duration))
         rT.duration = duration
-        rT.rate = rate
+        rT.rate = ketoProtection(rate, profile, rT, pumpCaps)
         val decisionType = when {
             rate == 0.0 -> "suspend"
             rate > currenttemp.rate -> "tbr_up"
@@ -11144,7 +11154,9 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         }
     }
 
-    /** T3c brittle mode: dynamic PI basal (basal-first isolation). */
+    // =========================================================================================
+    // 🛡️ T3C BRITTLE MODE — Dynamic PI Basal (Strict Basal-First Isolation)
+    // =========================================================================================
     private fun executeT3cBrittleMode(
         bg: Double,
         delta: Float,
@@ -11272,7 +11284,17 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             safeRate
         }
 
-        rT.rate = t3cFinalRate
+        val pumpDesc = activePlugin.activePump.pumpDescription
+        val pumpCaps = PumpCaps(
+            basalStep = if (pumpDesc.basalStep > 0) pumpDesc.basalStep else 0.05,
+            bolusStep = if (pumpDesc.bolusStep > 0) pumpDesc.bolusStep else 0.05,
+            minDurationMin = 30,
+            maxBasal = profile.max_basal,
+            maxSmb = 3.0
+        )
+
+        //rT.rate = t3cFinalRate
+        rT.rate = ketoProtection(t3cFinalRate, profile, rT, pumpCaps )
         rT.duration = 30
         rT.reason.append(
             "🛡️T3c | Thresh: ${activationThreshold.toInt()} | Agg: ${"%.1f".format(aggressiveness)} (raw=${"%.1f".format(rawAggressiveness)} AML=${"%.2f".format(adaptiveMult)}) | " +

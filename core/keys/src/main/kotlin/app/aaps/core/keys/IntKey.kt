@@ -318,6 +318,16 @@ enum class IntKey(
     // 🌸 Endometriosis & Cycle Management (MTR)
     AimiEndometriosisFlareDuration("aimi_endo_flare_duration", 4, 1, 24),
 
+    // Ketoacidosis Protection
+    ApsKetoacidosisProtectionBasal(
+        key = "ketoacidosis_protection_basal",
+        defaultValue = 20,10,
+        max = 40,
+        defaultedBySM = true,
+        titleResId = R.string.ketoacidosis_protection_basal_title,
+        summaryResId = R.string.ketoacidosis_protection_basal_summary,
+    ),
+
     // 🌀 Adaptive Kernel Bank (Cosine Gate)
     AimiCosineGateMaxPeakShift("aimi_cosine_gate_max_shift", 15, 0, 60),
 

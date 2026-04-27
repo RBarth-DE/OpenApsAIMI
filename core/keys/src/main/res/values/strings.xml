@@ -547,6 +547,15 @@
     <string name="aimi_gov_anticipation_decay_blend_max_title">Governance: anticipation HOLD decay softening</string>
     <string name="aimi_gov_anticipation_decay_blend_max_summary">Caps how much HOLD basal/aggressiveness decay is eased toward neutral when prediction relief is high. 0 leaves decay unchanged by anticipation.</string>
 
+    // Ketoacidosis Protection
+    <string name="ketoacidosis_protection_title">Ketoacidosis Protection</string>
+    <string name="ketoacidosis_protection_summary">Enables a small safety TBR instead of 0 TBR to reduce the ketoacidosis risk.</string>
+    <string name="ketoacidosis_protection_strategy_title">Variable strategy?</string>
+    <string name="ketoacidosis_protection_strategy_summary">If activated the small safety TBR kicks in when IOB is in negative range as if no basal insulin has been delivered for half hour. If deactivated every Zero Temp is replaced with the small TBR.</string>
+    <string name="ketoacidosis_protection_basal_title">Quantity of the safety TBR [%]</string>
+    <string name="ketoacidosis_protection_basal_summary">Default: 10</string>
+
+
     <string name="eversense_use_smoothing">Use ESEL smoothing</string>
     <string name="eversense_cloud_upload_enabled">Enable Eversense cloud upload</string>
     <string name="eversense_cloud_upload_toast">Show cloud upload result</string>
