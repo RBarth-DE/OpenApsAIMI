@@ -193,7 +193,7 @@ fun OverviewScreenStacked(
                 state = tirState,
                 modifier = Modifier
                     .padding(horizontal = 2.dp)
-                    .width(25.dp)
+                    .width(30.dp)
                     .heightIn(min = 100.dp, max = 200.dp)
             )
 
