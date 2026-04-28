@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
@@ -133,7 +134,7 @@ fun OverviewScreenStacked(
                 .padding(horizontal = 8.dp, vertical = 8.dp),
             verticalAlignment = Alignment.Top
         ) {
-            Box {
+            Box (modifier = Modifier.widthIn(max = 150.dp)) {
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
@@ -191,13 +192,16 @@ fun OverviewScreenStacked(
             VerticalTirPanel(
                 state = tirState,
                 modifier = Modifier
-                    .padding(horizontal = 4.dp)
+                    .padding(horizontal = 2.dp)
+                    .width(25.dp)
                     .heightIn(min = 100.dp, max = 200.dp)
             )
 
             // Right: AIMI quick action tiles
             Column(
-                modifier = Modifier.padding(start = 4.dp),
+                modifier = Modifier
+                    .padding(start = 4.dp)
+                    .width(40.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(2.dp)
             ) {
@@ -357,7 +361,7 @@ private fun StatusChip(
                 style = MaterialTheme.typography.labelMedium,
                 autoSize = TextAutoSize.StepBased(
                     minFontSize = 8.sp,
-                    maxFontSize = MaterialTheme.typography.labelMedium.fontSize,
+                    maxFontSize = MaterialTheme.typography.labelLarge.fontSize,
                     stepSize = 0.5.sp
                 ),
                 modifier = Modifier

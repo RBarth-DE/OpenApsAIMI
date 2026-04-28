@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
@@ -25,6 +26,8 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.sp
 import app.aaps.core.data.model.RM
 import app.aaps.core.ui.compose.AapsSpacing
 import app.aaps.core.ui.compose.AapsTheme
@@ -37,7 +40,6 @@ import app.aaps.core.ui.compose.icons.IcLoopPaused
 import app.aaps.core.ui.compose.icons.IcLoopSuperbolus
 import app.aaps.core.ui.compose.loopColor
 import app.aaps.ui.compose.overview.graphs.TriangleShape
-import androidx.compose.ui.text.style.TextOverflow
 
 
 @Composable
@@ -91,6 +93,11 @@ fun RunningModeChip(
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                     style = MaterialTheme.typography.labelMedium,
+                    autoSize = TextAutoSize.StepBased(
+                        minFontSize = 8.sp,
+                        maxFontSize = MaterialTheme.typography.labelLarge.fontSize,
+                        stepSize = 0.5.sp
+                    ),
                     color = textColor,
                     modifier = Modifier.padding(start = AapsSpacing.small)
                 )
