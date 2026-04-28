@@ -33,6 +33,7 @@ import java.math.RoundingMode
 import java.net.HttpURLConnection
 import java.net.SocketAddress
 import java.net.URI
+import java.util.Locale
 import java.time.Clock
 import java.time.Duration
 import java.time.Instant
@@ -789,11 +790,24 @@ class GarminPlugin @Inject constructor(
                     GlucoseUnit.MMOL -> jo.addProperty("units_hint", "mmol")
                 }
                 jo.addProperty("iob", loopHub.insulinOnboard + loopHub.insulinBasalOnboard)
+                // TBR as "value/%"
+                val profile = loopHub.currentProfile
+                val basal = profile?.getBasal() ?: 0.0
                 loopHub.temporaryBasal.also {
                     if (!it.isNaN()) {
-                        val temporaryBasalRateInPercent = (it * 100.0).toInt()
-                        jo.addProperty("tbr", temporaryBasalRateInPercent)
+                        val safeTbrFactor = if (it.isFinite()) it else 0.0
+
+                        val curBasalAsValue = basal * safeTbrFactor
+                        val tbrPercent = (safeTbrFactor * 100.0).toInt()   // or roundToInt()
+
+                        if (curBasalAsValue != 0.0 || tbrPercent != 0) {
+                            jo.addProperty("tbr", String.format(Locale.US, "%.1f/%d", curBasalAsValue, tbrPercent))
+                        } else {
+                            jo.addProperty("tbr", "0")
+                        }
                     }
+                    // we did not get valid values (happens sometimes that loopHub.temporaryBasal. delivers NaN instead of real value)
+                    // => Keep current values on watch.
                 }
                 jo.addProperty("cob", loopHub.carbsOnboard)
             }

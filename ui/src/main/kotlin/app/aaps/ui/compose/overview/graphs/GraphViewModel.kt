@@ -489,7 +489,17 @@ class GraphViewModel @AssistedInject constructor(
             val minTime = allTimestamps.minOrNull() ?: return@combine null
             val maxTime = allTimestamps.maxOrNull() ?: return@combine null
             val cacheUpper = cacheTimeRange?.let { if (showPredictions) it.endTime else it.toTime }
-            val effectiveMax = if (cacheUpper != null) maxOf(maxTime, cacheUpper) else maxTime
+            // // Also consider endTime from cache (may extend beyond prediction points)
+            // val effectiveMax = if (cacheTimeRange != null) maxOf(maxTime, cacheTimeRange.endTime) else maxTime
+            // Pair(minTime, effectiveMax)
+            // Force the graph to end no later than 2 hours from now
+            val twoHourFromNow = System.currentTimeMillis() + 60 * 60 * 1000L * 2
+            val effectiveMax = if (cacheTimeRange != null) {
+                maxOf(maxTime, cacheTimeRange.endTime)
+            } else {
+                maxTime
+            }.coerceAtMost(twoHourFromNow) // This is the line that caps the future view
+
             Pair(minTime, effectiveMax)
         }
     }.stateIn(
@@ -663,8 +673,9 @@ class GraphViewModel @AssistedInject constructor(
             .sumOf { it.steps5min }
 
         val recentRecords = todayRecords.filter { it.timestamp >= System.currentTimeMillis() - 15 * 60 * 1000L }
+        val fiveMinAgo = System.currentTimeMillis() - 5 * 60 * 1000L
         val stepsDelta = recentRecords
-            .filter { it.device == bestSource }
+            .filter { it.device == bestSource && it.timestamp >= fiveMinAgo }
             .sumOf { it.steps5min }
 
         val stepsText = if (stepsToday > 0) "$stepsToday / +$stepsDelta" else "--"
