@@ -10,8 +10,11 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.LinearProgressIndicator
@@ -100,6 +103,9 @@ fun OverviewScreenSplit(
             formatDuration = formatDuration
         )
 
+        // State sammeln
+        val tirState by graphViewModel.tirFlow.collectAsStateWithLifecycle()
+
         Row(
             modifier = Modifier
                 .fillMaxSize()
@@ -121,7 +127,7 @@ fun OverviewScreenSplit(
                     verticalAlignment = Alignment.Top
                 ) {
                     // Left: BG Info + sensitivity chip
-                    Box {
+                    Box (modifier = Modifier.widthIn(max = 150.dp)) {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             BgInfoSection(
                                 bgInfo = bgInfoState.bgInfo,
@@ -172,9 +178,19 @@ fun OverviewScreenSplit(
                         )
                     }
 
+                    VerticalTirPanel(
+                        state = tirState,
+                        modifier = Modifier
+                            .padding(horizontal = 2.dp)
+                            .width(25.dp)
+                            .heightIn(min = 100.dp, max = 200.dp)
+                    )
+
                     // Right: AIMI quick action tiles
                     Column(
-                        modifier = Modifier.padding(start = 4.dp),
+                        modifier = Modifier
+                            .padding(start = 4.dp)
+                            .width(40.dp),
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.spacedBy(2.dp)
                     ) {
