@@ -619,4 +619,8 @@ enum class DoubleKey(
         unitType = UnitType.DOUBLE_2,
         dependency = BooleanKey.OApsAIMIT3cAdaptiveBasalEnabled,
     ),
+
+    ActivityMonitorRatio("activity_ratio", 1.0, 0.0, 2.0, defaultedBySM = true),
+    ActivityScaleFactor("activity_scale_factor", 1.0, 0.0, 1.5, defaultedBySM = true, dependency = BooleanKey.ActivityMonitorDetection),
+    InactivityScaleFactor("inactivity_scale_factor", 1.0, 0.0, 1.5, defaultedBySM = true, dependency = BooleanKey.ActivityMonitorDetection),
 }

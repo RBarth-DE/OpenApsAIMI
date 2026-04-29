@@ -1645,7 +1645,7 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
             },
         )
 
-    // ketoScreen.addPreference(AdaptiveIntPreference(ctx = context, intKey = IntKey.ApsKetoacidosisProtectionBasal, dialogMessage = R.string.ketoacidosis_protection_basal_summary, title = R.string.ketoacidosis_protection_basal_title))
+    // ketoScreen.addPreference(AdaptiveIntPreferenceItem(ctx = context, intKey = IntKey.ApsKetoacidosisProtectionBasal, dialogMessage = R.string.ketoacidosis_protection_basal_summary, title = R.string.ketoacidosis_protection_basal_title))
 
     private fun aimiComposeInflammatorySubScreen(): PreferenceSubScreenDef =
         PreferenceSubScreenDef(

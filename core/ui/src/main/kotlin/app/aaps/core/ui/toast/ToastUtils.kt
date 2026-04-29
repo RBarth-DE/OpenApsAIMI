@@ -19,6 +19,11 @@ object ToastUtils {
     fun okToast(context: Context?, text: String) = show(context, text, Toast.LENGTH_SHORT)
     fun okToast(context: Context?, @StringRes textRes: Int) = show(context, textRes, Toast.LENGTH_SHORT)
 
+    fun warnToast(context: Context?, @StringRes textRes: Int) = show(context, textRes, Toast.LENGTH_SHORT)
+
+    // fun warnToast(ctx: Context?, @StringRes id: Int) {
+    //     graphicalToast(ctx, ctx?.getString(id), R.drawable.ic_toast_warn, true)
+    // }
     fun errorToast(context: Context?, text: String) = show(context, text, Toast.LENGTH_LONG)
     fun errorToast(context: Context?, @StringRes textRes: Int) = show(context, textRes, Toast.LENGTH_LONG)
 

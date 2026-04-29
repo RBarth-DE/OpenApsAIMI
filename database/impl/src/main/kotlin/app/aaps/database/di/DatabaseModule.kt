@@ -8,6 +8,7 @@ import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import app.aaps.database.AppDatabase
 import app.aaps.database.entities.TABLE_APS_RESULTS
+import app.aaps.database.entities.TABLE_AUTOISF_VALUES
 import app.aaps.database.entities.TABLE_BOLUSES
 import app.aaps.database.entities.TABLE_EFFECTIVE_PROFILE_SWITCHES
 import app.aaps.database.entities.TABLE_HEART_RATE
@@ -212,6 +213,15 @@ open class DatabaseModule {
 
     internal val migration31to32 = object : Migration(31, 32) {
         override fun migrate(db: SupportSQLiteDatabase) {
+            // Creation of table TABLE_AUTOISF_VALUES
+            db.execSQL(
+                "CREATE TABLE IF NOT EXISTS `${TABLE_AUTOISF_VALUES}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `timestamp` INTEGER NOT NULL, `acceIsf` REAL NOT NULL, `bgIsf` REAL NOT NULL, `ppIsf` REAL NOT NULL, `driftIsf` REAL NOT NULL, `duraIsf` REAL NOT NULL, `finalIsf` REAL NOT NULL, `iobThEffective` REAL NOT NULL, `utcOffset` INTEGER NOT NULL, `version` INTEGER NOT NULL, `dateCreated` INTEGER NOT NULL, `isValid` INTEGER NOT NULL, `referenceId` INTEGER, `nightscoutSystemId` TEXT, `nightscoutId` TEXT, `pumpType` TEXT, `pumpSerial` TEXT, `temporaryId` INTEGER, `pumpId` INTEGER, `startId` INTEGER, `endId` INTEGER)"
+            )
+            // Creation of index for table TABLE_AUTOISF_VALUES
+            db.execSQL("CREATE INDEX IF NOT EXISTS `index_autoIsfValues_id` ON `${TABLE_AUTOISF_VALUES}` (`id`)")
+            db.execSQL("CREATE INDEX IF NOT EXISTS `index_autoIsfValues_timestamp` ON `${TABLE_AUTOISF_VALUES}` (`timestamp`)")
+
+
             // Add carbInsulin column to TDD table — cached data, old rows get default 0 and will be recalculated
             db.execSQL("DELETE FROM $TABLE_TOTAL_DAILY_DOSES")
             db.execSQL("ALTER TABLE `$TABLE_TOTAL_DAILY_DOSES` ADD COLUMN `carbInsulin` REAL NOT NULL DEFAULT 0")
@@ -280,6 +290,13 @@ open class DatabaseModule {
 
     internal val migration33to34 = object : Migration(33, 34) {
         override fun migrate(db: SupportSQLiteDatabase) {
+
+db.execSQL(
+                "CREATE TABLE IF NOT EXISTS `${TABLE_AUTOISF_VALUES}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `timestamp` INTEGER NOT NULL, `acceIsf` REAL NOT NULL, `bgIsf` REAL NOT NULL, `ppIsf` REAL NOT NULL, `driftIsf` REAL NOT NULL, `duraIsf` REAL NOT NULL, `finalIsf` REAL NOT NULL, `iobThEffective` REAL NOT NULL, `utcOffset` INTEGER NOT NULL, `version` INTEGER NOT NULL, `dateCreated` INTEGER NOT NULL, `isValid` INTEGER NOT NULL, `referenceId` INTEGER, `nightscoutSystemId` TEXT, `nightscoutId` TEXT, `pumpType` TEXT, `pumpSerial` TEXT, `temporaryId` INTEGER, `pumpId` INTEGER, `startId` INTEGER, `endId` INTEGER)"
+            )
+            // Creation of index for table TABLE_AUTOISF_VALUES
+            db.execSQL("CREATE INDEX IF NOT EXISTS `index_autoIsfValues_id` ON `${TABLE_AUTOISF_VALUES}` (`id`)")
+            db.execSQL("CREATE INDEX IF NOT EXISTS `index_autoIsfValues_timestamp` ON `${TABLE_AUTOISF_VALUES}` (`timestamp`)")
             db.execSQL("ALTER TABLE `$TABLE_EFFECTIVE_PROFILE_SWITCHES` ADD COLUMN `originalPsId` INTEGER DEFAULT NULL")
             // Remove redundant indexes on primary key columns
             db.execSQL("DROP INDEX IF EXISTS `index_effectiveProfileSwitches_id`")
@@ -319,7 +336,57 @@ open class DatabaseModule {
         }
     }
 
+    // Adds autoIsfValues table (created in the correct schema) for devices that were already at
+    // version 34 without it (upstream v34 predates AIMI), or fixes the DOUBLE→REAL type mismatch
+    // for devices that ran the broken migration 33→34 that used DOUBLE column types.
+    // Also recreates the boluses table with nullable insulinConfiguration columns — AIMI changed
+    // Bolus.insulinConfiguration from InsulinConfiguration (NOT NULL) to InsulinConfiguration?,
+    // but no prior migration updated the physical table.
+    internal val migration34to35 = object : Migration(34, 35) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            // --- autoIsfValues table ---
+            val createSql =
+                "CREATE TABLE IF NOT EXISTS `${TABLE_AUTOISF_VALUES}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `timestamp` INTEGER NOT NULL, `acceIsf` REAL NOT NULL, `bgIsf` REAL NOT NULL, `ppIsf` REAL NOT NULL, `driftIsf` REAL NOT NULL, `duraIsf` REAL NOT NULL, `finalIsf` REAL NOT NULL, `iobThEffective` REAL NOT NULL, `utcOffset` INTEGER NOT NULL, `version` INTEGER NOT NULL, `dateCreated` INTEGER NOT NULL, `isValid` INTEGER NOT NULL, `referenceId` INTEGER, `nightscoutSystemId` TEXT, `nightscoutId` TEXT, `pumpType` TEXT, `pumpSerial` TEXT, `temporaryId` INTEGER, `pumpId` INTEGER, `startId` INTEGER, `endId` INTEGER)"
+            val tableExists = db.query(
+                "SELECT name FROM sqlite_master WHERE type='table' AND name='${TABLE_AUTOISF_VALUES}'"
+            ).use { it.count > 0 }
+            if (tableExists) {
+                // Table was created with DOUBLE types by the broken migration 33→34 — recreate with REAL.
+                db.execSQL("ALTER TABLE `${TABLE_AUTOISF_VALUES}` RENAME TO `autoIsfValues_old`")
+                db.execSQL(createSql)
+                db.execSQL("INSERT INTO `${TABLE_AUTOISF_VALUES}` SELECT * FROM `autoIsfValues_old`")
+                db.execSQL("DROP TABLE `autoIsfValues_old`")
+            } else {
+                // Table was never created (device had upstream v34 without AIMI changes).
+                db.execSQL(createSql)
+            }
+            db.execSQL("CREATE INDEX IF NOT EXISTS `index_autoIsfValues_id` ON `${TABLE_AUTOISF_VALUES}` (`id`)")
+            db.execSQL("CREATE INDEX IF NOT EXISTS `index_autoIsfValues_timestamp` ON `${TABLE_AUTOISF_VALUES}` (`timestamp`)")
+
+            // --- boluses table: make insulinConfiguration columns nullable ---
+            db.execSQL(
+                "CREATE TABLE IF NOT EXISTS `new_boluses` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `version` INTEGER NOT NULL, `dateCreated` INTEGER NOT NULL, `isValid` INTEGER NOT NULL, `referenceId` INTEGER, `timestamp` INTEGER NOT NULL, `utcOffset` INTEGER NOT NULL, `amount` REAL NOT NULL, `type` TEXT NOT NULL, `notes` TEXT, `isBasalInsulin` INTEGER NOT NULL, `nightscoutSystemId` TEXT, `nightscoutId` TEXT, `pumpType` TEXT, `pumpSerial` TEXT, `temporaryId` INTEGER, `pumpId` INTEGER, `startId` INTEGER, `endId` INTEGER, `insulinLabel` TEXT, `insulinEndTime` INTEGER, `insulinPeakTime` INTEGER, `concentration` REAL, FOREIGN KEY(`referenceId`) REFERENCES `boluses`(`id`) ON UPDATE NO ACTION ON DELETE NO ACTION )"
+            )
+            db.execSQL(
+                """
+                INSERT INTO new_boluses (id, version, dateCreated, isValid, referenceId, timestamp, utcOffset, amount, type, notes, isBasalInsulin, nightscoutSystemId, nightscoutId, pumpType, pumpSerial, temporaryId, pumpId, startId, endId, insulinLabel, insulinEndTime, insulinPeakTime, concentration)
+                SELECT id, version, dateCreated, isValid, referenceId, timestamp, utcOffset, amount, type, notes, isBasalInsulin, nightscoutSystemId, nightscoutId, pumpType, pumpSerial, temporaryId, pumpId, startId, endId, insulinLabel, insulinEndTime, insulinPeakTime, concentration
+                FROM `$TABLE_BOLUSES`
+                """.trimIndent()
+            )
+            db.execSQL("DROP TABLE `$TABLE_BOLUSES`")
+            db.execSQL("ALTER TABLE new_boluses RENAME TO `$TABLE_BOLUSES`")
+            db.execSQL("CREATE INDEX IF NOT EXISTS `index_boluses_pumpId` ON `$TABLE_BOLUSES` (`pumpId`)")
+            db.execSQL("CREATE INDEX IF NOT EXISTS `index_boluses_referenceId` ON `$TABLE_BOLUSES` (`referenceId`)")
+            db.execSQL("CREATE INDEX IF NOT EXISTS `index_boluses_timestamp` ON `$TABLE_BOLUSES` (`timestamp`)")
+            db.execSQL("CREATE INDEX IF NOT EXISTS `index_boluses_nightscoutId` ON `$TABLE_BOLUSES` (`nightscoutId`)")
+
+            // Custom indexes must be dropped on migration to pass room schema checking after upgrade
+            dropCustomIndexes(db)
+        }
+    }
+
     /** List of all migrations for easy reply in tests. */
     @VisibleForTesting
-    internal val migrations = arrayOf(migration20to21, migration21to22, migration22to23, migration23to24, migration24to25, migration25to26, migration26to27, migration27to28, migration28to29, migration29to30, migration30to31, migration31to32, migration32to33, migration33to34)
+    internal val migrations = arrayOf(migration20to21, migration21to22, migration22to23, migration23to24, migration24to25, migration25to26, migration26to27, migration27to28, migration28to29, migration29to30, migration30to31, migration31to32, migration32to33, migration33to34, migration34to35)
 }

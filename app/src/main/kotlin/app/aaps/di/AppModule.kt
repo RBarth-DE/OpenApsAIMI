@@ -2,11 +2,13 @@ package app.aaps.di
 
 import android.content.Context
 import android.content.SharedPreferences
+import app.aaps.core.interfaces.automation.AutomationStateInterface
 import app.aaps.core.interfaces.configuration.Config
 import app.aaps.core.interfaces.di.ApplicationScope
 import app.aaps.core.interfaces.di.PumpDriver
 import app.aaps.core.interfaces.plugin.PluginBase
 import app.aaps.core.interfaces.ui.UiInteraction
+import app.aaps.plugins.automation.AutomationStateServiceImpl
 import app.aaps.history.HistoryBrowserData
 import app.aaps.implementations.ConfigImpl
 import app.aaps.implementations.UiInteractionImpl
@@ -87,6 +89,8 @@ abstract class AppModule {
         @Binds fun bindActivityNames(activityNames: UiInteractionImpl): UiInteraction
 
         @Binds @Singleton fun bindHistoryScope(impl: HistoryBrowserData): HistoryScope
+
+        @Binds @Singleton fun bindAutomationStateInterface(impl: AutomationStateServiceImpl): AutomationStateInterface
     }
 }
 

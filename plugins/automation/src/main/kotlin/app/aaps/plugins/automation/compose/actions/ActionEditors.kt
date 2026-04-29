@@ -26,6 +26,7 @@ import app.aaps.plugins.automation.actions.ActionRunAutotune
 import app.aaps.plugins.automation.actions.ActionRunScene
 import app.aaps.plugins.automation.actions.ActionSMBChange
 import app.aaps.plugins.automation.actions.ActionSendSMS
+import app.aaps.plugins.automation.actions.ActionSetAutomationState
 import app.aaps.plugins.automation.actions.ActionSettingsExport
 import app.aaps.plugins.automation.actions.ActionStartTempTarget
 import app.aaps.plugins.automation.compose.elements.AutomationDropdown
@@ -74,6 +75,7 @@ fun ActionEditor(
             is ActionRunScene             -> ActionRunSceneEditor(action, sceneOptions, onChange)
             is ActionEnableScene          -> ActionEnableSceneEditor(action, sceneOptions, onChange)
             is ActionDisableScene         -> ActionDisableSceneEditor(action, sceneOptions, onChange)
+            is ActionSetAutomationState   -> ActionSetAutomationStateEditor(action, onChange)
             else                          -> Text(action.javaClass.simpleName)
         }
     }
@@ -326,5 +328,24 @@ fun ActionDisableSceneEditor(a: ActionDisableScene, sceneOptions: List<Scene>, o
         selectedId = a.scene.value,
         sceneOptions = sceneOptions,
         onPicked = { a.scene.value = it; onChange() }
+    )
+}
+
+@Composable
+fun ActionSetAutomationStateEditor(a: ActionSetAutomationState, onChange: () -> Unit) {
+    val stateNames = a.availableStateNames()
+    val stateValues = a.availableStateValues()
+    AutomationDropdown(
+        value = a.stateName,
+        options = stateNames,
+        onValueChange = { a.stateName = it; a.stateValue = ""; onChange() },
+        label = stringResource(R.string.action_set_automation_state_state)
+    )
+    AutomationDropdown(
+        value = a.stateValue,
+        options = stateValues,
+        onValueChange = { a.stateValue = it; onChange() },
+        enabled = a.stateName.isNotEmpty(),
+        label = stringResource(R.string.action_set_automation_state_value)
     )
 }

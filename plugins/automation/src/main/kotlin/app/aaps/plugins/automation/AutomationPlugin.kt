@@ -36,6 +36,8 @@ import app.aaps.core.ui.compose.preference.PreferenceSubScreenDef
 import app.aaps.core.utils.DeferredForegroundStart
 import app.aaps.plugins.automation.actions.Action
 import app.aaps.plugins.automation.actions.ActionAlarm
+import app.aaps.plugins.automation.actions.ActionAutoisfDisable
+import app.aaps.plugins.automation.actions.ActionAutoisfEnable
 import app.aaps.plugins.automation.actions.ActionCarePortalEvent
 import app.aaps.plugins.automation.actions.ActionDisableScene
 import app.aaps.plugins.automation.actions.ActionEnableScene
@@ -46,6 +48,9 @@ import app.aaps.plugins.automation.actions.ActionRunAutotune
 import app.aaps.plugins.automation.actions.ActionRunScene
 import app.aaps.plugins.automation.actions.ActionSMBChange
 import app.aaps.plugins.automation.actions.ActionSendSMS
+import app.aaps.plugins.automation.actions.ActionSetAutomationState
+import app.aaps.plugins.automation.actions.ActionSetAcceWeight
+import app.aaps.plugins.automation.actions.ActionSetIobTH
 import app.aaps.plugins.automation.actions.ActionSettingsExport
 import app.aaps.plugins.automation.actions.ActionStartTempTarget
 import app.aaps.plugins.automation.actions.ActionStopProcessing
@@ -61,6 +66,7 @@ import app.aaps.plugins.automation.triggers.Trigger
 import app.aaps.plugins.automation.triggers.TriggerAutosensValue
 import app.aaps.plugins.automation.triggers.TriggerBTDevice
 import app.aaps.plugins.automation.triggers.TriggerBg
+import app.aaps.plugins.automation.triggers.TriggerBgAcceWeight
 import app.aaps.plugins.automation.triggers.TriggerBolusAgo
 import app.aaps.plugins.automation.triggers.TriggerCOB
 import app.aaps.plugins.automation.triggers.TriggerCannulaAge
@@ -69,6 +75,7 @@ import app.aaps.plugins.automation.triggers.TriggerDelta
 import app.aaps.plugins.automation.triggers.TriggerHeartRate
 import app.aaps.plugins.automation.triggers.TriggerInsulinAge
 import app.aaps.plugins.automation.triggers.TriggerIob
+import app.aaps.plugins.automation.triggers.TriggerIobTH
 import app.aaps.plugins.automation.triggers.TriggerLocation
 import app.aaps.plugins.automation.triggers.TriggerPodChange
 import app.aaps.plugins.automation.triggers.TriggerProfilePercent
@@ -440,6 +447,7 @@ class AutomationPlugin @Inject constructor(
             ActionAlarm(injector),
             ActionSettingsExport(injector),
             ActionCarePortalEvent(injector),
+            ActionSetAutomationState(injector),
             ActionProfileSwitchPercent(injector),
             ActionProfileSwitch(injector),
             ActionSendSMS(injector),
@@ -448,9 +456,13 @@ class AutomationPlugin @Inject constructor(
             ActionEnableScene(injector),
             ActionDisableScene(injector)
         )
-        if (config.isEngineeringMode() && config.isDev())
+        if (config.isEngineeringMode() && config.isDev()) {
             actions.add(ActionRunAutotune(injector))
-
+            actions.add(ActionAutoisfEnable(injector))
+            actions.add(ActionAutoisfDisable(injector))
+            actions.add(ActionSetAcceWeight(injector))
+            actions.add(ActionSetIobTH(injector))
+        }
         return actions.toList()
     }
 
@@ -465,6 +477,7 @@ class AutomationPlugin @Inject constructor(
             TriggerIob(injector),
             TriggerCOB(injector),
             TriggerProfilePercent(injector),
+            //TriggerProfile(injector),
             TriggerTempTarget(injector),
             TriggerTempTargetValue(injector),
             TriggerWifiSsid(injector),
@@ -479,6 +492,10 @@ class AutomationPlugin @Inject constructor(
             TriggerReservoirLevel(injector),
             TriggerStepsCount(injector)
         )
+        if (config.isEngineeringMode() && config.isDev()) {
+            triggers.add(TriggerBgAcceWeight(injector))
+            triggers.add(TriggerIobTH(injector))
+        }
 
         val pump = activePlugin.activePump
 

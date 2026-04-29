@@ -11,8 +11,8 @@ import app.aaps.core.graph.data.BarGraphSeries
 import app.aaps.core.graph.data.DataPointWithLabelInterface
 import app.aaps.core.graph.data.DeviationDataPointLegacy
 import app.aaps.core.graph.data.FixedLineGraphSeries
-import app.aaps.core.graph.data.LineGraphSeries
 import app.aaps.core.graph.data.GlucoseValueDataPoint
+import app.aaps.core.graph.data.LineGraphSeries
 import app.aaps.core.graph.data.PointsWithLabelGraphSeries
 import app.aaps.core.graph.data.RunningModeDataPoint
 import app.aaps.core.graph.data.ScaledDataPoint
@@ -86,7 +86,6 @@ class OverviewDataImpl @Inject constructor(
         iobSeries = FixedLineGraphSeries<ScaledDataPoint>()
         absIobSeries = FixedLineGraphSeries<ScaledDataPoint>()
         iobPredictions1Series = PointsWithLabelGraphSeries<DataPointWithLabelInterface>()
-        //iobPredictions2Series = PointsWithLabelGraphSeries()
         maxBGIValue = Double.MIN_VALUE
         minusBgiSeries = FixedLineGraphSeries<ScaledDataPoint>()
         minusBgiHistSeries = FixedLineGraphSeries<ScaledDataPoint>()
@@ -95,7 +94,7 @@ class OverviewDataImpl @Inject constructor(
         cobMinFailOverSeries = PointsWithLabelGraphSeries<DataPointWithLabelInterface>()
         maxDevValueFound = Double.MIN_VALUE
         deviationsSeries = BarGraphSeries<DeviationDataPointLegacy>()
-        maxRatioValueFound = 5.0                    //even if sens data equals 0 for all the period, minimum scale is between 95% and 105%
+        maxRatioValueFound = 5.0
         minRatioValueFound = -maxRatioValueFound
         ratioSeries = LineGraphSeries<ScaledDataPoint>()
         maxFromMaxValueFound = Double.MIN_VALUE
@@ -113,6 +112,25 @@ class OverviewDataImpl @Inject constructor(
         maxVarSensValueFound = 200.0
         minVarSensValueFound = 50.0
         varSensSeries = LineGraphSeries<ScaledDataPoint>()
+        // AutoISF
+        maxIobThValueFound = 0.0
+        minIobThValueFound = 0.0
+        iobThSeries = LineGraphSeries<ScaledDataPoint>()
+        maxAcceIsfValueFound = 1.5
+        minAcceIsfValueFound = 0.5
+        acceIsfSeries = LineGraphSeries<ScaledDataPoint>()
+        maxBgIsfValueFound = 1.5
+        minBgIsfValueFound = 0.5
+        bgIsfSeries = LineGraphSeries<ScaledDataPoint>()
+        maxPpIsfValueFound = 1.5
+        minPpIsfValueFound = 0.5
+        ppIsfSeries = LineGraphSeries<ScaledDataPoint>()
+        maxDuraIsfValueFound = 1.5
+        minDuraIsfValueFound = 0.5
+        duraIsfSeries = LineGraphSeries<ScaledDataPoint>()
+        maxFinalIsfValueFound = 1.5
+        minFinalIsfValueFound = 0.5
+        finalIsfSeries = LineGraphSeries<ScaledDataPoint>()
     }
 
     override fun initRange() {
@@ -244,7 +262,7 @@ class OverviewDataImpl @Inject constructor(
     override val devScale = Scale()
     override var deviationsSeries: SeriesData = BarGraphSeries<DeviationDataPointLegacy>()
 
-    override var maxRatioValueFound = 5.0                    //even if sens data equals 0 for all the period, minimum scale is between 95% and 105%
+    override var maxRatioValueFound = 5.0
     override var minRatioValueFound = -maxRatioValueFound
     override val ratioScale = Scale()
     override var ratioSeries: SeriesData = LineGraphSeries<ScaledDataPoint>()
@@ -258,12 +276,42 @@ class OverviewDataImpl @Inject constructor(
     override var heartRateScale = Scale()
     override var heartRateGraphSeries: SeriesData = PointsWithLabelGraphSeries<DataPointWithLabelInterface>()
     override var stepsForScale = Scale()
-    override var stepsCountGraphSeries: SeriesData = PointsWithLabelGraphSeries<DataPointWithLabelInterface>()
+    override var stepsCountGraphSeries: SeriesData = PointsWithLabelGraphSeries<StepsDataPoint>()
 
     override var maxVarSensValueFound = 200.0
     override var minVarSensValueFound = 50.0
     override val varSensScale = Scale()
     override var varSensSeries: SeriesData = LineGraphSeries<ScaledDataPoint>()
+
+    // AutoISF interim results
+    override var maxIobThValueFound = Double.MIN_VALUE
+    override var minIobThValueFound = 0.0
+    override var iobThSeries: SeriesData = LineGraphSeries<ScaledDataPoint>()
+
+    override var maxAcceIsfValueFound = 1.5
+    override var minAcceIsfValueFound = 0.5
+    override val acceIsfScale = Scale()
+    override var acceIsfSeries: SeriesData = LineGraphSeries<ScaledDataPoint>()
+
+    override var maxBgIsfValueFound = 1.5
+    override var minBgIsfValueFound = 0.5
+    override val bgIsfScale = Scale()
+    override var bgIsfSeries: SeriesData = LineGraphSeries<ScaledDataPoint>()
+
+    override var maxPpIsfValueFound = 1.5
+    override var minPpIsfValueFound = 0.5
+    override val ppIsfScale = Scale()
+    override var ppIsfSeries: SeriesData = LineGraphSeries<ScaledDataPoint>()
+
+    override var maxDuraIsfValueFound = 1.5
+    override var minDuraIsfValueFound = 0.5
+    override val duraIsfScale = Scale()
+    override var duraIsfSeries: SeriesData = LineGraphSeries<ScaledDataPoint>()
+
+    override var maxFinalIsfValueFound = 1.5
+    override var minFinalIsfValueFound = 0.5
+    override val finalIsfScale = Scale()
+    override var finalIsfSeries: SeriesData = LineGraphSeries<ScaledDataPoint>()
 
     override fun replacePredictionGraphSeriesFromWorker(points: List<BgDataPoint>) {
         if (points.isEmpty()) {

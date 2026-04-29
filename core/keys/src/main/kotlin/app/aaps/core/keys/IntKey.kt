@@ -63,6 +63,12 @@ enum class IntKey(
         unitType = UnitType.GRAMS
     ),
 
+    //OverviewBolusPercentage(key = "boluswizard_percentage", defaultValue = 100, min = 10, max = 100),
+    ActivityMonitorIdleStart(key = "inactivity_idle_start", defaultValue = 22, min = 0, max = 23, defaultedBySM=true, dependency = BooleanKey.ActivityMonitorOvernight),
+    ActivityMonitorIdleEnd(key = "inactivity_idle_end", defaultValue = 6, min = 0, max = 23, defaultedBySM=true, dependency = BooleanKey.ActivityMonitorOvernight),
+
+    OverviewHypoDuration("hypo_duration", 60, 15, 180, defaultedBySM = true),
+    //OverviewHypoDuration(key = "hypo_duration", defaultValue = 60, min = 15, max = 180, titleResId = R.string.pref_title_hypo_duration, defaultedBySM = true, unitType = UnitType.MIN),
     OverviewCageWarning(key = "statuslights_cage_warning", defaultValue = 48, min = 24, max = 240, titleResId = R.string.pref_title_cage_warning, defaultedBySM = true, unitType = UnitType.HOURS),
     OverviewCageCritical(key = "statuslights_cage_critical", defaultValue = 72, min = 24, max = 240, titleResId = R.string.pref_title_cage_critical, defaultedBySM = true, unitType = UnitType.HOURS),
     OverviewIageWarning(
@@ -222,6 +228,11 @@ enum class IntKey(
         defaultedBySM = true,
         unitType = UnitType.PERCENT
     ),
+    FslMinFitMinutes(key = "fslMinMinutes", defaultValue = 20, min = 13, max = 20, defaultedBySM = true),
+    FslMaxSmoothGap(key = "Exp1SmoothGap", defaultValue = 20, min = 110, max = 60, defaultedBySM = true),
+    FslCalibrationDuration(key = "Calibration_Duration",defaultValue =  20, min = 120, max = 20, defaultedBySM = true),   // effectively frozen
+
+
     ApsDynIsfAdjustmentFactor(
         key = "DynISFAdjust",
         defaultValue = 100,

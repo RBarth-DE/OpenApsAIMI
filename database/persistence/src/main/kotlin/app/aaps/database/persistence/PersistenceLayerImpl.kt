@@ -1,5 +1,6 @@
 package app.aaps.database.persistence
 
+import app.aaps.core.data.model.AIV
 import app.aaps.core.data.model.BCR
 import app.aaps.core.data.model.BS
 import app.aaps.core.data.model.CA
@@ -32,6 +33,7 @@ import app.aaps.core.interfaces.logging.LTag
 import app.aaps.core.interfaces.utils.DateUtil
 import app.aaps.core.interfaces.utils.fabric.FabricPrivacy
 import app.aaps.database.AppRepository
+import app.aaps.database.ValueWrapper
 import app.aaps.database.entities.Bolus
 import app.aaps.database.entities.BolusCalculatorResult
 import app.aaps.database.entities.Carbs
@@ -62,6 +64,7 @@ import app.aaps.database.transactions.InsertBolusWithTempIdTransaction
 import app.aaps.database.transactions.InsertIfNewByTimestampCarbsTransaction
 import app.aaps.database.transactions.InsertIfNewByTimestampTherapyEventTransaction
 import app.aaps.database.transactions.InsertOrUpdateApsResultTransaction
+import app.aaps.database.transactions.InsertOrUpdateAutoIsfValuesTransaction
 import app.aaps.database.transactions.InsertOrUpdateBolusCalculatorResultTransaction
 import app.aaps.database.transactions.InsertOrUpdateBolusTransaction
 import app.aaps.database.transactions.InsertOrUpdateCachedTotalDailyDoseTransaction
@@ -124,6 +127,7 @@ import app.aaps.database.transactions.UpdateNsIdTherapyEventTransaction
 import app.aaps.database.transactions.UserEntryTransaction
 import app.aaps.database.transactions.VersionChangeTransaction
 import dagger.Reusable
+import io.reactivex.rxjava3.disposables.CompositeDisposable
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
@@ -135,6 +139,12 @@ import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import javax.inject.Provider
 import kotlin.reflect.KClass
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.map
 
 @Reusable
 class PersistenceLayerImpl @Inject constructor(
@@ -146,6 +156,24 @@ class PersistenceLayerImpl @Inject constructor(
     private val fabricPrivacy: FabricPrivacy
 ) : PersistenceLayer {
 
+    @Suppress("unused")
+    private fun <S, D> Single<ValueWrapper<S>>.fromDb(converter: S.() -> D): Single<ValueWrapper<D>> =
+        this.map { wrapper ->
+            when (wrapper) {
+                is ValueWrapper.Existing -> ValueWrapper.Existing(wrapper.value.converter())
+                is ValueWrapper.Absent   -> ValueWrapper.Absent()
+            }
+        }
+
+    private suspend fun log(entries: List<UE>) {
+        if (config.AAPSCLIENT.not())
+            if (entries.isNotEmpty()) {
+                insertUserEntries(entries)
+                delay(entries.size * 10L)
+            }
+    }
+
+    private val compositeDisposable = CompositeDisposable()
     private suspend fun log(entries: List<UE>) {
         if (config.AAPSCLIENT.not())
             if (entries.isNotEmpty()) {
@@ -162,57 +190,58 @@ class PersistenceLayerImpl @Inject constructor(
     }
 
     // Flow-based change observation
-    @Suppress("UNCHECKED_CAST")
+
     override fun <T : Any> observeChanges(type: Class<T>): Flow<List<T>> {
         // Map database entity changes to domain types
+        @Suppress("UNCHECKED_CAST")
         return when (type) {
-            BS::class.java  -> repository.changesOfType<Bolus>()
-                .map { list -> list.map { it.fromDb() } }
+            BS::class.java ->  repository.changesOfType<Bolus>()
+                .map { list -> list.map { it.fromDb() } } as Flow<List<T>>
 
             CA::class.java  -> repository.changesOfType<Carbs>()
-                .map { list -> list.map { it.fromDb() } }
+                .map { list -> list.map { it.fromDb() } } as Flow<List<T>>
 
             BCR::class.java -> repository.changesOfType<BolusCalculatorResult>()
-                .map { list -> list.map { it.fromDb() } }
+                .map { list -> list.map { it.fromDb() } } as Flow<List<T>>
 
             EB::class.java  -> repository.changesOfType<ExtendedBolus>()
-                .map { list -> list.map { it.fromDb() } }
+                .map { list -> list.map { it.fromDb() } } as Flow<List<T>>
 
             TB::class.java  -> repository.changesOfType<TemporaryBasal>()
-                .map { list -> list.map { it.fromDb() } }
+                .map { list -> list.map { it.fromDb() } } as Flow<List<T>>
 
             TT::class.java  -> repository.changesOfType<TemporaryTarget>()
-                .map { list -> list.map { it.fromDb() } }
+                .map { list -> list.map { it.fromDb() } } as Flow<List<T>>
 
             TE::class.java  -> repository.changesOfType<TherapyEvent>()
-                .map { list -> list.map { it.fromDb() } }
+                .map { list -> list.map { it.fromDb() } } as Flow<List<T>>
 
             PS::class.java  -> repository.changesOfType<ProfileSwitch>()
-                .map { list -> list.map { it.fromDb() } }
+                .map { list -> list.map { it.fromDb() } } as Flow<List<T>>
 
             EPS::class.java -> repository.changesOfType<EffectiveProfileSwitch>()
-                .map { list -> list.map { it.fromDb() } }
+                .map { list -> list.map { it.fromDb() } } as Flow<List<T>>
 
             GV::class.java  -> repository.changesOfType<GlucoseValue>()
-                .map { list -> list.map { it.fromDb() } }
+                .map { list -> list.map { it.fromDb() } } as Flow<List<T>>
 
             UE::class.java  -> repository.changesOfType<UserEntry>()
-                .map { list -> list.map { it.fromDb() } }
+                .map { list -> list.map { it.fromDb() } } as Flow<List<T>>
 
             RM::class.java  -> repository.changesOfType<RunningMode>()
-                .map { list -> list.map { it.fromDb() } }
+                .map { list -> list.map { it.fromDb() } } as Flow<List<T>>
 
             DS::class.java  -> repository.changesOfType<DeviceStatus>()
-                .map { list -> list.map { it.fromDb() } }
+                .map { list -> list.map { it.fromDb() } } as Flow<List<T>>
 
             HR::class.java  -> repository.changesOfType<HeartRate>()
-                .map { list -> list.map { it.fromDb() } }
+                .map { list -> list.map { it.fromDb() } } as Flow<List<T>>
 
             SC::class.java  -> repository.changesOfType<StepsCount>()
-                .map { list -> list.map { it.fromDb() } }
+                .map { list -> list.map { it.fromDb() } } as Flow<List<T>>
 
             FD::class.java  -> repository.changesOfType<Food>()
-                .map { list -> list.map { it.fromDb() } }
+                .map { list -> list.map { it.fromDb() } } as Flow<List<T>>
 
             else            -> throw IllegalArgumentException("Unsupported observation type: ${type.simpleName}")
         } as Flow<List<T>>
@@ -996,7 +1025,6 @@ class PersistenceLayerImpl @Inject constructor(
             throw e
         }
     }
-
 
     override suspend fun deleteLastEventMatchingKeyword(noteKeyword: String) {
         repository.deleteLastEventMatchingKeyword(noteKeyword)
@@ -2191,7 +2219,7 @@ class PersistenceLayerImpl @Inject constructor(
     }
 
     override suspend fun getHeartRatesFromTimeToTime(startTime: Long, endTime: Long): List<HR> = withContext(Dispatchers.IO) {
-        repository.getHeartRatesFromTimeToTime(startTime, endTime).map { it.fromDb() }
+        repository.getHeartRatesFromTimeToTime(startTime, endTime).blockingGet().map { it.fromDb() }
     }
 
     override suspend fun insertOrUpdateHeartRates(heartRates: List<HR>): PersistenceLayer.TransactionResult<HR> = withContext(Dispatchers.IO) {
@@ -2398,17 +2426,16 @@ class PersistenceLayerImpl @Inject constructor(
         }
     }
 
-    // SC
     override suspend fun getStepsCountFromTime(from: Long): List<SC> = withContext(Dispatchers.IO) {
-        repository.getStepsCountFromTime(from).map { it.fromDb() }
+        repository.getStepsCountFromTime(from).blockingGet().map { it.fromDb() }
     }
 
     override suspend fun getStepsCountFromTimeToTime(startTime: Long, endTime: Long): List<SC> = withContext(Dispatchers.IO) {
-        repository.getStepsCountFromTimeToTime(startTime, endTime).map { it.fromDb() }
+        repository.getStepsCountFromTimeToTime(startTime, endTime).blockingGet().map { it.fromDb() }
     }
 
     override suspend fun getLastStepsCountFromTimeToTime(startTime: Long, endTime: Long): SC? = withContext(Dispatchers.IO) {
-        repository.getLastStepsCountFromTimeToTime(startTime, endTime)?.fromDb()
+        repository.getLastStepsCountFromTimeToTime(startTime, endTime).blockingGet()?.fromDb()
     }
 
     override suspend fun insertOrUpdateStepsCounts(stepsCounts: List<SC>): PersistenceLayer.TransactionResult<SC> = withContext(Dispatchers.IO) {
@@ -2430,6 +2457,29 @@ class PersistenceLayerImpl @Inject constructor(
             throw e
         }
     }
+
+    // AIV
+    override fun getAutoIsfValuesFromTime(from: Long): List<AIV> =
+        repository.getAutoIsfValuesFromTime(from).map { list -> list.asSequence().map { it.fromDb() }.toList() }.blockingGet()
+
+    override fun getAutoIsfValuesFromTimeToTime(startTime: Long, endTime: Long): List<AIV> =
+        repository.getAutoIsfValuesFromTimeToTime(startTime, endTime).map { list -> list.asSequence().map { it.fromDb() }.toList() }.blockingGet()
+
+    override fun insertOrUpdateAutoIsfValues(autoIsfValues: AIV): Single<PersistenceLayer.TransactionResult<AIV>> =
+        repository.runTransactionForResult(InsertOrUpdateAutoIsfValuesTransaction(autoIsfValues.toDb()))
+            .doOnError { aapsLogger.error(LTag.DATABASE, "Error while saving AutoIsfValues $it") }
+            .map { result ->
+                val transactionResult = PersistenceLayer.TransactionResult<AIV>()
+                result.inserted.forEach {
+                    aapsLogger.debug(LTag.DATABASE, "Inserted AutoIsfValues $it")
+                    transactionResult.inserted.add(it.fromDb())
+                }
+                result.updated.forEach {
+                    aapsLogger.debug(LTag.DATABASE, "Updated AutoIsfValues $it")
+                    transactionResult.updated.add(it.fromDb())
+                }
+                transactionResult
+            }
 
     // VersionChange
     override suspend fun insertVersionChangeIfChanged(versionName: String, versionCode: Int, gitRemote: String?, commitHash: String?) = withContext(Dispatchers.IO) {
@@ -2487,3 +2537,4 @@ class PersistenceLayerImpl @Inject constructor(
         repository.getGlucoseValuesByPumpIdRange(source.name, startPumpId, endPumpId).map { it.fromDb() }
     }
 }
+

@@ -3,7 +3,7 @@
 gradlePlugin = "9.2.1"
 googleServices = "4.4.4"
 kotlin = "2.3.21"
-room = "2.8.4"
+room = "2.8.2"
 dagger = "2.59.2"
 mockito = "5.23.0"
 junit = "6.0.3"

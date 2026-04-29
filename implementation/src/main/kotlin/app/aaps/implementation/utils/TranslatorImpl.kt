@@ -4,6 +4,7 @@ import app.aaps.core.data.model.RM
 import app.aaps.core.data.model.TE
 import app.aaps.core.data.model.TT
 import app.aaps.core.data.ue.Action
+import app.aaps.core.data.ue.Action.ColorGroup
 import app.aaps.core.data.ue.Sources
 import app.aaps.core.data.ue.ValueWithUnit
 import app.aaps.core.interfaces.resources.ResourceHelper
@@ -108,6 +109,10 @@ class TranslatorImpl @Inject internal constructor(
         Action.PLUGIN_DISABLED                 -> rh.gs(R.string.uel_plugin_disabled)
         Action.LOOP_CHANGE                     -> rh.gs(R.string.uel_loop_change)
         Action.LOOP_REMOVED                    -> rh.gs(R.string.uel_loop_removed)
+        Action.AUTOISF_ENABLED                 -> rh.gs(R.string.uel_autoisf_enabled)
+        Action.AUTOISF_DISABLED                -> rh.gs(R.string.uel_autoisf_disabled)
+        Action.IOB_TH_SET                      -> rh.gs(R.string.uel_iobth_set)
+        Action.ACCE_WEIGHT_SET                 -> rh.gs(R.string.uel_acce_weight_set)
         Action.RUNNING_MODE                    -> rh.gs(R.string.uel_running_mode)
         Action.RUNNING_MODE_REMOVED            -> rh.gs(R.string.uel_running_mode_removed)
         Action.RUNNING_MODE_UPDATED            -> rh.gs(R.string.uel_running_mode_updarted)

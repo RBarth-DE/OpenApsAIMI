@@ -42,7 +42,7 @@ data class Bolus(
     var notes: String? = null,
     var isBasalInsulin: Boolean = false,
     @Embedded
-    var insulinConfiguration: InsulinConfiguration
+    var insulinConfiguration: InsulinConfiguration? = null
 ) : TraceableDBEntry, DBEntryWithTime {
 
     enum class Type {

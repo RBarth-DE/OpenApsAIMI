@@ -686,6 +686,11 @@
     <string name="autotune_tune_days">Tune days :</string>
     <string name="autotune_select_profile">Select profile to tune</string>
 
+    <!-- AutoISF -->
+    <string name="uel_autoisf_enabled">AUTOISF ENABLED</string>
+    <string name="uel_autoisf_disabled">AUTOISF DISABLED</string>
+    <string name="uel_iobth_set">IOBTH SET</string>
+    <string name="uel_acce_weight_set">ACCE WeIGHT SET</string>
 
     <!-- Alerts -->
     <string name="urgent_alarm">Urgent Alarm</string>
@@ -835,6 +840,12 @@
     <string name="export_result_message_expired">Settings export canceled: password expired. Export manually and (re)enter!</string>
     <string name="export_result_message_disabled">Warning (automation): Settings export not enabled!</string>
 
+   <!-- NumberPicker -->
+    <string name="a11y_min_button_description">decrement %1$s by %2$s</string>
+    <string name="a11y_plus_button_description">increment %1$s by %2$s</string>
+    <string name="you_are_on_allowed_limit">Allowed limit reached</string>
+    <string name="format_hour_minute">%1$dh %2$dm</string>
+
     <!-- Cloud export -->
     <string name="export_cloud_success">Cloud export successful</string>
     <string name="export_cloud_failed">Cloud export FAILED!</string>
@@ -882,8 +893,6 @@
     <string name="reauthorize">Re-authenticate</string>
     <string name="cloud_auth_success">Cloud storage authentication successful</string>
     <string name="authorization_status">Authorization Status</string>
-
-    <string name="format_hour_minute">%1$dh %2$dm</string>
 
     <!-- datetime layout -->
     <string name="event_time_label">Event time</string>

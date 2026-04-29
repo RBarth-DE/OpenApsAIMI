@@ -29,6 +29,9 @@
     <!---Toast  -->
     <attr name="toastBaseTextColor" format="reference|color" />
     <attr name="toastBackgroundColor" format="reference|color" />
+    <declare-styleable name="NumberPicker">
+        <attr name="customContentDescription" format="string" />
+    </declare-styleable>
     <!---Notification -->
     <!---Disabled Text Color  -->
     <!---Overview and History browser  -->

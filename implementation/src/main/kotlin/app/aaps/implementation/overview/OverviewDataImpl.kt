@@ -108,6 +108,36 @@ class OverviewDataImpl @Inject constructor() : OverviewData {
     override var stepsForScale: Scale = Scale()
     override var stepsCountGraphSeries: SeriesData = EmptySeriesData()
 
+    // AIMI AutoISF graph series
+    override var maxIobThValueFound: Double = Double.MIN_VALUE
+    override var minIobThValueFound: Double = Double.MAX_VALUE
+    override var iobThSeries: SeriesData = EmptySeriesData()
+
+    override var maxAcceIsfValueFound: Double = Double.MIN_VALUE
+    override var minAcceIsfValueFound: Double = Double.MAX_VALUE
+    override val acceIsfScale: Scale = Scale()
+    override var acceIsfSeries: SeriesData = EmptySeriesData()
+
+    override var maxBgIsfValueFound: Double = Double.MIN_VALUE
+    override var minBgIsfValueFound: Double = Double.MAX_VALUE
+    override val bgIsfScale: Scale = Scale()
+    override var bgIsfSeries: SeriesData = EmptySeriesData()
+
+    override var maxPpIsfValueFound: Double = Double.MIN_VALUE
+    override var minPpIsfValueFound: Double = Double.MAX_VALUE
+    override val ppIsfScale: Scale = Scale()
+    override var ppIsfSeries: SeriesData = EmptySeriesData()
+
+    override var maxDuraIsfValueFound: Double = Double.MIN_VALUE
+    override var minDuraIsfValueFound: Double = Double.MAX_VALUE
+    override val duraIsfScale: Scale = Scale()
+    override var duraIsfSeries: SeriesData = EmptySeriesData()
+
+    override var maxFinalIsfValueFound: Double = Double.MIN_VALUE
+    override var minFinalIsfValueFound: Double = Double.MAX_VALUE
+    override val finalIsfScale: Scale = Scale()
+    override var finalIsfSeries: SeriesData = EmptySeriesData()
+
     override fun reset() {
         pumpStatus = ""
         calcProgressPct = 100
@@ -155,6 +185,25 @@ class OverviewDataImpl @Inject constructor() : OverviewData {
         maxVarSensValueFound = 200.0
         minVarSensValueFound = 50.0
         varSensSeries = EmptySeriesData()
+        // AIMI AutoISF
+        maxIobThValueFound = Double.MIN_VALUE
+        minIobThValueFound = Double.MAX_VALUE
+        iobThSeries = EmptySeriesData()
+        maxAcceIsfValueFound = Double.MIN_VALUE
+        minAcceIsfValueFound = Double.MAX_VALUE
+        acceIsfSeries = EmptySeriesData()
+        maxBgIsfValueFound = Double.MIN_VALUE
+        minBgIsfValueFound = Double.MAX_VALUE
+        bgIsfSeries = EmptySeriesData()
+        maxPpIsfValueFound = Double.MIN_VALUE
+        minPpIsfValueFound = Double.MAX_VALUE
+        ppIsfSeries = EmptySeriesData()
+        maxDuraIsfValueFound = Double.MIN_VALUE
+        minDuraIsfValueFound = Double.MAX_VALUE
+        duraIsfSeries = EmptySeriesData()
+        maxFinalIsfValueFound = Double.MIN_VALUE
+        minFinalIsfValueFound = Double.MAX_VALUE
+        finalIsfSeries = EmptySeriesData()
     }
 
     override fun initRange() {

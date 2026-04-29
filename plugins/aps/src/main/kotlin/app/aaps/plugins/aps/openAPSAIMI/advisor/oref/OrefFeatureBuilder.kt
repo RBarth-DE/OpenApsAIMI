@@ -81,7 +81,7 @@ object OrefFeatureBuilder {
         val maxSmb = maxSmbCe ?: profileAimi?.maxSMBBasalMinutes?.toDouble()
         val maxUam = maxUamCe ?: profileAimi?.maxUAMSMBBasalMinutes?.toDouble()
 
-        val hasDyn = if (rt.runningDynamicIsf) 1.0 else 0.0
+        val hasDyn = if (rt.runningDynamicIsf == true) 1.0 else 0.0
         val hasSmb = if (
             (rt.units ?: 0.0) > 0 ||
             reason.contains("Microbolusing", ignoreCase = true) ||
