@@ -64,6 +64,7 @@ import app.aaps.core.interfaces.rx.events.EventLoopUpdateGui
 import app.aaps.core.interfaces.rx.events.EventMobileToWear
 import app.aaps.core.interfaces.rx.events.EventNewOpenLoopNotification
 import app.aaps.core.interfaces.rx.events.EventRefreshOverview
+import app.aaps.core.interfaces.rx.events.EventShowSnackbar
 import app.aaps.core.interfaces.rx.weardata.EventData
 import app.aaps.core.interfaces.ui.UiInteraction
 import app.aaps.core.interfaces.utils.DateUtil
@@ -811,36 +812,49 @@ class LoopPlugin @Inject constructor(
                                     // executing TBR may take some time thus give more time to SMB
                                     resultAfterConstraints.deliverAt = lastRun.lastTBREnact
                                     rxBus.send(EventLoopUpdateGui())
-                                    if (resultAfterConstraints.isBolusRequested) {
-                                        appScope.launch {
-                                            applySMBRequest(
-                                                resultAfterConstraints,
-                                                object : Callback() {
-                                                    override fun run() {
-                                                        // Callback is only called if a bolus was actually requested
-                                                        aapsLogger.debug(
+                                    if (resultAfterConstraints.isBolusRequested)
+                                        applySMBRequest(resultAfterConstraints, object : Callback() {
+                                            override fun run() {
+                                                // Callback is only called if a bolus was actually requested
+                                                aapsLogger.debug(
+                                                    LTag.APS,
+                                                    "SMB enact result: requested=%.2fU enacted=%s success=%s comment=%s".format(
+                                                        resultAfterConstraints.smb,
+                                                        result.enacted,
+                                                        result.success,
+                                                        result.comment ?: ""
+                                                    )
+                                                )
+                                                if (result.enacted || result.success) {
+                                                    lastRun.smbSetByPump = result
+                                                    lastRun.lastSMBRequest = lastRun.lastAPSRun
+                                                    lastRun.lastSMBEnact = dateUtil.now()
+                                                    scheduleBuildAndStoreDeviceStatus("applySMBRequest")
+                                                } else {
+                                                    // Partial delivery check — if pump delivered something, don't retry
+                                                    val delivered = result.bolusDelivered
+                                                    if (delivered > 0.0) {
+                                                        aapsLogger.warn(
                                                             LTag.APS,
-                                                            "SMB enact result: requested=%.2fU enacted=%s success=%s comment=%s".format(
-                                                                resultAfterConstraints.smb,
-                                                                result.enacted,
-                                                                result.success,
-                                                                result.comment ?: ""
+                                                            "SMB partial delivery: requested=%.2fU delivered=%.2fU → no retry to avoid overdose".format(
+                                                                resultAfterConstraints.smb, delivered
                                                             )
                                                         )
-                                                        if (result.enacted || result.success) {
-                                                            lastRun.smbSetByPump = result
-                                                            lastRun.lastSMBRequest = lastRun.lastAPSRun
-                                                            lastRun.lastSMBEnact = dateUtil.now()
-                                                            scheduleBuildAndStoreDeviceStatus("applySMBRequest")
-                                                        } else {
-                                                            handler?.postDelayed({ appScope.launch { invoke("tempBasalFallback", allowNotification, true) } }, 1000)
-                                                        }
-                                                        rxBus.send(EventLoopUpdateGui())
+                                                        lastRun.smbSetByPump = result
+                                                        lastRun.lastSMBEnact = dateUtil.now()
+                                                        // Block next SMB for full interval to account for delivered insulin
+                                                        scheduleBuildAndStoreDeviceStatus("applySMBRequest_partial")
+                                                    } else {
+                                                        handler?.postDelayed(
+                                                            { runBlocking { invoke("tempBasalFallback", allowNotification, true) } },
+                                                            1000
+                                                        )
                                                     }
                                                 }
-                                            )
-                                        }
-                                    } else {
+                                                rxBus.send(EventLoopUpdateGui())
+                                            }
+                                        })
+                                    else {
                                         aapsLogger.debug(LTag.APS, "No SMB requested")
                                         scheduleBuildAndStoreDeviceStatus("applyTBRRequest")
                                     }
@@ -1054,9 +1068,9 @@ class LoopPlugin @Inject constructor(
         }
     }
 
-    private suspend fun applySMBRequest(request: APSResult, callback: Callback?) {
+    private fun applySMBRequest(request: APSResult, callback: Callback?) {
         val pump = activePlugin.activePump
-        val lastBolusTime = persistenceLayer.getNewestBolus()?.timestamp ?: 0L
+        val lastBolusTime = runBlocking { persistenceLayer.getNewestBolus()?.timestamp ?: 0L }
         val now = dateUtil.now()
         val smbIntervalMin = preferences.get(IntKey.ApsMaxSmbFrequency)
         val lastBolusAgeSec = if (lastBolusTime > 0L) ((now - lastBolusTime).coerceAtLeast(0L) / 1000.0) else Double.NaN
@@ -1099,7 +1113,7 @@ class LoopPlugin @Inject constructor(
 
         // deliver SMB
         val detailedBolusInfo = DetailedBolusInfo()
-        detailedBolusInfo.lastKnownBolusTime = persistenceLayer.getNewestBolus()?.timestamp ?: 0L
+        detailedBolusInfo.lastKnownBolusTime = runBlocking { persistenceLayer.getNewestBolus() }?.timestamp ?: 0L
         detailedBolusInfo.eventType = TE.Type.CORRECTION_BOLUS
         detailedBolusInfo.insulin = request.smb
         detailedBolusInfo.bolusType = BS.Type.SMB
