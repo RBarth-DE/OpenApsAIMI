@@ -184,9 +184,7 @@
     <string name="a11y_high">high</string>
     <string name="a11y_inrange">in range</string>
     <string name="a11y_low">low</string>
-    <string name="average">Average</string>
     <string name="tir_short">TIR</string>
-    <string name="tir">Time in Range</string>
     <string name="none"><![CDATA[<none>]]></string>
     <string name="remove_label">REMOVE</string>
     <string name="activate_profile">Activate profile</string>
