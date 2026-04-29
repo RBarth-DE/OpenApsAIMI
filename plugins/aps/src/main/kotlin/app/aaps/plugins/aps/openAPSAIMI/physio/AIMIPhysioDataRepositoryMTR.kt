@@ -14,40 +14,41 @@ import app.aaps.core.interfaces.logging.AAPSLogger
 import app.aaps.core.interfaces.logging.LTag
 import app.aaps.plugins.aps.openAPSAIMI.steps.UnifiedActivityProviderMTR
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
 import java.time.Instant
-import java.time.LocalTime
 import java.time.ZoneId
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicReference
 import javax.inject.Inject
 import javax.inject.Singleton
-import kotlin.math.sqrt
+import androidx.health.connect.client.records.metadata.DataOrigin
 
 /**
  * 🏥 AIMI Physiological Data Repository - MTR Implementation
- * 
+ *
  * Fetches physiological data from Google Health Connect (Android 14+).
  * Implements caching, freshness checks, and graceful degradation.
- * 
+ *
  * CRITICAL: This class NEVER crashes if data is unavailable.
  * All methods return nullable results with safe defaults.
- * 
+ *
  * Data Sources:
  * - Sleep: Duration, stages, efficiency
  * - HRV: RMSSD (Root Mean Square of Successive Differences)
  * - Heart Rate: Resting HR calculation
  * - Steps: Daily totals (delegated to existing StepsManager)
- * 
+ *
  * @author MTR & Lyra AI - AIMI Physiological Intelligence
  */
 @Singleton
 class AIMIPhysioDataRepositoryMTR @Inject constructor(
     private val context: Context,
-    private val aapsLogger: AAPSLogger
+    private val aapsLogger: AAPSLogger,
+    private val unifiedActivityProvider: UnifiedActivityProviderMTR  // neu
 ) {
-    
+
     companion object {
         private const val TAG = "PhysioRepository"
         private const val CACHE_TTL_MS = 30 * 60 * 1000L // 30 minutes
@@ -57,7 +58,7 @@ class AIMIPhysioDataRepositoryMTR @Inject constructor(
         /** Dashboard today-steps aggregate: short TTL so a lagging HC value is not pinned too long. */
         private const val TODAY_STEPS_HC_CACHE_MS = 12_000L
     }
-    
+
     private val healthConnectClient: HealthConnectClient? by lazy {
         try {
             HealthConnectClient.getOrCreate(context)
@@ -66,7 +67,7 @@ class AIMIPhysioDataRepositoryMTR @Inject constructor(
             null
         }
     }
-    
+
     // Cache storage
     private data class CachedData<T>(
         val data: T?,
@@ -75,7 +76,7 @@ class AIMIPhysioDataRepositoryMTR @Inject constructor(
     ) {
         fun isValid(): Boolean = System.currentTimeMillis() < expiresAt
     }
-    
+
     private val cache = ConcurrentHashMap<String, CachedData<*>>()
 
     private data class TodayStepsAggCache(
@@ -84,20 +85,20 @@ class AIMIPhysioDataRepositoryMTR @Inject constructor(
         val cachedAtMs: Long
     )
 
-    /** Short TTL: dashboard debounces refreshes; shorter cache avoids sticking on a lagging HC aggregate. */
+    /** Short TTL so dashboard refreshes do not hammer HC every debounced tick. */
     private val todayStepsAggCache = AtomicReference<TodayStepsAggCache?>(null)
-    
+
     // ═══════════════════════════════════════════════════════════════════════
     // PROBE & DIAGNOSTICS
     // ═══════════════════════════════════════════════════════════════════════
-    
+
     /**
      * 🔍 Probes Health Connect to diagnose availability and data counts
      * CRITICAL for debugging "NEVER_SYNCED" issues
      */
     suspend fun probeHealthConnect(windowDays: Long = 7): ProbeResult {
         val client = healthConnectClient
-        
+
         if (client == null) {
             aapsLogger.error(LTag.APS, "[$TAG] PROBE: Health Connect client unavailable")
             return ProbeResult(
@@ -111,7 +112,7 @@ class AIMIPhysioDataRepositoryMTR @Inject constructor(
                 windowDays = windowDays.toInt()
             )
         }
-        
+
         return withContext(Dispatchers.IO) {
             try {
                 val sdkStatus = try {
@@ -119,17 +120,17 @@ class AIMIPhysioDataRepositoryMTR @Inject constructor(
                 } catch (e: Exception) {
                     "SDK_CHECK_FAILED"
                 }
-                
+
                 val grantedPerms = try {
                     client.permissionController.getGrantedPermissions()
                 } catch (e: Exception) {
                     emptySet()
                 }
-                
+
                 val now = Instant.now()
                 val start = now.minusSeconds(windowDays * 24 * 60 * 60)
                 val writers = mutableSetOf<String>()
-                
+
                 // Count Sleep
                 val sleepCount = try {
                     val req = ReadRecordsRequest(SleepSessionRecord::class, TimeRangeFilter.between(start, now))
@@ -140,7 +141,7 @@ class AIMIPhysioDataRepositoryMTR @Inject constructor(
                     aapsLogger.warn(LTag.APS, "[$TAG] PROBE: Sleep count failed - ${e.message}")
                     0
                 }
-                
+
                 // Count HRV
                 val hrvCount = try {
                     val req = ReadRecordsRequest(HeartRateVariabilityRmssdRecord::class, TimeRangeFilter.between(start, now))
@@ -151,7 +152,7 @@ class AIMIPhysioDataRepositoryMTR @Inject constructor(
                     aapsLogger.warn(LTag.APS, "[$TAG] PROBE: HRV count failed - ${e.message}")
                     0
                 }
-                
+
                 // Count HeartRate
                 val hrCount = try {
                     val req = ReadRecordsRequest(HeartRateRecord::class, TimeRangeFilter.between(start, now))
@@ -162,7 +163,7 @@ class AIMIPhysioDataRepositoryMTR @Inject constructor(
                     aapsLogger.warn(LTag.APS, "[$TAG] PROBE: HR count failed - ${e.message}")
                     0
                 }
-                
+
                 // Count Steps
                 val stepsCount = try {
                     val req = ReadRecordsRequest(StepsRecord::class, TimeRangeFilter.between(start, now))
@@ -173,7 +174,7 @@ class AIMIPhysioDataRepositoryMTR @Inject constructor(
                     aapsLogger.warn(LTag.APS, "[$TAG] PROBE: Steps count failed - ${e.message}")
                     0
                 }
-                
+
                 val result = ProbeResult(
                     sdkStatus = sdkStatus,
                     grantedPermissions = grantedPerms,
@@ -184,10 +185,10 @@ class AIMIPhysioDataRepositoryMTR @Inject constructor(
                     dataOrigins = writers,
                     windowDays = windowDays.toInt()
                 )
-                
+
                 aapsLogger.info(LTag.APS, "[$TAG] ✅ PROBE: ${result.toLogString()}")
                 aapsLogger.info(LTag.APS, "[$TAG] PROBE: Granted perms=${grantedPerms.size}, SDK=$sdkStatus")
-                
+
                 result
             } catch (e: Exception) {
                 aapsLogger.error(LTag.APS, "[$TAG] PROBE CRASH", e)
@@ -204,46 +205,46 @@ class AIMIPhysioDataRepositoryMTR @Inject constructor(
             }
         }
     }
-    
+
     // ═══════════════════════════════════════════════════════════════════════
     // SLEEP DATA
     // ═══════════════════════════════════════════════════════════════════════
-    
+
     /**
      * Fetches last night's sleep data (or most recent sleep session)
-     * 
+     *
      * @return SleepDataMTR or null if unavailable
      */
     suspend fun fetchSleepData(): SleepDataMTR? {
         val cacheKey = "sleep_last"
         val cached = cache[cacheKey] as? CachedData<SleepDataMTR>
-        
+
         if (cached?.isValid() == true) {
             aapsLogger.debug(LTag.APS, "[$TAG] Sleep data from cache")
             return cached.data
         }
-        
+
         val client = healthConnectClient ?: return null
-        
+
         return try {
             withTimeout(API_TIMEOUT_MS) {
                 withContext(Dispatchers.IO) {
                         val now = Instant.now()
                         val yesterday = now.minusSeconds(48 * 60 * 60) // Last 48h
-                        
+
                         val request = ReadRecordsRequest(
                             recordType = SleepSessionRecord::class,
                             timeRangeFilter = TimeRangeFilter.between(yesterday, now)
                         )
-                        
+
                         val response = client.readRecords(request)
-                        
+
                         // 🚀 FILTER & AGGREGATE Sleep Sessions
                         // Health Connect can return multiple segments (Naps, fragmented night)
                         // We sum up all sleep within the 'Last Night' window (e.g. last 16h to be safe, or just use the response window)
-                        // The response window is 'yesterday' to 'now' (48h). 
+                        // The response window is 'yesterday' to 'now' (48h).
                         // To get "Last Night" specifically, we should look for the most recent generic block.
-                        
+
                         // Inclure les nuits qui se terminent dans la même fenêtre que la lecture (48h).
                         // Un filtre 24h seulement excluait des sessions Garmin valides (décalage fuseau / fin de nuit).
                         val windowCutoff = now.minusSeconds(48 * 60 * 60)
@@ -251,10 +252,10 @@ class AIMIPhysioDataRepositoryMTR @Inject constructor(
 
                         if (recentSessions.isNotEmpty()) {
                             // Sum durations
-                            val totalDurationHours = recentSessions.sumOf { 
-                                (it.endTime.epochSecond - it.startTime.epochSecond) / 3600.0 
+                            val totalDurationHours = recentSessions.sumOf {
+                                (it.endTime.epochSecond - it.startTime.epochSecond) / 3600.0
                             }
-                            
+
                             // Use the latest end time as the session "end"
                             val latestEnd = recentSessions.maxOf { it.endTime }
                             val earliestStart = recentSessions.minOf { it.startTime }
@@ -270,14 +271,14 @@ class AIMIPhysioDataRepositoryMTR @Inject constructor(
                                 awakeMinutes = 0,
                                 fragmentationScore = 0.0
                             )
-                            
+
                             cache[cacheKey] = CachedData(sleepData, System.currentTimeMillis())
-                            
+
                             aapsLogger.info(
                                 LTag.APS,
                                 "[$TAG] ✅ Sleep (Aggregated): ${totalDurationHours.format(1)}h from ${recentSessions.size} segments"
                             )
-                            
+
                             sleepData
                         } else {
                             null
@@ -289,40 +290,40 @@ class AIMIPhysioDataRepositoryMTR @Inject constructor(
             null
         }
     }
-    
+
     // ═══════════════════════════════════════════════════════════════════════
     // HRV DATA
     // ═══════════════════════════════════════════════════════════════════════
-    
+
     /**
      * Fetches HRV data for last 7 days
-     * 
+     *
      * @return List of HRVDataMTR, empty if unavailable
      */
     suspend fun fetchHRVData(daysBack: Int = 7): List<HRVDataMTR> {
         val cacheKey = "hrv_${daysBack}days"
         val cached = cache[cacheKey] as? CachedData<List<HRVDataMTR>>
-        
+
         if (cached?.isValid() == true) {
             aapsLogger.debug(LTag.APS, "[$TAG] HRV data from cache")
             return cached.data ?: emptyList()
         }
-        
+
         val client = healthConnectClient ?: return emptyList()
-        
+
         return try {
             withTimeout(API_TIMEOUT_MS) {
                 withContext(Dispatchers.IO) {
                         val now = Instant.now()
                         val startTime = now.minusSeconds((daysBack * 24 * 60 * 60).toLong())
-                        
+
                         val request = ReadRecordsRequest(
                             recordType = HeartRateVariabilityRmssdRecord::class,
                             timeRangeFilter = TimeRangeFilter.between(startTime, now)
                         )
-                        
+
                         val response = client.readRecords(request)
-                        
+
                         val hrvList = response.records.map { record ->
                             HRVDataMTR(
                                 timestamp = record.time.toEpochMilli(),
@@ -330,17 +331,16 @@ class AIMIPhysioDataRepositoryMTR @Inject constructor(
                                 source = record.metadata.dataOrigin.packageName
                             )
                         }
-                        
-                        cache[cacheKey] = CachedData(hrvList, System.currentTimeMillis())
-                        
+                        // Only cache if there is actually data present
                         if (hrvList.isNotEmpty()) {
+                            cache[cacheKey] = CachedData(hrvList, System.currentTimeMillis())
                             val avgRMSSD = hrvList.map { it.rmssd }.average()
-                            aapsLogger.info(
-                                LTag.APS,
-                                "[$TAG] ✅ HRV: ${hrvList.size} samples, avg RMSSD=${avgRMSSD.format(1)}ms"
-                            )
+                            aapsLogger.info(LTag.APS, "[$TAG] ✅ HRV: ${hrvList.size} samples, avg RMSSD=${avgRMSSD.format(1)}ms")
+                        } else {
+                            // Do not cache — next cycle will try again
+                            // (Garmin does not write HRV to Health Connect, Samsung etc. do)
+                            aapsLogger.debug(LTag.APS, "[$TAG] HRV: 0 records in Health Connect (Garmin-User: normal)")
                         }
-                        
                         hrvList
                 }
             }
@@ -349,7 +349,7 @@ class AIMIPhysioDataRepositoryMTR @Inject constructor(
             emptyList()
         }
     }
-    
+
     // ═══════════════════════════════════════════════════════════════════════
     // HEART RATE DATA
     // ═══════════════════════════════════════════════════════════════════════
@@ -358,11 +358,24 @@ class AIMIPhysioDataRepositoryMTR @Inject constructor(
      * Fetches the most recent Heart Rate sample (Real-Time check)
      * Lookback window: 1 hour
      */
-    suspend fun fetchLastHeartRate(): Int {
+
+    fun fetchLastHeartRate(): Int {
+        // First UnifiedProvider (Garmin/Wear/HC)
+        val result = unifiedActivityProvider.getLatestHeartRate(3600_000L) // 1h Window
+        if (result != null) {
+            aapsLogger.debug(LTag.APS, "[$TAG] fetchLastHeartRate: ${result.bpm}bpm (source=${result.source})")
+            return result.bpm.toInt()
+        }
+        // HC Fallback bleibt wie bisher
+        return fetchLastHeartRateFromHC()
+    }
+
+    fun fetchLastHeartRateFromHC(): Int {
         val client = healthConnectClient ?: return 0
         return try {
-            withTimeout(API_TIMEOUT_MS) {
-                withContext(Dispatchers.IO) {
+            runBlocking {
+                withTimeout(API_TIMEOUT_MS) {
+                    withContext(Dispatchers.IO) {
                         val now = Instant.now()
                         val start = now.minusSeconds(3600) // 1 hour lookback
                         val request = ReadRecordsRequest(
@@ -375,6 +388,7 @@ class AIMIPhysioDataRepositoryMTR @Inject constructor(
                         val lastRecord = response.records.firstOrNull()
                         // Get the last sample in the record series
                         lastRecord?.samples?.lastOrNull()?.beatsPerMinute?.toInt() ?: 0
+                    }
                 }
             }
         } catch (e: Exception) {
@@ -382,7 +396,7 @@ class AIMIPhysioDataRepositoryMTR @Inject constructor(
             0
         }
     }
-    
+
     // ═══════════════════════════════════════════════════════════════════════
     // RESTING HEART RATE (RHR)
     // ═══════════════════════════════════════════════════════════════════════
@@ -417,40 +431,40 @@ class AIMIPhysioDataRepositoryMTR @Inject constructor(
             emptyList()
         }
     }
-    
+
     /**
      * Fetches morning Resting Heart Rate for last N days
      * Morning window: 5 AM - 9 AM
-     * 
+     *
      * @return List of RHRDataMTR, empty if unavailable
      */
     suspend fun fetchMorningRHR(daysBack: Int = 7): List<RHRDataMTR> {
         val cacheKey = "rhr_${daysBack}days"
         val cached = cache[cacheKey] as? CachedData<List<RHRDataMTR>>
-        
+
         if (cached?.isValid() == true) {
             aapsLogger.debug(LTag.APS, "[$TAG] RHR data from cache")
             return cached.data ?: emptyList()
         }
-        
+
         val client = healthConnectClient ?: return emptyList()
-        
+
         return try {
             withTimeout(API_TIMEOUT_MS) {
                 withContext(Dispatchers.IO) {
                         val now = Instant.now()
                         val zoneId = ZoneId.systemDefault()
                         val rhrList = mutableListOf<RHRDataMTR>()
-                        
+
                         // Loop through last N days to get daily morning mins
                         for (i in 0 until daysBack) {
                             val dayStart = now.minusSeconds((i * 24 * 60 * 60).toLong())
-                            
-                             // Define Morning Window (e.g., 04:00 - 10:00 local time) regarding the *start* of that 24h block
+
+                            // Define Morning Window (e.g., 04:00 - 10:00 local time) regarding the *start* of that 24h block
                             val localDate = dayStart.atZone(zoneId).toLocalDate()
                             val windowStart = localDate.atTime(4, 0).atZone(zoneId).toInstant()
                             val windowEnd = localDate.atTime(10, 0).atZone(zoneId).toInstant()
-                            
+
                             // Skip if window is in future
                             if (windowStart.isAfter(now)) continue
 
@@ -461,7 +475,7 @@ class AIMIPhysioDataRepositoryMTR @Inject constructor(
                                 )
                             )
                             val minBPM = aggregation[HeartRateRecord.BPM_MIN]
-                            
+
                             if (minBPM != null && minBPM > 0) {
                                 rhrList.add(
                                     RHRDataMTR(
@@ -472,7 +486,7 @@ class AIMIPhysioDataRepositoryMTR @Inject constructor(
                                 )
                             }
                         }
-                        
+
                         // Sort by timestamp (oldest first usually, but list is irrelevant)
                         var sortedRHR = rhrList.sortedBy { it.timestamp }
 
@@ -481,7 +495,7 @@ class AIMIPhysioDataRepositoryMTR @Inject constructor(
                         }
 
                         cache[cacheKey] = CachedData(sortedRHR, System.currentTimeMillis())
-                        
+
                         if (sortedRHR.isNotEmpty()) {
                             val avgRHR = sortedRHR.map { it.bpm }.average()
                             aapsLogger.info(
@@ -489,7 +503,7 @@ class AIMIPhysioDataRepositoryMTR @Inject constructor(
                                 "[$TAG] ✅ RHR: ${sortedRHR.size} points, avg=${avgRHR.toInt()} bpm (aggregate morning min and/or RestingHeartRateRecord)"
                             )
                         }
-                        
+
                         sortedRHR
                 }
             }
@@ -498,10 +512,100 @@ class AIMIPhysioDataRepositoryMTR @Inject constructor(
             emptyList()
         }
     }
-    
+
     // ═══════════════════════════════════════════════════════════════════════
     // STEPS DATA
     // ═══════════════════════════════════════════════════════════════════════
+
+    fun fetchRecentSteps(windowMinutes: Int = 15): Int {
+        val safeMins = windowMinutes.coerceAtLeast(1)
+        val windowMs = safeMins * 60 * 1000L
+        val cacheKey = "recentSteps_${safeMins}min"
+
+        // Cache check (60s TTL für Real-time)
+        val cached = cache[cacheKey]
+        if (cached != null && cached.isValid()) {
+            aapsLogger.debug(LTag.APS, "[$TAG] fetchRecentSteps: cache hit → ${cached.data}")
+            return (cached.data ?: 0 ) as Int
+        }
+
+        // UnifiedActivityProvider nutzen → Garmin > Wear > Phone > HC
+        val result = unifiedActivityProvider.getLatestSteps(windowMs)
+
+        val steps = result?.steps ?: run {
+            aapsLogger.debug(LTag.APS, "[$TAG] fetchRecentSteps: no data from UnifiedProvider, trying HC fallback")
+            fetchRecentStepsFromHC(safeMins)  // HC als letzter Fallback
+        }
+
+        val nowMs = System.currentTimeMillis()
+        cache[cacheKey] = CachedData(steps, nowMs, expiresAt = nowMs + 60_000L)
+
+        aapsLogger.info(LTag.APS, "[$TAG] ✅ fetchRecentSteps: steps=$steps over last $safeMins min" +
+            " (source=${result?.source ?: "HC-fallback"})")
+        return steps
+    }
+
+    /**
+     * Fetches steps count for the last [windowMinutes] minutes.
+     * Designed for real-time activity detection in the loop (e.g. steps15).
+     * Uses Health Connect aggregation with a short time window.
+     *
+     * @param windowMinutes  Look-back window in minutes (default: 15)
+     * @return Step count as Int, or 0 on error / unsupported mode
+     */
+    fun fetchRecentStepsFromHC(windowMinutes: Int = 15): Int {
+        val safeMins = windowMinutes.coerceAtLeast(1)
+        val cacheKey = "recentSteps_hc_${safeMins}min"
+
+        // Check preference first
+        val mode = UnifiedActivityProviderMTR.getMode(context)
+        if (mode == UnifiedActivityProviderMTR.MODE_DISABLED) return 0
+
+        // Fix:
+        val cached = cache[cacheKey]
+        if (cached != null && cached.isValid()) {
+            aapsLogger.debug(LTag.APS, "[$TAG] fetchRecentSteps: cache hit ($safeMins min) → ${cached.data}")
+            return (cached.data ?: 0) as Int
+        }
+
+        val client = healthConnectClient ?: return 0
+
+        return try {
+            runBlocking {
+                withTimeout(API_TIMEOUT_MS) {
+                    withContext(Dispatchers.IO) {
+                        val now = Instant.now()
+                        val startTime = now.minusSeconds((safeMins * 60).toLong())
+
+                        val response = client.aggregate(
+                            AggregateRequest(
+                                metrics = setOf(StepsRecord.COUNT_TOTAL),
+                                timeRangeFilter = TimeRangeFilter.between(startTime, now),
+                                dataOriginFilter = setOf(DataOrigin("com.garmin.android.apps.connectmobile"))
+                            )
+                        )
+
+                        val steps = (response[StepsRecord.COUNT_TOTAL] ?: 0L).toInt()
+
+                        val now2 = System.currentTimeMillis()
+                        cache[cacheKey] = CachedData(steps, now2, expiresAt = now2 + 60_000L)  // 60s TTL
+
+                        aapsLogger.info(LTag.APS, "[$TAG] ✅ fetchRecentSteps: steps=$steps over last $safeMins min")
+                        steps
+                    }
+                }
+            }
+        } catch (e: IllegalArgumentException) {
+            aapsLogger.warn(LTag.APS, "[$TAG] fetchRecentSteps: invalid time range – ${e.message}")
+            0
+        } catch (e: kotlinx.coroutines.TimeoutCancellationException) {
+            aapsLogger.warn(LTag.APS, "[$TAG] fetchRecentSteps: timeout after ${API_TIMEOUT_MS}ms")
+            0
+        } catch (e: Exception) {
+            aapsLogger.error(LTag.APS, "[$TAG] fetchRecentSteps: unexpected error – ${e.message}")
+            0
+        }
+    }
 
     /**
      * Fetches steps for last 7 days (daily totals)
@@ -511,48 +615,54 @@ class AIMIPhysioDataRepositoryMTR @Inject constructor(
      */
     suspend fun fetchStepsData(daysBack: Int = 7, ignoreUnifiedSourceMode: Boolean = false): Int {
         if (!ignoreUnifiedSourceMode) {
-            val mode = app.aaps.plugins.aps.openAPSAIMI.steps.UnifiedActivityProviderMTR.getMode(context)
-            if (mode == app.aaps.plugins.aps.openAPSAIMI.steps.UnifiedActivityProviderMTR.MODE_PREFER_WEAR ||
-                mode == app.aaps.plugins.aps.openAPSAIMI.steps.UnifiedActivityProviderMTR.MODE_DISABLED) {
+            val mode = UnifiedActivityProviderMTR.getMode(context)
+            if (mode == UnifiedActivityProviderMTR.MODE_PREFER_WEAR ||
+                mode == UnifiedActivityProviderMTR.MODE_DISABLED) {
                 return 0
             }
         }
 
         val cacheKey = "steps_${daysBack}days"
         val cached = cache[cacheKey] as? CachedData<Int>
-        
         if (cached?.isValid() == true) {
             return cached.data ?: 0
         }
-        
+
         val client = healthConnectClient ?: return 0
-        
+
         return try {
             withTimeout(API_TIMEOUT_MS) {
                 withContext(Dispatchers.IO) {
                         val now = Instant.now()
-                        val startTime = now.minusSeconds((daysBack * 24 * 60 * 60).toLong())
-                        
+                        val safeDaysBack = daysBack.coerceAtLeast(1)
+                        val startTime = now.minusSeconds((safeDaysBack * 24L * 60 * 60))
+
                         val response = client.aggregate(
                             AggregateRequest(
                                 metrics = setOf(StepsRecord.COUNT_TOTAL),
-                                timeRangeFilter = TimeRangeFilter.between(startTime, now)
+                                timeRangeFilter = TimeRangeFilter.between(startTime, now),
+                                dataOriginFilter = setOf(DataOrigin("com.garmin.android.apps.connectmobile"))
                             )
                         )
-                        
+
                         val totalSteps = response[StepsRecord.COUNT_TOTAL] ?: 0L
-                        
-                        // Average daily steps
-                        val avgSteps = if (daysBack > 0) (totalSteps / daysBack).toInt() else 0
-                        
+                        val avgSteps = (totalSteps / safeDaysBack).toInt()
+
                         cache[cacheKey] = CachedData(avgSteps, System.currentTimeMillis())
-                        
-                        aapsLogger.info(LTag.APS, "[$TAG] ✅ Steps (HC Aggregated): total=$totalSteps, avg=$avgSteps/day")
+                        aapsLogger.info(LTag.APS, "[$TAG] ✅ Steps (HC Aggregated, Garmin-only): total=$totalSteps, avg=$avgSteps/day")
                         avgSteps
                 }
             }
+        } catch (e: SecurityException) {
+            aapsLogger.debug(LTag.APS, "[$TAG] Steps aggregation skipped: HC permission not granted")
+            0
+        } catch (e: kotlinx.coroutines.TimeoutCancellationException) {
+            aapsLogger.debug(LTag.APS, "[$TAG] Steps aggregation timeout — HC unavailable")
+            0
         } catch (e: Exception) {
-            aapsLogger.warn(LTag.APS, "[$TAG] Steps aggregation failed", e)
+            aapsLogger.warn(LTag.APS, "[$TAG] Steps aggregation failed: ${e.javaClass.simpleName}: ${e.message}")
+            e.stackTrace.take(5).forEach { aapsLogger.warn(LTag.APS, "[$TAG]   at $it") }
+            e.cause?.let { aapsLogger.warn(LTag.APS, "[$TAG] Caused by: ${it.javaClass.canonicalName}: ${it.message}") }
             0
         }
     }
@@ -642,33 +752,33 @@ class AIMIPhysioDataRepositoryMTR @Inject constructor(
     // ═══════════════════════════════════════════════════════════════════════
     // AGGREGATED DATA FETCH
     // ═══════════════════════════════════════════════════════════════════════
-    
+
     /**
      * Fetches all physiological data in one call
-     * 
+     *
      * @return RawPhysioDataMTR with available data (never null)
      */
     suspend fun fetchAllData(daysBack: Int = 7): RawPhysioDataMTR {
         val startTime = System.currentTimeMillis()
-        
+
         aapsLogger.info(LTag.APS, "[$TAG] 🔄 Fetching physiological data (${daysBack}d window)...")
-        
+
         return try {
             // 📊 DIAGNOSTIC: Log each fetch result individually
             val sleep = fetchSleepData()
             aapsLogger.info(LTag.APS, "[$TAG] 📊 FETCH RESULT - Sleep: ${if (sleep != null) "${sleep.durationHours.format(1)}h" else "NULL (no data)"}")
-            
+
             val hrv = fetchHRVData(daysBack)
             aapsLogger.info(LTag.APS, "[$TAG] 📊 FETCH RESULT - HRV: ${hrv.size} samples ${if (hrv.isEmpty()) "(empty - no HRV data in HC)" else ""}")
-            
+
             val rhr = fetchMorningRHR(daysBack)
             aapsLogger.info(LTag.APS, "[$TAG] 📊 FETCH RESULT - RHR: ${rhr.size} samples ${if (rhr.isEmpty()) "(empty - no morning HR data)" else ""}")
-            
+
             val steps = fetchStepsData(daysBack, ignoreUnifiedSourceMode = true)
             aapsLogger.info(LTag.APS, "[$TAG] 📊 FETCH RESULT - Steps: $steps avg/day ${if (steps == 0) "(no steps data)" else ""}")
-            
+
             val elapsed = System.currentTimeMillis() - startTime
-            
+
             // 📊 SUMMARY
             val hasAnyData = sleep != null || hrv.isNotEmpty() || rhr.isNotEmpty() || steps > 0
             if (!hasAnyData) {
@@ -677,7 +787,7 @@ class AIMIPhysioDataRepositoryMTR @Inject constructor(
             } else {
                 aapsLogger.info(LTag.APS, "[$TAG] ✅ Fetch completed in ${elapsed}ms - Sleep=${sleep != null}, HRV=${hrv.size}, RHR=${rhr.size}, Steps=$steps")
             }
-            
+
             RawPhysioDataMTR(
                 sleep = sleep,
                 hrv = hrv,
@@ -693,7 +803,7 @@ class AIMIPhysioDataRepositoryMTR @Inject constructor(
             RawPhysioDataMTR.EMPTY
         }
     }
-    
+
     /**
      * Clears all cached data
      */
@@ -701,7 +811,7 @@ class AIMIPhysioDataRepositoryMTR @Inject constructor(
         cache.clear()
         aapsLogger.debug(LTag.APS, "[$TAG] Cache cleared")
     }
-    
+
     /**
      * Checks if Health Connect is available and permissions granted
      * Logs diagnostic info about permission state
@@ -712,12 +822,12 @@ class AIMIPhysioDataRepositoryMTR @Inject constructor(
             aapsLogger.error(LTag.APS, "[$TAG] ❌ Health Connect client is NULL - not available on this device")
             return false
         }
-        
+
         // Check SDK status
         try {
             val sdkStatus = HealthConnectClient.getSdkStatus(context)
             aapsLogger.info(LTag.APS, "[$TAG] Health Connect SDK Status: $sdkStatus")
-            
+
             if (sdkStatus != HealthConnectClient.SDK_AVAILABLE) {
                 aapsLogger.error(LTag.APS, "[$TAG] ❌ Health Connect SDK not available (status=$sdkStatus)")
                 return false
@@ -726,7 +836,7 @@ class AIMIPhysioDataRepositoryMTR @Inject constructor(
             aapsLogger.error(LTag.APS, "[$TAG] ❌ Failed to check SDK status", e)
             return false
         }
-        
+
         // Check granted permissions (async)
         try {
             val grantedPerms = try {
@@ -734,36 +844,36 @@ class AIMIPhysioDataRepositoryMTR @Inject constructor(
             } catch (e: Exception) {
                 emptySet<String>()
             }
-            
+
             // 🔍 DIAGNOSTIC: Log actual granted strings seen by the app
             aapsLogger.info(LTag.APS, "[$TAG] 🔍 PERMISSIONS DIAGNOSTIC:")
             aapsLogger.info(LTag.APS, "[$TAG]    Required (Central): ${AIMIHealthConnectPermissions.ALL_REQUIRED_PERMISSIONS.map { it.substringAfterLast(".") }}")
             aapsLogger.info(LTag.APS, "[$TAG]    Granted (System):   ${grantedPerms.map { it.substringAfterLast(".") }}")
-            
+
             // Use the centralized source of truth for checking
             val requiredPerms = AIMIHealthConnectPermissions.PHYSIO_REQUIRED_PERMISSIONS
             val missing = requiredPerms.filter { !grantedPerms.contains(it) }
-            
+
             if (missing.isNotEmpty()) {
-                val missingNames = missing.map { 
-                    AIMIHealthConnectPermissions.PERMISSION_NAMES[it] ?: it.substringAfterLast(".") 
+                val missingNames = missing.map {
+                    AIMIHealthConnectPermissions.PERMISSION_NAMES[it] ?: it.substringAfterLast(".")
                 }
                 aapsLogger.warn(LTag.APS, "[$TAG] ⚠️ Missing Health Connect permissions: ${missingNames.joinToString(", ")}")
                 aapsLogger.warn(LTag.APS, "[$TAG] ⚠️ Grant permissions in: Settings > Apps > AAPS > Health Connect")
             } else {
                 aapsLogger.info(LTag.APS, "[$TAG] ✅ All required Health Connect permissions granted for Physio")
             }
-            
+
         } catch (e: Exception) {
             aapsLogger.warn(LTag.APS, "[$TAG] Could not check permissions: ${e.message}")
         }
-        
+
         return true
     }
-    
+
     // ═══════════════════════════════════════════════════════════════════════
     // UTILITIES
     // ═══════════════════════════════════════════════════════════════════════
-    
+
     private fun Double.format(decimals: Int): String = "%.${decimals}f".format(this)
 }
