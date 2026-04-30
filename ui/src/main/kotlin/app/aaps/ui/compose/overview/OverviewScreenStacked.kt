@@ -127,6 +127,7 @@ fun OverviewScreenStacked(
 
         // State sammeln
         val tirState by graphViewModel.tirFlow.collectAsStateWithLifecycle()
+        val isAIMIActive by graphViewModel.isAIMIActiveFlow.collectAsStateWithLifecycle()
 
         Row(
             modifier = Modifier
@@ -134,7 +135,7 @@ fun OverviewScreenStacked(
                 .padding(horizontal = 8.dp, vertical = 8.dp),
             verticalAlignment = Alignment.Top
         ) {
-            Box (modifier = Modifier.widthIn(max = 150.dp)) {
+            Box (modifier = Modifier.widthIn(max = 154.dp)) {
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
@@ -144,20 +145,23 @@ fun OverviewScreenStacked(
                     )
                     SensitivityChipBlock(state = sensitivityUiState)
                 }
-                AuditorIconButton(
-                    state = auditorState,
-                    modifier = Modifier
-                        .align(Alignment.TopEnd)
-                        .offset(x = 8.dp, y = (-4).dp),
-                ) {
-                    try {
-                        context.startActivity(
-                            Intent().setClassName(
-                                context,
-                                "app.aaps.plugins.aps.openAPSAIMI.advisor.auditor.ui.AuditorVerdictActivity"
+                if( isAIMIActive ) {
+                    AuditorIconButton(
+                        state = auditorState,
+                        modifier = Modifier
+                            .align(Alignment.TopEnd)
+                            .offset(x = 8.dp, y = (-4).dp),
+                    ) {
+                        try {
+                            context.startActivity(
+                                Intent().setClassName(
+                                    context,
+                                    "app.aaps.plugins.aps.openAPSAIMI.advisor.auditor.ui.AuditorVerdictActivity"
+                                )
                             )
-                        )
-                    } catch (_: Exception) {}
+                        } catch (_: Exception) {
+                        }
+                    }
                 }
             }
 
@@ -197,52 +201,57 @@ fun OverviewScreenStacked(
                     .heightIn(min = 100.dp, max = 200.dp)
             )
 
-            // Right: AIMI quick action tiles
-            Column(
-                modifier = Modifier
-                    .padding(start = 4.dp)
-                    .width(40.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(2.dp)
-            ) {
-                AimiQuickTile(
-                    elementType = ElementType.PROFILE_HELPER,
-                    label = stringResource(app.aaps.core.ui.R.string.aimi_btn_advisor),
+            if ( isAIMIActive) {
+                // Right: AIMI quick action tiles
+                Column(
+                    modifier = Modifier
+                        .padding(start = 4.dp)
+                        .width(40.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(2.dp)
                 ) {
-                    try {
-                        context.startActivity(
-                            Intent().setClassName(
-                                context,
-                                "app.aaps.plugins.aps.openAPSAIMI.advisor.AimiProfileAdvisorActivity"
+                    AimiQuickTile(
+                        elementType = ElementType.PROFILE_HELPER,
+                        label = stringResource(app.aaps.core.ui.R.string.aimi_btn_advisor),
+                    ) {
+                        try {
+                            context.startActivity(
+                                Intent().setClassName(
+                                    context,
+                                    "app.aaps.plugins.aps.openAPSAIMI.advisor.AimiProfileAdvisorActivity"
+                                )
                             )
-                        )
-                    } catch (_: Exception) {}
-                }
-                AimiQuickTile(
-                    elementType = ElementType.QUICK_WIZARD_MANAGEMENT,
-                    label = stringResource(app.aaps.core.ui.R.string.aimi_btn_meal),
-                ) {
-                    try {
-                        context.startActivity(
-                            Intent().setClassName(
-                                context,
-                                "app.aaps.plugins.aps.openAPSAIMI.advisor.meal.MealAdvisorActivity"
+                        } catch (_: Exception) {
+                        }
+                    }
+                    AimiQuickTile(
+                        elementType = ElementType.QUICK_WIZARD_MANAGEMENT,
+                        label = stringResource(app.aaps.core.ui.R.string.aimi_btn_meal),
+                    ) {
+                        try {
+                            context.startActivity(
+                                Intent().setClassName(
+                                    context,
+                                    "app.aaps.plugins.aps.openAPSAIMI.advisor.meal.MealAdvisorActivity"
+                                )
                             )
-                        )
-                    } catch (_: Exception) {}
-                }
-                AimiQuickTile(
-                    elementType = ElementType.USER_ENTRY,
-                    label = stringResource(app.aaps.core.ui.R.string.aimi_btn_context),
-                ) {
-                    try {
-                        context.startActivity(
-                            Intent().setClassName(
-                                context,
-                                "app.aaps.plugins.aps.openAPSAIMI.context.ui.ContextActivity"
+                        } catch (_: Exception) {
+                        }
+                    }
+                    AimiQuickTile(
+                        elementType = ElementType.USER_ENTRY,
+                        label = stringResource(app.aaps.core.ui.R.string.aimi_btn_context),
+                    ) {
+                        try {
+                            context.startActivity(
+                                Intent().setClassName(
+                                    context,
+                                    "app.aaps.plugins.aps.openAPSAIMI.context.ui.ContextActivity"
+                                )
                             )
-                        )
-                    } catch (_: Exception) {}
+                        } catch (_: Exception) {
+                        }
+                    }
                 }
             }
         }

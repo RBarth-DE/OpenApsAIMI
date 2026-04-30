@@ -893,8 +893,8 @@
     <string name="graph_number">Diagramm %1$d</string>
     <string name="graph_bg">BG Diagramm</string>
     <string name="graph_height">Diagrammhöhe [dp]</string>
-    <string name="pulse_panel_title">Letzter AIMI-Lauf</string>
-    <string name="pulse_panel_title_with_age">Letzter AIMI-Lauf · %1$s</string>
+    <string name="pulse_panel_title">Letzter APS-Lauf</string>
+    <string name="pulse_panel_title_with_age">Letzter APS-Lauf · %1$s</string>
     <string name="pulse_panel_no_data">Noch keine APS-Ausgabe</string>
     <string name="pulse_panel_hypo_prefix">Hypo-Risiko —</string>
     <string name="pulse_panel_meta">SMB %1$s U · Nachfrage %2$s · AutoSens %3$s%%</string>

@@ -1122,8 +1122,8 @@
     <string name="dura_isf_shortname" comment="Short label for AutoISF Duration ISF graph series">duraISF</string>
     <string name="run_event_question">Run %s?</string>
 
-    <string name="pulse_panel_title">Last AIMI run</string>
-    <string name="pulse_panel_title_with_age">Last AIMI run · %1$s</string>
+    <string name="pulse_panel_title">Last APS run</string>
+    <string name="pulse_panel_title_with_age">Last APS run · %1$s</string>
     <string name="pulse_panel_no_data">No APS output yet</string>
     <string name="pulse_panel_fallback">SMB %1$s U · Basal %2$s U/h</string>
     <string name="pulse_panel_hypo_prefix">Hypo risk —</string>

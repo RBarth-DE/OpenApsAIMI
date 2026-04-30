@@ -2,12 +2,10 @@ package app.aaps.plugins.aps.openAPSAIMI
 
 import android.annotation.SuppressLint
 import android.content.Context
-import android.content.Intent
 import android.os.Looper
 import android.util.LongSparseArray
 import androidx.annotation.ArrayRes
 import androidx.core.util.forEach
-import app.aaps.plugins.aps.openAPSAIMI.steps.UnifiedActivityProviderMTR
 import app.aaps.core.data.aps.SMBDefaults
 import app.aaps.core.data.model.GlucoseUnit
 import app.aaps.core.data.model.TE
@@ -37,7 +35,6 @@ import app.aaps.core.interfaces.logging.LTag
 import app.aaps.core.interfaces.plugin.ActivePlugin
 import app.aaps.core.interfaces.insulin.ConcentrationHelper
 import app.aaps.core.interfaces.insulin.Insulin
-import app.aaps.core.interfaces.plugin.PluginBase
 import app.aaps.core.interfaces.plugin.PluginBaseWithPreferences
 import app.aaps.core.interfaces.plugin.PluginDescription
 import app.aaps.core.interfaces.profile.EffectiveProfile
@@ -58,7 +55,6 @@ import app.aaps.core.keys.BooleanKey
 import app.aaps.core.keys.DoubleKey
 import app.aaps.core.keys.R as CoreKeysR
 import app.aaps.core.keys.IntKey
-import app.aaps.core.keys.IntentKey
 import app.aaps.core.keys.interfaces.PreferenceItem
 import app.aaps.core.keys.interfaces.Preferences
 import app.aaps.core.keys.UnitDoubleKey
@@ -116,14 +112,12 @@ import app.aaps.plugins.aps.openAPSAIMI.trajectory.TrajectoryGuard
 import app.aaps.plugins.aps.openAPSAIMI.trajectory.TrajectoryHistoryProvider
 import androidx.core.util.isEmpty
 import androidx.core.util.size
-import androidx.core.net.toUri
 import kotlin.math.abs
 import kotlin.math.exp
 import app.aaps.plugins.aps.openAPSAIMI.compose.AimiPkpdSettingsScreen
 import app.aaps.plugins.aps.openAPSAIMI.learning.AimiMlTrainingScheduler
 import app.aaps.plugins.aps.openAPSAIMI.utils.AimiBackupManager
-import app.aaps.core.objects.extensions.put
-import app.aaps.core.objects.extensions.store
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.JsonObject
 

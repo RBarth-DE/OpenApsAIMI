@@ -113,7 +113,7 @@ private val SIMPLE_MODE_CONFIG = GraphConfig(
 )
 
 /** Series types available as BG graph overlays */
-private val BG_OVERLAY_SERIES = listOf(SeriesType.ACTIVITY, SeriesType.PREDICTIONS, SeriesType.BOLUS, SeriesType.BASAL)
+private val BG_OVERLAY_SERIES = listOf(SeriesType.ACTIVITY, SeriesType.PREDICTIONS, SeriesType.BOLUS, SeriesType.BASAL )
 
 /** AutoISF-specific series — only shown in the picker when AutoISF is the active APS plugin */
 private val AUTOISF_SERIES = setOf(
@@ -125,13 +125,16 @@ private val AUTOISF_SERIES = setOf(
     SeriesType.DURA_ISF
 )
 
+private val AIMI_SERIES = setOf(
+    SeriesType.MODES,
+    SeriesType.TIR
+)
+
 /** Base series types for user-configurable secondary graphs (IOB + UI-only overlays excluded) */
 private val BASE_CONFIGURABLE_SERIES = SeriesType.entries.filter {
-    it != SeriesType.IOB && it != SeriesType.PREDICTIONS && it !in AUTOISF_SERIES
+    it != SeriesType.IOB && it != SeriesType.PREDICTIONS && it !in AUTOISF_SERIES && it !in AIMI_SERIES
 }
 
-/** Custom-view types occupy the entire slot; they are mutually exclusive with chart types */
-private fun SeriesType.isCustomView() = this == SeriesType.MODES || this == SeriesType.PULSE || this == SeriesType.TIR
 
 // =========================================================================
 // Long press interceptor using PointerEventPass.Initial
@@ -186,12 +189,15 @@ fun GraphsSection(
     // In simple mode: fixed layout (BG, IOB+BAS, COB — no overlays, no editing)
     val graphConfig = if (isSimpleMode) SIMPLE_MODE_CONFIG else savedGraphConfig
 
-    // Include AutoISF series in the picker only when AutoISF is the active APS plugin
-    val configurableSeries = remember(graphViewModel.isAutoIsfActive) {
-        if (graphViewModel.isAutoIsfActive)
-            BASE_CONFIGURABLE_SERIES + AUTOISF_SERIES.toList()
-        else
-            BASE_CONFIGURABLE_SERIES
+    // Include AutoISF/AIMI series in the picker only when the respective plugin is active
+    val isAutoIsfActive by graphViewModel.isAutoIsfActiveFlow.collectAsStateWithLifecycle()
+    val isAIMIActive by graphViewModel.isAIMIActiveFlow.collectAsStateWithLifecycle()
+    val configurableSeries = remember(isAutoIsfActive, isAIMIActive) {
+        when {
+            isAutoIsfActive -> BASE_CONFIGURABLE_SERIES + AUTOISF_SERIES.toList()
+            isAIMIActive    -> BASE_CONFIGURABLE_SERIES + AIMI_SERIES.toList()
+            else            -> BASE_CONFIGURABLE_SERIES
+        }
     }
 
     // BG graph - primary interactive
@@ -488,7 +494,7 @@ fun GraphsSection(
         var editingGraphIndex by remember { mutableIntStateOf(-1) }
         for (i in 0 until activeCount) {
             val secondary = graphConfig.secondaryGraphs[i]
-            val customType = secondary.series.firstOrNull { it.isCustomView() }
+            val customType = secondary.series.firstOrNull { it in AIMI_SERIES || it == SeriesType.PULSE }
             Box(modifier = Modifier.offset(y = (-8).dp)) {
                 when (customType) {
                     SeriesType.MODES -> {

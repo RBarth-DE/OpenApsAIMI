@@ -566,9 +566,15 @@ class GraphViewModel @AssistedInject constructor(
 
     val auditorStateFlow: StateFlow<AuditorDisplayState> = auditorStateProvider.displayStateFlow
 
-    /** True when the active APS plugin is AutoISF — used to show/hide AutoISF-specific graph series. */
-    val isAutoIsfActive: Boolean
-        get() = activePlugin.activeAPS?.algorithm == APSResult.Algorithm.AUTO_ISF
+    /** Reactive: true when the active APS plugin is AutoISF. Re-checked on every 30 s tick. */
+    val isAutoIsfActiveFlow: StateFlow<Boolean> = ticker30s.map {
+        activePlugin.activeAPS?.algorithm == APSResult.Algorithm.AUTO_ISF
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), activePlugin.activeAPS?.algorithm == APSResult.Algorithm.AUTO_ISF)
+
+    /** Reactive: true when the active APS plugin is AIMI. Re-checked on every 30 s tick. */
+    val isAIMIActiveFlow: StateFlow<Boolean> = ticker30s.map {
+        activePlugin.activeAPS?.algorithm == APSResult.Algorithm.AIMI
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), activePlugin.activeAPS?.algorithm == APSResult.Algorithm.AIMI)
 
     @Volatile var lastInteractionMs: Long = 0L
         private set
