@@ -63,6 +63,12 @@ import app.aaps.core.interfaces.overview.graph.TherapyEventType
 import app.aaps.core.interfaces.overview.graph.TimeRange
 import app.aaps.core.interfaces.overview.graph.TreatmentGraphData
 import app.aaps.core.interfaces.overview.graph.VarSensGraphData
+import app.aaps.core.interfaces.overview.graph.IobThGraphData
+import app.aaps.core.interfaces.overview.graph.FinalIsfGraphData
+import app.aaps.core.interfaces.overview.graph.AcceIsfGraphData
+import app.aaps.core.interfaces.overview.graph.BgIsfGraphData
+import app.aaps.core.interfaces.overview.graph.PpIsfGraphData
+import app.aaps.core.interfaces.overview.graph.DuraIsfGraphData
 import app.aaps.core.interfaces.plugin.ActivePlugin
 import app.aaps.core.interfaces.profile.ProfileFunction
 import app.aaps.core.interfaces.profile.ProfileUtil
@@ -229,6 +235,18 @@ class OverviewDataCacheImpl @AssistedInject constructor(
     override val heartRateGraphFlow: StateFlow<HeartRateGraphData> = _heartRateGraphFlow.asStateFlow()
     private val _stepsGraphFlow = MutableStateFlow(StepsGraphData(emptyList()))
     override val stepsGraphFlow: StateFlow<StepsGraphData> = _stepsGraphFlow.asStateFlow()
+    private val _iobThGraphFlow = MutableStateFlow(IobThGraphData(emptyList()))
+    override val iobThGraphFlow: StateFlow<IobThGraphData> = _iobThGraphFlow.asStateFlow()
+    private val _finalIsfGraphFlow = MutableStateFlow(FinalIsfGraphData(emptyList()))
+    override val finalIsfGraphFlow: StateFlow<FinalIsfGraphData> = _finalIsfGraphFlow.asStateFlow()
+    private val _acceIsfGraphFlow = MutableStateFlow(AcceIsfGraphData(emptyList()))
+    override val acceIsfGraphFlow: StateFlow<AcceIsfGraphData> = _acceIsfGraphFlow.asStateFlow()
+    private val _bgIsfGraphFlow = MutableStateFlow(BgIsfGraphData(emptyList()))
+    override val bgIsfGraphFlow: StateFlow<BgIsfGraphData> = _bgIsfGraphFlow.asStateFlow()
+    private val _ppIsfGraphFlow = MutableStateFlow(PpIsfGraphData(emptyList()))
+    override val ppIsfGraphFlow: StateFlow<PpIsfGraphData> = _ppIsfGraphFlow.asStateFlow()
+    private val _duraIsfGraphFlow = MutableStateFlow(DuraIsfGraphData(emptyList()))
+    override val duraIsfGraphFlow: StateFlow<DuraIsfGraphData> = _duraIsfGraphFlow.asStateFlow()
     private val _treatmentGraphFlow = MutableStateFlow(TreatmentGraphData(emptyList(), emptyList(), emptyList(), emptyList()))
     override val treatmentGraphFlow: StateFlow<TreatmentGraphData> = _treatmentGraphFlow.asStateFlow()
     private val _epsGraphFlow = MutableStateFlow<List<EpsGraphPoint>>(emptyList())
@@ -740,6 +758,30 @@ class OverviewDataCacheImpl @AssistedInject constructor(
         _stepsGraphFlow.value = data
     }
 
+    override fun updateIobThGraph(data: IobThGraphData) {
+        _iobThGraphFlow.value = data
+    }
+
+    override fun updateFinalIsfGraph(data: FinalIsfGraphData) {
+        _finalIsfGraphFlow.value = data
+    }
+
+    override fun updateAcceIsfGraph(data: AcceIsfGraphData) {
+        _acceIsfGraphFlow.value = data
+    }
+
+    override fun updateBgIsfGraph(data: BgIsfGraphData) {
+        _bgIsfGraphFlow.value = data
+    }
+
+    override fun updatePpIsfGraph(data: PpIsfGraphData) {
+        _ppIsfGraphFlow.value = data
+    }
+
+    override fun updateDuraIsfGraph(data: DuraIsfGraphData) {
+        _duraIsfGraphFlow.value = data
+    }
+
     // =========================================================================
     // Category B: Reactive graph builders (treatments, RM, TT, basal)
     // =========================================================================
@@ -1086,6 +1128,12 @@ class OverviewDataCacheImpl @AssistedInject constructor(
         _varSensGraphFlow.value = VarSensGraphData(emptyList())
         _heartRateGraphFlow.value = HeartRateGraphData(emptyList())
         _stepsGraphFlow.value = StepsGraphData(emptyList())
+        _iobThGraphFlow.value = IobThGraphData(emptyList())
+        _finalIsfGraphFlow.value = FinalIsfGraphData(emptyList())
+        _acceIsfGraphFlow.value = AcceIsfGraphData(emptyList())
+        _bgIsfGraphFlow.value = BgIsfGraphData(emptyList())
+        _ppIsfGraphFlow.value = PpIsfGraphData(emptyList())
+        _duraIsfGraphFlow.value = DuraIsfGraphData(emptyList())
         _treatmentGraphFlow.value = TreatmentGraphData(emptyList(), emptyList(), emptyList(), emptyList())
         _epsGraphFlow.value = emptyList()
         _basalGraphFlow.value = BasalGraphData(emptyList(), emptyList(), 0.0)

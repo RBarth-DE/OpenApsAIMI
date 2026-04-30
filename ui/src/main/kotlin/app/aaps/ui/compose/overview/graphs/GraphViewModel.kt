@@ -18,6 +18,7 @@ import app.aaps.core.interfaces.overview.graph.BgInfoData
 import app.aaps.core.interfaces.overview.graph.GraphConfig
 import app.aaps.core.interfaces.overview.graph.GraphConfigRepository
 import app.aaps.core.interfaces.overview.graph.OverviewDataCache
+import app.aaps.core.interfaces.aps.APSResult
 import app.aaps.core.interfaces.aps.RT
 import app.aaps.core.interfaces.overview.AuditorStateProvider
 import app.aaps.core.interfaces.overview.AuditorDisplayState
@@ -302,6 +303,12 @@ class GraphViewModel @AssistedInject constructor(
     val varSensGraphFlow = cache.varSensGraphFlow
     val heartRateGraphFlow = cache.heartRateGraphFlow
     val stepsGraphFlow = cache.stepsGraphFlow
+    val iobThGraphFlow = cache.iobThGraphFlow
+    val finalIsfGraphFlow = cache.finalIsfGraphFlow
+    val acceIsfGraphFlow = cache.acceIsfGraphFlow
+    val bgIsfGraphFlow = cache.bgIsfGraphFlow
+    val ppIsfGraphFlow = cache.ppIsfGraphFlow
+    val duraIsfGraphFlow = cache.duraIsfGraphFlow
     val treatmentGraphFlow = cache.treatmentGraphFlow
     val epsGraphFlow = cache.epsGraphFlow
     val basalGraphFlow = cache.basalGraphFlow
@@ -558,6 +565,10 @@ class GraphViewModel @AssistedInject constructor(
     )
 
     val auditorStateFlow: StateFlow<AuditorDisplayState> = auditorStateProvider.displayStateFlow
+
+    /** True when the active APS plugin is AutoISF — used to show/hide AutoISF-specific graph series. */
+    val isAutoIsfActive: Boolean
+        get() = activePlugin.activeAPS?.algorithm == APSResult.Algorithm.AUTO_ISF
 
     @Volatile var lastInteractionMs: Long = 0L
         private set

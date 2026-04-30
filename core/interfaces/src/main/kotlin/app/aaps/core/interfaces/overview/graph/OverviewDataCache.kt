@@ -100,6 +100,25 @@ interface OverviewDataCache {
     val stepsGraphFlow: StateFlow<StepsGraphData>
     fun updateStepsGraph(data: StepsGraphData)
 
+    // AutoISF graphs (only populated when AutoISF plugin is active)
+    val iobThGraphFlow: StateFlow<IobThGraphData>
+    fun updateIobThGraph(data: IobThGraphData)
+
+    val finalIsfGraphFlow: StateFlow<FinalIsfGraphData>
+    fun updateFinalIsfGraph(data: FinalIsfGraphData)
+
+    val acceIsfGraphFlow: StateFlow<AcceIsfGraphData>
+    fun updateAcceIsfGraph(data: AcceIsfGraphData)
+
+    val bgIsfGraphFlow: StateFlow<BgIsfGraphData>
+    fun updateBgIsfGraph(data: BgIsfGraphData)
+
+    val ppIsfGraphFlow: StateFlow<PpIsfGraphData>
+    fun updatePpIsfGraph(data: PpIsfGraphData)
+
+    val duraIsfGraphFlow: StateFlow<DuraIsfGraphData>
+    fun updateDuraIsfGraph(data: DuraIsfGraphData)
+
     // =========================================================================
     // Treatment graph flows (main graph overlays)
     // Populated reactively by observing database changes — no worker needed.

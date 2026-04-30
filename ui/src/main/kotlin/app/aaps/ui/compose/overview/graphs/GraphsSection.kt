@@ -115,9 +115,19 @@ private val SIMPLE_MODE_CONFIG = GraphConfig(
 /** Series types available as BG graph overlays */
 private val BG_OVERLAY_SERIES = listOf(SeriesType.ACTIVITY, SeriesType.PREDICTIONS, SeriesType.BOLUS, SeriesType.BASAL)
 
-/** Series types available for user-configurable secondary graphs (IOB + UI-only overlays excluded) */
-private val CONFIGURABLE_SERIES = SeriesType.entries.filter {
-    it != SeriesType.IOB && it != SeriesType.PREDICTIONS
+/** AutoISF-specific series — only shown in the picker when AutoISF is the active APS plugin */
+private val AUTOISF_SERIES = setOf(
+    SeriesType.IOB_THRESHOLD,
+    SeriesType.FINAL_ISF,
+    SeriesType.ACCE_ISF,
+    SeriesType.BG_ISF,
+    SeriesType.PP_ISF,
+    SeriesType.DURA_ISF
+)
+
+/** Base series types for user-configurable secondary graphs (IOB + UI-only overlays excluded) */
+private val BASE_CONFIGURABLE_SERIES = SeriesType.entries.filter {
+    it != SeriesType.IOB && it != SeriesType.PREDICTIONS && it !in AUTOISF_SERIES
 }
 
 /** Custom-view types occupy the entire slot; they are mutually exclusive with chart types */
@@ -175,6 +185,14 @@ fun GraphsSection(
     val savedGraphConfig by graphViewModel.graphConfigFlow.collectAsStateWithLifecycle()
     // In simple mode: fixed layout (BG, IOB+BAS, COB — no overlays, no editing)
     val graphConfig = if (isSimpleMode) SIMPLE_MODE_CONFIG else savedGraphConfig
+
+    // Include AutoISF series in the picker only when AutoISF is the active APS plugin
+    val configurableSeries = remember(graphViewModel.isAutoIsfActive) {
+        if (graphViewModel.isAutoIsfActive)
+            BASE_CONFIGURABLE_SERIES + AUTOISF_SERIES.toList()
+        else
+            BASE_CONFIGURABLE_SERIES
+    }
 
     // BG graph - primary interactive
     val bgScrollState = rememberVicoScrollState(
@@ -543,7 +561,7 @@ fun GraphsSection(
             GraphSeriesBottomSheet(
                 title = stringResource(app.aaps.core.ui.R.string.graph_number, editingGraphIndex + 2),
                 selectedSeries = editing.series,
-                availableSeries = CONFIGURABLE_SERIES,
+                availableSeries = configurableSeries,
                 height = editing.height,
                 onHeightChange = { h ->
                     val graphs = graphConfig.secondaryGraphs.toMutableList()
@@ -594,7 +612,7 @@ fun GraphsSection(
                 GraphSeriesBottomSheet(
                     title = stringResource(app.aaps.core.ui.R.string.graph_new),
                     selectedSeries = newGraphSeries,
-                    availableSeries = CONFIGURABLE_SERIES,
+                    availableSeries = configurableSeries,
                     height = newGraphHeight,
                     onHeightChange = { newGraphHeight = it },
                     onToggle = { type ->
@@ -653,6 +671,12 @@ private fun seriesShortNameId(type: SeriesType): Int = when (type) {
     SeriesType.PULSE           -> app.aaps.core.ui.R.string.pulse_series_shortname
     SeriesType.TIR             -> app.aaps.core.ui.R.string.tir_series_shortname
     SeriesType.BOLUS           -> app.aaps.core.ui.R.string.graph_series_smb
+    SeriesType.IOB_THRESHOLD   -> app.aaps.core.ui.R.string.iob_threshold_shortname
+    SeriesType.FINAL_ISF       -> app.aaps.core.ui.R.string.final_isf_shortname
+    SeriesType.ACCE_ISF        -> app.aaps.core.ui.R.string.acce_isf_shortname
+    SeriesType.BG_ISF          -> app.aaps.core.ui.R.string.bg_isf_shortname
+    SeriesType.PP_ISF          -> app.aaps.core.ui.R.string.pp_isf_shortname
+    SeriesType.DURA_ISF        -> app.aaps.core.ui.R.string.dura_isf_shortname
 }
 
 // =========================================================================

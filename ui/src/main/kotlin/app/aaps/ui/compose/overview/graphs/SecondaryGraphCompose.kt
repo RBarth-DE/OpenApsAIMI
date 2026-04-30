@@ -118,6 +118,12 @@ fun SecondaryGraphCompose(
     val devSlopeData = if (primaryType == SeriesType.DEV_SLOPE) viewModel.devSlopeGraphFlow.collectAsStateWithLifecycle().value else null
     val hrData = if (primaryType == SeriesType.HEART_RATE) viewModel.heartRateGraphFlow.collectAsStateWithLifecycle().value else null
     val stepsData = if (primaryType == SeriesType.STEPS) viewModel.stepsGraphFlow.collectAsStateWithLifecycle().value else null
+    val iobThData = if (primaryType == SeriesType.IOB_THRESHOLD) viewModel.iobThGraphFlow.collectAsStateWithLifecycle().value else null
+    val finalIsfData = if (primaryType == SeriesType.FINAL_ISF) viewModel.finalIsfGraphFlow.collectAsStateWithLifecycle().value else null
+    val acceIsfData = if (primaryType == SeriesType.ACCE_ISF) viewModel.acceIsfGraphFlow.collectAsStateWithLifecycle().value else null
+    val bgIsfData = if (primaryType == SeriesType.BG_ISF) viewModel.bgIsfGraphFlow.collectAsStateWithLifecycle().value else null
+    val ppIsfData = if (primaryType == SeriesType.PP_ISF) viewModel.ppIsfGraphFlow.collectAsStateWithLifecycle().value else null
+    val duraIsfData = if (primaryType == SeriesType.DURA_ISF) viewModel.duraIsfGraphFlow.collectAsStateWithLifecycle().value else null
     // Activity data: either as primary series OR as overlay (on IOB graph)
     val needsActivity = primaryType == SeriesType.ACTIVITY || (activityOverlay && hasIob)
     val activityData = if (needsActivity) viewModel.activityGraphFlow.collectAsStateWithLifecycle().value else null
@@ -144,6 +150,12 @@ fun SecondaryGraphCompose(
         SeriesType.STEPS           -> viewModel.stepsGraphFlow.collectAsStateWithLifecycle().value.steps
         SeriesType.ACTIVITY        -> viewModel.activityGraphFlow.collectAsStateWithLifecycle().value.activity
         SeriesType.PREDICTIONS     -> emptyList() // UI-only overlay flag, not a secondary series
+        SeriesType.IOB_THRESHOLD   -> viewModel.iobThGraphFlow.collectAsStateWithLifecycle().value.iobTh
+        SeriesType.FINAL_ISF       -> viewModel.finalIsfGraphFlow.collectAsStateWithLifecycle().value.finalIsf
+        SeriesType.ACCE_ISF        -> viewModel.acceIsfGraphFlow.collectAsStateWithLifecycle().value.acceIsf
+        SeriesType.BG_ISF          -> viewModel.bgIsfGraphFlow.collectAsStateWithLifecycle().value.bgIsf
+        SeriesType.PP_ISF          -> viewModel.ppIsfGraphFlow.collectAsStateWithLifecycle().value.ppIsf
+        SeriesType.DURA_ISF        -> viewModel.duraIsfGraphFlow.collectAsStateWithLifecycle().value.duraIsf
         SeriesType.BASAL,
         SeriesType.MODES,
         SeriesType.PULSE,
@@ -164,7 +176,8 @@ fun SecondaryGraphCompose(
 
     // Simple line series processing (excludes BASAL — it's a fixed flipped overlay on IOB)
     val processedSimpleSeries = remember(
-        stableTimeRange, absIobData, bgiData, ratioData, varSensData, devSlopeData, hrData, stepsData, activityData
+        stableTimeRange, absIobData, bgiData, ratioData, varSensData, devSlopeData, hrData, stepsData, activityData,
+        iobThData, finalIsfData, acceIsfData, bgIsfData, ppIsfData, duraIsfData
     ) {
         if (!hasRealTimeRange) return@remember emptyList()
         buildList {
@@ -193,6 +206,24 @@ fun SecondaryGraphCompose(
             }
             stepsData?.steps?.takeIf { it.isNotEmpty() }?.let {
                 add(SeriesType.STEPS to processPoints(it, minTimestamp, minX, maxX))
+            }
+            iobThData?.iobTh?.takeIf { it.isNotEmpty() }?.let {
+                add(SeriesType.IOB_THRESHOLD to processPoints(it, minTimestamp, minX, maxX))
+            }
+            finalIsfData?.finalIsf?.takeIf { it.isNotEmpty() }?.let {
+                add(SeriesType.FINAL_ISF to processPoints(it, minTimestamp, minX, maxX))
+            }
+            acceIsfData?.acceIsf?.takeIf { it.isNotEmpty() }?.let {
+                add(SeriesType.ACCE_ISF to processPoints(it, minTimestamp, minX, maxX))
+            }
+            bgIsfData?.bgIsf?.takeIf { it.isNotEmpty() }?.let {
+                add(SeriesType.BG_ISF to processPoints(it, minTimestamp, minX, maxX))
+            }
+            ppIsfData?.ppIsf?.takeIf { it.isNotEmpty() }?.let {
+                add(SeriesType.PP_ISF to processPoints(it, minTimestamp, minX, maxX))
+            }
+            duraIsfData?.duraIsf?.takeIf { it.isNotEmpty() }?.let {
+                add(SeriesType.DURA_ISF to processPoints(it, minTimestamp, minX, maxX))
             }
             if (primaryType == SeriesType.ACTIVITY) {
                 activityData?.let {
@@ -773,7 +804,13 @@ data class SeriesColors(
     val devSlope: Color,
     val heartRate: Color,
     val steps: Color,
-    val activity: Color
+    val activity: Color,
+    val iobThreshold: Color,
+    val finalIsf: Color,
+    val acceIsf: Color,
+    val bgIsf: Color,
+    val ppIsf: Color,
+    val duraIsf: Color
 ) {
 
     fun colorFor(type: SeriesType): Color = when (type) {
@@ -788,6 +825,12 @@ data class SeriesColors(
         SeriesType.HEART_RATE      -> heartRate
         SeriesType.STEPS           -> steps
         SeriesType.ACTIVITY        -> activity
+        SeriesType.IOB_THRESHOLD   -> iobThreshold
+        SeriesType.FINAL_ISF       -> finalIsf
+        SeriesType.ACCE_ISF        -> acceIsf
+        SeriesType.BG_ISF          -> bgIsf
+        SeriesType.PP_ISF          -> ppIsf
+        SeriesType.DURA_ISF        -> duraIsf
         SeriesType.PREDICTIONS     -> activity // unused — PREDICTIONS is a BG overlay flag, not a secondary series
         SeriesType.BASAL,
         SeriesType.MODES,
@@ -814,7 +857,14 @@ fun rememberSeriesColors(): SeriesColors {
             devSlope = Color(0xFFFFFF00),            // yellow (matches @color/devSlopePos)
             heartRate = Color(0xFFFFFF66),           // pale yellow (matches @color/heartRate #FFFFFF66)
             steps = Color(0xFF66FFB8),              // mint green (matches @color/steps)
-            activity = Color(0xFFD3F166)            // lime green (matches @color/activity)
+            activity = Color(0xFFD3F166),           // lime green (matches @color/activity)
+            // AutoISF series colors
+            iobThreshold = Color(0xFF82B1FF),       // light blue — IOB threshold line
+            finalIsf = Color(0xFFFF4081),           // pink-red — final combined ISF
+            acceIsf = Color(0xFFFFAB40),            // amber — acceleration factor
+            bgIsf = Color(0xFF69F0AE),              // teal-green — BG factor
+            ppIsf = Color(0xFFEA80FC),              // purple — post-prandial factor
+            duraIsf = Color(0xFF84FFFF)             // cyan-white — duration factor
         )
     }
 }

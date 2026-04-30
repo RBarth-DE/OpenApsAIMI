@@ -29,7 +29,15 @@ enum class SeriesType {
     MODES,
     PULSE,
     TIR,
-    BOLUS   // SMB triangle markers on BG graph (fixed at bottom)
+    BOLUS,   // SMB triangle markers on BG graph (fixed at bottom)
+
+    // AutoISF-specific series (only populated when AutoISF plugin is active)
+    IOB_THRESHOLD,  // Effective IOB threshold (insulin units, same scale as IOB)
+    FINAL_ISF,      // Final combined ISF factor
+    ACCE_ISF,       // Acceleration ISF factor
+    BG_ISF,         // BG-based ISF factor
+    PP_ISF,         // Post-prandial ISF factor
+    DURA_ISF        // Duration ISF factor
 }
 
 /**

@@ -206,6 +206,48 @@ data class StepsGraphData(
 )
 
 /**
+ * AutoISF: effective IOB threshold line (insulin units, same scale as IOB).
+ */
+data class IobThGraphData(
+    val iobTh: List<GraphDataPoint>
+)
+
+/**
+ * AutoISF: final combined ISF factor line.
+ */
+data class FinalIsfGraphData(
+    val finalIsf: List<GraphDataPoint>
+)
+
+/**
+ * AutoISF: acceleration ISF factor line.
+ */
+data class AcceIsfGraphData(
+    val acceIsf: List<GraphDataPoint>
+)
+
+/**
+ * AutoISF: BG ISF factor line.
+ */
+data class BgIsfGraphData(
+    val bgIsf: List<GraphDataPoint>
+)
+
+/**
+ * AutoISF: post-prandial ISF factor line.
+ */
+data class PpIsfGraphData(
+    val ppIsf: List<GraphDataPoint>
+)
+
+/**
+ * AutoISF: duration ISF factor line.
+ */
+data class DuraIsfGraphData(
+    val duraIsf: List<GraphDataPoint>
+)
+
+/**
  * Basal graph data for BG graph overlay (dual Y-axis).
  * Profile basal: dashed step line (scheduled profile rate).
  * Actual basal: solid step line with area fill (profile rate when no temp, temp absolute when temp active).
