@@ -128,6 +128,7 @@ fun OverviewScreenStacked(
         // State sammeln
         val tirState by graphViewModel.tirFlow.collectAsStateWithLifecycle()
         val isAIMIActive by graphViewModel.isAIMIActiveFlow.collectAsStateWithLifecycle()
+        val isAutoISFActive by graphViewModel.isAutoIsfActiveFlow.collectAsStateWithLifecycle()
 
         Row(
             modifier = Modifier
@@ -200,16 +201,31 @@ fun OverviewScreenStacked(
                     .width(30.dp)
                     .heightIn(min = 100.dp, max = 200.dp)
             )
-
-            if ( isAIMIActive) {
-                // Right: AIMI quick action tiles
-                Column(
-                    modifier = Modifier
-                        .padding(start = 4.dp)
-                        .width(40.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(2.dp)
-                ) {
+            // Right: AIMI quick action tiles
+            Column(
+                modifier = Modifier
+                    .padding(start = 4.dp)
+                    .width(40.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(2.dp)
+            ) {
+                if ( isAutoISFActive) {
+                    AimiQuickTile(
+                        elementType = ElementType.PROFILE_HELPER,
+                        label = stringResource( app.aaps.core.ui.R.string.autoisf_btn_advisor),
+                    ) {
+                        try {
+                            context.startActivity(
+                                Intent().setClassName(
+                                    context,
+                                    "app.aaps.plugins.aps.openAPSAutoISF.advisor.AutoIsfProfileAdvisorActivity"
+                                )
+                            )
+                        } catch (_: Exception) {
+                        }
+                    }
+                }
+                if ( isAIMIActive) {
                     AimiQuickTile(
                         elementType = ElementType.PROFILE_HELPER,
                         label = stringResource(app.aaps.core.ui.R.string.aimi_btn_advisor),

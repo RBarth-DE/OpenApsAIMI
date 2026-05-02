@@ -6,6 +6,7 @@ import app.aaps.core.keys.interfaces.IntentPreferenceKey
 import app.aaps.plugins.aps.R
 import app.aaps.plugins.aps.openAPSAIMI.physio.AIMIHealthConnectPermissionActivityMTR
 import app.aaps.plugins.aps.openAPSAIMI.sos.AIMIEmergencySosPermissionActivityMTR
+import app.aaps.plugins.aps.openAPSAutoISF.advisor.AutoIsfProfileAdvisorActivity
 
 enum class ApsIntentKey(
     override val key: String,
@@ -52,5 +53,13 @@ enum class ApsIntentKey(
         summaryResId = R.string.aimi_physio_hc_permissions_summary,
         preferenceType = PreferenceType.ACTIVITY,
         activityClass = AIMIHealthConnectPermissionActivityMTR::class.java,
+    ),
+
+    AutoIsfProfileAdvisor(
+        key = "autoisf_profile_advisor",
+        titleResId = R.string.autoisf_advisor_title,
+        summaryResId = R.string.autoisf_advisor_summary,
+        preferenceType = PreferenceType.ACTIVITY,
+        activityClass = AutoIsfProfileAdvisorActivity::class.java,
     ),
 }

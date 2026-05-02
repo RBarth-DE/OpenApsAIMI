@@ -1134,4 +1134,5 @@
     <string name="aimi_btn_meal">Meal</string>
     <string name="aimi_btn_context">Context</string>
     <string name="aimi_btn_stats">Stats</string>
+    <string name="autoisf_btn_advisor">Advisor</string>
 </resources>

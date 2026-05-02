@@ -701,4 +701,19 @@
     <string name="aimi_auditor_section_evidence">EVIDENCE</string>
     <string name="aimi_auditor_section_debug">DEBUG CHECKS</string>
 
+    <!-- AutoISF Advisor -->
+    <string name="autoisf_advisor_title">AutoISF Advisor</string>
+    <string name="autoisf_advisor_summary">Analyze your AutoISF settings and get tuning recommendations</string>
+    <string name="autoisf_adv_loading">Analyzing…</string>
+    <string name="autoisf_adv_apply_btn">APPLY</string>
+    <string name="autoisf_adv_apply_dialog_title">Confirm Change</string>
+    <string name="autoisf_adv_success_msg">%1$d change(s) applied</string>
+    <string name="autoisf_adv_section_isf_weights">ISF WEIGHT TUNING</string>
+    <string name="autoisf_adv_section_smb">SMB DELIVERY</string>
+    <string name="autoisf_adv_section_observations">OBSERVATIONS</string>
+    <string name="autoisf_adv_section_ai">AI ANALYSIS</string>
+    <string name="autoisf_adv_ask_ai_btn">Ask %1$s</string>
+    <string name="autoisf_adv_ask_ai_no_key">No %1$s key configured</string>
+    <string name="autoisf_adv_ai_loading">Asking AI…</string>
+
 </resources>

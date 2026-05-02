@@ -1175,6 +1175,7 @@ open class OpenAPSAutoISFPlugin @Inject constructor(
         key = "openapsautoisf_settings",
         titleResId = R.string.openaps_auto_isf,
         items = listOf(
+            ApsIntentKey.AutoIsfProfileAdvisor,
             DoubleKey.ApsMaxBasal,
             DoubleKey.ApsSmbMaxIob,
             BooleanKey.ApsUseAutosens,

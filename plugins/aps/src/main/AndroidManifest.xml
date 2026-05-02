@@ -23,6 +23,11 @@
             android:theme="@style/AppTheme.NoActionBar"
             android:label="@string/aimi_advisor_title" />
         <activity
+            android:name=".openAPSAutoISF.advisor.AutoIsfProfileAdvisorActivity"
+            android:exported="false"
+            android:theme="@style/AppTheme.NoActionBar"
+            android:label="@string/autoisf_advisor_title" />
+        <activity
             android:name=".openAPSAIMI.advisor.meal.MealAdvisorActivity"
             android:label="AIMI Meal Advisor"
             android:exported="false"
