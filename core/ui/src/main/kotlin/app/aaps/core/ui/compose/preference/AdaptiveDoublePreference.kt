@@ -56,7 +56,15 @@ fun AdaptiveDoublePreferenceItem(
 
     val span = (doubleKey.max - doubleKey.min).let { if (abs(it) < 1e-12) 1e-9 else it }
     val unitType = doubleKey.unitType
-    val (decimalPlaces, step) = if (unitType == UnitType.NONE) {
+    val (decimalPlaces, step) = doubleKey.step?.let { explicitStep ->
+        val dp = when {
+            explicitStep >= 1.0  -> 0
+            explicitStep >= 0.1  -> 1
+            explicitStep >= 0.01 -> 2
+            else                 -> 3
+        }
+        dp to explicitStep
+    } ?: if (unitType == UnitType.NONE) {
         when {
             span <= 0.15  -> 3 to 0.001
             span <= 1.5   -> 2 to 0.01
@@ -66,7 +74,7 @@ fun AdaptiveDoublePreferenceItem(
     } else {
         unitType.decimalPlaces() to unitType.step()
     }
-    val valueFormatResId = unitType.valueResId()
+    val valueFormatResId = if (doubleKey.step != null) null else unitType.valueResId()
 
     LaunchedEffect(doubleKey.key) {
         val v = state.value

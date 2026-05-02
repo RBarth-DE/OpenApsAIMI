@@ -20,7 +20,8 @@ enum class DoubleKey(
     override val negativeDependency: BooleanPreferenceKey? = null,
     override val hideParentScreenIfHidden: Boolean = false,
     override val exportable: Boolean = true,
-    override val unitType: UnitType = UnitType.NONE
+    override val unitType: UnitType = UnitType.NONE,
+    override val step: Double? = null
 ) : DoublePreferenceKey {
 
     OverviewInsulinButtonIncrement1(
@@ -167,7 +168,8 @@ enum class DoubleKey(
         titleResId = R.string.pref_title_bg_accel_weight,
         summaryResId = R.string.openapsama_bgAccel_ISF_weight_summary,
         defaultedBySM = true,
-        unitType = UnitType.DOUBLE
+        unitType = UnitType.DOUBLE,
+        step = 0.05
     ),
     ApsAutoIsfBgBrakeWeight(
         key = "bgBrake_ISF_weight",
@@ -177,7 +179,8 @@ enum class DoubleKey(
         titleResId = R.string.pref_title_bg_brake_weight,
         summaryResId = R.string.openapsama_bgBrake_ISF_weight_summary,
         defaultedBySM = true,
-        unitType = UnitType.DOUBLE
+        unitType = UnitType.DOUBLE,
+        step = 0.05
     ),
     ApsAutoIsfLowBgWeight(
         key = "lower_ISFrange_weight",
@@ -209,12 +212,12 @@ enum class DoubleKey(
         defaultedBySM = true,
         unitType = UnitType.DOUBLE
     ),
-    ApsAutoIsfPpWeight(key = "pp_ISF_weight", defaultValue = 0.0, min = 0.0, max = 1.0, titleResId = R.string.pref_title_pp_weight, summaryResId = R.string.openapsama_pp_ISF_weight_summary, defaultedBySM = true, unitType = UnitType.DOUBLE),
+    ApsAutoIsfPpWeight(key = "pp_ISF_weight", defaultValue = 0.0, min = 0.0, max = 0.15, titleResId = R.string.pref_title_pp_weight, summaryResId = R.string.openapsama_pp_ISF_weight_summary, defaultedBySM = true, unitType = UnitType.DOUBLE, step = 0.005),
     ApsAutoIsfDuraWeight(key = "dura_ISF_weight", defaultValue = 0.0, min = 0.0, max = 3.0, titleResId = R.string.pref_title_dura_weight, summaryResId = R.string.openapsama_dura_ISF_weight_summary, defaultedBySM = true, unitType = UnitType.DOUBLE),
     ApsAutoIsfSmbDeliveryRatio(
         key = "openapsama_smb_delivery_ratio",
         defaultValue = 0.5,
-        min = 0.5,
+        min = 0.1,
         max = 1.0,
         titleResId = R.string.pref_title_smb_delivery_ratio,
         summaryResId = R.string.openapsama_smb_delivery_ratio_summary,
@@ -224,7 +227,7 @@ enum class DoubleKey(
     ApsAutoIsfSmbDeliveryRatioMin(
         key = "openapsama_smb_delivery_ratio_min",
         defaultValue = 0.5,
-        min = 0.5,
+        min = 0.1,
         max = 1.0,
         titleResId = R.string.pref_title_smb_delivery_ratio_min,
         summaryResId = R.string.openapsama_smb_delivery_ratio_min_summary,
@@ -233,7 +236,7 @@ enum class DoubleKey(
     ),
     ApsAutoIsfSmbDeliveryRatioMax(
         key = "openapsama_smb_delivery_ratio_max",
-        defaultValue = 0.5,
+        defaultValue = 0.9,
         min = 0.5,
         max = 1.0,
         titleResId = R.string.pref_title_smb_delivery_ratio_max,

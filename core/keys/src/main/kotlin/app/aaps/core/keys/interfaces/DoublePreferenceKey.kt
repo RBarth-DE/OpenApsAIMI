@@ -22,4 +22,9 @@ interface DoublePreferenceKey : PreferenceKey, DoubleNonPreferenceKey {
      */
     val calculatedBySM: Boolean
 
+    /**
+     * Optional explicit slider step. When null the step is auto-derived from the min/max span.
+     */
+    val step: Double? get() = null
+
 }
