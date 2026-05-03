@@ -46,14 +46,15 @@ import app.aaps.plugins.aps.openAPSAIMI.basal.T3cTrajectoryContext
 import app.aaps.plugins.aps.openAPSAIMI.carbs.CarbsAdvisor
 import app.aaps.core.interfaces.ui.UiInteraction
 import app.aaps.plugins.aps.openAPSAIMI.utils.AimiStorageHelper
-import app.aaps.plugins.aps.openAPSAIMI.model.Constants
 import app.aaps.core.data.model.HR
+import app.aaps.core.data.model.SourceSensor
+import app.aaps.core.interfaces.notifications.NotificationId
+import app.aaps.core.interfaces.notifications.NotificationManager
 import app.aaps.plugins.aps.openAPSAIMI.model.DecisionResult
 import app.aaps.plugins.aps.openAPSAIMI.advisor.auditor.AuditorVerdict
 import app.aaps.plugins.aps.openAPSAIMI.advisor.oref.OrefPredictionReasonSuffix
 import app.aaps.plugins.aps.openAPSAIMI.trajectory.TrajectoryType
 import app.aaps.plugins.aps.openAPSAIMI.model.PumpCaps
-import app.aaps.plugins.aps.openAPSAIMI.pkpd.PkPdCsvLogger
 import app.aaps.plugins.aps.openAPSAIMI.pkpd.MealAggressionContext
 import app.aaps.plugins.aps.openAPSAIMI.pkpd.PkPdIntegration
 import app.aaps.plugins.aps.openAPSAIMI.pkpd.PkpdBolusSample
@@ -83,7 +84,6 @@ import app.aaps.plugins.aps.openAPSAIMI.safety.CompressionReboundGuard
 import app.aaps.plugins.aps.openAPSAIMI.safety.HypoTools
 import app.aaps.plugins.aps.openAPSAIMI.safety.InsulinStackingStance
 import app.aaps.plugins.aps.openAPSAIMI.safety.SafetyDecision
-import app.aaps.plugins.aps.openAPSAIMI.smb.SmbDampingUsecase
 import app.aaps.plugins.aps.openAPSAIMI.smb.SmbInstructionExecutor
 import app.aaps.plugins.aps.openAPSAIMI.smb.computeMealHighIobDecision
 import app.aaps.plugins.aps.openAPSAIMI.wcycle.WCycleFacade
@@ -117,10 +117,58 @@ import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.collections.asSequence
 import app.aaps.core.interfaces.profile.EffectiveProfile
+import app.aaps.plugins.aps.openAPSAIMI.activity.ActivityContext
+import app.aaps.plugins.aps.openAPSAIMI.activity.ActivityManager
+import app.aaps.plugins.aps.openAPSAIMI.activity.ActivityState
+import app.aaps.plugins.aps.openAPSAIMI.advisor.auditor.AuditorOrchestrator
+import app.aaps.plugins.aps.openAPSAIMI.advisor.auditor.AuditorVerdictCache
+import app.aaps.plugins.aps.openAPSAIMI.advisor.gestation.GestationalAutopilot
+import app.aaps.plugins.aps.openAPSAIMI.autodrive.estimator.ContinuousStateEstimator
+import app.aaps.plugins.aps.openAPSAIMI.autodrive.models.AutoDriveState
+import app.aaps.plugins.aps.openAPSAIMI.autodrive.safety.AutoDriveGater
+import app.aaps.plugins.aps.openAPSAIMI.context.ContextInfluenceEngine
+import app.aaps.plugins.aps.openAPSAIMI.context.ContextManager
+import app.aaps.plugins.aps.openAPSAIMI.context.ContextMode
+import app.aaps.plugins.aps.openAPSAIMI.inflammatory.InflammationAdjuster
+import app.aaps.plugins.aps.openAPSAIMI.keys.AimiStringKey
+import app.aaps.plugins.aps.openAPSAIMI.learning.BasalLearner
+import app.aaps.plugins.aps.openAPSAIMI.learning.BasalNeuralLearner
+import app.aaps.plugins.aps.openAPSAIMI.learning.UnifiedReactivityLearner
+import app.aaps.plugins.aps.openAPSAIMI.ml.AimiSmbTrainer
+import app.aaps.plugins.aps.openAPSAIMI.physio.AIMIInsulinDecisionAdapterMTR
+import app.aaps.plugins.aps.openAPSAIMI.physio.PhysioMultipliersMTR
+import app.aaps.plugins.aps.openAPSAIMI.physio.thyroid.ThyroidDiagnosticsLogger
+import app.aaps.plugins.aps.openAPSAIMI.physio.thyroid.ThyroidEffectModel
+import app.aaps.plugins.aps.openAPSAIMI.physio.thyroid.ThyroidEffects
+import app.aaps.plugins.aps.openAPSAIMI.physio.thyroid.ThyroidPreferences
+import app.aaps.plugins.aps.openAPSAIMI.physio.thyroid.ThyroidSafetyGates
+import app.aaps.plugins.aps.openAPSAIMI.physio.thyroid.ThyroidStateEstimator
+import app.aaps.plugins.aps.openAPSAIMI.physio.thyroid.ThyroidStatus
+import app.aaps.plugins.aps.openAPSAIMI.pkpd.ActivityStage
+import app.aaps.plugins.aps.openAPSAIMI.pkpd.InsulinActionState
+import app.aaps.plugins.aps.openAPSAIMI.pkpd.IsfTddProvider
+import app.aaps.plugins.aps.openAPSAIMI.pkpd.RealTimeInsulinObserver
+import app.aaps.plugins.aps.openAPSAIMI.pkpd.SmbTbrThrottleLogic
+import app.aaps.plugins.aps.openAPSAIMI.safety.SafetyNet
+import app.aaps.plugins.aps.openAPSAIMI.sos.EmergencySosManager
+import app.aaps.plugins.aps.openAPSAIMI.trajectory.PhaseSpaceState
+import app.aaps.plugins.aps.openAPSAIMI.trajectory.StableOrbit
+import app.aaps.plugins.aps.openAPSAIMI.trajectory.TrajectoryGuard
+import app.aaps.plugins.aps.openAPSAIMI.trajectory.TrajectoryHistoryProvider
+import app.aaps.plugins.aps.openAPSAIMI.trajectory.TrajectoryMetricsCalculator
+import app.aaps.plugins.aps.openAPSAIMI.trajectory.TrajectoryType
+import app.aaps.plugins.aps.openAPSAIMI.trajectory.WarningSeverity
+import app.aaps.plugins.aps.openAPSAIMI.utils.AimiLogger
+import app.aaps.plugins.aps.openAPSAIMI.utils.RtInstrumentationHelpers
+import app.aaps.plugins.aps.openAPSAIMI.validation.PumpCapabilityValidator
+import app.aaps.plugins.aps.openAPSAIMI.wcycle.CyclePhase
+import app.aaps.plugins.aps.openAPSAIMI.wcycle.EndometriosisAdjuster
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
+import org.json.JSONArray
+import org.json.JSONObject
 import kotlin.math.abs
 import kotlin.math.exp
 import kotlin.math.max
@@ -201,12 +249,12 @@ internal data class AimiDecisionContext(
 
     fun toMedicalJson(): String {
         return try {
-            val json = org.json.JSONObject()
+            val json = JSONObject()
             json.put("event_id", event_id)
             json.put("timestamp", timestamp)
             json.put("trigger", trigger)
 
-            val base = org.json.JSONObject()
+            val base = JSONObject()
             base.put("profile_isf_mgdl", baseline_state.profile_isf_mgdl)
             base.put("profile_basal_uph", baseline_state.profile_basal_uph)
             base.put("current_bg_mgdl", baseline_state.current_bg_mgdl)
@@ -214,13 +262,13 @@ internal data class AimiDecisionContext(
             base.put("iob_u", baseline_state.iob_u)
             json.put("baseline_state", base)
 
-            val adj = org.json.JSONObject()
+            val adj = JSONObject()
             adjustments.dynamic_isf?.let { d ->
-                val dJson = org.json.JSONObject()
+                val dJson = JSONObject()
                 dJson.put("final_value_mgdl", d.final_value_mgdl)
-                val modsIdx = org.json.JSONArray()
+                val modsIdx = JSONArray()
                 d.modifiers.forEach { m ->
-                    val mJson = org.json.JSONObject()
+                    val mJson = JSONObject()
                     mJson.put("source", m.source)
                     mJson.put("factor", m.factor)
                     mJson.put("reason", m.clinical_reason)
@@ -230,25 +278,25 @@ internal data class AimiDecisionContext(
                 adj.put("dynamic_isf", dJson)
             }
             adjustments.physiological_context?.let { p ->
-                val pJson = org.json.JSONObject()
+                val pJson = JSONObject()
                 pJson.put("cycle_phase", p.hormonal_cycle_phase)
                 pJson.put("activity_mode", p.physical_activity_mode)
                 adj.put("physio_context", pJson)
             }
             // Add Basal Cap if present
             adjustments.basal_safety_cap?.let { c ->
-                val cJson = org.json.JSONObject()
+                val cJson = JSONObject()
                 cJson.put("status", c.status)
                 cJson.put("limit_uph", c.limit_uph)
                 cJson.put("reason", c.safety_reason)
                 adj.put("basal_cap", cJson)
             }
             adjustments.iob_surveillance?.let { s ->
-                val sJson = org.json.JSONObject()
+                val sJson = JSONObject()
                 sJson.put("pref_enabled", s.pref_enabled)
                 sJson.put("preference_key", s.preference_key)
                 sJson.put("kind", s.kind)
-                sJson.put("active_reason", s.active_reason ?: org.json.JSONObject.NULL)
+                sJson.put("active_reason", s.active_reason ?: JSONObject.NULL)
                 sJson.put("meal_priority_context", s.meal_priority_context)
                 sJson.put("bg_mgdl", s.bg_mgdl)
                 sJson.put("target_bg_mgdl", s.target_bg_mgdl)
@@ -257,9 +305,9 @@ internal data class AimiDecisionContext(
                 sJson.put("iob_u", s.iob_u)
                 sJson.put("max_iob_u", s.max_iob_u)
                 sJson.put("iob_floor_u", s.iob_floor_u)
-                sJson.put("eventual_bg", s.eventual_bg ?: org.json.JSONObject.NULL)
-                sJson.put("min_predicted_bg", s.min_predicted_bg ?: org.json.JSONObject.NULL)
-                sJson.put("trajectory_energy", s.trajectory_energy ?: org.json.JSONObject.NULL)
+                sJson.put("eventual_bg", s.eventual_bg ?: JSONObject.NULL)
+                sJson.put("min_predicted_bg", s.min_predicted_bg ?: JSONObject.NULL)
+                sJson.put("trajectory_energy", s.trajectory_energy ?: JSONObject.NULL)
                 sJson.put("signal_eventual_drop", s.signal_eventual_drop)
                 sJson.put("signal_min_pred_drop", s.signal_min_pred_drop)
                 sJson.put("signal_trajectory_stack", s.signal_trajectory_stack)
@@ -281,7 +329,7 @@ internal data class AimiDecisionContext(
             json.put("adjustments", adj)
 
             outcome?.let { o ->
-                val oJson = org.json.JSONObject()
+                val oJson = JSONObject()
                 oJson.put("decision", o.clinical_decision)
                 oJson.put("amount", o.dosage_u)
                 o.target_basal_uph?.let { oJson.put("target_basal_rate_uph", it) }
@@ -552,15 +600,15 @@ class DetermineBasalaimiSMB2 @Inject constructor(
     private val profileUtil: ProfileUtil,
     private val fabricPrivacy: FabricPrivacy,
     private val preferences: Preferences,
-    private val gestationalAutopilot: app.aaps.plugins.aps.openAPSAIMI.advisor.gestation.GestationalAutopilot,
-    private val auditorOrchestrator: app.aaps.plugins.aps.openAPSAIMI.advisor.auditor.AuditorOrchestrator,
+    private val gestationalAutopilot: GestationalAutopilot,
+    private val auditorOrchestrator: AuditorOrchestrator,
     private val uiInteraction: UiInteraction,
-    private val notificationManager: app.aaps.core.interfaces.notifications.NotificationManager,
+    private val notificationManager: NotificationManager,
     private val wCycleFacade: WCycleFacade,
     private val wCyclePreferences: WCyclePreferences,
     private val wCycleLearner: WCycleLearner,
-    private val pumpCapabilityValidator: app.aaps.plugins.aps.openAPSAIMI.validation.PumpCapabilityValidator,
-    private val dynamicBasalController: app.aaps.plugins.aps.openAPSAIMI.basal.DynamicBasalController,
+    private val pumpCapabilityValidator: PumpCapabilityValidator,
+    private val dynamicBasalController: DynamicBasalController,
     private val autodriveEngine: AutodriveEngine,
     private val context: Context
 ) {
@@ -570,17 +618,17 @@ class DetermineBasalaimiSMB2 @Inject constructor(
     @Inject lateinit var dateUtil: DateUtil
     @Inject lateinit var profileFunction: ProfileFunction
     @Inject lateinit var iobCobCalculator: IobCobCalculator
-    @Inject lateinit var aimiLogger: app.aaps.plugins.aps.openAPSAIMI.utils.AimiLogger
+    @Inject lateinit var aimiLogger: AimiLogger
     @Inject lateinit var activePlugin: ActivePlugin
     @Inject lateinit var basalDecisionEngine: BasalDecisionEngine
     @Inject
-    lateinit var autodriveGater: app.aaps.plugins.aps.openAPSAIMI.autodrive.safety.AutoDriveGater
-    @Inject lateinit var activityManager: app.aaps.plugins.aps.openAPSAIMI.activity.ActivityManager // Agnostic injection
+    lateinit var autodriveGater: AutoDriveGater
+    @Inject lateinit var activityManager: ActivityManager // Agnostic injection
     @Inject lateinit var glucoseStatusCalculatorAimi: GlucoseStatusCalculatorAimi
     @Inject lateinit var comparator: AimiSmbComparator
-    @Inject lateinit var basalLearner: app.aaps.plugins.aps.openAPSAIMI.learning.BasalLearner
-    @Inject lateinit var unifiedReactivityLearner: app.aaps.plugins.aps.openAPSAIMI.learning.UnifiedReactivityLearner
-    @Inject lateinit var basalNeuralLearner: app.aaps.plugins.aps.openAPSAIMI.learning.BasalNeuralLearner
+    @Inject lateinit var basalLearner: BasalLearner
+    @Inject lateinit var unifiedReactivityLearner: UnifiedReactivityLearner
+    @Inject lateinit var basalNeuralLearner: BasalNeuralLearner
     @Inject lateinit var storageHelper: AimiStorageHelper  // 🛡️ Restored StorageHelper
     
     // Helper to safely access learner (handles potential early access before injection)
@@ -603,11 +651,11 @@ class DetermineBasalaimiSMB2 @Inject constructor(
     @Inject lateinit var continuousStateEstimator: app.aaps.plugins.aps.openAPSAIMI.autodrive.estimator.ContinuousStateEstimator
     
     // 🌸 Endometriosis Adjuster (Lazy init manually since not in graph yet or use manual passing)
-    private val endoAdjuster by lazy { app.aaps.plugins.aps.openAPSAIMI.wcycle.EndometriosisAdjuster(preferences, aapsLogger) }
+    private val endoAdjuster by lazy { EndometriosisAdjuster(preferences, aapsLogger) }
     
     // 🏥 Inflammation Adjuster (New Refactor - Decoupled from WCycle)
-    private val inflammationAdjuster by lazy { 
-        app.aaps.plugins.aps.openAPSAIMI.inflammatory.InflammationAdjuster(wCyclePreferences) 
+    private val inflammationAdjuster by lazy {
+        InflammationAdjuster(wCyclePreferences)
     }
     
     private var adaptiveMult: Double = 1.0
@@ -631,7 +679,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
     private val bolusRefreshInFlight = AtomicBoolean(false)
     @Volatile private var cachedEffectiveProfile: EffectiveProfile? = null
     private val effectiveProfileRefreshInFlight = AtomicBoolean(false)
-    private val trajectoryHistoryRef = AtomicReference<List<app.aaps.plugins.aps.openAPSAIMI.trajectory.PhaseSpaceState>>(emptyList())
+    private val trajectoryHistoryRef = AtomicReference<List<PhaseSpaceState>>(emptyList())
     private val trajectoryHistoryRefreshInFlight = AtomicBoolean(false)
     private val determineIoScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
@@ -639,10 +687,10 @@ class DetermineBasalaimiSMB2 @Inject constructor(
     private var lastLoopCgmNoise: Double = 0.0
 
     // 🦋 Thyroid (Basedow) Module
-    private val thyroidPreferences by lazy { app.aaps.plugins.aps.openAPSAIMI.physio.thyroid.ThyroidPreferences(preferences) }
-    private val thyroidStateEstimator = app.aaps.plugins.aps.openAPSAIMI.physio.thyroid.ThyroidStateEstimator()
-    private val thyroidEffectModel = app.aaps.plugins.aps.openAPSAIMI.physio.thyroid.ThyroidEffectModel()
-    private val thyroidSafetyGates = app.aaps.plugins.aps.openAPSAIMI.physio.thyroid.ThyroidSafetyGates()
+    private val thyroidPreferences by lazy { ThyroidPreferences(preferences) }
+    private val thyroidStateEstimator = ThyroidStateEstimator()
+    private val thyroidEffectModel = ThyroidEffectModel()
+    private val thyroidSafetyGates = ThyroidSafetyGates()
 
     // ❌ OLD reactivityLearner removed - UnifiedReactivityLearner is now the only one
     init {
@@ -700,10 +748,10 @@ class DetermineBasalaimiSMB2 @Inject constructor(
     private fun refreshLatestSmbAsync() {
         if (!lastSmbRefreshInFlight.compareAndSet(false, true)) return
         determineIoScope.launch {
-            try {
-                cachedLastSmb = persistenceLayer.getNewestBolusOfType(BS.Type.SMB)
+            cachedLastSmb = try {
+                persistenceLayer.getNewestBolusOfType(BS.Type.SMB)
             } catch (_: Exception) {
-                cachedLastSmb = null
+                null
             } finally {
                 lastSmbRefreshInFlight.set(false)
             }
@@ -750,7 +798,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
     private fun latestCarbContextSnapshot(nowMs: Long, mealDataLastCarbTime: Long, cobNow: Float): CarbContextSnapshot {
         refreshCarbContextAsync(nowMs, mealDataLastCarbTime, cobNow)
         return carbContextSnapshotRef.get() ?: CarbContextSnapshot(
-            lastCarbTimestamp = mealDataLastCarbTime.takeIf { it > 0L } ?: nowMs - TimeUnit.DAYS.toMillis(1),
+            lastCarbTimestamp = mealDataLastCarbTime.takeIf { it > 0L } ?: (nowMs - TimeUnit.DAYS.toMillis(1)),
             lastCarbAgeMin = 0,
             futureCarbs = 0.0f,
             effectiveCob = cobNow,
@@ -787,7 +835,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             } catch (_: Exception) {
                 carbContextSnapshotRef.set(
                     CarbContextSnapshot(
-                        lastCarbTimestamp = mealDataLastCarbTime.takeIf { it > 0L } ?: nowMs - TimeUnit.DAYS.toMillis(1),
+                        lastCarbTimestamp = mealDataLastCarbTime.takeIf { it > 0L } ?: (nowMs - TimeUnit.DAYS.toMillis(1)),
                         lastCarbAgeMin = 0,
                         futureCarbs = 0.0f,
                         effectiveCob = cobNow,
@@ -948,11 +996,11 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         bgacc: Double,
         iobActivityNow: Double,
         iob: Float,
-        insulinActionState: app.aaps.plugins.aps.openAPSAIMI.pkpd.InsulinActionState,
+        insulinActionState: InsulinActionState,
         lastBolusAgeMinutes: Double,
         cob: Float,
         profile: OapsProfileAimi,
-    ): List<app.aaps.plugins.aps.openAPSAIMI.trajectory.PhaseSpaceState> {
+    ): List<PhaseSpaceState> {
         refreshTrajectoryHistoryAsync(
             currentTime = currentTime,
             bg = bg,
@@ -975,7 +1023,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         bgacc: Double,
         iobActivityNow: Double,
         iob: Float,
-        insulinActionState: app.aaps.plugins.aps.openAPSAIMI.pkpd.InsulinActionState,
+        insulinActionState: InsulinActionState,
         lastBolusAgeMinutes: Double,
         cob: Float,
         profile: OapsProfileAimi,
@@ -1013,7 +1061,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
     private val HYPO_RELEASE_MARGIN   = 5.0      // mg/dL au-dessus du seuil
     private val HYPO_RELEASE_HOLD_MIN = 5        // minutes à rester > seuil+margin
     private var highBgOverrideUsed = false
-    private val INSULIN_STEP = Constants.DEFAULT_INSULIN_STEP_U.toFloat()
+    // private val INSULIN_STEP = Constants.DEFAULT_INSULIN_STEP_U.toFloat()
 
     /** Suspend stats caches for one [determine_basal] pass; see [DetermineBasalInvocationCaches]. */
     private val determineBasalInvocationCaches = DetermineBasalInvocationCaches()
@@ -5576,7 +5624,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
     private var endoSmbMult = 1.0  // Written by applyEndoAndActivityAdjustments each cycle
     private var activityProtectionMode = false  // Written by applyEndoAndActivityAdjustments
     private var activityStateIntense = false     // Written by applyEndoAndActivityAdjustments
-    private var cachedActivityContext: app.aaps.plugins.aps.openAPSAIMI.activity.ActivityContext? = null  // Written by applyEndoAndActivityAdjustments
+    private var cachedActivityContext: ActivityContext? = null  // Written by applyEndoAndActivityAdjustments
     private var cachedBasalFirstActive = false    // Written by applyBasalFirstPolicy
     private var cachedIsFragileBg = false         // Written by applyBasalFirstPolicy
     private var aimilimit = 0.0f
@@ -5606,7 +5654,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
     private var intervalsmb = 1
     private var peakintermediaire = 0.0
     private var latestAdjustedDia: Double = 0.0 // Captured for logging
-    private var insulinPeakTime = 0.0
+    // private var insulinPeakTime = 0.0
     private var iobActivityNow: Double = 0.0
     private var lastBolusAgeMinutes: Double = Double.NaN
     private var lastDecisionSource: String = "AIMI"
@@ -5618,7 +5666,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
     /** Latest IOB surveillance snapshot for JSONL (updated each [finalizeAndCapSMB]). */
     private var lastIobSurveillanceExport: AimiDecisionContext.IobSurveillanceExport? = null
     private var lastSmbCapped: Double = 0.0
-    private var currentThyroidEffects = app.aaps.plugins.aps.openAPSAIMI.physio.thyroid.ThyroidEffects()
+    private var currentThyroidEffects = ThyroidEffects()
     private var lastSmbFinal: Double = 0.0
     private var lastAutodriveState: AutodriveState = AutodriveState.IDLE
     private var duraISFminutes: Double = 0.0
@@ -5651,7 +5699,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
     private val ngrTimeFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern("HH:mm")
     private var zeroBasalAccumulatedMinutes: Int = 0
     private val MAX_ZERO_BASAL_DURATION = 60  // Durée maximale autorisée en minutes à 0 basal
-    private val insulinObserver = app.aaps.plugins.aps.openAPSAIMI.pkpd.RealTimeInsulinObserver()  // 🚀 Real-Time Insulin Observer
+    private val insulinObserver = RealTimeInsulinObserver()  // 🚀 Real-Time Insulin Observer
     private var pkpdThrottleIntervalAdd: Int = 0       // 🚀 PKPD interval boost (0 si normal/modes repas)
     private var pkpdPreferTbrBoost: Double = 1.0       // 🚀 PKPD TBR boost factor (1.0 si normal/modes repas)
 
@@ -5674,130 +5722,6 @@ class DetermineBasalaimiSMB2 @Inject constructor(
     private fun Double.toFixed2(): String = "%.2f".format(Locale.US, this)
     private fun parseNgrTime(value: String, fallback: LocalTime): LocalTime =
         runCatching { LocalTime.parse(value, ngrTimeFormatter) }.getOrElse { fallback }
-
-    private class PkpdPortAdapter(
-        private val pkpdIntegration: PkPdIntegration
-    ) : PkpdPort {
-
-        private fun pkpdLearningWindowMin(ctx: app.aaps.plugins.aps.openAPSAIMI.model.LoopContext): Int =
-            ctx.pkpdWindowMin ?: 90
-
-        private fun app.aaps.plugins.aps.openAPSAIMI.model.LoopContext.mealModeActive(): Boolean =
-            modes.meal || modes.breakfast || modes.lunch || modes.dinner || modes.highCarb || modes.snack
-
-        override fun snapshot(ctx: app.aaps.plugins.aps.openAPSAIMI.model.LoopContext): PkpdPort.Snapshot {
-            val mealCtx = MealAggressionContext(
-                mealModeActive = ctx.mealModeActive(),
-                predictedBgMgdl = ctx.eventualBg,
-                targetBgMgdl = ctx.profile.targetMgdl
-            )
-            val rt = pkpdIntegration.computeRuntime(
-                epochMillis = ctx.nowEpochMillis,
-                bg = ctx.bg.mgdl,
-                deltaMgDlPer5 = ctx.bg.delta5,
-                iobU = ctx.iobU,
-                carbsActiveG = ctx.cobG,
-                windowMin = pkpdLearningWindowMin(ctx),
-                exerciseFlag = false, // remplace par ctx.modes.sport si dispo
-                profileIsf = ctx.profile.isfMgdlPerU,
-                tdd24h = ctx.tdd24hU,
-                mealContext = mealCtx,
-                combinedDelta = ctx.bg.combinedDelta,
-                uamConfidence = AimiUamHandler.confidenceOrZero()
-            )
-            return if (rt != null) {
-                PkpdPort.Snapshot(
-                    diaMin   = (rt.params.diaHrs * 60.0).toInt(), // ✅ diaHrs
-                    peakMin  = rt.params.peakMin.toInt(),
-                    fusedIsf = rt.fusedIsf,
-                    tailFrac = rt.tailFraction
-                    // ⚠ champs SMB optionnels laissent null ici
-                )
-            } else {
-                PkpdPort.Snapshot(diaMin = 6*60, peakMin = 60, fusedIsf = ctx.profile.isfMgdlPerU, tailFrac = 0.0)
-            }
-        }
-
-        override fun dampSmb(units: Double, ctx: app.aaps.plugins.aps.openAPSAIMI.model.LoopContext, bypassDamping: Boolean): PkpdPort.DampingAudit {
-            val mealCtx = MealAggressionContext(
-                mealModeActive = ctx.mealModeActive(),
-                predictedBgMgdl = ctx.eventualBg,
-                targetBgMgdl = ctx.profile.targetMgdl
-            )
-            val rt = pkpdIntegration.computeRuntime(epochMillis = ctx.nowEpochMillis,
-                                                    bg = ctx.bg.mgdl,
-                                                    deltaMgDlPer5 = ctx.bg.delta5,
-                                                    iobU = ctx.iobU,
-                                                    carbsActiveG = ctx.cobG,
-                                                    windowMin = pkpdLearningWindowMin(ctx),
-                                                    exerciseFlag = false, // remplace par ctx.modes.sport si dispo
-                                                    profileIsf = ctx.profile.isfMgdlPerU,
-                                                    tdd24h = ctx.tdd24hU,
-                                                    mealContext = mealCtx,
-                                                    combinedDelta = ctx.bg.combinedDelta,
-                                                    uamConfidence = AimiUamHandler.confidenceOrZero())
-
-            val damping = SmbDampingUsecase.run(
-                rt,
-                SmbDampingUsecase.Input(
-                    smbDecision = units,
-                    exercise = false, // adapte si tu as un flag d’exercice
-                    suspectedLateFatMeal = ctx.modes.highCarb, // ✅ depuis les modes
-                    mealModeRun = bypassDamping,
-                    highBgRiseActive = false
-                )
-            )
-            val audit = damping.audit
-            return if (audit != null) {
-                PkpdPort.DampingAudit(
-                    out = damping.smbAfterDamping,
-                    tailApplied = audit.tailApplied, tailMult = audit.tailMult,
-                    exerciseApplied = audit.exerciseApplied, exerciseMult = audit.exerciseMult,
-                    lateFatApplied = audit.lateFatApplied, lateFatMult = audit.lateFatMult,
-                    mealBypass = audit.mealBypass
-                )
-            } else {
-                PkpdPort.DampingAudit(damping.smbAfterDamping, false, 1.0, false, 1.0, false, 1.0, mealBypass = false)
-            }
-        }
-
-
-        override fun logCsv(
-            ctx: app.aaps.plugins.aps.openAPSAIMI.model.LoopContext,
-            pkpd: PkpdPort.Snapshot,
-            smbProposed: Double,
-            smbFinal: Double,
-            audit: PkpdPort.DampingAudit?
-        ) {
-            val dateStr  = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.US).format(Date(ctx.nowEpochMillis))
-            val epochMin = TimeUnit.MILLISECONDS.toMinutes(ctx.nowEpochMillis)
-            PkPdCsvLogger.append(
-                PkPdLogRow(
-                    dateStr = dateStr,
-                    epochMin = epochMin,
-                    bg = ctx.bg.mgdl,
-                    delta5 = ctx.bg.delta5,
-                    iobU = ctx.iobU,
-                    carbsActiveG = ctx.cobG,
-                    windowMin = pkpdLearningWindowMin(ctx),
-                    diaH = pkpd.diaMin / 60.0,
-                    peakMin = pkpd.peakMin.toDouble(),
-                    fusedIsf = pkpd.fusedIsf,
-                    tddIsf = 1800.0 / (ctx.tdd24hU.coerceAtLeast(0.1)),
-                    profileIsf = ctx.profile.isfMgdlPerU,
-                    tailFrac = pkpd.tailFrac,
-                    smbProposedU = smbProposed,
-                    smbFinalU = smbFinal,
-                    tailMult = audit?.tailMult,
-                    exerciseMult = audit?.exerciseMult,
-                    lateFatMult = audit?.lateFatMult,
-                    highBgOverride = null,
-                    lateFatRise = pkpd.lateFatRise,
-                    quantStepU = ctx.pump.bolusStep
-                )
-            )
-        }
-    }
 
     private val nightGrowthLearner = NightGrowthResistanceLearner()
 
@@ -6128,7 +6052,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         currentHour: Int,
         pumpAgeDays: Float,
         iob: Double = 0.0,
-        activityContext: app.aaps.plugins.aps.openAPSAIMI.activity.ActivityContext,
+        activityContext: ActivityContext,
         steps: Int? = null,
         heartRate: Int? = null
     ): Double {
@@ -6156,20 +6080,20 @@ class DetermineBasalaimiSMB2 @Inject constructor(
     
     // 3. Ajustement en fonction de l'activité physique (Via ActivityContext)
     when (activityContext.state) {
-        app.aaps.plugins.aps.openAPSAIMI.activity.ActivityState.INTENSE -> {
+        ActivityState.INTENSE  -> {
              // FIX: Stronger reduction for Intense activity to react faster
              diaMinutes *= 0.85f 
              // reasonBuilder.append("Sport Intense: DIA x0.85")
         }
-        app.aaps.plugins.aps.openAPSAIMI.activity.ActivityState.MODERATE -> {
+        ActivityState.MODERATE -> {
              diaMinutes *= 0.90f
              reasonBuilder.append(" • Moderate Activity ➝ x0.90\n")
         }
-        app.aaps.plugins.aps.openAPSAIMI.activity.ActivityState.LIGHT -> {
+        ActivityState.LIGHT    -> {
              diaMinutes *= 0.98f
              reasonBuilder.append(" • Light Activity ➝ x0.98\n")
         }
-        else -> {
+        else                   -> {
             // REST
             if (activityContext.isRecovery) {
                 // Recovery: Keep Dia normal or slightly extend?
@@ -6187,7 +6111,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         } else if (s > 350) {
              // Flow / Sport (Undeclared): > 70spm (Brisk Walk)
              // Absorption rapide -> DIA plus court (si pas déjà appliqué par ActivityContext)
-             if (activityContext.state != app.aaps.plugins.aps.openAPSAIMI.activity.ActivityState.INTENSE) {
+             if (activityContext.state != ActivityState.INTENSE) {
                  diaMinutes *= 0.90f
                  reasonBuilder.append(context.getString(R.string.reason_bio_sync_flow, s, h, 0.90f))
              }
@@ -6565,7 +6489,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                     R.string.manual_basal_override,
                     rate,
                     duration,
-                    if (Therapy(persistenceLayer).let { it.updateStatesBasedOnTherapyEvents();
+                    if (Therapy(persistenceLayer).let { it.updateStatesBasedOnTherapyEvents()
                             it.snackTime || it.highCarbTime || it.mealTime || it.lunchTime || it.dinnerTime || it.bfastTime
                         }) "✔" else "✘"
                 )
@@ -6597,13 +6521,13 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             bgNow > hypoGuard && bgNow > 110 && detectMealOnset(delta, predDelta, bgacc.toFloat(), predictedBg, profile.target_bg.toFloat())
 
         // 3) Tendance & ajustement dynamique
-        val bgTrend = calculateBgTrend(getRecentBGs(), StringBuilder())
+        // val bgTrend = calculateBgTrend(getRecentBGs(), StringBuilder())
         
         // Use the new progressive Sigmoid/PD controller instead of the old fixed 1.2x limit
         val dynamicState = dynamicBasalController.calculateDynamicRate(
             currentRate = _rate,
             bg = bgNow,
-            targetBg = profile.target_bg.toDouble(),
+            targetBg = profile.target_bg,
             delta = delta.toDouble(),
             shortAvgDelta = shortAvgDelta.toDouble()
         )
@@ -6949,13 +6873,13 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             enabled = preferences.get(BooleanKey.OApsAIMIIobSurveillanceGuard),
             mealPriorityContext = mealPriorityContext
         )
-        var iobSurveillanceSuppressRedCarpet = stackingEval.suppressRedCarpetRestore
+        val iobSurveillanceSuppressRedCarpet = stackingEval.suppressRedCarpetRestore
 
-        var chainBaseLimit = 0.0
-        var chainSafetyCapped = 0f
-        var chainAfterRefractory = 0f
-        var chainAfterThrottle = 0f
-        var chainFinal = 0.0
+        var chainBaseLimit: Double
+        var chainSafetyCapped: Float
+        var chainAfterRefractory: Float
+        var chainAfterThrottle: Float
+        var chainFinal: Double
         var chainIntervalAdd = 0
         var chainThrottleFactor = 1.0
         
@@ -6966,10 +6890,10 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         // Si l'Auditor a été interrogé récemment, utiliser sa confiance
         // Sinon, passer null pour appliquer le boost par défaut
         val auditorLastConfidence: Double? = try {
-            app.aaps.plugins.aps.openAPSAIMI.advisor.auditor.AuditorVerdictCache.get(300_000)?.verdict?.confidence
-        } catch (e: Exception) { null }
+            AuditorVerdictCache.get(300_000)?.verdict?.confidence
+        } catch (_: Exception) { null }
         
-        val baseLimit = app.aaps.plugins.aps.openAPSAIMI.safety.SafetyNet.calculateSafeSmbLimit(
+        val baseLimit = SafetyNet.calculateSafeSmbLimit(
             bg = this.bg,
             targetBg = targetBg.toDouble(),
             eventualBg = this.eventualBG,
@@ -7021,7 +6945,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
          var absorptionFactor = 1.0
 
          // 🦋 THYROID NORMALIZING SAFETY GATE
-         if (this.currentThyroidEffects.status == app.aaps.plugins.aps.openAPSAIMI.physio.thyroid.ThyroidStatus.NORMALIZING) {
+         if (this.currentThyroidEffects.status == ThyroidStatus.NORMALIZING) {
              val inputs = thyroidPreferences.inputsFlow.value
              val gatedEffects = thyroidSafetyGates.applyGates(
                  inputs = inputs,
@@ -7035,7 +6959,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                  consoleLog.add("🦋 THYROID_GUARD: SMB Blocked (Normalizing Phase risk)")
                  rT.reason.append("🦋 Thyroid Guard: Blocked. ")
              } else if (gatedEffects.smbCapUnits != null) {
-                 val cap = gatedEffects.smbCapUnits!!.toFloat()
+                 val cap = gatedEffects.smbCapUnits.toFloat()
                  if (gatedUnits > cap) {
                      consoleLog.add("🦋 THYROID_GUARD: SMB Capped to ${cap} (was $gatedUnits)")
                      rT.reason.append("🦋 Thyroid Guard: Cap ${cap}U. ")
@@ -7096,7 +7020,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                  now = dateUtil.now()
              )
              
-             val throttle = app.aaps.plugins.aps.openAPSAIMI.pkpd.SmbTbrThrottleLogic.computeThrottle(
+             val throttle = SmbTbrThrottleLogic.computeThrottle(
                  actionState = actionState,
                  bgDelta = this.delta.toDouble(),
                  bgRising = this.bg > this.targetBg,
@@ -7752,7 +7676,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         externalCombinedDelta: Float = 0f     // 📡 GAP1: G6-compensated combinedDelta from determine_basal
     ): Boolean {
         // ⚙️ Prefs
-        val pbolusA: Double = preferences.get(DoubleKey.OApsAIMIautodrivePrebolus)
+        // val pbolusA: Double = preferences.get(DoubleKey.OApsAIMIautodrivePrebolus)
         val autodriveDeltaBase: Float = preferences.get(DoubleKey.OApsAIMIcombinedDelta).toFloat()
         val autodriveMinDeviation: Double = preferences.get(DoubleKey.OApsAIMIAutodriveDeviation)
     val autodriveBG: Int = preferences.get(IntKey.OApsAIMIAutodriveBG) // User Decision: Static Threshold
@@ -8196,16 +8120,16 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         return context.getString(R.string.safety_condition, critical, conditionsString)
     }
 
-    // Fonctions de vérification spécifiques pour chaque condition
-    private fun isNosmbHm(context: SafetyContext): Boolean =
-        context.iob > 0.7 &&
-            preferences.get(BooleanKey.OApsAIMIhoneymoon) &&
-            context.delta <= 10.0 &&
-            !context.mealTime &&
-            !context.bfastTime &&
-            !context.lunchTime &&
-            !context.dinnerTime &&
-            context.predictedBg < 130
+    // // Fonctions de vérification spécifiques pour chaque condition
+    // private fun isNosmbHm(context: SafetyContext): Boolean =
+    //     context.iob > 0.7 &&
+    //         preferences.get(BooleanKey.OApsAIMIhoneymoon) &&
+    //         context.delta <= 10.0 &&
+    //         !context.mealTime &&
+    //         !context.bfastTime &&
+    //         !context.lunchTime &&
+    //         !context.dinnerTime &&
+    //         context.predictedBg < 130
 
     private fun isHoneysmb(context: SafetyContext): Boolean =
         preferences.get(BooleanKey.OApsAIMIhoneymoon) &&
@@ -8470,7 +8394,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         // 🚀 BYPASS: If explicitly triggered by user (Meal Advisor), skip soft reductions
         if (ignoreSafetyRestrictions) return smbAmount
 
-        val currentHour = LocalTime.now().hour
+        // val currentHour = LocalTime.now().hour
         val honeymoon   = preferences.get(BooleanKey.OApsAIMIhoneymoon)
 
         // 2) 🔧 AJUSTEMENT “falling decelerating” (soft)
@@ -8569,8 +8493,8 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         predictedSMB: Float,
         profile: OapsProfileAimi
     ): Float {
-        val recentDeltas = getRecentDeltas()
-        val predicted = predictedDelta(recentDeltas)
+        // val recentDeltas = getRecentDeltas()
+        // val predicted = predictedDelta(recentDeltas)
 
         // 🛡️ Fallback baseline (always available, no IO)
         val finalRefinedSMB: Float = calculateSMBFromModel()
@@ -8583,19 +8507,19 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             profile.insulinDivisor.toFloat(), recentSteps5Minutes, recentSteps10Minutes
         )
         val features = floatArrayOf(
-            bg.toFloat(), iob.toFloat(), cob.toFloat(), delta, shortAvgDelta, longAvgDelta,
-            tdd7DaysPerHour.toFloat(), tdd2DaysPerHour.toFloat(), tddPerHour.toFloat(),
-            tdd24HrsPerHour.toFloat(), trendIndicator.toFloat()
+            bg.toFloat(), iob, cob, delta, shortAvgDelta, longAvgDelta,
+            tdd7DaysPerHour, tdd2DaysPerHour, tddPerHour,
+            tdd24HrsPerHour, trendIndicator.toFloat()
         )
 
         // 🔥 Trigger async training (fire-and-forget, rate-limited to 1/6h, never blocks)
-        app.aaps.plugins.aps.openAPSAIMI.ml.AimiSmbTrainer.maybeTrainAsync(
+        AimiSmbTrainer.maybeTrainAsync(
             dir = externalDir,
             csvFile = csvfile
         )
 
         // 🎯 Inference-only O(1): fallback to predictedSMB on any issue
-        val mlRefined = app.aaps.plugins.aps.openAPSAIMI.ml.AimiSmbTrainer.refine(finalRefinedSMB, features)
+        val mlRefined = AimiSmbTrainer.refine(finalRefinedSMB, features)
 
         if (mlRefined > predictedSMB && bg > 150 && delta > 5) {
             return mlRefined
@@ -8927,7 +8851,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
              if (info.dayInCycle != lastCycleNotificationDay) {
                  val msg = "⚠️ WCycle: J${info.dayInCycle} > $limit. Retard détecté.\nMettre à jour le 1er jour des règles ?"
                  notificationManager.post(
-                     id = app.aaps.core.interfaces.notifications.NotificationId.HYPO_RISK_ALARM,
+                     id = NotificationId.HYPO_RISK_ALARM,
                      text = msg
                  )
                  lastCycleNotificationDay = info.dayInCycle
@@ -9171,10 +9095,10 @@ class DetermineBasalaimiSMB2 @Inject constructor(
     private fun applyGestationalAutopilot(profile: OapsProfileAimi) {
         try {
             if (preferences.get(BooleanKey.OApsAIMIpregnancy)) {
-                val dueDateString = preferences.get(app.aaps.plugins.aps.openAPSAIMI.keys.AimiStringKey.PregnancyDueDateString)
+                val dueDateString = preferences.get(AimiStringKey.PregnancyDueDateString)
                 if (dueDateString.isNotEmpty()) {
                     try {
-                        val dueDate = java.time.LocalDate.parse(dueDateString)
+                        val dueDate = LocalDate.parse(dueDateString)
                         val gState = gestationalAutopilot.calculateState(dueDate)
                         val mult = gestationalAutopilot.getProfileMultipliers(gState)
                         
@@ -9184,7 +9108,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                         
                         val oldBasal = profile.current_basal
                         val oldISF = profile.sens
-                        val oldCR = profile.carb_ratio
+                        // val oldCR = profile.carb_ratio
                         
                         profile.current_basal *= factorBasal
                         profile.sens *= factorISF
@@ -9209,7 +9133,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
     }
 
     private fun applyThyroidModule(profile: OapsProfileAimi) {
-        this.currentThyroidEffects = app.aaps.plugins.aps.openAPSAIMI.physio.thyroid.ThyroidEffects()
+        this.currentThyroidEffects = ThyroidEffects()
         try {
             thyroidPreferences.update()
             val thyroidInputs = thyroidPreferences.inputsFlow.value
@@ -9219,7 +9143,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                 val confidence = thyroidStateEstimator.confidence.value
                 currentThyroidEffects = thyroidEffectModel.calculateEffects(status, confidence)
                 
-                val logMsg = app.aaps.plugins.aps.openAPSAIMI.physio.thyroid.ThyroidDiagnosticsLogger.formatDecisionLog(
+                val logMsg = ThyroidDiagnosticsLogger.formatDecisionLog(
                     inputs = thyroidInputs,
                     status = status,
                     effects = currentThyroidEffects,
@@ -9254,7 +9178,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         sens: Double, tp: Float, variableSensitivity: Float,
         target_bg: Double, predictedBg: Float, eventualBG: Double,
         isMealAdvisorOneShot: Boolean, mealData: MealData,
-        pkpdRuntime: app.aaps.plugins.aps.openAPSAIMI.pkpd.PkPdRuntime?,
+        pkpdRuntime: PkPdRuntime?,
         sportTime: Boolean, lateFatRiseFlag: Boolean,
         highCarbrunTime: Long, threshold: Double,
         currentTime: Long, windowSinceDoseInt: Int,
@@ -9272,7 +9196,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             SmbInstructionExecutor.Input(
                 context = context, preferences = preferences, csvFile = csvfile, rT = rT,
                 consoleLog = consoleLog, consoleError = consoleError,
-                combinedDelta = combinedDeltaLocal.toDouble(), shortAvgDelta = shortAvgDelta.toFloat(), longAvgDelta = longAvgDelta.toFloat(),
+                combinedDelta = combinedDeltaLocal.toDouble(), shortAvgDelta = shortAvgDelta, longAvgDelta = longAvgDelta,
                 profile = profile, glucoseStatus = glucoseStatusLocal,
                 bg = bg, delta = delta.toDouble(), iob = iob,
                 basalaimi = basalaimi, initialBasal = basal,
@@ -9318,8 +9242,8 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                     calculateAdjustedDIA(
                         baseDIAHours = effectiveBaseDia, currentHour = currentHour,
                         pumpAgeDays = pumpAge, iob = iobValue,
-                        activityContext = cachedActivityContext ?: app.aaps.plugins.aps.openAPSAIMI.activity.ActivityContext(),
-                        steps = steps5, heartRate = currentHr?.toInt()
+                        activityContext = cachedActivityContext ?: ActivityContext(),
+                        steps = steps5, heartRate = currentHr.toInt()
                     )
                 },
                 costFunction = { basalInput, bgInput, targetInput, horizon, sensitivity, candidate ->
@@ -9537,20 +9461,20 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             steps5min = recentSteps5Minutes, steps10min = recentSteps10Minutes,
             avgHr = averageBeatsPerMinute, avgHrResting = averageBeatsPerMinute60
         )
-        if (activityContext.state != app.aaps.plugins.aps.openAPSAIMI.activity.ActivityState.REST || activityContext.isRecovery) {
+        if (activityContext.state != ActivityState.REST || activityContext.isRecovery) {
             consoleLog.add("Activity: ${activityContext.description} → ISF x${"%.2f".format(activityContext.isfMultiplier)}")
         }
         this.variableSensitivity *= activityContext.isfMultiplier.toFloat()
         if (activityContext.protectionMode) consoleLog.add("Activity Protection Mode Active (Recovery/Intense)")
         this.activityProtectionMode = activityContext.protectionMode
-        this.activityStateIntense = (activityContext.state == app.aaps.plugins.aps.openAPSAIMI.activity.ActivityState.INTENSE)
+        this.activityStateIntense = (activityContext.state == ActivityState.INTENSE)
         this.cachedActivityContext = activityContext
         val anyMealModeActive = mealTime || bfastTime || lunchTime || dinnerTime || highCarbTime || snackTime
         val basalFactor = when (activityContext.state) {
-            app.aaps.plugins.aps.openAPSAIMI.activity.ActivityState.REST  -> 1.0f
-            app.aaps.plugins.aps.openAPSAIMI.activity.ActivityState.LIGHT -> 1.0f
-            app.aaps.plugins.aps.openAPSAIMI.activity.ActivityState.MODERATE -> if (anyMealModeActive) 0.9f else 0.8f
-            app.aaps.plugins.aps.openAPSAIMI.activity.ActivityState.INTENSE  -> if (anyMealModeActive) 0.8f else 0.6f
+            ActivityState.REST     -> 1.0f
+            ActivityState.LIGHT    -> 1.0f
+            ActivityState.MODERATE -> if (anyMealModeActive) 0.9f else 0.8f
+            ActivityState.INTENSE  -> if (anyMealModeActive) 0.8f else 0.6f
         }
         if (basalFactor < 1.0f) {
             this.basalaimi *= basalFactor
@@ -9560,7 +9484,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
 
     private fun refreshAimiContextActivityFlag(nowMs: Long = System.currentTimeMillis()) {
         aimiContextActivityActive = false
-        if (!preferences.get(app.aaps.core.keys.BooleanKey.OApsAIMIContextEnabled)) return
+        if (!preferences.get(BooleanKey.OApsAIMIContextEnabled)) return
         try {
             val snap = contextManager.getSnapshot(nowMs)
             aimiContextActivityActive = snap.hasActivity && snap.intentCount > 0
@@ -9577,18 +9501,18 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         bg: Double, iob: Double, cob: Double, rT: RT
     ): Double? {
         var contextTargetOverride: Double? = null
-        val contextEnabled = preferences.get(app.aaps.core.keys.BooleanKey.OApsAIMIContextEnabled)
+        val contextEnabled = preferences.get(BooleanKey.OApsAIMIContextEnabled)
         if (contextEnabled) {
             try {
                 consoleLog.add("═══ CONTEXT MODULE ═══")
                 val contextSnapshot = contextManager.getSnapshot(System.currentTimeMillis())
                 if (contextSnapshot.intentCount > 0) {
                     aimiContextActivityActive = contextSnapshot.hasActivity
-                    val modeStr = preferences.get(app.aaps.core.keys.StringKey.ContextMode)
+                    val modeStr = preferences.get(StringKey.ContextMode)
                     val contextMode = when (modeStr) {
-                        "CONSERVATIVE" -> app.aaps.plugins.aps.openAPSAIMI.context.ContextMode.CONSERVATIVE
-                        "AGGRESSIVE" -> app.aaps.plugins.aps.openAPSAIMI.context.ContextMode.AGGRESSIVE
-                        else -> app.aaps.plugins.aps.openAPSAIMI.context.ContextMode.BALANCED
+                        "CONSERVATIVE" -> ContextMode.CONSERVATIVE
+                        "AGGRESSIVE" -> ContextMode.AGGRESSIVE
+                        else -> ContextMode.BALANCED
                     }
                     val contextInfluence = contextInfluenceEngine.computeInfluence(
                         snapshot = contextSnapshot, currentBG = bg,
@@ -9598,11 +9522,11 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                     contextSnapshot.activeIntents.take(3).forEach { intent ->
                         consoleLog.add("  • ${intent::class.simpleName ?: "Unknown"}")
                     }
-                    if (kotlin.math.abs(contextInfluence.smbFactorClamp - 1.0f) > 0.05f) {
+                    if (abs(contextInfluence.smbFactorClamp - 1.0f) > 0.05f) {
                         val origMaxSMB = maxSMB
                         maxSMB *= contextInfluence.smbFactorClamp
                         maxSMBHB *= contextInfluence.smbFactorClamp
-                        consoleLog.add("  SMB: %.2f→%.2fU (×%.2f)".format(java.util.Locale.US, origMaxSMB, maxSMB, contextInfluence.smbFactorClamp))
+                        consoleLog.add("  SMB: %.2f→%.2fU (×%.2f)".format(Locale.US, origMaxSMB, maxSMB, contextInfluence.smbFactorClamp))
                     }
                     if (contextInfluence.extraIntervalMin > 0) {
                         val origInterval = intervalsmb
@@ -9663,7 +9587,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                 cobG = effectiveCOB, profile = profile, delta = delta.toDouble()
             )
             val sanitizedPredictions = advancedPredictions.mapNotNull {
-                if (it.isNaN()) null else round(kotlin.math.min(401.0, kotlin.math.max(39.0, it)), 0)
+                if (it.isNaN()) null else round(min(401.0, max(39.0, it)), 0)
             }
             val intsPredictions = sanitizedPredictions.map { it.toInt() }
             lastPredictionSize = intsPredictions.size
@@ -9709,7 +9633,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
 
     private fun applyTrajectoryAnalysis(
         currentTime: Long, bg: Double, delta: Double, bgacc: Double, iobActivityNow: Double,
-        iob: Float, insulinActionState: app.aaps.plugins.aps.openAPSAIMI.pkpd.InsulinActionState,
+        iob: Float, insulinActionState: InsulinActionState,
         lastBolusAgeMinutes: Double, cob: Float, targetBg: Double, profile: OapsProfileAimi,
         rT: RT, uiInteraction: UiInteraction,
         relevanceScore: Double = 0.0 // 🌀 Relevance from Cosine Gate
@@ -9720,7 +9644,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         
         if (trajectoryFlagEnabled) {
             try {
-                val effectiveProfileForTrajectory: EffectiveProfile? = effectiveProfileCached(currentTime)
+                // val effectiveProfileForTrajectory: EffectiveProfile? = effectiveProfileCached(currentTime)
                 val trajectoryHistory = trajectoryHistoryCached(
                     currentTime = currentTime,
                     bg = bg,
@@ -9735,7 +9659,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                 )
                 
                 // 2. Run Trajectory Analysis (The "Insight" Gate)
-                val stableOrbit = app.aaps.plugins.aps.openAPSAIMI.trajectory.StableOrbit.fromProfile(targetBg, profile.current_basal)
+                val stableOrbit = StableOrbit.fromProfile(targetBg, profile.current_basal)
                 val traj = trajectoryGuard.analyzeTrajectory(trajectoryHistory, stableOrbit)
                 
                 if (traj == null) {
@@ -9781,18 +9705,18 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                         }
                         consoleLog.add("  🎛 Modulation: SMB×${"%.2f".format(effectiveSmbDamping)} Int×${"%.2f".format(effectiveIntervalStretch)} (${mod.reason})")
                         
-                        if (kotlin.math.abs(effectiveSmbDamping - 1.0) > 0.05) {
+                        if (abs(effectiveSmbDamping - 1.0) > 0.05) {
                             val orig = maxSMB
                             maxSMB *= effectiveSmbDamping; maxSMBHB *= effectiveSmbDamping
                             consoleLog.add("    → SMB: ${"%.2f".format(orig)}U → ${"%.2f".format(maxSMB)}U")
                         }
-                        if (kotlin.math.abs(effectiveIntervalStretch - 1.0) > 0.05) {
+                        if (abs(effectiveIntervalStretch - 1.0) > 0.05) {
                             val orig = intervalsmb
                             intervalsmb = (intervalsmb * effectiveIntervalStretch).toInt().coerceIn(1, 20)
                             consoleLog.add("    → Interval: ${orig}min → ${intervalsmb}min")
                         }
-                        if (kotlin.math.abs(mod.safetyMarginExpand - 1.0) > 0.05) {
-                            val origLimit = preferences.get(app.aaps.core.keys.DoubleKey.ApsSmbMaxIob)
+                        if (abs(mod.safetyMarginExpand - 1.0) > 0.05) {
+                            val origLimit = preferences.get(DoubleKey.ApsSmbMaxIob)
                             val floor = if (delta > 0.3) origLimit * 0.5 else 0.0
                             val candidate = maxIob * mod.safetyMarginExpand
                             val beforeMod = maxIob
@@ -9807,15 +9731,15 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                     }
                     
                     // Warning Propagation
-                    analysis.warnings.filter { it.severity >= app.aaps.plugins.aps.openAPSAIMI.trajectory.WarningSeverity.HIGH }.forEach { w ->
+                    analysis.warnings.filter { it.severity >= WarningSeverity.HIGH }.forEach { w ->
                         consoleLog.add("  🚨 ${w.severity.emoji()} ${w.message}")
-                        if (w.severity == app.aaps.plugins.aps.openAPSAIMI.trajectory.WarningSeverity.CRITICAL) {
+                        if (w.severity == WarningSeverity.CRITICAL) {
                             try {
                                 notificationManager.post(
-                                    id = app.aaps.core.interfaces.notifications.NotificationId.AUTOMATION_MESSAGE,
+                                    id = NotificationId.AUTOMATION_MESSAGE,
                                     text = w.message
                                 )
-                            } catch (e: Exception) {}
+                            } catch (_: Exception) {}
                         }
                     }
                     analysis.predictedConvergenceTime?.let {
@@ -10190,7 +10114,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             mealTime = mealTime, bfastTime = bfastTime, lunchTime = lunchTime,
             dinnerTime = dinnerTime, highCarbTime = highCarbTime, snackTime = snackTime,
             recentSteps5Minutes = recentSteps5Minutes, recentSteps10Minutes = recentSteps10Minutes,
-            averageBeatsPerMinute = averageBeatsPerMinute.toDouble(), averageBeatsPerMinute60 = averageBeatsPerMinute60
+            averageBeatsPerMinute = averageBeatsPerMinute, averageBeatsPerMinute60 = averageBeatsPerMinute60
         )
 
         sens = applyIsfBoundsAndPhysioMultipliersAfterEndoActivity(
@@ -10646,7 +10570,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         suggestedRate: Double,
         profileBasal: Double,
         safetyDecision: SafetyDecision,
-        activityContext: app.aaps.plugins.aps.openAPSAIMI.activity.ActivityContext,
+        activityContext: ActivityContext,
         bg: Double,
         delta: Double,
         shortAvgDelta: Double,
@@ -10678,7 +10602,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         }
 
         // 4. Activity Context
-        val isActivity = activityContext.state != app.aaps.plugins.aps.openAPSAIMI.activity.ActivityState.REST
+        val isActivity = activityContext.state != ActivityState.REST
         if (isActivity) {
             // If dropping fast during activity, allow low basal/zero
             if (delta < -3 || bg < 90) {
@@ -10949,7 +10873,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         // Re-calculating "Carbs/IC - IOB" after 90 mins with decayed IOB causes massive dangerous boluses.
         val maxPassiveWindow = if (isExplicitTrigger) 120.0 else 20.0
         aapsLogger.debug(
-            app.aaps.core.interfaces.logging.LTag.APS,
+            LTag.APS,
             "MEAL_ADVISOR_TRACE gate carbs=${"%.1f".format(estimatedCarbs)} timeSinceMin=${"%.1f".format(timeSinceEstimateMin)} maxWindow=$maxPassiveWindow bg=${"%.1f".format(bg)} explicit=$isExplicitTrigger modesCondition=$modesCondition"
         )
 
@@ -10958,7 +10882,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             // 🚀 BYPASS if Explicit Trigger (User clicked Snap&Go)
             if (!isExplicitTrigger && hasRecentBolus45m) {
                 aapsLogger.debug(
-                    app.aaps.core.interfaces.logging.LTag.APS,
+                    LTag.APS,
                     "MEAL_ADVISOR_TRACE blocked refractory=true explicit=$isExplicitTrigger lastBolusTime=$lastBolusTime"
                 )
                 return DecisionResult.Fallthrough("Advisor Refractory (Recent Bolus <45m)")
@@ -11020,13 +10944,13 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             } else {
                 consoleLog.add("ADVISOR_SKIP reason=modesCondition_false (legacy mode active)")
                 aapsLogger.debug(
-                    app.aaps.core.interfaces.logging.LTag.APS,
+                    LTag.APS,
                     "MEAL_ADVISOR_TRACE blocked modesCondition=false"
                 )
             }
         }
         aapsLogger.debug(
-            app.aaps.core.interfaces.logging.LTag.APS,
+            LTag.APS,
             "MEAL_ADVISOR_TRACE fallthrough no_active_request carbs=${"%.1f".format(estimatedCarbs)} timeSinceMin=${"%.1f".format(timeSinceEstimateMin)} bg=${"%.1f".format(bg)}"
         )
         return DecisionResult.Fallthrough("No active Meal Advisor request")
@@ -11102,8 +11026,8 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         val modulatedAmountSmall = dynamicPbolusSmall * contextFactor
 
         // Determine Intensity
-        var amount = 0.0
-        var stateReason = ""
+        var amount: Double
+        var stateReason: String
         val contextLog = if (contextFactor < 1.0f) " [Ctx ×${"%.2f".format(contextFactor)}]" else ""
         
         // Confirmed: strong rise — use G6-adjusted delta for correct tier selection
@@ -11118,8 +11042,8 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         }
 
         // TBR Calculation
-        val rawAutoMax = preferences.get(DoubleKey.autodriveMaxBasal) ?: 0.0
-        val scalarAuto: Double = if (rawAutoMax > 0.1) rawAutoMax.toDouble() else profile.max_basal.toDouble()
+        val rawAutoMax = preferences.get(DoubleKey.autodriveMaxBasal)
+        val scalarAuto: Double = if (rawAutoMax > 0.1) rawAutoMax else profile.max_basal
         
         // 🛡️ TIERED AUTODRIVE BASAL (Lyra Optimization)
         // If "Early", we use only 50% of the allowed max (Soft Start).
@@ -11127,7 +11051,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         val tierFactor = if (stateReason.startsWith("Early")) 0.5 else 1.0
         val effectiveAutoMax = scalarAuto * tierFactor
 
-        val safeAutoMax = minOf(effectiveAutoMax, profile.max_basal.toDouble())
+        val safeAutoMax = minOf(effectiveAutoMax, profile.max_basal)
         
         // 🛡️ Sanitize stateReason to prevent JSON crashes
         val safeStateReason = sanitizeForJson(stateReason)
@@ -11254,7 +11178,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         val aggressiveness = (rawAggressiveness + rawAggressiveness * adaptiveBoost)
             .coerceIn(0.3, 2.0) // hard bounds
 
-        val lgsForAnticipation = kotlin.math.min(
+        val lgsForAnticipation = min(
             90.0,
             (profile.lgsThreshold?.toDouble() ?: 70.0).coerceAtLeast(70.0)
         )
