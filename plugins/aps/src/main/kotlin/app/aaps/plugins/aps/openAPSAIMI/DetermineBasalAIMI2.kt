@@ -9515,6 +9515,9 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         return null
     }
 
+    private fun isPrebolusLocked(): Boolean =
+        (System.currentTimeMillis() - internalLastSmbMillis) < 10 * 60 * 1000L
+
 
     private fun applyEndoAndActivityAdjustments(
         bg: Double, delta: Float,
@@ -11152,6 +11155,36 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                  consoleLog.add("⚡ COB HYDRATION: Injected ${fallbackCarbs.toInt()}g from Advisor Prefs (DB latency bypass)")
             }
         }
+    }
+
+    /* *************************************************************
+     *  Ketoacidosis Protection
+     *  Checks tbr and keep at least a minimum active to prevent Ketoacidosis
+     *
+     *  Additional: Respects Pump capabilities for TBR.
+     ****************************************************************/
+    private fun ketoProtection(_proposedRate: Double, profile: OapsProfileAimi, rT: RT, pumpCaps : PumpCaps): Double {
+        aapsLogger.info(LTag.APS, "ketoProtection IN: _proposedRate=${"%.2f".format(_proposedRate)}")
+
+        var proposedRate : Double = _proposedRate
+        val protectionRate : Double = profile.ketoacidosisProtectionBasal.toDouble() * 0.01
+        val cutOff : Double = roundBasal(profile.current_basal * protectionRate)
+
+        if (profile.ketoacidosisProtection && proposedRate < cutOff) {
+            // original : if (profile.ketoacidosisProtectionStrategy && profile.ketoacidosisProtectionIob < (0 - profile.current_basal) ) {
+            // but (0 - profile.current_basal) will happen seldom to never. Reduce to IOB < (0 - profile.current_basal/2)
+            if (profile.ketoacidosisProtectionStrategy && profile.ketoacidosisProtectionIob < (0 - profile.current_basal/2) ) {
+                proposedRate = pumpCapabilityValidator.validateBasal(cutOff , pumpCaps)
+                rT.reason.append("\nKetoacidosis protection sets temp basal to " + round(proposedRate,2) +" U/h.")
+                aapsLogger.info(LTag.APS, "Ketoacidosis protection sets temp basal to " + round(proposedRate,2) + "fsteps U/h")
+            } else if (!profile.ketoacidosisProtectionStrategy) {
+                proposedRate = pumpCapabilityValidator.validateBasal(cutOff , pumpCaps)
+                rT.reason.append("\nKetoacidosis protection sets temp basal to " + round(proposedRate,2) + " U/h")
+                aapsLogger.info(LTag.APS, "Ketoacidosis protection sets temp basal to  " + round(proposedRate,2) + " U/h")
+            }
+        }
+        aapsLogger.info(LTag.APS, "ketoProtection OUT: proposedRate=${"%.2f".format(proposedRate)} cutOff=$cutOff IOB = ${profile.ketoacidosisProtectionIob} Basal = ${profile.current_basal}" )
+        return proposedRate
     }
 
     // =========================================================================================
