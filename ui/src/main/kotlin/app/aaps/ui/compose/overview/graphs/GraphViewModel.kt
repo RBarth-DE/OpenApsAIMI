@@ -31,6 +31,7 @@ import app.aaps.core.interfaces.overview.graph.SeriesType
 import app.aaps.core.interfaces.plugin.ActivePlugin
 import app.aaps.core.interfaces.profile.ProfileFunction
 import app.aaps.core.interfaces.profile.ProfileUtil
+import app.aaps.core.interfaces.pump.PumpInsulin
 import app.aaps.core.interfaces.resources.ResourceHelper
 import app.aaps.core.interfaces.utils.DateUtil
 import app.aaps.core.interfaces.utils.DecimalFormatter
@@ -62,6 +63,8 @@ import java.util.Locale
 import dagger.hilt.android.lifecycle.HiltViewModel
 import app.aaps.core.utils.MidnightUtils
 import kotlinx.coroutines.flow.map
+import app.aaps.core.interfaces.insulin.ConcentrationHelper
+import javax.inject.Inject
 
 /**
  * ViewModel for Overview graphs (Compose/Vico version).
@@ -201,6 +204,8 @@ class GraphViewModel @AssistedInject constructor(
     private val processedTbrEbData: ProcessedTbrEbData,
     private val auditorStateProvider: AuditorStateProvider
 ) : ViewModel() {
+
+    @Inject lateinit var ch: ConcentrationHelper
 
     @AssistedFactory
     interface Factory {
@@ -705,8 +710,10 @@ class GraphViewModel @AssistedInject constructor(
         val lastBolusMs = activePlugin.activePump.lastBolusTime.value ?: 0L
         val smbSeconds = MidnightUtils.secondsFromMidnight(lastBolusMs)
         val lastSmbTime = if (smbSeconds > 0) dateUtil.formatHHMM(smbSeconds) else "--:--"
-        val lastSmbAmount = activePlugin.activePump.lastBolusAmount.value
-            ?.let { decimalFormatter.to2Decimal(it.cU) + " U" } ?: "--"
+        val bolusCU = activePlugin.activePump.lastBolusAmount.value?.cU ?: 0.0
+        val lastSmbAmount = if (bolusCU > 0.0)
+            ch.insulinAmountString(PumpInsulin(bolusCU))
+        else "--"
 
         // Current basal (TBR or loop fallback)
         val unavail = rh.gs(R.string.value_unavailable_short)
