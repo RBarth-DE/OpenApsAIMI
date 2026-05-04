@@ -45,11 +45,8 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import app.aaps.core.ui.compose.dialogs.DatePickerModal
 import app.aaps.ui.R
 import app.aaps.ui.compose.overview.graphs.GraphViewModel
@@ -69,13 +66,13 @@ fun HistoryScreen(
     modifier: Modifier = Modifier,
     viewModel: HistoryViewModel = hiltViewModel()
 ) {
-    val graphViewModel: GraphViewModel = viewModel(
-        factory = remember {
-            object : ViewModelProvider.Factory {
-                @Suppress("UNCHECKED_CAST")
-                override fun <T : ViewModel> create(modelClass: Class<T>): T =
-                    viewModel.createGraphViewModel() as T
-            }
+    // hiltViewModel(creationCallback) is the correct Hilt 2.49+ API for
+    // @HiltViewModel(assistedFactory = ...). The factory lives inside Hilt's
+    // ViewModelComponent and must NOT be accessed via EntryPoint or direct
+    // injection – only through this creationCallback mechanism.
+    val graphViewModel: GraphViewModel = hiltViewModel(
+        creationCallback = { factory: GraphViewModel.Factory ->
+            factory.create(viewModel.cache)
         }
     )
 

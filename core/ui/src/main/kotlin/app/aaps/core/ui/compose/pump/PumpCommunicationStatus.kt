@@ -36,7 +36,11 @@ class PumpCommunicationStatus(
     init {
         rxBus.toFlow(EventPumpStatusChanged::class.java)
             .onEach { event ->
-                pumpStatusText = event.getStatus(context)
+                pumpStatusText = when (event.status) {
+                    EventPumpStatusChanged.Status.DISCONNECTED,
+                    EventPumpStatusChanged.Status.CONNECTED -> ""
+                    else -> event.getStatus(context)
+                }
                 pumpStatusLevel = StatusLevel.UNSPECIFIED
                 refreshTrigger.value = System.currentTimeMillis()
             }

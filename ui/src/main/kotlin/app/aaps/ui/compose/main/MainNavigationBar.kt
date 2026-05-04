@@ -21,6 +21,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.animation.animateContentSize
 import app.aaps.core.interfaces.plugin.PluginBase
 import app.aaps.core.ui.compose.AapsTheme
 import app.aaps.core.ui.compose.icons.IcAutomation
@@ -36,7 +38,7 @@ fun MainNavigationBar(
     modifier: Modifier = Modifier,
     quickWizardCount: Int = 0,
     onAutomationClick: () -> Unit = {},
-    automationCount: Int = 0,
+    sceneCount: Int = 0,
     pumpSetupPlugin: PluginBase? = null,
     bgSetupPlugin: PluginBase? = null,
     bgQualityBadgeIcon: ImageVector? = null,
@@ -89,30 +91,38 @@ fun MainNavigationBar(
             colors = navColors
         )
 
-        // Automation action button (visible only when actions are available)
-        if (automationCount > 0) {
-            NavigationBarItem(
-                selected = false,
-                onClick = onAutomationClick,
-                icon = {
-                    BadgedBox(
-                        badge = {
+        NavigationBarItem(
+            selected = false,
+            onClick = onAutomationClick,
+            enabled = sceneCount > 0,
+            modifier = Modifier.animateContentSize(),
+            icon = {
+                BadgedBox(
+                    badge = {
+                        if (sceneCount > 0) {
                             Badge(containerColor = AapsTheme.generalColors.statusNormal, contentColor = Color.Black) {
-                                Text(text = automationCount.toString())
+                                Text(text = sceneCount.toString())
                             }
                         }
-                    ) {
-                        Icon(
-                            imageVector = IcAutomation,
-                            contentDescription = stringResource(CoreUiR.string.scenes),
-                            modifier = Modifier.size(24.dp)
-                        )
                     }
-                },
-                label = { Text(text = stringResource(CoreUiR.string.scenes)) },
-                colors = navColors
-            )
-        }
+                ) {
+                    Icon(
+                        imageVector = IcAutomation,
+                        contentDescription = stringResource(CoreUiR.string.scenes),
+                        modifier = Modifier
+                            .size(24.dp)
+                            .graphicsLayer { alpha = if (sceneCount > 0) 1f else 0f }
+                    )
+                }
+            },
+            label = {
+                Text(
+                    text = stringResource(CoreUiR.string.scenes),
+                    modifier = Modifier.graphicsLayer { alpha = if (sceneCount > 0) 1f else 0f }
+                )
+            },
+            colors = navColors
+        )
 
         // Manage action button (opens bottom sheet)
         NavigationBarItem(

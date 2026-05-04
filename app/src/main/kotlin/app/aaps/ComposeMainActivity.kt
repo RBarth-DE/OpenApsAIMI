@@ -22,6 +22,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -48,12 +49,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
@@ -64,6 +63,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import dagger.hilt.android.lifecycle.withCreationCallback
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -98,6 +98,7 @@ import app.aaps.core.interfaces.resources.ResourceHelper
 import app.aaps.core.interfaces.rx.bus.RxBus
 import app.aaps.core.interfaces.rx.events.EventRefreshOverview
 import app.aaps.core.interfaces.rx.events.EventUpdateOverviewIobCob
+import app.aaps.core.interfaces.rx.events.EventShowDialog
 import app.aaps.core.interfaces.source.DexcomBoyda
 import app.aaps.core.interfaces.ui.UiInteraction
 import app.aaps.core.interfaces.utils.DateUtil
@@ -113,8 +114,11 @@ import app.aaps.core.ui.compose.LocalConfig
 import app.aaps.core.ui.compose.LocalDateUtil
 import app.aaps.core.ui.compose.LocalPreferences
 import app.aaps.core.ui.compose.LocalProfileUtil
+import app.aaps.core.ui.compose.LocalSnackbarHostState
 import app.aaps.core.ui.compose.ProtectionHost
 import app.aaps.core.ui.compose.ScreenMode
+import app.aaps.core.ui.compose.dialogs.GlobalDialogHost
+import app.aaps.core.ui.compose.dialogs.GlobalSnackbarHost
 import app.aaps.core.ui.compose.dialogs.OkDialog
 import app.aaps.core.ui.compose.navigation.ElementType
 import app.aaps.core.ui.compose.navigation.NavigationRequest
@@ -127,15 +131,13 @@ import app.aaps.core.ui.compose.pump.PumpCommunicationStatus
 import app.aaps.core.ui.locale.LocaleHelper
 import app.aaps.core.ui.search.SearchableItem
 import app.aaps.core.utils.isRunningRealPumpTest
-import app.aaps.compose.dashboard.DashboardOverviewHost
 import app.aaps.implementation.plugin.PluginStore
 import app.aaps.implementation.protection.BiometricCheck
 import app.aaps.plugins.configuration.setupwizard.SWDefinition
 import app.aaps.plugins.main.general.manual.UserManualActivity
-import app.aaps.plugins.main.skins.SkinDashboardPreferenceSync
-import app.aaps.plugins.main.skins.SkinProvider
 import app.aaps.plugins.source.DexcomPlugin
 import app.aaps.plugins.source.activities.RequestDexcomPermissionActivity
+import app.aaps.ui.compose.scenesSheet.ScenesViewModel
 import app.aaps.ui.compose.careDialog.CareportalEventType
 import app.aaps.ui.compose.configuration.ConfigurationViewModel
 import app.aaps.ui.compose.fillDialog.FillPreselect
@@ -159,7 +161,6 @@ import app.aaps.ui.compose.profileManagement.viewmodels.ProfileManagementViewMod
 import app.aaps.ui.compose.quickLaunch.QuickLaunchAction
 import app.aaps.ui.compose.quickWizard.viewmodels.QuickWizardManagementViewModel
 import app.aaps.ui.compose.runningMode.RunningModeManagementViewModel
-import app.aaps.ui.compose.scenesSheet.ScenesViewModel
 import app.aaps.ui.compose.siteRotationDialog.viewModels.SiteRotationManagementViewModel
 import app.aaps.ui.compose.stats.viewmodels.StatsViewModel
 import app.aaps.ui.compose.tempTarget.TempTargetManagementViewModel
@@ -168,12 +169,18 @@ import app.aaps.ui.compose.treatmentsSheet.TreatmentViewModel
 import app.aaps.ui.search.BuiltInSearchables
 import app.aaps.ui.search.SearchIndexEntry
 import app.aaps.ui.search.SearchViewModel
+import android.os.Build
+import android.os.Environment
+import app.aaps.plugins.aps.openAPSAIMI.utils.AimiStorageHelper
+import app.aaps.plugins.main.skins.SkinDashboardPreferenceSync
+import app.aaps.plugins.main.skins.SkinProvider
 import com.google.firebase.crashlytics.FirebaseCrashlytics
 import dagger.hilt.android.AndroidEntryPoint
 import io.reactivex.rxjava3.disposables.CompositeDisposable
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+
 
 @AndroidEntryPoint
 class ComposeMainActivity : AppCompatActivity() {
@@ -206,11 +213,11 @@ class ComposeMainActivity : AppCompatActivity() {
     @Inject lateinit var builtInSearchables: BuiltInSearchables
     @Inject lateinit var bolusProgressData: BolusProgressData
     @Inject lateinit var commandQueue: CommandQueue
+    @Inject lateinit var storageHelper: AimiStorageHelper
     @Inject lateinit var skinDashboardPreferenceSync: SkinDashboardPreferenceSync
     @Inject lateinit var skinProvider: SkinProvider
     @Inject lateinit var bgQualityCheck: BgQualityCheck
     @Inject lateinit var objectives: Objectives
-    @Inject lateinit var graphViewModelFactory: GraphViewModel.Factory
     @Inject lateinit var chipsViewModelFactory: ChipsViewModel.Factory
     @Inject lateinit var overviewDataCache: OverviewDataCache
 
@@ -226,9 +233,13 @@ class ComposeMainActivity : AppCompatActivity() {
     private val treatmentViewModel: TreatmentViewModel by viewModels()
     private val scenesViewModel: ScenesViewModel by viewModels()
     private val loopActionViewModel: LoopActionViewModel by viewModels()
-    private val graphViewModel: GraphViewModel by viewModels {
-        viewModelFactory { initializer { graphViewModelFactory.create(overviewDataCache) } }
-    }
+    private val graphViewModel: GraphViewModel by viewModels(
+        extrasProducer = {
+            defaultViewModelCreationExtras.withCreationCallback<GraphViewModel.Factory> { factory ->
+                factory.create(overviewDataCache)
+            }
+        }
+    )
     private val chipsViewModel: ChipsViewModel by viewModels {
         viewModelFactory { initializer { chipsViewModelFactory.create(overviewDataCache) } }
     }
@@ -269,15 +280,17 @@ class ComposeMainActivity : AppCompatActivity() {
                 val directoryName = pathAfterColon.substringAfterLast("/", pathAfterColon)
                 val managedSubdirectories = listOf("preferences", "extra", "exports", "temp")
                 if (managedSubdirectories.any { it.equals(directoryName, ignoreCase = true) }) {
-                    uiInteraction.showError(
-                        this,
-                        rh.gs(app.aaps.plugins.configuration.R.string.warning_wrong_directory_selected),
-                        rh.gs(app.aaps.plugins.configuration.R.string.warning_wrong_directory_message, directoryName)
+                    rxBus.send(
+                        EventShowDialog.Error(
+                            title = rh.gs(app.aaps.plugins.configuration.R.string.warning_wrong_directory_selected),
+                            message = rh.gs(app.aaps.plugins.configuration.R.string.warning_wrong_directory_message, directoryName)
+                        )
                     )
                     return@registerForActivityResult
                 }
                 contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
                 preferences.put(StringKey.AapsDirectoryUri, uri.toString())
+                storageHelper.resetDirectory()  // directory changed – invalidate cached storage path
             }
         }
         requestMultiplePermissions = registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { permissions ->
@@ -299,33 +312,35 @@ class ComposeMainActivity : AppCompatActivity() {
 
         observePreferences()
 
+        checkAndRequestStoragePermission()
+
         setContent {
             MainContent()
         }
     }
 
-    override fun onNewIntent(intent: Intent) {
-        super.onNewIntent(intent)
-        setIntent(intent)
-        val route = intent.getStringExtra(EXTRA_NAVIGATE_ROUTE) ?: return
-        intent.removeExtra(EXTRA_NAVIGATE_ROUTE)
-        navController?.navigate(route) {
-            launchSingleTop = true
+    private fun checkAndRequestStoragePermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && !Environment.isExternalStorageManager()) {
+            android.app.AlertDialog.Builder(this)
+                .setTitle("All Files Access Required")
+                .setMessage(
+                    "AIMI needs 'All files access' to read/write algorithm data " +
+                    "(models, CSV logs, learned parameters) in your AAPS folder.\n\n" +
+                    "Tap 'Grant Access' → find AndroidAPS Dev → enable 'Allow management of all files'."
+                )
+                .setPositiveButton("Grant Access") { _, _ ->
+                    val intent = Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION)
+                    intent.data = Uri.parse("package:$packageName")
+                    startActivity(intent)
+                }
+                .setNegativeButton("Later", null)
+                .show()
         }
     }
 
     @Composable
     private fun MainContent() {
         val navController = rememberNavController().also { this.navController = it }
-
-        val composeActivity = LocalContext.current as ComposeMainActivity
-        LaunchedEffect(navController) {
-            val route = composeActivity.intent.getStringExtra(EXTRA_NAVIGATE_ROUTE) ?: return@LaunchedEffect
-            composeActivity.intent.removeExtra(EXTRA_NAVIGATE_ROUTE)
-            navController.navigate(route) {
-                launchSingleTop = true
-            }
-        }
 
         CompositionLocalProvider(
             LocalPreferences provides preferences,
@@ -337,26 +352,43 @@ class ComposeMainActivity : AppCompatActivity() {
             LocalVisibilityContext provides visibilityContext
         ) {
             AapsTheme {
-                val initProgress by config.initProgressFlow.collectAsStateWithLifecycle()
+                val rootSnackbarHostState = remember { SnackbarHostState() }
+                CompositionLocalProvider(LocalSnackbarHostState provides rootSnackbarHostState) {
+                    val initProgress by config.initProgressFlow.collectAsStateWithLifecycle()
 
-                AnimatedVisibility(
-                    visible = !initProgress.done,
-                    exit = fadeOut()
-                ) {
-                    val splashSnackbarHostState = remember { SnackbarHostState() }
-                    LaunchedEffect(Unit) {
-                        config.initSnackbarFlow.collect { message ->
-                            splashSnackbarHostState.showSnackbar(message)
+                    Box(modifier = Modifier.fillMaxSize()) {
+                        AnimatedVisibility(
+                            visible = !initProgress.done,
+                            exit = fadeOut()
+                        ) {
+                            val splashSnackbarHostState = remember { SnackbarHostState() }
+                            LaunchedEffect(Unit) {
+                                config.initSnackbarFlow.collect { message ->
+                                    splashSnackbarHostState.showSnackbar(message)
+                                }
+                            }
+                            SplashScreen(initProgress, splashSnackbarHostState)
                         }
-                    }
-                    SplashScreen(initProgress, splashSnackbarHostState)
-                }
 
-                AnimatedVisibility(
-                    visible = initProgress.done,
-                    enter = fadeIn()
-                ) {
-                    AppContent(navController)
+                        AnimatedVisibility(
+                            visible = initProgress.done,
+                            enter = fadeIn()
+                        ) {
+                            AppContent(navController)
+                        }
+
+                        // Root-level snackbar host — subscribes to EventShowSnackbar
+                        // and is the single visible SnackbarHost across every screen.
+                        GlobalSnackbarHost(
+                            rxBus = rxBus,
+                            hostState = rootSnackbarHostState,
+                            modifier = Modifier.align(Alignment.BottomCenter)
+                        )
+
+                        // Root-level dialog host — subscribes to EventShowDialog and
+                        // renders one modal dialog at a time.
+                        GlobalDialogHost(rxBus = rxBus)
+                    }
                 }
             }
         }
@@ -646,6 +678,7 @@ class ComposeMainActivity : AppCompatActivity() {
                     )
                 }
 
+                val pumpRefresh by pumpCommunicationStatus.refreshTrigger.collectAsStateWithLifecycle()
 
                 key(showHybridDashboard, generalSkin) {
                     MainScreen(
@@ -742,23 +775,12 @@ class ComposeMainActivity : AppCompatActivity() {
                     treatmentButtonsDef = builtInSearchables.treatmentButtons,
                     // Pump activity
                     bolusState = bolusState,
-                    pumpStatusText = pumpCommunicationStatus.statusBanner()?.text ?: "",
-                    queueStatusText = pumpCommunicationStatus.queueStatus(),
-                    isPumpCommunicating = pumpCommunicationStatus.statusBanner() != null,
+                    pumpStatusText = remember(pumpRefresh) { pumpCommunicationStatus.statusBanner()?.text ?: "" },
+                    queueStatusText = remember(pumpRefresh) { pumpCommunicationStatus.queueStatus() },
+                    isPumpCommunicating = remember(pumpRefresh) { pumpCommunicationStatus.statusBanner() != null },
                     onStopBolus = {
                         commandQueue.cancelAllBoluses(null)
-                    },
-                    useRingHeroHome = false,
-                    dashboardOverview = if (showHybridDashboard) {
-                        { pad, fab ->
-                            DashboardOverviewHost(
-                                paddingValues = pad,
-                                fabBottomOffset = fab,
-                            )
-                        }
-                    } else {
-                        null
-                    },
+                    }
                 )
                 }
             }
@@ -1046,13 +1068,15 @@ class ComposeMainActivity : AppCompatActivity() {
         }
     }
 
-    private fun openCgmApp(packageName: String) {
-        try {
+    private fun openCgmApp(packageName: String): Boolean {
+        return try {
             val intent = packageManager.getLaunchIntentForPackage(packageName) ?: throw ActivityNotFoundException()
             intent.addCategory(Intent.CATEGORY_LAUNCHER)
             startActivity(intent)
+            true
         } catch (_: ActivityNotFoundException) {
             aapsLogger.debug("Error opening CGM app: $packageName")
+            false
         }
     }
 
@@ -1161,8 +1185,9 @@ class ComposeMainActivity : AppCompatActivity() {
             ElementType.EXTENDED_BOLUS          -> navController.navigate(AppRoute.ExtendedBolusDialog.route)
 
             // CGM
-            ElementType.CGM_XDRIP               -> openCgmApp("com.eveningoutpost.dexdrip")
+            ElementType.CGM_XDRIP               -> if (!openCgmApp("com.eveningoutpost.dexdrip")) openCgmApp("tk.glucodata")
             ElementType.CGM_DEX                 -> dexcomBoyda.dexcomPackages().forEach { openCgmApp(it) }
+            ElementType.CGM_JUGGLUCO            -> openCgmApp("tk.glucodata")
 
             ElementType.CALIBRATION             -> navController.navigate(AppRoute.CalibrationDialog.route)
 

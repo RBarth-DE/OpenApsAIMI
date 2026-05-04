@@ -61,6 +61,7 @@ class GraphConfigRepositoryImpl @Inject constructor(
 
         private const val KEY_SECONDARY_GRAPHS = "secondaryGraphs"
         private const val KEY_BG_OVERLAYS = "bgOverlays"
+        private const val KEY_SHOW_IOB_GRAPH = "showIobGraph"
         private const val KEY_IOB_OVERLAYS = "iobOverlays"
         private const val KEY_BG_HEIGHT = "bgHeight"
         private const val KEY_IOB_HEIGHT = "iobHeight"
@@ -90,6 +91,7 @@ class GraphConfigRepositoryImpl @Inject constructor(
         fun toJson(config: GraphConfig): String {
             val obj = JSONObject()
             obj.put(KEY_BG_OVERLAYS, overlaysToJson(config.bgOverlays))
+            obj.put(KEY_SHOW_IOB_GRAPH, config.showIobGraph)
             obj.put(KEY_IOB_OVERLAYS, overlaysToJson(config.iobOverlays))
             obj.put(KEY_BG_HEIGHT, config.bgHeight)
             obj.put(KEY_IOB_HEIGHT, config.iobHeight)
@@ -126,9 +128,9 @@ class GraphConfigRepositoryImpl @Inject constructor(
             val bgOverlays = overlaysFromJson(obj.optJSONArray(KEY_BG_OVERLAYS), listOf(SeriesType.ACTIVITY, SeriesType.PREDICTIONS))
             val iobOverlays = overlaysFromJson(obj.optJSONArray(KEY_IOB_OVERLAYS), listOf(SeriesType.ACTIVITY))
             val bgHeight = obj.optInt(KEY_BG_HEIGHT, GraphConfig.DEFAULT_GRAPH_HEIGHT_DP)
-                .coerceIn(GraphConfig.DEFAULT_GRAPH_HEIGHT_DP, GraphConfig.MAX_GRAPH_HEIGHT_DP)
+                .coerceIn(GraphConfig.MIN_GRAPH_HEIGHT_DP, GraphConfig.MAX_GRAPH_HEIGHT_DP)
             val iobHeight = obj.optInt(KEY_IOB_HEIGHT, GraphConfig.DEFAULT_GRAPH_HEIGHT_DP)
-                .coerceIn(GraphConfig.DEFAULT_GRAPH_HEIGHT_DP, GraphConfig.MAX_GRAPH_HEIGHT_DP)
+                .coerceIn(GraphConfig.MIN_GRAPH_HEIGHT_DP, GraphConfig.MAX_GRAPH_HEIGHT_DP)
             val graphs = mutableListOf<SecondaryGraph>()
             val graphsArray = obj.optJSONArray(KEY_SECONDARY_GRAPHS)
             if (graphsArray != null) {
@@ -141,7 +143,7 @@ class GraphConfigRepositoryImpl @Inject constructor(
                         is JSONObject -> {
                             val s = raw.optJSONArray(KEY_SERIES)?.let { parseSeriesArray(it) } ?: emptyList()
                             val h = raw.optInt(KEY_HEIGHT, GraphConfig.DEFAULT_GRAPH_HEIGHT_DP)
-                                .coerceIn(GraphConfig.DEFAULT_GRAPH_HEIGHT_DP, GraphConfig.MAX_GRAPH_HEIGHT_DP)
+                                .coerceIn(GraphConfig.MIN_GRAPH_HEIGHT_DP, GraphConfig.MAX_GRAPH_HEIGHT_DP)
                             s to h
                         }
                         else          -> emptyList<SeriesType>() to GraphConfig.DEFAULT_GRAPH_HEIGHT_DP
@@ -151,6 +153,7 @@ class GraphConfigRepositoryImpl @Inject constructor(
             }
             return GraphConfig(
                 bgOverlays = bgOverlays,
+                showIobGraph = obj.optBoolean(KEY_SHOW_IOB_GRAPH, true),
                 iobOverlays = iobOverlays,
                 bgHeight = bgHeight,
                 iobHeight = iobHeight,

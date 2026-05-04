@@ -5,7 +5,6 @@ import app.aaps.core.data.configuration.Constants
 import app.aaps.core.data.time.T
 import app.aaps.core.interfaces.utils.DateUtil
 import app.aaps.core.interfaces.workflow.CalculationWorkflow
-import app.aaps.ui.compose.overview.graphs.GraphViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -19,10 +18,12 @@ class HistoryViewModel @Inject constructor(
     private val historyScope: HistoryScope,
     private val calculationWorkflow: CalculationWorkflow,
     private val dateUtil: DateUtil,
-    private val graphViewModelFactory: GraphViewModel.Factory
 ) : ViewModel() {
 
     val progress: StateFlow<Int> = historyScope.signals.progress
+
+    /** Exposed so HistoryScreen can pass it to GraphViewModel.Factory.create(). */
+    val cache get() = historyScope.cache
 
     private val _uiState = MutableStateFlow(buildState())
     val uiState: StateFlow<HistoryUiState> = _uiState.asStateFlow()
@@ -34,10 +35,6 @@ class HistoryViewModel @Inject constructor(
         setTime(dateUtil.now())
         runCalculation("init")
     }
-
-    /** Creates the per-scope graph VM. Called by [HistoryScreen] via `viewModel(factory = …)`. */
-    fun createGraphViewModel(): GraphViewModel =
-        graphViewModelFactory.create(historyScope.cache)
 
     fun previousWindow() {
         adjustTimeRange(historyScope.overviewData.fromTime - WINDOW_MS)

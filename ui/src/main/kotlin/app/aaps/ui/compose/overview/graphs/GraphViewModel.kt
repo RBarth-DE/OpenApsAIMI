@@ -18,6 +18,15 @@ import app.aaps.core.interfaces.overview.graph.BgInfoData
 import app.aaps.core.interfaces.overview.graph.GraphConfig
 import app.aaps.core.interfaces.overview.graph.GraphConfigRepository
 import app.aaps.core.interfaces.overview.graph.OverviewDataCache
+import app.aaps.core.interfaces.aps.RT
+import app.aaps.core.interfaces.overview.AuditorStateProvider
+import app.aaps.core.interfaces.overview.AuditorDisplayState
+import app.aaps.core.interfaces.automation.Automation
+import app.aaps.core.interfaces.db.ProcessedTbrEbData
+import app.aaps.core.objects.extensions.convertedToAbsolute
+import app.aaps.core.objects.extensions.toStringShort
+import java.time.LocalDate
+import java.time.ZoneId
 import app.aaps.core.interfaces.overview.graph.SeriesType
 import app.aaps.core.interfaces.plugin.ActivePlugin
 import app.aaps.core.interfaces.profile.ProfileFunction
@@ -36,6 +45,8 @@ import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -48,6 +59,9 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import java.util.Locale
+import dagger.hilt.android.lifecycle.HiltViewModel
+import app.aaps.core.utils.MidnightUtils
+import kotlinx.coroutines.flow.map
 
 /**
  * ViewModel for Overview graphs (Compose/Vico version).
@@ -112,11 +126,59 @@ data class SensitivityUiState(
 )
 
 @Immutable
+data class AutomationEventData(val id: String, val title: String)
+
+data class ModesUiState(
+    val events: List<AutomationEventData> = emptyList()
+)
+
+/**
+ * UI state for APS Pulse / rate panel
+ */
+@Immutable
+data class PulseUiState(
+    val titleText: String = "",
+    val summaryText: String = "",
+    val metaText: String = "",
+    val hintText: String = "",
+    val isHypoRisk: Boolean = false
+)
+
+/**
+ * UI state for Time In Range panel
+ */
+@Immutable
+data class TirUiState(
+    val veryLow: Float = 0f,
+    val low: Float = 0f,
+    val inRange: Float = 0f,
+    val high: Float = 0f,
+    val veryHigh: Float = 0f,
+    val readingCount: Int = 0,
+    val avgMgDl: Float = 0f,
+    val a1c: Float = 0f
+)
+
+/**
+ * UI state for the compact status panel (top-right overlay).
+ */
+@Immutable
+data class StatusPanelUiState(
+    val stepsText: String = "--",
+    val hrText: String = "--",
+    val lastSmbTime: String = "--:--",
+    val lastSmbAmount: String = "--",
+    val basalPctText: String = "--",
+    val basalRateText: String = "--",
+    val iobText: String = "--"
+)
+
 data class VicoChartLook(
     val bgReadingTintKey: String,
     val chartBackdropKey: String,
 )
 
+@HiltViewModel(assistedFactory = GraphViewModel.Factory::class)
 @Stable
 class GraphViewModel @AssistedInject constructor(
     @Assisted cache: OverviewDataCache,
@@ -134,7 +196,10 @@ class GraphViewModel @AssistedInject constructor(
     private val profileFunction: ProfileFunction,
     private val processedDeviceStatusData: ProcessedDeviceStatusData,
     private val profileUtil: ProfileUtil,
-    private val activePlugin: ActivePlugin
+    private val activePlugin: ActivePlugin,
+    private val automation: Automation,
+    private val processedTbrEbData: ProcessedTbrEbData,
+    private val auditorStateProvider: AuditorStateProvider
 ) : ViewModel() {
 
     @AssistedFactory
@@ -438,6 +503,53 @@ class GraphViewModel @AssistedInject constructor(
         aapsLogger.debug(LTag.UI, "GraphViewModel initialized - exposing independent series flows")
     }
 
+
+    val modesFlow: StateFlow<ModesUiState> = ticker30s.map {
+        ModesUiState(
+            events = automation.userEvents()
+                .filter { it.isEnabled }
+                .take(10)
+                .map { AutomationEventData(id = it.id, title = it.title) }
+        )
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = ModesUiState()
+    )
+
+    val pulseFlow: StateFlow<PulseUiState> = ticker30s.map {
+        buildPulseUiState()
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = PulseUiState()
+    )
+
+    fun runAutomationEvent(eventId: String) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val event = automation.userEvents().firstOrNull { it.id == eventId } ?: return@launch
+            automation.processEvent(event)
+        }
+    }
+
+    val tirFlow: StateFlow<TirUiState> = ticker30s.map {
+        buildTirUiState()
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = TirUiState()
+    )
+
+    val statusPanelFlow: StateFlow<StatusPanelUiState> = ticker30s.map {
+        buildStatusPanelUiState()
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = StatusPanelUiState()
+    )
+
+    val auditorStateFlow: StateFlow<AuditorDisplayState> = auditorStateProvider.displayStateFlow
+
     @Volatile var lastInteractionMs: Long = 0L
         private set
 
@@ -449,5 +561,156 @@ class GraphViewModel @AssistedInject constructor(
     override fun onCleared() {
         super.onCleared()
         aapsLogger.debug(LTag.UI, "GraphViewModel cleared")
+    }
+
+    private suspend fun buildTirUiState(): TirUiState {
+        val end = System.currentTimeMillis()
+        val start = end - 24 * 60 * 60 * 1000L
+        val readings = persistenceLayer.getBgReadingsDataFromTimeToTime(start, end, ascending = true)
+        if (readings.isEmpty()) return TirUiState()
+        var veryLow = 0; var low = 0; var inRange = 0; var high = 0; var veryHigh = 0
+        for (gv in readings) {
+            when {
+                gv.value < 54.0  -> veryLow++
+                gv.value < 70.0  -> low++
+                gv.value <= 180.0 -> inRange++
+                gv.value <= 250.0 -> high++
+                else             -> veryHigh++
+            }
+        }
+        val total = readings.size.toFloat()
+        val avgMgDl = readings.map { it.value }.average().toFloat()
+        val a1c = ((avgMgDl + 46.7) / 28.7).toFloat()
+        return TirUiState(
+            veryLow  = veryLow  / total * 100f,
+            low      = low      / total * 100f,
+            inRange  = inRange  / total * 100f,
+            high     = high     / total * 100f,
+            veryHigh = veryHigh / total * 100f,
+            readingCount = readings.size,
+            avgMgDl  = avgMgDl,
+            a1c      = a1c
+        )
+    }
+
+
+    private fun buildPulseUiState(): PulseUiState {
+        val lastRun = loop.lastRun
+        val ts = lastRun?.lastAPSRun
+        val titleText = if (ts != null && ts > 0L) {
+            val elapsed = (dateUtil.now() - ts).coerceAtLeast(0L)
+            rh.gs(R.string.pulse_panel_title_with_age, dateUtil.age(elapsed, true, rh).trim())
+        } else {
+            rh.gs(R.string.pulse_panel_title)
+        }
+
+        val request = lastRun?.request
+            ?: return PulseUiState(titleText = titleText, summaryText = rh.gs(R.string.pulse_panel_no_data))
+
+        val isHypoRisk = (request.rawData() as? RT)?.isHypoRisk == true
+
+        val plain = request.reason
+            .replace(Regex("<[^>]+>"), " ")
+            .replace("&nbsp;", " ")
+            .replace(Regex("\\s{2,}"), " ")
+            .trim()
+        val summaryCore = if (plain.isNotBlank()) {
+            val single = plain.replace('\n', ' ').replace(Regex("\\s{2,}"), " ").trim()
+            if (single.length <= 220) single else single.take(219).trimEnd() + "…"
+        } else {
+            rh.gs(
+                R.string.pulse_panel_fallback,
+                decimalFormatter.to2Decimal(request.smb),
+                if (request.rate == -1.0) "—" else decimalFormatter.to2Decimal(request.rate)
+            )
+        }
+        val summaryText = if (isHypoRisk) rh.gs(R.string.pulse_panel_hypo_prefix) + " " + summaryCore
+        else summaryCore
+
+        val metaText = rh.gs(
+            R.string.pulse_panel_meta,
+            decimalFormatter.to2Decimal(request.smb),
+            if (request.rate == -1.0) "—" else decimalFormatter.to2Decimal(request.rate) + " U/h",
+            decimalFormatter.to0Decimal((request.autosensResult?.ratio ?: 1.0) * 100.0)
+        )
+
+        return PulseUiState(
+            titleText = titleText,
+            summaryText = summaryText,
+            metaText = metaText,
+            hintText = "", //rh.gs(R.string.pulse_panel_hint),  //remove for now. not usefully
+            isHypoRisk = isHypoRisk
+        )
+    }
+
+    private suspend fun buildStatusPanelUiState(): StatusPanelUiState {
+        val now = System.currentTimeMillis()
+        val midnight = LocalDate.now()
+            .atStartOfDay(ZoneId.systemDefault())
+            .toInstant()
+            .toEpochMilli()
+
+        // Tagesschritte direkt aus DB — gleicher Weg wie UnifiedActivityProvider
+        val todayRecords = persistenceLayer.getStepsCountFromTimeToTime(midnight, System.currentTimeMillis())
+
+        // Source-Priorität: Garmin > Wear > HC > Phone
+        val bestSource = todayRecords.map { it.device }.firstOrNull { it == "Garmin-Watchface" }
+            ?: todayRecords.map { it.device }.firstOrNull { it.startsWith("Wear") }
+            ?: todayRecords.map { it.device }.firstOrNull { it == "HealthConnect" }
+            ?: todayRecords.firstOrNull()?.device
+
+        val stepsToday = todayRecords
+            .filter { it.device == bestSource }
+            .sumOf { it.steps5min }
+
+        val recentRecords = todayRecords.filter { it.timestamp >= System.currentTimeMillis() - 15 * 60 * 1000L }
+        val stepsDelta = recentRecords
+            .filter { it.device == bestSource }
+            .sumOf { it.steps5min }
+
+        val stepsText = if (stepsToday > 0) "$stepsToday / +$stepsDelta" else "--"
+
+        // HR — latest non-zero BPM reading
+        val hrText = heartRateGraphFlow.value.heartRates
+            .filter { it.value > 0 }.lastOrNull()?.value?.toInt()?.toString() ?: "--"
+
+        // Last SMB (bolus)
+        val lastBolusMs = activePlugin.activePump.lastBolusTime.value ?: 0L
+        val smbSeconds = MidnightUtils.secondsFromMidnight(lastBolusMs)
+        val lastSmbTime = if (smbSeconds > 0) dateUtil.formatHHMM(smbSeconds) else "--:--"
+        val lastSmbAmount = activePlugin.activePump.lastBolusAmount.value
+            ?.let { decimalFormatter.to2Decimal(it.cU) + " U" } ?: "--"
+
+        // Current basal (TBR or loop fallback)
+        val unavail = rh.gs(R.string.value_unavailable_short)
+        val tbr = processedTbrEbData.getTempBasalIncludingConvertedExtended(now)
+        val (basalPctText, basalRateText) = if (tbr?.isValid == true) {
+            val pct = tbr.toStringShort(rh)
+            val profile = profileFunction.getProfile()
+            val rate = profile?.let { rh.gs(R.string.format_insulin_units, tbr.convertedToAbsolute(now, it)) } ?: unavail
+            pct to rate
+        } else {
+            val pctVal = loop.lastRun?.request?.percent
+            val pct = if (pctVal == null || pctVal < 0) unavail else "$pctVal%"
+            val rateVal = loop.lastRun?.request?.rate
+            val rate = if (rateVal == null || rateVal == -1.0) unavail
+                       else rh.gs(R.string.format_insulin_units, rateVal)
+            pct to rate
+        }
+
+        // IOB — total bolus + basal IOB
+        val bolusIob = iobCobCalculator.calculateIobFromBolus().round()
+        val basalIob = iobCobCalculator.calculateIobFromTempBasalsIncludingConvertedExtended().round()
+        val iobText = rh.gs(R.string.format_insulin_units, bolusIob.iob + basalIob.basaliob)
+
+        return StatusPanelUiState(
+            stepsText = stepsText,
+            hrText = hrText,
+            lastSmbTime = lastSmbTime,
+            lastSmbAmount = lastSmbAmount,
+            basalPctText = basalPctText,
+            basalRateText = basalRateText,
+            iobText = iobText
+        )
     }
 }

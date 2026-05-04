@@ -14,6 +14,8 @@ import app.aaps.core.interfaces.profile.ProfileFunction
 import app.aaps.core.interfaces.rx.bus.RxBus
 import app.aaps.core.interfaces.rx.events.EventAutomationDataChanged
 import app.aaps.core.interfaces.rx.events.EventRefreshOverview
+import app.aaps.core.interfaces.rx.events.EventAppInitialized
+import app.aaps.core.interfaces.rx.events.EventInitializationChanged
 import app.aaps.ui.compose.scenes.SceneRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -23,8 +25,12 @@ import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+
 
 @Immutable
 data class AutomationActionItem(
@@ -75,6 +81,10 @@ class ScenesViewModel @Inject constructor(
             .drop(1).onEach { refreshState() }.launchIn(viewModelScope)
         rxBus.toFlow(EventAutomationDataChanged::class.java)
             .drop(1).onEach { refreshState() }.launchIn(viewModelScope)
+        rxBus.toFlow(EventAppInitialized::class.java)
+            .onEach { refreshState() }.launchIn(viewModelScope)
+        rxBus.toFlow(EventInitializationChanged::class.java)
+            .onEach { refreshState() }.launchIn(viewModelScope)
         sceneRepository.scenesFlow
             .drop(1).onEach { refreshState() }.launchIn(viewModelScope)
     }

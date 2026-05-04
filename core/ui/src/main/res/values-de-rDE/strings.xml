@@ -501,4 +501,12 @@
     <!--    BLE Scan Step (shared pump pairing) -->
     <!-- Graph configuration -->
     <!-- Graph series short names (used as graph labels, keep very short) -->
+
+    <string name="pulse_panel_title">Letzter AIMI-Lauf</string>
+    <string name="pulse_panel_title_with_age">Letzter AIMI-Lauf · %1$s</string>
+    <string name="pulse_panel_no_data">Noch keine APS-Ausgabe</string>
+    <string name="pulse_panel_hypo_prefix">Hypo-Risiko —</string>
+    <string name="pulse_panel_meta">SMB %1$s U · Nachfrage %2$s · AutoSens %3$s%%</string>
+    <string name="pulse_panel_hint">Tippen Sie hier, um die vollständige Begründung und den Verlauf anzuzeigen</string>
+
 </resources>

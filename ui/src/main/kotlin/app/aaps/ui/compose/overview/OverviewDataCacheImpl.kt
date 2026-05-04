@@ -70,12 +70,9 @@ import app.aaps.core.interfaces.resources.ResourceHelper
 import app.aaps.core.interfaces.rx.bus.RxBus
 import app.aaps.core.interfaces.rx.events.EventBucketedDataCreated
 import app.aaps.core.interfaces.rx.events.EventInitializationChanged
-import app.aaps.core.interfaces.rx.events.EventIobCalculationProgress
 import app.aaps.core.interfaces.rx.events.EventLoopUpdateGui
 import app.aaps.core.interfaces.rx.events.EventNewOpenLoopNotification
 import app.aaps.core.interfaces.rx.events.EventNsClientStatusUpdated
-import app.aaps.core.interfaces.rx.events.EventRefreshOverview
-import app.aaps.core.interfaces.rx.events.EventUpdateOverviewIobCob
 import app.aaps.core.interfaces.utils.DateUtil
 import app.aaps.core.interfaces.utils.DecimalFormatter
 import app.aaps.core.interfaces.utils.Round
@@ -88,7 +85,6 @@ import app.aaps.core.keys.UnitDoubleKey
 import app.aaps.core.keys.interfaces.Preferences
 import app.aaps.core.objects.extensions.fromGv
 import app.aaps.core.objects.extensions.target
-import app.aaps.core.objects.overview.DashboardCoherentGlucose
 import app.aaps.core.objects.profile.ProfileSealed
 import app.aaps.core.ui.R
 import dagger.assisted.Assisted
@@ -307,24 +303,10 @@ class OverviewDataCacheImpl @AssistedInject constructor(
                 }
             }
 
-            // Align with classic overview / hybrid dashboard: refresh BgInfo on the same bus events
-            // so Compose home matches after cold start, loop GUI updates, and IOB recalculation.
+            // Retry running mode after app finishes initializing (pump may not be selected at first load)
             scope.launch {
-                merge(
-                    rxBus.toFlow(EventBucketedDataCreated::class.java),
-                    rxBus.toFlow(EventRefreshOverview::class.java),
-                    rxBus.toFlow(EventLoopUpdateGui::class.java),
-                    rxBus.toFlow(EventInitializationChanged::class.java),
-                    activePlugin.activeOverview.overviewBus.toFlow(EventUpdateOverviewIobCob::class.java),
-                ).collect {
-                    aapsLogger.debug(LTag.UI, "OverviewDataCache: BgInfo refresh (${it.javaClass.simpleName})")
-                    updateBgInfoFromDatabase()
-                }
-            }
-
-            scope.launch {
-                rxBus.toFlow(EventIobCalculationProgress::class.java).collect {
-                    _calcProgressFlow.value = it.finalPercent
+                rxBus.toFlow(EventInitializationChanged::class.java).collect {
+                    updateRunningModeFromDatabase()
                 }
             }
 
@@ -514,23 +496,7 @@ class OverviewDataCacheImpl @AssistedInject constructor(
             return
         }
 
-        val now = dateUtil.now()
-        val glucoseStatus = glucoseStatusProvider.glucoseStatusData
-        val bgMgdl = DashboardCoherentGlucose.displayMgdl(
-            lastGv,
-            glucoseStatus,
-            activePlugin.activeSmoothing,
-            now
-        ) ?: run {
-            _bgInfoFlow.value = null
-            return
-        }
-        val displayTs = DashboardCoherentGlucose.displayTimestamp(
-            lastGv,
-            glucoseStatus,
-            activePlugin.activeSmoothing,
-            now
-        ) ?: lastGv.timestamp
+        val bgMgdl = lastGv.recalculated
         val highMark = preferences.get(UnitDoubleKey.OverviewHighMark)
         val lowMark = preferences.get(UnitDoubleKey.OverviewLowMark)
         val valueInUnits = profileUtil.fromMgdlToUnits(bgMgdl)
@@ -541,22 +507,17 @@ class OverviewDataCacheImpl @AssistedInject constructor(
             else                    -> BgRange.IN_RANGE
         }
 
-        val isOutdated = !DashboardCoherentGlucose.isDisplayActual(
-            lastGv,
-            glucoseStatus,
-            activePlugin.activeSmoothing,
-            now,
-            T.mins(9).msecs()
-        )
+        val isOutdated = lastGv.timestamp < dateUtil.now() - 9 * 60 * 1000L
         val trendArrow = trendCalculator.getTrendArrow(iobCobCalculator.ads)
         val trendDescription = trendCalculator.getTrendDescription(iobCobCalculator.ads)
+        val glucoseStatus = glucoseStatusProvider.glucoseStatusData
 
         _bgInfoFlow.value = BgInfoData(
             bgValue = valueInUnits,
             bgText = profileUtil.fromMgdlToStringInUnits(bgMgdl),
             bgRange = bgRange,
             isOutdated = isOutdated,
-            timestamp = displayTs,
+            timestamp = lastGv.timestamp,
             trendArrow = trendArrow,
             trendDescription = trendDescription,
             delta = glucoseStatus?.let { profileUtil.fromMgdlToUnits(it.delta) },

@@ -37,9 +37,15 @@ class AuditorNotificationManager @Inject constructor(
     companion object {
         private const val CHANNEL_ID = "AIMI_AUDITOR_INSIGHTS"
         private const val CHANNEL_NAME = "AIMI Auditor Insights"
-        private const val NOTIFICATION_ID = 8888  // Unique ID for Auditor
-        
-        private const val ACTION_OPEN_REPORT = "app.aaps.AUDITOR_OPEN_REPORT"
+        private const val NOTIFICATION_ID = 8888
+
+        /**
+         * Static cancel — called from AuditorVerdictActivity.onCreate()
+         * so the notification dismisses when the report is opened.
+         */
+        fun cancelNotificationStatic(context: Context) {
+            NotificationManagerCompat.from(context).cancel(NOTIFICATION_ID)
+        }
     }
     
     init {
@@ -91,12 +97,21 @@ class AuditorNotificationManager @Inject constructor(
             .addAction(createOpenReportAction())
             .setColor(getNotificationColor(uiState))
             .build()
-        
-        // Show notification
+
+        // POST_NOTIFICATIONS is required on Android 13+ (API 33)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (androidx.core.content.ContextCompat.checkSelfPermission(
+                    context,
+                    android.Manifest.permission.POST_NOTIFICATIONS
+                ) != android.content.pm.PackageManager.PERMISSION_GRANTED
+            ) return
+        }
         try {
             NotificationManagerCompat.from(context).notify(NOTIFICATION_ID, notification)
-        } catch (e: Exception) {
-            // Fail silently if notifications disabled
+        } catch (_: SecurityException) {
+            // Permission revoked at runtime — fail silently
+        } catch (_: Exception) {
+            // Other failures — fail silently
         }
     }
     
@@ -155,10 +170,7 @@ class AuditorNotificationManager @Inject constructor(
      * TODO: Replace with actual AuditorVerdictActivity intent
      */
     private fun createOpenReportIntent(): PendingIntent {
-        // For now, use a generic intent
-        // Replace with actual deep link to AuditorVerdictActivity
-        val intent = Intent(ACTION_OPEN_REPORT).apply {
-            setPackage(context.packageName)
+        val intent = Intent(context, AuditorVerdictActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
         }
         
@@ -169,15 +181,11 @@ class AuditorNotificationManager @Inject constructor(
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
     }
-    
-    /**
-     * Create "View Report" action button
-     */
-    private fun createOpenReportAction(): NotificationCompat.Action {
-        return NotificationCompat.Action.Builder(
+
+    private fun createOpenReportAction(): NotificationCompat.Action =
+        NotificationCompat.Action.Builder(
             R.drawable.ic_audit_monitor,
             "View Report",
             createOpenReportIntent()
         ).build()
-    }
 }

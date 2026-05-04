@@ -13,6 +13,8 @@
     <!-- 📺 Screen Share (WebRTC) Permissions -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PROJECTION" />
+    <!--- AuditorNotificationManager -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <application>
         <!-- ... existing activities ... -->
@@ -36,7 +38,16 @@
             android:exported="false"
             android:theme="@style/AppTheme"
             android:label="AIMI Modes" />
-        
+        <activity
+            android:name=".openAPSAIMI.advisor.auditor.ui.AuditorVerdictActivity"
+            android:exported="false"
+            android:theme="@style/AppTheme"
+            android:label="@string/aimi_auditor_mode_title"/>
+        <activity
+            android:name=".openAPSAIMI.advisor.pulse.AimiPulseDetailActivity"
+            android:exported="false"
+            android:theme="@style/AppTheme.NoActionBar"
+            android:label="AIMI Pulse Detail" />
         <activity
             android:name=".openAPSAIMI.context.ui.ContextActivity"
             android:exported="false"

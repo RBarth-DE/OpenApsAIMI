@@ -5,6 +5,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import com.patrykandpatrick.vico.compose.cartesian.layer.LineCartesianLayer
 import androidx.compose.ui.graphics.drawscope.DrawScope
 
 object VicoChartAppearance {
@@ -153,3 +154,35 @@ private fun Color.compositeOver(background: Color): Color {
         alpha = outA,
     )
 }
+
+
+// ── Stubs for dashboard soft-therapy visuals ─────────────────────────────────
+
+fun softenChartColor(color: Color, surface: Color): Color =
+    color.copy(alpha = color.alpha * 0.55f)
+
+fun createSoftPredictionLine(color: Color): LineCartesianLayer.Line = createPredictionLine(color)
+
+@androidx.compose.runtime.Composable
+fun rememberDashboardTbrLaneDecoration(
+    minTimestamp: Long = 0L,
+    segments: List<*> = emptyList<Any>(),
+    markerEpochMs: List<*> = emptyList<Any>(),
+    bgAxisYMin: Double? = null,
+    bgAxisYMax: Double? = null,
+    legacyBottomReservePx: Float = 0f,
+    laneBackground: Color = Color.Transparent,
+    barFillSoft: Color = Color.Transparent,
+    barFillStrong: Color = Color.Transparent,
+    markerLineColor: Color = Color.Transparent,
+    softStyle: Boolean = false,
+): Nothing? = null
+
+@androidx.compose.runtime.Composable
+fun rememberTargetComfortCorridorDecoration(
+    corridor: Pair<Double, Double>? = null,
+    bgAxisMinY: Double = 0.0,
+    bgAxisMaxY: Double = 400.0,
+    fillColor: Color = Color.Transparent,
+    fillAlpha: Float = 0f,
+): Nothing? = null

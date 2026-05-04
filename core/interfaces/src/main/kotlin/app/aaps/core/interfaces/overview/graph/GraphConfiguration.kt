@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.StateFlow
  */
 enum class SeriesType {
 
+    BASAL,  // Profile + actual delivered basal step-fill on BG graph
     IOB,
     ABS_IOB,
     COB,
@@ -24,7 +25,11 @@ enum class SeriesType {
     HEART_RATE,
     STEPS,
     ACTIVITY,
-    PREDICTIONS
+    PREDICTIONS,
+    MODES,
+    PULSE,
+    TIR,
+    BOLUS   // SMB triangle markers on BG graph (fixed at bottom)
 }
 
 /**
@@ -53,7 +58,8 @@ data class SecondaryGraph(
  *   Max 2 series per graph. FIFO: adding a 3rd deselects the oldest.
  */
 data class GraphConfig(
-    val bgOverlays: List<SeriesType> = listOf(SeriesType.ACTIVITY, SeriesType.PREDICTIONS),
+    val bgOverlays: List<SeriesType> = listOf(SeriesType.BASAL, SeriesType.BOLUS, SeriesType.ACTIVITY),
+    val showIobGraph: Boolean = true,
     val iobOverlays: List<SeriesType> = listOf(SeriesType.ACTIVITY),
     val bgHeight: Int = DEFAULT_GRAPH_HEIGHT_DP,
     val iobHeight: Int = DEFAULT_GRAPH_HEIGHT_DP,
@@ -66,6 +72,9 @@ data class GraphConfig(
 
         /** Maximum number of secondary graphs allowed */
         const val MAX_SECONDARY_GRAPHS = 5
+
+        /** Maximum graph height in dp (2.5x default) */
+        const val MIN_GRAPH_HEIGHT_DP = 50
 
         /** Default graph height in dp (minimum value — user-adjustable up to [MAX_GRAPH_HEIGHT_DP]) */
         const val DEFAULT_GRAPH_HEIGHT_DP = 100

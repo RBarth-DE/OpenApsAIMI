@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
@@ -21,6 +22,8 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.text.style.TextOverflow
 import app.aaps.core.data.model.TT
 import app.aaps.core.ui.compose.AapsSpacing
 import app.aaps.core.ui.compose.AapsTheme
@@ -30,6 +33,7 @@ import app.aaps.core.ui.compose.icons.IcTtHypo
 import app.aaps.core.ui.compose.icons.IcTtManual
 import app.aaps.core.ui.compose.ttReasonColor
 import app.aaps.ui.compose.main.TempTargetChipState
+
 
 @Composable
 fun TempTargetChip(
@@ -62,10 +66,14 @@ fun TempTargetChip(
             .fillMaxWidth()
             .height(AapsSpacing.chipHeight)
     ) {
-        Column {
+        Column (
+            verticalArrangement = Arrangement.Center
+        ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.padding(horizontal = AapsSpacing.medium, vertical = AapsSpacing.small)
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(horizontal = AapsSpacing.small, vertical = 0.dp)
             ) {
                 Icon(
                     imageVector = reason.toIcon(),
@@ -75,8 +83,11 @@ fun TempTargetChip(
                 )
                 Text(
                     text = targetText,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    style = MaterialTheme.typography.labelMedium,
                     color = textColor,
-                    modifier = Modifier.padding(start = AapsSpacing.medium)
+                    modifier = Modifier.padding(start = AapsSpacing.small)
                 )
                 if (sceneManaged) {
                     SceneBadge(modifier = Modifier.padding(start = AapsSpacing.small))

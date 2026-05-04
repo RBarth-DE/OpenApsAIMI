@@ -27,6 +27,7 @@ enum class ElementType(
     // CGM
     CGM_XDRIP(category = ElementCategory.CGM, searchable = true),
     CGM_DEX(category = ElementCategory.CGM),
+    CGM_JUGGLUCO(category = ElementCategory.CGM, searchable = true),
     CALIBRATION(category = ElementCategory.CGM, searchable = true),
 
     // Profile & Targets — minimum level is BOLUS; screen mode (PLAY/EDIT) determined by granted auth level

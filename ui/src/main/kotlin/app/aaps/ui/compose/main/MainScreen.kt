@@ -392,12 +392,13 @@ fun MainScreen(
                                     treatmentViewModel.refreshState()
                                     showTreatmentSheet = true
                                 },
-                                quickWizardCount = uiState.quickWizardItems.size,
+                                 quickWizardCount = uiState.quickWizardItems.size,
                                 onAutomationClick = {
                                     scenesViewModel.refreshState()
                                     showAutomationSheet = true
                                 },
-                                automationCount = automationState.items.size + automationState.sceneItems.size,
+                                sceneCount = scenesViewModel.uiState.collectAsStateWithLifecycle().value.items.size +
+                                    scenesViewModel.uiState.collectAsStateWithLifecycle().value.sceneItems.size,
                                 pumpSetupPlugin = pumpSetupPlugin,
                                 bgSetupPlugin = bgSetupPlugin,
                                 bgQualityBadgeIcon = bgQualityBadgeIcon,

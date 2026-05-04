@@ -1194,5 +1194,22 @@
     <string name="remove_items">Remove Items</string>
     <string name="sort_items">Sort Items</string>
 
+    <string name="modes_series_shortname" comment="Short label for Automation Modes custom panel">Modes</string>
+    <string name="pulse_series_shortname" comment="Short label for APS Pulse/Rate custom panel">Pulse</string>
+    <string name="tir_series_shortname" comment="Short label for Time In Range custom panel">TIR</string>
+    <string name="graph_series_smb" comment="Short label for SMB triangle markers on BG graph">SMBs</string>
+    <string name="run_event_question">Run %s?</string>
 
+    <string name="pulse_panel_title">Last AIMI run</string>
+    <string name="pulse_panel_title_with_age">Last AIMI run · %1$s</string>
+    <string name="pulse_panel_no_data">No APS output yet</string>
+    <string name="pulse_panel_fallback">SMB %1$s U · Basal %2$s U/h</string>
+    <string name="pulse_panel_hypo_prefix">Hypo risk —</string>
+    <string name="pulse_panel_meta">SMB %1$s U · demand %2$s · AutoSens %3$s%%</string>
+    <string name="pulse_panel_hint">Tap for full rationale and trajectory</string>
+
+    <string name="aimi_btn_advisor">Advisor</string>
+    <string name="aimi_btn_meal">Meal</string>
+    <string name="aimi_btn_context">Context</string>
+    <string name="aimi_btn_stats">Stats</string>
 </resources>

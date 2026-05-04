@@ -30,7 +30,7 @@ class AimiStorageHelper @Inject constructor(
     private val context: Context,
     private val log: AAPSLogger
 ) {
-    
+
     /**
      * État du stockage utilisé (pour logs de santé)
      */
@@ -55,38 +55,47 @@ class AimiStorageHelper @Inject constructor(
     /**
      * Détermine le meilleur répertoire de stockage disponible.
      * Appelé une seule fois au premier accès (lazy init).
+     *
+     * AIMI files always target Documents/AAPS/ (not the main AAPS app configured directory).
      */
     @Synchronized
     private fun determineStorageDirectory(): File {
         if (currentDirectory != null) {
             return currentDirectory!!
         }
-        
-        // 1️⃣ Tenter Documents/AAPS d'abord (préféré pour cohérence AIMI)
-        try {
-            val docsDir = File(Environment.getExternalStorageDirectory(), "Documents/AAPS")
-            
-            // Créer le répertoire s'il n'existe pas
-            if (!docsDir.exists()) {
-                if (docsDir.mkdirs()) {
-                    log.info(LTag.APS, "AimiStorageHelper: ✅ Created Documents/AAPS directory")
+
+        val storageManagerGranted = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
+            Environment.isExternalStorageManager()
+        } else {
+            true
+        }
+
+        // 1️⃣ Documents/AAPS (only attempted if MANAGE_EXTERNAL_STORAGE is granted; same permission needed)
+        if (storageManagerGranted) {
+            try {
+                val docsDir = File(Environment.getExternalStorageDirectory(), "Documents/AAPS")
+                val hasAccess = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
+                    true  // storageManagerGranted == true in this branch
+                } else {
+                    docsDir.exists() && docsDir.canWrite()
                 }
+                if (hasAccess) {
+                    if (!docsDir.exists()) docsDir.mkdirs()
+                    currentStatus = StorageStatus.DOCUMENTS_AAPS
+                    currentDirectory = docsDir
+                    log.info(LTag.APS, "AimiStorageHelper: 📁 Using Documents/AAPS (preferred)")
+                    log.info(LTag.APS, "  → Path: ${docsDir.absolutePath}")
+                    return docsDir
+                } else {
+                    if (lastError == null) lastError = "Documents/AAPS not accessible (canWrite=false)"
+                    log.warn(LTag.APS, "AimiStorageHelper: ⚠️ Documents/AAPS not accessible (canWrite=false)")
+                }
+            } catch (e: Exception) {
+                if (lastError == null) lastError = "Cannot access Documents/AAPS: ${e.message}"
+                log.warn(LTag.APS, "AimiStorageHelper: ⚠️ Cannot access Documents/AAPS: ${e.message}")
             }
-            
-            // Tester si on peut écrire (vérification permission)
-            if (docsDir.exists() && docsDir.canWrite()) {
-                currentStatus = StorageStatus.DOCUMENTS_AAPS
-                currentDirectory = docsDir
-                log.info(LTag.APS, "AimiStorageHelper: 📁 Using Documents/AAPS (preferred)")
-                log.info(LTag.APS, "  → Path: ${docsDir.absolutePath}")
-                return docsDir
-            } else {
-                lastError = "Documents/AAPS not writable (permission issue?)"
-                log.warn(LTag.APS, "AimiStorageHelper: ⚠️ $lastError")
-            }
-        } catch (e: Exception) {
-            lastError = "Cannot access Documents/AAPS: ${e.message}"
-            log.warn(LTag.APS, "AimiStorageHelper: ⚠️ $lastError")
+        } else {
+            log.debug(LTag.APS, "AimiStorageHelper: Skipping Documents/AAPS – MANAGE_EXTERNAL_STORAGE not granted")
         }
         
         // 2️⃣ Fallback vers app-scoped external storage
@@ -120,6 +129,18 @@ class AimiStorageHelper @Inject constructor(
     fun getAimiDirectory(): File {
         return determineStorageDirectory()
     }
+
+    /**
+     * Resets cached directory so it is re-evaluated on next access.
+     * Call after MANAGE_EXTERNAL_STORAGE is granted at runtime.
+     */
+    @Synchronized
+    fun resetDirectory() {
+        currentDirectory = null
+        currentStatus = StorageStatus.ERROR
+        lastError = null
+        log.info(LTag.APS, "AimiStorageHelper: Directory cache reset (will re-evaluate on next access)")
+    }
     
     /**
      * Obtient un fichier dans le répertoire AIMI.
@@ -129,7 +150,12 @@ class AimiStorageHelper @Inject constructor(
      */
     fun getAimiFile(filename: String): File {
         val dir = getAimiDirectory()
-        return File(dir, filename).also {
+        val targetDir = if (filename.endsWith(".tflite")) {
+            File(dir, "ml").also { if (!it.exists()) it.mkdirs() }
+        } else {
+            dir
+        }
+        return File(targetDir, filename).also {
             log.debug(LTag.APS, "AimiStorageHelper: File '$filename' → ${it.absolutePath}")
         }
     }
@@ -248,16 +274,18 @@ class AimiStorageHelper @Inject constructor(
      * Génère un rapport de santé du stockage pour les logs Adjustments.
      */
     fun getHealthReport(): String {
+        getAimiDirectory() // ensure lazy init is done before reading status
         val (status, path, error) = getStorageStatus()
         return when (status) {
-            StorageStatus.DOCUMENTS_AAPS -> 
+            StorageStatus.DOCUMENTS_AAPS ->
                 "✅ Storage: Documents/AAPS"
-            StorageStatus.APP_SCOPED_EXTERNAL -> 
+            StorageStatus.APP_SCOPED_EXTERNAL ->
                 "⚠️ Storage: App-scoped (fallback) - Reason: ${error ?: "unknown"}"
-            StorageStatus.INTERNAL_ONLY -> 
+            StorageStatus.INTERNAL_ONLY ->
                 "⚠️ Storage: Internal only (degraded) - Reason: ${error ?: "unknown"}"
-            StorageStatus.ERROR -> 
+            StorageStatus.ERROR ->
                 "❌ Storage: ERROR - ${error ?: "unknown"}"
         }
     }
+
 }

@@ -37,6 +37,8 @@ import app.aaps.core.ui.compose.icons.IcLoopPaused
 import app.aaps.core.ui.compose.icons.IcLoopSuperbolus
 import app.aaps.core.ui.compose.loopColor
 import app.aaps.ui.compose.overview.graphs.TriangleShape
+import androidx.compose.ui.text.style.TextOverflow
+
 
 @Composable
 fun RunningModeChip(
@@ -65,7 +67,7 @@ fun RunningModeChip(
         Column {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.padding(horizontal = AapsSpacing.medium, vertical = AapsSpacing.small)
+                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
             ) {
                 Box(modifier = Modifier.size(AapsSpacing.chipIconSize)) {
                     Icon(
@@ -86,8 +88,11 @@ fun RunningModeChip(
                 }
                 Text(
                     text = text,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    style = MaterialTheme.typography.labelMedium,
                     color = textColor,
-                    modifier = Modifier.padding(start = AapsSpacing.medium)
+                    modifier = Modifier.padding(start = AapsSpacing.small)
                 )
                 if (sceneManaged) {
                     SceneBadge(modifier = Modifier.padding(start = AapsSpacing.small))
