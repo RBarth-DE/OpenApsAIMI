@@ -47,21 +47,16 @@ import app.aaps.plugins.aps.openAPSAIMI.carbs.CarbsAdvisor
 import app.aaps.core.interfaces.ui.UiInteraction
 import app.aaps.plugins.aps.openAPSAIMI.utils.AimiStorageHelper
 import app.aaps.core.data.model.HR
-import app.aaps.core.data.model.SourceSensor
 import app.aaps.core.interfaces.notifications.NotificationId
 import app.aaps.core.interfaces.notifications.NotificationManager
 import app.aaps.plugins.aps.openAPSAIMI.model.DecisionResult
 import app.aaps.plugins.aps.openAPSAIMI.advisor.auditor.AuditorVerdict
 import app.aaps.plugins.aps.openAPSAIMI.advisor.oref.OrefPredictionReasonSuffix
-import app.aaps.plugins.aps.openAPSAIMI.trajectory.TrajectoryType
 import app.aaps.plugins.aps.openAPSAIMI.model.PumpCaps
 import app.aaps.plugins.aps.openAPSAIMI.pkpd.MealAggressionContext
 import app.aaps.plugins.aps.openAPSAIMI.pkpd.PkPdIntegration
 import app.aaps.plugins.aps.openAPSAIMI.pkpd.PkpdBolusSample
-import app.aaps.plugins.aps.openAPSAIMI.pkpd.PkPdLogRow
-import app.aaps.plugins.aps.openAPSAIMI.pkpd.IsfTddProvider
 import app.aaps.plugins.aps.openAPSAIMI.pkpd.PkPdRuntime
-import app.aaps.plugins.aps.openAPSAIMI.ports.PkpdPort
 import app.aaps.plugins.aps.openAPSAIMI.prediction.PredictionSanityResult
 import app.aaps.plugins.aps.openAPSAIMI.prediction.minPredictedAcrossCurves
 import app.aaps.plugins.aps.openAPSAIMI.prediction.sanitizePredictionValues
@@ -123,11 +118,7 @@ import app.aaps.plugins.aps.openAPSAIMI.activity.ActivityState
 import app.aaps.plugins.aps.openAPSAIMI.advisor.auditor.AuditorOrchestrator
 import app.aaps.plugins.aps.openAPSAIMI.advisor.auditor.AuditorVerdictCache
 import app.aaps.plugins.aps.openAPSAIMI.advisor.gestation.GestationalAutopilot
-import app.aaps.plugins.aps.openAPSAIMI.autodrive.estimator.ContinuousStateEstimator
-import app.aaps.plugins.aps.openAPSAIMI.autodrive.models.AutoDriveState
 import app.aaps.plugins.aps.openAPSAIMI.autodrive.safety.AutoDriveGater
-import app.aaps.plugins.aps.openAPSAIMI.context.ContextInfluenceEngine
-import app.aaps.plugins.aps.openAPSAIMI.context.ContextManager
 import app.aaps.plugins.aps.openAPSAIMI.context.ContextMode
 import app.aaps.plugins.aps.openAPSAIMI.inflammatory.InflammationAdjuster
 import app.aaps.plugins.aps.openAPSAIMI.keys.AimiStringKey
@@ -135,8 +126,6 @@ import app.aaps.plugins.aps.openAPSAIMI.learning.BasalLearner
 import app.aaps.plugins.aps.openAPSAIMI.learning.BasalNeuralLearner
 import app.aaps.plugins.aps.openAPSAIMI.learning.UnifiedReactivityLearner
 import app.aaps.plugins.aps.openAPSAIMI.ml.AimiSmbTrainer
-import app.aaps.plugins.aps.openAPSAIMI.physio.AIMIInsulinDecisionAdapterMTR
-import app.aaps.plugins.aps.openAPSAIMI.physio.PhysioMultipliersMTR
 import app.aaps.plugins.aps.openAPSAIMI.physio.thyroid.ThyroidDiagnosticsLogger
 import app.aaps.plugins.aps.openAPSAIMI.physio.thyroid.ThyroidEffectModel
 import app.aaps.plugins.aps.openAPSAIMI.physio.thyroid.ThyroidEffects
@@ -144,24 +133,16 @@ import app.aaps.plugins.aps.openAPSAIMI.physio.thyroid.ThyroidPreferences
 import app.aaps.plugins.aps.openAPSAIMI.physio.thyroid.ThyroidSafetyGates
 import app.aaps.plugins.aps.openAPSAIMI.physio.thyroid.ThyroidStateEstimator
 import app.aaps.plugins.aps.openAPSAIMI.physio.thyroid.ThyroidStatus
-import app.aaps.plugins.aps.openAPSAIMI.pkpd.ActivityStage
-import app.aaps.plugins.aps.openAPSAIMI.pkpd.InsulinActionState
 import app.aaps.plugins.aps.openAPSAIMI.pkpd.IsfTddProvider
 import app.aaps.plugins.aps.openAPSAIMI.pkpd.RealTimeInsulinObserver
 import app.aaps.plugins.aps.openAPSAIMI.pkpd.SmbTbrThrottleLogic
 import app.aaps.plugins.aps.openAPSAIMI.safety.SafetyNet
-import app.aaps.plugins.aps.openAPSAIMI.sos.EmergencySosManager
 import app.aaps.plugins.aps.openAPSAIMI.trajectory.PhaseSpaceState
 import app.aaps.plugins.aps.openAPSAIMI.trajectory.StableOrbit
-import app.aaps.plugins.aps.openAPSAIMI.trajectory.TrajectoryGuard
-import app.aaps.plugins.aps.openAPSAIMI.trajectory.TrajectoryHistoryProvider
-import app.aaps.plugins.aps.openAPSAIMI.trajectory.TrajectoryMetricsCalculator
 import app.aaps.plugins.aps.openAPSAIMI.trajectory.TrajectoryType
 import app.aaps.plugins.aps.openAPSAIMI.trajectory.WarningSeverity
 import app.aaps.plugins.aps.openAPSAIMI.utils.AimiLogger
-import app.aaps.plugins.aps.openAPSAIMI.utils.RtInstrumentationHelpers
 import app.aaps.plugins.aps.openAPSAIMI.validation.PumpCapabilityValidator
-import app.aaps.plugins.aps.openAPSAIMI.wcycle.CyclePhase
 import app.aaps.plugins.aps.openAPSAIMI.wcycle.EndometriosisAdjuster
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.CoroutineScope
@@ -1198,6 +1179,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             rT.reason.append("${ctx.extraDebug}\n")
         }
         app.aaps.plugins.aps.openAPSAIMI.sos.EmergencySosManager.evaluateSosCondition(
+            aapsLogger = aapsLogger,
             bg = ctx.glucoseStatus.glucose,
             delta = ctx.glucoseStatus.delta,
             iob = ctx.iobDataArray.firstOrNull()?.iob ?: 0.0,
