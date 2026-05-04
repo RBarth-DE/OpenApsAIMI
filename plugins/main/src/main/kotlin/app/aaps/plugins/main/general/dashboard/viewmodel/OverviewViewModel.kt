@@ -5,7 +5,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
-import app.aaps.core.data.iob.InMemoryGlucoseValue
+import app.aaps.core.interfaces.insulin.ConcentrationHelper
 import app.aaps.core.data.model.EB
 import app.aaps.core.data.model.EPS
 import app.aaps.core.data.model.GlucoseUnit
@@ -74,6 +74,7 @@ import app.aaps.core.interfaces.overview.OverviewData
 import app.aaps.plugins.main.R
 import app.aaps.core.objects.overview.DashboardCoherentGlucose
 import androidx.core.text.HtmlCompat
+import app.aaps.core.interfaces.pump.PumpInsulin
 import io.reactivex.rxjava3.disposables.CompositeDisposable
 import io.reactivex.rxjava3.kotlin.plusAssign
 import kotlinx.coroutines.CancellationException
@@ -95,6 +96,7 @@ import java.util.concurrent.TimeUnit
 import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.sqrt
+import javax.inject.Inject
 
 class OverviewViewModel(
     private val context: Context,
@@ -121,6 +123,7 @@ class OverviewViewModel(
     private val aimiPhysioDataRepository: AIMIPhysioDataRepositoryMTR
 ) : ViewModel() {
 
+    @Inject lateinit var ch: ConcentrationHelper
     private val disposables = CompositeDisposable()
     private var started = false
     /** Cancelled in [stop]; Rx + DB observation for dashboard updates run here (same pattern as OverviewFragment flows). */
@@ -478,11 +481,8 @@ class OverviewViewModel(
         }
         
         // 2. Reservoir
-        val reservoirUnits = activePlugin.activePump.reservoirLevel.value.cU
-        val reservoirText =
-            if (reservoirUnits > 0) decimalFormatter.to2Decimal(reservoirUnits) + " IE"
-            else null
-        
+        val reservoirText = if (activePlugin.activePump.reservoirLevel.value.cU > 0.0 ) ch.insulinAmountString(PumpInsulin(activePlugin.activePump.reservoirLevel.value.cU)) else null
+
         // 3. Infusion Age (from CarePortal)
         val infusionAgeText = persistenceLayer.getLastTherapyRecordUpToNow(TE.Type.CANNULA_CHANGE)?.let { event ->
             val ageMillis = dateUtil.now() - event.timestamp
@@ -502,9 +502,9 @@ class OverviewViewModel(
         }
         
         // 5. Basal (current profile basal rate)
-        val basalText = profile?.let { p ->
-            val currentBasal = p.getBasal(now)
-            decimalFormatter.to2Decimal(currentBasal) + " IE"
+        val basalText = profileFunction.getProfile()?.let { profile ->
+            val currentBasal = profile.getBasal(dateUtil.now())
+            resourceHelper.gs(app.aaps.core.ui.R.string.format_insulin_units, currentBasal)
         }
         
         val activeTempBasal = processedTbrEbData.getTempBasalIncludingConvertedExtended(dateUtil.now())?.takeIf { it.isInProgress }
@@ -539,20 +539,20 @@ class OverviewViewModel(
 
         // 9. TBR: compact strip shows rate only (full line in étendu keeps % vs profil — long string was easy to clip in the horizontal chips row)
         val tbrRateCompactText = activeTempBasal?.let { tbr ->
-            decimalFormatter.to2Decimal(tbr.rate) + " U/h"
-        } ?: (decimalFormatter.to2Decimal(0.0) + " U/h")
+            resourceHelper.gs(app.aaps.core.ui.R.string.pump_base_basal_rate, tbr.rate)
+        } ?: resourceHelper.gs(app.aaps.core.ui.R.string.pump_base_basal_rate, 0.0)
 
         val tbrRateText = activeTempBasal?.let { tbr ->
-            val rateUh = decimalFormatter.to2Decimal(tbr.rate) + " U/h"
-            val pctStr = profile?.let { p ->
-                val currentBasal = p.getBasal(now)
+            val rateUh = resourceHelper.gs(app.aaps.core.ui.R.string.pump_base_basal_rate, tbr.rate)
+            val pctStr = profileFunction.getProfile()?.let { profile ->
+                val currentBasal = profile.getBasal(dateUtil.now())
                 if (currentBasal > 0) {
                     val pct = ((tbr.rate / currentBasal) * 100).toInt()
                     " ($pct%)"
                 } else ""
             } ?: ""
             rateUh + pctStr
-        } ?: (decimalFormatter.to2Decimal(0.0) + " U/h")
+        } ?: resourceHelper.gs(app.aaps.core.ui.R.string.pump_base_basal_rate, 0.0)
 
         // 10. Steps & HR
         var stepsText: String = "--"
@@ -973,7 +973,7 @@ class OverviewViewModel(
     private fun buildAimiPulseMeta(request: APSResult?): String {
         if (request == null) return ""
         val smb = decimalFormatter.to2Decimal(request.smb)
-        val basalDisplay = if (request.rate == -1.0) "—" else decimalFormatter.to2Decimal(request.rate) + " U/h"
+        val basalDisplay = if (request.rate == -1.0) "—" else resourceHelper.gs(app.aaps.core.ui.R.string.pump_base_basal_rate, request.rate)
         val sens = decimalFormatter.to0Decimal((request.autosensResult?.ratio ?: 1.0) * 100.0)
         return resourceHelper.gs(R.string.dashboard_aimi_pulse_meta, smb, basalDisplay, sens)
     }
@@ -989,11 +989,8 @@ class OverviewViewModel(
         HtmlCompat.fromHtml(html, HtmlCompat.FROM_HTML_MODE_LEGACY).toString().trim()
 
     private suspend fun buildPumpAdjustmentDisplay(now: Long): PumpAdjustmentDisplay {
-        val reservoirUnits = activePlugin.activePump.reservoirLevel.value.cU
-        val reservoirText =
-            if (reservoirUnits > 0)
-                resourceHelper.gs(app.aaps.core.ui.R.string.format_insulin_units, reservoirUnits)
-            else resourceHelper.gs(app.aaps.core.ui.R.string.value_unavailable_short)
+
+        val reservoirText = if (activePlugin.activePump.reservoirLevel.value.cU > 0.0 ) ch.insulinAmountString(PumpInsulin(activePlugin.activePump.reservoirLevel.value.cU)) else null
 
         val siteEvent = persistenceLayer.getLastTherapyRecordUpToNow(TE.Type.CANNULA_CHANGE)
         var siteAge = formatTherapyAge(siteEvent, now)
@@ -1020,9 +1017,10 @@ class OverviewViewModel(
         val isUnreachable =
             preferences.get(app.aaps.core.keys.BooleanKey.AlertPumpUnreachable) && (lastConnection + threshold < now)
 
-        val statusText = if (isUnreachable) {
+        val statusText: String? = if (isUnreachable) {
             val unreachableText = resourceHelper.gs(app.aaps.core.ui.R.string.pump_unreachable)
-            "$reservoirText <font color='#FF0000'>$unreachableText</font>"
+            reservoirText?.let { "$it <font color='#FF0000'>$unreachableText</font>" }
+                ?: "<font color='#FF0000'>$unreachableText</font>"
         } else {
             reservoirText
         }
@@ -1030,7 +1028,7 @@ class OverviewViewModel(
         val lineHtml = resourceHelper.gs(R.string.dashboard_adjustment_pump, statusText, siteAge, sensorAge)
         return PumpAdjustmentDisplay(
             lineHtml = lineHtml,
-            reservoirPlain = htmlSegmentToPlain(statusText),
+            reservoirPlain = htmlSegmentToPlain(statusText ?: ""),
             sitePlain = htmlSegmentToPlain(siteAge),
             sensorPlain = htmlSegmentToPlain(sensorAge),
         )

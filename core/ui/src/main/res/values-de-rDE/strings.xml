@@ -897,7 +897,7 @@
     <string name="pulse_panel_title_with_age">Letzter APS-Lauf · %1$s</string>
     <string name="pulse_panel_no_data">Noch keine APS-Ausgabe</string>
     <string name="pulse_panel_hypo_prefix">Hypo-Risiko —</string>
-    <string name="pulse_panel_meta">SMB %1$s U · Nachfrage %2$s · AutoSens %3$s%%</string>
+    <string name="pulse_panel_meta">SMB %1$s U · Basal %2$s · AutoSens %3$s%%</string>
     <string name="pulse_panel_hint">Tippen Sie hier, um die vollständige Begründung und den Verlauf anzuzeigen</string>
     <string name="remove_items">Elemente entfernen</string>
     <string name="sort_items">Elemente sortieren</string>
