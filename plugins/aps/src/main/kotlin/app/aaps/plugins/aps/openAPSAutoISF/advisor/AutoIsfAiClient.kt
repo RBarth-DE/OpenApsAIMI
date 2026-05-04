@@ -1,6 +1,7 @@
 package app.aaps.plugins.aps.openAPSAutoISF.advisor
 
 import android.content.Context
+import app.aaps.core.keys.DoubleKey
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.json.JSONArray
@@ -71,19 +72,19 @@ class AutoIsfAiClient {
         sb.appendLine("Mean BG: ${m.meanBg.toInt()} mg/dL  |  GMI: ${"%.1f".format(Locale.US, m.gmi)}%")
         sb.appendLine("Avg TDD: ${"%.1f".format(Locale.US, m.tdd)} U  |  Basal fraction: ${pct(m.basalPercent)}%")
         sb.appendLine()
-
+        val test = DoubleKey.ApsAutoIsfLowBgWeight.min
         sb.appendLine("--- AUTOISF CONFIGURATION ---")
         sb.appendLine("Weights enabled: ${prefs.useAutoIsfWeights}")
-        sb.appendLine("AutoISF bounds: min=${prefs.autoIsfMin}  max=${prefs.autoIsfMax}  autosensMax=${prefs.autosensMax}")
+        sb.appendLine("AutoISF bounds: min=${prefs.autoIsfMin} (${DoubleKey.ApsAutoIsfMin.min}/${DoubleKey.ApsAutoIsfMin.max}) max=${prefs.autoIsfMax} ((${DoubleKey.ApsAutoIsfMax.min}/${DoubleKey.ApsAutoIsfMax.max}))  autosensMax=${prefs.autosensMax} (defines how strong ISF can become)")
         sb.appendLine("ISF weights:")
-        sb.appendLine("  highBgWeight=${prefs.highBgWeight}   (boosts ISF at high BG)")
-        sb.appendLine("  lowBgWeight=${prefs.lowBgWeight}    (lowers ISF when BG low → more insulin)")
-        sb.appendLine("  bgAccelWeight=${prefs.bgAccelWeight}  (responds to rising BG rate)")
-        sb.appendLine("  bgBrakeWeight=${prefs.bgBrakeWeight}  (reduces ISF when BG falling fast)")
-        sb.appendLine("  ppWeight=${prefs.ppWeight}        (post-prandial ISF boost)")
-        sb.appendLine("  duraWeight=${prefs.duraWeight}      (extra ISF for prolonged highs)")
-        sb.appendLine("SMB delivery ratio=${prefs.smbDeliveryRatio}  min=${prefs.smbDeliveryRatioMin}  max=${prefs.smbDeliveryRatioMax}")
-        sb.appendLine("IOB threshold: ${prefs.iobThPercent}%")
+        sb.appendLine("  highBgWeight=${prefs.highBgWeight}         (min: ${DoubleKey.ApsAutoIsfHighBgWeight.min} / max: ${DoubleKey.ApsAutoIsfHighBgWeight.max})   (boosts ISF at high BG)")
+        sb.appendLine("  lowBgWeight=${prefs.lowBgWeight}           (min: ${DoubleKey.ApsAutoIsfLowBgWeight.min} / max: ${DoubleKey.ApsAutoIsfLowBgWeight.max})     (lowers ISF when BG low → more insulin)")
+        sb.appendLine("  bgAccelWeight=${prefs.bgAccelWeight}       (min: ${DoubleKey.ApsAutoIsfBgAccelWeight.min} / max: ${DoubleKey.ApsAutoIsfBgAccelWeight.max}) (responds to rising BG rate)")
+        sb.appendLine("  bgBrakeWeight=${prefs.bgBrakeWeight}       (min: ${DoubleKey.ApsAutoIsfBgBrakeWeight.min} / max: ${DoubleKey.ApsAutoIsfBgBrakeWeight.max}) (reduces ISF when BG falling fast)")
+        sb.appendLine("  ppWeight=${prefs.ppWeight}                 (min: ${DoubleKey.ApsAutoIsfPpWeight.min} / max: ${DoubleKey.ApsAutoIsfPpWeight.max})           (post-prandial ISF boost)")
+        sb.appendLine("  duraWeight=${prefs.duraWeight}             (min: ${DoubleKey.ApsAutoIsfDuraWeight.min} / max: ${DoubleKey.ApsAutoIsfDuraWeight.max})       (extra ISF for prolonged highs)")
+        sb.appendLine("SMB delivery ratio=${prefs.smbDeliveryRatio} (min: ${prefs.smbDeliveryRatioMin} / max: ${prefs.smbDeliveryRatioMax})                         (The linearly increasing SMB delivery ratio is mapped to the glucose range)")
+        sb.appendLine("IOB threshold: ${prefs.iobThPercent}%        (min: ${DoubleKey.ApsAutoIsfHighBgWeight.min} / max: ${DoubleKey.ApsAutoIsfHighBgWeight.max})   (Raise IOB threshold to allow SMBs in high BG situations)")
         sb.appendLine()
 
         sb.appendLine("--- LOCAL HEURISTIC FLAGS ---")

@@ -255,8 +255,8 @@ enum class DoubleKey(
     // === Tes ajouts AIMI / custom ===
     EquilMaxBolus("equil_maxbolus", 10.0, 0.1, 25.0),
 
-    OApsAIMIMaxSMB("key_openapsaimi_max_smb", 1.0, 0.05, 15.0),
-    OApsAIMIHighBGMaxSMB("key_openapsaimi_high_bg_max_smb", 1.0, 0.05, 15.0),
+    OApsAIMIMaxSMB("key_openapsaimi_max_smb", 1.0, 0.05, 30.0),
+    OApsAIMIHighBGMaxSMB("key_openapsaimi_high_bg_max_smb", 1.0, 0.05, 30.0),
 
     OApsAIMIweight("key_aimiweight", 50.0, 1.0, 200.0),
     /** MPC: max insulin (U) per kg body weight per 5-minute dose search; combined with Max SMB / High BG SMB caps. */
@@ -292,8 +292,8 @@ enum class DoubleKey(
     OApsAIMIFCLFactor("key_oaps_aimi_FCL_factor", 50.0, 1.0, 150.0),
     OApsAIMIBFFactor("key_oaps_aimi_BF_factor", 50.0, 1.0, 150.0),
 
-    OApsAIMIBFPrebolus("key_prebolus_BF_mode", 2.5, 0.1, 10.0),
-    OApsAIMIBFPrebolus2("key_prebolus2_BF_mode", 2.0, 0.1, 10.0),
+    OApsAIMIBFPrebolus("key_prebolus_BF_mode", 2.5, 0.1, 20.0),
+    OApsAIMIBFPrebolus2("key_prebolus2_BF_mode", 2.0, 0.1, 20.0),
 
     OApsAIMILunchFactor("key_oaps_aimi_lunch_factor", 50.0, 1.0, 150.0),
     OApsAIMIDinnerFactor("key_oaps_aimi_dinner_factor", 50.0, 1.0, 150.0),
@@ -304,9 +304,9 @@ enum class DoubleKey(
 
     OApsAIMIsleepFactor("key_oaps_aimi_sleep_factor", 60.0, 1.0, 150.0),
 
-    OApsAIMIMealPrebolus("key_prebolus_meal_mode", 2.0, 0.1, 10.0),
-    OApsAIMIautodrivePrebolus("key_prebolus_autodrive_mode", 1.0, 0.1, 10.0),
-    OApsAIMIautodrivesmallPrebolus("key_prebolussmall_autodrive_mode", 0.1, 0.05, 2.0),
+    OApsAIMIMealPrebolus("key_prebolus_meal_mode", 2.0, 0.1, 20.0),
+    OApsAIMIautodrivePrebolus("key_prebolus_autodrive_mode", 1.0, 0.1, 20.0),
+    OApsAIMIautodrivesmallPrebolus("key_prebolussmall_autodrive_mode", 0.1, 0.05, 20.0),
 
     OApsAIMIcombinedDelta("key_combinedDelta_autodrive_mode", 1.0, 0.1, 20.0),
     OApsAIMIAutodriveDeviation("key_mindeviation_autodrive_mode", 1.0, 0.1, 5.0),
@@ -315,13 +315,13 @@ enum class DoubleKey(
     autodriveMaxBasal("autodrive_max_basal", 1.0, 0.05, 25.0),
     meal_modes_MaxBasal("meal_modes_max_basal", 1.0, 0.05, 25.0),
 
-    OApsAIMILunchPrebolus("key_prebolus_lunch_mode", 2.5, 0.1, 10.0),
-    OApsAIMILunchPrebolus2("key_prebolus2_lunch_mode", 2.0, 0.1, 10.0),
-    OApsAIMIDinnerPrebolus("key_prebolus_dinner_mode", 2.5, 0.1, 10.0),
-    OApsAIMIDinnerPrebolus2("key_prebolus2_dinner_mode", 2.0, 0.1, 10.0),
-    OApsAIMISnackPrebolus("key_prebolus_snack_mode", 1.0, 0.1, 10.0),
-    OApsAIMIHighCarbPrebolus("key_prebolus_highcarb_mode", 5.0, 0.1, 10.0),
-    OApsAIMIHighCarbPrebolus2("key_prebolus_highcarb_mode2", 5.0, 0.1, 10.0),
+    OApsAIMILunchPrebolus("key_prebolus_lunch_mode", 2.5, 0.1, 20.0),
+    OApsAIMILunchPrebolus2("key_prebolus2_lunch_mode", 2.0, 0.1, 20.0),
+    OApsAIMIDinnerPrebolus("key_prebolus_dinner_mode", 2.5, 0.1, 20.0),
+    OApsAIMIDinnerPrebolus2("key_prebolus2_dinner_mode", 2.0, 0.1, 20.0),
+    OApsAIMISnackPrebolus("key_prebolus_snack_mode", 1.0, 0.1, 20.0),
+    OApsAIMIHighCarbPrebolus("key_prebolus_highcarb_mode", 5.0, 0.1, 20.0),
+    OApsAIMIHighCarbPrebolus2("key_prebolus_highcarb_mode2", 5.0, 0.1, 20.0),
 
     OApsAIMIwcycledateday("key_wcycledateday", 1.0, 1.0, 31.0),
     OApsAIMIWCycleClampMin("key_wcycle_clamp_min", 0.8, 0.5, 1.0),
