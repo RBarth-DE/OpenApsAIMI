@@ -61,7 +61,8 @@ data class AutoIsfPrefsSnapshot(
     val smbDeliveryRatioMax: Double,
     val smbDeliveryRatioBgRange: Double,
     val smbMaxRangeExtension: Double,
-    val autosensMax: Double
+    val autosensMax: Double,
+    val profileISF: Double
 )
 
 data class AutoIsfReport(

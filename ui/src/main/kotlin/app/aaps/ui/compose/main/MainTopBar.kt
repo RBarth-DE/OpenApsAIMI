@@ -13,11 +13,14 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import app.aaps.ui.compose.overview.graphs.GraphViewModel
 import app.aaps.ui.search.M3SearchBar
 import app.aaps.ui.search.SearchUiState
 
@@ -44,8 +47,11 @@ fun MainTopBar(
     onSearchQueryChange: (String) -> Unit,
     onSearchClear: () -> Unit,
     onSearchActiveChange: (Boolean) -> Unit,
+    graphViewModel: GraphViewModel,
     modifier: Modifier = Modifier
 ) {
+    val isAIMIActive by graphViewModel.isAIMIActiveFlow.collectAsStateWithLifecycle()
+
     TopAppBar(
         title = {
             Row(
@@ -71,11 +77,13 @@ fun MainTopBar(
             }
         },
         actions = {
-            IconButton(onClick = onUserManualClick) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.MenuBook,
-                    contentDescription = stringResource(app.aaps.core.ui.R.string.user_manual)
-                )
+            if( isAIMIActive ) {
+                IconButton(onClick = onUserManualClick) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.MenuBook,
+                        contentDescription = stringResource(app.aaps.core.ui.R.string.user_manual)
+                    )
+                }
             }
             IconButton(onClick = onPreferencesClick) {
                 Icon(

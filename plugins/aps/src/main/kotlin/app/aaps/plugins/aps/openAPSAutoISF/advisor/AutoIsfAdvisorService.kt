@@ -158,7 +158,8 @@ class AutoIsfAdvisorService(
             smbDeliveryRatioMax = p.get(DoubleKey.ApsAutoIsfSmbDeliveryRatioMax),
             smbDeliveryRatioBgRange = p.get(DoubleKey.ApsAutoIsfSmbDeliveryRatioBgRange),
             smbMaxRangeExtension = p.get(DoubleKey.ApsAutoIsfSmbMaxRangeExtension),
-            autosensMax = p.get(DoubleKey.AutosensMax)
+            autosensMax = p.get(DoubleKey.AutosensMax),
+            profileISF = runBlocking { profileFunction?.getProfile()?.getIsfMgdl("AutoIsfAdvisorService") } ?: 0.0
         )
     }
 
@@ -184,7 +185,8 @@ class AutoIsfAdvisorService(
         iobThPercent = 100,
         smbDeliveryRatio = 0.5, smbDeliveryRatioMin = 0.3, smbDeliveryRatioMax = 0.7,
         smbDeliveryRatioBgRange = 40.0, smbMaxRangeExtension = 2.0,
-        autosensMax = 1.2
+        autosensMax = 1.2,
+        profileISF = 0.0
     )
 
     private fun pct(v: Double) = (v * 100).toInt()

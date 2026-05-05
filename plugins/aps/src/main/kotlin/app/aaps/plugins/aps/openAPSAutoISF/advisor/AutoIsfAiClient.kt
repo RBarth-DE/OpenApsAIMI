@@ -77,6 +77,7 @@ class AutoIsfAiClient {
         sb.appendLine("Weights enabled: ${prefs.useAutoIsfWeights}")
         sb.appendLine("AutoISF bounds: min=${prefs.autoIsfMin} (${DoubleKey.ApsAutoIsfMin.min}/${DoubleKey.ApsAutoIsfMin.max}) max=${prefs.autoIsfMax} ((${DoubleKey.ApsAutoIsfMax.min}/${DoubleKey.ApsAutoIsfMax.max}))  autosensMax=${prefs.autosensMax} (defines how strong ISF can become)")
         sb.appendLine("ISF weights:")
+        sb.appendLine("  Profile ISF=${prefs.profileISF}            (min: 2 / max: 1200 / default: 40)                                                                            (Profile ISF scales with its weights below)")
         sb.appendLine("  highBgWeight=${prefs.highBgWeight}         (min: ${DoubleKey.ApsAutoIsfHighBgWeight.min} / max: ${DoubleKey.ApsAutoIsfHighBgWeight.max})   (boosts ISF at high BG)")
         sb.appendLine("  lowBgWeight=${prefs.lowBgWeight}           (min: ${DoubleKey.ApsAutoIsfLowBgWeight.min} / max: ${DoubleKey.ApsAutoIsfLowBgWeight.max})     (lowers ISF when BG low → more insulin)")
         sb.appendLine("  bgAccelWeight=${prefs.bgAccelWeight}       (min: ${DoubleKey.ApsAutoIsfBgAccelWeight.min} / max: ${DoubleKey.ApsAutoIsfBgAccelWeight.max}) (responds to rising BG rate)")
