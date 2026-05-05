@@ -712,8 +712,11 @@ class GraphViewModel @AssistedInject constructor(
         val smbSeconds = MidnightUtils.secondsFromMidnight(lastBolusMs)
         val lastSmbTime = if (smbSeconds > 0) dateUtil.formatHHMM(smbSeconds) else "--:--"
         val bolusCU = activePlugin.activePump.lastBolusAmount.value?.cU ?: 0.0
-        val lastSmbAmount = if (bolusCU > 0.0)
+        val lastSmbAmount = if (bolusCU > 0.0) {
             ch.insulinAmountString(PumpInsulin(bolusCU))
+            //remove the U200 part.
+            .substringBefore("(").trim()
+        }
         else "--"
 
         // Current basal (TBR or loop fallback)
@@ -721,11 +724,17 @@ class GraphViewModel @AssistedInject constructor(
         val tbr = processedTbrEbData.getTempBasalIncludingConvertedExtended(now)
         val (basalPctText, basalRateText) =
             if (tbr?.isValid == true) {
-                val pct = rh.gs(R.string.formatPercent, tbr.rate)
                 val profile = profileFunction.getProfile()
                 val rate = profile?.let {
                     val absoluteRate = tbr.convertedToAbsolute(now, it)
                     ch.basalRateString(PumpRate(absoluteRate), true, 1)
+                        //remove the U200 part.
+                        .substringBefore("(").trim()
+                } ?: unavail
+                val pct = profile?.let {
+                    val profileBasal = it.getBasal(now)
+                    val absoluteRate = tbr.convertedToAbsolute(now, it)
+                    rh.gs(R.string.formatPercent, (absoluteRate / profileBasal * 100))
                 } ?: unavail
                 pct to rate
             } else {
