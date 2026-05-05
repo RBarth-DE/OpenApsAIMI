@@ -386,7 +386,73 @@ db.execSQL(
         }
     }
 
+    // Downgrade path for devices that were at v35.
+    // Devices that came from MTR v34 directly (skipping migration33to34) still have stale indexes
+    // that migration33to34 would have dropped. Use IF EXISTS so it's safe for devices that already
+    // ran migration33to34.
+    internal val migration35to34 = object : Migration(35, 34) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL("DROP INDEX IF EXISTS `index_effectiveProfileSwitches_id`")
+            db.execSQL("DROP INDEX IF EXISTS `index_boluses_id`")
+            db.execSQL("DROP INDEX IF EXISTS `index_bolusCalculatorResults_id`")
+            db.execSQL("DROP INDEX IF EXISTS `index_bolusCalculatorResults_isValid`")
+            db.execSQL("DROP INDEX IF EXISTS `index_carbs_id`")
+            db.execSQL("DROP INDEX IF EXISTS `index_carbs_isValid`")
+            db.execSQL("DROP INDEX IF EXISTS `index_extendedBoluses_id`")
+            db.execSQL("DROP INDEX IF EXISTS `index_extendedBoluses_isValid`")
+            db.execSQL("DROP INDEX IF EXISTS `index_extendedBoluses_pumpSerial`")
+            db.execSQL("DROP INDEX IF EXISTS `index_extendedBoluses_pumpType`")
+            db.execSQL("DROP INDEX IF EXISTS `index_glucoseValues_id`")
+            db.execSQL("DROP INDEX IF EXISTS `index_glucoseValues_sourceSensor`")
+            db.execSQL("DROP INDEX IF EXISTS `index_profileSwitches_id`")
+            db.execSQL("DROP INDEX IF EXISTS `index_temporaryBasals_id`")
+            db.execSQL("DROP INDEX IF EXISTS `index_temporaryBasals_isValid`")
+            db.execSQL("DROP INDEX IF EXISTS `index_temporaryBasals_pumpType`")
+            db.execSQL("DROP INDEX IF EXISTS `index_temporaryBasals_pumpSerial`")
+            db.execSQL("CREATE INDEX IF NOT EXISTS `index_temporaryBasals_pumpId` ON `$TABLE_TEMPORARY_BASALS` (`pumpId`)")
+            db.execSQL("DROP INDEX IF EXISTS `index_temporaryTargets_id`")
+            db.execSQL("DROP INDEX IF EXISTS `index_temporaryTargets_isValid`")
+            db.execSQL("DROP INDEX IF EXISTS `index_therapyEvents_id`")
+            db.execSQL("DROP INDEX IF EXISTS `index_therapyEvents_isValid`")
+            db.execSQL("DROP INDEX IF EXISTS `index_totalDailyDoses_id`")
+            db.execSQL("DROP INDEX IF EXISTS `index_totalDailyDoses_isValid`")
+            db.execSQL("DROP INDEX IF EXISTS `index_totalDailyDoses_pumpType`")
+            db.execSQL("DROP INDEX IF EXISTS `index_totalDailyDoses_pumpSerial`")
+            db.execSQL("DROP INDEX IF EXISTS `index_foods_id`")
+            db.execSQL("DROP INDEX IF EXISTS `index_foods_isValid`")
+            db.execSQL("DROP INDEX IF EXISTS `index_deviceStatus_id`")
+            db.execSQL("DROP INDEX IF EXISTS `index_runningModes_id`")
+            db.execSQL("DROP INDEX IF EXISTS `index_heartRate_id`")
+            db.execSQL("DROP INDEX IF EXISTS `index_stepsCount_id`")
+            // originalPsId may be missing on devices that skipped migration33to34
+            val cursor = db.query("PRAGMA table_info(`$TABLE_EFFECTIVE_PROFILE_SWITCHES`)")
+            var hasOriginalPsId = false
+            while (cursor.moveToNext()) {
+                if (cursor.getString(cursor.getColumnIndexOrThrow("name")) == "originalPsId") {
+                    hasOriginalPsId = true
+                    break
+                }
+            }
+            cursor.close()
+            if (!hasOriginalPsId) {
+                db.execSQL("ALTER TABLE `$TABLE_EFFECTIVE_PROFILE_SWITCHES` ADD COLUMN `originalPsId` INTEGER DEFAULT NULL")
+            }
+            // autoIsfValues may be missing on devices that skipped both migration31to32 and migration33to34
+            val tableExists = db.query(
+                "SELECT name FROM sqlite_master WHERE type='table' AND name='$TABLE_AUTOISF_VALUES'"
+            ).use { it.count > 0 }
+            if (!tableExists) {
+                db.execSQL(
+                    "CREATE TABLE IF NOT EXISTS `${TABLE_AUTOISF_VALUES}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `timestamp` INTEGER NOT NULL, `acceIsf` REAL NOT NULL, `bgIsf` REAL NOT NULL, `ppIsf` REAL NOT NULL, `driftIsf` REAL NOT NULL, `duraIsf` REAL NOT NULL, `finalIsf` REAL NOT NULL, `iobThEffective` REAL NOT NULL, `utcOffset` INTEGER NOT NULL, `version` INTEGER NOT NULL, `dateCreated` INTEGER NOT NULL, `isValid` INTEGER NOT NULL, `referenceId` INTEGER, `nightscoutSystemId` TEXT, `nightscoutId` TEXT, `pumpType` TEXT, `pumpSerial` TEXT, `temporaryId` INTEGER, `pumpId` INTEGER, `startId` INTEGER, `endId` INTEGER)"
+                )
+                db.execSQL("CREATE INDEX IF NOT EXISTS `index_autoIsfValues_id` ON `${TABLE_AUTOISF_VALUES}` (`id`)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS `index_autoIsfValues_timestamp` ON `${TABLE_AUTOISF_VALUES}` (`timestamp`)")
+            }
+            dropCustomIndexes(db)
+        }
+    }
+
     /** List of all migrations for easy reply in tests. */
     @VisibleForTesting
-    internal val migrations = arrayOf(migration20to21, migration21to22, migration22to23, migration23to24, migration24to25, migration25to26, migration26to27, migration27to28, migration28to29, migration29to30, migration30to31, migration31to32, migration32to33, migration33to34, migration34to35)
+    internal val migrations = arrayOf(migration20to21, migration21to22, migration22to23, migration23to24, migration24to25, migration25to26, migration26to27, migration27to28, migration28to29, migration29to30, migration30to31, migration31to32, migration32to33, migration33to34, migration35to34)
 }

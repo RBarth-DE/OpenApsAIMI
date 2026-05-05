@@ -718,19 +718,18 @@ class GraphViewModel @AssistedInject constructor(
         // Current basal (TBR or loop fallback)
         val unavail = rh.gs(R.string.value_unavailable_short)
         val tbr = processedTbrEbData.getTempBasalIncludingConvertedExtended(now)
-        val (basalPctText, basalRateText) = if (tbr?.isValid == true) {
-            val pct = rh.gs(R.string.formatPercent, tbr.rate)
-            val profile = profileFunction.getProfile()
-            val rate = profile?.let { rh.gs(R.string.format_insulin_units, tbr.convertedToAbsolute(now, it)) } ?: unavail
-            pct to rate
-        } else {
-            val pctVal = loop.lastRun?.request?.percent
-            val pct = if (pctVal == null || pctVal < 0) unavail else "$pctVal%"
-            val rateVal = loop.lastRun?.request?.rate
-            val rate = if (rateVal == null || rateVal == -1.0) unavail
-                       else rh.gs(R.string.format_insulin_units, rateVal)
-            pct to rate
-        }
+        val (basalPctText, basalRateText) =
+            if (tbr?.isValid == true) {
+                val pct = rh.gs(R.string.formatPercent, tbr.rate)
+                val profile = profileFunction.getProfile()
+                val rate = profile?.let {
+                    // vorher: rh.gs(R.string.format_insulin_units, tbr.convertedToAbsolute(now, it))
+                    ch.insulinAmountString(PumpInsulin(tbr.convertedToAbsolute(now, it)))
+                } ?: unavail
+                pct to rate
+            } else {
+                unavail to unavail
+            }
 
         // IOB — total bolus + basal IOB
         val bolusIob = iobCobCalculator.calculateIobFromBolus().round()

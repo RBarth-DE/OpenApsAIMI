@@ -1102,7 +1102,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         val iobObj = ctx.iobDataArray.firstOrNull() ?: IobTotal(ctx.currentTime)
         this.iobNet = iobObj.iob
         this.iob = iobObj.iob.toFloat() // 🛡️ Early Initialization for Safety Guards
-        val accel = ctx.glucoseStatus.bgAcceleration ?: 0.0
+        val accel = ctx.glucoseStatus.bgAcceleration
         this.bgacc = accel
         val hMult = if (tdd7Days.toFloat() != 0.0f) basalLearner.getMultiplier() else 1.0
         val nMult = if (preferences.get(BooleanKey.OApsAIMIT3cAdaptiveBasalEnabled)) {
@@ -1123,7 +1123,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             consoleLog.add("🛡️ BASAL_UNIFIED_SCALING: H=${"%.2f".format(hMult)}x / N=${"%.2f".format(nMult)}x -> Applied=${"%.2f".format(adaptiveMult)}x")
         }
         val isConfirmedHighRiseLocal =
-            ctx.glucoseStatus.glucose > 150.0 && ctx.glucoseStatus.combinedDelta > 1.5 && (ctx.glucoseStatus.bgAcceleration ?: 0.0) > 0.4
+            ctx.glucoseStatus.glucose > 150.0 && ctx.glucoseStatus.combinedDelta > 1.5 && (ctx.glucoseStatus.bgAcceleration) > 0.4
         applyThyroidModule(ctx.profile)
         return isConfirmedHighRiseLocal
     }
@@ -1273,7 +1273,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                 }
             )
         }
-        val gs = pack.gs!!
+        val gs = pack.gs
         val f = pack.features
         val glucoseStatus = ctx.glucoseStatus ?: GlucoseStatusAIMI(
             glucose = gs.glucose,
@@ -1319,7 +1319,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         val rawVelocityMgdlMin = glucoseStatus.delta / 5.0 // delta mg/dL/5min → mg/dL/min
         val correctedVelocityMgdlMin = continuousStateEstimator.applyG6LeadCompensation(rawVelocityMgdlMin, isG6Sensor)
         val correctedDelta = correctedVelocityMgdlMin * 5.0
-        if (isG6Sensor && correctedDelta != glucoseStatus.delta.toDouble()) {
+        if (isG6Sensor && correctedDelta != glucoseStatus.delta) {
             consoleLog.add("🌐 T9 G6-Lead: delta_raw=${String.format("%.1f", glucoseStatus.delta)} → delta_corr=${String.format("%.1f", correctedDelta)} mg/dL/5min")
         }
 
@@ -1467,7 +1467,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                         bgMgdl = glucoseStatus.glucose,
                         deltaMgdlPer5m = glucoseStatus.delta,
                         iobU = iobTotal,
-                        cobG = ctx.mealData.mealCOB.toDouble(),
+                        cobG = ctx.mealData.mealCOB,
                         isfMgdlPerU = earlySens,
                         diaHours = effectiveDiaH,
                         targetMgdl = ctx.profile.target_bg,
@@ -1844,7 +1844,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             mealTime -> "Meal"
             else -> "N/A"
         }
-        applyLegacyMealModes(profile, rT, ctx.currentTemp, modeTbrLimit.toDouble())?.let { early ->
+        applyLegacyMealModes(profile, rT, ctx.currentTemp, modeTbrLimit)?.let { early ->
             return AimiManualMealModesGate.ReturnEarly(early)
         }
         return AimiManualMealModesGate.Continue(activeModeName)
@@ -2077,7 +2077,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             setTempBasal(advisorRes.tbrUph, advisorRes.tbrMin ?: 30, profile, rT, ctx.currentTemp, overrideSafetyLimits = true, adaptiveMultiplier = adaptiveMult)
         }
 
-        val bolusIntent = (advisorRes.bolusU ?: 0.0).toDouble()
+        val bolusIntent = advisorRes.bolusU ?: 0.0
 
         // Direct send for all Meal Advisor results — bypass finalizeAndCapSMB (refractory + min carb coverage inside advisor).
         if (bolusIntent > 0) {
@@ -2244,7 +2244,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                     setTempBasal(v3TbrRate, 30, profile, rT, ctx.currentTemp, overrideSafetyLimits = true, adaptiveMultiplier = adaptiveMult)
                 }
 
-                val v3Smb = adCommand.scheduledMicroBolus ?: 0.0
+                val v3Smb = adCommand.scheduledMicroBolus
                 if (v3Smb > 0) {
                     finalizeAndCapSMB(
                         rT = rT,
@@ -2310,7 +2310,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         }
 
         val autoRes = if (!v3AppliedAction) tryAutodrive(
-            bg, delta, shortAvgDeltaAdj.toFloat(), profile, lastBolusTimeMs ?: 0L, predictedBg, ctx.mealData.slopeFromMinDeviation, targetBgMgdl, reason,
+            bg, delta, shortAvgDeltaAdj, profile, lastBolusTimeMs ?: 0L, predictedBg, ctx.mealData.slopeFromMinDeviation, targetBgMgdl, reason,
             preferences.get(BooleanKey.OApsAIMIautoDrive),
             dynamicPbolusLarge, dynamicPbolusSmall,
             flatBGsDetected,
@@ -2375,7 +2375,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
     ): RT? {
         val isPostHypo = postHypoState !is PostHypoState.None
 
-        val isCompression = isCompressionProtectionCondition(delta.toFloat(), reason)
+        val isCompression = isCompressionProtectionCondition(delta, reason)
 
         if (isCompression) {
             logDecisionFinal("COMPRESSION", rT, bg, delta)
@@ -2394,9 +2394,9 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             isDriftTerminatorCondition(
                 bg.toFloat(),
                 terminatorTarget.toFloat(),
-                delta.toFloat(),
+                delta,
                 shortAvgDeltaRawForDrift,
-                combinedDelta.toFloat(),
+                combinedDelta,
                 ctx.mealData.slopeFromMinDeviation,
                 totalBolusLastHour,
                 reason
@@ -2555,7 +2555,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         basal = profile.current_basal / sensitivityRatioLocal
         val wCycle = wCycleInfoForRun
         if (wCycle != null && wCycle.applied) {
-            basal *= wCycle.basalMultiplier.toDouble()
+            basal *= wCycle.basalMultiplier
         }
         basal = roundBasal(basal)
         if (basal != profileCurrentBasal) {
@@ -3414,7 +3414,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             isExplicitAction || anyMealModeForGuard || isConfirmedHighRiseLocal || (isMealChaos && smbExecution.finalSmb > 0.5)
 
         val gatedUnits = smbToGiveLocal
-        val proposedUnits = smbExecution.finalSmb.toFloat()
+        val proposedUnits = smbExecution.finalSmb
 
         if (isRedCarpetSituation && proposedUnits > 0.0) {
             val baseRestoreThreshold = 0.60f
@@ -3838,12 +3838,12 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         )?.data?.totalAmount ?: 0.0
         val tirInHypo = tirCalculator.averageTIR(
             resolveTir65180ForAverage()
-        )?.belowPct() ?: 0.0
+        ).belowPct() ?: 0.0
         val safetyDecision = safetyAdjustment(
             currentBG = glucoseStatus.glucose.toFloat(),
             predictedBG = eventualBG.toFloat(),
             bgHistory = glucoseStatusCalculatorAimi.getRecentGlucose(),
-            combinedDelta = combinedDelta.toFloat(),
+            combinedDelta = combinedDelta,
             iob = iob,
             maxIob = profile.max_iob.toFloat(),
             tdd24Hrs = tdd24h.toFloat(),
@@ -4130,8 +4130,8 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                     cachedActivityContext ?: app.aaps.plugins.aps.openAPSAIMI.activity.ActivityContext(),
                     bg,
                     delta.toDouble(),
-                    ctx.glucoseStatus.shortAvgDelta.toDouble(),
-                    eventualBG.toDouble(),
+                    ctx.glucoseStatus.shortAvgDelta,
+                    eventualBG,
                     mealModeActive,
                     HypoThresholdMath.getLgsThresholdSafe(profile)
                 )
@@ -4154,8 +4154,8 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                     cachedActivityContext ?: app.aaps.plugins.aps.openAPSAIMI.activity.ActivityContext(),
                     bg,
                     delta.toDouble(),
-                    ctx.glucoseStatus.shortAvgDelta.toDouble(),
-                    eventualBG.toDouble(),
+                    ctx.glucoseStatus.shortAvgDelta,
+                    eventualBG,
                     mealModeActive,
                     HypoThresholdMath.getLgsThresholdSafe(profile)
                 )
@@ -4674,7 +4674,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         )
         finalResult.reason.append("\n").append(learnersDebugLine)
         if (wCyclePreferences.enabled()) {
-            val wcyclePhase = wCycleFacade.getPhase()?.name
+            val wcyclePhase = wCycleFacade.getPhase().name
             val wcycleFactor = wCycleFacade.getIcMultiplier()
             val wcycleLine = app.aaps.plugins.aps.openAPSAIMI.utils.RtInstrumentationHelpers.buildWCycleLine(
                 enabled = true,
@@ -4742,7 +4742,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                     else -> null
                 }
                 val autodriveState = lastAutodriveState.toString()
-                val wcyclePhase = wCycleFacade.getPhase()?.name
+                val wcyclePhase = wCycleFacade.getPhase().name
                 val wcycleFactor = wCycleFacade.getIcMultiplier()
                 val reasonTags = finalResult.reason.toString().split(". ").map { it.trim() }
                 val auditorEffectiveProfile: EffectiveProfile? = effectiveProfileCached(dateUtil.now())
@@ -4775,7 +4775,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                     tbrMaxAutoDrive = null,
                     smb30min = smb30min,
                     predictionAvailable = predictionAvailable,
-                    predictedBg = this.predictedBg?.toDouble(),
+                    predictedBg = this.predictedBg.toDouble(),
                     eventualBg = b.rT.eventualBG,
                     inPrebolusWindow = inPrebolusWindow,
                     effectiveProfile = auditorEffectiveProfile,
@@ -5301,7 +5301,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             consoleLog.add("  │ fusedISF: ${"%.1f".format(Locale.US, pkpdRuntime.fusedIsf)} mg/dL/U")
 
             applyBasalFirstPolicy(
-                bg = bg, delta = delta.toFloat(), combinedDelta = combinedDelta.toFloat(),
+                bg = bg, delta = delta, combinedDelta = combinedDelta,
                 mealData = ctx.mealData, autosens_data = ctx.autosensData, isMealAdvisorOneShot = isExplicitAdvisorRun,
                 targetBg = targetBg.toDouble(), rT = rT, isConfirmedHighRise = isConfirmedHighRiseLocal
             )
@@ -9421,9 +9421,6 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         return null
     }
 
-    private fun isPrebolusLocked(): Boolean =
-        (System.currentTimeMillis() - internalLastSmbMillis) < 10 * 60 * 1000L
-
 
     private fun applyEndoAndActivityAdjustments(
         bg: Double, delta: Float,
@@ -10196,7 +10193,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             profileCurrentBasal = profile_current_basal,
             isConfirmedHighRiseLocal = isConfirmedHighRiseLocal,
             exerciseInsulinLockoutActive = exerciseInsulinLockoutActive,
-            combinedDelta = combinedDelta.toFloat(),
+            combinedDelta = combinedDelta,
         )
 
         var smbToGive = applySmbAdvisorExecutionToTickStateAndLog(smbExecution) { basal = it }
@@ -10413,8 +10410,8 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                 bgAcceleration = bgAcceleration.toDouble(),
                 allowMealHighIob = allowMealHighIob,
                 safetyDecision = safetyDecision,
-                forcedBasal = forcedBasal.toDouble(),
-                forcedBasalMealModesMax = forcedBasalmealmodes.toDouble(),
+                forcedBasal = forcedBasal,
+                forcedBasalMealModesMax = forcedBasalmealmodes,
                 isMealActive = isMealActive,
                 runtimeMinValue = runtimeMinValue,
                 smbToGive = smbToGive.toDouble(),
