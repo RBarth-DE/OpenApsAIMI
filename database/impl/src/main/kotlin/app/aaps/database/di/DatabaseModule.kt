@@ -336,44 +336,59 @@ db.execSQL(
         }
     }
 
-    // Adds autoIsfValues table (created in the correct schema) for devices that were already at
-    // version 34 without it (upstream v34 predates AIMI), or fixes the DOUBLE→REAL type mismatch
-    // for devices that ran the broken migration 33→34 that used DOUBLE column types.
-    // Also recreates the boluses table with nullable insulinConfiguration columns — AIMI changed
-    // Bolus.insulinConfiguration from InsulinConfiguration (NOT NULL) to InsulinConfiguration?,
-    // but no prior migration updated the physical table.
+    // Brings any v34 database (our fork's v34 OR upstream MTR v34) to v35.
+    // Uses PRAGMA checks before referencing columns that may be absent on MTR devices.
     internal val migration34to35 = object : Migration(34, 35) {
+        private fun hasColumn(db: SupportSQLiteDatabase, table: String, column: String): Boolean {
+            val cursor = db.query("PRAGMA table_info(`$table`)")
+            return cursor.use {
+                var found = false
+                while (it.moveToNext()) {
+                    if (it.getString(it.getColumnIndexOrThrow("name")) == column) { found = true; break }
+                }
+                found
+            }
+        }
+
         override fun migrate(db: SupportSQLiteDatabase) {
-            // --- autoIsfValues table ---
-            val createSql =
+            // --- autoIsfValues: create if missing, or recreate to fix DOUBLE→REAL type bug ---
+            val autoIsfCreateSql =
                 "CREATE TABLE IF NOT EXISTS `${TABLE_AUTOISF_VALUES}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `timestamp` INTEGER NOT NULL, `acceIsf` REAL NOT NULL, `bgIsf` REAL NOT NULL, `ppIsf` REAL NOT NULL, `driftIsf` REAL NOT NULL, `duraIsf` REAL NOT NULL, `finalIsf` REAL NOT NULL, `iobThEffective` REAL NOT NULL, `utcOffset` INTEGER NOT NULL, `version` INTEGER NOT NULL, `dateCreated` INTEGER NOT NULL, `isValid` INTEGER NOT NULL, `referenceId` INTEGER, `nightscoutSystemId` TEXT, `nightscoutId` TEXT, `pumpType` TEXT, `pumpSerial` TEXT, `temporaryId` INTEGER, `pumpId` INTEGER, `startId` INTEGER, `endId` INTEGER)"
-            val tableExists = db.query(
+            val autoIsfExists = db.query(
                 "SELECT name FROM sqlite_master WHERE type='table' AND name='${TABLE_AUTOISF_VALUES}'"
             ).use { it.count > 0 }
-            if (tableExists) {
-                // Table was created with DOUBLE types by the broken migration 33→34 — recreate with REAL.
+            if (autoIsfExists) {
                 db.execSQL("ALTER TABLE `${TABLE_AUTOISF_VALUES}` RENAME TO `autoIsfValues_old`")
-                db.execSQL(createSql)
+                db.execSQL(autoIsfCreateSql)
                 db.execSQL("INSERT INTO `${TABLE_AUTOISF_VALUES}` SELECT * FROM `autoIsfValues_old`")
                 db.execSQL("DROP TABLE `autoIsfValues_old`")
             } else {
-                // Table was never created (device had upstream v34 without AIMI changes).
-                db.execSQL(createSql)
+                db.execSQL(autoIsfCreateSql)
             }
             db.execSQL("CREATE INDEX IF NOT EXISTS `index_autoIsfValues_id` ON `${TABLE_AUTOISF_VALUES}` (`id`)")
             db.execSQL("CREATE INDEX IF NOT EXISTS `index_autoIsfValues_timestamp` ON `${TABLE_AUTOISF_VALUES}` (`timestamp`)")
 
-            // --- boluses table: make insulinConfiguration columns nullable ---
+            // --- totalDailyDoses: add carbInsulin if missing (MTR v34 may not have it) ---
+            if (!hasColumn(db, TABLE_TOTAL_DAILY_DOSES, "carbInsulin")) {
+                db.execSQL("DELETE FROM `$TABLE_TOTAL_DAILY_DOSES`")
+                db.execSQL("ALTER TABLE `$TABLE_TOTAL_DAILY_DOSES` ADD COLUMN `carbInsulin` REAL NOT NULL DEFAULT 0")
+            }
+
+            // --- boluses: recreate with nullable insulinConfiguration columns ---
+            // Source may have them as NOT NULL (our fork v33 path) or absent (MTR v34 path).
+            val bolusHasInsulin = hasColumn(db, TABLE_BOLUSES, "insulinLabel")
             db.execSQL(
                 "CREATE TABLE IF NOT EXISTS `new_boluses` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `version` INTEGER NOT NULL, `dateCreated` INTEGER NOT NULL, `isValid` INTEGER NOT NULL, `referenceId` INTEGER, `timestamp` INTEGER NOT NULL, `utcOffset` INTEGER NOT NULL, `amount` REAL NOT NULL, `type` TEXT NOT NULL, `notes` TEXT, `isBasalInsulin` INTEGER NOT NULL, `nightscoutSystemId` TEXT, `nightscoutId` TEXT, `pumpType` TEXT, `pumpSerial` TEXT, `temporaryId` INTEGER, `pumpId` INTEGER, `startId` INTEGER, `endId` INTEGER, `insulinLabel` TEXT, `insulinEndTime` INTEGER, `insulinPeakTime` INTEGER, `concentration` REAL, FOREIGN KEY(`referenceId`) REFERENCES `boluses`(`id`) ON UPDATE NO ACTION ON DELETE NO ACTION )"
             )
-            db.execSQL(
-                """
-                INSERT INTO new_boluses (id, version, dateCreated, isValid, referenceId, timestamp, utcOffset, amount, type, notes, isBasalInsulin, nightscoutSystemId, nightscoutId, pumpType, pumpSerial, temporaryId, pumpId, startId, endId, insulinLabel, insulinEndTime, insulinPeakTime, concentration)
-                SELECT id, version, dateCreated, isValid, referenceId, timestamp, utcOffset, amount, type, notes, isBasalInsulin, nightscoutSystemId, nightscoutId, pumpType, pumpSerial, temporaryId, pumpId, startId, endId, insulinLabel, insulinEndTime, insulinPeakTime, concentration
-                FROM `$TABLE_BOLUSES`
-                """.trimIndent()
-            )
+            if (bolusHasInsulin) {
+                db.execSQL(
+                    "INSERT INTO new_boluses (id, version, dateCreated, isValid, referenceId, timestamp, utcOffset, amount, type, notes, isBasalInsulin, nightscoutSystemId, nightscoutId, pumpType, pumpSerial, temporaryId, pumpId, startId, endId, insulinLabel, insulinEndTime, insulinPeakTime, concentration) SELECT id, version, dateCreated, isValid, referenceId, timestamp, utcOffset, amount, type, notes, isBasalInsulin, nightscoutSystemId, nightscoutId, pumpType, pumpSerial, temporaryId, pumpId, startId, endId, insulinLabel, insulinEndTime, insulinPeakTime, concentration FROM `$TABLE_BOLUSES`"
+                )
+            } else {
+                db.execSQL(
+                    "INSERT INTO new_boluses (id, version, dateCreated, isValid, referenceId, timestamp, utcOffset, amount, type, notes, isBasalInsulin, nightscoutSystemId, nightscoutId, pumpType, pumpSerial, temporaryId, pumpId, startId, endId) SELECT id, version, dateCreated, isValid, referenceId, timestamp, utcOffset, amount, type, notes, isBasalInsulin, nightscoutSystemId, nightscoutId, pumpType, pumpSerial, temporaryId, pumpId, startId, endId FROM `$TABLE_BOLUSES`"
+                )
+            }
             db.execSQL("DROP TABLE `$TABLE_BOLUSES`")
             db.execSQL("ALTER TABLE new_boluses RENAME TO `$TABLE_BOLUSES`")
             db.execSQL("CREATE INDEX IF NOT EXISTS `index_boluses_pumpId` ON `$TABLE_BOLUSES` (`pumpId`)")
@@ -381,7 +396,59 @@ db.execSQL(
             db.execSQL("CREATE INDEX IF NOT EXISTS `index_boluses_timestamp` ON `$TABLE_BOLUSES` (`timestamp`)")
             db.execSQL("CREATE INDEX IF NOT EXISTS `index_boluses_nightscoutId` ON `$TABLE_BOLUSES` (`nightscoutId`)")
 
-            // Custom indexes must be dropped on migration to pass room schema checking after upgrade
+            // --- effectiveProfileSwitches / profileSwitches: add insulin columns if missing ---
+            if (!hasColumn(db, TABLE_EFFECTIVE_PROFILE_SWITCHES, "insulinLabel")) {
+                db.execSQL("ALTER TABLE `$TABLE_EFFECTIVE_PROFILE_SWITCHES` ADD COLUMN `insulinLabel` TEXT NOT NULL DEFAULT ''")
+                db.execSQL("ALTER TABLE `$TABLE_EFFECTIVE_PROFILE_SWITCHES` ADD COLUMN `insulinEndTime` INTEGER NOT NULL DEFAULT -1")
+                db.execSQL("ALTER TABLE `$TABLE_EFFECTIVE_PROFILE_SWITCHES` ADD COLUMN `insulinPeakTime` INTEGER NOT NULL DEFAULT -1")
+                db.execSQL("ALTER TABLE `$TABLE_EFFECTIVE_PROFILE_SWITCHES` ADD COLUMN `concentration` REAL NOT NULL DEFAULT 1.0")
+            }
+            if (!hasColumn(db, TABLE_PROFILE_SWITCHES, "insulinLabel")) {
+                db.execSQL("ALTER TABLE `$TABLE_PROFILE_SWITCHES` ADD COLUMN `insulinLabel` TEXT NOT NULL DEFAULT ''")
+                db.execSQL("ALTER TABLE `$TABLE_PROFILE_SWITCHES` ADD COLUMN `insulinEndTime` INTEGER NOT NULL DEFAULT -1")
+                db.execSQL("ALTER TABLE `$TABLE_PROFILE_SWITCHES` ADD COLUMN `insulinPeakTime` INTEGER NOT NULL DEFAULT -1")
+                db.execSQL("ALTER TABLE `$TABLE_PROFILE_SWITCHES` ADD COLUMN `concentration` REAL NOT NULL DEFAULT 1.0")
+            }
+
+            // --- originalPsId: add to effectiveProfileSwitches if missing ---
+            if (!hasColumn(db, TABLE_EFFECTIVE_PROFILE_SWITCHES, "originalPsId")) {
+                db.execSQL("ALTER TABLE `$TABLE_EFFECTIVE_PROFILE_SWITCHES` ADD COLUMN `originalPsId` INTEGER DEFAULT NULL")
+            }
+
+            // --- drop stale indexes that MTR v34 may still have ---
+            db.execSQL("DROP INDEX IF EXISTS `index_effectiveProfileSwitches_id`")
+            db.execSQL("DROP INDEX IF EXISTS `index_boluses_id`")
+            db.execSQL("DROP INDEX IF EXISTS `index_bolusCalculatorResults_id`")
+            db.execSQL("DROP INDEX IF EXISTS `index_bolusCalculatorResults_isValid`")
+            db.execSQL("DROP INDEX IF EXISTS `index_carbs_id`")
+            db.execSQL("DROP INDEX IF EXISTS `index_carbs_isValid`")
+            db.execSQL("DROP INDEX IF EXISTS `index_extendedBoluses_id`")
+            db.execSQL("DROP INDEX IF EXISTS `index_extendedBoluses_isValid`")
+            db.execSQL("DROP INDEX IF EXISTS `index_extendedBoluses_pumpSerial`")
+            db.execSQL("DROP INDEX IF EXISTS `index_extendedBoluses_pumpType`")
+            db.execSQL("DROP INDEX IF EXISTS `index_glucoseValues_id`")
+            db.execSQL("DROP INDEX IF EXISTS `index_glucoseValues_sourceSensor`")
+            db.execSQL("DROP INDEX IF EXISTS `index_profileSwitches_id`")
+            db.execSQL("DROP INDEX IF EXISTS `index_temporaryBasals_id`")
+            db.execSQL("DROP INDEX IF EXISTS `index_temporaryBasals_isValid`")
+            db.execSQL("DROP INDEX IF EXISTS `index_temporaryBasals_pumpType`")
+            db.execSQL("DROP INDEX IF EXISTS `index_temporaryBasals_pumpSerial`")
+            db.execSQL("CREATE INDEX IF NOT EXISTS `index_temporaryBasals_pumpId` ON `$TABLE_TEMPORARY_BASALS` (`pumpId`)")
+            db.execSQL("DROP INDEX IF EXISTS `index_temporaryTargets_id`")
+            db.execSQL("DROP INDEX IF EXISTS `index_temporaryTargets_isValid`")
+            db.execSQL("DROP INDEX IF EXISTS `index_therapyEvents_id`")
+            db.execSQL("DROP INDEX IF EXISTS `index_therapyEvents_isValid`")
+            db.execSQL("DROP INDEX IF EXISTS `index_totalDailyDoses_id`")
+            db.execSQL("DROP INDEX IF EXISTS `index_totalDailyDoses_isValid`")
+            db.execSQL("DROP INDEX IF EXISTS `index_totalDailyDoses_pumpType`")
+            db.execSQL("DROP INDEX IF EXISTS `index_totalDailyDoses_pumpSerial`")
+            db.execSQL("DROP INDEX IF EXISTS `index_foods_id`")
+            db.execSQL("DROP INDEX IF EXISTS `index_foods_isValid`")
+            db.execSQL("DROP INDEX IF EXISTS `index_deviceStatus_id`")
+            db.execSQL("DROP INDEX IF EXISTS `index_runningModes_id`")
+            db.execSQL("DROP INDEX IF EXISTS `index_heartRate_id`")
+            db.execSQL("DROP INDEX IF EXISTS `index_stepsCount_id`")
+
             dropCustomIndexes(db)
         }
     }
@@ -454,5 +521,5 @@ db.execSQL(
 
     /** List of all migrations for easy reply in tests. */
     @VisibleForTesting
-    internal val migrations = arrayOf(migration20to21, migration21to22, migration22to23, migration23to24, migration24to25, migration25to26, migration26to27, migration27to28, migration28to29, migration29to30, migration30to31, migration31to32, migration32to33, migration33to34, migration35to34)
+    internal val migrations = arrayOf(migration20to21, migration21to22, migration22to23, migration23to24, migration24to25, migration25to26, migration26to27, migration27to28, migration28to29, migration29to30, migration30to31, migration31to32, migration32to33, migration33to34, migration34to35, migration35to34)
 }
