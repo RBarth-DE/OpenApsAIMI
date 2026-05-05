@@ -64,6 +64,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import app.aaps.core.utils.MidnightUtils
 import kotlinx.coroutines.flow.map
 import app.aaps.core.interfaces.insulin.ConcentrationHelper
+import app.aaps.core.interfaces.pump.PumpRate
 import javax.inject.Inject
 
 /**
@@ -723,8 +724,8 @@ class GraphViewModel @AssistedInject constructor(
                 val pct = rh.gs(R.string.formatPercent, tbr.rate)
                 val profile = profileFunction.getProfile()
                 val rate = profile?.let {
-                    // vorher: rh.gs(R.string.format_insulin_units, tbr.convertedToAbsolute(now, it))
-                    ch.insulinAmountString(PumpInsulin(tbr.convertedToAbsolute(now, it)))
+                    val absoluteRate = tbr.convertedToAbsolute(now, it)
+                    ch.basalRateString(PumpRate(absoluteRate), true, 1)
                 } ?: unavail
                 pct to rate
             } else {
