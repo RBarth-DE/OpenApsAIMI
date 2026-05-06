@@ -726,10 +726,10 @@ class GraphViewModel @AssistedInject constructor(
             if (tbr?.isValid == true) {
                 val profile = profileFunction.getProfile()
                 val rate = profile?.let {
-                    val absoluteRate = tbr.convertedToAbsolute(now, it)
-                    ch.basalRateString(PumpRate(absoluteRate), true, 1)
-                        //remove the U200 part.
-                        .substringBefore("(").trim()
+                    rh.gs(
+                        R.string.format_insulin_units,
+                        tbr.convertedToAbsolute(now, it)
+                    )
                 } ?: unavail
                 val pct = profile?.let {
                     val profileBasal = it.getBasal(now)
