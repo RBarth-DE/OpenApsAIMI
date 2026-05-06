@@ -19,8 +19,10 @@ import app.aaps.core.interfaces.resources.ResourceHelper
 import app.aaps.core.ui.activities.TranslatedDaggerAppCompatActivity
 import app.aaps.plugins.aps.R
 import app.aaps.core.keys.BooleanKey
+import app.aaps.plugins.aps.advisor.AdvisorCooldown
 import app.aaps.plugins.aps.openAPSAIMI.advisor.oref.OrefAnalysisReport
 import app.aaps.plugins.aps.openAPSAIMI.advisor.oref.OrefUserInsightFormatter
+import android.content.SharedPreferences
 import javax.inject.Inject
 import kotlin.math.roundToInt
 import kotlinx.coroutines.launch
@@ -57,6 +59,12 @@ class AimiProfileAdvisorActivity : TranslatedDaggerAppCompatActivity() {
     // NOT injected - created manually to avoid Dagger issues
     private lateinit var advisorService: AimiAdvisorService
     private lateinit var historyRepo: app.aaps.plugins.aps.openAPSAIMI.advisor.data.AdvisorHistoryRepository
+    private lateinit var aiCachePrefs: SharedPreferences
+
+    private companion object {
+        const val CACHE_TEXT = "__ai_call_text"
+        const val CACHE_PROVIDER = "__ai_call_provider"
+    }
 
     /** Observation / PKPD recommendation cards; used to remove rows after apply without full recreate(). */
     private val recommendationRowViews = mutableListOf<Pair<View, AimiRecommendation>>()
@@ -77,6 +85,7 @@ class AimiProfileAdvisorActivity : TranslatedDaggerAppCompatActivity() {
             aapsLogger = aapsLogger
         )
         historyRepo = app.aaps.plugins.aps.openAPSAIMI.advisor.data.AdvisorHistoryRepository(this)
+        aiCachePrefs = getSharedPreferences("aimi_advisor_cache", MODE_PRIVATE)
         title = rh.gs(R.string.aimi_advisor_title)
         
 
@@ -1069,31 +1078,46 @@ class AimiProfileAdvisorActivity : TranslatedDaggerAppCompatActivity() {
             val placeholder = rh.gs(R.string.aimi_coach_placeholder) + " (${provider.name})"
             contentText.text = "$basicAnalysis\n\n⚙️ $placeholder"
         } else {
-            lifecycleScope.launch {
-                try {
-                    val history = withContext(Dispatchers.IO) {
-                        historyRepo.getRecentActions(7)
-                    }
-                    val richOref = preferences.get(BooleanKey.OApsAIMIAdvisorLlmRichOref)
-                    val advice = AiCoachingService().fetchAdvice(
-                        this@AimiProfileAdvisorActivity,
-                        context,
-                        report,
-                        activeKey,
-                        provider,
-                        history,
-                        includeRichOref = richOref,
-                    )
-                    if (!isFinishing) {
-                        contentText.text = advice
-                    }
-                } catch (t: Throwable) {
-                    if (!isFinishing) {
-                        val detail = when (t) {
-                            is OutOfMemoryError -> rh.gs(R.string.aimi_adv_error_oom)
-                            else -> t.localizedMessage ?: t.javaClass.simpleName
+            val remaining = AdvisorCooldown.remainingMs(aiCachePrefs)
+            val cachedText = aiCachePrefs.getString(CACHE_TEXT, null)
+            val cachedProvider = aiCachePrefs.getString(CACHE_PROVIDER, null) ?: provider.name
+            if (remaining > 0L && !cachedText.isNullOrBlank()) {
+                val footer = rh.gs(R.string.advisor_ai_cached_footer, cachedProvider, AdvisorCooldown.format(rh, remaining))
+                contentText.text = "$cachedText\n\n⏳ $footer"
+            } else {
+                lifecycleScope.launch {
+                    try {
+                        val history = withContext(Dispatchers.IO) {
+                            historyRepo.getRecentActions(7)
                         }
-                        contentText.text = rh.gs(R.string.aimi_coach_error) + "\n" + detail
+                        val richOref = preferences.get(BooleanKey.OApsAIMIAdvisorLlmRichOref)
+                        val advice = AiCoachingService().fetchAdvice(
+                            this@AimiProfileAdvisorActivity,
+                            context,
+                            report,
+                            activeKey,
+                            provider,
+                            history,
+                            includeRichOref = richOref,
+                        )
+                        if (!isFinishing) {
+                            contentText.text = advice
+                            if (!AdvisorCooldown.isErrorResult(advice)) {
+                                aiCachePrefs.edit()
+                                    .putString(CACHE_TEXT, advice)
+                                    .putString(CACHE_PROVIDER, provider.name)
+                                    .apply()
+                                AdvisorCooldown.markNow(aiCachePrefs)
+                            }
+                        }
+                    } catch (t: Throwable) {
+                        if (!isFinishing) {
+                            val detail = when (t) {
+                                is OutOfMemoryError -> rh.gs(R.string.aimi_adv_error_oom)
+                                else -> t.localizedMessage ?: t.javaClass.simpleName
+                            }
+                            contentText.text = rh.gs(R.string.aimi_coach_error) + "\n" + detail
+                        }
                     }
                 }
             }

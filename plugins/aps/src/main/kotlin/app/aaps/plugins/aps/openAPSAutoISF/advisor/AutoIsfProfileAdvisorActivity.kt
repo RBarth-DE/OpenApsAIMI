@@ -28,6 +28,7 @@ import app.aaps.core.keys.interfaces.Preferences
 import app.aaps.core.keys.interfaces.StringPreferenceKey
 import app.aaps.core.ui.activities.TranslatedDaggerAppCompatActivity
 import app.aaps.plugins.aps.R
+import app.aaps.plugins.aps.advisor.AdvisorCooldown
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -182,11 +183,27 @@ class AutoIsfProfileAdvisorActivity : TranslatedDaggerAppCompatActivity() {
             ).apply { setMargins(0, 8, 0, 16) }
         }
 
-        if (apiKey.isBlank()) {
-            askBtn.isEnabled = false
-            askBtn.alpha = 0.4f
-            askBtn.text = rh.gs(R.string.autoisf_adv_ask_ai_no_key, provider.name)
+        fun applyIdleState() {
+            val remaining = AdvisorCooldown.remainingMs(cooldownPrefs)
+            when {
+                apiKey.isBlank() -> {
+                    askBtn.isEnabled = false
+                    askBtn.alpha = 0.4f
+                    askBtn.text = rh.gs(R.string.autoisf_adv_ask_ai_no_key, provider.name)
+                }
+                remaining > 0L  -> {
+                    askBtn.isEnabled = false
+                    askBtn.alpha = 0.4f
+                    askBtn.text = rh.gs(R.string.advisor_ai_cooldown, AdvisorCooldown.format(rh, remaining))
+                }
+                else            -> {
+                    askBtn.isEnabled = true
+                    askBtn.alpha = 1.0f
+                    askBtn.text = rh.gs(R.string.autoisf_adv_ask_ai_btn, provider.name)
+                }
+            }
         }
+        applyIdleState()
 
         askBtn.setOnClickListener {
             val report = currentReport ?: return@setOnClickListener
@@ -201,8 +218,8 @@ class AutoIsfProfileAdvisorActivity : TranslatedDaggerAppCompatActivity() {
                     if (isFinishing) return@withContext
                     responseText.text = result
                     responseCard.visibility = View.VISIBLE
-                    askBtn.isEnabled = true
-                    askBtn.text = rh.gs(R.string.autoisf_adv_ask_ai_btn, provider.name)
+                    if (!AdvisorCooldown.isErrorResult(result)) AdvisorCooldown.markNow(cooldownPrefs)
+                    applyIdleState()
                 }
             }
         }

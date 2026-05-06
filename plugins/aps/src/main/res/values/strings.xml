@@ -715,5 +715,10 @@
     <string name="autoisf_adv_ask_ai_btn">Ask %1$s</string>
     <string name="autoisf_adv_ask_ai_no_key">No %1$s key configured</string>
     <string name="autoisf_adv_ai_loading">Asking AI…</string>
+    <string name="advisor_ai_cooldown">Available in %1$s</string>
+    <string name="advisor_ai_cached_footer">Cached (%1$s) · Refresh available in %2$s</string>
+    <string name="advisor_cooldown_dh">%1$dd %2$dh</string>
+    <string name="advisor_cooldown_hm">%1$dh %2$dm</string>
+    <string name="advisor_cooldown_m">%1$dm</string>
 
 </resources>
