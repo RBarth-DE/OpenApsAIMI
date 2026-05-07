@@ -370,6 +370,7 @@ fun MainScreen(
                                 // Guard against transient 0 heights during AnimatedVisibility exit:
                                 // the resulting contentPadding invalidation can schedule a remeasure
                                 // on a node that's losing its owner — crashes in dispatchDraw.
+                                graphViewModel = graphViewModel,
                                 modifier = Modifier.onSizeChanged {
                                     if (it.height > 0 && it.height != topBarHeightPx) topBarHeightPx = it.height
                                 }

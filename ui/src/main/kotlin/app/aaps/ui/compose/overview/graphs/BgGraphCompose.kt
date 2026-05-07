@@ -41,7 +41,6 @@ import com.patrykandpatrick.vico.compose.cartesian.data.CartesianChartModelProdu
 import com.patrykandpatrick.vico.compose.cartesian.data.CartesianValueFormatter
 import com.patrykandpatrick.vico.compose.cartesian.data.CartesianLayerRangeProvider
 import com.patrykandpatrick.vico.compose.cartesian.data.lineSeries
-import com.patrykandpatrick.vico.compose.cartesian.decoration.HorizontalBox
 import com.patrykandpatrick.vico.compose.cartesian.layer.LineCartesianLayer
 import com.patrykandpatrick.vico.compose.cartesian.layer.rememberLineCartesianLayer
 import com.patrykandpatrick.vico.compose.cartesian.rememberCartesianChart
@@ -54,12 +53,16 @@ import com.patrykandpatrick.vico.compose.common.component.LineComponent
 import com.patrykandpatrick.vico.compose.common.component.ShapeComponent
 import com.patrykandpatrick.vico.compose.common.component.TextComponent
 import com.patrykandpatrick.vico.compose.common.component.rememberTextComponent
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 import kotlin.math.abs
 
 /** Series identifiers */
 /** Basal on BG graph — deprecated, now shown as flipped overlay on IOB graph. Set to true to restore. */
 @Deprecated("Basal moved to IOB graph as flipped overlay")
 private const val showBasalOnBgGraph = false
+/** Series identifiers */
 
 private const val SERIES_REGULAR = "regular"
 private const val SERIES_BUCKETED = "bucketed"
@@ -97,7 +100,6 @@ fun BgGraphCompose(
     zoomState: VicoZoomState,
     derivedTimeRange: Pair<Long, Long>?,
     nowTimestamp: Long,
-    /** When true, BG dots + prediction strokes use [MaterialTheme] (dashboard parity with Canvas). */
     useMaterial3DashboardStyle: Boolean = false,
     /** Dashboard-only SMB markers as a Vico line series (triangles), empty on overview. */
     dashboardSmbMarkers: List<ChartSmbMarker> = emptyList(),
@@ -385,6 +387,10 @@ fun BgGraphCompose(
         for ((key, points) in predictionsByType) {
             seriesRegistry[key] = points
         }
+        // maxBgY clamped against highMark (same as legacy GraphData.maxY logic)
+        val allBgValues = (bgReadings + bucketedData).map { it.value }
+        val maxBgY = if (allBgValues.isNotEmpty()) maxOf(allBgValues.max(), chartConfig.highMark) else chartConfig.highMark
+        rebuildChart(basalData, targetData, epsPoints, activityData, maxBgY, treatmentData, showBolus, chartConfig.lowMark)
         val sortedBgAsc = bgReadings.sortedBy { it.timestamp }
         val fallbackSmbY = viewModel.glucoseDisplayYToMgdl(
             (chartConfig.lowMark + chartConfig.highMark) / 2.0,
@@ -412,12 +418,12 @@ fun BgGraphCompose(
         val targetPeakDisplay =
             targetData.targets.maxOfOrNull { viewModel.glucoseMgdlToChartY(it.value) }
                 ?: Double.NEGATIVE_INFINITY
-        val maxBgY = if (bgDisplay.isNotEmpty()) {
+        maxBgY = if (bgDisplay.isNotEmpty()) {
             maxOf(bgDisplay.max(), chartConfig.highMark, targetPeakDisplay)
         } else {
             maxOf(chartConfig.highMark, targetPeakDisplay)
         }
-        rebuildChart(basalData, targetData, epsPoints, activityData, maxBgY)
+        rebuildChart(basalData, targetData, epsPoints, activityData, maxBgY, treatmentData, showBolus, chartConfig.lowMark)
     }
 
     // Build lookup map for BUCKETED points: x-value -> BgDataPoint (for PointProvider)
@@ -704,10 +710,10 @@ fun BgGraphCompose(
     // Dashboard soft BG axis: ~48 mg/dL steps in chart Y space (display units — see legacy GraphData).
     val yAxisStep =
         remember(generalUnits, dashboardSoftTherapyVisuals, lockStartAxisYFromZero) {
-            if (dashboardSoftTherapyVisuals && lockStartAxisYFromZero) {
+        if (dashboardSoftTherapyVisuals && lockStartAxisYFromZero) {
                 viewModel.chartBgSoftAxisStep()
-            } else {
-                1.0
+        } else {
+            1.0
             }
         }
     val decorations = remember(comfortCorridorDecoration, tbrDecoration, nowLine) {
@@ -878,8 +884,8 @@ private class DashboardSmbTapMarkerController(
 
     override fun shouldShowMarker(interaction: Interaction, targets: List<CartesianMarker.Target>): Boolean = false
 
-    private companion object {
-        private const val MODEL_X_MATCH_EPS = 0.02
-        private const val SMB_TAP_MAX_CANVAS_X_DIST_PX = 56f
+        private companion object {
+            private const val MODEL_X_MATCH_EPS = 0.02
+            private const val SMB_TAP_MAX_CANVAS_X_DIST_PX = 56f
+        }
     }
-}
