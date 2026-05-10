@@ -937,9 +937,17 @@ private fun GraphSeriesBottomSheet(
     onDismiss: () -> Unit,
     onRemoveGraph: (() -> Unit)? = null
 ) {
+    // Buffer height locally — committing on every keystroke crashed the parent
+    // composition (Vico SubcomposeLayout + IME insets re-measurement raced with
+    // the live height change). Commit only on dismiss.
+    var pendingHeight by remember(height) { mutableIntStateOf(height) }
+    val flushAndDismiss = {
+        if (pendingHeight != height) onHeightChange(pendingHeight)
+        onDismiss()
+    }
     val sheetState = rememberModalBottomSheetState()
     ModalBottomSheet(
-        onDismissRequest = onDismiss,
+        onDismissRequest = flushAndDismiss,
         sheetState = sheetState
     ) {
         Column(
@@ -967,8 +975,8 @@ private fun GraphSeriesBottomSheet(
             Spacer(Modifier.height(12.dp))
             NumberInputRow(
                 labelResId = app.aaps.core.ui.R.string.graph_height,
-                value = height.toDouble(),
-                onValueChange = { onHeightChange(it.toInt()) },
+                value = pendingHeight.toDouble(),
+                onValueChange = { pendingHeight = it.toInt() },
                 valueRange = GraphConfig.MIN_GRAPH_HEIGHT_DP.toDouble()..GraphConfig.MAX_GRAPH_HEIGHT_DP.toDouble(),
                 step = 10.0,
                 formatAsInt = true

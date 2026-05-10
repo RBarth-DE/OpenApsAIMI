@@ -67,8 +67,8 @@ fun QuickLaunchToolbar(
         tonalElevation = 6.dp,
         modifier = modifier.padding(horizontal = 16.dp)
     ) {
-        BoxWithConstraints(Modifier.height(48.dp)) {
-            val itemSizePx = with(LocalDensity.current) { 48.dp.toPx() }
+        BoxWithConstraints(Modifier.height(40.dp)) {
+            val itemSizePx = with(LocalDensity.current) { 40.dp.toPx() }
             val contentPaddingPx = with(LocalDensity.current) { 8.dp.toPx() }
             val maxItems = ((constraints.maxWidth - contentPaddingPx) / itemSizePx).toInt()
                 .coerceAtLeast(1)
@@ -79,7 +79,7 @@ fun QuickLaunchToolbar(
 
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.padding(horizontal = 4.dp)
+                modifier = Modifier.padding(horizontal = 3.dp)
             ) {
                 visibleItems.forEach { item ->
                     ToolbarIconButton(item, onActionClick)
