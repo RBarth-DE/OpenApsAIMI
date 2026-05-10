@@ -20,7 +20,6 @@ import app.aaps.core.data.model.ActiveSceneState
 import app.aaps.core.data.model.RM
 import app.aaps.core.data.model.TT
 import app.aaps.core.interfaces.notifications.AapsNotification
-import app.aaps.core.interfaces.overview.graph.TbrState
 import app.aaps.core.interfaces.pump.BolusProgressState
 import app.aaps.core.ui.compose.TABLET_MIN_SW_DP
 import app.aaps.core.ui.compose.navigation.NavigationRequest
@@ -31,7 +30,6 @@ import app.aaps.ui.compose.main.TempTargetChipState
 import app.aaps.ui.compose.manageSheet.ManageViewModel
 import app.aaps.ui.compose.notificationsSheet.NotificationBottomSheet
 import app.aaps.ui.compose.notificationsSheet.NotificationFab
-import app.aaps.ui.compose.overview.chips.ChipsViewModel
 import app.aaps.ui.compose.overview.graphs.GraphViewModel
 import app.aaps.ui.compose.overview.statusLights.StatusViewModel
 
@@ -39,10 +37,7 @@ private val SPLIT_LAYOUT_MIN_WIDTH: Dp = 720.dp
 
 @Composable
 fun OverviewScreen(
-    profileName: String,
     profilePsId: Long = 0,
-    isProfileModified: Boolean,
-    profileProgress: Float,
     tempTargetText: String,
     tempTargetState: TempTargetChipState,
     tempTargetProgress: Float,
@@ -52,17 +47,14 @@ fun OverviewScreen(
     runningModeText: String,
     runningModeProgress: Float,
     runningModeRecordId: Long = 0,
-    tbrState: TbrState,
     smbEnabled: Boolean,
     isSimpleMode: Boolean,
     calcProgress: Int,
     graphViewModel: GraphViewModel,
-    chipsViewModel: ChipsViewModel,
     manageViewModel: ManageViewModel,
     statusViewModel: StatusViewModel,
     statusLightsDef: PreferenceSubScreenDef,
     onNavigate: (NavigationRequest) -> Unit,
-    onTbrChipClick: () -> Unit,
     notifications: List<AapsNotification>,
     onDismissNotification: (AapsNotification) -> Unit,
     onNotificationActionClick: (AapsNotification) -> Unit,
@@ -80,8 +72,6 @@ fun OverviewScreen(
     queueStatusText: String? = null,
     isPumpCommunicating: Boolean = false,
     onStopBolus: () -> Unit = {},
-    /** When true (e.g. SkinMinimal dashboard layout), show [RingHeroHomeSection] instead of [BgInfoSection]. */
-    useRingHeroHome: Boolean = false,
     modifier: Modifier = Modifier
 ) {
     var showNotificationSheet by remember { mutableStateOf(false) }
@@ -111,10 +101,6 @@ fun OverviewScreen(
     Box(modifier = modifier.fillMaxSize()) {
         if (isTablet) {
             OverviewScreenTablet(
-                profileName = profileName,
-                isProfileModified = isProfileModified,
-                profileProgress = profileProgress,
-                profileSceneManaged = profileSceneManaged,
                 tempTargetText = tempTargetText,
                 tempTargetState = tempTargetState,
                 tempTargetProgress = tempTargetProgress,
@@ -124,17 +110,14 @@ fun OverviewScreen(
                 runningModeText = runningModeText,
                 runningModeProgress = runningModeProgress,
                 runningModeSceneManaged = runningModeSceneManaged,
-                tbrState = tbrState,
                 smbEnabled = smbEnabled,
                 isSimpleMode = isSimpleMode,
                 calcProgress = calcProgress,
                 graphViewModel = graphViewModel,
-                chipsViewModel = chipsViewModel,
                 manageViewModel = manageViewModel,
                 statusViewModel = statusViewModel,
                 statusLightsDef = statusLightsDef,
                 onNavigate = onNavigate,
-                onTbrChipClick = onTbrChipClick,
                 paddingValues = paddingValues,
                 activeSceneState = activeSceneState,
                 sceneExpired = sceneExpired,
@@ -145,10 +128,6 @@ fun OverviewScreen(
         } else BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
             if (maxWidth >= SPLIT_LAYOUT_MIN_WIDTH) {
                 OverviewScreenSplit(
-                    profileName = profileName,
-                    isProfileModified = isProfileModified,
-                    profileProgress = profileProgress,
-                    profileSceneManaged = profileSceneManaged,
                     tempTargetText = tempTargetText,
                     tempTargetState = tempTargetState,
                     tempTargetProgress = tempTargetProgress,
@@ -158,19 +137,15 @@ fun OverviewScreen(
                     runningModeText = runningModeText,
                     runningModeProgress = runningModeProgress,
                     runningModeSceneManaged = runningModeSceneManaged,
-                    tbrState = tbrState,
                     smbEnabled = smbEnabled,
                     isSimpleMode = isSimpleMode,
                     calcProgress = calcProgress,
                     graphViewModel = graphViewModel,
-                    chipsViewModel = chipsViewModel,
                     manageViewModel = manageViewModel,
                     statusViewModel = statusViewModel,
                     statusLightsDef = statusLightsDef,
                     onNavigate = onNavigate,
-                    onTbrChipClick = onTbrChipClick,
                     paddingValues = paddingValues,
-                    useRingHeroHome = useRingHeroHome,
                     activeSceneState = activeSceneState,
                     sceneExpired = sceneExpired,
                     onEndScene = onEndScene,
@@ -179,10 +154,6 @@ fun OverviewScreen(
                 )
             } else {
                 OverviewScreenStacked(
-                    profileName = profileName,
-                    isProfileModified = isProfileModified,
-                    profileProgress = profileProgress,
-                    profileSceneManaged = profileSceneManaged,
                     tempTargetText = tempTargetText,
                     tempTargetState = tempTargetState,
                     tempTargetProgress = tempTargetProgress,
@@ -192,19 +163,15 @@ fun OverviewScreen(
                     runningModeText = runningModeText,
                     runningModeProgress = runningModeProgress,
                     runningModeSceneManaged = runningModeSceneManaged,
-                    tbrState = tbrState,
-                    smbEnabled = smbEnabled,
                     isSimpleMode = isSimpleMode,
+                    smbEnabled = smbEnabled,
                     calcProgress = calcProgress,
                     graphViewModel = graphViewModel,
-                    chipsViewModel = chipsViewModel,
                     manageViewModel = manageViewModel,
                     statusViewModel = statusViewModel,
                     statusLightsDef = statusLightsDef,
                     onNavigate = onNavigate,
-                    onTbrChipClick = onTbrChipClick,
                     paddingValues = paddingValues,
-                    useRingHeroHome = useRingHeroHome,
                     activeSceneState = activeSceneState,
                     sceneExpired = sceneExpired,
                     onEndScene = onEndScene,

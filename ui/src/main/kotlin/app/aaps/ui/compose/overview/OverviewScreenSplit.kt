@@ -57,6 +57,7 @@ fun OverviewScreenSplit(
     runningModeText: String,
     runningModeProgress: Float,
     runningModeSceneManaged: Boolean = false,
+    smbEnabled: Boolean,
     isSimpleMode: Boolean,
     calcProgress: Int,
     graphViewModel: GraphViewModel,
@@ -241,9 +242,6 @@ fun OverviewScreenSplit(
                                 } catch (_: Exception) {
                                 }
                             }
-                        }
-                        AimiActionButton(label = stringResource(app.aaps.core.ui.R.string.aimi_btn_stats)) {
-                            onNavigate(NavigationRequest.Element(ElementType.STATISTICS))
                         }
                     }
                 }

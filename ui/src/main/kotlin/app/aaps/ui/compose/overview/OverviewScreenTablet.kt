@@ -49,10 +49,6 @@ import app.aaps.ui.compose.scenes.ActiveSceneBanner
  */
 @Composable
 fun OverviewScreenTablet(
-    profileName: String,
-    isProfileModified: Boolean,
-    profileProgress: Float,
-    profileSceneManaged: Boolean = false,
     tempTargetText: String,
     tempTargetState: TempTargetChipState,
     tempTargetProgress: Float,
@@ -62,7 +58,6 @@ fun OverviewScreenTablet(
     runningModeText: String,
     runningModeProgress: Float,
     runningModeSceneManaged: Boolean = false,
-    tbrState: TbrState,
     smbEnabled: Boolean,
     isSimpleMode: Boolean,
     calcProgress: Int,
@@ -72,7 +67,6 @@ fun OverviewScreenTablet(
     statusViewModel: StatusViewModel,
     statusLightsDef: PreferenceSubScreenDef,
     onNavigate: (NavigationRequest) -> Unit,
-    onTbrChipClick: () -> Unit,
     paddingValues: PaddingValues,
     activeSceneState: ActiveSceneState? = null,
     sceneExpired: Boolean = false,
@@ -157,20 +151,12 @@ fun OverviewScreenTablet(
                             runningModeSceneManaged = runningModeSceneManaged,
                             smbEnabled = smbEnabled,
                             isSimpleMode = isSimpleMode,
-                            profileName = profileName,
-                            isProfileModified = isProfileModified,
-                            profileProgress = profileProgress,
-                            profileSceneManaged = profileSceneManaged,
                             tempTargetText = tempTargetText,
                             tempTargetState = tempTargetState,
                             tempTargetProgress = tempTargetProgress,
                             tempTargetReason = tempTargetReason,
                             tempTargetSceneManaged = tempTargetSceneManaged,
-                            tbrState = tbrState,
-                            iobUiState = iobUiState,
-                            cobUiState = cobUiState,
                             onNavigate = onNavigate,
-                            onTbrChipClick = onTbrChipClick
                         )
                     }
                 }

@@ -32,8 +32,8 @@ class DetermineBasalAutoISF @Inject constructor(
 
     @Inject lateinit var preferences: Preferences
 
-    private val consoleError = mutableListOf<String>()
-    private val consoleLog = mutableListOf<String>()
+    private var consoleError = mutableListOf<String>()
+    private var consoleLog = mutableListOf<String>()
 
     private fun Double.toFixed2(): String = DecimalFormat("0.00#").format(round(this, 2))
 

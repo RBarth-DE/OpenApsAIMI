@@ -18,18 +18,11 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import app.aaps.core.data.model.RM
 import app.aaps.core.data.model.TT
-import app.aaps.core.interfaces.overview.graph.TbrState
-import app.aaps.core.ui.compose.AapsSpacing
 import app.aaps.core.ui.compose.icons.IcSettingsOff
 import app.aaps.core.ui.compose.navigation.ElementType
 import app.aaps.core.ui.compose.navigation.NavigationRequest
 import app.aaps.ui.compose.main.TempTargetChipState
-import app.aaps.ui.compose.overview.chips.CobUiState
-import app.aaps.ui.compose.overview.chips.IobCobChipsRow
-import app.aaps.ui.compose.overview.chips.IobUiState
-import app.aaps.ui.compose.overview.chips.ProfileChip
 import app.aaps.ui.compose.overview.chips.RunningModeChip
-import app.aaps.ui.compose.overview.chips.TbrChip
 import app.aaps.ui.compose.overview.chips.TempTargetChip
 
 @Composable
@@ -40,20 +33,12 @@ fun OverviewChipsColumn(
     runningModeSceneManaged: Boolean = false,
     smbEnabled: Boolean = false,
     isSimpleMode: Boolean,
-    profileName: String,
-    isProfileModified: Boolean,
-    profileProgress: Float,
-    profileSceneManaged: Boolean = false,
     tempTargetText: String,
     tempTargetState: TempTargetChipState,
     tempTargetProgress: Float,
     tempTargetReason: TT.Reason?,
     tempTargetSceneManaged: Boolean = false,
-    tbrState: TbrState,
-    iobUiState: IobUiState,
-    cobUiState: CobUiState,
     onNavigate: (NavigationRequest) -> Unit,
-    onTbrChipClick: () -> Unit,
     modifier: Modifier = Modifier,
     trailingContent: @Composable (RowScope.() -> Unit)? = null
 ) {
@@ -63,7 +48,7 @@ fun OverviewChipsColumn(
     ) {
         if (trailingContent != null) {
             BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
-                val chipsWidth = (maxWidth * 0.4f).coerceIn(140.dp, 220.dp)
+                val chipsWidth = (maxWidth * 0.4f).coerceIn(100.dp, 160.dp)
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically
@@ -79,18 +64,13 @@ fun OverviewChipsColumn(
                             runningModeSceneManaged = runningModeSceneManaged,
                             smbEnabled = smbEnabled,
                             isSimpleMode = isSimpleMode,
-                            profileName = profileName,
-                            isProfileModified = isProfileModified,
-                            profileProgress = profileProgress,
-                            profileSceneManaged = profileSceneManaged,
                             tempTargetText = tempTargetText,
                             tempTargetState = tempTargetState,
                             tempTargetProgress = tempTargetProgress,
                             tempTargetReason = tempTargetReason,
                             tempTargetSceneManaged = tempTargetSceneManaged,
-                            tbrState = tbrState,
                             onNavigate = onNavigate,
-                            onTbrChipClick = onTbrChipClick
+                            modifier = Modifier.width(chipsWidth),
                         )
                     }
                     Row(
@@ -107,24 +87,15 @@ fun OverviewChipsColumn(
                 runningModeSceneManaged = runningModeSceneManaged,
                 smbEnabled = smbEnabled,
                 isSimpleMode = isSimpleMode,
-                profileName = profileName,
-                isProfileModified = isProfileModified,
-                profileProgress = profileProgress,
-                profileSceneManaged = profileSceneManaged,
                 tempTargetText = tempTargetText,
                 tempTargetState = tempTargetState,
                 tempTargetProgress = tempTargetProgress,
                 tempTargetReason = tempTargetReason,
                 tempTargetSceneManaged = tempTargetSceneManaged,
-                tbrState = tbrState,
                 onNavigate = onNavigate,
-                onTbrChipClick = onTbrChipClick
+                modifier = Modifier
             )
         }
-        IobCobChipsRow(
-            iobUiState = iobUiState,
-            cobUiState = cobUiState
-        )
     }
 }
 
@@ -136,69 +107,52 @@ private fun NarrowChips(
     runningModeSceneManaged: Boolean,
     smbEnabled: Boolean,
     isSimpleMode: Boolean,
-    profileName: String,
-    isProfileModified: Boolean,
-    profileProgress: Float,
-    profileSceneManaged: Boolean,
     tempTargetText: String,
     tempTargetState: TempTargetChipState,
     tempTargetProgress: Float,
     tempTargetReason: TT.Reason?,
     tempTargetSceneManaged: Boolean,
-    tbrState: TbrState,
     onNavigate: (NavigationRequest) -> Unit,
-    onTbrChipClick: () -> Unit
+    modifier: Modifier = Modifier
 ) {
-    if (runningModeText.isNotEmpty()) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            RunningModeChip(
-                mode = runningMode,
-                text = runningModeText,
-                progress = runningModeProgress,
-                modifier = Modifier.weight(1f),
-                sceneManaged = runningModeSceneManaged,
-                smbEnabled = smbEnabled,
-                onClick = { onNavigate(NavigationRequest.Element(ElementType.RUNNING_MODE)) }
-            )
-            if (isSimpleMode) {
-                Icon(
-                    imageVector = IcSettingsOff,
-                    contentDescription = stringResource(app.aaps.core.ui.R.string.simple_mode),
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier
-                        .padding(start = 4.dp)
-                        .size(20.dp)
+    Column(
+        modifier = modifier,
+        verticalArrangement = Arrangement.spacedBy(2.dp)
+        ) {
+        if (runningModeText.isNotEmpty()) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                RunningModeChip(
+                    mode = runningMode,
+                    text = runningModeText,
+                    progress = runningModeProgress,
+                    modifier = Modifier.weight(1f),
+                    sceneManaged = runningModeSceneManaged,
+                    smbEnabled = smbEnabled,
+                    onClick = { onNavigate(NavigationRequest.Element(ElementType.RUNNING_MODE)) }
                 )
+                if (isSimpleMode) {
+                    Icon(
+                        imageVector = IcSettingsOff,
+                        contentDescription = stringResource(app.aaps.core.ui.R.string.simple_mode),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier
+                            .padding(start = 4.dp)
+                            .size(20.dp)
+                    )
+                }
             }
         }
-    }
-    ProfileChip(
-        profileName = profileName.ifEmpty { stringResource(app.aaps.core.ui.R.string.no_profile_set) },
-        isModified = isProfileModified,
-        progress = profileProgress,
-        onClick = { onNavigate(NavigationRequest.Element(ElementType.PROFILE_MANAGEMENT)) },
-        sceneManaged = profileSceneManaged,
-        isNoProfile = profileName.isEmpty()
-    )
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(AapsSpacing.small)
-    ) {
         if (tempTargetText.isNotEmpty()) {
             TempTargetChip(
                 targetText = tempTargetText,
                 state = tempTargetState,
                 progress = tempTargetProgress,
                 reason = tempTargetReason,
-                modifier = Modifier.weight(1f),
                 onClick = { onNavigate(NavigationRequest.Element(ElementType.TEMP_TARGET_MANAGEMENT)) },
+                modifier = Modifier.fillMaxWidth(),
                 sceneManaged = tempTargetSceneManaged
             )
         }
-        TbrChip(
-            state = tbrState,
-            onClick = onTbrChipClick
-        )
     }
 }
 

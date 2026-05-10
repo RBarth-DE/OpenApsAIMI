@@ -1,21 +1,44 @@
 package app.aaps.ui.compose.overview.graphs
 
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.key
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.platform.LocalViewConfiguration
+import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.waitForUpOrCancellation
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.clickable
+import androidx.compose.material3.Surface
+import androidx.compose.ui.window.Popup
+import androidx.compose.ui.window.PopupProperties
+
+import kotlinx.coroutines.delay
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.aaps.core.data.configuration.Constants
 import app.aaps.core.graph.vico.Square
@@ -24,11 +47,13 @@ import app.aaps.core.interfaces.overview.graph.BasalGraphData
 import app.aaps.core.interfaces.overview.graph.BgDataPoint
 import app.aaps.core.interfaces.overview.graph.BgRange
 import app.aaps.core.interfaces.overview.graph.BgType
+import app.aaps.core.interfaces.overview.graph.BolusGraphPoint
 import app.aaps.core.interfaces.overview.graph.ChartSmbMarker
 import app.aaps.core.interfaces.overview.graph.ChartTbrSegment
 import app.aaps.core.interfaces.overview.graph.EpsGraphPoint
 import app.aaps.core.interfaces.overview.graph.SeriesType
 import app.aaps.core.interfaces.overview.graph.TargetLineData
+import app.aaps.core.interfaces.overview.graph.TreatmentGraphData
 import app.aaps.core.ui.compose.AapsTheme
 import app.aaps.core.ui.compose.icons.IcProfile
 import com.patrykandpatrick.vico.compose.cartesian.CartesianChartHost
@@ -82,15 +107,13 @@ private val PREDICTION_SERIES = listOf(SERIES_PRED_IOB, SERIES_PRED_COB, SERIES_
  * Layer 0 (start axis): BG readings — regular (outlined circles) + bucketed (filled, range-colored)
  * Layer 1 (end axis, hidden): Basal — profile (dashed step) + actual delivered (solid step + area fill)
  *
- * **BG start-axis Y** follows legacy [app.aaps.core.graph.data.GlucoseValueDataPoint] / GraphView:
- * display units from General → Units (mg/dL or mmol/L). Cache [BgDataPoint.value] stays mg/dL; conversion
- * happens when building Vico series so ticks and data share one coordinate space.
- *
  * Basal Y-axis is scaled so maxBasal = 25% of chart height (maxY = maxBasal * 4).
  *
  * Scroll/Zoom:
  * - Accepts external scroll/zoom states for synchronization with secondary graphs
  * - This is the primary interactive graph - user controls scroll/zoom here
+ *
+ * Tap on SMB triangle to show bolus details dialog.
  */
 @Composable
 fun BgGraphCompose(
@@ -138,18 +161,18 @@ fun BgGraphCompose(
     val rawPredictions by viewModel.predictionsFlow.collectAsStateWithLifecycle()
     val predictions = if (showPredictions) rawPredictions else emptyList()
     val rawBasalData by viewModel.basalGraphFlow.collectAsStateWithLifecycle()
-    // Basal on BG graph is deprecated — now shown as flipped overlay on IOB graph instead.
-    // Keep the layer structure intact (dummy data) to avoid chart restructuring.
-    @Suppress("DEPRECATION")
-    val basalData = if (showBasalOnBgGraph) rawBasalData else BasalGraphData(emptyList(), emptyList(), 0.0)
+    val targetData by viewModel.targetLineFlow.collectAsStateWithLifecycle()
+    val showBasal = SeriesType.BASAL in bgOverlays
+    val basalData = if (showBasal) rawBasalData else BasalGraphData(emptyList(), emptyList(), 0.0)
     val epsPoints by viewModel.epsGraphFlow.collectAsStateWithLifecycle()
     val showActivityOnMainChart = SeriesType.ACTIVITY in bgOverlays && !dashboardSplitActivityToStrip
     val activityData by viewModel.activityGraphFlow.collectAsStateWithLifecycle()
+    val showBolus = SeriesType.BOLUS in bgOverlays
+    val treatmentData by viewModel.treatmentGraphFlow.collectAsStateWithLifecycle()
+    val smbColor = AapsTheme.elementColors.insulin
     val chartConfig by viewModel.chartConfigFlow.collectAsStateWithLifecycle()
     val generalUnits by viewModel.generalUnits.collectAsStateWithLifecycle()
     val vicoChartLook by viewModel.vicoChartLookFlow.collectAsStateWithLifecycle()
-
-    val targetData by viewModel.targetLineFlow.collectAsStateWithLifecycle()
 
     // Y-axis matches legacy GraphView: display units (mg/dL or mmol/L per General → Units).
     // [BgDataPoint.value] / target line / DB remain mg/dL; convert at Vico series build.
@@ -200,6 +223,8 @@ fun BgGraphCompose(
     val uamPredColor = AapsTheme.generalColors.uamPrediction
     val ztPredColor = AapsTheme.generalColors.ztPrediction
 
+    val viewConfiguration = LocalViewConfiguration.current
+
     // Calculate x-axis range (must match COB graph for alignment)
     val maxX = remember(minTimestamp, maxTimestamp) {
         timestampToX(maxTimestamp, minTimestamp)
@@ -213,13 +238,29 @@ fun BgGraphCompose(
         minTimestamp to maxTimestamp
     }
 
-    // Function to rebuild chart from registry
+    // =========================================================================
+    // SMB tap detection state
+    // =========================================================================
+    var selectedSmb by remember { mutableStateOf<BolusGraphPoint?>(null) }
+    var chartWidthPx by remember { mutableFloatStateOf(0f) }
+    val density = LocalDensity.current
+
+    // Precompute visible SMB list for hit testing (same filter as rebuildChart)
+    val visibleSmbs = remember(treatmentData, showBolus, minTimestamp) {
+        if (!showBolus) emptyList()
+        else treatmentData.boluses.filter { it.isValid }
+
+    }
+
     suspend fun rebuildChart(
         currentBasalData: BasalGraphData,
         currentTargetData: TargetLineData,
         currentEpsPoints: List<EpsGraphPoint>,
         currentActivityData: ActivityGraphData,
         currentMaxBgY: Double,
+        currentTreatmentData: TreatmentGraphData,
+        showBolusMarkers: Boolean,
+        currentLowMark: Double
     ) {
         val regularPoints = seriesRegistry[SERIES_REGULAR] ?: emptyList()
         val bucketedPoints = seriesRegistry[SERIES_BUCKETED] ?: emptyList()
@@ -352,6 +393,21 @@ fun BgGraphCompose(
                     series(x = listOf(0.0, 1.0), y = listOf(0.0, 0.0))
                 }
             }
+
+            // Block 6 → SMB markers (layer 5, start axis — fixed at bottom of BG chart)
+            lineSeries {
+                val smbX = if (showBolusMarkers) {
+                    currentTreatmentData.boluses
+                        .filter { it.isValid }
+                        .map { timestampToX(it.timestamp, minTimestamp) }
+                        .filter { it in 0.0..maxX }
+                } else emptyList()
+                if (smbX.isNotEmpty()) {
+                    series(x = smbX, y = List(smbX.size) { currentLowMark })
+                } else {
+                    series(x = listOf(0.0, 1.0), y = listOf(0.0, 0.0))
+                }
+            }
         }
     }
 
@@ -389,7 +445,7 @@ fun BgGraphCompose(
         }
         // maxBgY clamped against highMark (same as legacy GraphData.maxY logic)
         val allBgValues = (bgReadings + bucketedData).map { it.value }
-        val maxBgY = if (allBgValues.isNotEmpty()) maxOf(allBgValues.max(), chartConfig.highMark) else chartConfig.highMark
+        var maxBgY = if (allBgValues.isNotEmpty()) maxOf(allBgValues.max(), chartConfig.highMark) else chartConfig.highMark
         rebuildChart(basalData, targetData, epsPoints, activityData, maxBgY, treatmentData, showBolus, chartConfig.lowMark)
         val sortedBgAsc = bgReadings.sortedBy { it.timestamp }
         val fallbackSmbY = viewModel.glucoseDisplayYToMgdl(
@@ -441,7 +497,6 @@ fun BgGraphCompose(
     // =========================================================================
     // BG layer lines (layer 0)
     // =========================================================================
-
     val regularColorChart = if (dashboardSoftTherapyVisuals) regularColor.copy(alpha = 0.88f) else regularColor
     val regularOutlineAlpha = if (dashboardSoftTherapyVisuals) 0.22f else 0.3f
     val customTintDots = vicoChartLook.bgReadingTintKey != VicoChartAppearance.TINT_THEME
@@ -455,6 +510,7 @@ fun BgGraphCompose(
     } else {
         0f
     }
+
     val regularLine = remember(regularColorChart, regularOutlineAlpha, regularDotFillAlpha) {
         LineCartesianLayer.Line(
             fill = LineCartesianLayer.LineFill.single(Fill(Color.Transparent)),
@@ -516,7 +572,6 @@ fun BgGraphCompose(
             )
         )
     }
-
     val normalizerLine = remember { createNormalizerLine() }
 
     val surfaceForBlend = scheme.surface
@@ -540,7 +595,6 @@ fun BgGraphCompose(
         val c = if (dashboardSoftTherapyVisuals) softenChartColor(ztPredColor, surfaceForBlend) else ztPredColor
         if (dashboardSoftTherapyVisuals) createSoftPredictionLine(c) else createPredictionLine(c)
     }
-
     val activeSeries by activeSeriesState
     val bgLines = remember(activeSeries, regularLine, bucketedLine, smbDashboardLine, iobPredLine, cobPredLine, aCobPredLine, uamPredLine, ztPredLine, normalizerLine) {
         buildList {
@@ -659,6 +713,20 @@ fun BgGraphCompose(
         listOf(activityHistLine, activityPredLine)
     }
 
+    val smbLine = remember(smbColor) {
+        LineCartesianLayer.Line(
+            fill = LineCartesianLayer.LineFill.single(Fill(Color.Transparent)),
+            areaFill = null,
+            pointProvider = LineCartesianLayer.PointProvider.single(
+                LineCartesianLayer.Point(
+                    component = ShapeComponent(fill = Fill(smbColor), shape = TriangleShape),
+                    size = 13.dp
+                )
+            )
+        )
+    }
+    val smbLines = remember(smbLine) { listOf(smbLine) }
+
     // Basal Y-axis range: maxBasal * 4 so basal occupies ~25% of chart height
     // EPS layer shares End axis with basal, so both must use the same Y-range (basalMaxY)
     val basalMaxY = remember(basalData.maxBasal) {
@@ -707,7 +775,7 @@ fun BgGraphCompose(
     )
     val axisLabelColor = if (dashboardSoftTherapyVisuals) scheme.onSurfaceVariant.copy(alpha = 0.72f) else scheme.onSurface
     val gridGuideAlpha = if (dashboardSoftTherapyVisuals) 0.22f else 0.5f
-    // Dashboard soft BG axis: ~48 mg/dL steps in chart Y space (display units — see legacy GraphData).
+    // Dashboard soft BG axis: same tick spacing as Overview (48 mg/dL ≈ 2.67 mmol/L) — fewer labels, shorter chart feel.
     val yAxisStep =
         remember(generalUnits, dashboardSoftTherapyVisuals, lockStartAxisYFromZero) {
         if (dashboardSoftTherapyVisuals && lockStartAxisYFromZero) {
@@ -758,10 +826,130 @@ fun BgGraphCompose(
     }
 
     // =========================================================================
-    // Chart — multi layer
+    // SMB tap hit-test modifier
+    // Left axis occupies ~36dp; remaining width is chart content.
+    // chartX = (tapX - leftAxisPx + scrollPx) / (contentPx * zoom / maxX)
+    // Tolerance: ±15dp in screen space → converted to chart units.
     // =========================================================================
 
-    key(generalUnits) {
+    // Diese States werden im Lambda immer aktuell gelesen
+    val latestZoom by rememberUpdatedState(zoomState.value)
+    val latestScroll by rememberUpdatedState(scrollState.value)
+    val latestChartWidth by rememberUpdatedState(chartWidthPx)
+
+    // Initialzoom einmalig capturen (entspricht DEFAULT_GRAPH_ZOOM_MINUTES Viewport
+    var initialZoom by remember { mutableFloatStateOf(-1f) }
+
+    // Capture the initial zoom value via LaunchedEffect — must NOT be done during composition
+    LaunchedEffect(zoomState.value) {
+        if (initialZoom <= 0f && zoomState.value > 0f) {
+            initialZoom = zoomState.value
+        }
+    }
+
+    var smbPopupOffset by remember { mutableStateOf(androidx.compose.ui.unit.IntOffset.Zero) }
+
+    val smbTapModifier = if (showBolus && visibleSmbs.isNotEmpty()) {
+        Modifier
+            .pointerInput(visibleSmbs, minTimestamp, maxX) {
+                awaitEachGesture {
+                    val down = awaitFirstDown(pass = PointerEventPass.Initial)
+                    val up = withTimeoutOrNull(viewConfiguration.longPressTimeoutMillis) {
+                        waitForUpOrCancellation(pass = PointerEventPass.Initial)
+                    }
+                    if (up != null) {
+                        val leftAxisPx = with(density) { 36.dp.toPx() }
+                        val contentPx = latestChartWidth - leftAxisPx  // ← latest
+                        // Absicherung im pointerInput:
+                        if (contentPx <= 0f) return@awaitEachGesture
+                        if (initialZoom <= 0f) return@awaitEachGesture  // ← neu: warten bis initialisiert
+
+                        val zoomFactor = latestZoom / initialZoom
+                        // Sanity check — verhindert Division by zero oder extreme Werte
+                        if (zoomFactor <= 0f || zoomFactor > 100f) return@awaitEachGesture
+
+                        val pixelsPerUnit = (contentPx / DEFAULT_GRAPH_ZOOM_MINUTES) * zoomFactor
+                        val tappedChartX = (down.position.x - leftAxisPx + latestScroll) / pixelsPerUnit
+                        val toleranceUnits = with(density) { 30.dp.toPx() } / pixelsPerUnit
+
+                        val hit = visibleSmbs.minByOrNull { smb ->
+                            kotlin.math.abs(timestampToX(smb.timestamp, minTimestamp) - tappedChartX)
+                        }?.takeIf { smb ->
+                            kotlin.math.abs(timestampToX(smb.timestamp, minTimestamp) - tappedChartX) <= toleranceUnits
+                        }
+
+                        if (hit != null) {
+                            //haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                            val popupY = (down.position.y - with(density) { 80.dp.toPx() }).toInt()
+                            smbPopupOffset = androidx.compose.ui.unit.IntOffset(
+                                x = (down.position.x - with(density) { 40.dp.toPx() }).toInt().coerceAtLeast(0),
+                                y = popupY.coerceAtLeast(with(density) { 4.dp.toPx() }.toInt())
+                            )
+                            selectedSmb = hit
+                        }
+                    }
+                }
+            }
+    } else Modifier
+
+    // =========================================================================
+    // SMB detail dialog
+    // =========================================================================
+
+    selectedSmb?.let { smb ->
+        val timeStr = remember(smb.timestamp) {
+            SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(Date(smb.timestamp))
+        }
+
+        // Auto-dismiss nach 3 Sekunden
+        LaunchedEffect(smb) {
+            delay(3000)
+            selectedSmb = null
+        }
+
+        Popup(
+            offset = smbPopupOffset,
+            onDismissRequest = { selectedSmb = null },
+            properties = PopupProperties(focusable = false)
+        ) {
+            Surface(
+                shape = MaterialTheme.shapes.medium,
+                tonalElevation = 4.dp,
+                shadowElevation = 4.dp,
+                modifier = Modifier
+                    .padding(16.dp)
+                    .clickable { selectedSmb = null }
+            ) {
+                Column(modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)) {
+                    Text(
+                        text = "${"%.2f".format(smb.amount)} U",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text(
+                        text = timeStr,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                    )
+                }
+            }
+        }
+    }
+
+    // =========================================================================
+    // Chart
+    // =========================================================================
+
+    // Box-Wrapper statt direkt auf CartesianChartHost
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .height(130.dp)
+            .onGloballyPositioned { chartWidthPx = it.size.width.toFloat() }
+            .then(smbTapModifier)
+    ) {
+        key(generalUnits) {
+
         CartesianChartHost(
             chart = rememberCartesianChart(
                 // Layer 0: BG (start axis, visible)
@@ -794,6 +982,12 @@ fun BgGraphCompose(
                     rangeProvider = startAxisRangeProvider,
                     verticalAxisPosition = Axis.Position.Vertical.Start
                 ),
+                // Layer 5: SMB markers (start axis — triangle points fixed at lowMark, no line)
+                rememberLineCartesianLayer(
+                    lineProvider = LineCartesianLayer.LineProvider.series(smbLines),
+                    rangeProvider = startAxisRangeProvider,
+                    verticalAxisPosition = Axis.Position.Vertical.Start
+                ),
                 startAxis = VerticalAxis.rememberStart(
                     itemPlacer = VerticalAxis.ItemPlacer.step({ yAxisStep }),
                     valueFormatter = bgStartAxisValueFormatter,
@@ -814,75 +1008,79 @@ fun BgGraphCompose(
                 decorations = decorations,
                 marker = if (dashboardSmbTapController != null) dashboardSmbTapMarker else null,
                 markerController = dashboardSmbTapController ?: defaultMarkerController,
+
                 getXStep = { 1.0 }
             ),
             modelProducer = modelProducer,
-            modifier = modifier.fillMaxWidth(),
+            modifier = modifier
+                .fillMaxWidth()
+                .height(130.dp),
             scrollState = scrollState,
             zoomState = zoomState
         )
+        }
     }
 }
 
-private fun interpolateBgForDashboardMarker(
-    epochMs: Long,
-    sortedAsc: List<BgDataPoint>,
-    fallbackY: Double,
-): Double {
-    if (sortedAsc.isEmpty()) return fallbackY
-    if (sortedAsc.size == 1) return sortedAsc.first().value
-    if (epochMs <= sortedAsc.first().timestamp) return sortedAsc.first().value
-    if (epochMs >= sortedAsc.last().timestamp) return sortedAsc.last().value
-    for (i in 0 until sortedAsc.lastIndex) {
-        val a = sortedAsc[i]
-        val b = sortedAsc[i + 1]
-        if (epochMs < a.timestamp || epochMs > b.timestamp) continue
-        val span = (b.timestamp - a.timestamp).toDouble().coerceAtLeast(1.0)
-        val t = ((epochMs - a.timestamp).toDouble() / span).coerceIn(0.0, 1.0)
-        return a.value + t * (b.value - a.value)
+    private fun interpolateBgForDashboardMarker(
+        epochMs: Long,
+        sortedAsc: List<BgDataPoint>,
+        fallbackY: Double,
+    ): Double {
+        if (sortedAsc.isEmpty()) return fallbackY
+        if (sortedAsc.size == 1) return sortedAsc.first().value
+        if (epochMs <= sortedAsc.first().timestamp) return sortedAsc.first().value
+        if (epochMs >= sortedAsc.last().timestamp) return sortedAsc.last().value
+        for (i in 0 until sortedAsc.lastIndex) {
+            val a = sortedAsc[i]
+            val b = sortedAsc[i + 1]
+            if (epochMs < a.timestamp || epochMs > b.timestamp) continue
+            val span = (b.timestamp - a.timestamp).toDouble().coerceAtLeast(1.0)
+            val t = ((epochMs - a.timestamp).toDouble() / span).coerceIn(0.0, 1.0)
+            return a.value + t * (b.value - a.value)
+        }
+        return sortedAsc.last().value
     }
-    return sortedAsc.last().value
-}
 
-/**
- * Shows nothing; enables Vico's tap pipeline so we can match [LineCartesianLayerMarkerTarget]s for the
- * dashboard SMB series without duplicating scroll/zoom → model-X math.
- */
-private class DashboardSmbTapMarkerController(
-    private val smbs: List<ChartSmbMarker>,
-    private val minTimestamp: Long,
-    private val onSmbTap: (ChartSmbMarker) -> Unit,
-) : CartesianMarkerController {
+    /**
+     * Shows nothing; enables Vico's tap pipeline so we can match [LineCartesianLayerMarkerTarget]s for the
+     * dashboard SMB series without duplicating scroll/zoom → model-X math.
+     */
+    private class DashboardSmbTapMarkerController(
+        private val smbs: List<ChartSmbMarker>,
+        private val minTimestamp: Long,
+        private val onSmbTap: (ChartSmbMarker) -> Unit,
+    ) : CartesianMarkerController {
 
-    override val acceptsLongPress: Boolean get() = false
+        override val acceptsLongPress: Boolean get() = false
 
-    override fun shouldAcceptInteraction(
-        interaction: Interaction,
-        targets: List<CartesianMarker.Target>,
-    ): Boolean {
-        if (interaction !is Interaction.Tap || targets.isEmpty()) return true
-        val tapX = interaction.point.x
-        var bestSmb: ChartSmbMarker? = null
-        var bestDist = Float.POSITIVE_INFINITY
-        for (t in targets) {
-            if (t !is LineCartesianLayerMarkerTarget) continue
-            val smb = smbs.firstOrNull { smb ->
-                abs(timestampToX(smb.timestampEpochMs, minTimestamp) - t.x) < MODEL_X_MATCH_EPS
-            } ?: continue
-            val d = abs(t.canvasX - tapX)
-            if (d <= SMB_TAP_MAX_CANVAS_X_DIST_PX && d < bestDist) {
-                bestDist = d
-                bestSmb = smb
+        override fun shouldAcceptInteraction(
+            interaction: Interaction,
+            targets: List<CartesianMarker.Target>,
+        ): Boolean {
+            if (interaction !is Interaction.Tap || targets.isEmpty()) return true
+            val tapX = interaction.point.x
+            var bestSmb: ChartSmbMarker? = null
+            var bestDist = Float.POSITIVE_INFINITY
+            for (t in targets) {
+                if (t !is LineCartesianLayerMarkerTarget) continue
+                val smb = smbs.firstOrNull { smb ->
+                    abs(timestampToX(smb.timestampEpochMs, minTimestamp) - t.x) < MODEL_X_MATCH_EPS
+                } ?: continue
+                val d = abs(t.canvasX - tapX)
+                if (d <= SMB_TAP_MAX_CANVAS_X_DIST_PX && d < bestDist) {
+                    bestDist = d
+                    bestSmb = smb
+                }
             }
+            if (bestSmb != null) {
+                onSmbTap(bestSmb)
+                return false
+            }
+            return true
         }
-        if (bestSmb != null) {
-            onSmbTap(bestSmb)
-            return false
-        }
-        return true
-    }
 
-    override fun shouldShowMarker(interaction: Interaction, targets: List<CartesianMarker.Target>): Boolean = false
+        override fun shouldShowMarker(interaction: Interaction, targets: List<CartesianMarker.Target>): Boolean = false
 
         private companion object {
             private const val MODEL_X_MATCH_EPS = 0.02

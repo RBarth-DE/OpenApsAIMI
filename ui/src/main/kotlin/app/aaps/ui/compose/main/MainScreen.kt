@@ -21,11 +21,8 @@ import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -47,8 +44,6 @@ import app.aaps.core.interfaces.notifications.AapsNotification
 import app.aaps.core.interfaces.plugin.PluginBase
 import app.aaps.core.interfaces.pump.BolusProgressState
 import app.aaps.core.ui.R
-import app.aaps.core.ui.compose.pump.PumpActivityDialog
-import app.aaps.core.ui.compose.pump.PumpActivityFab
 import app.aaps.core.ui.compose.LocalDateUtil
 import app.aaps.core.ui.compose.LocalSnackbarHostState
 import app.aaps.core.ui.compose.dialogs.OkCancelDialog
@@ -58,23 +53,20 @@ import app.aaps.core.ui.compose.navigation.NavigationRequest
 import app.aaps.core.ui.compose.preference.PreferenceSubScreenDef
 import app.aaps.ui.compose.alertDialogs.AboutAlertDialog
 import app.aaps.ui.compose.alertDialogs.AboutDialogData
+import app.aaps.ui.compose.scenesSheet.ScenesBottomSheet
+import app.aaps.ui.compose.scenesSheet.ScenesViewModel
+import app.aaps.ui.compose.loopSheet.LoopActionViewModel
 import app.aaps.ui.compose.maintenance.ImportSource
 import app.aaps.ui.compose.maintenance.MaintenanceDialogs
 import app.aaps.ui.compose.maintenance.MaintenanceViewModel
-import app.aaps.core.data.model.ActiveSceneState
 import app.aaps.ui.compose.manageSheet.ManageSheetState
 import app.aaps.ui.compose.manageSheet.ManageViewModel
-import app.aaps.ui.compose.notificationsSheet.NotificationBottomSheet
-import app.aaps.ui.compose.notificationsSheet.NotificationFab
 import app.aaps.ui.compose.overview.OverviewScreen
-import app.aaps.ui.compose.overview.chips.ChipsViewModel
 import app.aaps.ui.compose.overview.graphs.GraphViewModel
 import app.aaps.ui.compose.overview.statusLights.StatusViewModel
 import app.aaps.ui.compose.quickLaunch.QuickLaunchAction
 import app.aaps.ui.compose.quickLaunch.QuickLaunchToolbar
 import app.aaps.ui.compose.quickLaunch.ResolvedQuickLaunchItem
-import app.aaps.ui.compose.scenesSheet.ScenesBottomSheet
-import app.aaps.ui.compose.scenesSheet.ScenesViewModel
 import app.aaps.ui.compose.treatmentsSheet.TreatmentBottomSheet
 import app.aaps.ui.compose.treatmentsSheet.TreatmentViewModel
 import app.aaps.ui.search.SearchIndexEntry
@@ -94,7 +86,7 @@ fun MainScreen(
     statusViewModel: StatusViewModel,
     treatmentViewModel: TreatmentViewModel,
     scenesViewModel: ScenesViewModel,
-    loopActionViewModel: app.aaps.ui.compose.loopSheet.LoopActionViewModel,
+    loopActionViewModel: LoopActionViewModel,
     // Search
     searchUiState: SearchUiState,
     onSearchQueryChange: (String) -> Unit,
@@ -137,7 +129,6 @@ fun MainScreen(
     onQuickLaunchActionClick: (QuickLaunchAction) -> Unit = {},
     calcProgress: Int,
     graphViewModel: GraphViewModel,
-    chipsViewModel: ChipsViewModel,
     statusLightsDef: PreferenceSubScreenDef,
     treatmentButtonsDef: PreferenceSubScreenDef,
     // Pump activity
@@ -146,10 +137,6 @@ fun MainScreen(
     queueStatusText: String? = null,
     isPumpCommunicating: Boolean = false,
     onStopBolus: () -> Unit = {},
-    /** When true, overview uses the ring glucose hero instead of the flat BG circle (Compose overview only). */
-    useRingHeroHome: Boolean = false,
-    /** When non-null, replaces [OverviewScreen] with the embedded AIMI hybrid [app.aaps.plugins.main.general.dashboard.DashboardFragment]. */
-    dashboardOverview: (@Composable (PaddingValues, Dp) -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
     LocalDateUtil.current
@@ -159,21 +146,11 @@ fun MainScreen(
     var showAutomationSheet by remember { mutableStateOf(false) }
     var showLoopActionSheet by remember { mutableStateOf(false) }
     val automationState by scenesViewModel.uiState.collectAsStateWithLifecycle()
-    val snackbarHostState = remember { SnackbarHostState() }
-    val isDashboardEmbedded = dashboardOverview != null
-    var dashboardNotificationSheet by remember { mutableStateOf(false) }
-    var dashboardPumpDialog by remember { mutableStateOf(false) }
-    val showDashboardPumpFab = isDashboardEmbedded &&
-        (isPumpCommunicating || (bolusState != null && bolusState.isSMB))
+    val snackbarHostState = LocalSnackbarHostState.current
 
-    LaunchedEffect(autoShowNotificationSheet, isDashboardEmbedded) {
-        if (autoShowNotificationSheet && isDashboardEmbedded) {
-            dashboardNotificationSheet = true
-            onAutoShowConsumed()
-        }
-    }
-    LaunchedEffect(bolusState, isDashboardEmbedded) {
-        if (isDashboardEmbedded && bolusState == null) dashboardPumpDialog = false
+    // Sync automation state (otherwise missed after start)
+    LaunchedEffect(Unit) {
+        scenesViewModel.refreshState()
     }
 
     // Sync drawer state with ui state
@@ -191,140 +168,116 @@ fun MainScreen(
         }
     }
 
-    CompositionLocalProvider(LocalSnackbarHostState provides snackbarHostState) {
-        ModalNavigationDrawer(
-            drawerState = drawerState,
-            drawerContent = {
-                MainDrawer(
-                    versionName = mainViewModel.versionName,
-                    appIcon = mainViewModel.appIcon,
-                    onNavigate = { request ->
-                        scope.launch { drawerState.close() }
-                        onDrawerClosed()
-                        onNavigate(request)
-                    },
-                    isTreatmentsEnabled = uiState.isProfileLoaded
-                )
-            },
-            gesturesEnabled = true,
-            modifier = modifier
-        ) {
-            BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
-                val density = LocalDensity.current
-                val previewMode = maxHeight < PREVIEW_MODE_MIN_HEIGHT
-                var chromeVisible by remember { mutableStateOf(false) }
-                val showChrome = !previewMode || chromeVisible
-                val interactionSource = remember { MutableInteractionSource() }
+    ModalNavigationDrawer(
+        drawerState = drawerState,
+        drawerContent = {
+            MainDrawer(
+                versionName = mainViewModel.versionName,
+                appIcon = mainViewModel.appIcon,
+                onNavigate = { request ->
+                    scope.launch { drawerState.close() }
+                    onDrawerClosed()
+                    onNavigate(request)
+                },
+                isTreatmentsEnabled = uiState.isProfileLoaded
+            )
+        },
+        gesturesEnabled = true,
+        modifier = modifier
+    ) {
+        BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+            val density = LocalDensity.current
+            val previewMode = maxHeight < PREVIEW_MODE_MIN_HEIGHT
+            var chromeVisible by remember { mutableStateOf(false) }
+            val showChrome = !previewMode || chromeVisible
+            val interactionSource = remember { MutableInteractionSource() }
 
-                // Measure actual bar heights for content padding in non-preview mode
-                var topBarHeightPx by remember { mutableIntStateOf(0) }
-                var bottomBarHeightPx by remember { mutableIntStateOf(0) }
+            // Measure actual bar heights for content padding in non-preview mode
+            var topBarHeightPx by remember { mutableIntStateOf(0) }
+            var bottomBarHeightPx by remember { mutableIntStateOf(0) }
 
-                // Auto-hide chrome after timeout, reset when leaving preview mode
-                LaunchedEffect(chromeVisible, previewMode) {
-                    if (!previewMode) {
-                        chromeVisible = false
-                        return@LaunchedEffect
-                    }
-                    if (chromeVisible) {
-                        delay(AUTO_HIDE_DELAY_MS)
-                        chromeVisible = false
-                    }
+            // Auto-hide chrome after timeout, reset when leaving preview mode
+            LaunchedEffect(chromeVisible, previewMode) {
+                if (!previewMode) {
+                    chromeVisible = false
+                    return@LaunchedEffect
+                }
+                if (chromeVisible) {
+                    delay(AUTO_HIDE_DELAY_MS)
+                    chromeVisible = false
+                }
+            }
+
+            Scaffold { scaffoldPadding ->
+                val hasToolbar = quickLaunchItems.isNotEmpty()
+
+                // Content padding: in preview mode use only system bars;
+                // in normal mode add measured bar heights
+                val contentPadding = if (previewMode) scaffoldPadding
+                else {
+                    val topBarHeight = with(density) { topBarHeightPx.toDp() }
+                    val bottomBarHeight = with(density) { bottomBarHeightPx.toDp() }
+                    PaddingValues(
+                        top = scaffoldPadding.calculateTopPadding() + topBarHeight,
+                        bottom = scaffoldPadding.calculateBottomPadding() + bottomBarHeight
+                    )
                 }
 
-                Scaffold(
-                    snackbarHost = { SnackbarHost(snackbarHostState) },
-                ) { scaffoldPadding ->
-                    val hasToolbar = quickLaunchItems.isNotEmpty()
+                val activeSceneState by mainViewModel.activeSceneState.collectAsStateWithLifecycle()
+                val sceneExpired by mainViewModel.sceneExpired.collectAsStateWithLifecycle()
+                Box(modifier = Modifier.fillMaxSize()) {
+                    // Main content
+                    OverviewScreen(
+                        tempTargetText = uiState.tempTargetText,
+                        tempTargetState = uiState.tempTargetState,
+                        tempTargetProgress = uiState.tempTargetProgress,
+                        tempTargetReason = uiState.tempTargetReason,
+                        tempTargetRecordId = uiState.tempTargetRecordId,
+                        runningMode = uiState.runningMode,
+                        runningModeText = uiState.runningModeText,
+                        runningModeProgress = uiState.runningModeProgress,
+                        runningModeRecordId = uiState.runningModeRecordId,
+                        smbEnabled = uiState.smbEnabled,
+                        isSimpleMode = uiState.isSimpleMode,
+                        calcProgress = calcProgress,
+                        graphViewModel = graphViewModel,
+                        manageViewModel = manageViewModel,
+                        statusViewModel = statusViewModel,
+                        statusLightsDef = statusLightsDef,
+                        onNavigate = onNavigate,
+                        notifications = notifications,
+                        onDismissNotification = onDismissNotification,
+                        onNotificationActionClick = onNotificationActionClick,
+                        autoShowNotificationSheet = autoShowNotificationSheet,
+                        onAutoShowConsumed = onAutoShowConsumed,
+                        activeSceneState = activeSceneState,
+                        sceneExpired = sceneExpired,
+                        onEndScene = { mainViewModel.requestSceneDeactivation() },
+                        onDismissScene = { mainViewModel.dismissExpiredScene() },
+                        formatDuration = mainViewModel::formatDuration,
+                        paddingValues = contentPadding,
+                        fabBottomOffset = if (hasToolbar && showChrome) 56.dp else 0.dp,
+                        bolusState = bolusState,
+                        pumpStatusText = pumpStatusText,
+                        queueStatusText = queueStatusText,
+                        isPumpCommunicating = isPumpCommunicating,
+                        onStopBolus = onStopBolus
+                    )
 
-                    // Content padding: in preview mode use only system bars;
-                    // in normal mode add measured bar heights
-                    val contentPadding = if (previewMode) scaffoldPadding
-                    else {
-                        val topBarHeight = with(density) { topBarHeightPx.toDp() }
-                        val bottomBarHeight = with(density) { bottomBarHeightPx.toDp() }
-                        PaddingValues(
-                            top = scaffoldPadding.calculateTopPadding() + topBarHeight,
-                            bottom = scaffoldPadding.calculateBottomPadding() + bottomBarHeight
-                        )
-                    }
-
-                    val activeSceneState by mainViewModel.activeSceneState.collectAsStateWithLifecycle()
-                    val sceneExpired by mainViewModel.sceneExpired.collectAsStateWithLifecycle()
-                    Box(modifier = Modifier.fillMaxSize()) {
-                        val fabBottomOffset = if (hasToolbar && showChrome) 56.dp else 0.dp
-
-                        // Main content
-                        if (dashboardOverview != null) {
-                            dashboardOverview(contentPadding, fabBottomOffset)
-                        } else {
-                            OverviewScreen(
-                                profileName = uiState.profileName,
-                                profilePsId = uiState.profilePsId,
-                                isProfileModified = uiState.isProfileModified,
-                                profileProgress = uiState.profileProgress,
-                                tempTargetText = uiState.tempTargetText,
-                                tempTargetState = uiState.tempTargetState,
-                                tempTargetProgress = uiState.tempTargetProgress,
-                                tempTargetReason = uiState.tempTargetReason,
-                                tempTargetRecordId = uiState.tempTargetRecordId,
-                                runningMode = uiState.runningMode,
-                                runningModeText = uiState.runningModeText,
-                                runningModeProgress = uiState.runningModeProgress,
-                                runningModeRecordId = uiState.runningModeRecordId,
-                                tbrState = uiState.tbrState,
-                                smbEnabled = uiState.smbEnabled,
-                                isSimpleMode = uiState.isSimpleMode,
-                                calcProgress = calcProgress,
-                                graphViewModel = graphViewModel,
-                                chipsViewModel = chipsViewModel,
-                                manageViewModel = manageViewModel,
-                                statusViewModel = statusViewModel,
-                                statusLightsDef = statusLightsDef,
-                                onNavigate = onNavigate,
-                                onTbrChipClick = mainViewModel::showTbrInfo,
-                                notifications = notifications,
-                                onDismissNotification = onDismissNotification,
-                                onNotificationActionClick = onNotificationActionClick,
-                                autoShowNotificationSheet = autoShowNotificationSheet,
-                                onAutoShowConsumed = onAutoShowConsumed,
-                                activeSceneState = activeSceneState,
-                                sceneExpired = sceneExpired,
-                                onEndScene = { mainViewModel.requestSceneDeactivation() },
-                                onDismissScene = { mainViewModel.dismissExpiredScene() },
-                                formatDuration = mainViewModel::formatDuration,
-                                paddingValues = contentPadding,
-                                fabBottomOffset = fabBottomOffset,
-                                bolusState = bolusState,
-                                pumpStatusText = pumpStatusText,
-                                queueStatusText = queueStatusText,
-                                isPumpCommunicating = isPumpCommunicating,
-                                onStopBolus = onStopBolus,
-                                useRingHeroHome = useRingHeroHome,
-                            )
-                        }
-
-                        // Search results overlay
-                        if (searchUiState.isSearchActive) {
-                            SearchResults(
-                                results = searchUiState.results,
-                                wikiResults = searchUiState.wikiResults,
-                                isSearching = searchUiState.isSearching,
-                                isSearchingWiki = searchUiState.isSearchingWiki,
-                                wikiOffline = searchUiState.wikiOffline,
-                                onResultClick = onSearchResultClick,
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .padding(contentPadding)
-                            )
-                        }
-
-                        // Version overlay
-                        VersionOverlay(
+                    // Search results overlay
+                    if (searchUiState.isSearchActive) {
+                        SearchResults(
+                            results = searchUiState.results,
+                            wikiResults = searchUiState.wikiResults,
+                            isSearching = searchUiState.isSearching,
+                            isSearchingWiki = searchUiState.isSearchingWiki,
+                            wikiOffline = searchUiState.wikiOffline,
+                            onResultClick = onSearchResultClick,
                             modifier = Modifier
-                                .align(Alignment.TopEnd)
+                                .fillMaxSize()
                                 .padding(contentPadding)
                         )
+                    }
 
                         // Status bar protection scrim — keeps system icons legible
                         // against the floating search bar / graph content
@@ -418,123 +371,80 @@ fun MainScreen(
                             )
                         }
 
-                        // Quick launch toolbar overlay
-                        AnimatedVisibility(
-                            visible = hasToolbar && showChrome,
-                            enter = slideInVertically { it },
-                            exit = slideOutVertically { it },
+                    // Quick launch toolbar overlay
+                    AnimatedVisibility(
+                        visible = hasToolbar && showChrome,
+                        enter = slideInVertically { it },
+                        exit = slideOutVertically { it },
+                        modifier = Modifier
+                            .align(Alignment.BottomCenter)
+                            .padding(
+                                bottom = scaffoldPadding.calculateBottomPadding() +
+                                    with(density) { bottomBarHeightPx.toDp() } + 8.dp
+                            )
+                    ) {
+                        QuickLaunchToolbar(
+                            items = quickLaunchItems,
+                            onActionClick = onQuickLaunchActionClick,
+                        )
+                    }
+
+                    // Tap overlay to restore chrome in preview mode (only when hidden)
+                    if (previewMode && !chromeVisible) {
+                        Box(
                             modifier = Modifier
-                                .align(Alignment.BottomCenter)
-                                .padding(
-                                    bottom = scaffoldPadding.calculateBottomPadding() +
-                                        with(density) { bottomBarHeightPx.toDp() } + 8.dp
-                                )
-                        ) {
-                            QuickLaunchToolbar(
-                                items = quickLaunchItems,
-                                onActionClick = onQuickLaunchActionClick,
-                            )
-                        }
-
-                        // FABs (classic View UI switch removed upstream; Compose is the only shell)
-                        if (showChrome) {
-                            if (isDashboardEmbedded) {
-                                val fabBottomOffset = if (hasToolbar && showChrome) 56.dp else 0.dp
-                                PumpActivityFab(
-                                    visible = showDashboardPumpFab,
-                                    bolusState = bolusState,
-                                    onClick = { dashboardPumpDialog = true },
-                                    modifier = Modifier
-                                        .align(Alignment.BottomEnd)
-                                        .padding(contentPadding)
-                                        .padding(end = 16.dp, bottom = 128.dp + fabBottomOffset)
-                                )
-                                NotificationFab(
-                                    notificationCount = notifications.size,
-                                    highestLevel = notifications.minByOrNull { it.level.ordinal }?.level,
-                                    onClick = { dashboardNotificationSheet = true },
-                                    modifier = Modifier
-                                        .align(Alignment.BottomEnd)
-                                        .padding(contentPadding)
-                                        .padding(end = 16.dp, bottom = 72.dp + fabBottomOffset)
-                                )
-                            }
-                        }
-
-                        // Tap overlay to restore chrome in preview mode (only when hidden)
-                        if (previewMode && !chromeVisible) {
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .clickable(
-                                        interactionSource = interactionSource,
-                                        indication = null
-                                    ) { chromeVisible = true }
-                            )
-                        }
+                                .fillMaxSize()
+                                .clickable(
+                                    interactionSource = interactionSource,
+                                    indication = null
+                                ) { chromeVisible = true }
+                        )
                     }
                 }
             }
         }
+    }
 
-        // Treatment bottom sheet
-        if (showTreatmentSheet) {
-            val treatmentState by treatmentViewModel.uiState.collectAsStateWithLifecycle()
-            TreatmentBottomSheet(
-                onDismiss = { showTreatmentSheet = false },
-                showCgm = treatmentState.showCgm,
-                showCalibration = treatmentState.showCalibration,
-                showTreatment = treatmentState.showTreatment,
-                showInsulin = treatmentState.showInsulin,
-                showCarbs = treatmentState.showCarbs,
-                showCalculator = treatmentState.showCalculator,
-                isDexcomSource = treatmentState.isDexcomSource,
-                showSettingsIcon = treatmentState.showSettingsIcon,
-                quickWizardItems = treatmentState.quickWizardItems,
-                onNavigate = onNavigate,
-                treatmentButtonsDef = treatmentButtonsDef,
-            )
-        }
+    // Treatment bottom sheet
+    if (showTreatmentSheet) {
+        val treatmentState by treatmentViewModel.uiState.collectAsStateWithLifecycle()
+        TreatmentBottomSheet(
+            onDismiss = { showTreatmentSheet = false },
+            showCgm = treatmentState.showCgm,
+            showCalibration = treatmentState.showCalibration,
+            showTreatment = treatmentState.showTreatment,
+            showInsulin = treatmentState.showInsulin,
+            showCarbs = treatmentState.showCarbs,
+            showCalculator = treatmentState.showCalculator,
+            isDexcomSource = treatmentState.isDexcomSource,
+            showSettingsIcon = treatmentState.showSettingsIcon,
+            quickWizardItems = treatmentState.quickWizardItems,
+            onNavigate = onNavigate,
+            treatmentButtonsDef = treatmentButtonsDef,
+        )
+    }
 
-        if (isDashboardEmbedded && dashboardPumpDialog) {
-            PumpActivityDialog(
-                bolusState = bolusState,
-                pumpStatus = pumpStatusText,
-                queueStatus = queueStatusText,
-                isModal = false,
-                onStop = onStopBolus,
-                onDismiss = { dashboardPumpDialog = false }
-            )
-        }
-        if (isDashboardEmbedded && dashboardNotificationSheet && notifications.isNotEmpty()) {
-            NotificationBottomSheet(
-                notifications = notifications,
-                onDismissSheet = { dashboardNotificationSheet = false },
-                onDismissNotification = onDismissNotification,
-                onNotificationActionClick = onNotificationActionClick
-            )
-        }
+    // Automation bottom sheet
+    if (showAutomationSheet) {
+        val sceneState by scenesViewModel.uiState.collectAsStateWithLifecycle()
+        ScenesBottomSheet(
+            onDismiss = { showAutomationSheet = false },
+            automationItems = sceneState.items,
+            onItemClick = { item -> mainViewModel.requestAutomationConfirmation(item.eventId) },
+            sceneItems = sceneState.sceneItems,
+            onSceneClick = { sceneId -> mainViewModel.requestSceneConfirmation(sceneId) }
+        )
+    }
 
-        // Automation bottom sheet
-        if (showAutomationSheet) {
-            ScenesBottomSheet(
-                onDismiss = { showAutomationSheet = false },
-                automationItems = automationState.items,
-                onItemClick = { item -> mainViewModel.requestAutomationConfirmation(item.eventId) },
-                sceneItems = automationState.sceneItems,
-                onSceneClick = { sceneId -> mainViewModel.requestSceneConfirmation(sceneId) }
-            )
-        }
-
-        // Loop accept action bottom sheet
-        if (showLoopActionSheet) {
-            val loopState by loopActionViewModel.uiState.collectAsStateWithLifecycle()
-            app.aaps.ui.compose.loopSheet.LoopActionBottomSheet(
-                state = loopState,
-                onPerform = { mainViewModel.performLoopAccept() },
-                onDismiss = { showLoopActionSheet = false }
-            )
-        }
+    // Loop accept action bottom sheet
+    if (showLoopActionSheet) {
+        val loopState by loopActionViewModel.uiState.collectAsStateWithLifecycle()
+        app.aaps.ui.compose.loopSheet.LoopActionBottomSheet(
+            state = loopState,
+            onPerform = { mainViewModel.performLoopAccept() },
+            onDismiss = { showLoopActionSheet = false }
+        )
+    }
 
         // Shared confirmation dialog (automation actions, TT presets, scene end — from toolbar or
         // bottom sheets). When the confirmation carries a secondary action (e.g., scene chain skip),
@@ -563,27 +473,26 @@ fun MainScreen(
             }
         }
 
-        // Maintenance dialogs (sheets, confirmations, export chain)
-        MaintenanceDialogs(
-            maintenanceViewModel = maintenanceViewModel,
-            showMaintenanceSheet = uiState.showMaintenanceSheet,
-            onMaintenanceSheetDismiss = onMaintenanceSheetDismiss,
-            onDirectoryClick = onDirectoryClick,
-            onImportSettingsNavigate = onImportSettingsNavigate,
-            onRecreateActivity = onRecreateActivity,
-            onLaunchBrowser = onLaunchBrowser,
-            onBringToForeground = onBringToForeground,
-            onSnackbar = { snackbarHostState.showSnackbar(it) }
-        )
+    // Maintenance dialogs (sheets, confirmations, export chain)
+    MaintenanceDialogs(
+        maintenanceViewModel = maintenanceViewModel,
+        showMaintenanceSheet = uiState.showMaintenanceSheet,
+        onMaintenanceSheetDismiss = onMaintenanceSheetDismiss,
+        onDirectoryClick = onDirectoryClick,
+        onImportSettingsNavigate = onImportSettingsNavigate,
+        onRecreateActivity = onRecreateActivity,
+        onLaunchBrowser = onLaunchBrowser,
+        onBringToForeground = onBringToForeground,
+        onSnackbar = { snackbarHostState.showSnackbar(it) }
+    )
 
-        // About dialog
-        if (uiState.showAboutDialog && aboutDialogData != null) {
-            AboutAlertDialog(
-                data = aboutDialogData,
-                onDismiss = onAboutDialogDismiss
-            )
-        }
-    } // CompositionLocalProvider
+    // About dialog
+    if (uiState.showAboutDialog && aboutDialogData != null) {
+        AboutAlertDialog(
+            data = aboutDialogData,
+            onDismiss = onAboutDialogDismiss
+        )
+    }
 }
 
 private val PREVIEW_MODE_MIN_HEIGHT: Dp = 500.dp
