@@ -1,6 +1,7 @@
 package app.aaps.pump.medtrum
 
 import android.util.Base64
+import app.aaps.core.data.model.BS
 import app.aaps.core.data.model.TE
 import app.aaps.core.data.pump.defs.PumpType
 import app.aaps.core.data.time.T
@@ -288,6 +289,12 @@ class MedtrumPump @Inject constructor(
     var bolusStopped = false // bolus stopped by user
     var bolusDone = true // Bolus completed or stopped on pump, initialize as true as to don't show bolus on init
     var bolusErrorReason: String? = null
+
+    // Type of the currently tracked bolus (set in setBolus, used for auto-resume of interrupted boluses).
+    var bolusOriginalType: BS.Type = BS.Type.NORMAL
+
+    // Set to true once an auto-resume has been attempted for the current bolus session. Cleared in setBolus().
+    var bolusResumeAttempted = false
 
     private val _bolusAmountDelivered = MutableStateFlow(0.0)
     val bolusAmountDeliveredFlow: StateFlow<Double> = _bolusAmountDelivered

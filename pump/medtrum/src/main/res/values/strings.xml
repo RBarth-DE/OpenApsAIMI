@@ -134,6 +134,18 @@
     <string name="daily_max_insulin_summary">Specify the maximum units of insulin allowed per day. If exceeded, the pump will suspend.</string>
     <string name="scan_on_connection_error_title">Scan on connection error</string>
     <string name="scan_on_connection_error_summary">WARNING: Only enable if you have connection problems. If enabled the driver scans for the pump again before trying to reconnect to the pump. Make sure you have Location permission set to "Always allow" </string>
+    <string name="auto_resume_interrupted_bolus_title">Auto-resume interrupted bolus</string>
+    <string name="auto_resume_interrupted_bolus_summary">If a bolus is interrupted by a Bluetooth disconnect, automatically deliver the remaining amount on reconnect. Only triggers within 120 seconds of the original bolus start and when the pump has no active alarms. Disabled by default — read the docs before enabling.</string>
+    <string name="bolus_interrupted_resumed">Bolus interrupted: delivered %1$.2f U of %2$.2f U. Auto-resuming remaining %3$.2f U.</string>
+    <string name="bolus_interrupted_not_resumed">Bolus interrupted: delivered %1$.2f U of %2$.2f U. Remaining %3$.2f U NOT delivered (%4$s). Deliver manually if needed.</string>
+    <string name="bolus_resume_reason_disabled">auto-resume disabled in settings</string>
+    <string name="bolus_resume_reason_too_old">too much time elapsed</string>
+    <string name="bolus_resume_reason_pump_alarm">pump has active alarm</string>
+    <string name="bolus_resume_reason_pump_not_active">pump not active</string>
+    <string name="bolus_resume_reason_already_attempted">resume already attempted</string>
+    <string name="bolus_resume_reason_user_stopped">user pressed stop</string>
+    <string name="bolus_resume_reason_remainder_too_small">remainder below threshold</string>
+    <string name="bolus_resume_reason_other_error">non-recoverable error</string>
 
     <!-- treatment state-->
     <string name="getting_pump_status">Getting pump status</string>

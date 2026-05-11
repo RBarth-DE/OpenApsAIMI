@@ -115,6 +115,12 @@ class MedtrumService : DaggerService(), MedtrumBleCallback {
         private const val ALARM_DAILY_MAX_CLEAR_CODE = 5
 
         private const val CHECK_EXPIRY_WARNING_TIME_MS = 5 * 60 * 1000L
+
+        // Auto-resume of an interrupted bolus is only allowed if the original bolus was started less than this many seconds ago.
+        private const val BOLUS_AUTO_RESUME_MAX_AGE_SEC = 120L
+
+        // Minimum remainder (U) for which we'll attempt an auto-resume. Below this we just notify.
+        private const val BOLUS_AUTO_RESUME_MIN_REMAINDER_U = 0.1
     }
 
     private val disposable = CompositeDisposable()
@@ -400,6 +406,8 @@ class MedtrumService : DaggerService(), MedtrumBleCallback {
         medtrumPump.bolusDone = false
         medtrumPump.bolusStopped = false
         medtrumPump.bolusErrorReason = null
+        medtrumPump.bolusOriginalType = detailedBolusInfo.bolusType
+        medtrumPump.bolusResumeAttempted = false
 
         if (!sendBolusCommand(insulin)) {
             medtrumPump.bolusErrorReason = rh.gs(R.string.bolus_error_reason_unable_to_send_command)
@@ -532,6 +540,88 @@ class MedtrumService : DaggerService(), MedtrumBleCallback {
                 rxBus.send(EventPumpStatusChanged(rh.gs(R.string.getting_bolus_status)))
             }
         })
+    }
+
+    /**
+     * Called once per fresh reconnect (from ReadyState.onEnter). If the previous bolus session was
+     * interrupted by a comm loss and the safety preconditions all hold, enqueue a new bolus for the
+     * remainder. Otherwise notify the user that the partial delivery cannot be auto-resumed.
+     */
+    private fun checkAndResumeInterruptedBolus() {
+        val errorReason = medtrumPump.bolusErrorReason ?: return
+        val commLost = rh.gs(R.string.bolus_error_reason_communication_lost)
+        if (errorReason != commLost) return
+        if (medtrumPump.bolusDone) return
+        if (medtrumPump.bolusResumeAttempted) return
+
+        val requested = medtrumPump.bolusAmountToBeDelivered
+        val delivered = medtrumPump.bolusAmountDeliveredFlow.value
+        val remainder = requested - delivered
+        if (requested <= 0.0) return
+
+        // Mark immediately so we never retry this session even if the notification path fails below.
+        medtrumPump.bolusResumeAttempted = true
+
+        val ageMs = System.currentTimeMillis() - medtrumPump.bolusStartTime
+        val pumpActive = medtrumPump.pumpState == MedtrumPumpState.ACTIVE || medtrumPump.pumpState == MedtrumPumpState.ACTIVE_ALT
+        val autoEnabled = preferences.get(MedtrumBooleanKey.MedtrumAutoResumeInterruptedBolus)
+
+        val skipReason: String? = when {
+            !autoEnabled                                              -> rh.gs(R.string.bolus_resume_reason_disabled)
+            bolusProgressData.isStopPressed                           -> rh.gs(R.string.bolus_resume_reason_user_stopped)
+            remainder < BOLUS_AUTO_RESUME_MIN_REMAINDER_U             -> rh.gs(R.string.bolus_resume_reason_remainder_too_small)
+            ageMs > T.secs(BOLUS_AUTO_RESUME_MAX_AGE_SEC).msecs()     -> rh.gs(R.string.bolus_resume_reason_too_old)
+            medtrumPump.activeAlarms.isNotEmpty()                     -> rh.gs(R.string.bolus_resume_reason_pump_alarm)
+            !pumpActive                                               -> rh.gs(R.string.bolus_resume_reason_pump_not_active)
+            else                                                      -> null
+        }
+
+        if (skipReason != null) {
+            aapsLogger.warn(
+                LTag.PUMPCOMM,
+                "Bolus auto-resume skipped: delivered=$delivered U of $requested U, remainder=$remainder U, reason=$skipReason"
+            )
+            notificationManager.post(
+                NotificationId.PUMP_ERROR,
+                rh.gs(R.string.bolus_interrupted_not_resumed, delivered, requested, remainder, skipReason),
+                level = NotificationLevel.URGENT,
+                soundRes = app.aaps.core.ui.R.raw.alarm
+            )
+            return
+        }
+
+        aapsLogger.warn(
+            LTag.PUMPCOMM,
+            "Auto-resuming interrupted bolus: delivered=$delivered U of $requested U, remainder=$remainder U"
+        )
+        notificationManager.post(
+            NotificationId.PUMP_WARNING,
+            rh.gs(R.string.bolus_interrupted_resumed, delivered, requested, remainder),
+            level = NotificationLevel.URGENT,
+            soundRes = app.aaps.core.ui.R.raw.alarm
+        )
+
+        // Clear the error reason so the resumed bolus has a clean slate (waitForBolusProgress sets it
+        // again only if the *new* bolus also fails).
+        medtrumPump.bolusErrorReason = null
+
+        val resumeInfo = DetailedBolusInfo().apply {
+            insulin = remainder
+            carbs = 0.0
+            bolusType = medtrumPump.bolusOriginalType
+            timestamp = System.currentTimeMillis()
+            notes = "Medtrum auto-resume of interrupted bolus"
+        }
+        val enqueued = commandQueue.bolus(resumeInfo, object : Callback() {
+            override fun run() {
+                if (!this.result.success) {
+                    aapsLogger.error(LTag.PUMPCOMM, "Auto-resume bolus failed: ${this.result.comment}")
+                }
+            }
+        })
+        if (!enqueued) {
+            aapsLogger.error(LTag.PUMPCOMM, "Auto-resume bolus could not be enqueued")
+        }
     }
 
     fun stopBolus() {
@@ -1200,6 +1290,9 @@ class MedtrumService : DaggerService(), MedtrumBleCallback {
             // Now we are fully connected and authenticated and we can start sending commands. Let AAPS know
             if (!isConnected) {
                 medtrumPump.connectionState = ConnectionState.CONNECTED
+                // Fresh reconnect: check whether a prior bolus was interrupted and resume/notify as needed.
+                // Run off the BLE callback thread so we don't block notification delivery.
+                scope.launch { checkAndResumeInterruptedBolus() }
             }
         }
     }

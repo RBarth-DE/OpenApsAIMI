@@ -442,7 +442,8 @@ class MedtrumPlugin @Inject constructor(
                     key = "medtrum_advanced",
                     titleResId = app.aaps.core.ui.R.string.advanced_settings_title,
                     items = listOf(
-                        MedtrumBooleanKey.MedtrumScanOnConnectionErrors
+                        MedtrumBooleanKey.MedtrumScanOnConnectionErrors,
+                        MedtrumBooleanKey.MedtrumAutoResumeInterruptedBolus
                     )
                 )
             ),

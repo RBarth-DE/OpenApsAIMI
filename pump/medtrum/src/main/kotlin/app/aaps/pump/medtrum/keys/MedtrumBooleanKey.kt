@@ -38,4 +38,10 @@ enum class MedtrumBooleanKey(
         titleResId = R.string.scan_on_connection_error_title,
         summaryResId = R.string.scan_on_connection_error_summary
     ),
+    MedtrumAutoResumeInterruptedBolus(
+        key = "auto_resume_interrupted_bolus",
+        defaultValue = false,
+        titleResId = R.string.auto_resume_interrupted_bolus_title,
+        summaryResId = R.string.auto_resume_interrupted_bolus_summary
+    ),
 }
