@@ -1168,7 +1168,7 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
             aapsLogger.debug(LTag.APS, ">>> Invoking determine_basal AIMI <<<")
             aapsLogger.debug(LTag.APS, "Glucose status:     $glucoseStatus")
             aapsLogger.debug(LTag.APS, "Current temp:       $currentTemp")
-            aapsLogger.debug(LTag.APS, "IOB data:           ${iobArray.joinToString()}")
+            aapsLogger.debug(LTag.APS, "IOB data:           ${iobArray.firstOrNull()?.iob}")
             aapsLogger.debug(LTag.APS, "Profile:            $oapsProfile")
             aapsLogger.debug(LTag.APS, "Autosens data:      $autosensResult")
             aapsLogger.debug(LTag.APS, "Meal data:          $mealData")
