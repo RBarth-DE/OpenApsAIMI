@@ -6,6 +6,7 @@ import app.aaps.core.interfaces.aps.AutosensResult
 import app.aaps.core.interfaces.aps.CurrentTemp
 import app.aaps.core.interfaces.aps.GlucoseStatus
 import app.aaps.core.interfaces.aps.IobTotal
+import app.aaps.core.interfaces.aps.Loop
 import app.aaps.core.interfaces.aps.MealData
 import app.aaps.core.interfaces.aps.OapsProfile
 import app.aaps.core.interfaces.aps.OapsProfileAutoIsf
@@ -48,6 +49,7 @@ data class KeyValueRow(
 
 class OpenAPSViewModel(
     private val apsPlugin: APS,
+    private val loop: Loop,
     private val rxBus: RxBus,
     private val rh: ResourceHelper,
     private val dateUtil: DateUtil,
@@ -73,7 +75,7 @@ class OpenAPSViewModel(
     fun onRefresh() {
         _uiState.value = _uiState.value.copy(isRefreshing = true)
         scope.launch {
-            apsPlugin.invoke("OpenAPS pull-to-refresh", false)
+            loop.invoke("OpenAPS pull-to-refresh", true)
         }
     }
 

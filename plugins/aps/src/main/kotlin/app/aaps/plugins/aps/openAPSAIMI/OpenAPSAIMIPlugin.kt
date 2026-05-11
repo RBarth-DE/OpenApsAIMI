@@ -18,6 +18,7 @@ import app.aaps.core.interfaces.aps.APS
 import app.aaps.core.interfaces.aps.APSResult
 import app.aaps.core.interfaces.aps.AutosensResult
 import app.aaps.core.interfaces.aps.CurrentTemp
+import app.aaps.core.interfaces.aps.Loop
 import app.aaps.core.interfaces.aps.OapsProfileAimi
 import app.aaps.core.interfaces.bgQualityCheck.BgQualityCheck
 import app.aaps.core.interfaces.configuration.Config
@@ -160,6 +161,7 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
     private val ch: ConcentrationHelper,
     private val trajectoryHistoryProvider: TrajectoryHistoryProvider,
     private val trajectoryGuard: TrajectoryGuard,
+    private val loopProvider: Provider<Loop>,
     private val dynIsfTrajectoryTuning: DynIsfTrajectoryTuning
 ) : PluginBaseWithPreferences(
     PluginDescription()
@@ -167,6 +169,7 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
         .composeContent { plugin ->
             app.aaps.plugins.aps.compose.OpenAPSComposeContent(
                 apsPlugin = plugin as APS,
+                loop = loopProvider.get(),
                 rxBus = rxBus,
                 rh = rh,
                 dateUtil = dateUtil
@@ -1855,9 +1858,6 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
                 add(DoubleKey.OApsAIMIIsfFusionMinFactor)
                 add(DoubleKey.OApsAIMIIsfFusionMaxFactor)
                 add(DoubleKey.OApsAIMIIsfFusionMaxChangePerTick)
-                add(BooleanKey.OApsAIMIDynIsfTrajectoryTuningEnabled)
-                add(BooleanKey.OApsAIMIDynIsfTrajectoryShadowOnly)
-                add(DoubleKey.OApsAIMIDynIsfTrajectoryMaxFraction)
                 add(DoubleKey.OApsAIMISmbTailThreshold)
                 add(DoubleKey.OApsAIMISmbTailDamping)
                 add(BooleanKey.OApsAIMIPkpdPragmaticReliefEnabled)

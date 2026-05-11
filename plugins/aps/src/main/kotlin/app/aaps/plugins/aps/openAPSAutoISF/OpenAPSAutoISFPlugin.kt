@@ -15,6 +15,7 @@ import app.aaps.core.interfaces.aps.AutosensResult
 import app.aaps.core.interfaces.aps.CurrentTemp
 import app.aaps.core.interfaces.aps.GlucoseStatus
 import app.aaps.core.interfaces.aps.GlucoseStatusAutoIsf
+import app.aaps.core.interfaces.aps.Loop
 import app.aaps.core.interfaces.aps.OapsProfileAutoIsf
 import app.aaps.core.interfaces.automation.AutomationStateInterface
 import app.aaps.core.interfaces.bgQualityCheck.BgQualityCheck
@@ -117,12 +118,14 @@ open class OpenAPSAutoISFPlugin @Inject constructor(
     private val apsResultProvider: Provider<APSResult>,
     private val ch: ConcentrationHelper,
     private val automationStateService: AutomationStateInterface,
+    private val loopProvider: Provider<Loop>,
 ) : PluginBaseWithPreferences(
     PluginDescription()
         .mainType(PluginType.APS)
         .composeContent { plugin ->
             app.aaps.plugins.aps.compose.OpenAPSComposeContent(
                 apsPlugin = plugin as APS,
+                loop = loopProvider.get(),
                 rxBus = rxBus,
                 rh = rh,
                 dateUtil = dateUtil
@@ -511,7 +514,7 @@ open class OpenAPSAutoISFPlugin @Inject constructor(
         aapsLogger.debug(LTag.APS, ">>> Invoking determine_basal AutoISF <<<")
         aapsLogger.debug(LTag.APS, "Glucose status:     $glucoseStatus")
         aapsLogger.debug(LTag.APS, "Current temp:       $currentTemp")
-        aapsLogger.debug(LTag.APS, "IOB data:           ${gson.toJson(iobArray)}")
+        aapsLogger.debug(LTag.APS, "IOB data:           ${iobArray.firstOrNull()?.iob}")
         aapsLogger.debug(LTag.APS, "Profile:            $oapsProfile")
         aapsLogger.debug(LTag.APS, "Autosens data:      $autosensResult")
         aapsLogger.debug(LTag.APS, "Meal data:          $mealData")

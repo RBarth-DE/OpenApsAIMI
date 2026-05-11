@@ -8,9 +8,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicReference
 import java.util.regex.Pattern
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 
 class Therapy(private val persistenceLayer: PersistenceLayer) {
 
@@ -31,24 +29,27 @@ class Therapy(private val persistenceLayer: PersistenceLayer) {
     private var latestNoteEvents: List<TE> = emptyList()
 
     fun updateStatesBasedOnTherapyEvents() {
-        snapshotRef.get()?.let { applySnapshot(it) }
-        refreshIfNeededAsync()
-    }
-
-    private fun refreshIfNeededAsync() {
         val now = System.currentTimeMillis()
-        val current = snapshotRef.get()
-        if (current != null && now - current.generatedAtMs < SNAPSHOT_TTL_MS) return
-        if (!refreshInFlight.compareAndSet(false, true)) return
-
-        ioScope.launch {
+        val cached = snapshotRef.get()
+        if (cached != null && now - cached.generatedAtMs < SNAPSHOT_TTL_MS) {
+            applySnapshot(cached)
+            return
+        }
+        // Stale or missing: rebuild synchronously so the calling tick sees events inserted between
+        // the previous tick and now (e.g. an automation note inserted seconds before pull-to-refresh).
+        // The DB call inside buildSnapshot() runs on Dispatchers.IO; the AIMI pipeline calls into this
+        // from Dispatchers.Default workers, so runBlocking here does not block the UI thread.
+        if (refreshInFlight.compareAndSet(false, true)) {
             try {
-                val snapshot = buildSnapshot()
-                snapshotRef.set(snapshot)
-                applySnapshot(snapshot)
+                val refreshed = runBlocking(Dispatchers.IO) { buildSnapshot() }
+                snapshotRef.set(refreshed)
+                applySnapshot(refreshed)
             } finally {
                 refreshInFlight.set(false)
             }
+        } else {
+            // Another caller is mid-rebuild; fall back to the most recent snapshot rather than no state.
+            cached?.let { applySnapshot(it) }
         }
     }
 
@@ -285,6 +286,5 @@ class Therapy(private val persistenceLayer: PersistenceLayer) {
         private const val SNAPSHOT_TTL_MS = 30_000L
         private val snapshotRef = AtomicReference<TherapySnapshot?>(null)
         private val refreshInFlight = AtomicBoolean(false)
-        private val ioScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     }
 }

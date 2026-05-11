@@ -8,6 +8,7 @@ import app.aaps.core.interfaces.aps.APSResult
 import app.aaps.core.interfaces.aps.AutosensResult
 import app.aaps.core.interfaces.aps.CurrentTemp
 import app.aaps.core.interfaces.aps.GlucoseStatus
+import app.aaps.core.interfaces.aps.Loop
 import app.aaps.core.interfaces.aps.OapsProfile
 import app.aaps.core.interfaces.configuration.Config
 import app.aaps.core.interfaces.constraints.Constraint
@@ -77,13 +78,15 @@ class OpenAPSAMAPlugin @Inject constructor(
     private val determineBasalAMA: DetermineBasalAMA,
     private val glucoseStatusCalculatorSMB: GlucoseStatusCalculatorSMB,
     private val apsResultProvider: Provider<APSResult>,
-    private val ch: ConcentrationHelper
+    private val ch: ConcentrationHelper,
+    private val loopProvider: Provider<Loop>
 ) : PluginBaseWithPreferences(
     PluginDescription()
         .mainType(PluginType.APS)
         .composeContent { plugin ->
             app.aaps.plugins.aps.compose.OpenAPSComposeContent(
                 apsPlugin = plugin as APS,
+                loop = loopProvider.get(),
                 rxBus = rxBus,
                 rh = rh,
                 dateUtil = dateUtil
