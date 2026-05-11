@@ -74,6 +74,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
@@ -121,6 +122,10 @@ class MedtrumService : DaggerService(), MedtrumBleCallback {
 
         // Minimum remainder (U) for which we'll attempt an auto-resume. Below this we just notify.
         private const val BOLUS_AUTO_RESUME_MIN_REMAINDER_U = 0.1
+
+        // How long to wait after reconnect for the pump's authoritative bolus status before deciding
+        // whether to auto-resume. Guards against double-delivery races with loadEvents.
+        private const val BOLUS_AUTO_RESUME_STATUS_WAIT_MS = 5_000L
     }
 
     private val disposable = CompositeDisposable()
@@ -444,6 +449,9 @@ class MedtrumService : DaggerService(), MedtrumBleCallback {
         }
 
         waitForBolusProgress()
+        // Snapshot now: a parallel reconnect path (checkAndResumeInterruptedBolus) may clear
+        // bolusErrorReason before this method's cleanup blocks run.
+        val commLostExit = medtrumPump.bolusErrorReason == rh.gs(R.string.bolus_error_reason_communication_lost)
 
         if (medtrumPump.bolusStopped && (bolusProgressData.state.value?.delivered?.cU ?: 0.0) == 0.0) {
             // In this case we don't get a bolus end event, so need to remove all the stuff added previously
@@ -462,6 +470,29 @@ class MedtrumService : DaggerService(), MedtrumBleCallback {
             )
             // remove detailed bolus info
             detailedBolusInfoStorage.findDetailedBolusInfo(bolusStart, detailedBolusInfo.insulin)
+        }
+
+        if (commLostExit) {
+            // tempId entry was added with the full requested amount, but the pump may have delivered
+            // only part of it before comms dropped. Sync the tempId to the last-known delivered
+            // amount so the DB doesn't overstate insulin on board. A later status read from the pump
+            // may correct this further if it reaches us.
+            val deliveredCU = bolusProgressData.state.value?.delivered?.cU ?: 0.0
+            val syncOk = runBlocking {
+                pumpSync.syncBolusWithTempId(
+                    timestamp = bolusStart,
+                    amount = PumpInsulin(deliveredCU),
+                    temporaryId = bolusStart,
+                    type = detailedBolusInfo.bolusType,
+                    pumpId = bolusStart,
+                    pumpType = medtrumPump.pumpType(),
+                    pumpSerial = medtrumPump.pumpSN.toString(radix = 16)
+                )
+            }
+            aapsLogger.warn(
+                LTag.PUMPCOMM,
+                "set bolus: **COMM-LOST CLEANUP** tempId ${dateUtil.dateAndTimeString(bolusStart)} ($bolusStart) Bolus: ${deliveredCU}U of ${detailedBolusInfo.insulin}U requested SyncOK: $syncOk"
+            )
         }
 
         return true
@@ -515,6 +546,10 @@ class MedtrumService : DaggerService(), MedtrumBleCallback {
                     medtrumPump.bolusErrorReason = rh.gs(R.string.bolus_error_reason_communication_lost)
                     aapsLogger.warn(LTag.PUMPCOMM, "Retry connection failed, communication stopped")
                     disconnect("Communication stopped")
+                    // Finalize the bolus session at AAPS side so canSetBolus() doesn't keep blocking
+                    // subsequent boluses with "already in progress". The actual pump-side completion
+                    // (if any) is reconciled later via handleBolusStatusUpdate after reconnect.
+                    medtrumPump.bolusDone = true
                 }
             } else {
                 val currentBolusAmount = bolusProgressData.state.value?.delivered ?: PumpInsulin(0.0)
@@ -547,20 +582,37 @@ class MedtrumService : DaggerService(), MedtrumBleCallback {
      * interrupted by a comm loss and the safety preconditions all hold, enqueue a new bolus for the
      * remainder. Otherwise notify the user that the partial delivery cannot be auto-resumed.
      */
-    private fun checkAndResumeInterruptedBolus() {
+    private suspend fun checkAndResumeInterruptedBolus() {
         val errorReason = medtrumPump.bolusErrorReason ?: return
         val commLost = rh.gs(R.string.bolus_error_reason_communication_lost)
         if (errorReason != commLost) return
-        if (medtrumPump.bolusDone) return
         if (medtrumPump.bolusResumeAttempted) return
+
+        // Mark immediately so we never retry this session even if the notification path fails below.
+        medtrumPump.bolusResumeAttempted = true
+
+        // Wait briefly for the post-reconnect status sync to update the bolus state. Without this,
+        // we may enqueue a duplicate bolus while the pump is still mid-delivery, or while it has
+        // already finished locally during the comm gap. Authoritative state arrives via
+        // handleBolusStatusUpdate, which bumps bolusProgressLastTimeStamp.
+        val tsAtStart = medtrumPump.bolusProgressLastTimeStamp
+        val deadline = System.currentTimeMillis() + BOLUS_AUTO_RESUME_STATUS_WAIT_MS
+        while (System.currentTimeMillis() < deadline
+            && medtrumPump.bolusProgressLastTimeStamp == tsAtStart
+            && !medtrumPump.bolusDone) {
+            delay(100)
+        }
+
+        // Pump status arrived but it is still mid-bolus — leave the pump alone to finish on its own.
+        if (medtrumPump.bolusProgressLastTimeStamp != tsAtStart && !medtrumPump.bolusDone) {
+            aapsLogger.warn(LTag.PUMPCOMM, "Bolus auto-resume skipped: pump still reports active bolus after reconnect")
+            return
+        }
 
         val requested = medtrumPump.bolusAmountToBeDelivered
         val delivered = medtrumPump.bolusAmountDeliveredFlow.value
         val remainder = requested - delivered
         if (requested <= 0.0) return
-
-        // Mark immediately so we never retry this session even if the notification path fails below.
-        medtrumPump.bolusResumeAttempted = true
 
         val ageMs = System.currentTimeMillis() - medtrumPump.bolusStartTime
         val pumpActive = medtrumPump.pumpState == MedtrumPumpState.ACTIVE || medtrumPump.pumpState == MedtrumPumpState.ACTIVE_ALT
@@ -605,12 +657,16 @@ class MedtrumService : DaggerService(), MedtrumBleCallback {
         // again only if the *new* bolus also fails).
         medtrumPump.bolusErrorReason = null
 
+        // Force NORMAL for the resume even if the original was SMB: the SMB safety guards in
+        // CommandQueue (cooldowns, max-SMB) would likely reject a follow-up SMB ~60 s after the
+        // original, and an SMB-shaped recovery isn't what the user expects after a comm loss.
+        val originalType = medtrumPump.bolusOriginalType
         val resumeInfo = DetailedBolusInfo().apply {
             insulin = remainder
             carbs = 0.0
-            bolusType = medtrumPump.bolusOriginalType
+            bolusType = BS.Type.NORMAL
             timestamp = System.currentTimeMillis()
-            notes = "Medtrum auto-resume of interrupted bolus"
+            notes = "Medtrum auto-resume of interrupted bolus (original type: $originalType)"
         }
         val enqueued = commandQueue.bolus(resumeInfo, object : Callback() {
             override fun run() {
