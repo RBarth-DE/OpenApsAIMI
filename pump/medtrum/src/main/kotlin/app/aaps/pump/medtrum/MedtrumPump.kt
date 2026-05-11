@@ -667,7 +667,7 @@ class MedtrumPump @Inject constructor(
         } else {
             alarmsStr.split(",")
                 .mapNotNull { AlarmState.entries.find { alarm -> alarm.name == it } }
-                .let { if (it.isEmpty()) EnumSet.noneOf(AlarmState::class.java) else EnumSet.copyOf(it) }
+                .let { EnumSet.copyOf(it) }
         }
     }
 

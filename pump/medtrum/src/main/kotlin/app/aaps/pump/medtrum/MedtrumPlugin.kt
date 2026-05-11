@@ -168,7 +168,6 @@ class MedtrumPlugin @Inject constructor(
         return medtrumService
     }
 
-
     override fun isConfigured(): Boolean =
         medtrumPump.pumpSNFromSP != 0L && medtrumPump.pumpState > MedtrumPumpState.EJECTED
 
