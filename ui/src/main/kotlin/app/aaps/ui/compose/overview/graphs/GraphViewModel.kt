@@ -505,13 +505,13 @@ class GraphViewModel @AssistedInject constructor(
             // // Also consider endTime from cache (may extend beyond prediction points)
             // val effectiveMax = if (cacheTimeRange != null) maxOf(maxTime, cacheTimeRange.endTime) else maxTime
             // Pair(minTime, effectiveMax)
-            // Force the graph to end no later than 2 hours from now
-            val twoHourFromNow = System.currentTimeMillis() + 60 * 60 * 1000L * 2
+            // Force the graph to end no later than 1 hours from now
+            val oneHourFromNow = System.currentTimeMillis() + 60 * 60 * 1000L * 1
             val effectiveMax = if (cacheTimeRange != null) {
                 maxOf(maxTime, cacheTimeRange.endTime)
             } else {
                 maxTime
-            }.coerceAtMost(twoHourFromNow) // This is the line that caps the future view
+            }.coerceAtMost(oneHourFromNow) // This is the line that caps the future view
 
             Pair(minTime, effectiveMax)
         }
