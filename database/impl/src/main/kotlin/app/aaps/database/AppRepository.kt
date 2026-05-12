@@ -170,8 +170,6 @@ class AppRepository @Inject internal constructor(
         }
     }
 
-    fun clearDatabases() = database.clearAllTables()
-
     fun clearApsResults() = database.apsResultDao.deleteAllEntries()
 
     suspend fun cleanupDatabase(keepDays: Long, deleteTrackedChanges: Boolean): String {

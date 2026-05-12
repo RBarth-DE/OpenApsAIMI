@@ -679,8 +679,6 @@ open class OpenAPSAutoISFPlugin @Inject constructor(
 
     fun activityMonitor(isTempTarget: Boolean, bg: Double, target_bg: Double, now: Int): Double
     {
-        aapsLogger.debug(LTag.APS, "Activity Monitor: activityMonitor")
-
         val currentHour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
 
         //update steps
@@ -702,9 +700,7 @@ open class OpenAPSAutoISFPlugin @Inject constructor(
             } else {
                 aapsLogger.debug(LTag.APS, "Activity Monitor: No records found in last 210 mins")
             }
-
             val valid5 = allStepsCounts.filter { it.timestamp >= timeMillis5 }.maxByOrNull { it.timestamp }
-            aapsLogger.debug(LTag.APS, "Activity Monitor: SC 5: ${valid5?.steps5min} 10: ${valid5?.steps10min}")
 
             val fallbackRecord = if (valid5 == null) {
                 allStepsCounts.filter { it.timestamp >= (now - 30 * 60 * 1000) }.maxByOrNull { it.timestamp }
@@ -713,21 +709,17 @@ open class OpenAPSAutoISFPlugin @Inject constructor(
             aapsLogger.debug(LTag.APS, "Activity Monitor: fallback=${fallbackRecord?.timestamp} steps5=${fallbackRecord?.steps5min} recentSteps5=${valid5?.steps5min ?: fallbackRecord?.steps5min ?: 0}")
 
             recentSteps5Minutes = valid5?.steps5min ?: fallbackRecord?.steps5min ?: 0
-            aapsLogger.debug(LTag.APS, "Activity Monitor: AFTER ASSIGN recentSteps5Minutes=$recentSteps5Minutes")
 
             //  sum up steps5min since MTR StepsService only provides 5min steps.
             recentSteps10Minutes = allStepsCounts
                 .filter { it.timestamp >= timeMillis10 }
                 .sumOf { it.steps5min }
-
             recentSteps15Minutes = allStepsCounts
                 .filter { it.timestamp >= timeMillis15 }
                 .sumOf { it.steps5min }
-
             recentSteps30Minutes = allStepsCounts
                 .filter { it.timestamp >= timeMillis30 }
                 .sumOf { it.steps5min }
-
             recentSteps60Minutes = allStepsCounts
                 .filter { it.timestamp >= timeMillis60 }
                 .sumOf { it.steps5min }
@@ -778,12 +770,12 @@ open class OpenAPSAutoISFPlugin @Inject constructor(
 
         val existSleepState = automationStateService.hasStateValues("Sleeping")
         val useSleepState = automationStateService.inState("Sleeping", "True")
-        aapsLogger.debug(LTag.APS, "State json for Sleep mode: {\"Sleeping\":\"${automationStateService.getState("Sleeping")}\"}")
+        //aapsLogger.debug(LTag.APS, "State json for Sleep mode: {\"Sleeping\":\"${automationStateService.getState("Sleeping")}\"}")
         // really still sleeping?
             if (useSleepState && (recentSteps5Minutes+recentSteps10Minutes+recentSteps15Minutes < recentSteps30Minutes) && currentHour >= inactivity_idle_end) {
             automationStateService.setState("query_got_up", "query_it")
         }
-        aapsLogger.debug(LTag.APS, "State json for got up query: {\"query_got_up\":\"${automationStateService.getState("query_got_up")}\"}")
+        //aapsLogger.debug(LTag.APS, "State json for got up query: {\"query_got_up\":\"${automationStateService.getState("query_got_up")}\"}")
 
         if ( !activityDetection ) {
             consoleLog.add("Activity monitor disabled in settings")
