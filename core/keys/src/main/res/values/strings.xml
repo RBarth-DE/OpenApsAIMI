@@ -555,6 +555,25 @@
     <string name="ketoacidosis_protection_basal_title">Quantity of the safety TBR [%]</string>
     <string name="ketoacidosis_protection_basal_summary">Default: 10</string>
 
+    // Activity Monitor
+    <string name="pref_activ_mon_title_activity_detection">Enable Activity Monitor</string>
+    <string name="pref_activ_mon_sum_activity_detection">Master switch. Off → activityRatio = 1.0 at all times, no effect on ISF/Basal.</string>
+    <string name="pref_activ_mon_title_ignore_inactivity_overnight">Ignore Inactivity at Night</string>
+    <string name="pref_activ_mon_sum_ignore_inactivity_overnight">Prevents prolonged lying still while sleeping from being classified as “inactivity” and incorrectly triggering the inactivity penalty.</string>
+    <string name="pref_activ_mon_title_act_mon_use_steps">Evaluate Steps from different sources</string>
+    <string name="pref_activ_mon_sum_inactivity_idle_start">When nighttime suppression takes effect (e.g., 22 = 10:00 PM).
+        + (later) → shorter night window, inactivity detection active again earlier
+        - (earlier) → longer night window</string>
+    <string name="pref_activ_mon_sum_inactivity_idle_end">Until what time night suppression applies (e.g., 6 = 6:00 a.m.). Supports crossing midnight (IdleStart > IdleEnd).
+        + (wake up later) → longer night window
+        - (wake up earlier) → shorter night window</string>b
+    <string name="pref_activ_mon_sum_activity_scale_factor">Amplifies the sensitivity boost when movement is detected.
+        + → greater ISF increase during activity (activityRatio decreases more sharply, more insulin)
+        - → weaker effect, smoother transition</string>
+    <string name="pref_activ_mon_sum_inactivity_scale_factor">Increases ISF protection during inactivity.
+        + → greater reduction in insulin during inactivity (activityRatio increases more sharply)
+        - → weaker effect</string>
+
 
     <string name="eversense_use_smoothing">Use ESEL smoothing</string>
     <string name="eversense_cloud_upload_enabled">Enable Eversense cloud upload</string>

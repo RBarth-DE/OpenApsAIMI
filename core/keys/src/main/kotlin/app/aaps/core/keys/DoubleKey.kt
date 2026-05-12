@@ -623,7 +623,14 @@ enum class DoubleKey(
         dependency = BooleanKey.OApsAIMIT3cAdaptiveBasalEnabled,
     ),
 
-    ActivityMonitorRatio("activity_ratio", 1.0, 0.0, 2.0, defaultedBySM = true),
-    ActivityScaleFactor("activity_scale_factor", 1.0, 0.0, 1.5, defaultedBySM = true, dependency = BooleanKey.ActivityMonitorDetection),
-    InactivityScaleFactor("inactivity_scale_factor", 1.0, 0.0, 1.5, defaultedBySM = true, dependency = BooleanKey.ActivityMonitorDetection),
+    ActivityScaleFactor(
+        key= "activity_scale_factor",
+        //titleResId = empty
+        summaryResId = R.string.pref_activ_mon_sum_activity_scale_factor,
+        defaultValue = 1.0, min = 0.0, max = 1.5, defaultedBySM = true, dependency = BooleanKey.ActivityMonitorDetection),
+    InactivityScaleFactor(
+        "inactivity_scale_factor",
+        //titleResId = empty,
+        summaryResId = R.string.pref_activ_mon_sum_inactivity_scale_factor,
+        defaultValue = 1.0, min = 0.0, max = 1.5, defaultedBySM = true, dependency = BooleanKey.ActivityMonitorDetection),
 }

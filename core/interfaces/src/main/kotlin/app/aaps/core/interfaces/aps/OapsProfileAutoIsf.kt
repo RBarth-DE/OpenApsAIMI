@@ -34,6 +34,9 @@ data class OapsProfileAutoIsf(
     val phone_moved: Boolean? = false,
     val time_since_start: Long? = 0,
     val now: Int? = 0,
+    val activity_ratio: Double = 1.0,
+    val steps_activity_detected: Boolean = false,
+    val steps_inactivity_detected: Boolean = false,
     // Activity Monitor end
     var maxCOB: Int,
     var skip_neutral_temps: Boolean,
@@ -74,5 +77,11 @@ data class OapsProfileAutoIsf(
     var smb_max_range_extension: Double,
     var enableSMB_EvenOn_OddOff_always: Boolean,
     var iob_threshold_percent: Int,
-    var profile_percentage: Int
+    var profile_percentage: Int,
+
+    // Ketoacidosis Protection
+    var ketoacidosisProtection: Boolean = false,
+    var ketoacidosisProtectionStrategy : Boolean = false,
+    var ketoacidosisProtectionBasal: Int = 10,
+    val ketoacidosisProtectionIob: Double = 0.0
 )

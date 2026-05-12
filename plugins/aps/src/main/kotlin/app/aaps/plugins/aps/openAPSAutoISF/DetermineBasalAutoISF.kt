@@ -8,13 +8,16 @@ import app.aaps.core.interfaces.aps.CurrentTemp
 import app.aaps.core.interfaces.aps.GlucoseStatus
 import app.aaps.core.interfaces.aps.IobTotal
 import app.aaps.core.interfaces.aps.MealData
+import app.aaps.core.interfaces.aps.OapsProfileAimi
 import app.aaps.core.interfaces.aps.OapsProfileAutoIsf
 import app.aaps.core.interfaces.aps.Predictions
 import app.aaps.core.interfaces.aps.RT
+import app.aaps.core.interfaces.logging.AAPSLogger
+import app.aaps.core.interfaces.logging.LTag
+import app.aaps.core.interfaces.plugin.ActivePlugin
 import app.aaps.core.interfaces.profile.ProfileUtil
-import app.aaps.core.keys.BooleanKey
-import app.aaps.core.keys.DoubleKey
-import app.aaps.core.keys.interfaces.Preferences
+import app.aaps.plugins.aps.openAPSAIMI.model.PumpCaps
+import app.aaps.plugins.aps.openAPSAIMI.validation.PumpCapabilityValidator
 import java.text.DecimalFormat
 import java.time.Instant
 import java.time.ZoneId
@@ -27,10 +30,12 @@ import kotlin.math.roundToInt
 
 @Singleton
 class DetermineBasalAutoISF @Inject constructor(
-    private val profileUtil: ProfileUtil
+    private val profileUtil: ProfileUtil,
+    private val pumpCapabilityValidator: PumpCapabilityValidator
 ) {
 
-    @Inject lateinit var preferences: Preferences
+    @Inject lateinit var aapsLogger: AAPSLogger
+    @Inject lateinit var activePlugin: ActivePlugin
 
     private var consoleError = mutableListOf<String>()
     private var consoleLog = mutableListOf<String>()
@@ -122,6 +127,15 @@ class DetermineBasalAutoISF @Inject constructor(
         if (rate < 0) rate = 0.0
         else if (rate > maxSafeBasal) rate = maxSafeBasal
 
+        val pumpDesc = activePlugin.activePump.pumpDescription
+        val pumpCaps = PumpCaps(
+            basalStep = if (pumpDesc.basalStep > 0) pumpDesc.basalStep else 0.05,
+            bolusStep = if (pumpDesc.bolusStep > 0) pumpDesc.bolusStep else 0.05,
+            minDurationMin = 30,
+            maxBasal = profile.max_basal,
+            maxSmb = 3.0
+        )
+
         val suggestedRate = round_basal(rate)
         if (currenttemp.duration > (duration - 10) && currenttemp.duration <= 120 && suggestedRate <= currenttemp.rate * 1.2 && suggestedRate >= currenttemp.rate * 0.8 && duration > 0) {
             rT.reason.append(" ${currenttemp.duration}m left and ${currenttemp.rate.withoutZeros()} ~ req ${suggestedRate.withoutZeros()}U/hr: no temp required")
@@ -133,7 +147,7 @@ class DetermineBasalAutoISF @Inject constructor(
                 if (currenttemp.duration > 0) {
                     reason(rT, "Suggested rate is same as profile rate, a temp basal is active, canceling current temp")
                     rT.duration = 0
-                    rT.rate = 0.0
+                    rT.rate = ketoProtection(0.0, profile, rT, pumpCaps )
                     return rT
                 } else {
                     reason(rT, "Suggested rate is same as profile rate, no temp basal is active, doing nothing")
@@ -142,12 +156,12 @@ class DetermineBasalAutoISF @Inject constructor(
             } else {
                 reason(rT, "Setting neutral temp basal of ${profile.current_basal}U/hr")
                 rT.duration = duration
-                rT.rate = suggestedRate
+                rT.rate = ketoProtection(suggestedRate, profile, rT, pumpCaps ) //suggestedRate
                 return rT
             }
         } else {
             rT.duration = duration
-            rT.rate = suggestedRate
+            rT.rate = ketoProtection(suggestedRate, profile, rT, pumpCaps ) //suggestedRate
             return rT
         }
     }
@@ -165,6 +179,15 @@ class DetermineBasalAutoISF @Inject constructor(
             timestamp = currentTime,
             consoleLog = consoleLog,
             consoleError = consoleError
+        )
+
+        val pumpDesc = activePlugin.activePump.pumpDescription
+        val pumpCaps = PumpCaps(
+            basalStep = if (pumpDesc.basalStep > 0) pumpDesc.basalStep else 0.05,
+            bolusStep = if (pumpDesc.bolusStep > 0) pumpDesc.bolusStep else 0.05,
+            minDurationMin = 30,
+            maxBasal = profile.max_basal,
+            maxSmb = 3.0
         )
 
         // TODO eliminate
@@ -200,13 +223,13 @@ class DetermineBasalAutoISF @Inject constructor(
                 rT.reason.append(". Replacing high temp basal of ${currenttemp.rate} with neutral temp of $basal")
                 rT.deliverAt = deliverAt
                 rT.duration = 30
-                rT.rate = basal
+                rT.rate = ketoProtection(basal, profile, rT, pumpCaps ) //basal
                 return rT
             } else if (currenttemp.rate == 0.0 && currenttemp.duration > 30) { //shorten long zero temps to 30m
                 rT.reason.append(". Shortening " + currenttemp.duration + "m long zero temp to 30m. ")
                 rT.deliverAt = deliverAt
                 rT.duration = 30
-                rT.rate = 0.0
+                rT.rate = ketoProtection(0.0, profile, rT, pumpCaps )
                 return rT
             } else { //do nothing.
                 rT.reason.append(". Temp ${currenttemp.rate} <= current basal ${round(basal, 2)}U/hr; doing nothing. ")
@@ -222,9 +245,9 @@ class DetermineBasalAutoISF @Inject constructor(
         var min_bg = profile.min_bg
         var max_bg = profile.max_bg
 
-        val activityRatio = preferences.get(DoubleKey.ActivityMonitorRatio)    // activityMonitor(profile, bg, target_bg)
-        val stepActivityDetected = preferences.get(BooleanKey.ActivityMonitorStepsActive)
-        val stepInactivityDetected = preferences.get(BooleanKey.ActivityMonitorStepsInactive)
+        val activityRatio = profile.activity_ratio
+        val stepActivityDetected = profile.steps_activity_detected
+        val stepInactivityDetected = profile.steps_inactivity_detected
         var sensitivityRatio = 1.0
         val normalTarget = Constants.NORMAL_TARGET_MGDL // evaluate high/low temptarget against normal target, not scheduled target (which might change)
         val exerciseModeActive = (profile.exercise_mode || profile.high_temptarget_raises_sensitivity) && profile.temptargetSet && target_bg > normalTarget
@@ -236,7 +259,7 @@ class DetermineBasalAutoISF @Inject constructor(
                 // w/ target 100, temp target 110 = .89, 120 = 0.8, 140 = 0.67, 160 = .57, and 200 = .44
                 // e.g.: Sensitivity ratio set to 0.8 based on temp target of 120; Adjusting basal from 1.65 to 1.35; ISF from 58.9 to 73.6
                 val resistanceMax = min(1.5, profile.autosens_max)  // additional safety limit
-                val c = (mgdlHalfBasalTarget - normalTarget).toDouble()
+                val c = (mgdlHalfBasalTarget - normalTarget)
                 if (c * (c + target_bg - normalTarget) <= 0.0) {
                     sensitivityRatio = resistanceMax
                 } else {
@@ -1120,7 +1143,7 @@ class DetermineBasalAutoISF @Inject constructor(
 
                 // if no zero temp is required, don't return yet; allow later code to set a high temp
                 if (durationReq > 0) {
-                    rT.rate = smbLowTempReq
+                    rT.rate = ketoProtection(smbLowTempReq, profile, rT, pumpCaps ) //smbLowTempReq
                     rT.duration = durationReq
                     return rT
                 }
@@ -1154,5 +1177,45 @@ class DetermineBasalAutoISF @Inject constructor(
             rT.reason.append("temp ${currenttemp.rate.toFixed2()} < ${round(rate, 2).withoutZeros()}U/hr. ")
             return setTempBasal(rate, 30, profile, rT, currenttemp)
         }
+    }
+
+    /* *************************************************************
+     *  Ketoacidosis Protection
+     *  Checks tbr and keep at least a minimum active to prevent Ketoacidosis
+     *^
+     *  Additional: Respects Pump capabilities for TBR.
+     *
+     * Thanks to https://github.com/swissalpine/AndroidAPS where I took over this implementation
+     ****************************************************************/
+    private fun ketoProtection(_proposedRate: Double, profile: OapsProfileAutoIsf, rT: RT, pumpCaps : PumpCaps): Double {
+        aapsLogger.info(LTag.APS, "ketoProtection IN: _proposedRate=${"%.2f".format(_proposedRate)}")
+
+        var proposedRate : Double = _proposedRate
+        val protectionRate : Double = profile.ketoacidosisProtectionBasal.toDouble() * 0.01
+        val cutOff : Double = roundBasal(profile.current_basal * protectionRate)
+
+        if (profile.ketoacidosisProtection && proposedRate < cutOff) {
+            // original : if (profile.ketoacidosisProtectionStrategy && profile.ketoacidosisProtectionIob < (0 - profile.current_basal) ) {
+            // but (0 - profile.current_basal) will happen seldom to never. Reduce to IOB < (0 - profile.current_basal/2)
+            if (profile.ketoacidosisProtectionStrategy && profile.ketoacidosisProtectionIob < (0 - profile.current_basal/2) ) {
+                proposedRate = pumpCapabilityValidator.validateBasal(cutOff , pumpCaps)
+                rT.reason.append("\nKetoacidosis protection sets temp basal to " + round(proposedRate,2) +" U/h.")
+                consoleError.add("\nKetoacidosis protection sets temp basal to " + round(proposedRate,2) +" U/h.")
+                aapsLogger.info(LTag.APS, "Ketoacidosis protection sets temp basal to " + round(proposedRate,2) + "fsteps U/h")
+            } else if (!profile.ketoacidosisProtectionStrategy) {
+                proposedRate = pumpCapabilityValidator.validateBasal(cutOff , pumpCaps)
+                rT.reason.append("\nKetoacidosis protection sets temp basal to " + round(proposedRate,2) + " U/h")
+                consoleError.add("Ketoacidosis protection sets temp basal to " + round(proposedRate,2) + " U/h")
+                aapsLogger.info(LTag.APS, "Ketoacidosis protection sets temp basal to  " + round(proposedRate,2) + " U/h")
+            }
+        }
+        aapsLogger.info(LTag.APS, "ketoProtection OUT: proposedRate=${"%.2f".format(proposedRate)} cutOff=$cutOff IOB = ${profile.ketoacidosisProtectionIob} Basal = ${profile.current_basal}" )
+        return proposedRate
+    }
+
+    private fun roundBasal(value: Double): Double {
+        val safeValue = if (value < 0.0) 0.0 else value
+        // Standard rounding to 2 decimals (OpenAPS style 0.00)
+        return Math.round(safeValue * 100.0) / 100.0
     }
 }

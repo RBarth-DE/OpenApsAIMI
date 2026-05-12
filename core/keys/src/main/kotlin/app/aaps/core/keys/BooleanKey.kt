@@ -127,11 +127,21 @@ enum class BooleanKey(
     FslCalibrationTrigger("calibration_stops_SMB", false, defaultedBySM = true),
     FslCalibrationEnd("calibration_end", false, defaultedBySM = true),
 
-    ActivityMonitorDetection("activity_detection", false, defaultedBySM=true),
-    ActivityMonitorOvernight("ignore_inactivity_overnight", true, defaultedBySM=true, dependency = ActivityMonitorDetection),
-    ActivityMonitorStepsActive("steps_activity_detected", false, defaultedBySM=true),
-    ActivityMonitorStepsInactive("steps_inactivity_detected", false, defaultedBySM=true),
-    ActivityMonitorShowStepsFromSmartphone("steps_graph_from_smartphone", true, defaultedBySM = true),
+    ActivityMonitorDetection(
+        key = "activity_detection",
+        titleResId = R.string.pref_activ_mon_title_activity_detection,
+        summaryResId = R.string.pref_activ_mon_sum_activity_detection,
+        defaultValue = false, defaultedBySM=true),
+    ActivityMonitorOvernight(
+        "ignore_inactivity_overnight",
+        titleResId = R.string.pref_activ_mon_title_ignore_inactivity_overnight,
+        summaryResId = R.string.pref_activ_mon_sum_ignore_inactivity_overnight,
+        defaultValue = true, defaultedBySM=true, dependency = ActivityMonitorDetection),
+    ActivityMonitorUseSteps(
+        key= "act_mon_use_steps",
+        titleResId = R.string.pref_activ_mon_title_act_mon_use_steps,
+        //summaryResId = empty
+        defaultValue = true, defaultedBySM = true),
 
     MaintenanceEnableFabric("enable_fabric2", true, R.string.pref_title_maintenance_enable_fabric, defaultedBySM = true, hideParentScreenIfHidden = true),
     MaintenanceEnableExportSettingsAutomation("enable_unattended_export", false, R.string.pref_title_maintenance_enable_export_automation, defaultedBySM = false),
@@ -294,8 +304,8 @@ enum class BooleanKey(
         key ="ketoacidosis_protection",
         defaultValue =false,
         defaultedBySM = true,
-        titleResId = R.string.ketoacidosis_protection_summary,
-        summaryResId = R.string.ketoacidosis_protection_title
+        titleResId = R.string.ketoacidosis_protection_title,
+        summaryResId = R.string.ketoacidosis_protection_summary
     ),
     ApsKetoacidosisProtectionStrategy(
         key ="ketoacidosis_protection_strategy",

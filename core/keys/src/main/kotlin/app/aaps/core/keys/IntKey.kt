@@ -64,8 +64,17 @@ enum class IntKey(
     ),
 
     //OverviewBolusPercentage(key = "boluswizard_percentage", defaultValue = 100, min = 10, max = 100),
-    ActivityMonitorIdleStart(key = "inactivity_idle_start", defaultValue = 22, min = 0, max = 23, defaultedBySM=true, dependency = BooleanKey.ActivityMonitorOvernight),
-    ActivityMonitorIdleEnd(key = "inactivity_idle_end", defaultValue = 6, min = 0, max = 23, defaultedBySM=true, dependency = BooleanKey.ActivityMonitorOvernight),
+    ActivityMonitorIdleStart(
+        key = "inactivity_idle_start",
+        //titleResId = empty
+        summaryResId = R.string.pref_activ_mon_sum_inactivity_idle_start,
+        defaultValue = 22, min = 0, max = 23, defaultedBySM=true,
+        dependency = BooleanKey.ActivityMonitorOvernight),
+    ActivityMonitorIdleEnd(
+        key = "inactivity_idle_end",
+        //titleResId = empty
+        summaryResId = R.string.pref_activ_mon_sum_inactivity_idle_end,
+        defaultValue = 6, min = 0, max = 23, defaultedBySM=true, dependency = BooleanKey.ActivityMonitorOvernight),
 
     OverviewHypoDuration("hypo_duration", 60, 15, 180, defaultedBySM = true),
     //OverviewHypoDuration(key = "hypo_duration", defaultValue = 60, min = 15, max = 180, titleResId = R.string.pref_title_hypo_duration, defaultedBySM = true, unitType = UnitType.MIN),
