@@ -61,7 +61,11 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.TextUnitType
 import androidx.compose.ui.unit.dp
@@ -72,6 +76,7 @@ import app.aaps.core.data.configuration.Constants
 import app.aaps.core.interfaces.overview.graph.GraphConfig
 import app.aaps.core.interfaces.overview.graph.SecondaryGraph
 import app.aaps.core.interfaces.overview.graph.SeriesType
+import app.aaps.core.ui.compose.AapsTheme
 import app.aaps.core.ui.compose.NumberInputRow
 import com.patrykandpatrick.vico.compose.cartesian.Scroll
 import com.patrykandpatrick.vico.compose.cartesian.Zoom
@@ -451,18 +456,19 @@ fun GraphsSection(
                         .fillMaxWidth()
                         .height(graphConfig.iobHeight.dp)
                 )
+                val iobHeaderColors = rememberSeriesColors()
+                val iobHeaderSep = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                val iobHeaderBasalColor = AapsTheme.elementColors.tempBasal
+                val iobHeaderParts = buildList {
+                    add(stringResource(app.aaps.core.ui.R.string.iob) to iobHeaderColors.iob)
+                    add(stringResource(app.aaps.core.ui.R.string.basal_shortname) to iobHeaderBasalColor)
+                    if (SeriesType.ACTIVITY in graphConfig.iobOverlays) {
+                        add(stringResource(app.aaps.core.ui.R.string.activity_shortname) to iobHeaderColors.activity)
+                    }
+                }
                 Text(
-                   text = buildString {
-                       append(stringResource(app.aaps.core.ui.R.string.iob))
-                       append(" / ")
-                       append(stringResource(app.aaps.core.ui.R.string.basal_shortname))
-                       if (SeriesType.ACTIVITY in graphConfig.iobOverlays) {
-                           append(" / ")
-                           append(stringResource(app.aaps.core.ui.R.string.activity_shortname))
-                       }
-                   },
+                   text = coloredSeriesLabel(iobHeaderParts, iobHeaderSep),
                    style = MaterialTheme.typography.labelSmall,
-                   color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
                    modifier = Modifier
                        .align(Alignment.TopStart)
                        .padding(start = 36.dp, top = 2.dp)
@@ -550,10 +556,14 @@ fun GraphsSection(
                                     ) else Modifier
                                 )
                         )
+                        val secHeaderColors = rememberSeriesColors()
+                        val secHeaderSep = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                        val secHeaderParts = secondary.series.map { s ->
+                            stringResource(seriesShortNameId(s)) to secHeaderColors.colorFor(s)
+                        }
                         Text(
-                            text = seriesListLabel(secondary.series),
+                            text = coloredSeriesLabel(secHeaderParts, secHeaderSep),
                             style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
                             modifier = Modifier
                                 .align(Alignment.TopStart)
                                 .padding(start = 36.dp, top = 2.dp)
@@ -653,10 +663,16 @@ fun GraphsSection(
 // Graph label generation
 // =========================================================================
 
-/** Generate a short label from the series types in a graph (e.g., "IOB", "COB", "BGI / DEV") */
-@Composable
-private fun seriesListLabel(seriesList: List<SeriesType>): String =
-    seriesList.map { stringResource(seriesShortNameId(it)) }.joinToString(" / ")
+/** Build a per-segment colored label so each shortname matches its line color in the graph. */
+private fun coloredSeriesLabel(
+    parts: List<Pair<String, Color>>,
+    separatorColor: Color
+): AnnotatedString = buildAnnotatedString {
+    parts.forEachIndexed { i, (text, color) ->
+        if (i > 0) withStyle(SpanStyle(color = separatorColor)) { append(" / ") }
+        withStyle(SpanStyle(color = color)) { append(text) }
+    }
+}
 
 /** String resource ID for the short name of a series type */
 private fun seriesShortNameId(type: SeriesType): Int = when (type) {
