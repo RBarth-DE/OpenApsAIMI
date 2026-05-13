@@ -1188,7 +1188,7 @@ class DetermineBasalAutoISF @Inject constructor(
      * Thanks to https://github.com/swissalpine/AndroidAPS where I took over this implementation
      ****************************************************************/
     private fun ketoProtection(_proposedRate: Double, profile: OapsProfileAutoIsf, rT: RT, pumpCaps : PumpCaps): Double {
-        aapsLogger.info(LTag.APS, "ketoProtection IN: _proposedRate=${"%.2f".format(_proposedRate)}")
+        aapsLogger.debug(LTag.APS, "ketoProtection IN: _proposedRate=${"%.2f".format(_proposedRate)}")
 
         var proposedRate : Double = _proposedRate
         val protectionRate : Double = profile.ketoacidosisProtectionBasal.toDouble() * 0.01
@@ -1209,7 +1209,7 @@ class DetermineBasalAutoISF @Inject constructor(
                 aapsLogger.info(LTag.APS, "Ketoacidosis protection sets temp basal to  " + round(proposedRate,2) + " U/h")
             }
         }
-        aapsLogger.info(LTag.APS, "ketoProtection OUT: proposedRate=${"%.2f".format(proposedRate)} cutOff=$cutOff IOB = ${profile.ketoacidosisProtectionIob} Basal = ${profile.current_basal}" )
+        aapsLogger.debug(LTag.APS, "ketoProtection OUT: proposedRate=${"%.2f".format(proposedRate)} cutOff=$cutOff IOB = ${profile.ketoacidosisProtectionIob} Basal = ${profile.current_basal}" )
         return proposedRate
     }
 

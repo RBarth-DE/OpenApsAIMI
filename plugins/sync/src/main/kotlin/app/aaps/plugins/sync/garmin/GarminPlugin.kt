@@ -429,7 +429,7 @@ class GarminPlugin @Inject constructor(
         samplingStart: Instant, samplingEnd: Instant,
         avg: Int, device: String?, test: Boolean
     ) {
-        aapsLogger.info(LTag.GARMIN, "average heart rate $avg BPM $samplingStart to $samplingEnd")
+        aapsLogger.debug(LTag.GARMIN, "average heart rate $avg BPM $samplingStart to $samplingEnd")
         if (test) return
         if (avg > 10 && samplingStart > Instant.ofEpochMilli(0L) && samplingEnd > samplingStart) {
             loopHub.storeHeartRate(samplingStart, samplingEnd, avg, device)
