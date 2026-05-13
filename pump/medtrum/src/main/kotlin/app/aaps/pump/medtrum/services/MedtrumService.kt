@@ -1005,9 +1005,18 @@ class MedtrumService : DaggerService(), MedtrumBleCallback {
         }
     }
 
-    override fun onNotification(data: ByteArray) {
-        aapsLogger.debug(LTag.PUMPCOMM, "<<<<< onNotification ${data.contentToString()}")
-        NotificationPacket(injector).handleNotification(data)
+    // override fun onNotification(notification: ByteArray) {
+    //     aapsLogger.debug(LTag.PUMPCOMM, "<<<<< onNotification" + notification.contentToString())
+    //     NotificationPacket(injector).handleNotification(notification)
+    // }
+
+    // NACHHER:
+    override fun onNotification(notification: ByteArray) {
+        aapsLogger.debug(LTag.PUMPCOMM, "<<<<< onNotification" + notification.contentToString())
+        val notificationCopy = notification.copyOf() // defensiv kopieren, bevor der BLE-Thread weiterläuft
+        scope.launch {
+            NotificationPacket(injector).handleNotification(notificationCopy)
+        }
     }
 
     override fun onIndication(data: ByteArray) {
