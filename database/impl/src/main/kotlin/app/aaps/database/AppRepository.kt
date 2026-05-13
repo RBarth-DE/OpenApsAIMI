@@ -42,6 +42,7 @@ import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.math.roundToInt
+import io.reactivex.rxjava3.core.Single
 
 @Singleton
 class AppRepository @Inject internal constructor(

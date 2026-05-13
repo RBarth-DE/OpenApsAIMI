@@ -1526,7 +1526,7 @@ interface PersistenceLayer {
      * @param autoIsfValues record
      * @return List of inserted/updated records
      */
-    fun insertOrUpdateAutoIsfValues(autoIsfValues: AIV): Single<TransactionResult<AIV>>
+    suspend fun insertOrUpdateAutoIsfValues(autoIsfValues: AIV): TransactionResult<AIV>
     // VersionChange
 
     /**

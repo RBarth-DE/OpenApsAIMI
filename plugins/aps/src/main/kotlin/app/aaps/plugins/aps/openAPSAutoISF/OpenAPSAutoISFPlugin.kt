@@ -77,7 +77,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.JsonObject
-import io.reactivex.rxjava3.disposables.CompositeDisposable
 import io.reactivex.rxjava3.kotlin.plusAssign
 import org.json.JSONObject
 import java.util.Locale
@@ -169,7 +168,6 @@ open class OpenAPSAutoISFPlugin @Inject constructor(
     val normalTarget = Constants.NORMAL_TARGET_MGDL
     val calibrationDuration = preferences.get(IntKey.FslCalibrationDuration)
     private val minutesClass; get() = if (preferences.get(IntKey.ApsMaxSmbFrequency) == 1) 6L else 30L  // ga-zelle: later get correct 1 min CGM flag from glucoseStatus ? ... or from apsResults?
-    private val disposable = CompositeDisposable()
     // create array for key AutoISF results with defaults
     var autoIsfValues = AIV(
         timestamp = 0L,
@@ -557,7 +555,7 @@ open class OpenAPSAutoISFPlugin @Inject constructor(
         }
         autoIsfValues.timestamp = now
         //aapsLogger.debug(LTag.APS, "autoIsfValues to write contains: $autoIsfValues")
-        disposable += persistenceLayer.insertOrUpdateAutoIsfValues(autoIsfValues).subscribe()
+        persistenceLayer.insertOrUpdateAutoIsfValues(autoIsfValues)
         //val autoIsfRecords = persistenceLayer.getAutoIsfValuesFromTime(now-100000L)
         //aapsLogger.debug(LTag.APS, "autoIsfValues records read contain: $autoIsfRecords")
         rxBus.send(EventOpenAPSUpdateGui())

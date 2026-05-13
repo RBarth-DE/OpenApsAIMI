@@ -139,12 +139,7 @@ import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import javax.inject.Provider
 import kotlin.reflect.KClass
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.withContext
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.filter
-import kotlinx.coroutines.flow.map
+import io.reactivex.rxjava3.core.Single
 
 @Reusable
 class PersistenceLayerImpl @Inject constructor(
@@ -164,14 +159,6 @@ class PersistenceLayerImpl @Inject constructor(
                 is ValueWrapper.Absent   -> ValueWrapper.Absent()
             }
         }
-
-    private suspend fun log(entries: List<UE>) {
-        if (config.AAPSCLIENT.not())
-            if (entries.isNotEmpty()) {
-                insertUserEntries(entries)
-                delay(entries.size * 10L)
-            }
-    }
 
     private val compositeDisposable = CompositeDisposable()
     private suspend fun log(entries: List<UE>) {
@@ -2465,21 +2452,24 @@ class PersistenceLayerImpl @Inject constructor(
     override fun getAutoIsfValuesFromTimeToTime(startTime: Long, endTime: Long): List<AIV> =
         repository.getAutoIsfValuesFromTimeToTime(startTime, endTime).map { list -> list.asSequence().map { it.fromDb() }.toList() }.blockingGet()
 
-    override fun insertOrUpdateAutoIsfValues(autoIsfValues: AIV): Single<PersistenceLayer.TransactionResult<AIV>> =
-        repository.runTransactionForResult(InsertOrUpdateAutoIsfValuesTransaction(autoIsfValues.toDb()))
-            .doOnError { aapsLogger.error(LTag.DATABASE, "Error while saving AutoIsfValues $it") }
-            .map { result ->
-                val transactionResult = PersistenceLayer.TransactionResult<AIV>()
-                result.inserted.forEach {
-                    aapsLogger.debug(LTag.DATABASE, "Inserted AutoIsfValues $it")
-                    transactionResult.inserted.add(it.fromDb())
-                }
-                result.updated.forEach {
-                    aapsLogger.debug(LTag.DATABASE, "Updated AutoIsfValues $it")
-                    transactionResult.updated.add(it.fromDb())
-                }
-                transactionResult
+    override suspend fun insertOrUpdateAutoIsfValues(autoIsfValues: AIV): PersistenceLayer.TransactionResult<AIV> = withContext(Dispatchers.IO) {
+        try {
+            val result = repository.runTransactionForResultSuspend(InsertOrUpdateAutoIsfValuesTransaction(autoIsfValues.toDb()))
+            val transactionResult = PersistenceLayer.TransactionResult<AIV>()
+            result.inserted.forEach {
+                aapsLogger.debug(LTag.DATABASE, "Inserted AutoIsfValues $it")
+                transactionResult.inserted.add(it.fromDb())
             }
+            result.updated.forEach {
+                aapsLogger.debug(LTag.DATABASE, "Updated AutoIsfValues $it")
+                transactionResult.updated.add(it.fromDb())
+            }
+            transactionResult
+        } catch (e: Exception) {
+            aapsLogger.error(LTag.DATABASE, "Error while saving AutoIsfValues", e)
+            throw e
+        }
+    }
 
     // VersionChange
     override suspend fun insertVersionChangeIfChanged(versionName: String, versionCode: Int, gitRemote: String?, commitHash: String?) = withContext(Dispatchers.IO) {
