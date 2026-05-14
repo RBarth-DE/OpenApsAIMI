@@ -2,6 +2,7 @@ package app.aaps.pump.medtrum.comm.packets
 
 import app.aaps.core.interfaces.logging.AAPSLogger
 import app.aaps.core.interfaces.logging.LTag
+import app.aaps.core.interfaces.utils.DateUtil
 import app.aaps.pump.medtrum.MedtrumPump
 import app.aaps.pump.medtrum.comm.enums.AlarmState
 import app.aaps.pump.medtrum.comm.enums.BasalType
@@ -12,7 +13,10 @@ import app.aaps.pump.medtrum.util.MedtrumTimeUtil
 import dagger.android.HasAndroidInjector
 import javax.inject.Inject
 
-class NotificationPacket(val injector: HasAndroidInjector) {
+class NotificationPacket(
+    val injector: HasAndroidInjector
+
+) {
 
     /**
      * This is a bit of a special packet, as it is not a command packet
@@ -142,6 +146,8 @@ class NotificationPacket(val injector: HasAndroidInjector) {
      * Handle a message with a field mask, can be used by other packets as well
      */
     fun handleMaskedMessage(data: ByteArray): Boolean {
+        medtrumPump.lastNotificationTimestamp = System.currentTimeMillis()
+
         val fieldMask = data.copyOfRange(0, 2).toInt()
         var offset = 2
 

@@ -533,15 +533,18 @@ class MedtrumService : DaggerService(), MedtrumBleCallback {
     }
 
     private fun waitForBolusProgress() {
+        medtrumPump.lastNotificationTimestamp = System.currentTimeMillis() // ← neu
+
         var communicationLost = false
         var connectionRetryCounter = 0
-        var checkTime = medtrumPump.bolusProgressLastTimeStamp
+        var checkTime = System.currentTimeMillis()
         var lastSentBolusAmount: Double? = null
 
         while (!medtrumPump.bolusStopped && !medtrumPump.bolusDone && !communicationLost) {
             SystemClock.sleep(100)
             if (medtrumPump.bolusProgressLastTimeStamp > checkTime) checkTime = medtrumPump.bolusProgressLastTimeStamp
-            if (System.currentTimeMillis() - checkTime > T.secs(20).msecs()) {
+            val pumpAlive = (System.currentTimeMillis() - medtrumPump.lastNotificationTimestamp) < T.secs(20).msecs()
+            if (!pumpAlive && (System.currentTimeMillis() - checkTime > T.secs(20).msecs())) {
                 if (connectionRetryCounter < 3) {
                     aapsLogger.warn(LTag.PUMPCOMM, "No bolus progress for 20 seconds, retrying connection")
                     connect("retrying connection")
