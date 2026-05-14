@@ -708,7 +708,10 @@ class MedtrumService : DaggerService(), MedtrumBleCallback {
         if (medtrumPump.tempBasalInProgress) {
             result = sendPacketAndGetResponse(CancelTempBasalPacket(injector))
         }
-        if (result) result = sendPacketAndGetResponse(SetTempBasalPacket(injector, absoluteRate, durationInMinutes))
+        // Medtrum pump triggers OCCLUSION after ~10min with TBR 0.0 U/h
+        // Minimum deliverable step is 0.05 U/h (1 unit in pump encoding)
+        val safeRate = if (absoluteRate == 0.0) 0.05 else absoluteRate
+        if (result) result = sendPacketAndGetResponse(SetTempBasalPacket(injector, safeRate, durationInMinutes))
 
         // Get history records, this will update the previous basals
         // Do not call update status directly, reconnection may be needed
