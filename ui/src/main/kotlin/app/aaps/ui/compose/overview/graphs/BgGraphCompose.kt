@@ -260,7 +260,8 @@ fun BgGraphCompose(
         currentMaxBgY: Double,
         currentTreatmentData: TreatmentGraphData,
         showBolusMarkers: Boolean,
-        currentLowMark: Double
+        currentLowMark: Double,
+        currentHighMark: Double
     ) {
         val regularPoints = seriesRegistry[SERIES_REGULAR] ?: emptyList()
         val bucketedPoints = seriesRegistry[SERIES_BUCKETED] ?: emptyList()
@@ -346,9 +347,13 @@ fun BgGraphCompose(
                         .sortedBy { it.first }
                     series(x = pts.map { it.first }, y = pts.map { it.second })
                 } else {
-                    // Dummy series - invisible at y=0
                     series(x = listOf(0.0, 1.0), y = listOf(0.0, 0.0))
                 }
+
+                val highY = viewModel.glucoseMgdlToChartY(currentHighMark)
+                val lowY  = viewModel.glucoseMgdlToChartY(currentLowMark)
+                series(x = listOf(0.0, maxX), y = listOf(highY, highY))  // high mark
+                series(x = listOf(0.0, maxX), y = listOf(lowY,  lowY))   // low mark
             }
 
             // Block 4 → EPS layer (layer 3, end axis — Y-values normalized to basal coordinate space)
@@ -446,7 +451,7 @@ fun BgGraphCompose(
         // maxBgY clamped against highMark (same as legacy GraphData.maxY logic)
         val allBgValues = (bgReadings + bucketedData).map { it.value }
         var maxBgY = if (allBgValues.isNotEmpty()) maxOf(allBgValues.max(), chartConfig.highMark) else chartConfig.highMark
-        rebuildChart(basalData, targetData, epsPoints, activityData, maxBgY, treatmentData, showBolus, chartConfig.lowMark)
+        rebuildChart(basalData, targetData, epsPoints, activityData, maxBgY, treatmentData, showBolus, chartConfig.lowMark, chartConfig.highMark)
         val sortedBgAsc = bgReadings.sortedBy { it.timestamp }
         val fallbackSmbY = viewModel.glucoseDisplayYToMgdl(
             (chartConfig.lowMark + chartConfig.highMark) / 2.0,
@@ -479,7 +484,7 @@ fun BgGraphCompose(
         } else {
             maxOf(chartConfig.highMark, targetPeakDisplay)
         }
-        rebuildChart(basalData, targetData, epsPoints, activityData, maxBgY, treatmentData, showBolus, chartConfig.lowMark)
+        rebuildChart(basalData, targetData, epsPoints, activityData, maxBgY, treatmentData, showBolus, chartConfig.lowMark, chartConfig.highMark)
     }
 
     // Build lookup map for BUCKETED points: x-value -> BgDataPoint (for PointProvider)
@@ -657,7 +662,30 @@ fun BgGraphCompose(
         )
     }
 
-    val targetLines = remember(targetLine) { listOf(targetLine) }
+    //val targetLines = remember(targetLine) { listOf(targetLine) }
+
+    val highMarkLine = remember {
+        LineCartesianLayer.Line(
+            fill = LineCartesianLayer.LineFill.single(Fill(highColor.copy(alpha = 0.7f))),
+            stroke = LineCartesianLayer.LineStroke.Dashed(
+                thickness = 1.dp, cap = StrokeCap.Round, dashLength = 4.dp, gapLength = 4.dp
+            ),
+            areaFill = null
+        )
+    }
+    val lowMarkLine = remember {
+        LineCartesianLayer.Line(
+            fill = LineCartesianLayer.LineFill.single(Fill(lowColor.copy(alpha = 0.7f))),
+            stroke = LineCartesianLayer.LineStroke.Dashed(
+                thickness = 1.dp, cap = StrokeCap.Round, dashLength = 4.dp, gapLength = 4.dp
+            ),
+            areaFill = null
+        )
+    }
+
+    val targetLines = remember(targetLine, highMarkLine, lowMarkLine) {
+        listOf(targetLine, highMarkLine, lowMarkLine)
+    }
 
     // =========================================================================
     // EPS layer lines (layer 3) — profile icon points
