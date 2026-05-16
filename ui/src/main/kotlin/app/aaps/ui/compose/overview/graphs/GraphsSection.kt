@@ -591,7 +591,7 @@ fun GraphsSection(
                         current.remove(type)
                     } else {
                         current.add(type)
-                        if (current.size > 2) current.removeAt(0) // FIFO: drop oldest
+                        if (current.size > 5) current.removeAt(0) // FIFO: drop oldest
                     }
                     if (current.isEmpty()) {
                         // Auto-remove graph when all series deselected
@@ -637,7 +637,7 @@ fun GraphsSection(
                             current.remove(type)
                         } else {
                             current.add(type)
-                            if (current.size > 2) current.removeAt(0)
+                            if (current.size > 5) current.removeAt(0)
                         }
                         newGraphSeries = current
                     },

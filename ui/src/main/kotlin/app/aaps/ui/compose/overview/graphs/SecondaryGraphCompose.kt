@@ -44,6 +44,8 @@ import com.patrykandpatrick.vico.compose.common.component.LineComponent
 import com.patrykandpatrick.vico.compose.common.component.ShapeComponent
 import com.patrykandpatrick.vico.compose.common.component.TextComponent
 import com.patrykandpatrick.vico.compose.common.component.rememberTextComponent
+import androidx.compose.runtime.collectAsState
+
 
 /**
  * General-purpose secondary graph composable.
@@ -101,7 +103,12 @@ fun SecondaryGraphCompose(
     // Primary series = left axis (orderedTypes[0]), secondary series = right axis (orderedTypes[1])
     val primaryType = orderedTypes[0]
     val secondaryType = orderedTypes.getOrNull(1)
-    val isDualAxis = secondaryType != null
+
+
+
+// In SecondaryGraphCompose, primaryType/secondaryType-Block:
+    val isMultiSimple = seriesTypes.size > 1 && seriesTypes.all { it in SIMPLE_LINE_TYPES }
+    val isDualAxis    = secondaryType != null && !isMultiSimple  // ← das ist die Änderung
 
     val hasIob = primaryType == SeriesType.IOB
     val hasCob = primaryType == SeriesType.COB
@@ -118,12 +125,13 @@ fun SecondaryGraphCompose(
     val devSlopeData = if (primaryType == SeriesType.DEV_SLOPE) viewModel.devSlopeGraphFlow.collectAsStateWithLifecycle().value else null
     val hrData = if (primaryType == SeriesType.HEART_RATE) viewModel.heartRateGraphFlow.collectAsStateWithLifecycle().value else null
     val stepsData = if (primaryType == SeriesType.STEPS) viewModel.stepsGraphFlow.collectAsStateWithLifecycle().value else null
-    val iobThData = if (primaryType == SeriesType.IOB_THRESHOLD) viewModel.iobThGraphFlow.collectAsStateWithLifecycle().value else null
-    val finalIsfData = if (primaryType == SeriesType.FINAL_ISF) viewModel.finalIsfGraphFlow.collectAsStateWithLifecycle().value else null
-    val acceIsfData = if (primaryType == SeriesType.ACCE_ISF) viewModel.acceIsfGraphFlow.collectAsStateWithLifecycle().value else null
-    val bgIsfData = if (primaryType == SeriesType.BG_ISF) viewModel.bgIsfGraphFlow.collectAsStateWithLifecycle().value else null
-    val ppIsfData = if (primaryType == SeriesType.PP_ISF) viewModel.ppIsfGraphFlow.collectAsStateWithLifecycle().value else null
-    val duraIsfData = if (primaryType == SeriesType.DURA_ISF) viewModel.duraIsfGraphFlow.collectAsStateWithLifecycle().value else null
+    val iobThData    by viewModel.iobThGraphFlow.collectAsStateWithLifecycle()
+    val finalIsfData by viewModel.finalIsfGraphFlow.collectAsStateWithLifecycle()
+    val acceIsfData  by viewModel.acceIsfGraphFlow.collectAsStateWithLifecycle()
+    val bgIsfData    by viewModel.bgIsfGraphFlow.collectAsStateWithLifecycle()
+    val ppIsfData    by viewModel.ppIsfGraphFlow.collectAsStateWithLifecycle()
+    val duraIsfData  by viewModel.duraIsfGraphFlow.collectAsStateWithLifecycle()
+// ... gleich für alle anderen simple-line flows
     // Activity data: either as primary series OR as overlay (on IOB graph)
     val needsActivity = primaryType == SeriesType.ACTIVITY || (activityOverlay && hasIob)
     val activityData = if (needsActivity) viewModel.activityGraphFlow.collectAsStateWithLifecycle().value else null
@@ -176,7 +184,7 @@ fun SecondaryGraphCompose(
 
     // Simple line series processing (excludes BASAL — it's a fixed flipped overlay on IOB)
     val processedSimpleSeries = remember(
-        stableTimeRange, absIobData, bgiData, ratioData, varSensData, devSlopeData, hrData, stepsData, activityData,
+        stableTimeRange, seriesTypes, absIobData, bgiData, ratioData, varSensData, devSlopeData, hrData, stepsData, activityData,
         iobThData, finalIsfData, acceIsfData, bgIsfData, ppIsfData, duraIsfData
     ) {
         if (!hasRealTimeRange) return@remember emptyList()
@@ -207,24 +215,30 @@ fun SecondaryGraphCompose(
             stepsData?.steps?.takeIf { it.isNotEmpty() }?.let {
                 add(SeriesType.STEPS to processPoints(it, minTimestamp, minX, maxX))
             }
-            iobThData?.iobTh?.takeIf { it.isNotEmpty() }?.let {
-                add(SeriesType.IOB_THRESHOLD to processPoints(it, minTimestamp, minX, maxX))
-            }
-            finalIsfData?.finalIsf?.takeIf { it.isNotEmpty() }?.let {
-                add(SeriesType.FINAL_ISF to processPoints(it, minTimestamp, minX, maxX))
-            }
-            acceIsfData?.acceIsf?.takeIf { it.isNotEmpty() }?.let {
-                add(SeriesType.ACCE_ISF to processPoints(it, minTimestamp, minX, maxX))
-            }
-            bgIsfData?.bgIsf?.takeIf { it.isNotEmpty() }?.let {
-                add(SeriesType.BG_ISF to processPoints(it, minTimestamp, minX, maxX))
-            }
-            ppIsfData?.ppIsf?.takeIf { it.isNotEmpty() }?.let {
-                add(SeriesType.PP_ISF to processPoints(it, minTimestamp, minX, maxX))
-            }
-            duraIsfData?.duraIsf?.takeIf { it.isNotEmpty() }?.let {
-                add(SeriesType.DURA_ISF to processPoints(it, minTimestamp, minX, maxX))
-            }
+            if (SeriesType.IOB_THRESHOLD in seriesTypes)
+                iobThData.iobTh.takeIf { it.isNotEmpty() }?.let {
+                    add(SeriesType.IOB_THRESHOLD to processPoints(it, minTimestamp, minX, maxX))
+                }
+            if (SeriesType.FINAL_ISF in seriesTypes)
+                finalIsfData.finalIsf.takeIf { it.isNotEmpty() }?.let {
+                    add(SeriesType.FINAL_ISF to processPoints(it, minTimestamp, minX, maxX))
+                }
+            if (SeriesType.ACCE_ISF in seriesTypes)
+                acceIsfData.acceIsf.takeIf { it.isNotEmpty() }?.let {
+                    add(SeriesType.ACCE_ISF to processPoints(it, minTimestamp, minX, maxX))
+                }
+            if (SeriesType.BG_ISF in seriesTypes)
+                bgIsfData.bgIsf.takeIf { it.isNotEmpty() }?.let {
+                    add(SeriesType.BG_ISF to processPoints(it, minTimestamp, minX, maxX))
+                }
+            if (SeriesType.PP_ISF in seriesTypes)
+                ppIsfData.ppIsf.takeIf { it.isNotEmpty() }?.let {
+                    add(SeriesType.PP_ISF to processPoints(it, minTimestamp, minX, maxX))
+                }
+            if (SeriesType.DURA_ISF in seriesTypes)
+                duraIsfData.duraIsf.takeIf { it.isNotEmpty() }?.let {
+                    add(SeriesType.DURA_ISF to processPoints(it, minTimestamp, minX, maxX))
+                }
             if (primaryType == SeriesType.ACTIVITY) {
                 activityData?.let {
                     if (it.activity.isNotEmpty()) add(SeriesType.ACTIVITY to processPoints(it.activity, minTimestamp, minX, maxX))
@@ -1086,6 +1100,13 @@ private val DEVIATION_COLOR_EQUAL = Color(0x72000000)    // black (matches @colo
 private val DEVIATION_COLOR_UAM = Color(0xFFC9BD60)      // yellow (matches @color/uam)
 private val DEVIATION_COLOR_CSF = Color(0xC8666666)      // grey (matches @color/deviationGrey)
 
+private val SIMPLE_LINE_TYPES = setOf(
+    SeriesType.ABS_IOB, SeriesType.BGI, SeriesType.SENSITIVITY,
+    SeriesType.VAR_SENSITIVITY, SeriesType.DEV_SLOPE, SeriesType.HEART_RATE,
+    SeriesType.STEPS, SeriesType.ACTIVITY, SeriesType.IOB_THRESHOLD,
+    SeriesType.FINAL_ISF, SeriesType.ACCE_ISF, SeriesType.BG_ISF,
+    SeriesType.PP_ISF, SeriesType.DURA_ISF
+)
 private fun deviationColor(type: DeviationType): Color = when (type) {
     DeviationType.POSITIVE -> DEVIATION_COLOR_POSITIVE
     DeviationType.NEGATIVE -> DEVIATION_COLOR_NEGATIVE
@@ -1155,4 +1176,6 @@ private fun alignZeros(aMin: Double, aMax: Double, bMin: Double, bMax: Double): 
         else                 -> null
     }
 }
+
+
 

@@ -120,7 +120,7 @@ class GraphConfigRepositoryImpl @Inject constructor(
                     // Skip unknown series (forward compat)
                 }
             }
-            return series.take(2)
+            return series.take(5)
         }
 
         fun fromJson(json: String): GraphConfig {

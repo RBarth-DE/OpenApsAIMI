@@ -63,7 +63,7 @@ data class SecondaryGraph(
  *   IOB cannot appear here (it has a dedicated fixed slot). Each graph is a List (not Set) to
  *   preserve selection order:
  *   - list[0] = left axis (start), list[1] = right axis (end).
- *   Max 2 series per graph. FIFO: adding a 3rd deselects the oldest.
+ *   Max 5 series per graph. FIFO: adding a 6th deselects the oldest.
  */
 data class GraphConfig(
     val bgOverlays: List<SeriesType> = listOf(SeriesType.BASAL, SeriesType.BOLUS, SeriesType.ACTIVITY),
