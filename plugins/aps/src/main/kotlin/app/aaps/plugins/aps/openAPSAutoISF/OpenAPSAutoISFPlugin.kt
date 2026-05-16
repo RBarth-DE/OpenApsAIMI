@@ -51,8 +51,10 @@ import app.aaps.core.keys.DoubleKey
 import app.aaps.core.keys.IntKey
 import app.aaps.core.keys.IntentKey
 import app.aaps.core.keys.LongKey
+import app.aaps.core.keys.StringKey
 import app.aaps.core.keys.UnitDoubleKey
 import app.aaps.core.keys.interfaces.Preferences
+import app.aaps.core.keys.interfaces.withEntries
 import app.aaps.core.objects.constraints.ConstraintObject
 import app.aaps.core.objects.extensions.convertedToAbsolute
 import app.aaps.core.objects.extensions.getPassedDurationToTimeInMinutes
@@ -1368,6 +1370,26 @@ open class OpenAPSAutoISFPlugin @Inject constructor(
                 )
             ),
             PreferenceSubScreenDef(
+                key = "aimi_compose_ai_keys",
+                titleResId = R.string.aimi_prefs_ai_title,
+                items = listOf(
+                    StringKey.AimiAdvisorProvider.withEntries(
+                        mapOf(
+                            "OPENAI" to rh.gs(R.string.aimi_prefs_provider_openai),
+                            "GEMINI" to rh.gs(R.string.aimi_prefs_provider_gemini),
+                            "DEEPSEEK" to rh.gs(R.string.aimi_prefs_provider_deepseek),
+                            "CLAUDE" to rh.gs(R.string.aimi_prefs_provider_claude),
+                        )
+                    ),
+                    StringKey.AimiAdvisorOpenAIKey,
+                    StringKey.AimiAdvisorGeminiKey,
+                    StringKey.AimiAdvisorDeepSeekKey,
+                    StringKey.AimiAdvisorClaudeKey,
+                    // BooleanKey.OApsAIMIAdvisorPersonalOrefMl,
+                    // BooleanKey.OApsAIMIAdvisorLlmRichOref,
+                ),
+            ),
+            PreferenceSubScreenDef(
                 key = "Ketoacidosis_Protection",
                 titleResId = app.aaps.core.keys.R.string.ketoacidosis_protection_title,
                 summaryResId = app.aaps.core.keys.R.string.ketoacidosis_protection_summary,
@@ -1376,6 +1398,19 @@ open class OpenAPSAutoISFPlugin @Inject constructor(
                     add(BooleanKey.ApsKetoacidosisProtectionStrategy)
                     add(IntKey.ApsKetoacidosisProtectionBasal)
                 }
+            ),
+            PreferenceSubScreenDef(
+                key = "aimi_compose_sos",
+                titleResId = R.string.aimi_sos_title,
+                items = buildList {
+                    add(BooleanKey.AimiEmergencySosEnable)
+                    add(StringKey.AimiEmergencySosPhone)
+                    add(StringKey.AimiEmergencySosPhone2)
+                    add(IntKey.AimiEmergencySosThreshold)
+                    add(IntKey.AimiEmergencySosImmediateThreshold)
+                    add(IntKey.AimiEmergencySosStaleThreshold)
+                    add(ApsIntentKey.AimiSosPermissions)
+                },
             ),
         ),
         icon = pluginDescription.icon

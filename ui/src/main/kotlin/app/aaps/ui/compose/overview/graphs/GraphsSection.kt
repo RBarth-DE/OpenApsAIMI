@@ -127,12 +127,12 @@ private val AUTOISF_SERIES = setOf(
     SeriesType.ACCE_ISF,
     SeriesType.BG_ISF,
     SeriesType.PP_ISF,
-    SeriesType.DURA_ISF
+    SeriesType.DURA_ISF,
+    SeriesType.MODES
 )
 
 private val AIMI_SERIES = setOf(
     SeriesType.MODES,
-    SeriesType.TIR
 )
 
 /** Base series types for user-configurable secondary graphs (IOB + UI-only overlays excluded) */
