@@ -128,7 +128,12 @@ class SPImpl @Inject constructor(
         try {
             sharedPreferences.getFloat(key, defaultValue.toFloat()).toDouble()
         } catch (_: Exception) {
-            SafeParse.stringToDouble(sharedPreferences.getString(key, defaultValue.toString()), defaultValue)
+            try {
+                SafeParse.stringToDouble(sharedPreferences.getString(key, defaultValue.toString()), defaultValue)
+            } catch (_: ClassCastException) {
+                // Migration: Value was stored as INT
+                sharedPreferences.getInt(key, defaultValue.toInt()).toDouble()
+            }
         }
 
     override fun getInt(resourceID: Int, defaultValue: Int): Int =

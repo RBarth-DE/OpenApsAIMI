@@ -391,7 +391,7 @@ open class OpenAPSAutoISFPlugin @Inject constructor(
             }
             autosensResult = autosensData.autosensResult
         } else autosensResult.sensResult = "autosens disabled"
-        val iobArray = iobCobCalculator.calculateIobArrayForSMB(autosensResult, preferences.get(BooleanKey.ApsAutoIsfHighTtRaisesSens), preferences.get(IntKey.ApsAutoIsfHalfBasalExerciseTarget), isTempTarget)
+        val iobArray = iobCobCalculator.calculateIobArrayForSMB(autosensResult, preferences.get(BooleanKey.ApsAutoIsfHighTtRaisesSens), preferences.get(UnitDoubleKey.ApsAutoIsfHalfBasalExerciseTarget).toInt(), isTempTarget)
         val mealData = iobCobCalculator.getMealDataWithWaitingForCalculationFinish()
         val iobData = iobArray[0]
         val profile_percentage = if (profile is ProfileSealed.EPS) profile.value.originalPercentage else 100
@@ -1305,7 +1305,7 @@ open class OpenAPSAutoISFPlugin @Inject constructor(
             BooleanKey.ApsResistanceLowersTarget,
             BooleanKey.ApsAutoIsfHighTtRaisesSens,
             BooleanKey.ApsAutoIsfLowTtLowersSens,
-            IntKey.ApsAutoIsfHalfBasalExerciseTarget,
+            UnitDoubleKey.ApsAutoIsfHalfBasalExerciseTarget,
             BooleanKey.ApsUseSmb,
             BooleanKey.ApsUseSmbWithHighTt,
             BooleanKey.ApsUseSmbAlways,

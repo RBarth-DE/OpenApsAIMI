@@ -217,16 +217,6 @@ enum class IntKey(
         defaultedBySM = true,
         unitType = UnitType.GRAMS
     ),
-    ApsAutoIsfHalfBasalExerciseTarget(
-        key = "half_basal_exercise_target",
-        defaultValue = 160,
-        min = 120,
-        max = 200,
-        titleResId = R.string.pref_title_half_basal_exercise_target,
-        summaryResId = R.string.half_basal_exercise_target_summary,
-        defaultedBySM = true,
-        unitType = UnitType.MGDL
-    ),
     ApsAutoIsfIobThPercent(
         key = "iob_threshold_percent",
         defaultValue = 100,

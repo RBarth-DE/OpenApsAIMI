@@ -121,7 +121,7 @@ enum class BooleanKey(
     ApsAmaAutosensAdjustTargets("autosens_adjust_targets", true, R.string.pref_title_aps_autosens_adjust_targets, R.string.pref_summary_aps_autosens_adjust_targets, defaultedBySM = true),
     ApsAutoIsfHighTtRaisesSens("high_temptarget_raises_sensitivity", false, R.string.pref_title_aps_high_tt_raises_sensitivity, R.string.pref_summary_aps_high_tt_raises_sensitivity, defaultedBySM = true),
     ApsAutoIsfLowTtLowersSens("low_temptarget_lowers_sensitivity", false, R.string.pref_title_aps_low_tt_lowers_sensitivity, R.string.pref_summary_aps_low_tt_lowers_sensitivity, defaultedBySM = true),
-    ApsUseAutoIsfWeights("openapsama_enable_autoISF", false, R.string.pref_title_aps_use_autoisf_weights, R.string.pref_summary_aps_use_autoisf_weights, defaultedBySM = true),
+    ApsUseAutoIsfWeights("openapsama_enable_autoISF", true, R.string.pref_title_aps_use_autoisf_weights, R.string.pref_summary_aps_use_autoisf_weights, defaultedBySM = true),
     ApsAutoIsfSmbOnEvenTarget("Enable alternative activation of SMB always", false, R.string.pref_title_aps_smb_on_even_target, R.string.pref_summary_aps_smb_on_even_target, defaultedBySM = true),
     ApsActivityDetection("activity_detection", false, defaultedBySM = true),
     FslCalibrationTrigger("calibration_stops_SMB", false, defaultedBySM = true),
