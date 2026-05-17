@@ -1135,4 +1135,6 @@
     <string name="aimi_btn_context">Context</string>
     <string name="aimi_btn_stats">Stats</string>
     <string name="autoisf_btn_advisor">Advisor</string>
+    <string name="scene_editor_reason">Reason</string>
+    <string name="scene_time_remaining">%1$s remaining</string>
 </resources>

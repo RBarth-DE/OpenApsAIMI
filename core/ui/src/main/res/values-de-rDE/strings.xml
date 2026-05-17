@@ -901,6 +901,10 @@
     <string name="pulse_panel_hint">Tippen Sie hier, um die vollständige Begründung und den Verlauf anzuzeigen</string>
     <string name="remove_items">Elemente entfernen</string>
     <string name="sort_items">Elemente sortieren</string>
+    <string name="scene_editor_reason">Grund</string>
+    <string name="scene_editor_profile">Profil</string>
+    <string name="scene_editor_note">Notiz</string>
+    <string name="scene_editor_mode">Modus</string>
     <!--    Playback-->
     <!-- ProfileEditor -->
     <!--    Search-->

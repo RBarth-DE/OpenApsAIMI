@@ -720,5 +720,8 @@
     <string name="advisor_cooldown_dh">%1$dd %2$dh</string>
     <string name="advisor_cooldown_hm">%1$dh %2$dm</string>
     <string name="advisor_cooldown_m">%1$dm</string>
+    <string name="aimi_auditor_verdict_title">🧠 AI Auditor Report</string>
+    <string name="run_now">Run now</string>
+    <string name="use_dynamic_sensitivity_summary">Modify the algorithm so that dynamic sensitivity is used instead of the profile value</string>
 
 </resources>

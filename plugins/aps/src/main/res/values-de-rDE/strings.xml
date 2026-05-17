@@ -139,6 +139,7 @@
     <string name="aimi_pkpd_preset_applied">Insulinprofil angewendet</string>
     <string name="aimi_pkpd_sync_state_action">Schleifenstatus an Anfangs- und Endwert anpassen</string>
     <string name="aimi_pkpd_sync_done">Schleife DIA und Spitzenwert an Ausgangswerte und Grenzen angepasst.</string>
+    <string name="aimi_dyn_isf_trajectory_section_title">DynISF-Trajektorie (CGM-Geometrie)</string>
     <string name="aimi_pkpd_section_comfort">Komfort &amp; SMB-Formgebung</string>
     <string name="aimi_pkpd_section_learning">Lernen (Anfangswerte und Grenzen)</string>
     <string name="aimi_pkpd_section_expert">Hochwertige Kappen und Schutzvorrichtungen</string>
@@ -156,6 +157,7 @@
     <string name="openapsama_smb_delivery_ratio_bg_range_summary">Standardwert: 0. Das linear ansteigende SMB-Abgabeverhältnis wird dem Glukosebereich [Ziel-BZ, Ziel-BZ+BZ_Bereich] zugeordnet.\nBei Ziel-BZ ist das SMB-Verhältnis smb_delivery_ratio_min, bei Ziel-BZ+BZ_Bereich ist es smb_delivery_ratio_max.\nMit 0 ist das linear ansteigende SMB-Verhältnis deaktiviert und das feste smb_delivery_ratio wird verwendet.</string>
     <string name="openapsama_smb_max_range_extension_summary">Standardwert: 1. Dies ist eine weitere wichtige OpenAPS-Sicherheitsgrenze und legt fest, um welchen Faktor die regulären 120 maxSMB/maxUAM Minuten überschritten werden dürfen. Erhöhen Sie diesen experimentellen Wert langsam und vorsichtig.</string>
     <string name="openapsama_iob_threshold_percent_summary" formatted="false">Prozentsatz des maxIOB, ab dem SMBs deaktiviert werden.\nStandardwert: 100 %\nBei 100 % ist diese Funktion effektiv deaktiviert.</string>
+    <string name="activity_save_steps_from_smartphone_summary">Standard: true</string>
     <string name="oaps_aimi_shortname">AIMI</string>
     <string name="openapsaimi">"AIMI 3.3"</string>
     <string name="description_openapsaimi">Kleine Mikroboli basierend auf Künstlicher Intelligenz und Maschinellem Lernen.</string>
@@ -569,4 +571,38 @@
     <string name="aimi_auditor_section_risk">RISIKO-FLAGS</string>
     <string name="aimi_auditor_section_evidence">BEWEISE</string>
     <string name="aimi_auditor_section_debug">DEBUG-PRÜFUNGEN</string>
+    <string name="activity_monitor_title">Nicht genügend Speicherplatz, um den Vorgang abzuschließen. Schließe andere Apps und versuche es erneut.</string>
+    <string name="activity_monitor_summary">Die Aktivität wird anhand der vom Smartphone gemessenen Schritte erfasst. Dies ersetzt keine explizite Sportanpassung, sondern stellt eine ergänzende Funktion auf niedrigerer Ebene dar.</string>
+    <string name="activity_mode_source_title">Schrittzähler der Uhr verwenden (nur Wear OS) Standard: false (= Schrittzähler der Uhr NICHT verwenden)</string>
+    <string name="activity_mode_source_summary">Es wird empfohlen, stattdessen den Schrittzähler Ihres SMARTPHONES zu verwenden! Dies bietet folgende Vorteile:  - Erkennung, wenn die Uhr nicht getragen wird (ansonsten kann fälschlicherweise Inaktivität angezeigt werden). - Radfahren wird als Bewegung erkannt.</string>
+    <string name="activity_save_steps_from_smartphone_title">Schritte vom Smartphone speichern</string>
+    <string name="sos_log_monitoring_start">⚠️ Der Hintergrundwert ist unter den Schwellenwert gefallen (%1$.1f &lt; %2$.1f). 30-minütige Überwachung wird gestartet...</string>
+    <string name="sos_log_sending">🚨 SOS-SMS senden (BG: %1$.1f, Delta: %2$s)</string>
+    <string name="sos_log_error_send">SMS-Versand fehlgeschlagen</string>
+    <string name="sos_sms_title_stale">⚠️ AAPS: FEHLENDE DATEN ⚠️</string>
+    <string name="sos_sms_title_critical">🚨 SOS: SCHWERE UNTERZUCKERUNG 🚨</string>
+    <string name="sos_sms_title_recovery">⚠️ SOS HYPO: ERHOLUNGSPHASE ⚠️</string>
+    <string name="sos_sms_title_low">⚠️ SOS-WARNUNG: NIEDRIGER BLUTZUCKER ⚠️</string>
+    <string name="sos_sms_label_bg">BLUTZUCKER</string>
+    <string name="sos_sms_label_last_bg">LETZTER BLUTZUCKERWERT</string>
+    <string name="sos_sms_label_trend">TREND</string>
+    <string name="sos_sms_label_iob">AKTIVES INSULIN</string>
+    <string name="sos_sms_label_time">ZEIT</string>
+    <string name="sos_sms_label_pos">Position</string>
+    <string name="sos_sms_pos_not_available">Nicht verfügbar</string>
+    <string name="autoisf_advisor_title">AutoISF Advisor</string>
+    <string name="autoisf_advisor_summary">Analysieren Sie Ihre AutoISF-Einstellungen und erhalten Sie Empfehlungen zur Optimierung</string>
+    <string name="autoisf_adv_loading">Wird analysiert…</string>
+    <string name="autoisf_adv_apply_btn">ANWENDEN</string>
+    <string name="autoisf_adv_apply_dialog_title">Änderung bestätigen</string>
+    <string name="autoisf_adv_success_msg">%1$d Änderung(en) übernommen</string>
+    <string name="autoisf_adv_section_isf_weights">ISF-Gewichtsoptimierung</string>
+    <string name="autoisf_adv_section_smb">SMB ABGABE</string>
+    <string name="autoisf_adv_section_observations">BEOBACHTUNGEN</string>
+    <string name="autoisf_adv_section_ai">AI ANALYSE</string>
+    <string name="autoisf_adv_ask_ai_btn">Frage %1$s</string>
+    <string name="autoisf_adv_ask_ai_no_key">Es ist kein Schlüssel %1$s konfiguriert</string>
+    <string name="autoisf_adv_ai_loading">Die KI fragen…</string>
+    <string name="advisor_ai_cooldown">Verfügbar in %1$s</string>
+    <string name="advisor_ai_cached_footer">Zwischengespeichert (%1$s) · Aktualisierung in %2$s verfügbar</string>
 </resources>

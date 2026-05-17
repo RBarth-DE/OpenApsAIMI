@@ -3,8 +3,8 @@
     <!-- Switch title & summary -->
     <string name="wcycle_preferences" formatted="false">Women Cycle</string>
     <string name="wcycle_preferences_title_menu" formatted="false">Cycle féminin</string>
-    <string name="wcycle_enable_title" formatted="false">Activer l’ajustement Cycle</string>
-    <string name="wcycle_enable_summary" formatted="false">Appliquer des multiplicateurs basal/SMB selon la phase</string>
+    <string name="wcycle_enable_title" formatted="false">Enable Cycle Adjustment</string>
+    <string name="wcycle_enable_summary" formatted="false">Apply basal/SMB multipliers based on the phase</string>
 
     <!-- Tracking mode -->
     <string name="wcycle_tracking_mode_title" formatted="false">Mode de suivi</string>
@@ -80,7 +80,7 @@
 
     <!-- Inputs -->
     <string name="wcycle_start_dom_title" formatted="false">Jour de début (1–31)</string>
-    <string name="wcycle_avg_len_title" formatted="false">Longueur moyenne du cycle</string>
+    <string name="wcycle_avg_len_title" formatted="false">Average cycle length</string>
     <string name="wcycle_shadow_title" formatted="false">Mode shadow (n’applique pas)</string>
     <string name="wcycle_confirm_title" formatted="false">Demander confirmation</string>
     <string name="wcycle_clamp_min_title" formatted="false">Clamp min (≤ 1.0)</string>
