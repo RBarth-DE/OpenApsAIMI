@@ -483,6 +483,7 @@
     <string name="reason_ml_training">🗃️ ML training: dataset insufficient, no refinement\n</string>
     <string name="console_dia_adjusted">DIA Adjusted (in minutes) : %.0f</string>
     <string name="reason_mpc_pi">🎛️ MPC predictive model: %.2f U (%.0f%%) | PI physiological model: %.2f U (%.0f%%)</string>
+    <string name="reason_autodrive_v3_authoritative_blender_skipped">🛡️ Autodrive V3 authoritative: legacy MPC/PI blender skipped</string>
     <string name="smb_final">✅ Final SMB: %1$s U</string>
     <string name="autodrive_status">🚗 Autodrive: %1$s | Snack/prebolus mode: %2$s | </string>
     <string name="console_profile_sens">Sensitivity profile: %.0f, sens: %.0f, CSF: %.0f</string>

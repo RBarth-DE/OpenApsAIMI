@@ -501,6 +501,8 @@
     <string name="pref_summary_unified_reactivity">Replaces the time-based bucket system with an analysis based on actual clinical metrics</string>
     <string name="pref_title_xdripOM">Use XDrip One Minute</string>
     <string name="pref_summary_xdripOM">Enable support for XDrip one minute BG values</string>
+    <string name="pref_title_aimi_autodrive_v3_authoritative">Autodrive V3 authoritative SMB</string>
+    <string name="pref_summary_aimi_autodrive_v3_authoritative">When Autodrive V3 is active and issues a safe SMB/TBR, do not recompute SMB with the legacy MPC/PI blender (prevents post-hypo overshoot). Disable only for debugging.</string>
     <string name="aimi_tube_advanced_title">Straight-line tube (tuning)</string>
     <string name="aimi_tube_hypo_floor_title">Tube: minimum predicted BG floor (mg/dL)</string>
     <string name="aimi_tube_hypo_floor_summary">Robust hypo constraint: SMB cap scale is only allowed if min predicted BG minus estimated SMB effect stays at or above this value.</string>

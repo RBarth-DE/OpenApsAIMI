@@ -1811,6 +1811,7 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
             items = buildList {
                 add(BooleanKey.OApsAIMIautoDrive)
                 add(BooleanKey.OApsAIMIautoDriveActive)
+                add(BooleanKey.OApsAIMIautoDriveAuthoritative)
                 add(DoubleKey.autodriveMaxBasal)
                 add(DoubleKey.OApsAIMIMpcInsulinUPerKgPerStep)
                 add(DoubleKey.OApsAIMIautodrivesmallPrebolus)
