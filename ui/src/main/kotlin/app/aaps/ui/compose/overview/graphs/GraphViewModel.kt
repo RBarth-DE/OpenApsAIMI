@@ -738,7 +738,12 @@ class GraphViewModel @AssistedInject constructor(
                 } ?: unavail
                 pct to rate
             } else {
-                unavail to unavail
+                // TBR not active → Display profile basal at 100%
+                val profile = profileFunction.getProfile()
+                val rate = profile?.let {
+                    rh.gs(R.string.format_insulin_units, it.getBasal(now))
+                } ?: unavail
+                rh.gs(R.string.formatPercent, 100.0) to rate
             }
 
         // IOB — total bolus + basal IOB
