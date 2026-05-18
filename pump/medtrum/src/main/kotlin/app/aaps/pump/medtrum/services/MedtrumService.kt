@@ -423,7 +423,7 @@ class MedtrumService : DaggerService(), MedtrumBleCallback {
         if (!sendBolusCommand(insulin)) {
             medtrumPump.bolusErrorReason = rh.gs(R.string.bolus_error_reason_unable_to_send_command)
             aapsLogger.error(LTag.PUMPCOMM, "Failed to set bolus")
-            commandQueue.readStatus(rh.gs(R.string.bolus_error), null) // make sure if anything is delivered (which is highly unlikely at this point) we get it
+            commandQueue.readStatus(rh.gs(R.string.bolus_error)) // make sure if anything is delivered (which is highly unlikely at this point) we get it
             medtrumPump.bolusDone = true
             bolusProgressData.updateProgress(percent = 0, status = "")
             return false
@@ -677,15 +677,9 @@ class MedtrumService : DaggerService(), MedtrumBleCallback {
             timestamp = System.currentTimeMillis()
             notes = "Medtrum auto-resume of interrupted bolus (original type: $originalType)"
         }
-        val enqueued = commandQueue.bolus(resumeInfo, object : Callback() {
-            override fun run() {
-                if (!this.result.success) {
-                    aapsLogger.error(LTag.PUMPCOMM, "Auto-resume bolus failed: ${this.result.comment}")
-                }
-            }
-        })
-        if (!enqueued) {
-            aapsLogger.error(LTag.PUMPCOMM, "Auto-resume bolus could not be enqueued")
+        val result = commandQueue.bolus(resumeInfo)
+        if (!result.success) {
+            aapsLogger.error(LTag.PUMPCOMM, "Auto-resume bolus failed: ${result.comment}")
         }
     }
 

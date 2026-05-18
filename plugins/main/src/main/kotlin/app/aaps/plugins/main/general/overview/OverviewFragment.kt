@@ -129,6 +129,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import java.util.Locale
 import java.util.concurrent.TimeUnit
@@ -1214,7 +1215,7 @@ class OverviewFragment : DaggerFragment(), View.OnClickListener, View.OnLongClic
             activityText?.let { tv ->
                 // Get TBR percentage from current basal vs profile basal
                 val basalAt = displayTs ?: lastBg?.timestamp ?: nowCircle
-                val basalData = iobCobCalculator.getBasalData(profile, basalAt)
+                val basalData = runBlocking { iobCobCalculator.getBasalData(profile, basalAt) }
                 val currentBasal = basalData.basal
                 val profileBasal = profile.getBasal(basalAt)
                 val activity = if (profileBasal > 0) {
@@ -1227,7 +1228,7 @@ class OverviewFragment : DaggerFragment(), View.OnClickListener, View.OnLongClic
             // 9. UPDATE TBR TEXT (Bottom right - Current basal rate)
             // ───────────────────────────────────────────────────────────────────────
             tbrText?.let { tv ->
-                val basalRate = iobCobCalculator.getBasalData(profile, lastBg?.timestamp ?: dateUtil.now())
+                val basalRate = runBlocking { iobCobCalculator.getBasalData(profile, lastBg?.timestamp ?: dateUtil.now()) }
                 val formattedRate = String.format("%.2f", basalRate.basal)
                 tv.text = "TBR: $formattedRate U/h"
             }
