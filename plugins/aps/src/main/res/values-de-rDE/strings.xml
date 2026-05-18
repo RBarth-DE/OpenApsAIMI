@@ -571,7 +571,7 @@
     <string name="aimi_auditor_section_risk">RISIKO-FLAGS</string>
     <string name="aimi_auditor_section_evidence">BEWEISE</string>
     <string name="aimi_auditor_section_debug">DEBUG-PRÜFUNGEN</string>
-    <string name="activity_monitor_title">Nicht genügend Speicherplatz, um den Vorgang abzuschließen. Schließe andere Apps und versuche es erneut.</string>
+    <string name="activity_monitor_title">Aktivitätsmonitor</string>
     <string name="activity_monitor_summary">Die Aktivität wird anhand der vom Smartphone gemessenen Schritte erfasst. Dies ersetzt keine explizite Sportanpassung, sondern stellt eine ergänzende Funktion auf niedrigerer Ebene dar.</string>
     <string name="activity_mode_source_title">Schrittzähler der Uhr verwenden (nur Wear OS) Standard: false (= Schrittzähler der Uhr NICHT verwenden)</string>
     <string name="activity_mode_source_summary">Es wird empfohlen, stattdessen den Schrittzähler Ihres SMARTPHONES zu verwenden! Dies bietet folgende Vorteile:  - Erkennung, wenn die Uhr nicht getragen wird (ansonsten kann fälschlicherweise Inaktivität angezeigt werden). - Radfahren wird als Bewegung erkannt.</string>

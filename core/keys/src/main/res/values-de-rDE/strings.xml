@@ -1,12 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="pref_title_simple_mode">Einfacher Modus</string>
+    <string name="pref_title_low_end_stability_mode">Stabilitätsmodus für Low-End-Geräte</string>
     <string name="pref_title_insulin_concentration">Unterstützung für Insulinkonzentrationen</string>
     <string name="pref_summary_insulin_concentration">Unterstützung für verschiedene Insulinkonzentrationen aktivieren (U50, U200 usw.)</string>
 
 
     <string name="pref_title_keep_screen_on">Bildschirm eingeschaltet lassen</string>
     <string name="pref_summary_keep_screen_on">Verhindern, dass Android den Bildschirm ausschaltet. Dies verbraucht viel Energie, wenn das Gerät nicht an eine Steckdose angeschlossen ist.</string>
+    <string name="pref_vico_backdrop_muted">Stummgeschaltet</string>
     <string name="pref_title_show_treatment_button">Behandlungsschaltfläche anzeigen</string>
     <string name="pref_title_show_wizard_button">Assistenten-Schaltfläche anzeigen</string>
     <string name="pref_title_show_insulin_button">Insulin-Schaltfläche anzeigen</string>
@@ -213,7 +215,7 @@
     <string name="carbs_req_threshold_summary">Mindestmenge an Kohlenhydraten in Gramm, ab der eine Benachrichtigung mit einem Kohlenhydratvorschlag angezeigt wird. Kohlenhydratvorschläge unterhalb dieses Wertes lösen keine Benachrichtigung aus.</string>
     <string name="pref_title_half_basal_exercise_target">Halbes Basal-Ziel bei körperlicher Aktivität</string>
     <string name="half_basal_exercise_target_summary">Stellen Sie einen Wert ein, z. B. 160. Das bedeutet: Wenn der temporäre Zielwert 160 mg/dL beträgt und „High temptarget“ die Empfindlichkeit auf „true“ setzt, wird bei diesem Wert 50 % der Basalrate abgegeben (120 = 75 %; 140 = 60 %).</string>
-    <string name="pref_title_iob_threshold_percent">IOB-Schwellenwert in Prozent</string>
+    <string name="pref_title_iob_threshold_percent">IOB-Schwellenwert in Prozent (iob_threshold_percent)</string>
     <string name="openapsama_iob_threshold_percent_summary" formatted="false">Prozentualer Anteil von maxIOB, ab dem SMBs deaktiviert werden.\nStandardwert: 100 %\nBei 100 % ist diese Funktion effektiv deaktiviert.</string>
     <string name="pref_title_dynisf_adjustment_factor">DynamicISF-Anpassungsfaktor</string>
     <string name="dyn_isf_adjust_summary" formatted="false">Anpassungsfaktor für DynamicISF. Stellen Sie einen Wert über 100 % ein, um aggressivere Korrekturdosen zu erzielen, und einen Wert unter 100 %, um weniger aggressive Korrekturen zu erzielen.</string>
@@ -330,6 +332,7 @@
     <string name="pref_follow_system_theme">Systemdesign verwenden</string>
 
 
+    <string name="pref_title_skin">Übersichtslayout</string>
     <string name="pref_title_patient_age">Alter des Patienten</string>
     <string name="maintenance_email">E-Mail-Empfänger</string>
     <string name="pref_title_identification">Identifikation für Absturzberichte</string>
@@ -438,6 +441,7 @@
     <string name="pref_summary_aimi_advisor_llm_rich_oref">Fügt einen Block mit Fakten in einfacher Sprache für den Coach-LLM hinzu. Deaktivieren Sie diese Option für eine kürzere Cloud-Eingabeaufforderung.</string>
     <string name="pref_title_aimi_straight_line_tube">Straight-Line-Tube-Berater (SMB-Obergrenzen)</string>
     <string name="pref_summary_aimi_straight_line_tube">Diskrete Kurzzeitregelung für maximales SMB: Hält den vorhergesagten minimalen BG mithilfe der PKPD-Min-Kurve über einem Mindestwert, bevorzugt größere Obergrenzen, wenn der endgültige BG hoch ist, und bestraft eine zickzackförmige SMB-Dimensionierung. Ersetzt weder PKPD noch Sicherheitsnetze. Standardmäßig deaktiviert.</string>
+    <string name="pref_summary_aimi_dyn_isf_trajectory_max_fraction">Obergrenze für die relative ISF-Anpassung anhand der Kursentwicklung (z. B. 0,06 = bei starkem Anstieg höchstens etwa 6 % strengere ISF oder bei starkem Rückgang 6 % lockerere ISF). Ein niedrigerer Wert bedeutet mehr Sicherheit, aber einen geringeren Nutzen.</string>
     <string name="pref_title_aimi_peak_governor_enabled">TAP-G-Spitzenregler</string>
     <string name="pref_summary_aimi_peak_governor_enabled">Wenn die adaptive PK/PD aktiviert ist, wird der Spitzenwert des Insulinprofils mit dem erlernten PK/PD-Spitzenwert für die Schleife „peakTime“ kombiniert (siehe Forschungsdokument TAP_G_PEAK_GOVERNOR_RFC).</string>
     <string name="pref_title_aimi_peak_governor_learned_weight">TAP-G-gelernte Gewichtung für die Peak-Mischung</string>
@@ -547,4 +551,34 @@
     <string name="ketoacidosis_protection_strategy_summary">Wenn diese Funktion aktiviert ist, wird die kleine Sicherheits-TBR aktiviert, wenn der IOB im negativen Bereich liegt, als ob eine halbe Stunde lang kein Basalinsulin abgegeben worden wäre. Wenn diese Funktion deaktiviert ist, wird jeder Zero Temp durch die kleine TBR ersetzt.</string>
     <string name="ketoacidosis_protection_basal_title">Sicherheits-TBR in [%]</string>
     <string name="ketoacidosis_protection_basal_summary">Standard: 10</string>
+    <string name="pref_activ_mon_title_activity_detection">Aktivitätsanzeige aktivieren</string>
+    <string name="pref_activ_mon_sum_activity_detection">Hauptschalter. Aus → activityRatio = 1,0 zu jeder Zeit, keine Auswirkung auf ISF/Basal.</string>
+    <string name="pref_activ_mon_title_ignore_inactivity_overnight">Nächtliche Inaktivität ignorieren</string>
+    <string name="pref_activ_mon_sum_ignore_inactivity_overnight">Verhindert, dass längeres Stillliegen während des Schlafs als „Inaktivität“ gewertet wird und fälschlicherweise die Inaktivitätsstrafe auslöst.</string>
+    <string name="pref_activ_mon_title_act_mon_use_steps">Schritte aus verschiedenen Quellen bewerten</string>
+    <string name="pref_activ_mon_sum_inactivity_idle_start">Wenn die Nachtunterdrückung in Kraft tritt (z. B. 22 = 22:00 Uhr).         + (später) → kürzeres Nachtfenster, Inaktivitätserkennung wird früher wieder aktiviert         - (früher) → längeres Nachtfenster</string>
+    <string name="pref_activ_mon_sum_inactivity_idle_end">Bis zu welcher Uhrzeit gilt die Nachtunterdrückung (z. B. 6 = 6:00 Uhr). Unterstützt den Übergang über Mitternacht hinweg (IdleStart > IdleEnd).         + (später aufwachen) → längeres Nachtfenster         - (früher aufwachen) → kürzeres Nachtfenster</string>
+    <string name="pref_activ_mon_sum_activity_scale_factor">Verstärkt die Empfindlichkeitssteigerung, wenn eine Bewegung erkannt wird.         + → stärkere ISF-Erhöhung bei Aktivität (activityRatio sinkt stärker, mehr Insulin)         - → schwächerer Effekt, sanfterer Übergang</string>
+    <string name="pref_activ_mon_sum_inactivity_scale_factor">Verstärkt den ISF-Schutz bei Inaktivität.         + → stärkere Senkung des Insulinspiegels bei Inaktivität (der activityRatio steigt stärker an)         - → schwächerer Effekt</string>
+    <string name="eversense_use_smoothing">ESEL-Glättung verwenden</string>
+    <string name="eversense_cloud_upload_enabled">Eversense-Cloud-Upload aktivieren</string>
+    <string name="eversense_cloud_upload_toast">Ergebnis des Cloud-Uploads anzeigen</string>
+    <string name="pref_title_overview_use_dashboard_layout">Dashboard als Startseite verwenden</string>
+    <string name="pref_summary_overview_use_dashboard_layout">Verwenden Sie das AIMI-Hybrid-Dashboard als Hauptinhalt der Startseite. In der modernen Benutzeroberfläche (Compose) bleiben die Suchfunktion, die Verwaltung und die untere Leiste weiterhin verfügbar; in der klassischen Benutzeroberfläche wechselt die Registerkarte „Startseite“ zwischen dem Dashboard und der bisherigen Übersicht.</string>
+    <string name="pref_title_overview_show_hybrid_aimi_pulse">Letzten AIMI-Lauf auf dem Dashboard anzeigen</string>
+    <string name="pref_summary_overview_show_hybrid_aimi_pulse">Wenn diese Option aktiviert ist, wird die Übersichtskarte unter dem Glukosering angezeigt (letzter Loop, SMB usw.). Standardmäßig ist diese Option deaktiviert, um mehr Platz für das Diagramm zu schaffen.</string>
+    <string name="pref_title_overview_dashboard_extended_metrics">Dashboard: Erweiterte Kennzahlen</string>
+    <string name="pref_summary_overview_dashboard_extended_metrics">Vollständige zweispaltige Statistiken und AIMI-Verlaufsanzeige. Aus = kompakte Zeile (Schritte, IOB, Herzfrequenz, TBR).</string>
+    <string name="prefs_vico_chart_appearance_title">Darstellung des Startdiagramms (Vico)</string>
+    <string name="pref_title_vico_bg_reading_tint">BZ Punktfarbe</string>
+    <string name="pref_summary_vico_bg_reading_tint">Farbton für einzelne CGM-Punkte im Hauptglukosediagramm. Die nach Bereichen farblich gekennzeichneten Punkte bleiben unverändert.</string>
+    <string name="pref_title_vico_chart_backdrop">Hintergrundstil des Diagramms</string>
+    <string name="pref_summary_vico_chart_backdrop">Hintergrund hinter dem Armaturenbrett / Übersicht über die Blutzuckerkurve.</string>
+    <string name="pref_vico_tint_theme">Standarddesign</string>
+    <string name="pref_vico_backdrop_theme">Standarddesign</string>
+    <string name="pref_title_aimi_dyn_isf_trajectory_tuning">DynISF: Verlaufsoptimierung (CGM-Geometrie)</string>
+    <string name="pref_summary_aimi_dyn_isf_trajectory_tuning">Verwendet dieselben CGM-Funktionen mit kurzem Zeithorizont wie AutoISF (Deltas, parabolische Projektion, Beschleunigung), jedoch nur, wenn die Qualitätskriterien erfüllt sind. Begrenzte Änderung pro Tick; wird übersprungen, wenn die physikalische Modellierung die ISF bereits stark strafft. Erfordert dynamische Empfindlichkeit. Standardmäßig deaktiviert.</string>
+    <string name="pref_title_aimi_dyn_isf_trajectory_shadow">DynISF-Trajektorie: nur Schatten</string>
+    <string name="pref_summary_aimi_dyn_isf_trajectory_shadow">Wenn diese Option aktiviert ist, wird der voraussichtliche ISF-Multiplikator protokolliert, der angezeigte DynISF-Wert wird jedoch nicht geändert. Deaktivieren Sie diese Option, sobald Sie dem Signal in den Protokollen vertrauen.</string>
+    <string name="pref_title_aimi_dyn_isf_trajectory_max_fraction">DynISF-Verlauf: maximale ISF-Änderung pro Tick</string>
 </resources>

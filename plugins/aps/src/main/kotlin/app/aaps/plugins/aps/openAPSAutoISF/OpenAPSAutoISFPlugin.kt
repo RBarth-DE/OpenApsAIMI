@@ -1344,20 +1344,6 @@ open class OpenAPSAutoISFPlugin @Inject constructor(
                 )
             ),
             PreferenceSubScreenDef(
-                key = "activity_monitor",
-                titleResId = R.string.activity_monitor_title,
-                summaryResId =  R.string.activity_monitor_summary,
-                items = listOf(
-                    BooleanKey.ActivityMonitorDetection,
-                    DoubleKey.ActivityScaleFactor,
-                    DoubleKey.InactivityScaleFactor,
-                    BooleanKey.ActivityMonitorOvernight,
-                    IntKey.ActivityMonitorIdleStart,
-                    IntKey.ActivityMonitorIdleEnd,
-                    BooleanKey.ActivityMonitorUseSteps
-                )
-            ),
-            PreferenceSubScreenDef(
                 key = "smb_delivery_settings",
                 titleResId = R.string.smb_delivery_settings_title,
                 items = listOf(
@@ -1388,6 +1374,20 @@ open class OpenAPSAutoISFPlugin @Inject constructor(
                     // BooleanKey.OApsAIMIAdvisorPersonalOrefMl,
                     // BooleanKey.OApsAIMIAdvisorLlmRichOref,
                 ),
+            ),
+            PreferenceSubScreenDef(
+                key = "activity_monitor",
+                titleResId = R.string.activity_monitor_title,
+                summaryResId =  R.string.activity_monitor_summary,
+                items = listOf(
+                    BooleanKey.ActivityMonitorDetection,
+                    DoubleKey.ActivityScaleFactor,
+                    DoubleKey.InactivityScaleFactor,
+                    BooleanKey.ActivityMonitorOvernight,
+                    IntKey.ActivityMonitorIdleStart,
+                    IntKey.ActivityMonitorIdleEnd,
+                    BooleanKey.ActivityMonitorUseSteps
+                )
             ),
             PreferenceSubScreenDef(
                 key = "Ketoacidosis_Protection",

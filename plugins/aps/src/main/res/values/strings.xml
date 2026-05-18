@@ -144,7 +144,7 @@
     <string name="openapsama_iob_threshold_percent_summary" formatted="false">Percentage of maxIOB above which SMBs are disabled.\nDefault value: 100%\nWith 100% this feature is effectively disabled.</string>
 
     <!--    Activity Monitor -->
-    <string name="activity_monitor_title">Activity modifies sensitivity</string>
+    <string name="activity_monitor_title">Activity Monitor</string>
     <string name="activity_monitor_summary">Activity is detected in form of steps as measured by the phone. It does not replace an explicit sport adjustment but is a lower level complement.</string>
     <string name="activity_mode_source_title">Use your WATCH\'s step counter (Wear OS only)\nDefault: false (= Do NOT use WATCH\'s step counter)</string>
     <string name="activity_mode_source_summary">It is recommended that you use your PHONE\'s step counter instead! This offers the following advantages: \n- Detection when the watch is not worn (otherwise inactivity can be falsely detected).\n- Cycling is recognized as movement.</string>

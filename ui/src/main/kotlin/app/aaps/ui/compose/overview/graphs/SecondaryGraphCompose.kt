@@ -114,17 +114,29 @@ fun SecondaryGraphCompose(
     val hasCob = primaryType == SeriesType.COB
 
     // Collect flows for primary series
-    val iobData = if (hasIob) viewModel.iobGraphFlow.collectAsStateWithLifecycle().value else null
-    val cobData = if (hasCob) viewModel.cobGraphFlow.collectAsStateWithLifecycle().value else null
+    // Collect flows for primary series
+    val iobData      = if (SeriesType.IOB             in seriesTypes || hasIob) viewModel.iobGraphFlow.collectAsStateWithLifecycle().value else null
+    val cobData      = if (SeriesType.COB             in seriesTypes || hasCob) viewModel.cobGraphFlow.collectAsStateWithLifecycle().value else null
+    val absIobData   = if (SeriesType.ABS_IOB         in seriesTypes) viewModel.absIobGraphFlow.collectAsStateWithLifecycle().value else null
+    val bgiData      = if (SeriesType.BGI             in seriesTypes) viewModel.bgiGraphFlow.collectAsStateWithLifecycle().value else null
+    val deviationsData = if (SeriesType.DEVIATIONS    in seriesTypes) viewModel.deviationsGraphFlow.collectAsStateWithLifecycle().value else null
+    val ratioData    = if (SeriesType.SENSITIVITY      in seriesTypes) viewModel.ratioGraphFlow.collectAsStateWithLifecycle().value else null
+    val varSensData  = if (SeriesType.VAR_SENSITIVITY  in seriesTypes) viewModel.varSensGraphFlow.collectAsStateWithLifecycle().value else null
+    val devSlopeData = if (SeriesType.DEV_SLOPE        in seriesTypes) viewModel.devSlopeGraphFlow.collectAsStateWithLifecycle().value else null
+    val hrData       = if (SeriesType.HEART_RATE       in seriesTypes) viewModel.heartRateGraphFlow.collectAsStateWithLifecycle().value else null
+    val stepsData    = if (SeriesType.STEPS            in seriesTypes) viewModel.stepsGraphFlow.collectAsStateWithLifecycle().value else null
+
+    // val iobData = if (hasIob) viewModel.iobGraphFlow.collectAsStateWithLifecycle().value else null
+    // val cobData = if (hasCob) viewModel.cobGraphFlow.collectAsStateWithLifecycle().value else null
     val treatmentData = if (hasIob || hasCob) viewModel.treatmentGraphFlow.collectAsStateWithLifecycle().value else null
-    val absIobData = if (primaryType == SeriesType.ABS_IOB) viewModel.absIobGraphFlow.collectAsStateWithLifecycle().value else null
-    val bgiData = if (primaryType == SeriesType.BGI) viewModel.bgiGraphFlow.collectAsStateWithLifecycle().value else null
-    val deviationsData = if (primaryType == SeriesType.DEVIATIONS) viewModel.deviationsGraphFlow.collectAsStateWithLifecycle().value else null
-    val ratioData = if (primaryType == SeriesType.SENSITIVITY) viewModel.ratioGraphFlow.collectAsStateWithLifecycle().value else null
-    val varSensData = if (primaryType == SeriesType.VAR_SENSITIVITY) viewModel.varSensGraphFlow.collectAsStateWithLifecycle().value else null
-    val devSlopeData = if (primaryType == SeriesType.DEV_SLOPE) viewModel.devSlopeGraphFlow.collectAsStateWithLifecycle().value else null
-    val hrData = if (primaryType == SeriesType.HEART_RATE) viewModel.heartRateGraphFlow.collectAsStateWithLifecycle().value else null
-    val stepsData = if (primaryType == SeriesType.STEPS) viewModel.stepsGraphFlow.collectAsStateWithLifecycle().value else null
+    // val absIobData = if (primaryType == SeriesType.ABS_IOB) viewModel.absIobGraphFlow.collectAsStateWithLifecycle().value else null
+    // val bgiData = if (primaryType == SeriesType.BGI) viewModel.bgiGraphFlow.collectAsStateWithLifecycle().value else null
+    // val deviationsData = if (primaryType == SeriesType.DEVIATIONS) viewModel.deviationsGraphFlow.collectAsStateWithLifecycle().value else null
+    // val ratioData = if (primaryType == SeriesType.SENSITIVITY) viewModel.ratioGraphFlow.collectAsStateWithLifecycle().value else null
+    // val varSensData = if (primaryType == SeriesType.VAR_SENSITIVITY) viewModel.varSensGraphFlow.collectAsStateWithLifecycle().value else null
+    // val devSlopeData = if (primaryType == SeriesType.DEV_SLOPE) viewModel.devSlopeGraphFlow.collectAsStateWithLifecycle().value else null
+    // val hrData = if (primaryType == SeriesType.HEART_RATE) viewModel.heartRateGraphFlow.collectAsStateWithLifecycle().value else null
+    // val stepsData = if (primaryType == SeriesType.STEPS) viewModel.stepsGraphFlow.collectAsStateWithLifecycle().value else null
     val iobThData    by viewModel.iobThGraphFlow.collectAsStateWithLifecycle()
     val finalIsfData by viewModel.finalIsfGraphFlow.collectAsStateWithLifecycle()
     val acceIsfData  by viewModel.acceIsfGraphFlow.collectAsStateWithLifecycle()
@@ -133,10 +145,15 @@ fun SecondaryGraphCompose(
     val duraIsfData  by viewModel.duraIsfGraphFlow.collectAsStateWithLifecycle()
 // ... gleich für alle anderen simple-line flows
     // Activity data: either as primary series OR as overlay (on IOB graph)
-    val needsActivity = primaryType == SeriesType.ACTIVITY || (activityOverlay && hasIob)
+    //val needsActivity = primaryType == SeriesType.ACTIVITY || (activityOverlay && hasIob)
+    val needsActivity = SeriesType.ACTIVITY in seriesTypes || (activityOverlay && hasIob)
     val activityData = if (needsActivity) viewModel.activityGraphFlow.collectAsStateWithLifecycle().value else null
     // Basal overlay only when IOB is primary and single-axis (no room for basal with dual-axis)
-    val basalData = if (hasIob && !isDualAxis) viewModel.basalGraphFlow.collectAsStateWithLifecycle().value else null
+    //val basalData = if (hasIob && !isDualAxis) viewModel.basalGraphFlow.collectAsStateWithLifecycle().value else null
+    val hasBasalSeries = SeriesType.BASAL in seriesTypes
+    val basalData = if ((hasIob && !isDualAxis) || hasBasalSeries)
+        viewModel.basalGraphFlow.collectAsStateWithLifecycle().value else null
+
 
     // Collect flow for secondary (right axis) series
     val secondaryLineData = when (secondaryType) {
@@ -309,15 +326,15 @@ fun SecondaryGraphCompose(
 
     // Flipped basal overlay — fixed on IOB graphs, rendered as a second chart layer.
     // Uses negative Y values so area fill goes upward to y=0 (the top of the basal layer).
-    val processedBasalProfile = remember(basalData, stableTimeRange) {
+    val processedBasalProfile = remember(basalData, hasIob, stableTimeRange) {
         if (!hasRealTimeRange || basalData == null) return@remember emptyList()
         val pts = processPoints(basalData.profileBasal, minTimestamp, minX, maxX)
-        pts.map { (x, y) -> x to -y } // negate: y=0 at top, -maxBasal at bottom
+        if (hasIob) pts.map { (x, y) -> x to -y } else pts
     }
-    val processedBasalActual = remember(basalData, stableTimeRange) {
+    val processedBasalActual = remember(basalData, hasIob, stableTimeRange) {
         if (!hasRealTimeRange || basalData == null) return@remember emptyList()
         val pts = processPoints(basalData.actualBasal, minTimestamp, minX, maxX)
-        pts.map { (x, y) -> x to -y }
+        if (hasIob) pts.map { (x, y) -> x to -y } else pts
     }
     val basalMaxY = remember(basalData) {
         if (basalData != null && basalData.maxBasal > 0.0) basalData.maxBasal * 4.0 else 1.0
@@ -433,6 +450,18 @@ fun SecondaryGraphCompose(
                     }
                 }
 
+                // Standalone basal — nur wenn kein IOB-Overlay aktiv
+                if (!hasIob && basalData != null) {
+                    if (processedBasalActual.size >= 2) {
+                        series(x = processedBasalActual.map { it.first }, y = processedBasalActual.map { it.second })
+                        slots.add(SeriesSlot.BasalActual)
+                    }
+                    if (processedBasalProfile.size >= 2) {
+                        series(x = processedBasalProfile.map { it.first }, y = processedBasalProfile.map { it.second })
+                        slots.add(SeriesSlot.BasalProfile)
+                    }
+                }
+
                 // DevSlope min (separate slot for magenta color)
                 if (processedDevSlopeMin.isNotEmpty()) {
                     series(x = processedDevSlopeMin.map { it.first }, y = processedDevSlopeMin.map { it.second })
@@ -493,6 +522,34 @@ fun SecondaryGraphCompose(
     val cobLineStyle = rememberCobLineStyles(showPointDataLabels)
     val normalizerLine = remember { createNormalizerLine() }
 
+    // Basal layer line styles — same as BG graph (profile dashed, actual solid with fill)
+    val basalColor = AapsTheme.elementColors.tempBasal
+    val basalProfileLine = remember(basalColor) {
+        LineCartesianLayer.Line(
+            fill = LineCartesianLayer.LineFill.single(Fill(basalColor)),
+            stroke = LineCartesianLayer.LineStroke.Dashed(
+                thickness = 1.dp,
+                cap = StrokeCap.Round,
+                dashLength = 1.dp,
+                gapLength = 2.dp
+            ),
+            areaFill = null,
+            interpolator = Square
+        )
+    }
+
+    val basalActualLine = remember(basalColor) {
+        LineCartesianLayer.Line(
+            fill = LineCartesianLayer.LineFill.single(Fill(basalColor)),
+            stroke = LineCartesianLayer.LineStroke.Continuous(thickness = 1.dp),
+            areaFill = LineCartesianLayer.AreaFill.single(Fill(basalColor.copy(alpha = 0.3f))),
+            interpolator = Square
+        )
+    }
+    val basalLines = remember(basalActualLine, basalProfileLine) {
+        listOf(basalActualLine, basalProfileLine)
+    }
+
     val activeSlots by activeSlotState
     val lines = remember(activeSlots, seriesColors, iobLineStyle, cobLineStyle, normalizerLine) {
         buildList {
@@ -512,38 +569,13 @@ fun SecondaryGraphCompose(
                         SeriesSlot.DevSlopeMin      -> createDevSlopeMinLine()
                         SeriesSlot.ActivityOverlay  -> createSeriesLine(SeriesType.ACTIVITY, seriesColors)
                         is SeriesSlot.SimpleLine    -> createSeriesLine(slot.type, seriesColors)
+                        SeriesSlot.BasalActual      -> basalActualLine
+                        SeriesSlot.BasalProfile     -> basalProfileLine
                     }
                 )
             }
             add(normalizerLine)
         }
-    }
-
-    // Basal layer line styles — same as BG graph (profile dashed, actual solid with fill)
-    val basalColor = AapsTheme.elementColors.tempBasal
-    val basalProfileLine = remember(basalColor) {
-        LineCartesianLayer.Line(
-            fill = LineCartesianLayer.LineFill.single(Fill(basalColor)),
-            stroke = LineCartesianLayer.LineStroke.Dashed(
-                thickness = 1.dp,
-                cap = StrokeCap.Round,
-                dashLength = 1.dp,
-                gapLength = 2.dp
-            ),
-            areaFill = null,
-            interpolator = Square
-        )
-    }
-    val basalActualLine = remember(basalColor) {
-        LineCartesianLayer.Line(
-            fill = LineCartesianLayer.LineFill.single(Fill(basalColor)),
-            stroke = LineCartesianLayer.LineStroke.Continuous(thickness = 1.dp),
-            areaFill = LineCartesianLayer.AreaFill.single(Fill(basalColor.copy(alpha = 0.3f))),
-            interpolator = Square
-        )
-    }
-    val basalLines = remember(basalActualLine, basalProfileLine) {
-        listOf(basalActualLine, basalProfileLine)
     }
 
     // =========================================================================
@@ -716,6 +748,9 @@ private sealed class SeriesSlot {
     data class SimpleLine(val type: SeriesType) : SeriesSlot()
     data object DevSlopeMin : SeriesSlot()
     data object ActivityOverlay : SeriesSlot()
+    data object BasalActual : SeriesSlot()
+    data object BasalProfile : SeriesSlot()
+
 }
 
 // =========================================================================
