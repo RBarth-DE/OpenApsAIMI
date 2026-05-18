@@ -16,25 +16,13 @@ repositories {
     google()
 }
 
-fun generateGitBuild(): String {
-    try {
-        val processBuilder = ProcessBuilder("git", "describe", "--always")
-        val output = File.createTempFile("git-build", "")
-        processBuilder.redirectOutput(output)
-        val process = processBuilder.start()
-        process.waitFor()
-        return output.readText().trim()
-    } catch (_: Exception) {
-        return "NoGitSystemAvailable"
-    }
-}
+val gitDescribeProvider = providers.exec {
+    commandLine("git", "describe", "--always")
+    isIgnoreExitValue = true
+}.standardOutput.asText.map { it.trim() }
 
-fun generateDate(): String {
-    val stringBuilder: StringBuilder = StringBuilder()
-    // showing only date prevents app to rebuild everytime
-    stringBuilder.append(SimpleDateFormat("yyyy.MM.dd").format(Date()))
-    return stringBuilder.toString()
-}
+fun generateDate(): String =
+    SimpleDateFormat("yyyy.MM.dd").format(Date())
 
 
 android {
@@ -44,18 +32,19 @@ android {
         minSdk = Versions.wearMinSdk
         targetSdk = Versions.wearTargetSdk
 
-        buildConfigField("String", "BUILDVERSION", "\"${generateGitBuild()}-${generateDate()}\"")
+        buildConfigField(
+            "String", "BUILDVERSION",
+            "\"${gitDescribeProvider.getOrElse("NoGitSystemAvailable")}-${generateDate()}\""
+        )
     }
 
-    android {
-        buildTypes {
-            debug {
-                enableUnitTestCoverage = true
-                // Disable androidTest coverage, since it performs offline coverage
-                // instrumentation and that causes online (JavaAgent) instrumentation
-                // to fail in this project.
-                enableAndroidTestCoverage = false
-            }
+    buildTypes {
+        debug {
+            enableUnitTestCoverage = true
+            // Disable androidTest coverage, since it performs offline coverage
+            // instrumentation and that causes online (JavaAgent) instrumentation
+            // to fail in this project.
+            enableAndroidTestCoverage = false
         }
     }
 

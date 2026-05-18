@@ -35,30 +35,21 @@ fun DependencyHandler.`kapt`(dependencyNotation: Any): Dependency? =
 // -----------------------------------------------------------------------------
 // Fonctions personnalisées
 // -----------------------------------------------------------------------------
-fun generateGitBuild(): String {
-    try {
-        val processBuilder = ProcessBuilder("git", "describe", "--always")
-        val output = File.createTempFile("git-build", "")
-        processBuilder.redirectOutput(output)
-        val process = processBuilder.start()
-        process.waitFor()
-        return output.readText().trim()
-    } catch (_: Exception) {
-        return "NoGitSystemAvailable"
-    }
-}
+// ─── Git providers — configuration cache compatible ───────────────────────────
+fun gitExec(vararg args: String): Provider<String> =
+    providers.exec {
+        commandLine("git", *args)
+        isIgnoreExitValue = true          // don't throw on non-zero exit
+    }.standardOutput.asText.map { it.trim() }
 
-fun generateGitRemote(): String {
-    try {
-        val processBuilder = ProcessBuilder("git", "remote", "get-url", "origin")
-        val output = File.createTempFile("git-remote", "")
-        processBuilder.redirectOutput(output)
-        val process = processBuilder.start()
-        process.waitFor()
-        return output.readText().trim()
-    } catch (_: Exception) {
-        return "NoGitSystemAvailable"
-    }
+val gitDescribeProvider  = gitExec("describe", "--always")
+val gitRemoteProvider    = gitExec("remote", "get-url", "origin")
+val gitAvailableProvider = gitExec("--version").map { it.isNotEmpty() }
+val gitStatusProvider    = gitExec("status", "-s").map { output ->
+    output
+        .replace(Regex("""(?m)^\s*(M|A|D|\?\?)\s*.*?\.idea\/codeStyles\/.*?\s*$"""), "")
+        .replace(Regex("""(?m)^\s*(\?\?)\s*.*?\s*$"""), "")
+        .trim().isEmpty()
 }
 
 fun generateDate(): String {
@@ -70,33 +61,7 @@ fun generateDate(): String {
 
 fun isMaster(): Boolean = !Versions.appVersion.contains("-")
 
-fun gitAvailable(): Boolean {
-    try {
-        val processBuilder = ProcessBuilder("git", "--version")
-        val output = File.createTempFile("git-version", "")
-        processBuilder.redirectOutput(output)
-        val process = processBuilder.start()
-        process.waitFor()
-        return output.readText().isNotEmpty()
-    } catch (_: Exception) {
-        return false
-    }
-}
-
-fun allCommitted(): Boolean {
-    try {
-        val processBuilder = ProcessBuilder("git", "status", "-s")
-        val output = File.createTempFile("git-comited", "")
-        processBuilder.redirectOutput(output)
-        val process = processBuilder.start()
-        process.waitFor()
-        return output.readText().replace(Regex("""(?m)^\s*(M|A|D|\?\?)\s*.*?\.idea\/codeStyles\/.*?\s*$"""), "")
-            // ignore all files added to project dir but not staged/known to GIT
-            .replace(Regex("""(?m)^\s*(\?\?)\s*.*?\s*$"""), "").trim().isEmpty()
-    } catch (_: Exception) {
-        return false
-    }
-}
+// ─────────────────────────────────────────────────────────────────────────────
 
 // -----------------------------------------------------------------------------
 // Configuration Android
@@ -109,17 +74,15 @@ android {
     namespace = "app.aaps"
 
     defaultConfig {
-        // Remplace par des valeurs fixes si besoin (ex. 21, 34, etc.)
-        minSdk = Versions.minSdk
+        minSdk    = Versions.minSdk
         targetSdk = Versions.targetSdk
 
-        buildConfigField("String", "VERSION", "\"$version\"")
-        buildConfigField("String", "BUILDVERSION", "\"${generateGitBuild()}-${generateDate()}\"")
-        buildConfigField("String", "REMOTE", "\"${generateGitRemote()}\"")
-        buildConfigField("String", "HEAD", "\"${generateGitBuild()}\"")
-        buildConfigField("String", "COMMITTED", "\"${allCommitted()}\"")
+        buildConfigField("String", "VERSION",      "\"$version\"")
+        buildConfigField("String", "BUILDVERSION", "\"${gitDescribeProvider.getOrElse("NoGitSystemAvailable")}-${generateDate()}\"")
+        buildConfigField("String", "REMOTE",       "\"${gitRemoteProvider.getOrElse("NoGitSystemAvailable")}\"")
+        buildConfigField("String", "HEAD",         "\"${gitDescribeProvider.getOrElse("NoGitSystemAvailable")}\"")
+        buildConfigField("String", "COMMITTED",    "\"${gitStatusProvider.getOrElse(false)}\"")
 
-        // For Dagger injected instrumentation tests in app module
         testInstrumentationRunner = "app.aaps.runners.InjectedTestRunner"
     }
 
@@ -319,12 +282,16 @@ dependencies {
 // Dernières lignes (messages console)
 // -----------------------------------------------------------------------------
 println("-------------------")
-println("isMaster: ${isMaster()}")
-println("gitAvailable: ${gitAvailable()}")
-println("allCommitted: ${allCommitted()}")
+println("isMaster: ${isMaster()}")   // fine — only reads Versions.appVersion, no git
+println("gitAvailable: ${gitAvailableProvider.getOrElse(false)}")
+println("allCommitted: ${gitStatusProvider.getOrElse(false)}")
 println("-------------------")
-if (!gitAvailable()) {
-    throw GradleException("GIT system is not available. On Windows try to run Android Studio as an Administrator. Check if GIT is installed and Studio have permissions to use it")
+
+if (!gitAvailableProvider.getOrElse(false)) {
+    throw GradleException(
+        "GIT system is not available. On Windows try to run Android Studio as an Administrator. " +
+            "Check if GIT is installed and Studio have permissions to use it"
+    )
 }
 
 /*if (isMaster() && !allCommitted()) {
