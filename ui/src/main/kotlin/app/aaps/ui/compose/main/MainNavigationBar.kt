@@ -38,7 +38,10 @@ fun MainNavigationBar(
     modifier: Modifier = Modifier,
     quickWizardCount: Int = 0,
     onAutomationClick: () -> Unit = {},
-    sceneCount: Int = 0,
+    /** Total scenes + automation items defined — drives whether the nav button is shown at all. */
+    automationTotal: Int = 0,
+    /** Subset of [automationTotal] that the user can activate right now — drives the badge. */
+    automationCount: Int = 0,
     pumpSetupPlugin: PluginBase? = null,
     bgSetupPlugin: PluginBase? = null,
     bgQualityBadgeIcon: ImageVector? = null,
@@ -91,38 +94,34 @@ fun MainNavigationBar(
             colors = navColors
         )
 
-        NavigationBarItem(
-            selected = false,
-            onClick = onAutomationClick,
-            enabled = sceneCount > 0,
-            modifier = Modifier.animateContentSize(),
-            icon = {
-                BadgedBox(
-                    badge = {
-                        if (sceneCount > 0) {
-                            Badge(containerColor = AapsTheme.generalColors.statusNormal, contentColor = Color.Black) {
-                                Text(text = sceneCount.toString())
+        // Scenes/automation button — visible whenever scenes or automation items exist
+        // (regardless of pump/loop/profile state). The badge counts only items the user
+        // can act on right now; gated items are visible inside the sheet, dimmed with reason.
+        if (automationTotal > 0) {
+            NavigationBarItem(
+                selected = false,
+                onClick = onAutomationClick,
+                icon = {
+                    BadgedBox(
+                        badge = {
+                            if (automationCount > 0) {
+                                Badge(containerColor = AapsTheme.generalColors.statusNormal, contentColor = Color.Black) {
+                                    Text(text = automationCount.toString())
+                                }
                             }
                         }
+                    ) {
+                        Icon(
+                            imageVector = IcAutomation,
+                            contentDescription = stringResource(CoreUiR.string.scenes),
+                            modifier = Modifier.size(24.dp)
+                        )
                     }
-                ) {
-                    Icon(
-                        imageVector = IcAutomation,
-                        contentDescription = stringResource(CoreUiR.string.scenes),
-                        modifier = Modifier
-                            .size(24.dp)
-                            .graphicsLayer { alpha = if (sceneCount > 0) 1f else 0f }
-                    )
-                }
-            },
-            label = {
-                Text(
-                    text = stringResource(CoreUiR.string.scenes),
-                    modifier = Modifier.graphicsLayer { alpha = if (sceneCount > 0) 1f else 0f }
-                )
-            },
-            colors = navColors
-        )
+                },
+                label = { Text(text = stringResource(CoreUiR.string.scenes)) },
+                colors = navColors
+            )
+        }
 
         // Manage action button (opens bottom sheet)
         NavigationBarItem(

@@ -333,46 +333,50 @@ fun MainScreen(
                             )
                         }
 
-                        // Bottom bar overlay
-                        AnimatedVisibility(
-                            visible = showChrome,
-                            enter = slideInVertically { it },
-                            exit = slideOutVertically { it },
-                            modifier = Modifier
-                                .align(Alignment.BottomCenter)
-                                .padding(bottom = scaffoldPadding.calculateBottomPadding())
-                        ) {
-                            val loopActionState = loopActionViewModel.uiState.collectAsStateWithLifecycle().value
-                            MainNavigationBar(
-                                onManageClick = { manageSheetState.show() },
-                                onTreatmentClick = {
-                                    treatmentViewModel.refreshState()
-                                    showTreatmentSheet = true
-                                },
-                                 quickWizardCount = uiState.quickWizardItems.size,
-                                onAutomationClick = {
-                                    scenesViewModel.refreshState()
-                                    showAutomationSheet = true
-                                },
-                                sceneCount = scenesViewModel.uiState.collectAsStateWithLifecycle().value.items.size +
-                                    scenesViewModel.uiState.collectAsStateWithLifecycle().value.sceneItems.size,
-                                pumpSetupPlugin = pumpSetupPlugin,
-                                bgSetupPlugin = bgSetupPlugin,
-                                bgQualityBadgeIcon = bgQualityBadgeIcon,
-                                bgQualityBadgeTint = bgQualityBadgeTint,
-                                bgQualityBadgeDescription = bgQualityBadgeDescription,
-                                objectivesSetupPlugin = objectivesSetupPlugin,
-                                objectivesProgressText = objectivesProgressText,
-                                onNavigate = onNavigate,
-                                permissionsMissing = permissionsMissing,
-                                onPermissionsClick = onPermissionsClick,
-                                loopActionAvailable = loopActionState.actionAvailable,
-                                onLoopActionClick = { showLoopActionSheet = true },
-                                modifier = Modifier.onSizeChanged {
-                                    if (it.height > 0 && it.height != bottomBarHeightPx) bottomBarHeightPx = it.height
-                                }
-                            )
-                        }
+                    // Bottom bar overlay
+                    AnimatedVisibility(
+                        visible = showChrome,
+                        enter = slideInVertically { it },
+                        exit = slideOutVertically { it },
+                        modifier = Modifier
+                            .align(Alignment.BottomCenter)
+                            .padding(bottom = scaffoldPadding.calculateBottomPadding())
+                    ) {
+                        val loopActionState = loopActionViewModel.uiState.collectAsStateWithLifecycle().value
+                        MainNavigationBar(
+                            onManageClick = { manageSheetState.show() },
+                            onTreatmentClick = {
+                                treatmentViewModel.refreshState()
+                                showTreatmentSheet = true
+                            },
+                            quickWizardCount = uiState.quickWizardItems.size,
+                            onAutomationClick = {
+                                scenesViewModel.refreshState()
+                                showAutomationSheet = true
+                            },
+                            // Total drives nav-button visibility (button stays visible whenever
+                            // scenes/automation exist, even if currently un-activatable).
+                            // Count drives the badge — only items the user can act on right now.
+                            automationTotal = automationState.items.size + automationState.sceneItems.size,
+                            automationCount = automationState.items.count { it.activationReason == null } +
+                                automationState.sceneItems.count { it.activationReason == null },
+                            pumpSetupPlugin = pumpSetupPlugin,
+                            bgSetupPlugin = bgSetupPlugin,
+                            bgQualityBadgeIcon = bgQualityBadgeIcon,
+                            bgQualityBadgeTint = bgQualityBadgeTint,
+                            bgQualityBadgeDescription = bgQualityBadgeDescription,
+                            objectivesSetupPlugin = objectivesSetupPlugin,
+                            objectivesProgressText = objectivesProgressText,
+                            onNavigate = onNavigate,
+                            permissionsMissing = permissionsMissing,
+                            onPermissionsClick = onPermissionsClick,
+                            loopActionAvailable = loopActionState.actionAvailable,
+                            onLoopActionClick = { showLoopActionSheet = true },
+                            modifier = Modifier.onSizeChanged {
+                                if (it.height > 0 && it.height != bottomBarHeightPx) bottomBarHeightPx = it.height
+                            }
+                        )
+                    }
 
                     // Quick launch toolbar overlay
                     AnimatedVisibility(
