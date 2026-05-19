@@ -548,16 +548,16 @@
     <string name="aimi_prefs_provider_deepseek">DeepSeek (Chat)</string>
     <string name="aimi_prefs_provider_claude">Claude (3.5 Sonnet)</string>
     <string name="aimi_advisor_title">AIMI Advisor</string>
-    <string name="aimi_adv_loading">Analyse en cours...</string>
-    <string name="aimi_adv_error_prefix">Erreur: </string>
+    <string name="aimi_adv_loading">Analyzing...</string>
+    <string name="aimi_adv_error_prefix">"Error: "</string>
     <string name="aimi_adv_error_oom">Not enough memory to finish. Close other apps and try again.</string>
     <string name="aimi_adv_report_weekly">Rapport Hebdo</string>
     <string name="aimi_adv_score_label">Score: %1$.1f/10</string>
-    <string name="aimi_adv_apply_btn">APPLIQUER</string>
-    <string name="aimi_adv_apply_dialog_title">Confirmation des Ajustements</string>
-    <string name="aimi_adv_apply_dialog_prefix">L\'Advisor propose les ajustements suivants :\n\n</string>
+    <string name="aimi_adv_apply_btn">APPLY</string>
+    <string name="aimi_adv_apply_dialog_title">Confirmation of Adjustments</string>
+    <string name="aimi_adv_apply_dialog_prefix">The Advisor suggests the following adjustments:</string>
     <string name="aimi_adv_success_msg">%1$d changements appliqués !</string>
-    <string name="aimi_adv_no_change_msg">Aucun changement compatible appliqué.</string>
+    <string name="aimi_adv_no_change_msg">No compatible changes have been applied.</string>
     <string name="aimi_adv_section_obs">OBSERVATIONS</string>
     <string name="aimi_adv_section_pkpd">AJUSTEMENTS PKPD</string>
     <string name="aimi_adv_section_brain">ÉTAT COGNITIF</string>
@@ -579,37 +579,37 @@
     <string name="aimi_adv_oref_user_personal_ok">Personal on-device signals (informational, not treatment advice): hypo-related ≈%1$d%%, hyper-related ≈%2$d%%. Discuss persistent issues with your care team.</string>
     <string name="aimi_adv_section_coach">COACH IA</string>
 
-    <string name="aimi_coach_title">Coach IA</string>
-    <string name="aimi_coach_loading">Génération des conseils personnalisés...</string>
-    <string name="aimi_coach_placeholder">Configurez une clé API OpenAI ou Gemini dans les préférences pour activer le Coach IA.</string>
-    <string name="aimi_coach_error">Erreur lors de la récupération des conseils IA.</string>
+    <string name="aimi_coach_title">AI Coach</string>
+    <string name="aimi_coach_loading">Generating personalized recommendations...</string>
+    <string name="aimi_coach_placeholder">Set up an OpenAI or Gemini API key in the preferences to enable the AI Coach.</string>
+    <string name="aimi_coach_error">Error retrieving AI recommendations.</string>
 
-    <string name="aimi_adv_analysis_intro_excellent">Excellent travail ! Vos résultats sont impressionnants.</string>
-    <string name="aimi_adv_analysis_intro_good">Bon travail, mais quelques ajustements sont possibles.</string>
-    <string name="aimi_adv_analysis_intro_poor">Attention, des ajustements sont nécessaires pour améliorer l\'équilibre.</string>
-    <string name="aimi_adv_analysis_issues_header">Points d\'attention identifiés :</string>
+    <string name="aimi_adv_analysis_intro_excellent">Great job! Your results are impressive.</string>
+    <string name="aimi_adv_analysis_intro_good">Good work, but a few adjustments could be made.</string>
+    <string name="aimi_adv_analysis_intro_poor">Please note that adjustments are needed to improve the balance.</string>
+    <string name="aimi_adv_analysis_issues_header">Identified areas of concern:</string>
     <string name="aimi_adv_analysis_all_good">Aucun problème majeur détecté.</string>
-    <string name="aimi_adv_generated_footer">Généré le %1$s • OpenAPS AIMI</string>
+    <string name="aimi_adv_generated_footer">Generated on %1$s • OpenAPS AIMI</string>
 
     <string name="aimi_advisor_model_title">Choisir le modèle IA</string>
 
-    <string name="aimi_adv_rec_hypos_desc">Détecté %1$d%% de temps sous 54mg/dL. Suggestion de réduire l\'agressivité.</string>
-    <string name="aimi_adv_rec_control_desc">TIR %1$d%% inférieur à l\'objectif. Suggestion d\'augmenter l\'agressivité.</string>
-    <string name="aimi_adv_rec_hypers_desc">Temps &gt; 180 trop élevé (%1$d%%). Vérifiez vos ratios repas.</string>
-    <string name="aimi_adv_rec_basal_desc">La part de basale (%1$d%%) est élevée. Vérifiez si votre basale est correcte.</string>
+    <string name="aimi_adv_rec_hypos_desc">%1$d%% of the time was spent below 54 mg/dL. We recommend reducing the intensity.</string>
+    <string name="aimi_adv_rec_control_desc">Shooting %1$d%% below target. Suggestion: increase aggressiveness.</string>
+    <string name="aimi_adv_rec_hypers_desc">Time &gt; 180 is too high (%1$d%%). Check your meal ratios.</string>
+    <string name="aimi_adv_rec_basal_desc">The basal rate (%1$d%%) is high. Check to see if your basal rate is correct.</string>
     <string name="aimi_adv_rec_profile_ok_title">Profil Excellent</string>
     <string name="aimi_adv_rec_profile_ok_desc">Aucun ajustement majeur nécessaire.</string>
 
     <string name="aimi_adv_rec_oref_isf_hypo_title">Hypo pattern: discuss ISF with your care team</string>
-    <string name="aimi_adv_rec_oref_isf_hypo_desc">On-device OREF/ML marks hypo priority. About %1$s%% of CGM time was below 70 mg/dL. Ask your clinician whether a modestly higher ISF (more mg/dL per unit = gentler corrections) fits your profile—avoid abrupt one-step jumps.</string>
+    <string name="aimi_adv_rec_oref_isf_hypo_desc">On-device OREF/ML marks hypo priority. About %1$s% of CGM time was below 70 mg/dL. Ask your clinician whether a modestly higher ISF (more mg/dL per unit = gentler corrections) fits your profile—avoid abrupt one-step jumps.</string>
     <string name="aimi_adv_rec_oref_isf_hyper_title">High pattern: ISF direction with your team</string>
-    <string name="aimi_adv_rec_oref_isf_hyper_desc">Time above 180 is about %1$s%% with few lows. Discuss whether profile ISF should allow slightly stronger corrections (often a modestly lower ISF in mg/dL per U)—only with clinician oversight.</string>
+    <string name="aimi_adv_rec_oref_isf_hyper_desc">Time above 180 is about %1$s% with few lows. Discuss whether profile ISF should allow slightly stronger corrections (often a modestly lower ISF in mg/dL per U)—only with clinician oversight.</string>
     <string name="aimi_adv_rec_oref_isf_mixed_title">Mixed highs and lows: ISF trade-offs</string>
-    <string name="aimi_adv_rec_oref_isf_mixed_desc">OREF flags both hypo and hyper pressure (about %1$s%% below 70 and %2$s%% above 180). ISF moves are ambiguous: follow whichever problem dominates week-over-week (softer if lows lead, stronger if highs lead) with your care team.</string>
+    <string name="aimi_adv_rec_oref_isf_mixed_desc">OREF flags both hypo and hyper pressure (about %1$s% below 70 and %2$s%% above 180). ISF moves are ambiguous: follow whichever problem dominates week-over-week (softer if lows lead, stronger if highs lead) with your care team.</string>
     <string name="aimi_adv_rec_oref_basal_hypo_title">Basal share and lows</string>
-    <string name="aimi_adv_rec_oref_basal_hypo_desc">Basal is about %1$s%% of TDD while hypo risk is elevated. Review overnight and daytime basal segments with your team before changing meal ratios or PKPD.</string>
+    <string name="aimi_adv_rec_oref_basal_hypo_desc">Basal is about %1$s% of TDD while hypo risk is elevated. Review overnight and daytime basal segments with your team before changing meal ratios or PKPD.</string>
     <string name="aimi_adv_rec_oref_ic_hyper_title">Post-meal highs: verify carb ratios</string>
-    <string name="aimi_adv_rec_oref_ic_hyper_desc">OREF focus is hyper with about %1$s%% of time above 180 mg/dL. Check IC (carb ratio) accuracy and timing; adjust only in small supervised steps.</string>
+    <string name="aimi_adv_rec_oref_ic_hyper_desc">OREF focus is hyper with about %1$s% of time above 180 mg/dL. Check IC (carb ratio) accuracy and timing; adjust only in small supervised steps.</string>
     <string name="aimi_adv_rec_oref_pkpd_review_title">PKPD: DIA, peak, damping</string>
     <string name="aimi_adv_rec_oref_pkpd_review_desc">PKPD is enabled and OREF flags an imbalance. With your clinician, review DIA, peak time, and SMB damping together—not in isolation—using the advisor cards above as a checklist.</string>
     <string name="aimi_adv_rec_oref_autodrive_mpc_title">AutoDrive: MPC aggressiveness</string>
@@ -627,18 +627,18 @@
     <string name="aimi_adv_rec_priority_maxiob_extra_reduce_desc">Priority MaxIOB extra is %1$sU while lows are elevated. A step toward ~%2$sU may be safer than pushing headroom higher.</string>
 
     <string name="aimi_pkpd_title_enable">Activation PK/PD</string>
-    <string name="aimi_pkpd_title_dia">Durée d\'action (DIA)</string>
-    <string name="aimi_pkpd_title_peak">Pic d\'action</string>
-    <string name="aimi_pkpd_title_isf">Facteur Sensibilité (ISF)</string>
+    <string name="aimi_pkpd_title_dia">Duration of action (DIA)</string>
+    <string name="aimi_pkpd_title_peak">Peak activity</string>
+    <string name="aimi_pkpd_title_isf">Sensitivity Factor (ISF)</string>
     <string name="aimi_pkpd_title_damping">Amortissement SMB</string>
 
-    <string name="aimi_pkpd_advisor_disabled">PKPD désactivé alors que le TIR est faible. Activation recommandée pour apprentissage dynamique.</string>
-    <string name="aimi_pkpd_hyper_dia">Hyperglycémies persistantes : Réduire la DIA (%1$s -&gt; %2$sh) pour accélérer l\'action.</string>
-    <string name="aimi_pkpd_hyper_peak">Hyperglycémies post-prandiales : Avancer le pic (%1$s min) pour plus de réactivité.</string>
-    <string name="aimi_pkpd_hyper_isf">Résistance détectée : Augmenter la fusion ISF (Max x2.0) pour des corrections plus fortes.</string>
-    <string name="aimi_pkpd_hypo_dia">Hypoglycémies détectées : Allonger la DIA (%1$s -&gt; %2$sh) pour réduire l\'empilement (stacking).</string>
-    <string name="aimi_pkpd_hypo_peak">Hypoglycémies précoces : Retarder le pic (%1$s min) pour adoucir la courbe.</string>
-    <string name="aimi_pkpd_hypo_damping">Risque hypo : Augmenter l\'amortissement (Damping) pour réduire les SMB en fin de DIA.</string>
+    <string name="aimi_pkpd_advisor_disabled">PKPD is disabled when the TIR is low. Enabling is recommended for dynamic learning.</string>
+    <string name="aimi_pkpd_hyper_dia">Persistent hyperglycemia: Reduce the daily insulin dose (from %1$s to %2$sh) to speed up the effect.</string>
+    <string name="aimi_pkpd_hyper_peak">Postprandial hyperglycemia: Advance the peak (%1$s min) for greater responsiveness.</string>
+    <string name="aimi_pkpd_hyper_isf">Resistance detected: Increase the ISF fusion (Max x2.0) for stronger corrections.</string>
+    <string name="aimi_pkpd_hypo_dia">Detected hypoglycemia: Increase the DIA (%1$s → %2$sh) to reduce stacking.</string>
+    <string name="aimi_pkpd_hypo_peak">Early hypoglycemia: Delay the peak (by 1–2 minutes) to smooth out the curve.</string>
+    <string name="aimi_pkpd_hypo_damping">Risk of hypoglycemia: Increase damping to reduce SMBs at the end of the DIA.</string>
     <string name="aimi_pkpd_hypo_isf_reduce">Frequent lows with high ISF-fusion headroom: consider lowering max fusion from %1$sx to ~%2$sx with your clinician to cap aggressive corrections.</string>
     <string name="aimi_pkpd_hyper_damping_reduce">Persistent highs with strong SMB tail damping (%1$s): if hypos are rare, discuss a modest damping decrease to ~%2$s instead of only ever increasing it.</string>
     <string name="aimi_auditor_mode_title">Auditor Mode</string>

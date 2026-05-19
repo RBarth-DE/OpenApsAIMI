@@ -12,6 +12,7 @@ import java.io.OutputStreamWriter
 import java.net.HttpURLConnection
 import java.net.URL
 import java.util.Locale
+import app.aaps.core.keys.resolvedStep
 
 /**
  * Self-contained LLM client for the AutoISF Advisor.
@@ -54,6 +55,13 @@ class AutoIsfAiClient {
         }
     }
 
+
+    private fun keyInfo(key: DoubleKey, current: Double, disabledValue: String? = "0"): String {
+        val step = key.resolvedStep()
+        val dis = if (disabledValue != null) " / disabled: $disabledValue" else ""
+        return "%.3f (min: ${key.min} / max: ${key.max} / step: $step$dis)".format(Locale.US, current)
+    }
+
     private fun buildPrompt(report: AutoIsfReport, prefs: AutoIsfPrefsSnapshot, context: Context): String {
         val m = report.metrics
         val lang = Locale.getDefault().displayLanguage
@@ -74,17 +82,26 @@ class AutoIsfAiClient {
         sb.appendLine()
         sb.appendLine("--- AutoISF CONFIGURATION ---")
         sb.appendLine("Weights enabled: ${prefs.useAutoIsfWeights}")
-        sb.appendLine("AutoISF bounds: min=${prefs.autoIsfMin} (${DoubleKey.ApsAutoIsfMin.min}/${DoubleKey.ApsAutoIsfMin.max}) max=${prefs.autoIsfMax} ((${DoubleKey.ApsAutoIsfMax.min}/${DoubleKey.ApsAutoIsfMax.max}))  autosensMax=${prefs.autosensMax} (defines how strong ISF can become)")
+        sb.appendLine("AutoISF bounds:")
+        sb.appendLine("  autoISF_min=${keyInfo(DoubleKey.ApsAutoIsfMin, prefs.autoIsfMin, null)}")
+        sb.appendLine("  autoISF_max=${keyInfo(DoubleKey.ApsAutoIsfMax, prefs.autoIsfMax, null)}")
+        sb.appendLine("  autosensMax=${prefs.autosensMax} (defines how strong ISF can become)")
         sb.appendLine("ISF weights:")
-        sb.appendLine("  Profile ISF=${prefs.profileISF}                (min: 2 / max: 1200 / default: 40)                                                                            (Profile ISF scales with its weights below)")
-        sb.appendLine("  higher_ISFrange_weight=${prefs.highBgWeight}   (min: ${DoubleKey.ApsAutoIsfHighBgWeight.min} / max: ${DoubleKey.ApsAutoIsfHighBgWeight.max} / disabled: 0)   (boosts ISF at high BG)")
-        sb.appendLine("  lower_ISFrange_weight=${prefs.lowBgWeight}     (min: ${DoubleKey.ApsAutoIsfLowBgWeight.min} / max: ${DoubleKey.ApsAutoIsfLowBgWeight.max} / disabled: 0)     (lowers ISF when BG low → more insulin)")
-        sb.appendLine("  bgAccel_ISF_weight=${prefs.bgAccelWeight}      (min: ${DoubleKey.ApsAutoIsfBgAccelWeight.min} / max: ${DoubleKey.ApsAutoIsfBgAccelWeight.max} / disabled: 0) (responds to rising BG rate)")
-        sb.appendLine("  bgBrake_ISF_weight=${prefs.bgBrakeWeight}      (min: ${DoubleKey.ApsAutoIsfBgBrakeWeight.min} / max: ${DoubleKey.ApsAutoIsfBgBrakeWeight.max} / disabled: 0) (reduces ISF when BG falling fast)")
-        sb.appendLine("  pp_ISF_weight=${prefs.ppWeight}                (min: ${DoubleKey.ApsAutoIsfPpWeight.min} / max: ${DoubleKey.ApsAutoIsfPpWeight.max} / disabled: 0)           (post-prandial ISF boost)")
-        sb.appendLine("  dura_ISF_weight=${prefs.duraWeight}            (min: ${DoubleKey.ApsAutoIsfDuraWeight.min} / max: ${DoubleKey.ApsAutoIsfDuraWeight.max} / disabled: 0)       (extra ISF for prolonged highs)")
-        sb.appendLine("SMB delivery ratio=${prefs.smbDeliveryRatio} (min: ${prefs.smbDeliveryRatioMin} / max: ${prefs.smbDeliveryRatioMax} / disabled: 0)                         (The linearly increasing SMB delivery ratio is mapped to the glucose range)")
-        sb.appendLine("IOB threshold: ${prefs.iobThPercent}%        (min: 10 / max: 100  / disabled: 0)                                                                           (Raise IOB threshold to allow SMBs in high BG situations)")
+        sb.appendLine("  higher_ISFrange_weight=${keyInfo(DoubleKey.ApsAutoIsfHighBgWeight,          prefs.highBgWeight)}")
+        sb.appendLine("  lower_ISFrange_weight=${keyInfo(DoubleKey.ApsAutoIsfLowBgWeight,            prefs.lowBgWeight)}")
+        sb.appendLine("  bgAccel_ISF_weight=${keyInfo(DoubleKey.ApsAutoIsfBgAccelWeight,             prefs.bgAccelWeight)}")
+        sb.appendLine("  bgBrake_ISF_weight=${keyInfo(DoubleKey.ApsAutoIsfBgBrakeWeight,             prefs.bgBrakeWeight)}")
+        sb.appendLine("  pp_ISF_weight=${keyInfo(DoubleKey.ApsAutoIsfPpWeight,                       prefs.ppWeight)}")
+        sb.appendLine("  dura_ISF_weight=${keyInfo(DoubleKey.ApsAutoIsfDuraWeight,                   prefs.duraWeight)}")
+        sb.appendLine("SMB:")
+        sb.appendLine("  smb_delivery_ratio=${keyInfo(DoubleKey.ApsAutoIsfSmbDeliveryRatio,          prefs.smbDeliveryRatio, null)}")
+        sb.appendLine("  smb_delivery_ratio_min=${keyInfo(DoubleKey.ApsAutoIsfSmbDeliveryRatioMin,   prefs.smbDeliveryRatioMin, null)}")
+        sb.appendLine("  smb_delivery_ratio_max=${keyInfo(DoubleKey.ApsAutoIsfSmbDeliveryRatioMax,   prefs.smbDeliveryRatioMax, null)}")
+        sb.appendLine("  smb_delivery_ratio_bg_range=${keyInfo(DoubleKey.ApsAutoIsfSmbDeliveryRatioBgRange, prefs.smbDeliveryRatioBgRange, null)}")
+        sb.appendLine("  smb_max_range_extension=${keyInfo(DoubleKey.ApsAutoIsfSmbMaxRangeExtension, prefs.smbMaxRangeExtension, null)}")
+        sb.appendLine("Other:")
+        sb.appendLine("  Profile ISF=${prefs.profileISF} (min: 2 / max: 1200 / default: 40)")
+        sb.appendLine("  IOB threshold: ${prefs.iobThPercent}% (min: 10 / max: 100 / disabled: 0)")
         sb.appendLine()
 
         sb.appendLine("--- LOCAL HEURISTIC FLAGS ---")
@@ -103,7 +120,8 @@ class AutoIsfAiClient {
         sb.appendLine("Respond in '$lang'. Structure your answer as:")
         sb.appendLine("1. 🔍 Diagnostics: Key glycemic patterns observed.")
         sb.appendLine("2. ⚙️ Weight analysis: Which AutoISF weights are likely contributing to the patterns and why.")
-        sb.appendLine("3. 🛠️ Tuning directions (2-4 steps): Specific, cautious parameter adjustments. Hypo safety first.")
+        sb.appendLine("3. 🛠️ Tuning directions (2-4 steps): Specific, cautious parameter adjustments. " +
+                          "All suggested values must be multiples of the given step size and within [min, max]. Hypo safety first.")
         sb.appendLine("4. ⚠️ Safety note: Brief reminder to verify with a clinician before applying changes.")
         sb.appendLine("Constraint: Under 250 words. Only reference data above — do not invent metrics.")
 

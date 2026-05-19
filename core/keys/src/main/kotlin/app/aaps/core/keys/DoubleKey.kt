@@ -158,8 +158,24 @@ enum class DoubleKey(
         unitType = UnitType.DOUBLE
     ),
     AutosensMax(key = "autosens_max", defaultValue = 1.2, min = 0.5, max = 3.0, titleResId = R.string.pref_title_autosens_max, summaryResId = R.string.openapsama_autosens_max_summary, defaultedBySM = true, unitType = UnitType.DOUBLE),
-    ApsAutoIsfMin(key = "autoISF_min", defaultValue = 1.0, min = 0.3, max = 1.0, titleResId = R.string.pref_title_autoisf_min, summaryResId = R.string.openapsama_autoISF_min_summary, defaultedBySM = true, unitType = UnitType.DOUBLE),
-    ApsAutoIsfMax(key = "autoISF_max", defaultValue = 1.0, min = 1.0, max = 3.0, titleResId = R.string.pref_title_autoisf_max, summaryResId = R.string.openapsama_autoISF_max_summary, defaultedBySM = true, unitType = UnitType.DOUBLE),
+    ApsAutoIsfMin(
+        key = "autoISF_min",
+        defaultValue = 1.0,
+        min = 0.3,
+        max = 1.0,
+        titleResId = R.string.pref_title_autoisf_min,
+        summaryResId = R.string.openapsama_autoISF_min_summary,
+        defaultedBySM = true,
+        unitType = UnitType.DOUBLE),
+    ApsAutoIsfMax(
+        key = "autoISF_max",
+        defaultValue = 1.0,
+        min = 1.0,
+        max = 3.0,
+        titleResId = R.string.pref_title_autoisf_max,
+        summaryResId = R.string.openapsama_autoISF_max_summary,
+        defaultedBySM = true,
+        unitType = UnitType.DOUBLE),
     ApsAutoIsfBgAccelWeight(
         key = "bgAccel_ISF_weight",
         defaultValue = 0.0,
@@ -168,7 +184,7 @@ enum class DoubleKey(
         titleResId = R.string.pref_title_bg_accel_weight,
         summaryResId = R.string.openapsama_bgAccel_ISF_weight_summary,
         defaultedBySM = true,
-        unitType = UnitType.DOUBLE,
+        unitType = UnitType.DOUBLE_2,
         step = 0.05
     ),
     ApsAutoIsfBgBrakeWeight(
@@ -190,7 +206,7 @@ enum class DoubleKey(
         titleResId = R.string.pref_title_low_bg_weight,
         summaryResId = R.string.openapsama_lower_ISFrange_weight_summary,
         defaultedBySM = true,
-        unitType = UnitType.DOUBLE_2
+        unitType = UnitType.DOUBLE
     ),
     ApsAutoIsfHighBgWeight(
         key = "higher_ISFrange_weight",
@@ -200,7 +216,7 @@ enum class DoubleKey(
         titleResId = R.string.pref_title_high_bg_weight,
         summaryResId = R.string.openapsama_higher_ISFrange_weight_summary,
         defaultedBySM = true,
-        unitType = UnitType.DOUBLE_2
+        unitType = UnitType.DOUBLE
     ),
     ApsAutoIsfSmbDeliveryRatioBgRange(
         key = "openapsama_smb_delivery_ratio_bg_range",
@@ -220,9 +236,8 @@ enum class DoubleKey(
         titleResId = R.string.pref_title_pp_weight,
         summaryResId = R.string.openapsama_pp_ISF_weight_summary,
         defaultedBySM = true,
-        unitType = UnitType.DOUBLE,
-        step = 0.005
-    ),
+        unitType = UnitType.DOUBLE_3,
+        step = 0.005),
     ApsAutoIsfDuraWeight(
         key = "dura_ISF_weight",
         defaultValue = 0.0,
@@ -241,7 +256,7 @@ enum class DoubleKey(
         titleResId = R.string.pref_title_smb_delivery_ratio,
         summaryResId = R.string.openapsama_smb_delivery_ratio_summary,
         defaultedBySM = true,
-        unitType = UnitType.DOUBLE_2
+        unitType = UnitType.DOUBLE
     ),
     ApsAutoIsfSmbDeliveryRatioMin(
         key = "openapsama_smb_delivery_ratio_min",
@@ -251,7 +266,7 @@ enum class DoubleKey(
         titleResId = R.string.pref_title_smb_delivery_ratio_min,
         summaryResId = R.string.openapsama_smb_delivery_ratio_min_summary,
         defaultedBySM = true,
-        unitType = UnitType.DOUBLE_2
+        unitType = UnitType.DOUBLE
     ),
     ApsAutoIsfSmbDeliveryRatioMax(
         key = "openapsama_smb_delivery_ratio_max",
@@ -261,7 +276,7 @@ enum class DoubleKey(
         titleResId = R.string.pref_title_smb_delivery_ratio_max,
         summaryResId = R.string.openapsama_smb_delivery_ratio_max_summary,
         defaultedBySM = true,
-        unitType = UnitType.DOUBLE_2
+        unitType = UnitType.DOUBLE
     ),
     ApsAutoIsfSmbMaxRangeExtension(
         key = "openapsama_smb_max_range_extension",
@@ -282,7 +297,7 @@ enum class DoubleKey(
 
     OApsAIMIweight("key_aimiweight", 50.0, 1.0, 200.0),
     /** MPC: max insulin (U) per kg body weight per 5-minute dose search; combined with Max SMB / High BG SMB caps. */
-    OApsAIMIMpcInsulinUPerKgPerStep("aimi_mpc_insulin_u_per_kg_per_5min", 0.065, 0.03, 0.12),
+    OApsAIMIMpcInsulinUPerKgPerStep("aimi_mpc_insulin_u_per_kg_per_5min", 0.065, 0.03, 0.12, unitType = UnitType.DOUBLE_3),
     OApsAIMICHO("key_cho", 50.0, 1.0, 150.0),
     OApsAIMITDD7("key_tdd7", 40.0, 1.0, 150.0),
 
@@ -308,6 +323,7 @@ enum class DoubleKey(
         max = 1.0,
         titleResId = R.string.pref_title_aimi_peak_governor_learned_weight,
         summaryResId = R.string.pref_summary_aimi_peak_governor_learned_weight,
+        unitType = UnitType.DOUBLE_2
     ),
     OApsAIMIIsfFusionMinFactor("aimi_isf_fusion_min_factor", 0.75, 0.3, 1.0),
     OApsAIMIIsfFusionMaxFactor("aimi_isf_fusion_max_factor", 2.0, 1.0, 2.0),
@@ -385,7 +401,7 @@ enum class DoubleKey(
     OApsAIMIMaxMultiplier(key = "OApsAIMIMaxMultiplier", 1.6, 1.0,2.5), // plafond multiplicatif de la basale (× profil)
     OApsAIMIKickerStep(key = "OApsAIMIKickerStep", 0.15, 0.05, 0.5), // intensité du “kicker” plateau (incrément multiplicatif)
     OApsAIMIKickerMinUph(key = "OApsAIMIKickerMinUph", 0.2,0.05, 1.0), // plancher absolu U/h pour les kicks très bas
-    OApsAIMIZeroResumeFrac(key = "OApsAIMIZeroResumeFrac", 0.25, 0.05, 0.8), // fraction du basal profil pour la micro-reprise
+    OApsAIMIZeroResumeFrac(key = "OApsAIMIZeroResumeFrac", 0.25, 0.05, 0.8, unitType = UnitType.DOUBLE_2), // fraction du basal profil pour la micro-reprise
     OApsAIMIAntiStallBias(key = "OApsAIMIAntiStallBias", 0.10, 0.0, 0.5), // biais de “décollage” anti-stagnation (+%)
     OApsAIMIDeltaPosRelease(key = "OApsAIMIDeltaPosRelease", 1.0, 0.5, 3.0), // seuil Δ positif au-delà duquel on arrête l’intensification
     AimiUamConfidence (key = "AIMI_UAM_CONFIDENCE", 0.5, 0.0, 1.0),
@@ -432,7 +448,7 @@ enum class DoubleKey(
         titleResId = R.string.aimi_tube_aggressiveness_title,
         summaryResId = R.string.aimi_tube_aggressiveness_summary,
         dependency = BooleanKey.OApsAIMIStraightLineTubeAdvisorEnabled,
-        unitType = UnitType.DOUBLE_2,
+        unitType = UnitType.DOUBLE,
     ),
     AimiTubeBasalTrimMax(
         key = "key_aimi_tube_basal_trim_max",
@@ -524,7 +540,7 @@ enum class DoubleKey(
         titleResId = R.string.aimi_gov_hold_basal_decay_rate_title,
         summaryResId = R.string.aimi_gov_hold_basal_decay_rate_summary,
         preferenceType = PreferenceType.TEXT_FIELD,
-        unitType = UnitType.DOUBLE_2,
+        unitType = UnitType.DOUBLE_3,
         dependency = BooleanKey.OApsAIMIT3cAdaptiveBasalEnabled,
     ),
     OApsAIMIGovernanceHoldAggFloorRate(
@@ -546,7 +562,7 @@ enum class DoubleKey(
         titleResId = R.string.aimi_gov_hold_agg_decay_rate_title,
         summaryResId = R.string.aimi_gov_hold_agg_decay_rate_summary,
         preferenceType = PreferenceType.TEXT_FIELD,
-        unitType = UnitType.DOUBLE_2,
+        unitType = UnitType.DOUBLE_3,
         dependency = BooleanKey.OApsAIMIT3cAdaptiveBasalEnabled,
     ),
     OApsAIMIGovernanceHoldBasalFloorSevere(
@@ -590,7 +606,7 @@ enum class DoubleKey(
         titleResId = R.string.aimi_gov_hold_agg_decay_severe_title,
         summaryResId = R.string.aimi_gov_hold_agg_decay_severe_summary,
         preferenceType = PreferenceType.TEXT_FIELD,
-        unitType = UnitType.DOUBLE_2,
+        unitType = UnitType.DOUBLE_3,
         dependency = BooleanKey.OApsAIMIT3cAdaptiveBasalEnabled,
     ),
     /** Recent governance samples (5-min cadence) used for short-horizon prediction relief (A3). */

@@ -26,7 +26,7 @@ import kotlin.math.abs
 import app.aaps.core.ui.R
 import app.aaps.core.ui.compose.LocalPreferences
 import java.text.DecimalFormat
-
+import app.aaps.core.keys.resolvedStep
 /**
  * Composable double preference for use inside card sections.
  *
@@ -56,23 +56,12 @@ fun AdaptiveDoublePreferenceItem(
 
     val span = (doubleKey.max - doubleKey.min).let { if (abs(it) < 1e-12) 1e-9 else it }
     val unitType = doubleKey.unitType
-    val (decimalPlaces, step) = doubleKey.step?.let { explicitStep ->
-        val dp = when {
-            explicitStep >= 1.0  -> 0
-            explicitStep >= 0.1  -> 1
-            explicitStep >= 0.01 -> 2
-            else                 -> 3
-        }
-        dp to explicitStep
-    } ?: if (unitType == UnitType.NONE) {
-        when {
-            span <= 0.15  -> 3 to 0.001
-            span <= 1.5   -> 2 to 0.01
-            span <= 25.0  -> 1 to 0.1
-            else          -> 0 to 1.0
-        }
-    } else {
-        unitType.decimalPlaces() to unitType.step()
+    val step = doubleKey.resolvedStep()
+    val decimalPlaces = when {
+        step >= 1.0   -> 0
+        step >= 0.1   -> 1
+        step >= 0.01  -> 2
+        else          -> 3
     }
     val valueFormatResId = if (doubleKey.step != null) null else unitType.valueResId()
 
