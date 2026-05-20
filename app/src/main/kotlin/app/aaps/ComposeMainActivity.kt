@@ -607,6 +607,8 @@ class ComposeMainActivity : AppCompatActivity() {
 
         val state by mainViewModel.uiState.collectAsStateWithLifecycle()
         val bolusState by bolusProgressData.state.collectAsStateWithLifecycle()
+        val pumpStatusBanner by pumpCommunicationStatus.statusBannerFlow.collectAsStateWithLifecycle()
+        val pumpQueueStatus by pumpCommunicationStatus.queueStatusFlow.collectAsStateWithLifecycle()
 
         // Keep skin collector alive for the whole shell (not only when Main is composed),
         // so changes made from Preferences still update flows before returning home.
@@ -843,8 +845,8 @@ class ComposeMainActivity : AppCompatActivity() {
         // Modal bolus progress overlay — shown above everything for standard bolus
         bolusState?.let { state ->
             if (!state.isSMB) {
-                val pumpStatus = pumpCommunicationStatus.statusBanner()?.text ?: ""
-                val queueStatus = pumpCommunicationStatus.queueStatus()
+                val pumpStatus = pumpStatusBanner?.text ?: ""
+                val queueStatus = pumpQueueStatus
                 PumpActivityDialog(
                     bolusState = state,
                     pumpStatus = pumpStatus,

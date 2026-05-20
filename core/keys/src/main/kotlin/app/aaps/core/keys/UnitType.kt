@@ -101,6 +101,6 @@ fun UnitType.unitLabelResId(): Int? = when (this) {
     UnitType.PERCENT                       -> R.string.units_percent
     UnitType.INSULIN, UnitType.INSULIN_INT -> R.string.units_insulin
     UnitType.INSULIN_RATE                  -> R.string.units_insulin_rate
-    UnitType.DOUBLE, UnitType.DOUBLE_2, UnitType.DOUBLE_3    -> null  // No unit label for generic doubles
+    UnitType.DOUBLE, UnitType.DOUBLE_2, UnitType.DOUBLE_3 -> null  // No unit label for generic doubles
     UnitType.MGDL                          -> R.string.units_mgdl
 }
