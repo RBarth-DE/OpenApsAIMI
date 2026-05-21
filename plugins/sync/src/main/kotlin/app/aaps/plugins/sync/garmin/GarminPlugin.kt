@@ -597,7 +597,7 @@ class GarminPlugin @Inject constructor(
                     .toEpochMilli()
                 val todayCount = runBlocking {
                     persistenceLayer.getStepsCountFromTimeToTime(midnight, now)
-                        .count { it.device == device }
+                        .count { it.device.startsWith("Garmin") }
                 }
                 if (todayCount == 0) {
                     aapsLogger.info(LTag.GARMIN, "[GarminHTTP] no records today, storing initial total=$totalSteps")
