@@ -211,7 +211,7 @@ open class OpenAPSAutoISFPlugin @Inject constructor(
     private val determineIoScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val phone_moved; get() = PhoneMovementDetector.phoneMoved()
 
-    override fun onStart() {
+    override suspend fun onStart() {
         super.onStart()
         var count = 0
         val apsResults = runBlocking { persistenceLayer.getApsResults(dateUtil.now() - T.days(1).msecs(), dateUtil.now()) }
