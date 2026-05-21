@@ -1,5 +1,6 @@
 package app.aaps.plugins.aps.openAPSAutoISF
 
+import android.content.Context
 import app.aaps.core.data.configuration.Constants
 import app.aaps.core.data.model.GlucoseUnit
 import app.aaps.core.interfaces.aps.APSResult
@@ -16,7 +17,9 @@ import app.aaps.core.interfaces.logging.AAPSLogger
 import app.aaps.core.interfaces.logging.LTag
 import app.aaps.core.interfaces.plugin.ActivePlugin
 import app.aaps.core.interfaces.profile.ProfileUtil
+import app.aaps.core.keys.interfaces.Preferences
 import app.aaps.plugins.aps.openAPSAIMI.model.PumpCaps
+import app.aaps.plugins.aps.openAPSAIMI.sos.EmergencySosManager
 import app.aaps.plugins.aps.openAPSAIMI.validation.PumpCapabilityValidator
 import java.text.DecimalFormat
 import java.time.Instant
@@ -31,7 +34,9 @@ import kotlin.math.roundToInt
 @Singleton
 class DetermineBasalAutoISF @Inject constructor(
     private val profileUtil: ProfileUtil,
-    private val pumpCapabilityValidator: PumpCapabilityValidator
+    private val pumpCapabilityValidator: PumpCapabilityValidator,
+    private val preferences: Preferences,
+    private val context: Context
 ) {
 
     @Inject lateinit var aapsLogger: AAPSLogger
@@ -179,6 +184,16 @@ class DetermineBasalAutoISF @Inject constructor(
             timestamp = currentTime,
             consoleLog = consoleLog,
             consoleError = consoleError
+        )
+
+        EmergencySosManager.evaluateSosCondition(
+            aapsLogger = aapsLogger,
+            bg = glucose_status.glucose,
+            delta = glucose_status.delta,
+            iob = iob_data_array.firstOrNull()?.iob ?: 0.0,
+            context = context,
+            preferences = preferences,
+            nowMs = currentTime
         )
 
         val pumpDesc = activePlugin.activePump.pumpDescription
