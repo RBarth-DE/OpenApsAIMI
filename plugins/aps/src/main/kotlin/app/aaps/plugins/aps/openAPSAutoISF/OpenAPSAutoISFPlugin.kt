@@ -7,6 +7,7 @@ import app.aaps.core.data.configuration.Constants
 import app.aaps.core.data.model.AIV
 import app.aaps.core.data.model.GlucoseUnit
 import app.aaps.core.data.model.SC
+import app.aaps.core.data.model.HR
 import app.aaps.core.data.plugin.PluginType
 import app.aaps.core.data.time.T
 import app.aaps.core.interfaces.aps.APS
@@ -189,18 +190,21 @@ open class OpenAPSAutoISFPlugin @Inject constructor(
         finalIsf = 1.0,
         iobThEffective = 0.0
     )
-        // Activity detection (steps)
-        private var recentSteps5Minutes = 0
-        private var recentSteps10Minutes = 0
-        private var recentSteps15Minutes = 0
-        private var recentSteps30Minutes = 0
-        private var recentSteps60Minutes = 0
+    // Activity detection (steps)
+    private var recentSteps5Minutes = 0
+    private var recentSteps10Minutes = 0
+    private var recentSteps15Minutes = 0
+    private var recentSteps30Minutes = 0
+    private var recentSteps60Minutes = 0
 
-        // Last activity-monitor result from invoke(); read by autoISF() (also from the cached
-        // getIsfMgdl() path) so we don't smuggle transient state through SharedPreferences.
-        private var lastActivityRatio = 1.0
-        private var lastStepActivityDetected = false
-        private var lastStepInactivityDetected = false
+    // Last activity-monitor result from invoke(); read by autoISF() (also from the cached
+    // getIsfMgdl() path) so we don't smuggle transient state through SharedPreferences.
+    private var lastActivityRatio = 1.0
+    private var lastStepActivityDetected = false
+    private var lastStepInactivityDetected = false
+
+    private val heartRatesSnapshotRef = AtomicReference<List<HR>>(emptyList())
+    private val heartRatesRefreshInFlight = AtomicBoolean(false)
 
     private val stepsSnapshotRef = AtomicReference<List<SC>>(emptyList())
     private val stepsRefreshInFlight = AtomicBoolean(false)
@@ -679,6 +683,25 @@ open class OpenAPSAutoISFPlugin @Inject constructor(
     fun convert_bg_to_units(value: Double, profile: OapsProfileAutoIsf): Double =
         if (profile.out_units == "mmol/L") value * Constants.MGDL_TO_MMOLL else value
 
+    private fun heartRatesCached(now: Long): List<HR> {
+        refreshHeartRatesAsync(now)
+        return heartRatesSnapshotRef.get()
+    }
+
+    private fun refreshHeartRatesAsync(now: Long) {
+        if (!heartRatesRefreshInFlight.compareAndSet(false, true)) return
+        determineIoScope.launch {
+            try {
+                val start = now - 200 * 60 * 1000
+                heartRatesSnapshotRef.set(persistenceLayer.getHeartRatesFromTimeToTime(start, now))
+            } catch (_: Exception) {
+                heartRatesSnapshotRef.set(emptyList())
+            } finally {
+                heartRatesRefreshInFlight.set(false)
+            }
+        }
+    }
+
     fun activityMonitor(isTempTarget: Boolean, bg: Double, target_bg: Double, now: Int): Double
     {
         val currentHour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
@@ -736,6 +759,28 @@ open class OpenAPSAutoISFPlugin @Inject constructor(
 
         aapsLogger.debug(LTag.APS, "Activity Monitor: Steps: $recentSteps5Minutes $recentSteps10Minutes $recentSteps15Minutes ")
 
+        // === HR-based activity detection (cycling, rowing, etc.) ===
+        val allHeartRates = heartRatesCached(now)
+        fun getHrForWindow(windowMillis: Long): List<HR> {
+            val windowStart = now - windowMillis
+            return allHeartRates.filter { (it.timestamp + it.duration) >= windowStart }
+        }
+        val hrAvg5  = getHrForWindow(5  * 60 * 1000).let { if (it.isNotEmpty()) it.map { h -> h.beatsPerMinute.toInt() }.average() else Double.NaN }
+        val hrAvg60 = getHrForWindow(60 * 60 * 1000).let { if (it.isNotEmpty()) it.map { h -> h.beatsPerMinute.toInt() }.average() else 70.0 }
+        val hrAvg180= getHrForWindow(180* 60 * 1000).let { if (it.isNotEmpty()) it.map { h -> h.beatsPerMinute.toInt() }.average() else 70.0 }
+
+        val hrBaseline = if (hrAvg180 > 40) hrAvg180 else hrAvg60
+        val hrNow      = if (!hrAvg5.isNaN()) hrAvg5 else hrBaseline
+        val hrTrend    = hrNow / hrBaseline
+
+        // only active when swimming, biking,....
+        val hrOnlyActivityHigh = !hrAvg5.isNaN() && recentSteps5Minutes < 100 && recentSteps15Minutes < 200 && hrTrend > 1.30
+        val hrOnlyActivityMid  = !hrAvg5.isNaN() && recentSteps5Minutes < 100 && recentSteps15Minutes < 200 && hrTrend > 1.15
+        // HR only confirms inactivity when it is truly idle (or there is no data)
+        val hrConfirmsInactivity = hrAvg5.isNaN() || hrTrend < 1.05
+
+        aapsLogger.debug(LTag.APS, "Activity Monitor: HR hrNow=${"%.1f".format(hrNow)} baseline=${"%.1f".format(hrBaseline)} trend=${"%.2f".format(hrTrend)} highAct=$hrOnlyActivityHigh midAct=$hrOnlyActivityMid")
+
         val phoneMoved = true // To be implemented!! PhoneMovementDetector.phoneMoved()
         val lastAppStart = preferences.get(LongKey.AppStart)
         val time_since_start = (dateUtil.now() - lastAppStart).milliseconds.inWholeMinutes
@@ -781,53 +826,48 @@ open class OpenAPSAutoISFPlugin @Inject constructor(
 
         if ( !activityDetection ) {
             consoleLog.add("Activity monitor disabled in settings")
-            aapsLogger.debug(LTag.APS, "Activity Monitor: Activity monitor disabled in settings")
         } else if ( isTempTarget ) {
             consoleLog.add("Activity monitor disabled: tempTarget")
-            aapsLogger.debug(LTag.APS, "Activity Monitor: Activity monitor disabled: tempTarget")
         } else if ( !phoneMoved ) {
             consoleLog.add("Activity monitor disabled: Phone seems not to be carried for the last 15m")
-            aapsLogger.debug(LTag.APS, "Activity Monitor: Activity monitor disabled: Phone seems not to be carried for the last 15m")
         } else {
             if ( time_since_start < 60 && recentSteps60Minutes <= 200 ) {
                 consoleLog.add("Activity monitor initialising for ${60 - time_since_start} more minutes: inactivity detection disabled")
-                aapsLogger.debug(LTag.APS, "Activity Monitor: Activity monitor initialising for ${60 - time_since_start} more minutes: inactivity detection disabled")
             } else if ( useSleepState && recentSteps60Minutes <= 200) {
                 consoleLog.add("Activity monitor disabled inactivity detection: sleeping state")
-                aapsLogger.debug(LTag.APS, "Activity Monitor: Activity monitor disabled inactivity detection: sleeping state")
             } else if ( (( inactivity_idle_start>inactivity_idle_end && (currentHour !in inactivity_idle_end..<inactivity_idle_start) )  // includes midnight
                 || (currentHour in inactivity_idle_start..<inactivity_idle_end)  )                                                       // excludes midnight
                 && recentSteps60Minutes <= 200 && ignore_inactivity_overnight && !existSleepState) {
                 consoleLog.add("Activity monitor disabled inactivity detection: sleeping hours")
-                aapsLogger.debug(LTag.APS, "Activity Monitor: Activity monitor disabled inactivity detection: sleeping hours")
-            } else if ( recentSteps5Minutes > 300 || recentSteps10Minutes > 300  || recentSteps15Minutes > 300  || recentSteps30Minutes > 1500 || recentSteps60Minutes > 2500 ) {
+            } else if ( recentSteps5Minutes > 300 || recentSteps10Minutes > 300
+                || recentSteps15Minutes > 300 || recentSteps30Minutes > 1500
+                || recentSteps60Minutes > 2500 || hrOnlyActivityHigh ) {
                 activityRatio = 1 - 0.3 * activity_scale_factor
-                consoleLog.add("Activity monitor detected activity, sensitivity ratio: $activityRatio")
-                aapsLogger.debug(LTag.APS, "Activity Monitor: Activity monitor detected activity, sensitivity ratio: $activityRatio")
-            } else if ( recentSteps5Minutes > 200 || recentSteps10Minutes > 200  || recentSteps15Minutes > 200
-                || recentSteps30Minutes > 500 || recentSteps60Minutes > 800 ) {
+                val src = if (hrOnlyActivityHigh && recentSteps5Minutes < 100) "HR" else "steps"
+                consoleLog.add("Activity monitor detected activity ($src), sensitivity ratio: $activityRatio")
+            } else if ( recentSteps5Minutes > 200 || recentSteps10Minutes > 200
+                || recentSteps15Minutes > 200 || recentSteps30Minutes > 500
+                || recentSteps60Minutes > 800 || hrOnlyActivityMid ) {
                 activityRatio = 1 - 0.15 * activity_scale_factor
-                consoleLog.add("Activity monitor detected partial activity, sensitivity ratio: $activityRatio")
-                aapsLogger.debug(LTag.APS, "Activity Monitor: Activity monitor detected partial activity, sensitivity ratio: $activityRatio")
+                val src = if (hrOnlyActivityMid && recentSteps5Minutes < 100) "HR" else "steps"
+                consoleLog.add("Activity monitor detected partial activity ($src), sensitivity ratio: $activityRatio")
             } else if ( bg < target_bg && recentSteps60Minutes <= 200 ) {
                 consoleLog.add("Activity monitor disabled inactivity detection: bg < target")
-                aapsLogger.debug(LTag.APS, "Activity Monitor: Activity monitor disabled inactivity detection: bg < target")
-            } else if ( recentSteps60Minutes < 50 ) {
+            } else if ( recentSteps60Minutes < 50 && hrConfirmsInactivity ) {
                 activityRatio = 1 + 0.2 * inactivity_scale_factor
                 consoleLog.add("Activity monitor detected inactivity, sensitivity ratio: $activityRatio")
-                aapsLogger.debug(LTag.APS, "Activity Monitor: Activity monitor detected inactivity, sensitivity ratio: $activityRatio")
-            } else if ( recentSteps60Minutes <= 200 ) {
+            } else if ( recentSteps60Minutes <= 200 && hrConfirmsInactivity ) {
                 activityRatio = 1 + 0.1 * inactivity_scale_factor
                 consoleLog.add("Activity monitor detected partial inactivity, sensitivity ratio: $activityRatio")
-                aapsLogger.debug(LTag.APS, "Activity Monitor: Activity monitor detected partial inactivity, sensitivity ratio: $activityRatio")
             } else {
                 consoleLog.add("Activity monitor detected neutral state")  //, sensitivity ratio unchanged: $activityRatio")
-                aapsLogger.debug(LTag.APS, "Activity Monitor: Activity monitor detected neutral state")
             }
         }
         var activityMsg = "Activity Monitor json: {\"activity_scale_factor\":$activity_scale_factor,\"inactivity_scale_factor\":$inactivity_scale_factor"
         activityMsg += ",\"recentSteps5Minutes\":$recentSteps5Minutes,\"recentSteps10Minutes\":$recentSteps10Minutes,\"recentSteps15Minutes\":$recentSteps15Minutes"
         activityMsg += ",\"recentSteps30Minutes\":$recentSteps30Minutes,\"recentSteps60Minutes\":$recentSteps60Minutes"
+        activityMsg += ",\"hrNow\":${"%.1f".format(hrNow)},\"hrBaseline\":${"%.1f".format(hrBaseline)},\"hrTrend\":${"%.2f".format(hrTrend)}"
+        activityMsg += ",\"hrOnlyActivityHigh\":$hrOnlyActivityHigh,\"hrOnlyActivityMid\":$hrOnlyActivityMid"
         activityMsg += ",\"phone_moved\":$phoneMoved,\"time_since_start\":$time_since_start,\"activity_detection\":$activityDetection"
         activityMsg += ",\"ignore_inactivity_overnight\":$ignore_inactivity_overnight,\"inactivity_idle_start\":$inactivity_idle_start,\"inactivity_idle_end\":$inactivity_idle_end}"
         aapsLogger.debug(LTag.APS, activityMsg)
