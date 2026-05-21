@@ -61,7 +61,7 @@ class TriggerConnector(injector: HasAndroidInjector) : Trigger(injector) {
         for (i in 1 until list.size) {
             result = connectorType.apply(result, list[i].shouldRun())
         }
-        if (result) aapsLogger.debug(LTag.AUTOMATION, "Ready for execution: " + friendlyDescription().replace("\n", " "))
+        //if (result) aapsLogger.debug(LTag.AUTOMATION, "Ready for execution: " + friendlyDescription().replace("\n", " "))
         return result
     }
 

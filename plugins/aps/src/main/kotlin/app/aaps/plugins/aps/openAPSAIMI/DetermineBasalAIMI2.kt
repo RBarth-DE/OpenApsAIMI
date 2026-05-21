@@ -1615,9 +1615,21 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             this.lastBolusSMBUnit = getlastBolusSMB?.amount?.toFloat() ?: 0.0F
             val diff = abs(now - cacheSmbTimestamp)
             this.lastsmbtime = (diff / (60 * 1000)).toInt()
+            // DB has caught up → pending prebolus confirmed (or superseded).  Clear.
+            if (pendingLegacyPrebolusUnit > 0.0f) {
+                pendingLegacyPrebolusUnit = 0.0f
+                pendingLegacyPrebolusExpiry = 0L
+            }
         } else {
             val diff = abs(now - internalLastSmbMillis)
             this.lastsmbtime = (diff / (60 * 1000)).toInt()
+            // DB has not caught up yet.  Check if the delivery TTL has expired:
+            // if so the bolus was silently dropped (e.g. Medtrum BLE disconnect)
+            // → clear pending so the next in-window tick can retry.
+            if (pendingLegacyPrebolusUnit > 0.0f && now > pendingLegacyPrebolusExpiry) {
+                pendingLegacyPrebolusUnit = 0.0f
+                pendingLegacyPrebolusExpiry = 0L
+            }
         }
         this.maxIob = preferences.get(DoubleKey.ApsSmbMaxIob)
 // Tarciso Dynamic Max IOB
@@ -5669,6 +5681,13 @@ class DetermineBasalaimiSMB2 @Inject constructor(
     private var maxSMB = 0.5
     private var maxSMBHB = 0.5
     private var lastBolusSMBUnit = 0.0f
+    // Pending delivery state for legacy meal prebolus.
+    // Set by markLegacyMealDecision() instead of lastBolusSMBUnit, so a Medtrum
+    // BLE disconnect at the P1 tick does not permanently consume the one-shot
+    // window.  Cleared when DB confirms delivery (cacheSmbTimestamp catches up)
+    // or when the TTL expires — whichever comes first.
+    private var pendingLegacyPrebolusUnit: Float = 0.0f
+    private var pendingLegacyPrebolusExpiry: Long = 0L
     private var tdd7DaysPerHour = 0.0f
     private var tdd2DaysPerHour = 0.0f
     private var tddPerHour = 0.0f
@@ -5752,6 +5771,11 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         /** 2ᵉ prébolus legacy repas : minutes depuis le démarrage du mode (inclus). */
         private const val LEGACY_MEAL_PRE2_MIN = 15
         private const val LEGACY_MEAL_PRE2_MAX = 22
+        /** How long (ms) a legacy prebolus delivery attempt is considered in-flight.
+         *  If the pump (e.g. Medtrum BLE) was unreachable and the bolus was silently
+         *  dropped, the pending state expires after this interval so the next loop
+         *  tick — still inside the P1 window — can retry. */
+        private const val LEGACY_PREBOLUS_DELIVERY_TTL_MS = 3 * 60 * 1000L
     }
 
     private var internalLastSmbMillis: Long
@@ -8034,50 +8058,67 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         return false
     }
 
+    /** Returns true while a legacy prebolus delivery attempt is still in-flight
+     *  (fired this tick but not yet confirmed by the DB, and TTL not expired).
+     *  Blocks re-fire during the pending window to prevent double-dosing, but
+     *  allows retry once the TTL expires without DB confirmation (Medtrum drop). */
+    private fun isLegacyPrebolusDeliveryPending(targetUnits: Float): Boolean =
+        pendingLegacyPrebolusUnit == targetUnits && dateUtil.now() < pendingLegacyPrebolusExpiry
+
     private fun isMealModeCondition(): Boolean {
         val pbolusM: Double = preferences.get(DoubleKey.OApsAIMIMealPrebolus)
-        return mealruntime in 0..7 && lastBolusSMBUnit != pbolusM.toFloat() && mealTime
+        return mealruntime in 0..7 && lastBolusSMBUnit != pbolusM.toFloat()
+            && !isLegacyPrebolusDeliveryPending(pbolusM.toFloat()) && mealTime
     }
     private fun isbfastModeCondition(): Boolean {
         val pbolusbfast: Double = preferences.get(DoubleKey.OApsAIMIBFPrebolus)
-        return bfastruntime in 0..7 && lastBolusSMBUnit != pbolusbfast.toFloat() && bfastTime
+        return bfastruntime in 0..7 && lastBolusSMBUnit != pbolusbfast.toFloat()
+            && !isLegacyPrebolusDeliveryPending(pbolusbfast.toFloat()) && bfastTime
     }
     private fun isbfast2ModeCondition(): Boolean {
         val pbolusbfast2: Double = preferences.get(DoubleKey.OApsAIMIBFPrebolus2)
         return bfastruntime in LEGACY_MEAL_PRE2_MIN..LEGACY_MEAL_PRE2_MAX &&
-            lastBolusSMBUnit != pbolusbfast2.toFloat() && bfastTime
+            lastBolusSMBUnit != pbolusbfast2.toFloat()
+            && !isLegacyPrebolusDeliveryPending(pbolusbfast2.toFloat()) && bfastTime
     }
     private fun isLunchModeCondition(): Boolean {
         val pbolusLunch: Double = preferences.get(DoubleKey.OApsAIMILunchPrebolus)
-        return lunchruntime in 0..7 && lastBolusSMBUnit != pbolusLunch.toFloat() && lunchTime
+        return lunchruntime in 0..7 && lastBolusSMBUnit != pbolusLunch.toFloat()
+            && !isLegacyPrebolusDeliveryPending(pbolusLunch.toFloat()) && lunchTime
     }
     private fun isLunch2ModeCondition(): Boolean {
         val pbolusLunch2: Double = preferences.get(DoubleKey.OApsAIMILunchPrebolus2)
         return lunchruntime in LEGACY_MEAL_PRE2_MIN..LEGACY_MEAL_PRE2_MAX &&
-            lastBolusSMBUnit != pbolusLunch2.toFloat() && lunchTime
+            lastBolusSMBUnit != pbolusLunch2.toFloat()
+            && !isLegacyPrebolusDeliveryPending(pbolusLunch2.toFloat()) && lunchTime
     }
     private fun isDinnerModeCondition(): Boolean {
         val pbolusDinner: Double = preferences.get(DoubleKey.OApsAIMIDinnerPrebolus)
-        return dinnerruntime in 0..7 && lastBolusSMBUnit != pbolusDinner.toFloat() && dinnerTime
+        return dinnerruntime in 0..7 && lastBolusSMBUnit != pbolusDinner.toFloat()
+            && !isLegacyPrebolusDeliveryPending(pbolusDinner.toFloat()) && dinnerTime
     }
     private fun isDinner2ModeCondition(): Boolean {
         val pbolusDinner2: Double = preferences.get(DoubleKey.OApsAIMIDinnerPrebolus2)
         return dinnerruntime in LEGACY_MEAL_PRE2_MIN..LEGACY_MEAL_PRE2_MAX &&
-            lastBolusSMBUnit != pbolusDinner2.toFloat() && dinnerTime
+            lastBolusSMBUnit != pbolusDinner2.toFloat()
+            && !isLegacyPrebolusDeliveryPending(pbolusDinner2.toFloat()) && dinnerTime
     }
     private fun isHighCarbModeCondition(): Boolean {
         val pbolusHC: Double = preferences.get(DoubleKey.OApsAIMIHighCarbPrebolus)
-        return highCarbrunTime in 0..7 && lastBolusSMBUnit != pbolusHC.toFloat() && highCarbTime
+        return highCarbrunTime in 0..7 && lastBolusSMBUnit != pbolusHC.toFloat()
+            && !isLegacyPrebolusDeliveryPending(pbolusHC.toFloat()) && highCarbTime
     }
     private fun isHighCarb2ModeCondition(): Boolean {
         val pbolusHC: Double = preferences.get(DoubleKey.OApsAIMIHighCarbPrebolus2)
         return highCarbrunTime in LEGACY_MEAL_PRE2_MIN..LEGACY_MEAL_PRE2_MAX &&
-            lastBolusSMBUnit != pbolusHC.toFloat() && highCarbTime
+            lastBolusSMBUnit != pbolusHC.toFloat()
+            && !isLegacyPrebolusDeliveryPending(pbolusHC.toFloat()) && highCarbTime
     }
 
     private fun issnackModeCondition(): Boolean {
         val pbolussnack: Double = preferences.get(DoubleKey.OApsAIMISnackPrebolus)
-        return snackrunTime in 0..7 && lastBolusSMBUnit != pbolussnack.toFloat() && snackTime
+        return snackrunTime in 0..7 && lastBolusSMBUnit != pbolussnack.toFloat()
+            && !isLegacyPrebolusDeliveryPending(pbolussnack.toFloat()) && snackTime
     }
     // --- Helpers "fenêtre repas 30 min" ---
     /**
@@ -9535,16 +9576,25 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             physioAdapter.setFinalLoopDecisionType(if ((rT.units ?: 0.0) > 0.0) "smb" else "none")
             val units = rT.units ?: 0.0
             if (units > 0.0) {
-                lastBolusSMBUnit = units.toFloat()
+                // Intentionally do NOT set lastBolusSMBUnit here.
+                // We set a pending state instead so that a Medtrum BLE disconnect
+                // at the exact loop tick does not permanently block retries:
+                //   - pendingLegacyPrebolusUnit prevents re-fire during the TTL window
+                //   - once DB confirms delivery (latestSmbCached sync), lastBolusSMBUnit
+                //     is updated from the database and pending is cleared
+                //   - if the TTL expires without DB confirmation the pending is cleared
+                //     so the next in-window tick can retry
+                pendingLegacyPrebolusUnit = units.toFloat()
+                pendingLegacyPrebolusExpiry = dateUtil.now() + LEGACY_PREBOLUS_DELIVERY_TTL_MS
                 lastSmbCapped = units
                 lastSmbFinal = units
                 internalLastSmbMillis = dateUtil.now()
             }
         }
-        
-        // TBR legacy repas : taux = plafond mode manuel ([DoubleKey.meal_modes_MaxBasal] vs profil, voir [runManualMealModesAfterTherapyGate]),
-        // durée 30 min, pendant les 30 premières minutes du mode — réaffirmée à chaque tick P1/P2,
-        // et via les tags *_MAINT ci‑dessous quand aucun prébolus ne matche (p.ex. minutes 8–14 ou 23–29).
+
+        // TBR legacy meal: rate = manual mode ceiling ([DoubleKey.meal_modes_MaxBasal] vs profile, see [runManualMealModesAfterTherapyGate]),
+        // duration 30 min, during the first 30 minutes of the mode — reaffirmed at each P1/P2 tick,
+        // and via the *_MAINT tags below when no prebolus matches (e.g., minutes 8–14 or 23–29).
         fun manualMealModeTbr(runtimeMin: Long, logTag: String, overrideSafetyLimits: Boolean) {
             if (runtimeMin < 0 || runtimeMin >= 30) return
             val rateUh = modeTbrLimit.coerceAtLeast(0.05)
