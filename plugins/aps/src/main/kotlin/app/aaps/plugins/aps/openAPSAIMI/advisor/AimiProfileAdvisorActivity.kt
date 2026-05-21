@@ -854,19 +854,19 @@ class AimiProfileAdvisorActivity : TranslatedDaggerAppCompatActivity() {
         
         when {
             factor < 0.95 -> {
-                stateText = "PROTECTEUR (x${"%.2f".format(factor)})"
+                stateText = "PROTECTOR (x${"%.2f".format(factor)})"
                 stateColor = Color.parseColor("#F87171") // Red/Orange - Reducing aggression
-                explanation = "Le système a détecté une instabilité/hypo récente et a réduit l'agressivité globale."
+                explanation = "The system has detected a recent instability/hypo and has reduced the overall intensity."
             }
             factor > 1.05 -> {
-                stateText = "OFFENSIF (x${"%.2f".format(factor)})"
+                stateText = "OFFENSIVE (x${"%.2f".format(factor)})"
                 stateColor = Color.parseColor("#EF4444") // Red - Increasing aggression
-                explanation = "Le système combat une hyperglycémie persistante ou une résistance détectée."
+                explanation = "The system addresses persistent hyperglycemia or detected resistance."
             }
             else -> {
-                stateText = "NEUTRE (x${"%.2f".format(factor)})"
+                stateText = "NEUTRAL (x${"%.2f".format(factor)})"
                 stateColor = Color.parseColor("#4ADE80") // Green
-                explanation = "Le système fonctionne avec ses paramètres de base. Aucune anomalie détectée."
+                explanation = "The system is operating within its normal parameters. No anomalies detected."
             }
         }
 
