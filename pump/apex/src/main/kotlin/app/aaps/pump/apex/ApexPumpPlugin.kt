@@ -119,7 +119,7 @@ class ApexPumpPlugin @Inject constructor(
     }
 
 
-    override fun onStart() {
+    override suspend fun onStart() {
         super.onStart()
         aapsLogger.debug(LTag.PUMP, "Starting APEX plugin")
         context.bindService(Intent(context, ApexService::class.java), connection, Context.BIND_AUTO_CREATE)
@@ -129,7 +129,7 @@ class ApexPumpPlugin @Inject constructor(
             .subscribe({ context.unbindService(connection) }, fabricPrivacy::logException)
     }
 
-    override fun onStop() {
+    override suspend fun onStop() {
         aapsLogger.debug(LTag.PUMP, "Stopping APEX plugin")
         service?.disconnect()
         context.unbindService(connection)
