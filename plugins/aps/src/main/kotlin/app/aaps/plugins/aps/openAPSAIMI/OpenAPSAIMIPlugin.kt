@@ -115,7 +115,9 @@ import androidx.core.util.isEmpty
 import androidx.core.util.size
 import kotlin.math.abs
 import kotlin.math.exp
+import app.aaps.plugins.aps.openAPSAIMI.advisor.AimiAdvisorService
 import app.aaps.plugins.aps.openAPSAIMI.compose.AimiPkpdSettingsScreen
+import kotlinx.coroutines.withContext
 import app.aaps.plugins.aps.openAPSAIMI.learning.AimiMlTrainingScheduler
 import app.aaps.plugins.aps.openAPSAIMI.utils.AimiBackupManager
 import kotlinx.coroutines.runBlocking
@@ -1841,6 +1843,22 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
                             AimiPkpdSettingsScreen(
                                 preferences = preferences,
                                 onBack = onBack,
+                                loadProfileInsulin = {
+                                    val profile = profileFunction.getProfile() as? EffectiveProfile
+                                    profile?.iCfg?.dia to profile?.iCfg?.peak?.toDouble()
+                                },
+                                loadPkpdRecommendations = {
+                                    withContext(Dispatchers.IO) {
+                                        AimiAdvisorService(
+                                            profileFunction = profileFunction,
+                                            persistenceLayer = persistenceLayer,
+                                            preferences = preferences,
+                                            rh = rh,
+                                            unifiedReactivityLearner = unifiedReactivityLearner,
+                                            tddCalculator = tddCalculator,
+                                        ).pkpdRecommendationsForSettings(7)
+                                    }
+                                },
                             )
                         }
                     )
