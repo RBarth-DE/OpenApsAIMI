@@ -33,6 +33,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -53,12 +54,7 @@ class AppRepository @Inject internal constructor(
     internal val database: AppDatabase
 ) : Closeable {
 
-    // ========== RXJAVA SUPPORT (EXISTING) ==========
     private val changeSubject = PublishSubject.create<List<DBEntry>>()
-
-    fun changeObservable(): Observable<List<DBEntry>> = changeSubject.subscribeOn(Schedulers.io())
-
-    // ========== FLOW SUPPORT (NEW) ==========
 
     /**
      * Coroutine scope for Flow emissions
@@ -75,13 +71,13 @@ class AppRepository @Inject internal constructor(
     private val _changeFlow = MutableSharedFlow<List<DBEntry>>(
         replay = 0,
         extraBufferCapacity = 64,
-        onBufferOverflow = kotlinx.coroutines.channels.BufferOverflow.DROP_OLDEST
+        onBufferOverflow = BufferOverflow.DROP_OLDEST
     )
 
     private val _databaseClearedFlow = MutableSharedFlow<Unit>(
         replay = 0,
         extraBufferCapacity = 1,
-        onBufferOverflow = kotlinx.coroutines.channels.BufferOverflow.DROP_OLDEST
+        onBufferOverflow = BufferOverflow.DROP_OLDEST
     )
 
     /**
@@ -173,6 +169,7 @@ class AppRepository @Inject internal constructor(
     fun clearApsResults() = database.apsResultDao.deleteAllEntries()
 
     suspend fun cleanupDatabase(keepDays: Long, deleteTrackedChanges: Boolean): String {
+        database.openHelper.writableDatabase.query("PRAGMA optimize").use { }
         val than = System.currentTimeMillis() - TimeUnit.DAYS.toMillis(keepDays)
         val removed = mutableListOf<Pair<String, Int>>()
         removed.add(Pair("APSResult", database.apsResultDao.deleteOlderThan(than)))
@@ -229,6 +226,12 @@ class AppRepository @Inject internal constructor(
         removed
             .filter { it.second > 0 }
             .forEach { ret.append(it.first + " " + it.second + "<br>") }
+        database.openHelper.writableDatabase.query("PRAGMA wal_checkpoint(TRUNCATE)").use { }
+        try {
+            database.openHelper.writableDatabase.execSQL("VACUUM")
+        } catch (e: android.database.sqlite.SQLiteException) {
+            ret.append("VACUUM failed: ${e.message}<br>")
+        }
         return ret.toString()
     }
 
