@@ -160,6 +160,8 @@ class QueueWorker internal constructor(
                             queue.resetPerforming()
                             rxBus.send(EventQueueChanged())
                             lastCommandTime = System.currentTimeMillis()
+                            connectionStartTime = lastCommandTime  // fresh reconnect budget after every command
+                            connectLogged = false                  // “connection time Xs” can now be logged again for reconnection
                             delay(100)
                             true
                         } == true
