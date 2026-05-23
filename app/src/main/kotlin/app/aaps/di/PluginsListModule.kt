@@ -301,7 +301,7 @@ abstract class PluginsListModule {
     @Binds
     @AllConfigs
     @IntoMap
-    @IntKey(446)
+    @IntKey(445)
     abstract fun bindAidexPlugin(plugin: AidexPlugin): PluginBase
 
 
