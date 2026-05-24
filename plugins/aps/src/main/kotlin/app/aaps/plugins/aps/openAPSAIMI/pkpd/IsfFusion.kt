@@ -22,17 +22,25 @@ class IsfFusion(
             median = profileIsf
         }
 
-        // 🚀 VELOCITY BOOST: Apply reduction factor for aggression
-        median *= aggressionMultiplier
+        val minSafeIsf = minOf(profileIsf, tddIsf * bounds.minFactor) *
+            (if (isRising) 0.8 else 1.0)
+        val upperBound = tddIsf * (bounds.maxFactor * 1.5)
 
-        // 🛡️ DYNAMIC BOUNDS: Allow more aggression during rise, but stay safe
-        val minSafeIsf = minOf(profileIsf, tddIsf * bounds.minFactor) * (if (isRising) 0.8 else 1.0)
-        median = median.coerceIn(minSafeIsf, tddIsf * (bounds.maxFactor * 1.5)) 
+        // BUGFIX: Guard against Float-Inversion
+        median = median.coerceIn(
+            minOf(minSafeIsf, upperBound),
+            maxOf(minSafeIsf, upperBound)
+        )
 
         lastIsf?.let { prev ->
-            val maxUp = prev * (1.0 + bounds.maxChangePer5Min)
-            val maxDown = prev * (0.85 - bounds.maxChangePer5Min) // [MTR FIX] Slew rate: allow 15% drop per tick for massive meal response
-            median = median.coerceIn(maxDown, maxUp)
+            val maxUp   = prev * (1.0 + bounds.maxChangePer5Min)
+            val maxDown = prev * (0.85 - bounds.maxChangePer5Min)
+
+            // BUGFIX: Guard against Float-Inversion (MTR Slew-Rate-Change)
+            median = median.coerceIn(
+                minOf(maxDown, maxUp),
+                maxOf(maxDown, maxUp)
+            )
         }
         lastIsf = median
         return median
