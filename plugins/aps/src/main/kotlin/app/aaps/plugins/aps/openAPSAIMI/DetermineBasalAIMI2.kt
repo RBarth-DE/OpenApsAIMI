@@ -5825,7 +5825,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
          *  If the pump (e.g. Medtrum BLE) was unreachable and the bolus was silently
          *  dropped, the pending state expires after this interval so the next loop
          *  tick — still inside the P1 window — can retry. */
-        private const val LEGACY_PREBOLUS_DELIVERY_TTL_MS = 3 * 60 * 1000L
+        private const val LEGACY_PREBOLUS_DELIVERY_TTL_MS = 10 * 60 * 1000L
     }
 
     private var internalLastSmbMillis: Long
@@ -8196,10 +8196,12 @@ class DetermineBasalaimiSMB2 @Inject constructor(
     private fun isLegacyPrebolusDeliveryPending(targetUnits: Float): Boolean =
         pendingLegacyPrebolusUnit == targetUnits && dateUtil.now() < pendingLegacyPrebolusExpiry
 
+    // ── P1 functions (window 0..7 min) — block for 14 min ────────────────────
+
     private fun isMealModeCondition(): Boolean {
         val pbolusM: Double = preferences.get(DoubleKey.OApsAIMIMealPrebolus)
-        val sessionStartMs = dateUtil.now() - (mealruntime * 60_000L)
-        val prebolusAlreadyFiredThisSession = internalLastSmbMillis > sessionStartMs
+        val prebolusAlreadyFiredThisSession =
+            (dateUtil.now() - internalLastSmbMillis) < (14 * 60_000L)
         return mealruntime in 0..7
             && lastBolusSMBUnit != pbolusM.toFloat()
             && !isLegacyPrebolusDeliveryPending(pbolusM.toFloat())
@@ -8209,8 +8211,8 @@ class DetermineBasalaimiSMB2 @Inject constructor(
 
     private fun isbfastModeCondition(): Boolean {
         val pbolusbfast: Double = preferences.get(DoubleKey.OApsAIMIBFPrebolus)
-        val sessionStartMs = dateUtil.now() - (bfastruntime * 60_000L)
-        val prebolusAlreadyFiredThisSession = internalLastSmbMillis > sessionStartMs
+        val prebolusAlreadyFiredThisSession =
+            (dateUtil.now() - internalLastSmbMillis) < (14 * 60_000L)
         return bfastruntime in 0..7
             && lastBolusSMBUnit != pbolusbfast.toFloat()
             && !isLegacyPrebolusDeliveryPending(pbolusbfast.toFloat())
@@ -8218,22 +8220,10 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             && bfastTime
     }
 
-    private fun isbfast2ModeCondition(): Boolean {
-        val pbolusbfast2: Double = preferences.get(DoubleKey.OApsAIMIBFPrebolus2)
-        val sessionStartMs = dateUtil.now() - (bfastruntime * 60_000L)
-        val p2WindowStartMs = sessionStartMs + (LEGACY_MEAL_PRE2_MIN * 60_000L)
-        val prebolusAlreadyFiredInP2Window = internalLastSmbMillis > p2WindowStartMs
-        return bfastruntime in LEGACY_MEAL_PRE2_MIN..LEGACY_MEAL_PRE2_MAX
-            && lastBolusSMBUnit != pbolusbfast2.toFloat()
-            && !isLegacyPrebolusDeliveryPending(pbolusbfast2.toFloat())
-            && !prebolusAlreadyFiredInP2Window
-            && bfastTime
-    }
-
     private fun isLunchModeCondition(): Boolean {
         val pbolusLunch: Double = preferences.get(DoubleKey.OApsAIMILunchPrebolus)
-        val sessionStartMs = dateUtil.now() - (lunchruntime * 60_000L)
-        val prebolusAlreadyFiredThisSession = internalLastSmbMillis > sessionStartMs
+        val prebolusAlreadyFiredThisSession =
+            (dateUtil.now() - internalLastSmbMillis) < (14 * 60_000L)
         return lunchruntime in 0..7
             && lastBolusSMBUnit != pbolusLunch.toFloat()
             && !isLegacyPrebolusDeliveryPending(pbolusLunch.toFloat())
@@ -8241,22 +8231,10 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             && lunchTime
     }
 
-    private fun isLunch2ModeCondition(): Boolean {
-        val pbolusLunch2: Double = preferences.get(DoubleKey.OApsAIMILunchPrebolus2)
-        val sessionStartMs = dateUtil.now() - (lunchruntime * 60_000L)
-        val p2WindowStartMs = sessionStartMs + (LEGACY_MEAL_PRE2_MIN * 60_000L)
-        val prebolusAlreadyFiredInP2Window = internalLastSmbMillis > p2WindowStartMs
-        return lunchruntime in LEGACY_MEAL_PRE2_MIN..LEGACY_MEAL_PRE2_MAX
-            && lastBolusSMBUnit != pbolusLunch2.toFloat()
-            && !isLegacyPrebolusDeliveryPending(pbolusLunch2.toFloat())
-            && !prebolusAlreadyFiredInP2Window
-            && lunchTime
-    }
-
     private fun isDinnerModeCondition(): Boolean {
         val pbolusDinner: Double = preferences.get(DoubleKey.OApsAIMIDinnerPrebolus)
-        val sessionStartMs = dateUtil.now() - (dinnerruntime * 60_000L)
-        val prebolusAlreadyFiredThisSession = internalLastSmbMillis > sessionStartMs
+        val prebolusAlreadyFiredThisSession =
+            (dateUtil.now() - internalLastSmbMillis) < (14 * 60_000L)
         return dinnerruntime in 0..7
             && lastBolusSMBUnit != pbolusDinner.toFloat()
             && !isLegacyPrebolusDeliveryPending(pbolusDinner.toFloat())
@@ -8264,22 +8242,10 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             && dinnerTime
     }
 
-    private fun isDinner2ModeCondition(): Boolean {
-        val pbolusDinner2: Double = preferences.get(DoubleKey.OApsAIMIDinnerPrebolus2)
-        val sessionStartMs = dateUtil.now() - (dinnerruntime * 60_000L)
-        val p2WindowStartMs = sessionStartMs + (LEGACY_MEAL_PRE2_MIN * 60_000L)
-        val prebolusAlreadyFiredInP2Window = internalLastSmbMillis > p2WindowStartMs
-        return dinnerruntime in LEGACY_MEAL_PRE2_MIN..LEGACY_MEAL_PRE2_MAX
-            && lastBolusSMBUnit != pbolusDinner2.toFloat()
-            && !isLegacyPrebolusDeliveryPending(pbolusDinner2.toFloat())
-            && !prebolusAlreadyFiredInP2Window
-            && dinnerTime
-    }
-
     private fun isHighCarbModeCondition(): Boolean {
         val pbolusHC: Double = preferences.get(DoubleKey.OApsAIMIHighCarbPrebolus)
-        val sessionStartMs = dateUtil.now() - (highCarbrunTime * 60_000L)
-        val prebolusAlreadyFiredThisSession = internalLastSmbMillis > sessionStartMs
+        val prebolusAlreadyFiredThisSession =
+            (dateUtil.now() - internalLastSmbMillis) < (14 * 60_000L)
         return highCarbrunTime in 0..7
             && lastBolusSMBUnit != pbolusHC.toFloat()
             && !isLegacyPrebolusDeliveryPending(pbolusHC.toFloat())
@@ -8287,27 +8253,61 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             && highCarbTime
     }
 
-    private fun isHighCarb2ModeCondition(): Boolean {
-        val pbolusHC: Double = preferences.get(DoubleKey.OApsAIMIHighCarbPrebolus2)
-        val sessionStartMs = dateUtil.now() - (highCarbrunTime * 60_000L)
-        val p2WindowStartMs = sessionStartMs + (LEGACY_MEAL_PRE2_MIN * 60_000L)
-        val prebolusAlreadyFiredInP2Window = internalLastSmbMillis > p2WindowStartMs
-        return highCarbrunTime in LEGACY_MEAL_PRE2_MIN..LEGACY_MEAL_PRE2_MAX
-            && lastBolusSMBUnit != pbolusHC.toFloat()
-            && !isLegacyPrebolusDeliveryPending(pbolusHC.toFloat())
-            && !prebolusAlreadyFiredInP2Window
-            && highCarbTime
-    }
-
     private fun issnackModeCondition(): Boolean {
         val pbolussnack: Double = preferences.get(DoubleKey.OApsAIMISnackPrebolus)
-        val sessionStartMs = dateUtil.now() - (snackrunTime * 60_000L)
-        val prebolusAlreadyFiredThisSession = internalLastSmbMillis > sessionStartMs
+        val prebolusAlreadyFiredThisSession =
+            (dateUtil.now() - internalLastSmbMillis) < (14 * 60_000L)
         return snackrunTime in 0..7
             && lastBolusSMBUnit != pbolussnack.toFloat()
             && !isLegacyPrebolusDeliveryPending(pbolussnack.toFloat())
             && !prebolusAlreadyFiredThisSession
             && snackTime
+    }
+
+// ── P2 functions (window 15..22 min) — block for 10 min ──────────────────
+
+    private fun isbfast2ModeCondition(): Boolean {
+        val pbolusbfast2: Double = preferences.get(DoubleKey.OApsAIMIBFPrebolus2)
+        val prebolusAlreadyFiredInP2Window =
+            (dateUtil.now() - internalLastSmbMillis) < (10 * 60_000L)
+        return bfastruntime in LEGACY_MEAL_PRE2_MIN..LEGACY_MEAL_PRE2_MAX
+            && lastBolusSMBUnit != pbolusbfast2.toFloat()
+            && !isLegacyPrebolusDeliveryPending(pbolusbfast2.toFloat())
+            && !prebolusAlreadyFiredInP2Window
+            && bfastTime
+    }
+
+    private fun isLunch2ModeCondition(): Boolean {
+        val pbolusLunch2: Double = preferences.get(DoubleKey.OApsAIMILunchPrebolus2)
+        val prebolusAlreadyFiredInP2Window =
+            (dateUtil.now() - internalLastSmbMillis) < (10 * 60_000L)
+        return lunchruntime in LEGACY_MEAL_PRE2_MIN..LEGACY_MEAL_PRE2_MAX
+            && lastBolusSMBUnit != pbolusLunch2.toFloat()
+            && !isLegacyPrebolusDeliveryPending(pbolusLunch2.toFloat())
+            && !prebolusAlreadyFiredInP2Window
+            && lunchTime
+    }
+
+    private fun isDinner2ModeCondition(): Boolean {
+        val pbolusDinner2: Double = preferences.get(DoubleKey.OApsAIMIDinnerPrebolus2)
+        val prebolusAlreadyFiredInP2Window =
+            (dateUtil.now() - internalLastSmbMillis) < (10 * 60_000L)
+        return dinnerruntime in LEGACY_MEAL_PRE2_MIN..LEGACY_MEAL_PRE2_MAX
+            && lastBolusSMBUnit != pbolusDinner2.toFloat()
+            && !isLegacyPrebolusDeliveryPending(pbolusDinner2.toFloat())
+            && !prebolusAlreadyFiredInP2Window
+            && dinnerTime
+    }
+
+    private fun isHighCarb2ModeCondition(): Boolean {
+        val pbolusHC: Double = preferences.get(DoubleKey.OApsAIMIHighCarbPrebolus2)
+        val prebolusAlreadyFiredInP2Window =
+            (dateUtil.now() - internalLastSmbMillis) < (10 * 60_000L)
+        return highCarbrunTime in LEGACY_MEAL_PRE2_MIN..LEGACY_MEAL_PRE2_MAX
+            && lastBolusSMBUnit != pbolusHC.toFloat()
+            && !isLegacyPrebolusDeliveryPending(pbolusHC.toFloat())
+            && !prebolusAlreadyFiredInP2Window
+            && highCarbTime
     }
     // --- Helpers "fenêtre repas 30 min" ---
     /**
