@@ -1422,7 +1422,7 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
      * OpenAPS/SMB core keys (same order as [app.aaps.plugins.aps.openAPSSMB.OpenAPSSMBPlugin]) +
      * nested AIMI sections so Compose settings match most of the legacy tree.
      */
-    private fun buildAimiComposePreferenceItems(): List<PreferenceItem> = buildList {
+    /*private fun buildAimiComposePreferenceItems(): List<PreferenceItem> = buildList {
         add(DoubleKey.ApsMaxBasal)
         add(DoubleKey.ApsSmbMaxIob)
         add(BooleanKey.ApsUseDynamicSensitivity)
@@ -1455,6 +1455,53 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
                 ),
             )
         )
+
+     */
+    private fun buildAimiComposePreferenceItems(): List<PreferenceItem> = buildList {
+        // Questo creerà la sezione che l'utente può espandere o comprimere a piacimento in loco
+        add(
+            PreferenceSubScreenDef(
+                key = "openapsaimi_core_settings_group",
+                titleResId = app.aaps.core.ui.R.string.advanced_settings_title, // Sostituisci se hai una stringa tipo R.string.core_settings
+                items = buildList {
+                    add(DoubleKey.ApsMaxBasal)
+                    add(DoubleKey.ApsSmbMaxIob)
+                    add(BooleanKey.ApsUseDynamicSensitivity)
+                    add(BooleanKey.ApsUseAutosens)
+                    add(IntKey.ApsDynIsfAdjustmentFactor)
+                    add(UnitDoubleKey.ApsLgsThreshold)
+                    add(BooleanKey.ApsDynIsfAdjustSensitivity)
+                    add(BooleanKey.ApsSensitivityRaisesTarget)
+                    add(BooleanKey.ApsResistanceLowersTarget)
+                    add(BooleanKey.ApsUseSmb)
+                    add(BooleanKey.ApsUseSmbWithHighTt)
+                    add(BooleanKey.ApsUseSmbAlways)
+                    add(BooleanKey.ApsUseSmbWithCob)
+                    add(BooleanKey.ApsUseSmbWithLowTt)
+                    add(BooleanKey.ApsUseSmbAfterCarbs)
+                    add(IntKey.ApsMaxSmbFrequency)
+                    add(IntKey.ApsMaxMinutesOfBasalToLimitSmb)
+                    add(IntKey.ApsUamMaxMinutesOfBasalToLimitSmb)
+                    add(BooleanKey.ApsUseUam)
+                    add(IntKey.ApsCarbsRequestThreshold)
+
+                    // Mettiamo il sotto-blocco avanzato qui dentro, così si sposta insieme a tutto il gruppo
+                    add(
+                        PreferenceSubScreenDef(
+                            key = "openapsaimi_absorption_advanced",
+                            titleResId = app.aaps.core.ui.R.string.advanced_settings_title,
+                            items = listOf(
+                                ApsIntentKey.LinkToDocs,
+                                BooleanKey.ApsAlwaysUseShortDeltas,
+                                DoubleKey.ApsMaxDailyMultiplier,
+                                DoubleKey.ApsMaxCurrentBasalMultiplier,
+                            ),
+                        )
+                    )
+                }
+            )
+        )
+
         add(
             PreferenceSubScreenDef(
                 key = "aimi_user_preferences",
@@ -1479,6 +1526,7 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
                 key = "aimi_compose_ai_keys",
                 titleResId = R.string.aimi_prefs_ai_title,
                 items = listOf(
+                    BooleanKey.OApsAIMIMLtraining,
                     StringKey.AimiAdvisorProvider.withEntries(
                         mapOf(
                             "OPENAI" to rh.gs(R.string.aimi_prefs_provider_openai),
@@ -1493,6 +1541,7 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
                     StringKey.AimiAdvisorClaudeKey,
                     BooleanKey.OApsAIMIAdvisorPersonalOrefMl,
                     BooleanKey.OApsAIMIAdvisorLlmRichOref,
+                    aimiComposeAiAuditorSubScreen(),
                 ),
             )
         )
@@ -1529,28 +1578,31 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
                 },
             )
         )
-        add(BooleanKey.OApsAIMIMLtraining)
-        add(DoubleKey.OApsAIMIMaxSMB)
-        add(DoubleKey.OApsAIMIHighBGMaxSMB)
+       // add(BooleanKey.OApsAIMIMLtraining)
+       // add(DoubleKey.OApsAIMIMaxSMB)
+       // add(DoubleKey.OApsAIMIHighBGMaxSMB)
         add(DoubleKey.OApsAIMIweight)
         add(DoubleKey.OApsAIMICHO)
         add(DoubleKey.OApsAIMITDD7)
         add(aimiComposePkpdSubScreen())
         add(aimiComposeAdaptiveBasalSubScreen())
-        add(aimiComposeT3cSubScreen())
+        //add(aimiComposeT3cSubScreen())
         add(aimiComposeTrajectorySubScreen())
-        add(BooleanKey.OApsxdriponeminute)
-        add(aimiComposeWomenCycleSubScreen())
-        add(aimiComposeKetoProtectionSubScreen())
-        add(aimiComposeInflammatorySubScreen())
-        add(aimiComposeThyroidModuleSubScreen())
-        add(BooleanKey.OApsAIMIpregnancy)
-        add(AimiStringKey.PregnancyDueDateString)
-        add(BooleanKey.OApsAIMIhoneymoon)
-        add(BooleanKey.OApsAIMInight)
         add(BooleanKey.OApsAIMIUnifiedReactivityEnabled)
-        add(aimiComposeEndometriosisSubScreen())
-        add(aimiComposeAiAuditorSubScreen())
+        //add(BooleanKey.OApsxdriponeminute)
+        //add(aimiComposeWomenCycleSubScreen())
+        add(aimiComposeKetoProtectionSubScreen())
+        //add(aimiComposeInflammatorySubScreen())
+        //add(aimiComposeThyroidModuleSubScreen())
+        //add(BooleanKey.OApsAIMIpregnancy)
+        //add(AimiStringKey.PregnancyDueDateString)
+        //add(BooleanKey.OApsAIMIhoneymoon)
+        //add(BooleanKey.OApsAIMInight)
+        //add(BooleanKey.OApsAIMIUnifiedReactivityEnabled)
+        //add(aimiComposeEndometriosisSubScreen())
+        //add(aimiComposeAiAuditorSubScreen())
+        add(aimiComposeT3cSubScreen())
+        add(aimiComposeWomenCycleSubScreen())
         add(aimiComposeNightGrowthSubScreen())
     }
 
@@ -1559,9 +1611,9 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
             key = "aimi_compose_adaptive_basal",
             titleResId = R.string.oaps_aimi_adaptive_basal_title,
             items = buildList {
-                add(BooleanKey.OApsAIMIT3cAdaptiveBasalEnabled)
+                //add(BooleanKey.OApsAIMIT3cAdaptiveBasalEnabled)
                 add(DoubleKey.OApsAIMIAdaptiveBasalMaxScaling)
-                add(DoubleKey.OApsAIMIGovernanceHypoRateEnter)
+                /*add(DoubleKey.OApsAIMIGovernanceHypoRateEnter)
                 add(DoubleKey.OApsAIMIGovernanceHypoRateExit)
                 add(DoubleKey.OApsAIMIGovernanceHypoBgMgdl)
                 add(DoubleKey.OApsAIMIGovernanceSevereHypoBgMgdl)
@@ -1576,7 +1628,7 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
                 add(DoubleKey.OApsAIMIGovernanceAnticipationLookbackSamples)
                 add(DoubleKey.OApsAIMIGovernanceAnticipationMarginMgdl)
                 add(DoubleKey.OApsAIMIGovernanceAnticipationHypoDamp)
-                add(DoubleKey.OApsAIMIGovernanceAnticipationDecayBlendMax)
+                add(DoubleKey.OApsAIMIGovernanceAnticipationDecayBlendMax)*/
             },
         )
 
@@ -1589,6 +1641,24 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
                 DoubleKey.OApsAIMIT3cActivationThreshold,
                 DoubleKey.OApsAIMIT3cAggressiveness,
                 DoubleKey.OApsAIMIT3cAnticipationStrength,
+                BooleanKey.OApsAIMIT3cAdaptiveBasalEnabled,
+                DoubleKey.OApsAIMIGovernanceHypoRateEnter,
+                DoubleKey.OApsAIMIGovernanceHypoRateExit,
+                DoubleKey.OApsAIMIGovernanceHypoBgMgdl,
+                DoubleKey.OApsAIMIGovernanceSevereHypoBgMgdl,
+                DoubleKey.OApsAIMIGovernanceHoldBasalFloorRate,
+                DoubleKey.OApsAIMIGovernanceHoldBasalDecayRate,
+                DoubleKey.OApsAIMIGovernanceHoldAggFloorRate,
+                DoubleKey.OApsAIMIGovernanceHoldAggDecayRate,
+                DoubleKey.OApsAIMIGovernanceHoldBasalFloorSevere,
+                DoubleKey.OApsAIMIGovernanceHoldBasalDecaySevere,
+                DoubleKey.OApsAIMIGovernanceHoldAggFloorSevere,
+                DoubleKey.OApsAIMIGovernanceHoldAggDecaySevere,
+                DoubleKey.OApsAIMIGovernanceAnticipationLookbackSamples,
+                DoubleKey.OApsAIMIGovernanceAnticipationMarginMgdl,
+                DoubleKey.OApsAIMIGovernanceAnticipationHypoDamp,
+                DoubleKey.OApsAIMIGovernanceAnticipationDecayBlendMax
+
             ),
         )
 
@@ -1620,6 +1690,8 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
             key = "aimi_compose_wcycle",
             titleResId = R.string.wcycle_preferences,
             items = buildList {
+                add(BooleanKey.OApsAIMIpregnancy)
+                add(AimiStringKey.PregnancyDueDateString)
                 add(BooleanKey.OApsAIMIwcycle)
                 add(StringKey.OApsAIMIWCycleTrackingMode.withEntries(aimiComposeStringArrayMap(R.array.wcycle_tracking_values, R.array.wcycle_tracking_entries)))
                 add(StringKey.OApsAIMIWCycleContraceptive.withEntries(aimiComposeStringArrayMap(R.array.wcycle_contraceptive_values, R.array.wcycle_contraceptive_entries)))
@@ -1629,6 +1701,9 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
                 add(BooleanKey.OApsAIMIWCycleRequireConfirm)
                 add(DoubleKey.OApsAIMIWCycleClampMin)
                 add(DoubleKey.OApsAIMIWCycleClampMax)
+                add(aimiComposeInflammatorySubScreen())
+                add(aimiComposeThyroidModuleSubScreen())
+                add(aimiComposeEndometriosisSubScreen())
             },
         )
 
@@ -1709,6 +1784,7 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
             key = "aimi_compose_ngr",
             titleResId = R.string.oaps_aimi_ngr_title,
             items = listOf(
+                BooleanKey.OApsAIMIhoneymoon,
                 BooleanKey.OApsAIMINightGrowthEnabled,
                 IntKey.OApsAIMINightGrowthAgeYears,
                 StringKey.OApsAIMINightGrowthStart,
@@ -1811,13 +1887,15 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
             key = "aimi_compose_autodrive",
             titleResId = R.string.autodrive_preferences,
             items = buildList {
-                add(BooleanKey.OApsAIMIautoDrive)
+                //add(BooleanKey.OApsAIMIautoDrive)
                 add(BooleanKey.OApsAIMIautoDriveActive)
                 add(BooleanKey.OApsAIMIautoDriveAuthoritative)
                 add(DoubleKey.autodriveMaxBasal)
                 add(DoubleKey.OApsAIMIMpcInsulinUPerKgPerStep)
-                add(DoubleKey.OApsAIMIautodrivesmallPrebolus)
-                add(DoubleKey.OApsAIMIautodrivePrebolus)
+                //add(DoubleKey.OApsAIMIautodrivesmallPrebolus)
+                //add(DoubleKey.OApsAIMIautodrivePrebolus)
+                add(DoubleKey.OApsAIMIMaxSMB)
+                add(DoubleKey.OApsAIMIHighBGMaxSMB)
                 add(
                     PreferenceSubScreenDef(
                         key = "aimi_compose_autodrive_prebolus_vars",
@@ -1832,7 +1910,7 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
             },
         )
 
-    private fun aimiComposePkpdSubScreen(): PreferenceSubScreenDef =
+    /*private fun aimiComposePkpdSubScreen(): PreferenceSubScreenDef =
         PreferenceSubScreenDef(
             key = "aimi_compose_pkpd",
             titleResId = R.string.oaps_aimi_pkpd_section_title,
@@ -1863,7 +1941,9 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
                         }
                     )
                 )
-                add(BooleanKey.OApsAIMIPkpdEnabled)
+
+
+                /*add(BooleanKey.OApsAIMIPkpdEnabled)
                 add(BooleanKey.OApsAIMIPeakGovernorEnabled)
                 add(DoubleKey.OApsAIMIPeakGovernorLearnedWeight)
                 add(DoubleKey.OApsAIMIPkpdInitialDiaH)
@@ -1889,8 +1969,36 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
                 add(DoubleKey.OApsAIMIPriorityMaxIobFactor)
                 add(DoubleKey.OApsAIMIPriorityMaxIobExtraU)
                 add(DoubleKey.OApsAIMISmbExerciseDamping)
-                add(DoubleKey.OApsAIMISmbLateFatDamping)
+                add(DoubleKey.OApsAIMISmbLateFatDamping)*/
             },
         )
 
+}*/
+
+// Cambia il tipo di ritorno da PreferenceSubScreenDef a PreferenceItem
+private fun aimiComposePkpdSubScreen(): PreferenceItem =
+    ApsIntentKey.PkpdSetup.withCompose(
+        ComposeScreenContent { onBack ->
+            AimiPkpdSettingsScreen(
+                preferences = preferences,
+                onBack = onBack,
+                loadProfileInsulin = {
+                    val profile = profileFunction.getProfile() as? EffectiveProfile
+                    profile?.iCfg?.dia to profile?.iCfg?.peak?.toDouble()
+                },
+                loadPkpdRecommendations = {
+                    withContext(Dispatchers.IO) {
+                        AimiAdvisorService(
+                            profileFunction = profileFunction,
+                            persistenceLayer = persistenceLayer,
+                            preferences = preferences,
+                            rh = rh,
+                            unifiedReactivityLearner = unifiedReactivityLearner,
+                            tddCalculator = tddCalculator,
+                        ).pkpdRecommendationsForSettings(7)
+                    }
+                },
+            )
+        }
+    )
 }
