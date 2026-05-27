@@ -32,6 +32,7 @@ import app.aaps.core.interfaces.logging.AAPSLogger
 import app.aaps.core.interfaces.logging.LTag
 import app.aaps.core.interfaces.utils.DateUtil
 import app.aaps.core.interfaces.utils.fabric.FabricPrivacy
+import android.database.sqlite.SQLiteOutOfMemoryException
 import app.aaps.database.AppRepository
 import app.aaps.database.ValueWrapper
 import app.aaps.database.entities.Bolus
@@ -1429,7 +1430,19 @@ class PersistenceLayerImpl @Inject constructor(
 
     // TB
     override suspend fun getTemporaryBasalActiveAt(timestamp: Long): TB? = withContext(Dispatchers.IO) {
-        repository.getTemporaryBasalActiveAt(timestamp)?.fromDb()
+        runCatching { repository.getTemporaryBasalActiveAt(timestamp)?.fromDb() }
+            .onFailure { e ->
+                if (e.isSqliteOutOfMemory()) {
+                    aapsLogger.error(
+                        LTag.DATABASE,
+                        "getTemporaryBasalActiveAt OOM at $timestamp — run database cleanup",
+                        e
+                    )
+                } else {
+                    aapsLogger.error(LTag.DATABASE, "getTemporaryBasalActiveAt failed at $timestamp", e)
+                }
+            }
+            .getOrNull()
     }
 
     override suspend fun getOldestTemporaryBasalRecord(): TB? = withContext(Dispatchers.IO) {
@@ -2528,3 +2541,11 @@ class PersistenceLayerImpl @Inject constructor(
     }
 }
 
+private fun Throwable.isSqliteOutOfMemory(): Boolean {
+    var current: Throwable? = this
+    while (current != null) {
+        if (current is SQLiteOutOfMemoryException) return true
+        current = current.cause
+    }
+    return false
+}
