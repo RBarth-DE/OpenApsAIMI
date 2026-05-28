@@ -337,7 +337,7 @@ class LoopPlugin @Inject constructor(
             listValues = listValues
         )
         rxBus.send(EventRefreshOverview("handleRunningModeChange"))
-        runningModePreCheckSuspend()
+        runningModePreCheck()
         return result.inserted.isNotEmpty() || result.updated.isNotEmpty()
     }
 
