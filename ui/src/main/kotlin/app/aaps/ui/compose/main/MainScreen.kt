@@ -51,11 +51,11 @@ import app.aaps.core.ui.compose.dialogs.ThreeButtonDialog
 import app.aaps.core.ui.compose.navigation.ElementType
 import app.aaps.core.ui.compose.navigation.NavigationRequest
 import app.aaps.core.ui.compose.preference.PreferenceSubScreenDef
-import app.aaps.ui.compose.alertDialogs.AboutAlertDialog
-import app.aaps.ui.compose.alertDialogs.AboutDialogData
+import app.aaps.ui.compose.aboutDialog.AboutAlertDialog
+import app.aaps.ui.compose.aboutDialog.AboutDialogData
+import app.aaps.ui.compose.loopSheet.LoopActionViewModel
 import app.aaps.ui.compose.scenesSheet.ScenesBottomSheet
 import app.aaps.ui.compose.scenesSheet.ScenesViewModel
-import app.aaps.ui.compose.loopSheet.LoopActionViewModel
 import app.aaps.ui.compose.maintenance.ImportSource
 import app.aaps.ui.compose.maintenance.MaintenanceDialogs
 import app.aaps.ui.compose.maintenance.MaintenanceViewModel

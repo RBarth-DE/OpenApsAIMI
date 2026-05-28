@@ -90,7 +90,8 @@ interface UiInteraction {
     fun startAlarm(@RawRes sound: Int, reason: String)
 
     /**
-     * Stops any currently playing alarm.
+     * Stops any currently playing alarm (cancels FSI + all sound notifications).
+     * Per-AAPS-notification cancellation happens internally inside the implementation module.
      * @param reason A string describing why the alarm is being stopped.
      */
     fun stopAlarm(reason: String)
