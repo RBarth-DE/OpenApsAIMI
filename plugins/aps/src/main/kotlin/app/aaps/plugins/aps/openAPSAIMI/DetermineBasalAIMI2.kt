@@ -174,6 +174,7 @@ internal data class AimiDecisionContext(
     val adjustments: Adjustments = Adjustments(),
     var outcome: Outcome? = null
 ) {
+
     data class BaselineState(
         val profile_isf_mgdl: Double,
         val profile_basal_uph: Double,
@@ -181,6 +182,7 @@ internal data class AimiDecisionContext(
         val cob_g: Double,
         val iob_u: Double
     )
+
     data class Adjustments(
         var dynamic_isf: DynamicIsf? = null,
         var basal_safety_cap: BasalCap? = null,
@@ -228,10 +230,12 @@ internal data class AimiDecisionContext(
         val summary_line: String,
         val tuning_reference: String
     )
+
     data class DynamicIsf(
         var final_value_mgdl: Double = 0.0,
         val modifiers: MutableList<Modifier> = mutableListOf()
     )
+
     data class Modifier(val source: String, val factor: Double, val clinical_reason: String)
     data class BasalCap(val status: String, val limit_uph: Double, val safety_reason: String)
     data class PhysioContext(val hormonal_cycle_phase: String, val physical_activity_mode: String)
@@ -327,7 +331,9 @@ internal data class AimiDecisionContext(
                 json.put("outcome", oJson)
             }
             json.toString()
-        } catch (_: Exception) { "{ \"error\": \"JSON Generation Failed\" }" }
+        } catch (_: Exception) {
+            "{ \"error\": \"JSON Generation Failed\" }"
+        }
     }
 }
 
@@ -481,6 +487,7 @@ private data class AimiTrajectoryContextIsfPrep(
 
 /** CGM trop vieux → sortie anticipée ; sinon données signal + PKPD pour la suite du tick. */
 private sealed class AimiSignalPreparationPkpdOutcome {
+
     data class StaleAbort(val rT: RT) : AimiSignalPreparationPkpdOutcome()
     data class Continue(val data: AimiSignalPreparationPkpdContinue) : AimiSignalPreparationPkpdOutcome()
 }
@@ -541,6 +548,7 @@ private data class AimiTickClockTirCarbGlucoseBootstrap(
 
 /** [Continue] keeps the tick alive with [nightbis]; [ReturnEarly] is the same `return` as the historical inline branches. */
 private sealed class AimiTherapyExerciseGate {
+
     data class Continue(
         val nightbis: Boolean,
     ) : AimiTherapyExerciseGate()
@@ -552,6 +560,7 @@ private sealed class AimiTherapyExerciseGate {
 
 /** After [runAdvancedPredictionsAndPredPipePrep]: [trySafetyStart] before Meal Advisor — roadmap invariant 5. */
 private sealed class AimiPredPipelineSafetyGate {
+
     data object Continue : AimiPredPipelineSafetyGate()
     data class Halt(val rT: RT) : AimiPredPipelineSafetyGate()
 }
@@ -561,6 +570,7 @@ private sealed class AimiPredPipelineSafetyGate {
  * **Order:** before [runT3cBrittleBypassOrReturn] (roadmap invariant 4).
  */
 private sealed class AimiManualMealModesGate {
+
     data class Continue(val activeModeName: String) : AimiManualMealModesGate()
     data class ReturnEarly(val rT: RT) : AimiManualMealModesGate()
 }
@@ -605,6 +615,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
     private val autodriveEngine: AutodriveEngine,
     private val context: Context
 ) {
+
     @Inject lateinit var persistenceLayer: PersistenceLayer
     @Inject lateinit var tddCalculator: TddCalculator
     @Inject lateinit var tirCalculator: TirCalculator
@@ -614,6 +625,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
     @Inject lateinit var aimiLogger: AimiLogger
     @Inject lateinit var activePlugin: ActivePlugin
     @Inject lateinit var basalDecisionEngine: BasalDecisionEngine
+
     @Inject
     lateinit var autodriveGater: AutoDriveGater
     @Inject lateinit var activityManager: ActivityManager // Agnostic injection
@@ -623,7 +635,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
     @Inject lateinit var unifiedReactivityLearner: UnifiedReactivityLearner
     @Inject lateinit var basalNeuralLearner: BasalNeuralLearner
     @Inject lateinit var storageHelper: AimiStorageHelper  // 🛡️ Restored StorageHelper
-    
+
     // Helper to safely access learner (handles potential early access before injection)
     private val safeReactivityFactor: Double
         get() {
@@ -642,15 +654,15 @@ class DetermineBasalaimiSMB2 @Inject constructor(
     @Inject lateinit var physioAdapter: app.aaps.plugins.aps.openAPSAIMI.physio.AIMIInsulinDecisionAdapterMTR  // 🏥 Physiological Modulation
     @Inject lateinit var straightLineTubeAdvisor: StraightLineTubeAdvisor  // 📐 MPC-lite hypo tube + SMB-cap smoothing
     @Inject lateinit var continuousStateEstimator: app.aaps.plugins.aps.openAPSAIMI.autodrive.estimator.ContinuousStateEstimator
-    
+
     // 🌸 Endometriosis Adjuster (Lazy init manually since not in graph yet or use manual passing)
     private val endoAdjuster by lazy { EndometriosisAdjuster(preferences, aapsLogger) }
-    
+
     // 🏥 Inflammation Adjuster (New Refactor - Decoupled from WCycle)
     private val inflammationAdjuster by lazy {
         InflammationAdjuster(wCyclePreferences)
     }
-    
+
     private var adaptiveMult: Double = 1.0
     @Volatile private var cachedPumpAgeDays: Float = 0f
     private val pumpAgeRefreshInFlight = AtomicBoolean(false)
@@ -706,7 +718,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
     }
 
     private val EPS_FALL = 0.3      // mg/dL/5min : seuil de baisse
-    private val EPS_ACC  = 0.2      // mg/dL/5min : seuil d'écart short vs long
+    private val EPS_ACC = 0.2      // mg/dL/5min : seuil d'écart short vs long
 
     private fun pumpAgeDaysCached(): Float {
         refreshPumpAgeAsync()
@@ -1049,9 +1061,11 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             }
         }
     }
+
     private var lateFatRiseFlag: Boolean = false
+
     // — Hystérèse anti-pompage —
-    private val HYPO_RELEASE_MARGIN   = 5.0      // mg/dL au-dessus du seuil
+    private val HYPO_RELEASE_MARGIN = 5.0      // mg/dL au-dessus du seuil
     private val HYPO_RELEASE_HOLD_MIN = 5        // minutes à rester > seuil+margin
     private var highBgOverrideUsed = false
     // private val INSULIN_STEP = Constants.DEFAULT_INSULIN_STEP_U.toFloat()
@@ -1135,7 +1149,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         } else 1.0
         adaptiveMult = when {
             hMult < 0.99 || nMult < 0.99 -> min(hMult, nMult)
-            else -> max(hMult, nMult)
+            else                         -> max(hMult, nMult)
         }
         if (Math.abs(adaptiveMult - 1.0) > 0.01) {
             consoleLog.add("🛡️ BASAL_UNIFIED_SCALING: H=${"%.2f".format(hMult)}x / N=${"%.2f".format(nMult)}x -> Applied=${"%.2f".format(adaptiveMult)}x")
@@ -1173,8 +1187,9 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                         consoleLog.add("🚫 T6 NIGHT_RATE_LIMIT: BG_Rise_Fast bloqué (IOB=${"%.2f".format(iobNow)}U > 2.0 ET BG=${bgNow.toInt()} < 100 la nuit)")
                         "Routine_Cycle"
                     }
-                    isBgRiseFast -> "BG_Rise_Fast"
-                    else -> "Routine_Cycle"
+
+                    isBgRiseFast       -> "BG_Rise_Fast"
+                    else               -> "Routine_Cycle"
                 }
             },
             baseline_state = AimiDecisionContext.BaselineState(
@@ -1332,8 +1347,10 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         // T9: G6 lead compensation (+25%) so physio, PKPD, LGS, SMB share corrected delta (not only Autodrive V3).
         val isG6Sensor = try {
             activePlugin.activeBgSource.javaClass.simpleName.contains("Dexcom", ignoreCase = true) &&
-            activePlugin.activeBgSource.javaClass.simpleName.contains("G6", ignoreCase = true)
-        } catch (e: Exception) { false }
+                activePlugin.activeBgSource.javaClass.simpleName.contains("G6", ignoreCase = true)
+        } catch (e: Exception) {
+            false
+        }
         val rawVelocityMgdlMin = glucoseStatus.delta / 5.0 // delta mg/dL/5min → mg/dL/min
         val correctedVelocityMgdlMin = continuousStateEstimator.applyG6LeadCompensation(rawVelocityMgdlMin, isG6Sensor)
         val correctedDelta = correctedVelocityMgdlMin * 5.0
@@ -1361,9 +1378,9 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         if (!physioMultipliers.isNeutral()) {
             consoleLog.add(
                 "🏥 PHYSIO: ISF×${String.format("%.3f", physioMultipliers.isfFactor)} " +
-                "Basal×${String.format("%.3f", physioMultipliers.basalFactor)} " +
-                "SMB×${String.format("%.3f", physioMultipliers.smbFactor)} " +
-                "Conf=${(physioMultipliers.confidence * 100).toInt()}%"
+                    "Basal×${String.format("%.3f", physioMultipliers.basalFactor)} " +
+                    "SMB×${String.format("%.3f", physioMultipliers.smbFactor)} " +
+                    "Conf=${(physioMultipliers.confidence * 100).toInt()}%"
             )
         }
 
@@ -1581,9 +1598,9 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         val autodriveEnabled = preferences.get(BooleanKey.OApsAIMIautoDrive)
         val isAutodriveV3 = preferences.get(BooleanKey.OApsAIMIautoDriveActive)
         val autodriveDisplay = when {
-            isAutodriveV3 -> "✔V3"
+            isAutodriveV3    -> "✔V3"
             autodriveEnabled -> "✔V2"
-            else -> "✘"
+            else             -> "✘"
         }
         return AimiPreTherapyAutodriveByodaBootstrap(
             isG6Byoda = isG6Byoda,
@@ -1659,7 +1676,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             // 🚨 CRITICAL PLATEAU: BG >= 250, regardless of slope
             // Absolute emergency if BG catastrophic, even with low delta
             // Protection: Don't apply if rapid fall (delta <= -5)
-            bg >= 250 && combinedDelta > -5.0 -> {
+            bg >= 250 && combinedDelta > -5.0                                                                       -> {
                 consoleLog.add("MAXSMB_PLATEAU_CRITICAL BG=${bg.roundToInt()} Δ=${String.format("%.1f", combinedDelta)} slope=${String.format("%.2f", ctx.mealData.slopeFromMinDeviation)} -> maxSMBHB=${String.format("%.2f", maxSMBHB)}U (plateau)")
                 maxSMBHB
             }
@@ -1668,8 +1685,15 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             // Full maxSMBHB for confirmed meal/resistance in elevated range
             // Added combinedDelta check to confirm rise is real
             (bg >= 140 && !honeymoon && ctx.mealData.slopeFromMinDeviation >= 1.0 && combinedDelta > 0.5) ||
-            (bg >= 180 && honeymoon && ctx.mealData.slopeFromMinDeviation >= 1.4 && combinedDelta > 0.5) -> {
-                consoleLog.add("MAXSMB_SLOPE_HIGH BG=${bg.roundToInt()} slope=${String.format("%.2f", ctx.mealData.slopeFromMinDeviation)} \u0394=${String.format("%.1f", combinedDelta)} -> maxSMBHB=${String.format("%.2f", maxSMBHB)}U (confirmed rise)")
+                (bg >= 180 && honeymoon && ctx.mealData.slopeFromMinDeviation >= 1.4 && combinedDelta > 0.5)        -> {
+                consoleLog.add(
+                    "MAXSMB_SLOPE_HIGH BG=${bg.roundToInt()} slope=${String.format("%.2f", ctx.mealData.slopeFromMinDeviation)} \u0394=${String.format("%.1f", combinedDelta)} -> maxSMBHB=${
+                        String.format(
+                            "%.2f",
+                            maxSMBHB
+                        )
+                    }U (confirmed rise)"
+                )
                 maxSMBHB
             }
 
@@ -1678,13 +1702,20 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             // Added combinedDelta check to confirm rise is real
             bg >= 120 && bg < 140 && !honeymoon && ctx.mealData.slopeFromMinDeviation >= 1.0 && combinedDelta > 0.5 -> {
                 val partial = max(maxSMB, maxSMBHB * 0.85)
-                consoleLog.add("MAXSMB_SLOPE_SENSITIVE BG=${bg.roundToInt()} slope=${String.format("%.2f", ctx.mealData.slopeFromMinDeviation)} \u0394=${String.format("%.1f", combinedDelta)} -> ${String.format("%.2f", partial)}U (85% maxSMBHB - confirmed rise)")
+                consoleLog.add(
+                    "MAXSMB_SLOPE_SENSITIVE BG=${bg.roundToInt()} slope=${String.format("%.2f", ctx.mealData.slopeFromMinDeviation)} \u0394=${String.format("%.1f", combinedDelta)} -> ${
+                        String.format(
+                            "%.2f",
+                            partial
+                        )
+                    }U (85% maxSMBHB - confirmed rise)"
+                )
                 partial
             }
 
             // 🟠 MODERATE PLATEAU: BG 200-250, stable delta
             // Compromise: 75% of maxSMBHB for elevated but not critical BG
-            bg >= 200 && bg < 250 && combinedDelta > -3.0 && combinedDelta < 3.0 -> {
+            bg >= 200 && bg < 250 && combinedDelta > -3.0 && combinedDelta < 3.0                                    -> {
                 val partial = max(maxSMB, maxSMBHB * 0.75)
                 consoleLog.add("MAXSMB_PLATEAU_MODERATE BG=${bg.roundToInt()} Δ=${String.format("%.1f", combinedDelta)} -> ${String.format("%.2f", partial)}U (75% maxSMBHB)")
                 partial
@@ -1692,14 +1723,14 @@ class DetermineBasalaimiSMB2 @Inject constructor(
 
             // 🔵 FALLING PROTECTION: BG elevated but falling moderately
             // Partial limit to avoid over-correction while still allowing some action
-            bg > 180 && combinedDelta <= -3.0 && combinedDelta > -8.0 -> {
+            bg > 180 && combinedDelta <= -3.0 && combinedDelta > -8.0                                               -> {
                 val partial = max(maxSMB, maxSMBHB * 0.6)
                 consoleLog.add("MAXSMB_FALLING BG=${bg.roundToInt()} Δ=${String.format("%.1f", combinedDelta)} -> ${String.format("%.2f", partial)}U (60% maxSMBHB)")
                 partial
             }
 
             // ⚪ STANDARD: Normal/low BG conditions
-            else -> {
+            else                                                                                                    -> {
                 consoleLog.add("MAXSMB_STANDARD BG=${bg.roundToInt()} -> ${String.format("%.2f", maxSMB)}U")
                 maxSMB
             }
@@ -1709,8 +1740,8 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         // User Rule: "lowbg when < 120". No bypass allowed.
         val stdMaxSMB = preferences.get(DoubleKey.OApsAIMIMaxSMB)
         if (bg < 120.0 && this.maxSMB > stdMaxSMB) {
-             this.maxSMB = stdMaxSMB
-             consoleLog.add("🔒 STRICT CLAMP: BG<120 -> Forced Standard MaxSMB (${String.format("%.2f", stdMaxSMB)}U)")
+            this.maxSMB = stdMaxSMB
+            consoleLog.add("🔒 STRICT CLAMP: BG<120 -> Forced Standard MaxSMB (${String.format("%.2f", stdMaxSMB)}U)")
         }
         val ngrConfig = buildNightGrowthResistanceConfig(ctx.profile, ctx.autosensData, glucoseStatus, targetBg.toDouble())
         var tir1DAYIR = 0.0
@@ -1866,13 +1897,13 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         val mealLimitPref = preferences.get(DoubleKey.meal_modes_MaxBasal)
         val modeTbrLimit = if (mealLimitPref > 0.1) mealLimitPref else profile.max_basal
         val activeModeName = when {
-            lunchTime -> "Lunch"
-            dinnerTime -> "Dinner"
-            bfastTime -> "Breakfast"
-            snackTime -> "Snack"
+            lunchTime    -> "Lunch"
+            dinnerTime   -> "Dinner"
+            bfastTime    -> "Breakfast"
+            snackTime    -> "Snack"
             highCarbTime -> "HighCarb"
-            mealTime -> "Meal"
-            else -> "N/A"
+            mealTime     -> "Meal"
+            else         -> "N/A"
         }
         applyLegacyMealModes(profile, rT, ctx.currentTemp, modeTbrLimit)?.let { early ->
             return AimiManualMealModesGate.ReturnEarly(early)
@@ -1907,7 +1938,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         // 3. Absolute IOB Cap (Emergency fallback)
 
         val t3cCapWindowMs = 20 * 60 * 1000L
-        val t3cCapCutoff   = System.currentTimeMillis() - t3cCapWindowMs
+        val t3cCapCutoff = System.currentTimeMillis() - t3cCapWindowMs
 
         // 1. Check Database (Harden: count ALL bolus types, not just SMB)
         val recentBolusCount = getBolusesFromTimeCached(t3cCapCutoff, true)
@@ -1927,8 +1958,8 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         } else {
             val reason = when {
                 iobSafetyBlock -> "IOB_LIMIT (${"%.2f".format(iob)}U > MaxIOB)"
-                internalBlock -> "INTERNAL_LOCKOUT (${timeSinceInternalSmbMs/60000}m < 20m)"
-                else -> "DB_CAP ($recentBolusCount boluses in 20min)"
+                internalBlock  -> "INTERNAL_LOCKOUT (${timeSinceInternalSmbMs / 60000}m < 20m)"
+                else           -> "DB_CAP ($recentBolusCount boluses in 20min)"
             }
             consoleLog.add("🛡️ T3c pre-bolus BLOCKED: $reason — skipping applyLegacyMealModes")
         }
@@ -2001,8 +2032,8 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         val sensForT3cPred = (
             when {
                 fusedT3c != null && dynSensT3c > 0.0 -> kotlin.math.min(fusedT3c, dynSensT3c)
-                fusedT3c != null -> fusedT3c
-                else -> dynSensT3c
+                fusedT3c != null                     -> fusedT3c
+                else                                 -> dynSensT3c
             }.coerceAtLeast(10.0) * ctx.autosensData.ratio.coerceIn(0.25, 4.0)
             )
         applyAdvancedPredictions(
@@ -2429,7 +2460,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         val terminatorThresholdAdd = when {
             autosensRatio < 0.8 -> 10.0
             autosensRatio > 1.2 -> 30.0
-            else -> 15.0
+            else                -> 15.0
         }
         val terminatorTarget = targetBgMgdl + terminatorThresholdAdd
 
@@ -2547,7 +2578,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                 this.targetBg = 130.0f
             }
 
-            !profile.temptargetSet && predictedBg >= 120 && combinedDelta > 3 -> {
+            !profile.temptargetSet && predictedBg >= 120 && combinedDelta > 3                                                                                                    -> {
                 var baseTarget = if (honeymoon) 110.0 else 70.0
                 if (hourOfDay in 0..11 || hourOfDay in 15..19 || hourOfDay >= 22) {
                     baseTarget = if (honeymoon) 110.0 else 90.0
@@ -2565,7 +2596,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                 consoleLog.add(context.getString(R.string.sensitivity_ratio_temp_target, sensitivityRatioLocal, targetBgLocal))
             }
 
-            !profile.temptargetSet && combinedDelta <= 0 && predictedBg < 120 -> {
+            !profile.temptargetSet && combinedDelta <= 0 && predictedBg < 120                                                                                                    -> {
                 val baseHypoTarget = if (honeymoon) 130.0 else 110.0
                 val hypoTarget = baseHypoTarget * max(1.0, circadianSensitivity)
                 this.targetBg = min(hypoTarget.toFloat(), 166.0f)
@@ -2577,7 +2608,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                 consoleLog.add(context.getString(R.string.sensitivity_ratio_temp_target, sensitivityRatioLocal, targetBgLocal))
             }
 
-            else -> {
+            else                                                                                                                                                                 -> {
                 val defaultTarget = profile.target_bg
                 this.targetBg = defaultTarget.toFloat()
                 targetBgLocal = targetBg.toDouble()
@@ -2839,7 +2870,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         val choKey = preferences.get(DoubleKey.OApsAIMICHO)
         this.aimilimit = when {
             ci != 0.0f && ci.isFinite() -> (choKey / ci).toFloat()
-            else -> (choKey / profile.carb_ratio).toFloat()
+            else                        -> (choKey / profile.carb_ratio).toFloat()
         }
 
         // 🎯 Apply Harmonized Adaptive Multiplier to carb limits
@@ -2859,7 +2890,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                 tirbasalhAP != null && tirbasalhAP >= 5           -> (basalaimi * 2.0).toFloat()
                 lastHourTIRAbove != null && lastHourTIRAbove >= 2 -> (basalaimi * 1.8).toFloat()
 
-                timenowCaptured < sixAMHourCaptured                               -> {
+                timenowCaptured < sixAMHourCaptured               -> {
                     val multiplier = if (honeymoon) 1.2 else 1.4
                     val reactivity = if (useUnified) {
                         unifiedReactivityLearner.globalFactor
@@ -2870,7 +2901,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                     (basalaimi * multiplier * reactivity).toFloat()
                 }
 
-                timenowCaptured > sixAMHourCaptured                               -> {
+                timenowCaptured > sixAMHourCaptured               -> {
                     val multiplier = if (honeymoon) 1.4 else 1.6
                     val reactivity = if (useUnified) {
                         unifiedReactivityLearner.globalFactor
@@ -2930,16 +2961,17 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                     0.60 // ISF réduit de 40%
                 }
                 // L'activité de l'insuline va diminuer. On anticipe.
-                iobActivityIn30Min < iobActivityNow * 0.9 -> {
+                iobActivityIn30Min < iobActivityNow * 0.9   -> {
                     consoleLog.add("PAI: BG rising & IOB activity will drop. PROACTIVE.")
                     0.90 // ISF réduit de 10%
                 }
                 // Le pic est dans un avenir proche (0-45min). On peut être patient.
-                iobPeakMinutes in 0.0..45.0 -> {
+                iobPeakMinutes in 0.0..45.0                 -> {
                     consoleLog.add("PAI: BG rising but IOB peak is coming. PATIENT.")
                     1.0 // Pas de changement
                 }
-                else -> 1.0 // Cas par défaut
+
+                else                                        -> 1.0 // Cas par défaut
             }
             newVariableSensitivity *= urgencyFactor
             if (urgencyFactor != 1.0) {
@@ -3205,7 +3237,8 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                             "(${postHypoState.sinceMs / 60_000}min depuis BG<70, COB=${"%.1f".format(cob)}g)"
                     )
                 }
-                is PostHypoState.MealConfirmed -> {
+
+                is PostHypoState.MealConfirmed    -> {
                     val maxSmbPref = preferences.get(DoubleKey.OApsAIMIMaxSMB).toFloat()
                     finalModelSmb = (finalModelSmb * 0.5f).coerceAtMost(maxSmbPref * 0.5f)
                     consoleLog.add(
@@ -3213,7 +3246,9 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                             "(COB=${"%.1f".format(cob)}g, ${postHypoState.sinceMs / 60_000}min post-hypo)"
                     )
                 }
-                PostHypoState.None -> { /* flux normal */ }
+
+                PostHypoState.None                -> { /* flux normal */
+                }
             }
 
             this.predictedSMB = finalModelSmb
@@ -3302,6 +3337,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             )
         )
         val pkpdDiaMinutesOverride: Double? = pkpdRuntime?.params?.diaHrs?.let { it * 60.0 }
+
         @Suppress("UNUSED_VARIABLE")
         val useLegacyDynamicsdia = pkpdDiaMinutesOverride == null
 
@@ -3439,12 +3475,12 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                     bg >= 250.0 -> 10.0
                     bg >= 200.0 -> 9.0
                     bg >= 170.0 -> 8.0
-                    else -> 6.0
+                    else        -> 6.0
                 }
                 val velocityBonus = when {
                     delta >= 30.0 || shortAvgDelta >= 20.0 -> 2.0
                     delta >= 22.0 || shortAvgDelta >= 15.0 -> 1.0
-                    else -> 0.0
+                    else                                   -> 0.0
                 }
                 (base + velocityBonus).coerceIn(5.0, 12.0)
             } else {
@@ -3608,6 +3644,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
      * Reads therapy flags + runtimes + [bg]/[delta]/[shortAvgDelta] from instance state like the inlined `when` did.
      */
     private sealed class AimiMealHyperBasalBoostOutcome {
+
         data class ContinueWithOptionalRate(val rate: Double?) : AimiMealHyperBasalBoostOutcome()
         data class CompleteWithTempBasal(val rT: RT) : AimiMealHyperBasalBoostOutcome()
     }
@@ -3626,12 +3663,13 @@ class DetermineBasalaimiSMB2 @Inject constructor(
     ): AimiMealHyperBasalBoostOutcome {
         val mealModesMaxBasal = preferences.get(DoubleKey.meal_modes_MaxBasal)
         return when {
-            isMealAdvisorOneShot -> {
+            isMealAdvisorOneShot                                                                                                                                                              -> {
                 val safeMax = if (mealModesMaxBasal > 0.1) mealModesMaxBasal else profile.max_basal
                 val boostedRate = calculateRate(basal, safeMax, 1.3, "Meal Advisor Trigger (One-Shot)", ctx.currentTemp, rT, overrideSafety = true)
                 AimiMealHyperBasalBoostOutcome.CompleteWithTempBasal(setTempBasal(boostedRate, 30, profile, rT, ctx.currentTemp, overrideSafetyLimits = true, adaptiveMultiplier = 1.0))
             }
-            snackTime && snackrunTime in 0..30 && delta < 15 -> {
+
+            snackTime && snackrunTime in 0..30 && delta < 15                                                                                                                                  -> {
                 val boostedRate = calculateRate(basal, profileCurrentBasal, 4.0, "AI Force basal because Snack Time $snackrunTime.", ctx.currentTemp, rT, overrideSafety = true)
                 AimiMealHyperBasalBoostOutcome.CompleteWithTempBasal(setTempBasal(boostedRate, 30, profile, rT, ctx.currentTemp, overrideSafetyLimits = true, adaptiveMultiplier = 1.0))
             }
@@ -3642,7 +3680,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                 AimiMealHyperBasalBoostOutcome.CompleteWithTempBasal(setTempBasal(boostedRate, 30, profile, rT, ctx.currentTemp, overrideSafetyLimits = true, adaptiveMultiplier = 1.0))
             }
 
-            (mealTime || lunchTime || dinnerTime || highCarbTime || bfastTime || snackTime || (timeSinceEstimateMin <= 120 && estimatedCarbs > 10.0)) -> {
+            (mealTime || lunchTime || dinnerTime || highCarbTime || bfastTime || snackTime || (timeSinceEstimateMin <= 120 && estimatedCarbs > 10.0))                                         -> {
                 val runTime = listOf(mealruntime, lunchruntime, dinnerruntime, highCarbrunTime, bfastruntime, snackrunTime).maxOrNull() ?: timeSinceEstimateMin.toInt()
                 val target = targetBg
                 val rocketStart = delta > 5.0f || bg > targetBg + 40
@@ -3670,7 +3708,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             correctionAggressionDecision?.tier == CorrectionAggressionGate.Tier.REBOUND_GUARD &&
                 cachedBasalFirstActive &&
                 bg < targetBg + 15.0 &&
-                delta >= 0.0f -> {
+                delta >= 0.0f                                                                                                                                                                 -> {
                 val bridgeRate = calculateRate(
                     basal,
                     profileCurrentBasal,
@@ -3693,7 +3731,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                 val allowHyper = aggression?.allowGlobalHyperKicker == true &&
                     (delta >= 0.3 || shortAvgDelta >= 0.2)
                 allowHyper
-            } -> {
+            }                                                                                                                                                                                 -> {
                 val autodriveMaxBasal = preferences.get(DoubleKey.autodriveMaxBasal)
                 val safeMax = if (autodriveMaxBasal > 0.1) autodriveMaxBasal else profile.max_basal
                 val scaleCap = correctionAggressionDecision?.maxBasalScaleCap ?: 10.0
@@ -3725,7 +3763,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                 AimiMealHyperBasalBoostOutcome.ContinueWithOptionalRate(optionalRate)
             }
 
-            cachedBasalFirstActive && !cachedIsFragileBg && bg > targetBg -> {
+            cachedBasalFirstActive && !cachedIsFragileBg && bg > targetBg                                                                                                                     -> {
                 val autodriveMaxBasal = preferences.get(DoubleKey.autodriveMaxBasal)
                 val safeMax = if (autodriveMaxBasal > 0.1) autodriveMaxBasal else profile.max_basal
                 AimiMealHyperBasalBoostOutcome.ContinueWithOptionalRate(
@@ -3733,10 +3771,13 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                 )
             }
 
-            fastingTime -> AimiMealHyperBasalBoostOutcome.ContinueWithOptionalRate(
+            fastingTime                                                                                                                                                                       -> AimiMealHyperBasalBoostOutcome.ContinueWithOptionalRate(
                 calculateRate(profileCurrentBasal, profileCurrentBasal, delta.coerceAtLeast(0.0f).toDouble(), "AI Force basal because fastingTime", ctx.currentTemp, rT)
             )
-            else -> AimiMealHyperBasalBoostOutcome.ContinueWithOptionalRate(null)
+
+            else                                                                                                                                                                              -> AimiMealHyperBasalBoostOutcome.ContinueWithOptionalRate(
+                null
+            )
         }
     }
 
@@ -3745,6 +3786,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
      * soit **overlay** optionnel sur [rT] (SMB aval inchangé).
      */
     private sealed class AimiMealHyperBasalBoostTickResult {
+
         data class CompleteLoop(val rT: RT) : AimiMealHyperBasalBoostTickResult()
         data class ContinueWithOverlay(val overlayRate: Double?) : AimiMealHyperBasalBoostTickResult()
     }
@@ -3786,8 +3828,9 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                 estimatedCarbs = estimatedCarbs,
             )
         ) {
-            is AimiMealHyperBasalBoostOutcome.CompleteWithTempBasal ->
+            is AimiMealHyperBasalBoostOutcome.CompleteWithTempBasal    ->
                 AimiMealHyperBasalBoostTickResult.CompleteLoop(o.rT)
+
             is AimiMealHyperBasalBoostOutcome.ContinueWithOptionalRate ->
                 AimiMealHyperBasalBoostTickResult.ContinueWithOverlay(o.rate)
         }
@@ -3804,10 +3847,10 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         val basalBoostApplied = overlayRate != null
         val basalBoostSource: String? = when {
             overlayRate != null && rT.reason.contains("Global Hyper Kicker") -> "HyperKicker"
-            overlayRate != null && rT.reason.contains("Post-Meal Boost") -> "PostMealBoost"
-            overlayRate != null && rT.reason.contains("Meal") -> "MealMode"
-            overlayRate != null && rT.reason.contains("fasting") -> "Fasting"
-            else -> null
+            overlayRate != null && rT.reason.contains("Post-Meal Boost")     -> "PostMealBoost"
+            overlayRate != null && rT.reason.contains("Meal")                -> "MealMode"
+            overlayRate != null && rT.reason.contains("fasting")             -> "Fasting"
+            else                                                             -> null
         }
         if (basalBoostApplied && overlayRate != null) {
             rT.rate = overlayRate.coerceAtLeast(0.0)
@@ -4095,12 +4138,12 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         targetBgSchedule: Double,
     ): AimiPostSafetyMealNgrStageResult {
         val (isMealActive, runtimeMinLabel, runtimeMinValue) = when {
-            mealTime -> Triple(true, "meal", mealModeRuntimeToNullableMinutes(mealruntime))
-            bfastTime -> Triple(true, "bfast", mealModeRuntimeToNullableMinutes(bfastruntime))
-            lunchTime -> Triple(true, "lunch", mealModeRuntimeToNullableMinutes(lunchruntime))
-            dinnerTime -> Triple(true, "dinner", mealModeRuntimeToNullableMinutes(dinnerruntime))
+            mealTime     -> Triple(true, "meal", mealModeRuntimeToNullableMinutes(mealruntime))
+            bfastTime    -> Triple(true, "bfast", mealModeRuntimeToNullableMinutes(bfastruntime))
+            lunchTime    -> Triple(true, "lunch", mealModeRuntimeToNullableMinutes(lunchruntime))
+            dinnerTime   -> Triple(true, "dinner", mealModeRuntimeToNullableMinutes(dinnerruntime))
             highCarbTime -> Triple(true, "highcarb", mealModeRuntimeToNullableMinutes(highCarbrunTime))
-            else -> Triple(false, "", Int.MAX_VALUE)
+            else         -> Triple(false, "", Int.MAX_VALUE)
         }
 
         if (isMealActive && runtimeMinValue in 0..30) {
@@ -4681,11 +4724,11 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                 val healthBar = "█".repeat(healthPercent / 10) + "░".repeat(10 - (healthPercent / 10))
 
                 val type = when {
-                    metrics.isStable -> "⭕ Stable Orbit"
-                    metrics.isConverging -> "🔄 Converging"
-                    metrics.isDiverging -> "↗️ Diverging"
+                    metrics.isStable      -> "⭕ Stable Orbit"
+                    metrics.isConverging  -> "🔄 Converging"
+                    metrics.isDiverging   -> "↗️ Diverging"
                     metrics.isTightSpiral -> "🌀 Spiral"
-                    else -> "❓ Uncertain"
+                    else                  -> "❓ Uncertain"
                 }
 
                 val etaText = if (metrics.convergenceVelocity > 0) {
@@ -4837,41 +4880,45 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                 val predictionAvailable = (finalResult.predBGs?.IOB?.size ?: 0) > 0
                 val therapy = Therapy(persistenceLayer).also { it.updateStatesBasedOnTherapyEvents() }
                 val inPrebolusWindow = when {
-                    therapy.bfastTime -> {
+                    therapy.bfastTime    -> {
                         val runtimeMin = therapy.getTimeElapsedSinceLastEvent("bfast") / 60000
                         runtimeMin in 0..30
                     }
-                    therapy.lunchTime -> {
+
+                    therapy.lunchTime    -> {
                         val runtimeMin = therapy.getTimeElapsedSinceLastEvent("lunch") / 60000
                         runtimeMin in 0..30
                     }
-                    therapy.dinnerTime -> {
+
+                    therapy.dinnerTime   -> {
                         val runtimeMin = therapy.getTimeElapsedSinceLastEvent("dinner") / 60000
                         runtimeMin in 0..30
                     }
+
                     therapy.highCarbTime -> {
                         val runtimeMin = therapy.getTimeElapsedSinceLastEvent("highcarb") / 60000
                         runtimeMin in 0..30
                     }
-                    else -> false
+
+                    else                 -> false
                 }
                 val modeType = when {
-                    therapy.bfastTime -> "breakfast"
-                    therapy.lunchTime -> "lunch"
-                    therapy.dinnerTime -> "dinner"
+                    therapy.bfastTime    -> "breakfast"
+                    therapy.lunchTime    -> "lunch"
+                    therapy.dinnerTime   -> "dinner"
                     therapy.highCarbTime -> "highCarb"
-                    therapy.snackTime -> "snack"
-                    therapy.mealTime -> "meal"
-                    else -> null
+                    therapy.snackTime    -> "snack"
+                    therapy.mealTime     -> "meal"
+                    else                 -> null
                 }
                 val modeRuntimeMin = when {
-                    therapy.bfastTime -> (therapy.getTimeElapsedSinceLastEvent("bfast") / 60000).toInt()
-                    therapy.lunchTime -> (therapy.getTimeElapsedSinceLastEvent("lunch") / 60000).toInt()
-                    therapy.dinnerTime -> (therapy.getTimeElapsedSinceLastEvent("dinner") / 60000).toInt()
+                    therapy.bfastTime    -> (therapy.getTimeElapsedSinceLastEvent("bfast") / 60000).toInt()
+                    therapy.lunchTime    -> (therapy.getTimeElapsedSinceLastEvent("lunch") / 60000).toInt()
+                    therapy.dinnerTime   -> (therapy.getTimeElapsedSinceLastEvent("dinner") / 60000).toInt()
                     therapy.highCarbTime -> (therapy.getTimeElapsedSinceLastEvent("highcarb") / 60000).toInt()
-                    therapy.snackTime -> (therapy.getTimeElapsedSinceLastEvent("snack") / 60000).toInt()
-                    therapy.mealTime -> (therapy.getTimeElapsedSinceLastEvent("meal") / 60000).toInt()
-                    else -> null
+                    therapy.snackTime    -> (therapy.getTimeElapsedSinceLastEvent("snack") / 60000).toInt()
+                    therapy.mealTime     -> (therapy.getTimeElapsedSinceLastEvent("meal") / 60000).toInt()
+                    else                 -> null
                 }
                 val autodriveState = lastAutodriveState.toString()
                 val wcyclePhase = wCycleFacade.getPhase().name
@@ -4913,7 +4960,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                     effectiveProfile = auditorEffectiveProfile,
                 ) { verdict: AuditorVerdict?, result: DecisionResult ->
                     when (result) {
-                        is DecisionResult.Applied -> {
+                        is DecisionResult.Applied  -> {
                             consoleLog.add(sanitizeForJson("🧠 AI Auditor: ✅ APPLIED - ${result.reason}"))
                             if (verdict != null) {
                                 consoleLog.add(sanitizeForJson("   Verdict: ${verdict.verdict}, Conf: ${"%.2f".format(verdict.confidence)}"))
@@ -4926,6 +4973,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                                 finalResult.duration = result.tbrMin
                             }
                         }
+
                         is DecisionResult.Rejected -> {
                             consoleLog.add(sanitizeForJson("🧠 AI Auditor: 🛑 REJECTED - ${result.reason}"))
                             consoleLog.add(sanitizeForJson("   Severity: ${result.severity}"))
@@ -4933,10 +4981,12 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                             finalResult.reason.setLength(0)
                             finalResult.reason.append("Auditor Rejected: ${result.reason}")
                         }
-                        is DecisionResult.Skipped -> {
+
+                        is DecisionResult.Skipped  -> {
                             consoleLog.add(sanitizeForJson("🧠 AI Auditor: ⏸ SKIPPED - ${result.reason}"))
                         }
-                        else -> {}
+
+                        else                       -> {}
                     }
                 }
             } catch (e: Exception) {
@@ -4971,19 +5021,23 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             final_value_mgdl = snapshotFusedIsf,
             modifiers = mutableListOf<AimiDecisionContext.Modifier>().apply {
                 if (ctx.autosensData.ratio != 1.0) {
-                    add(AimiDecisionContext.Modifier(
-                        source = "Autosensitivity",
-                        factor = 1.0 / ctx.autosensData.ratio,
-                        clinical_reason = "Rolling avg sensitivity: ${"%.2f".format(ctx.autosensData.ratio)}"
-                    ))
+                    add(
+                        AimiDecisionContext.Modifier(
+                            source = "Autosensitivity",
+                            factor = 1.0 / ctx.autosensData.ratio,
+                            clinical_reason = "Rolling avg sensitivity: ${"%.2f".format(ctx.autosensData.ratio)}"
+                        )
+                    )
                 }
                 val autosensAdjIsf = snapshotProfileIsf * (1.0 / ctx.autosensData.ratio)
                 if (abs(snapshotFusedIsf - autosensAdjIsf) > 1.0) {
-                    add(AimiDecisionContext.Modifier(
-                        source = "PkPd_Fusion",
-                        factor = snapshotFusedIsf / autosensAdjIsf,
-                        clinical_reason = "Fusion with TDD & Profile"
-                    ))
+                    add(
+                        AimiDecisionContext.Modifier(
+                            source = "PkPd_Fusion",
+                            factor = snapshotFusedIsf / autosensAdjIsf,
+                            clinical_reason = "Fusion with TDD & Profile"
+                        )
+                    )
                 }
             }
         )
@@ -5230,10 +5284,10 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             mealPriorityAlign && energy > 3.5 -> 0.70
             mealPriorityAlign && energy > 2.5 -> 0.85
             mealPriorityAlign && energy > 1.5 -> 0.95
-            energy > 3.5 -> 0.25
-            energy > 2.5 -> 0.50
-            energy > 1.5 -> 0.70
-            else -> 1.0
+            energy > 3.5                      -> 0.25
+            energy > 2.5                      -> 0.50
+            energy > 1.5                      -> 0.70
+            else                              -> 1.0
         }
 
         val cgateAmplified = physioMultipliers.isfFactor > 1.05
@@ -5256,7 +5310,11 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         rT.duration = if (energy > 3.5) 30 else 15
         rT.reason.append(" | 🌀 Traj-Bridge: $reason")
 
-        lastSafetySource = "TrajBridge_Tier${when { energy > 3.5 -> 1; energy > 2.5 -> 2; else -> 3 }}"
+        lastSafetySource = "TrajBridge_Tier${
+            when {
+                energy > 3.5 -> 1; energy > 2.5 -> 2; else -> 3
+            }
+        }"
         logDecisionFinal("TRAJ_SAFETY", rT, bg, delta)
         applyTrajectoryTightSpiralStandardSmbCapIfNeeded(
             energy = energy,
@@ -5304,8 +5362,8 @@ class DetermineBasalaimiSMB2 @Inject constructor(
 
         var sens = when {
             fusedSensitivity == null -> dynSensitivity
-            dynSensitivity <= 0.0 -> fusedSensitivity
-            else -> min(fusedSensitivity, dynSensitivity)
+            dynSensitivity <= 0.0    -> fusedSensitivity
+            else                     -> min(fusedSensitivity, dynSensitivity)
         }
         if (sens <= 0.0) sens = baseSensitivity
         variableSensitivity = sens.toFloat()
@@ -5336,7 +5394,8 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         isConfirmedHighRiseLocal: Boolean,
         pkpdRuntimeIn: PkPdRuntime?,
     ): AimiSignalPreparationPkpdOutcome {
-        val modesCondition = (!mealTime || mealruntime > 30) && (!lunchTime || lunchruntime > 30) && (!bfastTime || bfastruntime > 30) && (!dinnerTime || dinnerruntime > 30) && !sportTime && (!snackTime || snackrunTime > 30) && (!highCarbTime || highCarbrunTime > 30) && !sleepTime && !lowCarbTime
+        val modesCondition =
+            (!mealTime || mealruntime > 30) && (!lunchTime || lunchruntime > 30) && (!bfastTime || bfastruntime > 30) && (!dinnerTime || dinnerruntime > 30) && !sportTime && (!snackTime || snackrunTime > 30) && (!highCarbTime || highCarbrunTime > 30) && !sleepTime && !lowCarbTime
         val pbolusAS: Double = preferences.get(DoubleKey.OApsAIMIautodrivesmallPrebolus)
         val pbolusA: Double = preferences.get(DoubleKey.OApsAIMIautodrivePrebolus)
         val reason = StringBuilder()
@@ -5638,7 +5697,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         val msg = when (state) {
             is AsyncDataState.Fresh<*> -> "CACHE $tag=FRESH ageMs=${state.ageMs}"
             is AsyncDataState.Stale<*> -> "CACHE $tag=STALE ageMs=${state.ageMs}"
-            is AsyncDataState.Missing -> "CACHE $tag=MISSING reason=${state.reason}"
+            is AsyncDataState.Missing  -> "CACHE $tag=MISSING reason=${state.reason}"
         }
         consoleLog.add("📦 $msg")
     }
@@ -5671,6 +5730,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
     // État interne d’hystérèse
     private var lastHypoBlockAt: Long = 0L
     private var hypoClearCandidateSince: Long? = null
+
     // T6: Verrou nocturne anti-bang-bang pour BG_Rise_Fast
     // Empêche le trigger de s'emballer si l'IOB est déjà élevé la nuit
     private var lastBgRiseFastNightMs: Long = 0L
@@ -5679,6 +5739,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
     private var consoleLog = mutableListOf<String>()
     private var lastAutodriveActionTime: Long = 0L  // FCL 14.1 Cooldown State
     private val externalDir = File(Environment.getExternalStorageDirectory().absolutePath + "/Documents/AAPS")
+
     //private val modelFile = File(externalDir, "ml/model.tflite")
     //private val modelFileUAM = File(externalDir, "ml/modelUAM.tflite")
     private val csvfile = File(externalDir, "oapsaimiML2_records.csv")
@@ -5687,6 +5748,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
     private val hormonitorStudyExporter by lazy { AimiHormonitorStudyExporterMTR(context, aapsLogger, preferences) }
     private var csvPrimaryStorageDeniedLogged = false
     private val pkpdIntegration = PkPdIntegration(preferences)
+
     //private val tempFile = File(externalDir, "temp.csv")
     private var bgacc = 0.0
     private var predictedSMB = 0.0f
@@ -5703,6 +5765,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
     private var lastCarbAgeMin: Int = 0
     private var futureCarbs = 0.0f
     private var lastCycleNotificationDay: Int = -1 // State for cycle notification spam prevention
+
     //private var enablebasal: Boolean = false
     private var recentNotes: List<UE>? = null
     private var tags0to60minAgo = ""
@@ -5739,6 +5802,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
     private var maxSMB = 0.5
     private var maxSMBHB = 0.5
     private var lastBolusSMBUnit = 0.0f
+
     // Pending delivery state for legacy meal prebolus.
     // Set by markLegacyMealDecision() instead of lastBolusSMBUnit, so a Medtrum
     // BLE disconnect at the P1 tick does not permanently consume the one-shot
@@ -5769,8 +5833,10 @@ class DetermineBasalaimiSMB2 @Inject constructor(
     private var ci = 0.0f
     private var sleepTime = false
     private var sportTime = false
+
     /** Intent contexte AIMI : activité déclarée (snapshot.hasActivity). */
     private var aimiContextActivityActive = false
+
     /** Sport thérapie OU activité AIMI : SMB off ; basale off si BG ≤ [EXERCISE_BASAL_RESUME_BG_MGDL], sauf T3c/standard si BG > seuil. */
     private var exerciseInsulinLockoutActive = false
     private var snackTime = false
@@ -5792,9 +5858,11 @@ class DetermineBasalaimiSMB2 @Inject constructor(
     private var intervalsmb = 1
     private var peakintermediaire = 0.0
     private var latestAdjustedDia: Double = 0.0 // Captured for logging
+
     // private var insulinPeakTime = 0.0
     private var iobActivityNow: Double = 0.0
     private var lastBolusAgeMinutes: Double = Double.NaN
+
     /** One PKPD absorption-guard multiply per [determine_basal] tick (see [applyPkpdAbsorptionGuardOncePerTick]). */
     private var pkpdAbsorptionGuardAppliedThisTick: Boolean = false
     private var isConfirmedHighRiseThisTick: Boolean = false
@@ -5806,6 +5874,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
     private var lastPredictionSize: Int = 0
     private var lastEventualBgSnapshot: Double = 0.0
     private var lastSmbProposed: Double = 0.0
+
     /** Latest IOB surveillance snapshot for JSONL (updated each [finalizeAndCapSMB]). */
     private var lastIobSurveillanceExport: AimiDecisionContext.IobSurveillanceExport? = null
     private var lastSmbCapped: Double = 0.0
@@ -5820,7 +5889,9 @@ class DetermineBasalaimiSMB2 @Inject constructor(
     // 🛡️ PERSISTENT PREBOLUS LOCKOUT (MTR Safety Patch)
     // Survives instance re-creations and app restarts by combining Memory + SharedPreferences.
     companion object {
+
         private var lastSmbTimestampMem: Long = 0L
+
         /** Glycémie (mg/dL) au-dessus de laquelle la basale peut corriger malgré sport / contexte activité (SMB toujours off). */
         const val EXERCISE_BASAL_RESUME_BG_MGDL: Double = 220.0
 
@@ -5830,11 +5901,15 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         /** 2ᵉ prébolus legacy repas : minutes depuis le démarrage du mode (inclus). */
         private const val LEGACY_MEAL_PRE2_MIN = 15
         private const val LEGACY_MEAL_PRE2_MAX = 22
+
         /** How long (ms) a legacy prebolus delivery attempt is considered in-flight.
          *  If the pump (e.g. Medtrum BLE) was unreachable and the bolus was silently
          *  dropped, the pending state expires after this interval so the next loop
          *  tick — still inside the P1 window — can retry. */
         private const val LEGACY_PREBOLUS_DELIVERY_TTL_MS = 10 * 60 * 1000L
+
+        private var lastLegacyPrebolusTimestampMem: Long = 0L
+
     }
 
     private var internalLastSmbMillis: Long
@@ -5917,6 +5992,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             headroomSlotCap = slotCap
         )
     }
+
     /**
      * Prédit l’évolution de la glycémie sur un horizon donné (en minutes),
      * avec des pas de 5 minutes.
@@ -6000,7 +6076,6 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         return Math.round(safeValue * 100.0) / 100.0
     }
 
-
     /**
      * Ajuste la dose d'insuline (SMB) et décide éventuellement de stopper la basale.
      *
@@ -6076,12 +6151,14 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                     //reasonBuilder.append("combinedDelta très faible ($combinedDelta), réduction x0.6; ")
                     reasonBuilder.append(context.getString(R.string.bg_combined_delta_weak, combinedDelta))
                 }
+
                 combinedDelta < 2f -> {
                     factors.add(0.8f)
                     //reasonBuilder.append("combinedDelta modéré ($combinedDelta), réduction x0.8; ")
                     reasonBuilder.append(context.getString(R.string.bg_combined_delta_moderate, combinedDelta))
                 }
-                else -> {
+
+                else               -> {
                     // Appel au multiplicateur lissé
                     factors.add(computeDynamicBolusMultiplier(combinedDelta))
                     //reasonBuilder.append("combinedDelta élevé ($combinedDelta), multiplicateur dynamique appliqué; ")
@@ -6126,8 +6203,12 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                 reasonBuilder.append(context.getString(R.string.bg_near_target, predictedBG, targetBG))
             } else if (predictedBG < targetBG + 10 && risingFast) {
                 // Log pour traçabilité mais pas de réduction
-                reasonBuilder.append(context.getString(R.string.bg_near_target_but_rising, 
-                    predictedBG, targetBG, delta, combinedDelta))
+                reasonBuilder.append(
+                    context.getString(
+                        R.string.bg_near_target_but_rising,
+                        predictedBG, targetBG, delta, combinedDelta
+                    )
+                )
             }
         }
 
@@ -6175,6 +6256,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         val multiplier = 1 + 0.05f * excess
         return diaMinutes * multiplier
     }
+
     /**
      * Calcule le DIA ajusté en minutes en fonction de plusieurs paramètres :
      * - baseDIAHours : le DIA de base en heures (par exemple, 9.0 pour 9 heures)
@@ -6225,44 +6307,46 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             reasonBuilder.append(context.getString(R.string.night_adjustment))
         }
 
-    
-    // 3. Ajustement en fonction de l'activité physique (Via ActivityContext)
-    when (activityContext.state) {
-        ActivityState.INTENSE  -> {
-             // FIX: Stronger reduction for Intense activity to react faster
-             diaMinutes *= 0.85f 
-             // reasonBuilder.append("Sport Intense: DIA x0.85")
-        }
-        ActivityState.MODERATE -> {
-             diaMinutes *= 0.90f
-             reasonBuilder.append(" • Moderate Activity ➝ x0.90\n")
-        }
-        ActivityState.LIGHT    -> {
-             diaMinutes *= 0.98f
-             reasonBuilder.append(" • Light Activity ➝ x0.98\n")
-        }
-        else                   -> {
-            // REST
-            if (activityContext.isRecovery) {
-                // Recovery: Keep Dia normal or slightly extend?
+        // 3. Ajustement en fonction de l'activité physique (Via ActivityContext)
+        when (activityContext.state) {
+            ActivityState.INTENSE  -> {
+                // FIX: Stronger reduction for Intense activity to react faster
+                diaMinutes *= 0.85f
+                // reasonBuilder.append("Sport Intense: DIA x0.85")
+            }
+
+            ActivityState.MODERATE -> {
+                diaMinutes *= 0.90f
+                reasonBuilder.append(" • Moderate Activity ➝ x0.90\n")
+            }
+
+            ActivityState.LIGHT    -> {
+                diaMinutes *= 0.98f
+                reasonBuilder.append(" • Light Activity ➝ x0.98\n")
+            }
+
+            else                   -> {
+                // REST
+                if (activityContext.isRecovery) {
+                    // Recovery: Keep Dia normal or slightly extend?
+                }
             }
         }
-    }    
 
         // 3b. BIO-SYNC Stress Mode (Correction for High HR at Rest)
         val s = steps ?: 0
         val h = heartRate ?: 0
         if (h > 95 && s < 100) {
-             // Stress / Maladie : Résistance -> DIA plus long
-             diaMinutes *= 1.2f
-             reasonBuilder.append(context.getString(R.string.reason_bio_sync_stress, h, s))
+            // Stress / Maladie : Résistance -> DIA plus long
+            diaMinutes *= 1.2f
+            reasonBuilder.append(context.getString(R.string.reason_bio_sync_stress, h, s))
         } else if (s > 350) {
-             // Flow / Sport (Undeclared): > 70spm (Brisk Walk)
-             // Absorption rapide -> DIA plus court (si pas déjà appliqué par ActivityContext)
-             if (activityContext.state != ActivityState.INTENSE) {
-                 diaMinutes *= 0.90f
-                 reasonBuilder.append(context.getString(R.string.reason_bio_sync_flow, s, h, 0.90f))
-             }
+            // Flow / Sport (Undeclared): > 70spm (Brisk Walk)
+            // Absorption rapide -> DIA plus court (si pas déjà appliqué par ActivityContext)
+            if (activityContext.state != ActivityState.INTENSE) {
+                diaMinutes *= 0.90f
+                reasonBuilder.append(context.getString(R.string.reason_bio_sync_flow, s, h, 0.90f))
+            }
         }
 
         // 5. Ajustement en fonction de l'IOB (Insulin on Board)
@@ -6290,7 +6374,6 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         val finalDiaMinutes = diaMinutes.coerceIn(180f, 720f)
         //reasonBuilder.append("Final DIA constrained to [180, 720] min: ${finalDiaMinutes}min")
         reasonBuilder.append(context.getString(R.string.final_dia_constrained, finalDiaMinutes))
-
 
         //println("DIA Calculation Details:")
         println(context.getString(R.string.dia_calculation_details))
@@ -6383,8 +6466,8 @@ class DetermineBasalaimiSMB2 @Inject constructor(
     private fun mapPostHypoToAggressionHint(state: PostHypoState): CorrectionAggressionGate.PostHypoHint =
         when (state) {
             is PostHypoState.ReboundSuspected -> CorrectionAggressionGate.PostHypoHint.REBOUND_SUSPECTED
-            is PostHypoState.MealConfirmed -> CorrectionAggressionGate.PostHypoHint.MEAL_CONFIRMED
-            PostHypoState.None -> CorrectionAggressionGate.PostHypoHint.NONE
+            is PostHypoState.MealConfirmed    -> CorrectionAggressionGate.PostHypoHint.MEAL_CONFIRMED
+            PostHypoState.None                -> CorrectionAggressionGate.PostHypoHint.NONE
         }
 
     /**
@@ -6482,7 +6565,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
     private fun calculateSmbLast30Min(): Double {
         val now = dateUtil.now()
         val lookback30min = now - 30 * 60 * 1000L
-        
+
         return try {
             val boluses = getBolusesFromTimeCached(lookback30min, ascending = false)
                 .filter { it.type == BS.Type.SMB }
@@ -6493,7 +6576,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             0.0
         }
     }
-    
+
     // Rounds value to 'digits' decimal places
     // different for negative numbers fun round(value: Double, digits: Int): Double = BigDecimal(value).setScale(digits, RoundingMode.HALF_EVEN).toDouble()
     fun round(value: Double, digits: Int): Double {
@@ -6508,6 +6591,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         val scale = 10.0.pow(2.0)
         return (Math.round(value * scale) / scale).toInt()
     }
+
     // Helper for Post-Meal Basal Boost (AIMI 2.0)
     private fun adjustBasalForMealHyper(
         suggestedBasalUph: Double,
@@ -6530,7 +6614,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
 
         val boostFactor = when {
             veryHigh -> 10    // ex : 250+ → +50 %
-            else -> 8       // ex : 180–250 → +25 %
+            else     -> 8       // ex : 180–250 → +25 %
         }
 
         val boosted = suggestedBasalUph * boostFactor
@@ -6544,6 +6628,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         val rawRate = if (overrideSafety || basal == 0.0) currentBasal * multiplier else roundBasal(basal * multiplier)
         return rawRate.coerceAtLeast(0.0)
     }
+
     private fun calculateBasalRate(basal: Double, currentBasal: Double, multiplier: Double): Double {
         val raw = if (basal == 0.0) currentBasal * multiplier else roundBasal(basal * multiplier)
         return raw.coerceAtLeast(0.0)
@@ -6570,7 +6655,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             consoleError.add(context.getString(R.string.smb_disabled))
             return false
         }
-        
+
         // 🔒 SAFETY: Hard Floor for SMB. No SMB below 80 mg/dL ever.
         // Even if predicted to rise, we don't SuperBolus a hypo.
         if (currentBg < 80) {
@@ -6619,10 +6704,10 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         if (mealModeActive) {
             val safeFloorValue = max(100.0, targetbg - 5)
             val risingFast = combinedDelta >= 2.0 || (combinedDelta > 0 && currentBg > 120)
-            
+
             // 🚀 EXPLOSIVE RISE EXCEPTION: Allow SMB at 90mg/dL if combinedDelta is huge (> 4.0)
             val isExplosive = combinedDelta > 4.0 && currentBg > 90.0
-            
+
             // Condition assouplie: eventualBg ignoré si montée confirmée
             if ((currentBg > safeFloorValue || isExplosive) && combinedDelta > 0.5 && (eventualBg > safeFloorValue || risingFast || isExplosive)) {
                 mealModeSmbReason = context.getString(
@@ -6639,7 +6724,6 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         return false
     }
 
-
     fun reason(rT: RT, msg: String) {
         if (rT.reason.toString().isNotEmpty()) rT.reason.append(". ")
         rT.reason.append(msg)
@@ -6651,12 +6735,12 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         val duration = rT.duration ?: 0
         val rate = rT.rate ?: 0.0
         val decisionType = when {
-            units > 0.0 -> "smb"
-            duration > 0 && rate <= 0.0 -> "suspend"
+            units > 0.0                                                    -> "smb"
+            duration > 0 && rate <= 0.0                                    -> "suspend"
             duration > 0 && currenttemp != null && rate > currenttemp.rate -> "tbr_up"
             duration > 0 && currenttemp != null && rate < currenttemp.rate -> "tbr_down"
-            duration > 0 && rate > 0.0 -> "tbr_up"
-            else -> "none"
+            duration > 0 && rate > 0.0                                     -> "tbr_up"
+            else                                                           -> "none"
         }
         physioAdapter.setFinalLoopDecisionType(decisionType)
     }
@@ -6688,7 +6772,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         if (blockLgs) {
             rT.reason.append(context.getString(R.string.lgs_triggered, "%.0f".format(bg), "%.0f".format(hypoGuard)))
             rT.duration = maxOf(duration, 30)
-            rT.rate = ketoProtection(0.0, profile, rT, pumpCaps )
+            rT.rate = ketoProtection(0.0, profile, rT, pumpCaps)
             physioAdapter.setFinalLoopDecisionType("suspend")
             return rT
         }
@@ -6704,7 +6788,8 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                     R.string.manual_basal_override,
                     rate,
                     duration,
-                    if (Therapy(persistenceLayer).let { it.updateStatesBasedOnTherapyEvents()
+                    if (Therapy(persistenceLayer).let {
+                            it.updateStatesBasedOnTherapyEvents()
                             it.snackTime || it.highCarbTime || it.mealTime || it.lunchTime || it.dinnerTime || it.bfastTime
                         }) "✔" else "✘"
                 )
@@ -6712,10 +6797,10 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             rT.duration = duration
             rT.rate = ketoProtection(rate, profile, rT, pumpCaps)
             val decisionType = when {
-                rate == 0.0 -> "suspend"
+                rate == 0.0             -> "suspend"
                 rate > currenttemp.rate -> "tbr_up"
                 rate < currenttemp.rate -> "tbr_down"
-                else -> "none"
+                else                    -> "none"
             }
             physioAdapter.setFinalLoopDecisionType(decisionType)
             return rT
@@ -6737,7 +6822,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
 
         // 3) Tendance & ajustement dynamique
         // val bgTrend = calculateBgTrend(getRecentBGs(), StringBuilder())
-        
+
         // Use the new progressive Sigmoid/PD controller instead of the old fixed 1.2x limit
         val dynamicState = dynamicBasalController.calculateDynamicRate(
             currentRate = _rate,
@@ -6747,14 +6832,14 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             shortAvgDelta = shortAvgDelta.toDouble()
         )
         var rateAdjustment = dynamicState.finalRate.coerceAtLeast(0.0)
-        
+
         // Log the math for debugging and transparency
         consoleLog.add(
             "DYNAMIC_BASAL P-Err=${"%.1f".format(dynamicState.errorP)} " +
-            "D-Err=${"%.1f".format(dynamicState.errorD)} " +
-            "Total=${"%.2f".format(dynamicState.totalError)} " +
-            "Mult=${"%.2f".format(dynamicState.sigmoidMultiplier)}x " +
-            "Brake=${dynamicState.isBraking}"
+                "D-Err=${"%.1f".format(dynamicState.errorD)} " +
+                "Total=${"%.2f".format(dynamicState.totalError)} " +
+                "Mult=${"%.2f".format(dynamicState.sigmoidMultiplier)}x " +
+                "Brake=${dynamicState.isBraking}"
         )
 
         // 🚀 PKPD TBR Boost: Augmenter TBR si preferTbr (sauf modes repas)
@@ -6779,19 +6864,20 @@ class DetermineBasalaimiSMB2 @Inject constructor(
 
         // même en bypass, on ne dépasse JAMAIS max_basal (hard cap)
         var rate = when {
-            bgNow <= hypoGuard -> 0.0
+            bgNow <= hypoGuard               -> 0.0
             // [BASAL FLOOR] Rising & > 85 mg/dL -> Maintain floor (ML-Aware) instead of 0.0
             // Only if prediction would otherwise set it to 0.0 (e.g. safety logic)
-            rateAdjustment == 0.0 && bgNow > 85.0 && 
-            (delta > (if (adaptiveMultiplier > 1.1) -0.5 else 1.0)) && 
-            !isMealMode && !isLgsEnabled -> {
-                 val baseFloor = profile.current_basal * 0.5
-                 val adaptiveFloor = baseFloor * adaptiveMultiplier
-                 rT.reason.append(" [BASAL_FLOOR: ${"%.2f".format(adaptiveFloor)}U/h (ML:${"%.2f".format(adaptiveMultiplier)}x)] ")
-                 adaptiveFloor
+            rateAdjustment == 0.0 && bgNow > 85.0 &&
+                (delta > (if (adaptiveMultiplier > 1.1) -0.5 else 1.0)) &&
+                !isMealMode && !isLgsEnabled -> {
+                val baseFloor = profile.current_basal * 0.5
+                val adaptiveFloor = baseFloor * adaptiveMultiplier
+                rT.reason.append(" [BASAL_FLOOR: ${"%.2f".format(adaptiveFloor)}U/h (ML:${"%.2f".format(adaptiveMultiplier)}x)] ")
+                adaptiveFloor
             }
-            bypassSafety       -> rateAdjustment.coerceIn(0.0, profile.max_basal)
-            else               -> rateAdjustment.coerceIn(0.0, maxSafe)
+
+            bypassSafety                     -> rateAdjustment.coerceIn(0.0, profile.max_basal)
+            else                             -> rateAdjustment.coerceIn(0.0, maxSafe)
         }
 
         // Apply final Universal Adaptive Multiplier (only if > hypoGuard and not 0.0)
@@ -6841,17 +6927,14 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         rT.duration = duration
         rT.rate = ketoProtection(rate, profile, rT, pumpCaps)
         val decisionType = when {
-            rate == 0.0 -> "suspend"
+            rate == 0.0             -> "suspend"
             rate > currenttemp.rate -> "tbr_up"
             rate < currenttemp.rate -> "tbr_down"
-            else -> "none"
+            else                    -> "none"
         }
         physioAdapter.setFinalLoopDecisionType(decisionType)
         return rT
     }
-
-
-
 
     private fun calculateBgTrend(recentBGs: List<Float>, reason: StringBuilder): Float {
         if (recentBGs.isEmpty()) {
@@ -6873,7 +6956,6 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         reason.append(context.getString(R.string.calculated_trend, bgTrend))
         return bgTrend
     }
-
 
     private fun logDataMLToCsv(predictedSMB: Float, smbToGive: Float) {
         val usFormatter = DateTimeFormatter.ofPattern("MM/dd/yyyy HH:mm")
@@ -6993,6 +7075,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         //reasonBuilder.append("Les 200 dernières lignes ont été supprimées. Le fichier original a été sauvegardé sous '$backupFileName'.")
         reasonBuilder.append(context.getString(R.string.last_200_deleted, backupFileName))
     }
+
     @SuppressLint("StringFormatInvalid")
     private fun automateDeletionIfBadDay(tir1DAYIR: Int) {
         val reasonBuilder = StringBuilder()
@@ -7045,13 +7128,13 @@ class DetermineBasalaimiSMB2 @Inject constructor(
     ) {
         // 🚀 REACTOR MODE: Full Speed (Safety delegated to applySafetyPrecautions)
         // User Directive: "Garde le moteur à plein régime"
-        
+
         val effectiveProposed = proposedUnits
 
         // No inline clamping here. 
         // We trust the UnifiedReactivityLearner to provide the correct amplification
         // and the Safety Module to catch critical issues.
-        
+
         val proposedFloat = effectiveProposed.toFloat()
         lastDecisionSource = decisionSource
         lastSmbProposed = effectiveProposed
@@ -7070,9 +7153,9 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             )
         }
         val eventualForStacking = when {
-            this.eventualBG > 1.0 -> this.eventualBG
+            this.eventualBG > 1.0                          -> this.eventualBG
             rT.eventualBG != null && rT.eventualBG!! > 1.0 -> rT.eventualBG!!
-            else -> null
+            else                                           -> null
         }
         val stackingEval = InsulinStackingStance.evaluate(
             bg = this.bg,
@@ -7097,7 +7180,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         var chainFinal: Double
         var chainIntervalAdd = 0
         var chainThrottleFactor = 1.0
-        
+
         // 🛡️ SAFETY NET: Dynamic SMB Limit (Zones & Trajectory)
         // Replaces simple "React Over 120" with a smart, amplified range logic.
         // Handles: Strict Lows (<120), Buffer/Transition (120-160), and Full Reactor (>160).
@@ -7106,8 +7189,10 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         // Sinon, passer null pour appliquer le boost par défaut
         val auditorLastConfidence: Double? = try {
             AuditorVerdictCache.get(300_000)?.verdict?.confidence
-        } catch (_: Exception) { null }
-        
+        } catch (_: Exception) {
+            null
+        }
+
         val baseLimit = SafetyNet.calculateSafeSmbLimit(
             bg = this.bg,
             targetBg = targetBg.toDouble(),
@@ -7122,12 +7207,12 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         )
         chainBaseLimit = baseLimit
 
-         // 🔒 FCL Safety: Enforce Safety Precautions (Dropping Fast, Hypo Risk, etc)
-         // finalizeAndCapSMB often handles forced boluses, but they MUST yield to critical physical safety.
-         // 🔧 RESTORED: Pass PKPD runtime for tail damping
-         // Note: pkpdRuntime is calculated later in determine_basal, so we pass null here
-         // and rely on the PKPD tail damping in applySafetyPrecautions for context-aware reduction
-         val safetyCappedUnits = applySafetyPrecautions(
+        // 🔒 FCL Safety: Enforce Safety Precautions (Dropping Fast, Hypo Risk, etc)
+        // finalizeAndCapSMB often handles forced boluses, but they MUST yield to critical physical safety.
+        // 🔧 RESTORED: Pass PKPD runtime for tail damping
+        // Note: pkpdRuntime is calculated later in determine_basal, so we pass null here
+        // and rely on the PKPD tail damping in applySafetyPrecautions for context-aware reduction
+        val safetyCappedUnits = applySafetyPrecautions(
             mealData = mealData,
             smbToGiveParam = proposedFloat,
             hypoThreshold = hypoThreshold,
@@ -7136,52 +7221,52 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             exerciseFlag = sportTime, // Pass exercise state
             suspectedLateFatMeal = lateFatRiseFlag, // Pass late fat flag
             ignoreSafetyConditions = isExplicitUserAction
-         ).coerceAtMost(baseLimit.toFloat()) // Apply the SafetyNet limit immediately
-         chainSafetyCapped = safetyCappedUnits
+        ).coerceAtMost(baseLimit.toFloat()) // Apply the SafetyNet limit immediately
+        chainSafetyCapped = safetyCappedUnits
 
-         if (safetyCappedUnits < proposedFloat) {
-              consoleLog.add("Safety Precautions reduced SMB: $proposedFloat -> $safetyCappedUnits (BaseLimit=${"%.2f".format(baseLimit)})")
-         }
+        if (safetyCappedUnits < proposedFloat) {
+            consoleLog.add("Safety Precautions reduced SMB: $proposedFloat -> $safetyCappedUnits (BaseLimit=${"%.2f".format(baseLimit)})")
+        }
 
-         // 🔧 FIX 3: Enhanced refractory if prediction absent
-         // Calculate predMissing FIRST before using it
-         val predMissing = !lastPredictionAvailable || lastPredictionSize < 3
-         
-         val baseRefractoryWindow = calculateSMBInterval().toDouble()
-         val refractoryWindow = if (predMissing) {
-             (baseRefractoryWindow * 1.5).coerceAtLeast(5.0) // +50% safety margin if blind
-         } else {
-             baseRefractoryWindow
-         }
-         
-         val sinceBolus = if (lastBolusAgeMinutes.isNaN()) 999.0 else lastBolusAgeMinutes
-         val refractoryBlocked = sinceBolus < refractoryWindow && !isExplicitUserAction
-         var gatedUnits = safetyCappedUnits
-         var absorptionFactor = 1.0
+        // 🔧 FIX 3: Enhanced refractory if prediction absent
+        // Calculate predMissing FIRST before using it
+        val predMissing = !lastPredictionAvailable || lastPredictionSize < 3
 
-         // 🦋 THYROID NORMALIZING SAFETY GATE
-         if (this.currentThyroidEffects.status == ThyroidStatus.NORMALIZING) {
-             val inputs = thyroidPreferences.inputsFlow.value
-             val gatedEffects = thyroidSafetyGates.applyGates(
-                 inputs = inputs,
-                 effects = this.currentThyroidEffects,
-                 currentBg = bg,
-                 bgDelta = delta.toDouble(),
-                 currentIob = iob.toDouble()
-             )
-             if (gatedEffects.blockSmb) {
-                 gatedUnits = 0f
-                 consoleLog.add("🦋 THYROID_GUARD: SMB Blocked (Normalizing Phase risk)")
-                 rT.reason.append("🦋 Thyroid Guard: Blocked. ")
-             } else if (gatedEffects.smbCapUnits != null) {
-                 val cap = gatedEffects.smbCapUnits.toFloat()
-                 if (gatedUnits > cap) {
-                     consoleLog.add("🦋 THYROID_GUARD: SMB Capped to ${cap} (was $gatedUnits)")
-                     rT.reason.append("🦋 Thyroid Guard: Cap ${cap}U. ")
-                     gatedUnits = cap
-                 }
-             }
-         }
+        val baseRefractoryWindow = calculateSMBInterval().toDouble()
+        val refractoryWindow = if (predMissing) {
+            (baseRefractoryWindow * 1.5).coerceAtLeast(5.0) // +50% safety margin if blind
+        } else {
+            baseRefractoryWindow
+        }
+
+        val sinceBolus = if (lastBolusAgeMinutes.isNaN()) 999.0 else lastBolusAgeMinutes
+        val refractoryBlocked = sinceBolus < refractoryWindow && !isExplicitUserAction
+        var gatedUnits = safetyCappedUnits
+        var absorptionFactor = 1.0
+
+        // 🦋 THYROID NORMALIZING SAFETY GATE
+        if (this.currentThyroidEffects.status == ThyroidStatus.NORMALIZING) {
+            val inputs = thyroidPreferences.inputsFlow.value
+            val gatedEffects = thyroidSafetyGates.applyGates(
+                inputs = inputs,
+                effects = this.currentThyroidEffects,
+                currentBg = bg,
+                bgDelta = delta.toDouble(),
+                currentIob = iob.toDouble()
+            )
+            if (gatedEffects.blockSmb) {
+                gatedUnits = 0f
+                consoleLog.add("🦋 THYROID_GUARD: SMB Blocked (Normalizing Phase risk)")
+                rT.reason.append("🦋 Thyroid Guard: Blocked. ")
+            } else if (gatedEffects.smbCapUnits != null) {
+                val cap = gatedEffects.smbCapUnits.toFloat()
+                if (gatedUnits > cap) {
+                    consoleLog.add("🦋 THYROID_GUARD: SMB Capped to ${cap} (was $gatedUnits)")
+                    rT.reason.append("🦋 Thyroid Guard: Cap ${cap}U. ")
+                    gatedUnits = cap
+                }
+            }
+        }
 
         if (refractoryBlocked) {
             if (mealPriorityContext) {
@@ -7201,81 +7286,81 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                 gatedUnits = 0f
                 consoleLog.add("⏸️ REFRACTORY_BLOCK sinceBolus=${"%.1f".format(sinceBolus)}m window=${"%.1f".format(refractoryWindow)}m (SMB blocked)")
             }
-         } else if (sinceBolus < refractoryWindow && isExplicitUserAction) {
-             // Modes repas bypassent explicitement le refractory
-             consoleLog.add("✅ REFRACTORY_BYPASS sinceBolus=${"%.1f".format(sinceBolus)}m window=${"%.1f".format(refractoryWindow)}m (Meal mode override)")
-         }
+        } else if (sinceBolus < refractoryWindow && isExplicitUserAction) {
+            // Modes repas bypassent explicitement le refractory
+            consoleLog.add("✅ REFRACTORY_BYPASS sinceBolus=${"%.1f".format(sinceBolus)}m window=${"%.1f".format(refractoryWindow)}m (Meal mode override)")
+        }
         chainAfterRefractory = gatedUnits
 
-         // 🔧 FIX 2: Adaptive AbsorptionGuard threshold (pediatric-safe)
-         val tdd24h = resolveTdd24hForLoop(30.0)
-         val activityThreshold = (tdd24h / 24.0) * 0.15 // 15% of hourly TDD
-         
-        if (sinceBolus < 20.0 && iobActivityNow > activityThreshold && !isExplicitUserAction && !mealPriorityContext) {
-             absorptionFactor = if (bg > targetBg + 60 && delta > 0) 0.75 else 0.5
-             gatedUnits = (gatedUnits * absorptionFactor.toFloat()).coerceAtLeast(0f)
-         }
+        // 🔧 FIX 2: Adaptive AbsorptionGuard threshold (pediatric-safe)
+        val tdd24h = resolveTdd24hForLoop(30.0)
+        val activityThreshold = (tdd24h / 24.0) * 0.15 // 15% of hourly TDD
 
-         if (predMissing && !isExplicitUserAction) {
-             val degraded = (maxSMB * 0.5).toFloat()
-             if (gatedUnits > degraded) gatedUnits = degraded
-         }
-         
-         // 🚀 NOUVEAUTÉ: Real-Time Insulin Observer Throttle
-         if (!isExplicitUserAction) {
-             val actionState = insulinObserver.update(
-                 currentBg = this.bg,
-                 bgDelta = this.delta.toDouble(),
-                 iobTotal = this.iob.toDouble(),
-                 iobActivityNow = this.iobActivityNow,
-                 iobActivityIn30 = 0.0,  // Not critical for throttle
-                 peakMinutesAbs = 0,     // Not critical for throttle
-                 diaHours = 4.0,         // Approximation
-                 carbsActiveG = this.cob.toDouble(),
-                 now = dateUtil.now()
-             )
-             
-             val throttle = SmbTbrThrottleLogic.computeThrottle(
-                 actionState = actionState,
-                 bgDelta = this.delta.toDouble(),
-                 bgRising = this.bg > this.targetBg,
-                 targetBg = this.targetBg.toDouble(),
-                 currentBg = this.bg
-             )
-             
+        if (sinceBolus < 20.0 && iobActivityNow > activityThreshold && !isExplicitUserAction && !mealPriorityContext) {
+            absorptionFactor = if (bg > targetBg + 60 && delta > 0) 0.75 else 0.5
+            gatedUnits = (gatedUnits * absorptionFactor.toFloat()).coerceAtLeast(0f)
+        }
+
+        if (predMissing && !isExplicitUserAction) {
+            val degraded = (maxSMB * 0.5).toFloat()
+            if (gatedUnits > degraded) gatedUnits = degraded
+        }
+
+        // 🚀 NOUVEAUTÉ: Real-Time Insulin Observer Throttle
+        if (!isExplicitUserAction) {
+            val actionState = insulinObserver.update(
+                currentBg = this.bg,
+                bgDelta = this.delta.toDouble(),
+                iobTotal = this.iob.toDouble(),
+                iobActivityNow = this.iobActivityNow,
+                iobActivityIn30 = 0.0,  // Not critical for throttle
+                peakMinutesAbs = 0,     // Not critical for throttle
+                diaHours = 4.0,         // Approximation
+                carbsActiveG = this.cob.toDouble(),
+                now = dateUtil.now()
+            )
+
+            val throttle = SmbTbrThrottleLogic.computeThrottle(
+                actionState = actionState,
+                bgDelta = this.delta.toDouble(),
+                bgRising = this.bg > this.targetBg,
+                targetBg = this.targetBg.toDouble(),
+                currentBg = this.bg
+            )
+
             // Apply throttle
             val effectiveSmbFactor = if (mealPriorityContext) throttle.smbFactor.coerceAtLeast(0.80) else throttle.smbFactor
             val effectiveIntervalAdd = if (mealPriorityContext) min(throttle.intervalAddMin, 1) else throttle.intervalAddMin
             chainThrottleFactor = effectiveSmbFactor
             chainIntervalAdd = effectiveIntervalAdd
-             val originalGated = gatedUnits
+            val originalGated = gatedUnits
             gatedUnits = (gatedUnits * effectiveSmbFactor.toFloat()).coerceAtLeast(0f)
-             
-             // Log
+
+            // Log
             if (effectiveSmbFactor < 1.0 || throttle.preferTbr) {
                 consoleLog.add(
                     "PKPD_THROTTLE smbFactor=${"%.2f".format(effectiveSmbFactor)} intervalAdd=${effectiveIntervalAdd} " +
                         "preferTbr=${throttle.preferTbr} reason=${throttle.reason}" +
                         if (mealPriorityContext) " [MEAL_PRIORITY_RELAX]" else ""
                 )
-                 if (originalGated > 0f && gatedUnits < originalGated * 0.6f) {
-                     consoleLog.add("  ⚠️ SMB reduced ${"%2f".format(originalGated)} → ${"%.2f".format(gatedUnits)}U (PKPD throttle)")
-                 }
-             }
-             
-             // Si preferTbr, suggérer TBR dans reason (pas bloquer SMB)
-             if (throttle.preferTbr && gatedUnits < proposedFloat * 0.5) {
-                 rT.reason.append(" | 💡 TBR recommended (${throttle.reason})")
-             }
-             
-             // 🚀 Stocker les valeurs pour interval SMB et TBR boost
+                if (originalGated > 0f && gatedUnits < originalGated * 0.6f) {
+                    consoleLog.add("  ⚠️ SMB reduced ${"%2f".format(originalGated)} → ${"%.2f".format(gatedUnits)}U (PKPD throttle)")
+                }
+            }
+
+            // Si preferTbr, suggérer TBR dans reason (pas bloquer SMB)
+            if (throttle.preferTbr && gatedUnits < proposedFloat * 0.5) {
+                rT.reason.append(" | 💡 TBR recommended (${throttle.reason})")
+            }
+
+            // 🚀 Stocker les valeurs pour interval SMB et TBR boost
             pkpdThrottleIntervalAdd = effectiveIntervalAdd
-             pkpdPreferTbrBoost = if (throttle.preferTbr) 1.15 else 1.0  // +15% TBR si preferTbr
-         } else {
-             // Reset si explicit user action (modes repas)
-             pkpdThrottleIntervalAdd = 0
-             pkpdPreferTbrBoost = 1.0
-         }
+            pkpdPreferTbrBoost = if (throttle.preferTbr) 1.15 else 1.0  // +15% TBR si preferTbr
+        } else {
+            // Reset si explicit user action (modes repas)
+            pkpdThrottleIntervalAdd = 0
+            pkpdPreferTbrBoost = 1.0
+        }
         chainAfterThrottle = gatedUnits
 
         var stackingReducedSmbThisFinalize = false
@@ -7301,8 +7386,8 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             }
         }
 
-         val safeCap = capSmbDose(
-             proposedSmb = gatedUnits, // Use the safety-reduced amount as base
+        val safeCap = capSmbDose(
+            proposedSmb = gatedUnits, // Use the safety-reduced amount as base
             bg = this.bg,
             // 🔒 CRITICAL FIX: Always respect user preference (no bypass)
             // Previous code used max(baseLimit, proposedUnits) which IGNORED user limits
@@ -7311,16 +7396,16 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             iob = this.iob.toDouble(),
             maxIob = this.maxIob
         )
-        
+
         // 🚀 MEAL MODES FORCE SEND: "Red Carpet" Logic
         var finalUnits: Double
-        
+
         // Définition élargie du contexte prioritaire "Tapis Rouge"
         // 1. Action Explicite (Bouton appuyé)
         // 2. Mode Repas Actif (Dinner, Lunch, etc.) OU AIMI Context Meal (RContext déclaré)
         // 3. Chaos Carbohydrate (COB présents + Montée violente > 5 mg/dL/5m)
         val isMealChaos = (mealData.mealCOB > 10.0 && delta > 5.0)
-        
+
         // Helper interne pour vérifier AIMI Context (RContext) - supposer true si mealData indique un repas récent
         // Dans une implémentation idéale, on injecterait le ContextRepository, mais ici on utilise les proxies disponibles
         // 🐛 FIX: 'mealData.isMealStart' n'existe pas. On utilise la variable locale 'isMealActive' calculée plus haut.
@@ -7330,18 +7415,18 @@ class DetermineBasalaimiSMB2 @Inject constructor(
 
         // On entre dans la logique forcée si on est en situation "Red Carpet" et qu'il y a une demande
         if (isRedCarpetSituation && proposedUnits > 0.0 && !iobSurveillanceSuppressRedCarpet) {
-            
+
             // 1. Restauration de la demande
             // Si les sécurités mineures ont coupé plus de 40% du bolus, on restaure la demande initiale.
-            val candidateUnits = if (gatedUnits < proposedUnits.toFloat() * 0.6f) { 
+            val candidateUnits = if (gatedUnits < proposedUnits.toFloat() * 0.6f) {
                 consoleLog.add("✨ RED CARPET: Restoring meal bolus blocked by minor safety (Proposed=${"%.2f".format(proposedUnits)} vs Gated=${"%.2f".format(gatedUnits)})")
-                 proposedUnits.toFloat()
+                proposedUnits.toFloat()
             } else {
-                 gatedUnits 
+                gatedUnits
             }
 
             // 2. Appliquer les Sécurités VITALES (Hard Caps uniquement)
-            
+
             // a. Cap MaxSMB - On utilise MaxSMBHB (High) si dispo, sinon config standard
             val maxSmbCap = if (maxSMBHB > baseLimit) maxSMBHB.toFloat() else baseLimit.toFloat()
             var mealBolus = min(candidateUnits, maxSmbCap)
@@ -7350,18 +7435,24 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             val iobSpace = (this.maxIob - this.iob).coerceAtLeast(0.0)
 
             // DEBUG TRACE (MTR Audit)
-            consoleLog.add("MEAL_DEBUG Need=${"%.2f".format(candidateUnits)} MaxSMB=${"%.2f".format(baseLimit)} MaxSMBHB=${"%.2f".format(maxSMBHB)} Cap=${"%.2f".format(maxSmbCap)} MaxIOB=${"%.2f".format(this.maxIob)} IOB=${"%.2f".format(this.iob)} Space=${"%.2f".format(iobSpace)}")
-            
+            consoleLog.add(
+                "MEAL_DEBUG Need=${"%.2f".format(candidateUnits)} MaxSMB=${"%.2f".format(baseLimit)} MaxSMBHB=${"%.2f".format(maxSMBHB)} Cap=${"%.2f".format(maxSmbCap)} MaxIOB=${"%.2f".format(this.maxIob)} IOB=${"%.2f".format(this.iob)} Space=${
+                    "%.2f".format(
+                        iobSpace
+                    )
+                }"
+            )
+
             if (mealBolus > iobSpace.toFloat()) {
                 consoleLog.add("🛡️ RED CARPET: Clamped by MaxIOB (Need=${"%.2f".format(mealBolus)}, Space=${"%.2f".format(iobSpace)})")
                 mealBolus = iobSpace.toFloat()
             }
-            
+
             // c. Hard Cap 30U (Ceinture de sécurité absolue anti-bug)
             mealBolus = mealBolus.coerceAtMost(30f)
 
             finalUnits = mealBolus.toDouble()
-            
+
             // Log explicite pour le debugging
             if (finalUnits > gatedUnits + 0.1) {
                 val reason = if (isExplicitUserAction) "UserAction" else if (isMealChaos) "CarbChaos" else "MealMode/Context"
@@ -7373,7 +7464,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             finalUnits = safeCap.toDouble()
         }
         chainFinal = finalUnits
-        
+
         lastSmbCapped = finalUnits
         lastSmbFinal = finalUnits
 
@@ -7385,25 +7476,25 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         physioAdapter.setFinalLoopDecisionType(if (finalUnits > 0.0) "smb" else "none")
         rT.reason.append(reasonHeader)
 
-         val audit = SmbGateAudit(
-             sinceBolus = sinceBolus,
-             refractoryWindow = refractoryWindow,
-             absorptionFactor = absorptionFactor,
-             predMissing = predMissing,
-             maxIobLimit = this.maxIob,
-             maxSmbLimit = baseLimit
-         )
-         if (proposedUnits > 0 || safeCap > 0f) {
-             logSmbGateExplain(audit, proposedFloat, gatedUnits, safeCap, activityThreshold)
-         }
+        val audit = SmbGateAudit(
+            sinceBolus = sinceBolus,
+            refractoryWindow = refractoryWindow,
+            absorptionFactor = absorptionFactor,
+            predMissing = predMissing,
+            maxIobLimit = this.maxIob,
+            maxSmbLimit = baseLimit
+        )
+        if (proposedUnits > 0 || safeCap > 0f) {
+            logSmbGateExplain(audit, proposedFloat, gatedUnits, safeCap, activityThreshold)
+        }
 
         if (safeCap < proposedFloat) {
-             rT.reason.appendLine(context.getString(R.string.limits_smb, proposedFloat, safeCap))
-             consoleLog.add("SMB_CAP: Proposed=$proposedFloat Allowed=$safeCap Reason=$reasonHeader")
-             consoleLog.add("  -> Limits: MaxSMB=$baseLimit MaxIOB=${this.maxIob} IOB=${this.iob}")
-             if (safeCap == 0f && this.iob >= this.maxIob) {
-                 consoleLog.add("  -> BLOCK: IOB_SATURATION (IOB ${this.iob} >= MaxIOB ${this.maxIob})")
-             }
+            rT.reason.appendLine(context.getString(R.string.limits_smb, proposedFloat, safeCap))
+            consoleLog.add("SMB_CAP: Proposed=$proposedFloat Allowed=$safeCap Reason=$reasonHeader")
+            consoleLog.add("  -> Limits: MaxSMB=$baseLimit MaxIOB=${this.maxIob} IOB=${this.iob}")
+            if (safeCap == 0f && this.iob >= this.maxIob) {
+                consoleLog.add("  -> BLOCK: IOB_SATURATION (IOB ${this.iob} >= MaxIOB ${this.maxIob})")
+            }
         }
         if (mealPriorityContext) {
             val chainLine =
@@ -7455,7 +7546,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             smb_u_final_for_delivery = chainFinal,
             smb_final_source = smbFinalSource,
             summary_line = when (stackingEval.kind) {
-                InsulinStackingStance.Kind.SURVEILLANCE_IOB -> stackingEval.summary
+                InsulinStackingStance.Kind.SURVEILLANCE_IOB  -> stackingEval.summary
                 InsulinStackingStance.Kind.CORRECTION_ACTIVE ->
                     "CORRECTION_ACTIVE reason=${stackingEval.activeReason ?: "default"} meal_priority=$mealPriorityContext " +
                         "signals(ev=${signalEventualDrop(this.bg, evExp)} mn=${signalMinPredDrop(this.bg, mnExp)} traj=${signalTrajectoryStack(teExp)})"
@@ -7613,6 +7704,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                         )
                     }
                 }
+
                 PkpdGuardLogChannel.FINALIZE -> {
                     reason?.appendLine(
                         "🛡️ PKPD Guard (${guard.reason}): ${"%.2f".format(beforeGuard)} → ${"%.2f".format(smbOut)} U"
@@ -7651,7 +7743,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         var smbToGive = smbToGiveParam
         val mealWeights = computeMealAggressionWeights(mealData, hypoThreshold)
 
-        val (isCrit, critMsg) = isCriticalSafetyCondition(mealData, hypoThreshold,context)
+        val (isCrit, critMsg) = isCriticalSafetyCondition(mealData, hypoThreshold, context)
         if (isCrit && !ignoreSafetyConditions) {
             reason?.appendLine("🛑 $critMsg → SMB=0")
             consoleLog.add("SMB forced to 0 by critical safety: $critMsg")
@@ -7757,10 +7849,11 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         smbToGive = smbToGive.coerceAtLeast(0f)
         return smbToGive
     }
+
     // Helper to check for recent bolus activity (prevent double dosing)
     private fun hasReceivedRecentBolus(minutes: Int, lastBolusTimeMs: Long): Boolean {
         val lookbackTime = dateUtil.now() - minutes * 60 * 1000L
-        
+
         // 1. Check DB
         val boluses = getBolusesFromTimeCached(lookbackTime, true)
         val dbHasBolus = boluses.any { it.amount > 0.3 }
@@ -7789,29 +7882,29 @@ class DetermineBasalaimiSMB2 @Inject constructor(
     ): Boolean {
         // 1. Slow Creep (Target + 15)
         if (bg <= targetBg + 15) return false
-        
+
         // 2. Nature of the Drift: Must be Flat or Rising Slow (CONFIRMED BY 15m AVG & DEVIATION)
         // [FIX] Plateau/Hovering Detection with Deep Analysis:
         // - Instant Delta must be > -1.5 (Not falling)
         // - Avg Delta (15m) must be > -1.5 (Sustained not falling)
         // - Both must be < 6.0 (Not a spike)
-        
+
         if (delta < -1.5 || avgDelta < -1.5) return false // Falling real (instant or trend)
         if (delta > 6.0 || avgDelta > 6.0) return false // Rising fast (Not a creep)
-        
+
         // 3. Confirmation by MinDeviation (Are we stuck *worse* than IOB allows?)
         // If deviation is positive, it means BG > IOB prediction -> Resistance/Drift
         // If combinedDelta is also weak (-1 to +2), it confirms the "stuck" nature.
         val isStuck = minDeviation > 0 && combinedDelta > -1.0 && combinedDelta < 3.0
-        
+
         if (!isStuck) {
-             // Fallback: If deviation isn't available/positive, ensure delta is strictly flat
-             if (delta < -0.5) return false 
+            // Fallback: If deviation isn't available/positive, ensure delta is strictly flat
+            if (delta < -0.5) return false
         }
 
         // 4. No recent bolus activity (Clean slate)
         if (lastBolusVolume > 0.1) return false
-        
+
         reason.append("🧹 Drift Terminator: Plateau detected (Δ${"%.1f".format(delta)} Avg${"%.1f".format(avgDelta)} Dev${"%.0f".format(minDeviation)}) -> ENGAGED\n")
         return true
     }
@@ -7826,16 +7919,14 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         // Safety: ISF is rarely < 10 or > 500.
         // Cap max bolus to 0.5U for safety by default (unless baseFactor changes)
         if (isf <= 0) return 0.0 // Should not happen
-        
+
         var bolus = baseFactor / isf
-        
+
         // Safety Caps
-        bolus = bolus.coerceIn(0.05, 0.5) 
-        
+        bolus = bolus.coerceIn(0.05, 0.5)
+
         return bolus
     }
-
-
 
     private fun isCompressionProtectionCondition(
         delta: Float,
@@ -7858,6 +7949,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
      *   MealConfirmed     → hypo récente MAIS repas confirmé   → SMB cappé 50%
      */
     private sealed class PostHypoState {
+
         object None : PostHypoState()
         data class ReboundSuspected(val sinceMs: Long) : PostHypoState()
         data class MealConfirmed(val sinceMs: Long) : PostHypoState()
@@ -8035,7 +8127,6 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         )
     }
 
-
     @SuppressLint("DefaultLocale")
     private fun isAutodriveModeCondition(
         delta: Float,
@@ -8052,13 +8143,13 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         // val pbolusA: Double = preferences.get(DoubleKey.OApsAIMIautodrivePrebolus)
         val autodriveDeltaBase: Float = preferences.get(DoubleKey.OApsAIMIcombinedDelta).toFloat()
         val autodriveMinDeviation: Double = preferences.get(DoubleKey.OApsAIMIAutodriveDeviation)
-    val autodriveBG: Int = preferences.get(IntKey.OApsAIMIAutodriveBG) // User Decision: Static Threshold
+        val autodriveBG: Int = preferences.get(IntKey.OApsAIMIAutodriveBG) // User Decision: Static Threshold
 
         // 🛡️ Noise Filter (Anti-Jump) -> [User Request]: Disabled. information for Autodrive.
-    // if (delta > 15f && shortAvgDelta < 5f) {
-    //      reason.append("🚫 Noise detected (Delta > 15 & Avg < 5) -> Autodrive OFF")
-    //      return false
-    // }
+        // if (delta > 15f && shortAvgDelta < 5f) {
+        //      reason.append("🚫 Noise detected (Delta > 15 & Avg < 5) -> Autodrive OFF")
+        //      return false
+        // }
 
         // 📈 Deltas récents & delta combiné
         val recentDeltas = getRecentDeltas()
@@ -8098,11 +8189,11 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             consoleLog.add("DELTA_CALC current=${String.format("%.1f", delta)} predicted=${String.format("%.1f", predicted)} avgRecent=${String.format("%.1f", avgRecentDelta)} → combined=${String.format("%.1f", computed)}")
             computed
         }
-        
+
         // 🎯 Dynamic Thresholds
-    // Respect User Static Threshold AND Safety Margin (Target + 10)
-    val dynamicBgThreshold = maxOf(targetBg + 10f, autodriveBG.toFloat())
-    val dynamicPredictedThreshold = targetBg + 30f
+        // Respect User Static Threshold AND Safety Margin (Target + 10)
+        val dynamicBgThreshold = maxOf(targetBg + 10f, autodriveBG.toFloat())
+        val dynamicPredictedThreshold = targetBg + 30f
 
         // 🔍 Tendance BG
         val recentBGs = getRecentBGs()
@@ -8132,7 +8223,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         }
 
         // FCL 13.0: Rocket Start Bypass (CombinedDelta > 10 or > 2xPref)
-        
+
         // Final Decision
         val ok =
             autodriveCondition &&
@@ -8152,11 +8243,10 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             "Autodrive: ${if (ok) "ON" else "OFF"} [$currentState] | " +
                 "cond=$autodriveCondition, dC=${"%.2f".format(combinedDelta)}, " +
                 "predBG>${dynamicPredictedThreshold.toInt()}, slope>=${"%.2f".format(autodriveMinDeviation)}, bg>=${dynamicBgThreshold.toInt()} (UserMin=${autodriveBG})"
-    )
+        )
 
         return ok
     }
-
 
     private fun adjustAutodriveCondition(
         bgTrend: Float,
@@ -8205,12 +8295,12 @@ class DetermineBasalaimiSMB2 @Inject constructor(
     private fun isLegacyPrebolusDeliveryPending(targetUnits: Float): Boolean =
         pendingLegacyPrebolusUnit == targetUnits && dateUtil.now() < pendingLegacyPrebolusExpiry
 
-    // ── P1 functions (window 0..7 min) — block for 14 min ────────────────────
+    // ── P1 functions (window 0..7 min) — block 14 min ────────────────────────
 
     private fun isMealModeCondition(): Boolean {
         val pbolusM: Double = preferences.get(DoubleKey.OApsAIMIMealPrebolus)
         val prebolusAlreadyFiredThisSession =
-            (dateUtil.now() - internalLastSmbMillis) < (14 * 60_000L)
+            (dateUtil.now() - internalLastLegacyPrebolusMillis) < (14 * 60_000L)
         return mealruntime in 0..7
             && lastBolusSMBUnit != pbolusM.toFloat()
             && !isLegacyPrebolusDeliveryPending(pbolusM.toFloat())
@@ -8221,7 +8311,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
     private fun isbfastModeCondition(): Boolean {
         val pbolusbfast: Double = preferences.get(DoubleKey.OApsAIMIBFPrebolus)
         val prebolusAlreadyFiredThisSession =
-            (dateUtil.now() - internalLastSmbMillis) < (14 * 60_000L)
+            (dateUtil.now() - internalLastLegacyPrebolusMillis) < (14 * 60_000L)
         return bfastruntime in 0..7
             && lastBolusSMBUnit != pbolusbfast.toFloat()
             && !isLegacyPrebolusDeliveryPending(pbolusbfast.toFloat())
@@ -8232,7 +8322,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
     private fun isLunchModeCondition(): Boolean {
         val pbolusLunch: Double = preferences.get(DoubleKey.OApsAIMILunchPrebolus)
         val prebolusAlreadyFiredThisSession =
-            (dateUtil.now() - internalLastSmbMillis) < (14 * 60_000L)
+            (dateUtil.now() - internalLastLegacyPrebolusMillis) < (14 * 60_000L)
         return lunchruntime in 0..7
             && lastBolusSMBUnit != pbolusLunch.toFloat()
             && !isLegacyPrebolusDeliveryPending(pbolusLunch.toFloat())
@@ -8243,7 +8333,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
     private fun isDinnerModeCondition(): Boolean {
         val pbolusDinner: Double = preferences.get(DoubleKey.OApsAIMIDinnerPrebolus)
         val prebolusAlreadyFiredThisSession =
-            (dateUtil.now() - internalLastSmbMillis) < (14 * 60_000L)
+            (dateUtil.now() - internalLastLegacyPrebolusMillis) < (14 * 60_000L)
         return dinnerruntime in 0..7
             && lastBolusSMBUnit != pbolusDinner.toFloat()
             && !isLegacyPrebolusDeliveryPending(pbolusDinner.toFloat())
@@ -8254,7 +8344,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
     private fun isHighCarbModeCondition(): Boolean {
         val pbolusHC: Double = preferences.get(DoubleKey.OApsAIMIHighCarbPrebolus)
         val prebolusAlreadyFiredThisSession =
-            (dateUtil.now() - internalLastSmbMillis) < (14 * 60_000L)
+            (dateUtil.now() - internalLastLegacyPrebolusMillis) < (14 * 60_000L)
         return highCarbrunTime in 0..7
             && lastBolusSMBUnit != pbolusHC.toFloat()
             && !isLegacyPrebolusDeliveryPending(pbolusHC.toFloat())
@@ -8265,7 +8355,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
     private fun issnackModeCondition(): Boolean {
         val pbolussnack: Double = preferences.get(DoubleKey.OApsAIMISnackPrebolus)
         val prebolusAlreadyFiredThisSession =
-            (dateUtil.now() - internalLastSmbMillis) < (14 * 60_000L)
+            (dateUtil.now() - internalLastLegacyPrebolusMillis) < (14 * 60_000L)
         return snackrunTime in 0..7
             && lastBolusSMBUnit != pbolussnack.toFloat()
             && !isLegacyPrebolusDeliveryPending(pbolussnack.toFloat())
@@ -8273,12 +8363,12 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             && snackTime
     }
 
-// ── P2 functions (window 15..22 min) — block for 10 min ──────────────────
+    // ── P2 functions (window 15..22 min) — block 10 min ──────────────────────
 
     private fun isbfast2ModeCondition(): Boolean {
         val pbolusbfast2: Double = preferences.get(DoubleKey.OApsAIMIBFPrebolus2)
         val prebolusAlreadyFiredInP2Window =
-            (dateUtil.now() - internalLastSmbMillis) < (10 * 60_000L)
+            (dateUtil.now() - internalLastLegacyPrebolusMillis) < (10 * 60_000L)
         return bfastruntime in LEGACY_MEAL_PRE2_MIN..LEGACY_MEAL_PRE2_MAX
             && lastBolusSMBUnit != pbolusbfast2.toFloat()
             && !isLegacyPrebolusDeliveryPending(pbolusbfast2.toFloat())
@@ -8289,7 +8379,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
     private fun isLunch2ModeCondition(): Boolean {
         val pbolusLunch2: Double = preferences.get(DoubleKey.OApsAIMILunchPrebolus2)
         val prebolusAlreadyFiredInP2Window =
-            (dateUtil.now() - internalLastSmbMillis) < (10 * 60_000L)
+            (dateUtil.now() - internalLastLegacyPrebolusMillis) < (10 * 60_000L)
         return lunchruntime in LEGACY_MEAL_PRE2_MIN..LEGACY_MEAL_PRE2_MAX
             && lastBolusSMBUnit != pbolusLunch2.toFloat()
             && !isLegacyPrebolusDeliveryPending(pbolusLunch2.toFloat())
@@ -8300,7 +8390,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
     private fun isDinner2ModeCondition(): Boolean {
         val pbolusDinner2: Double = preferences.get(DoubleKey.OApsAIMIDinnerPrebolus2)
         val prebolusAlreadyFiredInP2Window =
-            (dateUtil.now() - internalLastSmbMillis) < (10 * 60_000L)
+            (dateUtil.now() - internalLastLegacyPrebolusMillis) < (10 * 60_000L)
         return dinnerruntime in LEGACY_MEAL_PRE2_MIN..LEGACY_MEAL_PRE2_MAX
             && lastBolusSMBUnit != pbolusDinner2.toFloat()
             && !isLegacyPrebolusDeliveryPending(pbolusDinner2.toFloat())
@@ -8311,7 +8401,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
     private fun isHighCarb2ModeCondition(): Boolean {
         val pbolusHC: Double = preferences.get(DoubleKey.OApsAIMIHighCarbPrebolus2)
         val prebolusAlreadyFiredInP2Window =
-            (dateUtil.now() - internalLastSmbMillis) < (10 * 60_000L)
+            (dateUtil.now() - internalLastLegacyPrebolusMillis) < (10 * 60_000L)
         return highCarbrunTime in LEGACY_MEAL_PRE2_MIN..LEGACY_MEAL_PRE2_MAX
             && lastBolusSMBUnit != pbolusHC.toFloat()
             && !isLegacyPrebolusDeliveryPending(pbolusHC.toFloat())
@@ -8366,7 +8456,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         return MealAggressionWeights(true, boost, guardScale, bypassTail, overshoot)
     }
 
-    private fun isCriticalSafetyCondition(mealData: MealData,  hypoThreshold: Double,ctx: Context): Pair<Boolean, String> {
+    private fun isCriticalSafetyCondition(mealData: MealData, hypoThreshold: Double, ctx: Context): Pair<Boolean, String> {
         val cobFromMeal = try {
             // Adapte le nom selon ta classe (souvent mealData.cob ou mealData.mealCOB)
             mealData.mealCOB
@@ -8399,7 +8489,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         )
 
         // Récupération des conditions critiques
-        val criticalConditions = determineCriticalConditions(ctx,context)
+        val criticalConditions = determineCriticalConditions(ctx, context)
 
         // Calcul du résultat final
         val isCritical = criticalConditions.isNotEmpty()
@@ -8436,6 +8526,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         val cob: Double,
         val hypoThreshold: Double
     )
+
     private fun isHypoBlocked(context: SafetyContext): Boolean =
         shouldBlockHypoWithHysteresis(
             bg = context.bg,
@@ -8444,6 +8535,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             threshold = context.hypoThreshold,
             deltaMgdlPer5min = context.delta
         )
+
     /**
      * Détermine les conditions critiques à partir du contexte fourni
      */
@@ -8564,7 +8656,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         }
 
 //      return "Safety condition $isCritical : $conditionsString"
-        val critical = if (isCritical) "✔"  else ""
+        val critical = if (isCritical) "✔" else ""
         return context.getString(R.string.safety_condition, critical, conditionsString)
     }
 
@@ -8630,7 +8722,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
     private fun isPrediction(context: SafetyContext): Boolean {
         val nearTargetThreshold = context.targetBg + 40.0
         val isDeepHypoRisk = context.bg < 90.0 || context.predictedBg < 90.0
-        
+
         return if (context.bg > nearTargetThreshold && !isDeepHypoRisk) {
             // 🛡️ High BG: Only block if dropping VERY fast (Emergency Brake)
             context.delta < -3.0
@@ -8654,12 +8746,12 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         if (recentSteps5Minutes == 0 && !sportTime && !aimiContextActivityActive) return false
 
         val manualSport = sportTime || aimiContextActivityActive
-        
+
         // Assouplissement des seuils : ne détecter que des VRAIS sports intenses
         // Anciens seuils : 200 pas/5min, 500 pas/10min → Trop sensible (marche normale)
         // Nouveaux seuils : 400 pas/5min, 800 pas/10min → Sports réels seulement
         val recentBurst = recentSteps5Minutes >= 400 && recentSteps10Minutes >= 800
-        
+
         // Activité soutenue : relevé significativement pour éviter faux positifs
         // Une marche de 20 min = ~2000 pas → NE DOIT PAS déclencher sécurité sport
         // Seuil 60 min : 3000 pas = ~30 min de marche soutenue ou 45+ min de marche normale
@@ -8674,6 +8766,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
 
         return manualSport || recentBurst || sustainedActivity || highTargetExercise
     }
+
     private fun calculateSMBInterval(): Int {
         val defaultInterval = 3
 
@@ -8698,16 +8791,16 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         val honeymoon = preferences.get(BooleanKey.OApsAIMIhoneymoon)
 
         val modeInterval = when {
-            snackTime                -> intervals.snack
-            mealTime                 -> intervals.meal
-            bfastTime                -> intervals.bfast
-            lunchTime                -> intervals.lunch
-            dinnerTime               -> intervals.dinner
-            sleepTime                -> intervals.sleep
-            highCarbTime             -> intervals.hc
-            !honeymoon && bg > 120f  -> intervals.highBG
-            honeymoon && bg > 180f   -> intervals.highBG
-            else                     -> defaultInterval
+            snackTime               -> intervals.snack
+            mealTime                -> intervals.meal
+            bfastTime               -> intervals.bfast
+            lunchTime               -> intervals.lunch
+            dinnerTime              -> intervals.dinner
+            sleepTime               -> intervals.sleep
+            highCarbTime            -> intervals.hc
+            !honeymoon && bg > 120f -> intervals.highBG
+            honeymoon && bg > 180f  -> intervals.highBG
+            else                    -> defaultInterval
         }.coerceAtLeast(1)
 
         var interval = modeInterval
@@ -8750,14 +8843,14 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         // 9) Clamp final : mécanique SMB entre 1 et 10 min
         // Clamp final + Low BG boost
         var finalInterval = interval.coerceIn(1, 10)
-        
+
         // 🛡️ FIX NC4: LOW BG INTERVAL BOOST (Safety-Critical)
         val lowBgIntervalMin = 5
         if (bg < 120f && finalInterval < lowBgIntervalMin) {
             finalInterval = lowBgIntervalMin
             consoleLog.add("LOW_BG_INTERVAL_BOOST bg=${bg.roundToInt()} interval=${finalInterval}m")
         }
-        
+
         // 🚀 PKPD Throttle: Add interval boost if near peak/onset unconfirmed
         // Note: pkpdThrottleIntervalAdd est déjà à 0 pour les modes repas (via reset dans finalizeAndCapSMB)
         val pkpdBoost = pkpdThrottleIntervalAdd
@@ -8766,7 +8859,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             finalInterval = (finalInterval + pkpdBoost).coerceAtMost(10)
             consoleLog.add("PKPD_INTERVAL_BOOST base=${baseInterval}m +${pkpdBoost}m → ${finalInterval}m")
         }
-        
+
         return finalInterval
     }
 
@@ -8781,6 +8874,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         val hc: Int,
         val highBG: Int
     )
+
     // Hystérèse : on ne débloque qu’après avoir été > (seuil+margin) pendant X minutes
     private fun canFallbackSmbWithoutPrediction(
         bg: Double,
@@ -8849,7 +8943,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         if (ignoreSafetyRestrictions) return smbAmount
 
         // val currentHour = LocalTime.now().hour
-        val honeymoon   = preferences.get(BooleanKey.OApsAIMIhoneymoon)
+        val honeymoon = preferences.get(BooleanKey.OApsAIMIhoneymoon)
 
         // 2) 🔧 AJUSTEMENT “falling decelerating” (soft)
         //    On baisse encore (deltas négatifs) mais la baisse RALENTIT :
@@ -8857,8 +8951,8 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         val fallingDecelerating =
             delta < -EPS_FALL &&
                 shortAvgDelta < -EPS_FALL &&
-                longAvgDelta  < -EPS_FALL &&
-                shortAvgDelta >  longAvgDelta + EPS_ACC
+                longAvgDelta < -EPS_FALL &&
+                shortAvgDelta > longAvgDelta + EPS_ACC
 
         if (fallingDecelerating && bg < targetBg + 10) {
             // On est sous/près de la cible et la baisse ralentit → on réduit le SMB
@@ -8910,6 +9004,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         )
         return smb.coerceAtLeast(0f)
     }
+
     private data class MealFlags(
         val mealTime: Boolean,
         val bfastTime: Boolean,
@@ -8917,6 +9012,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         val dinnerTime: Boolean,
         val highCarbTime: Boolean
     )
+
     private fun isLateFatProteinRise(
         bg: Double,
         predictedBg: Double,
@@ -8933,12 +9029,11 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         val hoursSinceBolus = lastBolusTimeMs?.let { (nowMs - it) / 3_600_000.0 } ?: Double.POSITIVE_INFINITY
         val rising = delta >= 1.0 && (shortAvgDelta >= 0.5 || longAvgDelta >= 0.3)
         val highish = bg > 130 || predictedBg > 140
-        val lowIOB  = iob < maxSMB
-        val noMeal  = !(mealFlags.mealTime || mealFlags.bfastTime || mealFlags.lunchTime
+        val lowIOB = iob < maxSMB
+        val noMeal = !(mealFlags.mealTime || mealFlags.bfastTime || mealFlags.lunchTime
             || mealFlags.dinnerTime || mealFlags.highCarbTime)
         return noMeal && hoursSinceBolus in 2.0..7.0 && rising && highish && lowIOB && cob <= 1.0
     }
-
 
     private fun neuralnetwork5(
         delta: Float,
@@ -9018,7 +9113,6 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             }
     }
 
-
     // Calcul d'un delta prédit à partir d'une moyenne pondérée
     private fun predictedDelta(deltaHistory: List<Double>): Double {
         if (deltaHistory.isEmpty()) return 0.0
@@ -9032,8 +9126,6 @@ class DetermineBasalaimiSMB2 @Inject constructor(
     // Legacy function for time-based reactivity (morning/afternoon/evening factors)
     // Replaced by UnifiedReactivityLearner.globalFactor which learns optimal reactivity
     // from actual glycemic outcomes (hypos, hypers, variability)
-
-
 
     private fun calculateAdjustedDelayFactor(
         bg: Float,
@@ -9067,9 +9159,9 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             val increasedHeartRateActivity = !sanitizedHr10.isNaN() && (heartRateChange.toDouble() >= heartRateIncreaseThreshold)
 
             val baseFactor = when {
-                bg <= normalBgThreshold -> 1f
+                bg <= normalBgThreshold                   -> 1f
                 bg <= insulinSensitivityDecreaseThreshold -> 1f - ((bg - normalBgThreshold) / (insulinSensitivityDecreaseThreshold - normalBgThreshold))
-                else -> 0.5f
+                else                                      -> 0.5f
             }
 
             val shouldDampenForActivity = (increasedPhysicalActivity || increasedHeartRateActivity) && bg < highBgOverrideThreshold
@@ -9093,7 +9185,6 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         }
         return delayFactor
     }
-
 
     private fun calculateInsulinEffect(
         bg: Float,
@@ -9145,6 +9236,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         reasonBuilder.append(context.getString(R.string.insulin_effect, insulinEffect))
         return insulinEffect
     }
+
     private fun calculateTrendIndicator(
         delta: Float,
         shortAvgDelta: Float,
@@ -9175,11 +9267,11 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         val trendValue = (delta * 0.5) + (shortAvgDelta * 0.25) + (longAvgDelta * 0.15) + (insulinEffect * 0.2) + (activityImpact * 0.1)
 
         return when {
-            trendValue > 1.0 -> 1 // Forte tendance à la hausse
-            trendValue < -1.0 -> -1 // Forte tendance à la baisse
+            trendValue > 1.0      -> 1 // Forte tendance à la hausse
+            trendValue < -1.0     -> -1 // Forte tendance à la baisse
             abs(trendValue) < 0.5 -> 0 // Pas de tendance significative
-            trendValue > 0.5 -> 2 // Faible tendance à la hausse
-            else -> -2 // Faible tendance à la baisse
+            trendValue > 0.5      -> 2 // Faible tendance à la hausse
+            else                  -> -2 // Faible tendance à la baisse
         }
     }
 
@@ -9250,19 +9342,18 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         }
     }
 
-
     private fun determineNoteBasedOnBg(bg: Double): String {
         return when {
             //bg > 170 -> "more aggressive"
-            bg > 170 -> context.getString(R.string.bg_note_more_aggressive)
+            bg > 170          -> context.getString(R.string.bg_note_more_aggressive)
             //bg in 90.0..100.0 -> "less aggressive"
             bg in 90.0..100.0 -> context.getString(R.string.bg_note_less_aggressive)
             //bg in 80.0..89.9 -> "too aggressive" // Vous pouvez ajuster ces valeurs selon votre logique
-            bg in 80.0..89.9 -> context.getString(R.string.bg_note_too_aggressive)
+            bg in 80.0..89.9  -> context.getString(R.string.bg_note_too_aggressive)
             //bg < 80 -> "low treatment"
-            bg < 80 -> context.getString(R.string.bg_note_low_treatment)
+            bg < 80           -> context.getString(R.string.bg_note_low_treatment)
             //else -> "normal" // Vous pouvez définir un autre message par défaut pour les cas non couverts
-            else -> context.getString(R.string.bg_note_normal)
+            else              -> context.getString(R.string.bg_note_normal)
         }
     }
 
@@ -9276,6 +9367,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             .replace("and", " ")
             .replace("\\s+", " ")
     }
+
     private fun ensureWCycleInfo(): WCycleInfo? {
         val profile = lastProfile ?: return null
         wCycleInfoForRun?.let { return it }
@@ -9300,20 +9392,20 @@ class DetermineBasalaimiSMB2 @Inject constructor(
 
     private fun checkCycleDayNotification(info: WCycleInfo) {
         val mode = wCyclePreferences.trackingMode()
-        val tracking = mode != CycleTrackingMode.MENOPAUSE && mode != CycleTrackingMode.NO_MENSES_LARC 
-        
+        val tracking = mode != CycleTrackingMode.MENOPAUSE && mode != CycleTrackingMode.NO_MENSES_LARC
+
         // Trigger: Late Period (Day > Avg Length)
         // Spam Prevention: Notify only once per day (if day index changed)
         val limit = wCyclePreferences.avgLen()
         if (tracking && info.dayInCycle > limit) {
-             if (info.dayInCycle != lastCycleNotificationDay) {
-                 val msg = "⚠️ WCycle: J${info.dayInCycle} > $limit. Retard détecté.\nMettre à jour le 1er jour des règles ?"
-                 notificationManager.post(
-                     id = NotificationId.HYPO_RISK_ALARM,
-                     text = msg
-                 )
-                 lastCycleNotificationDay = info.dayInCycle
-             }
+            if (info.dayInCycle != lastCycleNotificationDay) {
+                val msg = "⚠️ WCycle: J${info.dayInCycle} > $limit. Retard détecté.\nMettre à jour le 1er jour des règles ?"
+                notificationManager.post(
+                    id = NotificationId.HYPO_RISK_ALARM,
+                    text = msg
+                )
+                lastCycleNotificationDay = info.dayInCycle
+            }
         }
     }
 
@@ -9361,8 +9453,8 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         // 1️⃣ Facteur de correction hyperglycémique
         val hyperCorrectionFactor = when {
             bg <= 130 || delta <= 4 -> 1.0
-            bg in 130.0..240.0 -> 0.6 - (bg - 130) * (0.6 - 0.3) / (240 - 130)
-            else -> 0.3
+            bg in 130.0..240.0      -> 0.6 - (bg - 130) * (0.6 - 0.3) / (240 - 130)
+            else                    -> 0.3
         }
         dynamicPeakTime *= hyperCorrectionFactor
 //  reasonBuilder.append("  • Facteur hyperglycémie: $hyperCorrectionFactor\n")
@@ -9384,16 +9476,16 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         val ratioFactor = when {
             activityRatio > 1.5 -> 0.8  // (était 0.5 + ...) on accélère (x0.8)
             activityRatio < 0.5 -> 1.2  // on ralentit (x1.2)
-            else -> 1.0
+            else                -> 1.0
         }
         dynamicPeakTime *= ratioFactor
-        reasonBuilder.append(context.getString(R.string.reason_activity_ratio, round(activityRatio,2), ratioFactor))
+        reasonBuilder.append(context.getString(R.string.reason_activity_ratio, round(activityRatio, 2), ratioFactor))
 
         // 4️⃣ & 5️⃣ BIO-SYNC FUSION : Steps & HeartRate
         // On détecte 3 états : FLOW (Sport), STRESS (Cortisol), ou REST
         val steps = stepCount ?: 0
         val hr = heartRate ?: 0
-        
+
         val isStress = hr > 95 && steps < 100 // Tachycardie au repos -> Stress/Maladie
         val isFlow = steps > 500 || (steps > 200 && hr > 100) // Activité significative
 
@@ -9445,7 +9537,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
 
     fun detectMealOnset(delta: Float, predictedDelta: Float, acceleration: Float, predictedBg: Float, targetBg: Float): Boolean {
         val combinedDelta = (delta + predictedDelta) / 2.0f
-        
+
         // 1. Existing strict check (Explosive Rise)
         if (combinedDelta > 3.0f && acceleration > 1.2f) return true
 
@@ -9453,7 +9545,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         // Relaxed acceleration req if rise is clearly above noise
         val normalizedRise = ((predictedBg - targetBg) / 70.0f).coerceIn(0.0f, 1.0f)
         if (normalizedRise > 0.3f && combinedDelta > 2.0f && acceleration > 0.3f) return true
-        
+
         // 3. [FIX] Smart Rise Detection (TIR 70-140)
         // Require acceleration OR sustained high delta, rejecting single-point noise
         val isHighNoise = (delta > 5.0f && acceleration < 0.0f) // Sharp jump but slowing down
@@ -9472,13 +9564,14 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         notes += autoNote  // Ajout de la note auto générée
 
         recentNotes?.forEach { note ->
-            if(note.timestamp > olderTimeStamp && note.timestamp <= moreRecentTimeStamp) {
+            if (note.timestamp > olderTimeStamp && note.timestamp <= moreRecentTimeStamp) {
                 val noteText = note.note.lowercase()
                 if (noteText.contains("sleep") || noteText.contains("sport") || noteText.contains("snack") || noteText.contains("bfast") || noteText.contains("lunch") || noteText.contains("dinner") ||
                     noteText.contains("lowcarb") || noteText.contains("highcarb") || noteText.contains("meal") || noteText.contains("fasting") ||
                     noteText.contains("low treatment") || noteText.contains("less aggressive") ||
                     noteText.contains("more aggressive") || noteText.contains("too aggressive") ||
-                    noteText.contains("normal")) {
+                    noteText.contains("normal")
+                ) {
 
                     notes += if (notes.isEmpty()) recentNotes2 else " "
                     notes += note.note
@@ -9500,7 +9593,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         val storageReport = storageHelper.getHealthReport()
         val reactivityFactor = safeReactivityFactor // Safety check added
         val basalMultiplier = basalLearner.getMultiplier()
-        
+
         // Construire le rapport de santé
         val healthLines = listOf(
             "═══════════════════════════════",
@@ -9511,21 +9604,21 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             "PkPdEstimator: runtime-only",
             "═══════════════════════════════"
         )
-        
+
         // 📊 NOUVEAU: Afficher en HAUT de la page AIMI via rT.learnersInfo (section dédiée)
         val reactivityPct = (reactivityFactor * 100).toInt()
         val reactivityTrend = when {
             reactivityFactor < 0.5 -> "↓ prudent"
             reactivityFactor > 1.2 -> "↑ agressif"
-            else -> "→ neutre"
+            else                   -> "→ neutre"
         }
-        
+
         val basalTrend = when {
             basalMultiplier < 0.9 -> "↓ basal réduit"
             basalMultiplier > 1.1 -> "↑ basal augmenté"
-            else -> "→ basal neutre"
+            else                  -> "→ basal neutre"
         }
-        
+
         // ✅ Populate rT.learnersInfo for UI section display (like "Profil :", "Données repas :", etc.)
         rT.learnersInfo = buildString {
             appendLine("UnifiedReactivity: $reactivityPct% ($reactivityTrend)")
@@ -9533,12 +9626,12 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             appendLine("PkPdEstimator: ℹ️ runtime-only")
             append("Storage: $storageReport")
         }
-        
+
         // Aussi dans consoleLog pour affichage UI (Reasoning)
         healthLines.forEach { line ->
             consoleLog.add(line)
         }
-        
+
         // Logger aussi dans logcat pour debug
         aapsLogger.info(LTag.APS, "╔═══════════════════════════════════════════════╗")
         aapsLogger.info(LTag.APS, "║ 📦 AIMI SYSTEM HEALTH                          ║")
@@ -9559,20 +9652,20 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                         val dueDate = LocalDate.parse(dueDateString)
                         val gState = gestationalAutopilot.calculateState(dueDate)
                         val mult = gestationalAutopilot.getProfileMultipliers(gState)
-                        
+
                         val factorBasal = mult["basal"] ?: 1.0
                         val factorISF = mult["isf"] ?: 1.0
                         val factorCR = mult["cr"] ?: 1.0
-                        
+
                         val oldBasal = profile.current_basal
                         val oldISF = profile.sens
                         // val oldCR = profile.carb_ratio
-                        
+
                         profile.current_basal *= factorBasal
                         profile.sens *= factorISF
                         profile.carb_ratio *= factorCR
                         profile.variable_sens *= factorISF
-                        
+
                         aapsLogger.debug(LTag.APS, "🤰 Pregnancy Mode Active: Week ${gState.gestationalWeek} (${gState.description}) -> Basal*${factorBasal}, ISF*${factorISF}")
                         consoleLog.add("🤰 GESTATION ACTIVE: ${gState.gestationalWeek.toInt()} SA (${gState.description})")
                         consoleLog.add("   └ Factors: Basal x${"%.2f".format(factorBasal)} | ISF x${"%.2f".format(factorISF)} | CR x${"%.2f".format(factorCR)}")
@@ -9600,7 +9693,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                 val status = thyroidStateEstimator.currentState.value
                 val confidence = thyroidStateEstimator.confidence.value
                 currentThyroidEffects = thyroidEffectModel.calculateEffects(status, confidence)
-                
+
                 val logMsg = ThyroidDiagnosticsLogger.formatDecisionLog(
                     inputs = thyroidInputs,
                     status = status,
@@ -9612,14 +9705,14 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                 if (logMsg.isNotBlank()) consoleLog.add("🦋 $logMsg")
 
                 if (currentThyroidEffects.diaMultiplier != 1.0) {
-                     profile.dia *= currentThyroidEffects.diaMultiplier
+                    profile.dia *= currentThyroidEffects.diaMultiplier
                 }
                 if (currentThyroidEffects.egpMultiplier != 1.0) {
-                     profile.current_basal *= currentThyroidEffects.egpMultiplier
+                    profile.current_basal *= currentThyroidEffects.egpMultiplier
                 }
                 if (currentThyroidEffects.isfMultiplier != 1.0) {
-                     profile.sens *= currentThyroidEffects.isfMultiplier
-                     profile.variable_sens *= currentThyroidEffects.isfMultiplier
+                    profile.sens *= currentThyroidEffects.isfMultiplier
+                    profile.variable_sens *= currentThyroidEffects.isfMultiplier
                 }
             }
         } catch (e: Exception) {
@@ -9671,9 +9764,10 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                 sens = sens, tp = tp.toInt(), variableSensitivity = variableSensitivity,
                 targetBg = target_bg, predictedBg = predictedBg, eventualBg = eventualBG,
                 maxSmb = if (isMealAdvisorOneShot) max(maxSMBHB, 10.0)
-                    else if ((bg > 120 && !honeymoon && mealData.slopeFromMinDeviation >= 1.0) ||
-                        ((mealTime || lunchTime || dinnerTime || highCarbTime) && bg > 100)) maxSMBHB
-                    else maxSMB,
+                else if ((bg > 120 && !honeymoon && mealData.slopeFromMinDeviation >= 1.0) ||
+                    ((mealTime || lunchTime || dinnerTime || highCarbTime) && bg > 100)
+                ) maxSMBHB
+                else maxSMB,
                 maxIob = preferences.get(DoubleKey.ApsSmbMaxIob),
                 predictedSmb = predictedSMB, modelValue = modelcalLocal.toFloat(),
                 mealData = mealData, pkpdRuntime = pkpdRuntime,
@@ -9736,23 +9830,23 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         val autosensResistance = autosens_data.ratio < 0.8
         val isLearnerPrudent = learnerFactor < 0.75 && !autosensResistance
         val basalFirstMealActive = mealData.mealCOB > 0.1
-        val basalFirstHeavyMeal  = mealData.mealCOB > 20.0
+        val basalFirstHeavyMeal = mealData.mealCOB > 20.0
         val isPersistentRise = bg > targetBg && combinedDelta >= 0.3f
-        
+
         // 🛡️ Basal-First Policy: Bypassed if rise is confirmed OR BG > 110
         val basalFirstActive = (((isLearnerPrudent && !basalFirstMealActive && !isPersistentRise)
-                || (isFragileBg && !basalFirstHeavyMeal)) && !isMealAdvisorOneShot)
-                && !isConfirmedHighRise
-                && bg < 110.0 // 🚀 REVISED: Never block SMBs when BG is above 110
-        
+            || (isFragileBg && !basalFirstHeavyMeal)) && !isMealAdvisorOneShot)
+            && !isConfirmedHighRise
+            && bg < 110.0 // 🚀 REVISED: Never block SMBs when BG is above 110
+
         this.cachedBasalFirstActive = basalFirstActive
         this.cachedIsFragileBg = isFragileBg
         if (basalFirstActive) {
             this.maxSMB = 0.0; this.maxSMBHB = 0.0
             val reason = when {
-                isFragileBg    -> "Fragile BG (<110 & falling)"
+                isFragileBg      -> "Fragile BG (<110 & falling)"
                 isLearnerPrudent -> "Learner Prudence (Factor=${"%.2f".format(learnerFactor)})"
-                else -> "Unknown Safety Trigger"
+                else             -> "Unknown Safety Trigger"
             }
             consoleLog.add("🛡️ BASAL-FIRST ACTIVE: $reason -> SMB DISABLED")
             rT.reason.append(" [Basal-First: SMB OFF]")
@@ -9768,25 +9862,31 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         }
     }
 
+    // Companion object — nur für Legacy-Preboluses, NICHT für SMBs
+    private var lastLegacyPrebolusTimestampMem: Long = 0L
+
+    private var internalLastLegacyPrebolusMillis: Long
+        get() = Math.max(
+            lastLegacyPrebolusTimestampMem,
+            preferences.get(AimiLongKey.LastLegacyPrebolusTime)
+        )
+        set(value) {
+            lastLegacyPrebolusTimestampMem = value
+            preferences.put(AimiLongKey.LastLegacyPrebolusTime, value)
+        }
+
     private fun applyLegacyMealModes(profile: OapsProfileAimi, rT: RT, currenttemp: CurrentTemp, modeTbrLimit: Double): RT? {
         fun rbf(key: DoubleKey) = preferences.get(key)
         fun markLegacyMealDecision() {
             physioAdapter.setFinalLoopDecisionType(if ((rT.units ?: 0.0) > 0.0) "smb" else "none")
             val units = rT.units ?: 0.0
             if (units > 0.0) {
-                // Intentionally do NOT set lastBolusSMBUnit here.
-                // We set a pending state instead so that a Medtrum BLE disconnect
-                // at the exact loop tick does not permanently block retries:
-                //   - pendingLegacyPrebolusUnit prevents re-fire during the TTL window
-                //   - once DB confirms delivery (latestSmbCached sync), lastBolusSMBUnit
-                //     is updated from the database and pending is cleared
-                //   - if the TTL expires without DB confirmation the pending is cleared
-                //     so the next in-window tick can retry
                 pendingLegacyPrebolusUnit = units.toFloat()
                 pendingLegacyPrebolusExpiry = dateUtil.now() + LEGACY_PREBOLUS_DELIVERY_TTL_MS
                 lastSmbCapped = units
                 lastSmbFinal = units
                 internalLastSmbMillis = dateUtil.now()
+                internalLastLegacyPrebolusMillis = dateUtil.now()  // ← nur hier gesetzt
             }
         }
 
@@ -9891,13 +9991,13 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         }
         // Même priorité que les blocs prébolus ci‑dessus : premier mode actif dans les 30 premières minutes gagne.
         val legacyMealMaint = when {
-            mealTime && mealruntime in 0..29 -> mealruntime to "MEAL_MAINT"
-            bfastTime && bfastruntime in 0..29 -> bfastruntime to "BF_MAINT"
-            lunchTime && lunchruntime in 0..29 -> lunchruntime to "LUNCH_MAINT"
-            dinnerTime && dinnerruntime in 0..29 -> dinnerruntime to "DINNER_MAINT"
+            mealTime && mealruntime in 0..29         -> mealruntime to "MEAL_MAINT"
+            bfastTime && bfastruntime in 0..29       -> bfastruntime to "BF_MAINT"
+            lunchTime && lunchruntime in 0..29       -> lunchruntime to "LUNCH_MAINT"
+            dinnerTime && dinnerruntime in 0..29     -> dinnerruntime to "DINNER_MAINT"
             highCarbTime && highCarbrunTime in 0..29 -> highCarbrunTime to "HC_MAINT"
-            snackTime && snackrunTime in 0..29 -> snackrunTime to "SNACK_MAINT"
-            else -> null
+            snackTime && snackrunTime in 0..29       -> snackrunTime to "SNACK_MAINT"
+            else                                     -> null
         }
         if (legacyMealMaint != null) {
             manualMealModeTbr(legacyMealMaint.first, legacyMealMaint.second, overrideSafetyLimits = false)
@@ -9907,7 +10007,6 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         }
         return null
     }
-
 
     private fun applyEndoAndActivityAdjustments(
         bg: Double, delta: Float,
@@ -9977,8 +10076,8 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                     val modeStr = preferences.get(StringKey.ContextMode)
                     val contextMode = when (modeStr) {
                         "CONSERVATIVE" -> ContextMode.CONSERVATIVE
-                        "AGGRESSIVE" -> ContextMode.AGGRESSIVE
-                        else -> ContextMode.BALANCED
+                        "AGGRESSIVE"   -> ContextMode.AGGRESSIVE
+                        else           -> ContextMode.BALANCED
                     }
                     val contextInfluence = contextInfluenceEngine.computeInfluence(
                         snapshot = contextSnapshot, currentBG = bg,
@@ -10062,20 +10161,20 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                 val IOBpredBGs = mutableListOf<Double>()
                 val COBpredBGs = mutableListOf<Double>()
                 val UAMpredBGs = mutableListOf<Double>()
-                val ZTpredBGs  = mutableListOf<Double>()
+                val ZTpredBGs = mutableListOf<Double>()
                 IOBpredBGs.add(bg); COBpredBGs.add(bg); UAMpredBGs.add(bg); ZTpredBGs.add(bg)
                 intsPredictions.forEach { pred ->
                     val v = pred.toDouble()
                     IOBpredBGs.add(v); COBpredBGs.add(v); UAMpredBGs.add(v); ZTpredBGs.add(v)
                 }
                 val lastPred = intsPredictions.last().toDouble()
-                val minPred  = intsPredictions.minOrNull()?.toDouble() ?: bg
+                val minPred = intsPredictions.minOrNull()?.toDouble() ?: bg
                 lastEventualBgSnapshot = lastPred
                 rT.eventualBG = lastPred
                 this.predictedBg = lastPred.toFloat()
                 rT.predBGs = Predictions().apply {
                     IOB = IOBpredBGs.map { it.toInt() }; COB = COBpredBGs.map { it.toInt() }
-                    ZT  = ZTpredBGs.map { it.toInt()  }; UAM = UAMpredBGs.map { it.toInt() }
+                    ZT = ZTpredBGs.map { it.toInt() }; UAM = UAMpredBGs.map { it.toInt() }
                 }
                 consoleError.add("🔮 PREDICT GRAPH: IOB=${IOBpredBGs.size} COB=${COBpredBGs.size}")
                 consoleError.add("minGuardBG ${minPred.toInt()} IOBpredBG ${lastPred.toInt()}")
@@ -10105,9 +10204,9 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         relevanceScore: Double = 0.0 // 🌀 Relevance from Cosine Gate
     ) {
         val trajectoryFlagEnabled = preferences.get(BooleanKey.OApsAIMITrajectoryGuardEnabled)
-        
+
         rT.trajectoryRelevanceScore = relevanceScore
-        
+
         if (trajectoryFlagEnabled) {
             try {
                 // val effectiveProfileForTrajectory: EffectiveProfile? = effectiveProfileCached(currentTime)
@@ -10123,11 +10222,11 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                     cob = cob,
                     profile = profile,
                 )
-                
+
                 // 2. Run Trajectory Analysis (The "Insight" Gate)
                 val stableOrbit = StableOrbit.fromProfile(targetBg, profile.current_basal)
                 val traj = trajectoryGuard.analyzeTrajectory(trajectoryHistory, stableOrbit)
-                
+
                 if (traj == null) {
                     consoleLog.add("🌀 Trajectory: ⏳ Warming up (${trajectoryHistory.size}/4 states, need 20min)")
                     rT.trajectoryEnabled = false
@@ -10135,14 +10234,14 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                     val analysis = traj
                     val statusEmoji = analysis.classification.emoji()
                     val typeDesc = analysis.classification.description()
-                    
-                    consoleLog.add("🌀 Trajectory: $statusEmoji $typeDesc | κ=${"%.2f".format(analysis.metrics.curvature)} conv=${"%.1f".format(analysis.metrics.convergenceVelocity)} health=${"%.0f".format(analysis.metrics.healthScore*100)}%")
-                    
+
+                    consoleLog.add("🌀 Trajectory: $statusEmoji $typeDesc | κ=${"%.2f".format(analysis.metrics.curvature)} conv=${"%.1f".format(analysis.metrics.convergenceVelocity)} health=${"%.0f".format(analysis.metrics.healthScore * 100)}%")
+
                     // Display Visual Insights
                     val artLines = analysis.classification.asciiArt().split("\n")
                     artLines.forEach { line -> consoleLog.add("  $line") }
                     consoleLog.add("  📊 Metrics: Coherence=${"%.2f".format(analysis.metrics.coherence)} Energy=${"%.1f".format(analysis.metrics.energyBalance)}U Openness=${"%.2f".format(analysis.metrics.openness)}")
-                    
+
                     // 3. Apply Modulation (The "Safety" Gate)
                     // We only modify insulin delivery if relevance is sufficient (> 0.4)
                     val mod = analysis.modulation
@@ -10170,7 +10269,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                             )
                         }
                         consoleLog.add("  🎛 Modulation: SMB×${"%.2f".format(effectiveSmbDamping)} Int×${"%.2f".format(effectiveIntervalStretch)} (${mod.reason})")
-                        
+
                         if (abs(effectiveSmbDamping - 1.0) > 0.05) {
                             val orig = maxSMB
                             maxSMB *= effectiveSmbDamping; maxSMBHB *= effectiveSmbDamping
@@ -10187,7 +10286,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                             val candidate = maxIob * mod.safetyMarginExpand
                             val beforeMod = maxIob
                             maxIob = max(candidate, floor)
-                            
+
                             if (maxIob < beforeMod) {
                                 consoleLog.add("    → MaxIOB Modulation: ${"%.2f".format(beforeMod)}U → ${"%.2f".format(maxIob)}U (Floor=${"%.2f".format(floor)}U)")
                             }
@@ -10195,7 +10294,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                     } else if (relevanceScore <= 0.4) {
                         consoleLog.add("  ⏸ Modulation Gated (Relevance ${"%.2f".format(relevanceScore)} <= 0.4)")
                     }
-                    
+
                     // Warning Propagation
                     analysis.warnings.filter { it.severity >= WarningSeverity.HIGH }.forEach { w ->
                         consoleLog.add("  🚨 ${w.severity.emoji()} ${w.message}")
@@ -10205,13 +10304,14 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                                     id = NotificationId.AUTOMATION_MESSAGE,
                                     text = w.message
                                 )
-                            } catch (_: Exception) {}
+                            } catch (_: Exception) {
+                            }
                         }
                     }
                     analysis.predictedConvergenceTime?.let {
                         consoleLog.add("  ⏱ Est. convergence: ${it}min")
                     }
-                    
+
                     // 4. Populate RT for UI (Always if traj exists)
                     rT.trajectoryEnabled = true
                     rT.trajectoryType = analysis.classification.name
@@ -10236,7 +10336,6 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             rT.trajectoryEnabled = false
         }
     }
-
 
     /**
      * Corps du tick AIMI — ordre figé § **Carte P3a** (`orchestration/AIMI_ORCHESTRATION_ROADMAP.md`).
@@ -10270,10 +10369,10 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         ) = runRealtimePhysioIobProfilerAndInsulinObserver(ctx, decisionCtx)
 
         val (glucoseStatus, f) = when (val gsOutcome = ensureWCycleAndLoadGlucoseStatusOrAbort(ctx, rT)) {
-            is AimiGlucosePackLoadOutcome.Abort -> return gsOutcome.returnValue
+            is AimiGlucosePackLoadOutcome.Abort    -> return gsOutcome.returnValue
             is AimiGlucosePackLoadOutcome.Continue -> gsOutcome.glucoseStatus to gsOutcome.aimiBgFeatures
         }
-        
+
         val (pumpAgeDays, physioMultipliers) = runT9PhysioEarlyPkpdAndTubeBootstrap(ctx, glucoseStatus, rT, iobTotal)
         var pkpdRuntime = this.cachedPkpdRuntime
 
@@ -10306,12 +10405,12 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         ) = runTickClockMaxSmbTirCarbAndGlucoseCopy(ctx, glucoseStatus, rT, combinedDelta)
         val nightbis = when (val therapyGate = runTherapyHydrateClocksAndExerciseLockoutGate(ctx, profile, rT)) {
             is AimiTherapyExerciseGate.ReturnEarly -> return therapyGate.result
-            is AimiTherapyExerciseGate.Continue -> therapyGate.nightbis
+            is AimiTherapyExerciseGate.Continue    -> therapyGate.nightbis
         }
 
         val activeModeName = when (val mealModesGate = runManualMealModesAfterTherapyGate(ctx, profile, rT)) {
             is AimiManualMealModesGate.ReturnEarly -> return mealModesGate.rT
-            is AimiManualMealModesGate.Continue -> mealModesGate.activeModeName
+            is AimiManualMealModesGate.Continue    -> mealModesGate.activeModeName
         }
 
         // 🛡️ T3C BRITTLE MODE BRANCH (Moved here to capture `therapy` variables for Prebolus)
@@ -10340,7 +10439,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             )
         ) {
             is AimiSignalPreparationPkpdOutcome.StaleAbort -> return outcome.rT
-            is AimiSignalPreparationPkpdOutcome.Continue -> outcome.data
+            is AimiSignalPreparationPkpdOutcome.Continue   -> outcome.data
         }
         val (
             modesCondition,
@@ -10410,7 +10509,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                 eventualBg = sanity.eventualBg,
             )
         ) {
-            is AimiPredPipelineSafetyGate.Halt -> return safetyGate.rT
+            is AimiPredPipelineSafetyGate.Halt  -> return safetyGate.rT
             AimiPredPipelineSafetyGate.Continue -> Unit
         }
 
@@ -10770,7 +10869,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                 estimatedCarbsTimeMs = estimatedCarbsTime,
             )
         ) {
-            is AimiMealHyperBasalBoostTickResult.CompleteLoop -> return stage.rT
+            is AimiMealHyperBasalBoostTickResult.CompleteLoop        -> return stage.rT
             is AimiMealHyperBasalBoostTickResult.ContinueWithOverlay ->
                 applyMealHyperBasalBoostOverlayIfNeeded(stage.overlayRate, deliverAt, rT)
         }
@@ -10829,7 +10928,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             )
         ) {
             is AimiCarbsAdvisorHardHypoBasalGateResult.ReturnZeroTempBasal -> return gate.rT
-            is AimiCarbsAdvisorHardHypoBasalGateResult.Continue -> gate.stage
+            is AimiCarbsAdvisorHardHypoBasalGateResult.Continue            -> gate.stage
         }
 
         // NGR / repas 0–30 + headroom — see [runPostSafetyMealFirst30NgrHeadroomBasalSmbStage]
@@ -10855,7 +10954,8 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             )
         ) {
             is AimiPostSafetyMealNgrStageResult.EarlyTempBasal -> return mealNgr.rt
-            is AimiPostSafetyMealNgrStageResult.Continue -> {
+
+            is AimiPostSafetyMealNgrStageResult.Continue       -> {
                 isMealActive = mealNgr.isMealActive
                 runtimeMinValue = mealNgr.runtimeMinValue
                 maxIobLimit = mealNgr.maxIobLimit
@@ -11055,10 +11155,10 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         val duration = result.duration ?: 0
         val rate = result.rate ?: 0.0
         return when {
-            units > 0.0 -> "smb"
+            units > 0.0                 -> "smb"
             duration > 0 && rate <= 0.0 -> "suspend"
-            duration > 0 && rate > 0.0 -> "tbr_up"
-            else -> "none"
+            duration > 0 && rate > 0.0  -> "tbr_up"
+            else                        -> "none"
         }
     }
 
@@ -11082,7 +11182,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         if (safetyDecision.stopBasal || bg < lgsThreshold) {
             return suggestedRate // Allow 0.0 pour hypo réelle
         }
-        
+
         // 2. ⚡ Prediction basse MAIS montée → ne pas bypasser le floor
         if (predictedBg < 65) {
             if (delta > 0 && bg > 90) {
@@ -11124,10 +11224,10 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         // 5. Persistent Rise (Standard Mode Boost)
         // Si ça monte de façon persistante (AvgDelta > 0.5) et Delta > 0, on ne laisse pas chuter en dessous de 80%
         if (delta > 0 && shortAvgDelta > 0.5 && bg > 100) {
-             val persistentFloor = profileBasal * 0.8
-             if (suggestedRate < persistentFloor) {
-                 return persistentFloor
-             }
+            val persistentFloor = profileBasal * 0.8
+            if (suggestedRate < persistentFloor) {
+                return persistentFloor
+            }
         }
 
         // 6. Cruise Mode (No Activity, No Critical Low)
@@ -11142,9 +11242,6 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         return suggestedRate
     }
 
-
-
-
     // Helper for General Hyper Kicker (Non-Meal) (AIMI 2.0)
     private fun adjustBasalForGeneralHyper(
         suggestedBasalUph: Double,
@@ -11156,43 +11253,44 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         maxScaleCap: Double = 10.0,
     ): Double {
         // "Progressivement rapidement" logic requested by user
-        
+
         // Risque montée franche ou plateau haut persistant
         val rising = delta >= 0.5 || shortAvgDelta >= 0.3
         val plateauHigh = delta >= -0.1 && bg > targetBg + 50
         val rocketStart = delta > 10.0 &&
             (bg > targetBg + 20.0 || maxScaleCap >= 8.0)
-    
+
         if (!rising && !plateauHigh && !rocketStart) return suggestedBasalUph
-    
+
         val deviation = bg - targetBg
-    
+
         // Progressive scaling based on deviation severity
         // 30mg au dessus: x2
         // 60mg au dessus: x5
         // 90mg au dessus: x8
         // 120mg+        : x10 (Authorized by user)
         // Rocket Start : Auto Max (x10) if delta > 10.0 and not post-hypo rebound guard
-    
+
         var scaleFactor = when {
             rocketStart || deviation >= 120 -> 10.0
-            deviation >= 90  -> 8.0
-            deviation >= 60  -> 5.0
-            deviation >= 30  -> 2.0
-            else -> 1.0
+            deviation >= 90                 -> 8.0
+            deviation >= 60                 -> 5.0
+            deviation >= 30                 -> 2.0
+            else                            -> 1.0
         }
         scaleFactor = min(scaleFactor, maxScaleCap)
-    
+
         if (scaleFactor == 1.0) return suggestedBasalUph
-        
+
         val boosted = suggestedBasalUph * scaleFactor
-        
+
         // Cap only by absolute max config (safety)
         return if (boosted > maxBasalConfig) maxBasalConfig else boosted
     }
 
     // Decision pipeline helpers: degrade plan, DECISION_FINAL / basal neural, safety entry.
     private enum class ModeDegradeLevel(val value: Int, val label: String) {
+
         NORMAL(0, "Normal"),
         CAUTION(1, "Caution"),
         HIGH_RISK(2, "High Risk"),
@@ -11252,12 +11350,12 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         consoleLog.add(builder.toString())
 
         val modeLabel = when {
-            mealTime -> "Meal"
-            lunchTime -> "Lunch"
-            dinnerTime -> "Dinner"
+            mealTime     -> "Meal"
+            lunchTime    -> "Lunch"
+            dinnerTime   -> "Dinner"
             highCarbTime -> "HighCarb"
-            snackTime -> "Snack"
-            else -> "None"
+            snackTime    -> "Snack"
+            else         -> "None"
         }
         val predSize = rT.predBGs?.IOB?.size ?: lastPredictionSize
         val predAvailable = predSize > 0 || lastPredictionAvailable
@@ -11317,7 +11415,12 @@ class DetermineBasalaimiSMB2 @Inject constructor(
 
     private fun appendDecisionFinalTickLine(diag: DecisionFinalDiagSnapshot, activityThreshold: Double) {
         val tickLine =
-            "TICK ts=${System.currentTimeMillis()} bg=${diag.bgValue.roundToInt()} d=${"%.1f".format(Locale.US, diag.deltaValue)} iob=${"%.2f".format(Locale.US, iob)} act=${"%.3f".format(Locale.US, iobActivityNow)} th=${"%.3f".format(Locale.US, activityThreshold)} " +
+            "TICK ts=${System.currentTimeMillis()} bg=${diag.bgValue.roundToInt()} d=${"%.1f".format(Locale.US, diag.deltaValue)} iob=${"%.2f".format(Locale.US, iob)} act=${"%.3f".format(Locale.US, iobActivityNow)} th=${
+                "%.3f".format(
+                    Locale.US,
+                    activityThreshold
+                )
+            } " +
                 "cob=${"%.1f".format(Locale.US, cob)} mode=${diag.modeLabel} autodriveState=$lastAutodriveState pred=${diag.predChunk} " +
                 "safety=$lastSafetySource ref=${diag.refractoryStatus} maxIOB=${"%.2f".format(Locale.US, maxIob)} maxSMB=${"%.2f".format(Locale.US, maxSMB)} " +
                 "smb=${"%.2f".format(Locale.US, lastSmbProposed)}->${"%.2f".format(Locale.US, lastSmbCapped)}->${"%.2f".format(Locale.US, diag.smbFinal)} " +
@@ -11403,36 +11506,34 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                 )
                 return DecisionResult.Fallthrough("Advisor Refractory (Recent Bolus <45m)")
             }
-            
+
             // FIX: Removed delta > 0.0 condition - Meal Advisor should work even if BG is stable/falling
             // The refractory check, BG floor (>=60), and time window (120min/20min) are sufficient safety
-            if (modesCondition || isExplicitTrigger) { 
+            if (modesCondition || isExplicitTrigger) {
                 val maxBasalPref = preferences.get(DoubleKey.meal_modes_MaxBasal)
                 val safeMax = if (maxBasalPref > 0.1) maxBasalPref else profile.max_basal
-                
 
-                
                 // FIX: TBR Coverage Calculation
                 // ORIGINAL logic subtracted coveredByBasal from SMB, causing netNeeded to become 0
                 // NEW logic: TBR is a COMPLEMENT to SMB, not a replacement
                 // - SMB provides immediate prebolus action
                 // - TBR provides continuous aggressive support
-                
+
                 // INTELLIGENT IOB HANDLING (Fix 2025-12-19)
                 // Problem: User may have elevated IOB from previous unlogged meal (soup, snack)
                 // Solution: Discount IOB + guarantee minimum coverage for confirmed new meal
                 val insulinForCarbs = estimatedCarbs / profile.carb_ratio
-                
+
                 // Apply IOB discount to account for uncertainty
                 val effectiveIOB = iobData.iob * MEAL_ADVISOR_IOB_DISCOUNT_FACTOR
-                
+
                 // Guarantee minimum coverage (user confirmed meal = BG WILL rise)
                 val minimumRequired = insulinForCarbs * MEAL_ADVISOR_MIN_CARB_COVERAGE
-                
+
                 // Calculate need with discounted IOB, then apply minimum guarantee
                 val calculatedNeed = insulinForCarbs - effectiveIOB
                 val netNeeded = max(calculatedNeed, minimumRequired).coerceAtLeast(0.0)
-                
+
                 // For reference, calculate what TBR will deliver (not subtracted from SMB)
                 val tbrCoverage = safeMax * 0.5  // 30min = 0.5h
 
@@ -11443,20 +11544,20 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                 consoleLog.add("ADVISOR_CALC calculated=${String.format("%.2f", calculatedNeed)}U → netSMB=${String.format("%.2f", netNeeded)}U (max of calculated and minimum)")
                 consoleLog.add("ADVISOR_CALC TBR=${String.format("%.1f", safeMax)}U/h (will deliver ${String.format("%.2f", tbrCoverage)}U over 30min as complement)")
                 consoleLog.add("ADVISOR_CALC TOTAL delivery: SMB ${String.format("%.2f", netNeeded)}U + TBR ${String.format("%.2f", tbrCoverage)}U = ${String.format("%.2f", netNeeded + tbrCoverage)}U delta=$delta modesOK=true")
-                
+
                 // 🚀 If explicit trigger, consume the flag NOW to prevent loop
                 if (isExplicitTrigger) {
                     preferences.put(BooleanKey.OApsAIMIMealAdvisorTrigger, false)
                     consoleLog.add("🚀 MEAL ADVISOR: Trigger Consumed.")
                 }
 
-                     return DecisionResult.Applied(
-                        source = "MealAdvisor",
-                        bolusU = netNeeded,
-                        tbrUph = safeMax,
-                        tbrMin = 30,
-                        reason = "📸 Meal Advisor: ${estimatedCarbs.toInt()}g -> ${"%.2f".format(netNeeded)}U + TBR ${"%.1f".format(safeMax)}U/h"
-                    )
+                return DecisionResult.Applied(
+                    source = "MealAdvisor",
+                    bolusU = netNeeded,
+                    tbrUph = safeMax,
+                    tbrMin = 30,
+                    reason = "📸 Meal Advisor: ${estimatedCarbs.toInt()}g -> ${"%.2f".format(netNeeded)}U + TBR ${"%.1f".format(safeMax)}U/h"
+                )
             } else {
                 consoleLog.add("ADVISOR_SKIP reason=modesCondition_false (legacy mode active)")
                 aapsLogger.debug(
@@ -11473,8 +11574,8 @@ class DetermineBasalaimiSMB2 @Inject constructor(
     }
 
     private fun tryAutodrive(
-        bg: Double, 
-        delta: Float, 
+        bg: Double,
+        delta: Float,
         shortAvgDelta: Float,  // ← shortAvgDeltaAdj (G6-compensé +20%) depuis determine_basal
         profile: OapsProfileAimi,
         lastBolusTime: Long,
@@ -11496,14 +11597,14 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         if (flatBGsDetected) {
             return DecisionResult.Fallthrough("CGM data unreliable (FLAT detected)")
         }
-        
+
         // 🛡️ GATE R0b: AIMI Context Constraint Check
         if (contextPrefersBasal) {
             return DecisionResult.Fallthrough("AIMI Context: SMB constraint active (Basal Pref)")
         }
-        
+
         val autodriveBG = preferences.get(IntKey.OApsAIMIAutodriveBG)
-        
+
         // 🛡️ GATE R1: Strict BG Threshold (Raised from 100 to 120 for safety)
         // Never trigger Autodrive below 120 mg/dL to prevent hypos
         val safeMinimumBG = maxOf(autodriveBG.toDouble(), 120.0)
@@ -11519,7 +11620,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         val remaining = (lastAutodriveActionTime + cooldownMs) - now
         if (remaining > 0) {
             val cooldownLabel = if (isG6Byoda && mealRising) "G6+Meal 20min" else "Standard 45min"
-            return DecisionResult.Fallthrough("Cooldown [$cooldownLabel] active (${remaining/1000/60}m)")
+            return DecisionResult.Fallthrough("Cooldown [$cooldownLabel] active (${remaining / 1000 / 60}m)")
         }
 
         // Logic Re-Use — pass isG6Byoda + compensated combinedDelta (GAP1 fix)
@@ -11528,7 +11629,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             reasonBuf, targetBg, isG6Byoda,
             externalCombinedDelta = combinedDeltaG6  // feeds G6-compensated signal directly
         )
-        
+
         if (!validCondition) return DecisionResult.Fallthrough("Conditions not met")
 
         // 📡 GAP2: G6-aware intensity gates
@@ -11545,22 +11646,22 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         var amount: Double
         var stateReason: String
         val contextLog = if (contextFactor < 1.0f) " [Ctx ×${"%.2f".format(contextFactor)}]" else ""
-        
+
         // Confirmed: strong rise — use G6-adjusted delta for correct tier selection
         if (bg >= 120.0 && effectiveDelta >= 5.0 && shortAvgDelta >= 3.0) {
-             amount = modulatedAmountLarge
-             stateReason = "Confirmed: Bg≥120 & EffDelta≥5 & Avg≥3${if (isG6Byoda) " [G6adj×1.30]" else ""}$contextLog"
+            amount = modulatedAmountLarge
+            stateReason = "Confirmed: Bg≥120 & EffDelta≥5 & Avg≥3${if (isG6Byoda) " [G6adj×1.30]" else ""}$contextLog"
         } else if (bg >= 120.0 && effectiveDelta >= 2.0) {
-             amount = modulatedAmountSmall
-             stateReason = "Early: Bg≥120 & EffDelta≥2${if (isG6Byoda) " [G6adj×1.30]" else ""}$contextLog"
+            amount = modulatedAmountSmall
+            stateReason = "Early: Bg≥120 & EffDelta≥2${if (isG6Byoda) " [G6adj×1.30]" else ""}$contextLog"
         } else {
-             return DecisionResult.Fallthrough("BG or Delta insufficient (need BG≥120, effDelta≥2, was ${"%.1f".format(effectiveDelta)})") 
+            return DecisionResult.Fallthrough("BG or Delta insufficient (need BG≥120, effDelta≥2, was ${"%.1f".format(effectiveDelta)})")
         }
 
         // TBR Calculation
         val rawAutoMax = preferences.get(DoubleKey.autodriveMaxBasal)
         val scalarAuto: Double = if (rawAutoMax > 0.1) rawAutoMax else profile.max_basal
-        
+
         // 🛡️ TIERED AUTODRIVE BASAL (Lyra Optimization)
         // If "Early", we use only 50% of the allowed max (Soft Start).
         // If "Confirmed", we use 100%.
@@ -11568,11 +11669,11 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         val effectiveAutoMax = scalarAuto * tierFactor
 
         val safeAutoMax = minOf(effectiveAutoMax, profile.max_basal)
-        
+
         // 🛡️ Sanitize stateReason to prevent JSON crashes
         val safeStateReason = sanitizeForJson(stateReason)
         consoleLog.add(sanitizeForJson("AD_INTENT amount=$amount tbr=$safeAutoMax reason=$safeStateReason"))
-        
+
         return DecisionResult.Applied(
             source = "Autodrive",
             bolusU = amount,
@@ -11591,8 +11692,8 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             val fallbackCarbs: Double = preferences.get(DoubleKey.OApsAIMILastEstimatedCarbs)
             // Use explicit comparison (0.0) and safe casting
             if (mealData.mealCOB < 0.1 && fallbackCarbs > 0.0) {
-                 mealData.mealCOB = fallbackCarbs
-                 consoleLog.add("⚡ COB HYDRATION: Injected ${fallbackCarbs.toInt()}g from Advisor Prefs (DB latency bypass)")
+                mealData.mealCOB = fallbackCarbs
+                consoleLog.add("⚡ COB HYDRATION: Injected ${fallbackCarbs.toInt()}g from Advisor Prefs (DB latency bypass)")
             }
         }
     }
@@ -11603,27 +11704,27 @@ class DetermineBasalaimiSMB2 @Inject constructor(
      *
      *  Additional: Respects Pump capabilities for TBR.
      ****************************************************************/
-    private fun ketoProtection(_proposedRate: Double, profile: OapsProfileAimi, rT: RT, pumpCaps : PumpCaps): Double {
+    private fun ketoProtection(_proposedRate: Double, profile: OapsProfileAimi, rT: RT, pumpCaps: PumpCaps): Double {
         aapsLogger.info(LTag.APS, "ketoProtection IN: _proposedRate=${"%.2f".format(_proposedRate)}")
 
-        var proposedRate : Double = _proposedRate
-        val protectionRate : Double = profile.ketoacidosisProtectionBasal.toDouble() * 0.01
-        val cutOff : Double = roundBasal(profile.current_basal * protectionRate)
+        var proposedRate: Double = _proposedRate
+        val protectionRate: Double = profile.ketoacidosisProtectionBasal.toDouble() * 0.01
+        val cutOff: Double = roundBasal(profile.current_basal * protectionRate)
 
         if (profile.ketoacidosisProtection && proposedRate < cutOff) {
             // original : if (profile.ketoacidosisProtectionStrategy && profile.ketoacidosisProtectionIob < (0 - profile.current_basal) ) {
             // but (0 - profile.current_basal) will happen seldom to never. Reduce to IOB < (0 - profile.current_basal/2)
-            if (profile.ketoacidosisProtectionStrategy && profile.ketoacidosisProtectionIob < (0 - profile.current_basal/2) ) {
-                proposedRate = pumpCapabilityValidator.validateBasal(cutOff , pumpCaps)
-                rT.reason.append("\nKetoacidosis protection sets temp basal to " + round(proposedRate,2) +" U/h.")
-                aapsLogger.info(LTag.APS, "Ketoacidosis protection sets temp basal to " + round(proposedRate,2) + "fsteps U/h")
+            if (profile.ketoacidosisProtectionStrategy && profile.ketoacidosisProtectionIob < (0 - profile.current_basal / 2)) {
+                proposedRate = pumpCapabilityValidator.validateBasal(cutOff, pumpCaps)
+                rT.reason.append("\nKetoacidosis protection sets temp basal to " + round(proposedRate, 2) + " U/h.")
+                aapsLogger.info(LTag.APS, "Ketoacidosis protection sets temp basal to " + round(proposedRate, 2) + "fsteps U/h")
             } else if (!profile.ketoacidosisProtectionStrategy) {
-                proposedRate = pumpCapabilityValidator.validateBasal(cutOff , pumpCaps)
-                rT.reason.append("\nKetoacidosis protection sets temp basal to " + round(proposedRate,2) + " U/h")
-                aapsLogger.info(LTag.APS, "Ketoacidosis protection sets temp basal to  " + round(proposedRate,2) + " U/h")
+                proposedRate = pumpCapabilityValidator.validateBasal(cutOff, pumpCaps)
+                rT.reason.append("\nKetoacidosis protection sets temp basal to " + round(proposedRate, 2) + " U/h")
+                aapsLogger.info(LTag.APS, "Ketoacidosis protection sets temp basal to  " + round(proposedRate, 2) + " U/h")
             }
         }
-        aapsLogger.info(LTag.APS, "ketoProtection OUT: proposedRate=${"%.2f".format(proposedRate)} cutOff=$cutOff IOB = ${profile.ketoacidosisProtectionIob} Basal = ${profile.current_basal}" )
+        aapsLogger.info(LTag.APS, "ketoProtection OUT: proposedRate=${"%.2f".format(proposedRate)} cutOff=$cutOff IOB = ${profile.ketoacidosisProtectionIob} Basal = ${profile.current_basal}")
         return proposedRate
     }
 
@@ -11767,7 +11868,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         )
 
         //rT.rate = t3cFinalRate
-        rT.rate = ketoProtection(t3cFinalRate, profile, rT, pumpCaps )
+        rT.rate = ketoProtection(t3cFinalRate, profile, rT, pumpCaps)
         rT.duration = 30
         rT.reason.append(
             "🛡️T3c | Thresh: ${activationThreshold.toInt()} | Agg: ${"%.1f".format(aggressiveness)} (raw=${"%.1f".format(rawAggressiveness)} AML=${"%.2f".format(adaptiveMult)}) | " +
