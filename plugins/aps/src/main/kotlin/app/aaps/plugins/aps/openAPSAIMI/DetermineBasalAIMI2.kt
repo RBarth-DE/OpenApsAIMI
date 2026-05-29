@@ -1638,17 +1638,16 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             this.lastBolusSMBUnit = getlastBolusSMB?.amount?.toFloat() ?: 0.0F
             val diff = abs(now - cacheSmbTimestamp)
             this.lastsmbtime = (diff / (60 * 1000)).toInt()
-            // DB has caught up → pending prebolus confirmed (or superseded).  Clear.
-            if (pendingLegacyPrebolusUnit > 0.0f) {
+            // Only clear pending prebolus if DB has caught up WITH the prebolus itself,
+            // not just any SMB. Use the dedicated legacy prebolus timestamp.
+            if (pendingLegacyPrebolusUnit > 0.0f
+                && cacheSmbTimestamp >= internalLastLegacyPrebolusMillis) {
                 pendingLegacyPrebolusUnit = 0.0f
                 pendingLegacyPrebolusExpiry = 0L
             }
         } else {
             val diff = abs(now - internalLastSmbMillis)
             this.lastsmbtime = (diff / (60 * 1000)).toInt()
-            // DB has not caught up yet.  Check if the delivery TTL has expired:
-            // if so the bolus was silently dropped (e.g. Medtrum BLE disconnect)
-            // → clear pending so the next in-window tick can retry.
             if (pendingLegacyPrebolusUnit > 0.0f && now > pendingLegacyPrebolusExpiry) {
                 pendingLegacyPrebolusUnit = 0.0f
                 pendingLegacyPrebolusExpiry = 0L
@@ -9877,7 +9876,9 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         }
 
     private fun applyLegacyMealModes(profile: OapsProfileAimi, rT: RT, currenttemp: CurrentTemp, modeTbrLimit: Double): RT? {
+
         fun rbf(key: DoubleKey) = preferences.get(key)
+
         fun markLegacyMealDecision() {
             physioAdapter.setFinalLoopDecisionType(if ((rT.units ?: 0.0) > 0.0) "smb" else "none")
             val units = rT.units ?: 0.0
@@ -9886,8 +9887,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                 pendingLegacyPrebolusExpiry = dateUtil.now() + LEGACY_PREBOLUS_DELIVERY_TTL_MS
                 lastSmbCapped = units
                 lastSmbFinal = units
-                internalLastSmbMillis = dateUtil.now()
-                internalLastLegacyPrebolusMillis = dateUtil.now()  // ← nur hier gesetzt
+                internalLastLegacyPrebolusMillis = dateUtil.now()
             }
         }
 
@@ -10000,10 +10000,26 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             snackTime && snackrunTime in 0..29       -> snackrunTime to "SNACK_MAINT"
             else                                     -> null
         }
+        // In applyLegacyMealModes, MAINT-Block:
         if (legacyMealMaint != null) {
-            manualMealModeTbr(legacyMealMaint.first, legacyMealMaint.second, overrideSafetyLimits = false)
-            rT.units = null
-            consoleLog.add("🍱 LEGACY_MEAL_TBR_MAINT[${legacyMealMaint.second}] rt=${legacyMealMaint.first}m (no prebolus this tick)")
+            manualMealModeTbr(legacyMealMaint.first, legacyMealMaint.second,
+                              overrideSafetyLimits = false)
+            // Re-propagate pending prebolus if still in delivery window
+            if (pendingLegacyPrebolusUnit > 0.0f
+                && dateUtil.now() < pendingLegacyPrebolusExpiry) {
+                rT.units = pendingLegacyPrebolusUnit.toDouble()
+                consoleLog.add(
+                    "🍱 LEGACY_MAINT_PREBOLUS_CARRY[${legacyMealMaint.second}]" +
+                        " rt=${legacyMealMaint.first}m → re-queuing" +
+                        " ${pendingLegacyPrebolusUnit}U (still in TTL)"
+                )
+            } else {
+                rT.units = null
+                consoleLog.add(
+                    "🍱 LEGACY_MEAL_TBR_MAINT[${legacyMealMaint.second}]" +
+                        " rt=${legacyMealMaint.first}m (no prebolus this tick)"
+                )
+            }
             return rT
         }
         return null
