@@ -5906,7 +5906,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
          *  If the pump (e.g. Medtrum BLE) was unreachable and the bolus was silently
          *  dropped, the pending state expires after this interval so the next loop
          *  tick — still inside the P1 window — can retry. */
-        private const val LEGACY_PREBOLUS_DELIVERY_TTL_MS = 10 * 60 * 1000L
+        private const val LEGACY_PREBOLUS_DELIVERY_TTL_MS = 30 * 60 * 1000L
 
         private var lastLegacyPrebolusTimestampMem: Long = 0L
 
