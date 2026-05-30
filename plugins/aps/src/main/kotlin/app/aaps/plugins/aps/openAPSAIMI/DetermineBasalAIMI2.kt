@@ -1715,21 +1715,35 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             this.lastsmbtime = (diff / (60 * 1000)).toInt()
             // Only clear pending prebolus if DB has caught up WITH the prebolus itself,
             // not just any SMB. Use the dedicated legacy prebolus timestamp.
-            if (pendingLegacyPrebolusUnit > 0.0f
-                && cacheSmbTimestamp >= internalLastLegacyPrebolusMillis) {
-                pendingLegacyPrebolusUnit = 0.0f
-                pendingLegacyPrebolusExpiry = 0L
-            }
-        } else {
-            val diff = abs(now - internalLastSmbMillis)
-            this.lastsmbtime = (diff / (60 * 1000)).toInt()
             if (pendingLegacyPrebolusUnit > 0.0f && now > pendingLegacyPrebolusExpiry) {
                 pendingLegacyPrebolusUnit = 0.0f
                 pendingLegacyPrebolusExpiry = 0L
             }
         }
+        // ── Delivery Detection ──────────────────────────────────────────────────
+        // Clear pending prebolus once a matching NORMAL bolus appears in DB.
+        // Uses ≥45% threshold to handle AAPS-level SMB capping (e.g. 7.5U
+        // configured but only 3.75U delivered due to maxSMBBasalMinutes).
+        if (pendingLegacyPrebolusUnit > 0.0f && internalLastLegacyPrebolusMillis > 0L) {
+            val recentBoluses = getBolusesFromTimeCached(
+                internalLastLegacyPrebolusMillis, ascending = true
+            )
+            val prebolusDelivered = recentBoluses.any {
+                it.type == BS.Type.NORMAL &&
+                    it.amount >= pendingLegacyPrebolusUnit * 0.45f
+            }
+            if (prebolusDelivered) {
+                consoleLog.add(
+                    "🍱 PREBOLUS_DELIVERED_CONFIRMED: clearing pending " +
+                        "${pendingLegacyPrebolusUnit}U"
+                )
+                pendingLegacyPrebolusUnit = 0.0f
+                pendingLegacyPrebolusExpiry = 0L
+            }
+        }
+        // ────────────────────────────────────────────────────────────────────────
         this.maxIob = preferences.get(DoubleKey.ApsSmbMaxIob)
-// Tarciso Dynamic Max IOB
+        // Tarciso Dynamic Max IOB
         // [FIX] User Request: Strict MaxIOB Limit (Preference Only).
         // Dynamic calculations removed to prevent "dangerous variations".
         this.maxIob = maxIob
