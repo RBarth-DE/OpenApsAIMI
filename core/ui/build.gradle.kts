@@ -1,10 +1,12 @@
 import kotlin.math.min
+import org.gradle.testing.jacoco.plugins.JacocoTaskExtension
 
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.compose.compiler)
     id("android-module-dependencies")
     id("test-module-dependencies")
+    jacoco
 }
 
 android {
@@ -15,6 +17,16 @@ android {
 
     buildFeatures {
         compose = true
+    }
+}
+
+// Robolectric runs tests in its own classloader sandbox and rewrites bytecode, so the default
+// JaCoCo on-the-fly agent records no coverage for the Compose classes exercised by those tests.
+// includeNoLocationClasses lets JaCoCo account for the Robolectric-loaded classes.
+tasks.withType<Test>().configureEach {
+    extensions.configure(JacocoTaskExtension::class) {
+        isIncludeNoLocationClasses = true
+        excludes = listOf("jdk.internal.*")
     }
 }
 
