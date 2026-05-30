@@ -4,7 +4,9 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.Stable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import app.aaps.core.data.configuration.Constants
 import app.aaps.core.data.model.GlucoseUnit
+import app.aaps.core.data.time.T
 import app.aaps.core.interfaces.aps.Loop
 import app.aaps.core.interfaces.configuration.Config
 import app.aaps.core.interfaces.constraints.ConstraintsChecker
@@ -495,7 +497,13 @@ class GraphViewModel @AssistedInject constructor(
 
         if (allTimestamps.isEmpty()) {
             cacheTimeRange?.let {
-                val upper = if (showPredictions) it.endTime else it.toTime
+                val upper = if (showPredictions) {
+                    val minFutureEnd = System.currentTimeMillis() +
+                        T.hours(Constants.PREDICTION_GRAPH_MIN_HOURS.toLong()).msecs()
+                    maxOf(it.endTime, minFutureEnd)
+                } else {
+                    it.toTime
+                }
                 Pair(it.fromTime, upper)
             }
         } else {
@@ -507,12 +515,12 @@ class GraphViewModel @AssistedInject constructor(
             // Pair(minTime, effectiveMax)
             // Force the graph to end no later than 1 hours from now
             val oneHourFromNow = System.currentTimeMillis() + 60 * 60 * 1000L * 1
-            val effectiveMax = if (cacheTimeRange != null) {
-                maxOf(maxTime, cacheTimeRange.endTime)
-            } else {
-                maxTime
-            }.coerceAtMost(oneHourFromNow) // This is the line that caps the future view
-
+            var effectiveMax = if (cacheUpper != null) maxOf(maxTime, cacheUpper) else maxTime
+            if (showPredictions && effectivePredictions.isNotEmpty()) {
+                val minFutureEnd = System.currentTimeMillis() +
+                    T.hours(Constants.PREDICTION_GRAPH_MIN_HOURS.toLong()).msecs()
+                effectiveMax = maxOf(effectiveMax, minFutureEnd)
+            }
             Pair(minTime, effectiveMax)
         }
     }.stateIn(

@@ -158,11 +158,6 @@ private fun Color.compositeOver(background: Color): Color {
 
 // ── Stubs for dashboard soft-therapy visuals ─────────────────────────────────
 
-fun softenChartColor(color: Color, surface: Color): Color =
-    color.copy(alpha = color.alpha * 0.55f)
-
-fun createSoftPredictionLine(color: Color): LineCartesianLayer.Line = createPredictionLine(color)
-
 @androidx.compose.runtime.Composable
 fun rememberDashboardTbrLaneDecoration(
     minTimestamp: Long = 0L,
@@ -176,13 +171,4 @@ fun rememberDashboardTbrLaneDecoration(
     barFillStrong: Color = Color.Transparent,
     markerLineColor: Color = Color.Transparent,
     softStyle: Boolean = false,
-): Nothing? = null
-
-@androidx.compose.runtime.Composable
-fun rememberTargetComfortCorridorDecoration(
-    corridor: Pair<Double, Double>? = null,
-    bgAxisMinY: Double = 0.0,
-    bgAxisMaxY: Double = 400.0,
-    fillColor: Color = Color.Transparent,
-    fillAlpha: Float = 0f,
 ): Nothing? = null

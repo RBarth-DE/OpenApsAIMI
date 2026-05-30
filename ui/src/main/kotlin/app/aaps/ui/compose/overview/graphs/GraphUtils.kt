@@ -5,14 +5,19 @@ import androidx.compose.runtime.remember
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.GenericShape
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.graphics.StrokeCap
 import com.patrykandpatrick.vico.compose.cartesian.CartesianDrawingContext
 import com.patrykandpatrick.vico.compose.cartesian.axis.HorizontalAxis
 import com.patrykandpatrick.vico.compose.cartesian.data.CartesianValueFormatter
+import app.aaps.core.interfaces.overview.graph.ChartTbrSegment
 import com.patrykandpatrick.vico.compose.cartesian.decoration.Decoration
 import com.patrykandpatrick.vico.compose.cartesian.layer.LineCartesianLayer
 import com.patrykandpatrick.vico.compose.common.Fill
@@ -110,6 +115,13 @@ fun rememberBottomAxisItemPlacer(minTimestamp: Long): HorizontalAxis.ItemPlacer 
  * Default zoom level for graphs - shows 6 hours of data (360 minutes).
  */
 const val DEFAULT_GRAPH_ZOOM_MINUTES = 360.0
+
+/**
+ * When predictions are shown, auto-scroll places **now + this offset** at the right edge of the viewport
+ * so the scenario tail (~4 h) stays readable on the dashboard / overview graph.
+ * Keep in sync with [app.aaps.core.data.configuration.Constants.PREDICTION_VIEWPORT_FUTURE_BIAS_MINUTES].
+ */
+const val PREDICTION_VIEWPORT_FUTURE_BIAS_MINUTES = 180.0
 
 /**
  * Maximum zoom-in level — never show fewer than this many minutes.
@@ -251,6 +263,176 @@ fun createPredictionLine(color: Color): LineCartesianLayer.Line =
             )
         )
     )
+
+/**
+ * Softer BG prediction series: faint connector + smaller pastel dots (dashboard calm mode).
+ */
+fun createSoftPredictionLine(color: Color): LineCartesianLayer.Line =
+    LineCartesianLayer.Line(
+        fill = LineCartesianLayer.LineFill.single(Fill(color.copy(alpha = 0.14f))),
+        stroke = LineCartesianLayer.LineStroke.Continuous(thickness = 0.85.dp, cap = StrokeCap.Round),
+        areaFill = null,
+        pointProvider = LineCartesianLayer.PointProvider.single(
+            LineCartesianLayer.Point(
+                component = ShapeComponent(
+                    fill = Fill(color.copy(alpha = 0.72f)),
+                    shape = CircleShape
+                ),
+                size = 3.5.dp
+            )
+        )
+    )
+
+/**
+ * AIMI scenario **clinical floor** (maps to legacy IOB prediction series on the graph).
+ *
+ * Vico draws the connector from [LineCartesianLayer.Line.fill]; keep it **opaque** — low-alpha fill
+ * made the dashed prediction nearly invisible on the dark dashboard (regression vs Canvas renderer).
+ */
+fun createScenarioFloorLine(
+    color: Color,
+    pointHaloColor: Color = Color.White,
+): LineCartesianLayer.Line =
+    LineCartesianLayer.Line(
+        fill = LineCartesianLayer.LineFill.single(Fill(color)),
+        stroke = LineCartesianLayer.LineStroke.Dashed(
+            thickness = 3.5.dp,
+            cap = StrokeCap.Round,
+            dashLength = 7.dp,
+            gapLength = 5.dp,
+        ),
+        areaFill = null,
+        pointProvider = LineCartesianLayer.PointProvider.single(
+            LineCartesianLayer.Point(
+                component = ShapeComponent(
+                    fill = Fill(color),
+                    shape = CircleShape,
+                    strokeFill = Fill(pointHaloColor.copy(alpha = 0.88f)),
+                    strokeThickness = 1.75.dp,
+                ),
+                size = 7.dp,
+            )
+        ),
+    )
+
+/**
+ * AIMI scenario **best path** (maps to legacy UAM prediction series on the graph).
+ * Stronger weight than [createScenarioFloorLine] so the authoritative curve reads first.
+ */
+fun createScenarioBestLine(
+    color: Color,
+    pointHaloColor: Color = Color.White,
+): LineCartesianLayer.Line =
+    LineCartesianLayer.Line(
+        fill = LineCartesianLayer.LineFill.single(Fill(color)),
+        stroke = LineCartesianLayer.LineStroke.Dashed(
+            thickness = 4.dp,
+            cap = StrokeCap.Round,
+            dashLength = 9.dp,
+            gapLength = 5.dp,
+        ),
+        areaFill = null,
+        pointProvider = LineCartesianLayer.PointProvider.single(
+            LineCartesianLayer.Point(
+                component = ShapeComponent(
+                    fill = Fill(color),
+                    shape = CircleShape,
+                    strokeFill = Fill(pointHaloColor.copy(alpha = 0.92f)),
+                    strokeThickness = 2.dp,
+                ),
+                size = 8.dp,
+            )
+        ),
+    )
+
+/** Blend prediction / accent colors toward surface for a less alarming palette. */
+fun softenChartColor(accent: Color, surface: Color, amount: Float = 0.22f): Color =
+    lerp(accent, surface, amount)
+
+/**
+ * Horizontal band between [yLow] and [yHigh] (glycémie units), drawn under other decorations in the list order.
+ * Uses the same vertical mapping as [DashboardTbrLaneDecoration] when axis bounds are fixed.
+ */
+class TargetComfortCorridorDecoration(
+    private val yLow: Double,
+    private val yHigh: Double,
+    private val bgAxisMinY: Double,
+    private val bgAxisMaxY: Double,
+    private val fillColor: Color,
+    private val fillAlpha: Float = 0.085f,
+) : Decoration {
+
+    override fun drawOverLayers(context: CartesianDrawingContext) {
+        if (bgAxisMaxY <= bgAxisMinY) return
+        val lo = minOf(yLow, yHigh).coerceIn(bgAxisMinY, bgAxisMaxY)
+        val hi = maxOf(yLow, yHigh).coerceIn(bgAxisMinY, bgAxisMaxY)
+        if (hi <= lo) return
+        with(context) {
+            val span = bgAxisMaxY - bgAxisMinY
+            fun glucoseYToCanvas(y: Double): Float {
+                val t = ((y - bgAxisMinY) / span).toFloat().coerceIn(0f, 1f)
+                return layerBounds.bottom - t * layerBounds.height
+            }
+            val topY = glucoseYToCanvas(hi)
+            val bottomY = glucoseYToCanvas(lo)
+            val rectTop = minOf(topY, bottomY)
+            val h = (bottomY - rectTop).coerceAtLeast(2f)
+            with(mutableDrawScope) {
+                drawRoundRect(
+                    color = fillColor.copy(alpha = fillAlpha),
+                    topLeft = Offset(layerBounds.left, rectTop),
+                    size = Size((layerBounds.right - layerBounds.left).coerceAtLeast(1f), h),
+                    cornerRadius = CornerRadius(10f, 10f),
+                )
+            }
+        }
+    }
+
+    override fun equals(other: Any?): Boolean =
+        this === other ||
+            other is TargetComfortCorridorDecoration &&
+            yLow == other.yLow &&
+            yHigh == other.yHigh &&
+            bgAxisMinY == other.bgAxisMinY &&
+            bgAxisMaxY == other.bgAxisMaxY &&
+            fillColor == other.fillColor &&
+            fillAlpha == other.fillAlpha
+
+    override fun hashCode(): Int {
+        var result = yLow.hashCode()
+        result = 31 * result + yHigh.hashCode()
+        result = 31 * result + bgAxisMinY.hashCode()
+        result = 31 * result + bgAxisMaxY.hashCode()
+        result = 31 * result + fillColor.hashCode()
+        result = 31 * result + fillAlpha.hashCode()
+        return result
+    }
+}
+
+@Composable
+fun rememberTargetComfortCorridorDecoration(
+    corridor: Pair<Double, Double>?,
+    bgAxisMinY: Double,
+    bgAxisMaxY: Double,
+    fillColor: Color,
+    fillAlpha: Float = 0.085f,
+): TargetComfortCorridorDecoration? {
+    return remember(corridor, bgAxisMinY, bgAxisMaxY, fillColor, fillAlpha) {
+        val c = corridor
+        if (c == null || bgAxisMaxY <= bgAxisMinY || c.second <= c.first) {
+            null
+        } else {
+            TargetComfortCorridorDecoration(
+                yLow = c.first,
+                yHigh = c.second,
+                bgAxisMinY = bgAxisMinY,
+                bgAxisMaxY = bgAxisMaxY,
+                fillColor = fillColor,
+                fillAlpha = fillAlpha,
+            )
+        }
+    }
+}
 
 /**
  * "Now" vertical dotted line decoration for Vico charts.
