@@ -519,7 +519,7 @@ class GraphViewModel @AssistedInject constructor(
             if (showPredictions && effectivePredictions.isNotEmpty()) {
                 val minFutureEnd = System.currentTimeMillis() +
                     T.hours(Constants.PREDICTION_GRAPH_MIN_HOURS.toLong()).msecs()
-                effectiveMax = maxOf(effectiveMax, minFutureEnd)
+                effectiveMax = maxOf(effectiveMax, minFutureEnd).coerceAtMost(oneHourFromNow) // This is the line that caps the future view
             }
             Pair(minTime, effectiveMax)
         }
