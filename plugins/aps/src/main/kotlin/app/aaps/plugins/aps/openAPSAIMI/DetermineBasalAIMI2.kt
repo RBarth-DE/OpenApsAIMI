@@ -10332,25 +10332,30 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             snackTime && snackrunTime in 0..29       -> snackrunTime to "SNACK_MAINT"
             else                                     -> null
         }
-        // In applyLegacyMealModes, MAINT-Block:
         if (legacyMealMaint != null) {
             manualMealModeTbr(legacyMealMaint.first, legacyMealMaint.second,
                               overrideSafetyLimits = false)
             // Re-propagate pending prebolus if still in delivery window
-            if (pendingLegacyPrebolusUnit > 0.0f
-                && dateUtil.now() < pendingLegacyPrebolusExpiry) {
-                rT.units = pendingLegacyPrebolusUnit.toDouble()
-                consoleLog.add(
-                    "🍱 LEGACY_MAINT_PREBOLUS_CARRY[${legacyMealMaint.second}]" +
-                        " rt=${legacyMealMaint.first}m → re-queuing" +
-                        " ${pendingLegacyPrebolusUnit}U (still in TTL)"
-                )
-            } else {
-                rT.units = null
-                consoleLog.add(
-                    "🍱 LEGACY_MEAL_TBR_MAINT[${legacyMealMaint.second}]" +
-                        " rt=${legacyMealMaint.first}m (no prebolus this tick)"
-                )
+            if (pendingLegacyPrebolusUnit > 0.0f && internalLastLegacyPrebolusMillis > 0L) {
+                val prebolusDelivered = try {
+                    kotlinx.coroutines.runBlocking {
+                        persistenceLayer
+                            .getBolusesFromTime(internalLastLegacyPrebolusMillis, true)
+                            .any {
+                                it.type == BS.Type.NORMAL &&
+                                    it.amount >= pendingLegacyPrebolusUnit * 0.45f
+                            }
+                    }
+                } catch (_: Exception) { false }
+
+                if (prebolusDelivered) {
+                    consoleLog.add(
+                        "🍱 PREBOLUS_DELIVERED_CONFIRMED: clearing pending " +
+                            "${pendingLegacyPrebolusUnit}U"
+                    )
+                    pendingLegacyPrebolusUnit = 0.0f
+                    pendingLegacyPrebolusExpiry = 0L
+                }
             }
             return rT
         }
