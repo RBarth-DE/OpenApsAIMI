@@ -396,9 +396,9 @@
     <string name="openapsama_autosens_min_summary">Standardwert: 0,7\nDie andere Seite der Autosens-Sicherheitsgrenzen, die festlegt, wie tief Autosens die Basalraten senken und wie hoch es den ISF-Wert und die Blutzuckerzielwerte anheben kann.</string>
     <string name="pref_title_autosens_max">Autosens max</string>
     <string name="openapsama_autosens_max_summary">Standardwert: 1,2\nDies ist eine Multiplikator-Obergrenze für Autosens (und bald auch für Autotune), um eine maximale Grenze von 20 % festzulegen, wie hoch das Autosens-Verhältnis sein darf. Dies bestimmt wiederum, wie hoch Autosens die Basalraten anpassen kann, wie niedrig es den ISF anpassen kann und wie niedrig es den BG-Zielwert festlegen kann. </string>
-    <string name="pref_title_autoisf_min">AutoISF min</string>
+    <string name="pref_title_autoisf_min">AutoISF min (autoISF_min)</string>
     <string name="openapsama_autoISF_min_summary">Ähnlich wie bei autosens_min legt dies fest, wie schwach der ISF werden kann.\n\nDer Standardwert 1,0 schaltet diesen Effekt effektiv aus.</string>
-    <string name="pref_title_autoisf_max">AutoISF max</string>
+    <string name="pref_title_autoisf_max">AutoISF max (autoISF_max)</string>
     <string name="openapsama_autoISF_max_summary">Ähnlich wie bei autosens_max legt dies fest, wie stark der ISF werden kann.\n\nDer Standardwert 1,0 schaltet diesen Effekt effektiv aus.\n\nWARNUNG: Seien Sie äußerst vorsichtig bei der Verwendung von Werten über 2,5</string>
     <string name="pref_title_bg_accel_weight">ISF-Gewichtung der Hintergrundbeschleunigung (bgAccel_ISF_weight)</string>
     <string name="openapsama_bgAccel_ISF_weight_summary">Dies ist das Gewicht, das bei steigendem Blutzucker angewendet wird und das den ISF verstärkt, wodurch die Insulinabgabe potenziell erhöht wird.  Der Standardwert 0,0 schaltet diesen Effekt praktisch aus.</string>
@@ -408,19 +408,19 @@
     <string name="openapsama_lower_ISFrange_weight_summary">Dies ist die Gewichtung, die angewendet wird, wenn der Blutzucker unter dem Zielwert liegt, und die den ISF abschwächt, wodurch die Insulinabgabe potenziell reduziert wird.  Der Standardwert 0,0 schaltet diesen Effekt effektiv aus.</string>
     <string name="pref_title_high_bg_weight">Gewichtung für hohen Blutzuckerbereich (higher_ISFrange_weight)</string>
     <string name="openapsama_higher_ISFrange_weight_summary">Dies ist die Gewichtung, die angewendet wird, wenn der Blutzucker über dem Zielwert liegt, und die den ISF verstärkt, wodurch die Insulinabgabe potenziell erhöht wird.  Der Standardwert 0,0 schaltet diesen Effekt effektiv aus.</string>
-    <string name="pref_title_smb_delivery_ratio_bg_range">SMB-Abgabeverhältnis für Blutzuckerbereich</string>
+    <string name="pref_title_smb_delivery_ratio_bg_range">SMB-Abgabeverhältnis für Blutzuckerbereich (openapsama_smb_delivery_ratio_bg_range)</string>
     <string name="openapsama_smb_delivery_ratio_bg_range_summary">Standardwert: 0. Die linear ansteigende SMB-Abgaberate wird dem Blutzuckerbereich [target_bg, target_bg+bg_range] zugeordnet.\ Bei target_bg beträgt die SMB-Rate smb_delivery_ratio_min, bei target_bg+bg_range beträgt sie smb_delivery_ratio_max\nBei 0 ist die linear ansteigende SMB-Rate deaktiviert und es wird die feste smb_delivery_ratio verwendet.</string>
     <string name="pref_title_pp_weight">Gewichtung des postprandialen ISF (pp_ISF_weight)</string>
     <string name="openapsama_pp_ISF_weight_summary">Dies ist das Gewicht, das angewendet wird, während der Glukosespiegel ansteigt, und das den ISF verstärkt, wodurch die Insulinabgabe potenziell erhöht wird.  Der Standardwert 0,0 schaltet diesen Effekt effektiv aus.</string>
     <string name="pref_title_dura_weight">Dauer-ISF-Gewicht (dura_ISF_weight)</string>
     <string name="openapsama_dura_ISF_weight_summary">Dies ist die Gewichtung, die bei länger anhaltenden, erhöhten Glukoseplateaus angewendet wird und die den ISF verstärkt, wodurch die Insulinabgabe potenziell erhöht wird.\n\nDer Standardwert 0,0 schaltet diesen Effekt effektiv aus.</string>
-    <string name="pref_title_smb_delivery_ratio">SMB-Abgabeverhältnis</string>
+    <string name="pref_title_smb_delivery_ratio">SMB-Abgabeverhältnis (openapsama_smb_delivery_ratio)</string>
     <string name="openapsama_smb_delivery_ratio_summary">Standardwert: 0,5 Dies ist eine weitere wichtige Sicherheitsgrenze von OpenAPS, die festlegt, welcher Anteil des gesamten benötigten Insulins als SMB verabreicht werden darf. Damit soll verhindert werden, dass Nutzer in einen gefährlichen Bereich geraten, indem gleichzeitig SMB-Anforderungen über das Telefon der Pflegeperson gestellt werden. Erhöhen Sie diesen experimentellen Wert langsam und mit Vorsicht.</string>
-    <string name="pref_title_smb_delivery_ratio_min">SMB-Abgabeverhältnis min</string>
+    <string name="pref_title_smb_delivery_ratio_min">SMB-Abgabeverhältnis min (openapsama_smb_delivery_ratio_min)</string>
     <string name="openapsama_smb_delivery_ratio_min_summary">Standardwert: 0,5 Dies ist die Untergrenze eines linear ansteigenden Verhältnisses und kein fester Wert wie oben.</string>
-    <string name="pref_title_smb_delivery_ratio_max">Maximale SMB-Zustellungsquote</string>
+    <string name="pref_title_smb_delivery_ratio_max">Maximale SMB-Zustellungsquote (openapsama_smb_delivery_ratio_max)</string>
     <string name="openapsama_smb_delivery_ratio_max_summary">Standardwert: 0,5 Dies ist das obere Ende einer linear ansteigenden Quote und kein fester Wert wie oben.</string>
-    <string name="pref_title_smb_max_range_extension">Maximale Reichweitenausweitung für SMB</string>
+    <string name="pref_title_smb_max_range_extension">Maximale Reichweitenausweitung für SMB (openapsama_smb_max_range_extension)</string>
     <string name="openapsama_smb_max_range_extension_summary">Standardwert: 1 Dies ist eine weitere wichtige Sicherheitsgrenze von OpenAPS, die festlegt, um welchen Faktor die regulären 120 maxSMB/maxUAM-Minuten überschritten werden dürfen. Erhöhen Sie diesen experimentellen Wert langsam und mit Vorsicht.</string>
 
 
@@ -450,6 +450,7 @@
     <string name="pref_summary_unified_reactivity">Ersetzt das zeitbasierte Bucket-System durch eine Analyse auf Basis tatsächlicher klinischer Kennzahlen</string>
     <string name="pref_title_xdripOM">XDrip One Minute verwenden</string>
     <string name="pref_summary_xdripOM">Unterstützung für XDrip-Blutzuckerwerte im Minutentakt aktivieren</string>
+    <string name="pref_summary_aimi_autodrive_v3_authoritative">Wenn Autodrive V3 aktiv ist und einen sicheren SMB/TBR ausgibt, darf SMB nicht mit dem alten MPC/PI-Blender neu berechnet werden (verhindert ein Überschwingen nach dem Hypo). Nur zu Debugging-Zwecken deaktivieren.</string>
     <string name="aimi_tube_advanced_title">Straight-line tube (Feinabstimmung)</string>
     <string name="aimi_tube_hypo_floor_title">Tube: prognostizierter Mindestblutzuckerwert (mg/dL)</string>
     <string name="aimi_tube_hypo_floor_summary">Robuste Hypoglykämie-Einschränkung: Die SMB-Obergrenze ist nur zulässig, wenn der prognostizierte Mindestblutzuckerwert abzüglich des geschätzten SMB-Effekts auf oder über diesem Wert bleibt.</string>
@@ -581,4 +582,5 @@
     <string name="pref_title_aimi_dyn_isf_trajectory_shadow">DynISF-Trajektorie: nur Schatten</string>
     <string name="pref_summary_aimi_dyn_isf_trajectory_shadow">Wenn diese Option aktiviert ist, wird der voraussichtliche ISF-Multiplikator protokolliert, der angezeigte DynISF-Wert wird jedoch nicht geändert. Deaktivieren Sie diese Option, sobald Sie dem Signal in den Protokollen vertrauen.</string>
     <string name="pref_title_aimi_dyn_isf_trajectory_max_fraction">DynISF-Verlauf: maximale ISF-Änderung pro Tick</string>
+    <string name="pref_title_aimi_autodrive_v3_authoritative">"Autodrive V3 maßgeblich SMB "</string>
 </resources>

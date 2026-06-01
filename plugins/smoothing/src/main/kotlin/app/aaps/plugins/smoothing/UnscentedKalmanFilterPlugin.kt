@@ -831,18 +831,18 @@ class UnscentedKalmanFilterPlugin @Inject constructor(
             }
 
             // Logging with effective parameters (just switch to xPredEff for consistency).
-            aapsLogger.warn(
-                LTag.GLUCOSE,
-                "UKF: live R=${String.format(Locale.US, "%.1f", r)}, " +
-                    "R_eff=${String.format(Locale.US, "%.1f", rEff)}, " +
-                    "BG=${String.format(Locale.US, "%.0f", z)}, " +
-                    "predBG=${String.format(Locale.US, "%.0f", xPredEff[0])}, " +
-                    "innov=${String.format(Locale.US, "%.1f", innovation)}, " +
-                    "|ν|/σ=${String.format(Locale.US, "%.1f", absn)}, " +
-                    "qScale=${String.format(Locale.US, "%.1f", qScale)}, " +
-                    "P[0]=${String.format(Locale.US, "%.1f", p[0])}, " +
-                    "P[3]=${String.format(Locale.US, "%.4f", p[3])}"
-            )
+            // aapsLogger.warn(
+            //     LTag.GLUCOSE,
+            //     "UKF: live R=${String.format(Locale.US, "%.1f", r)}, " +
+            //         "R_eff=${String.format(Locale.US, "%.1f", rEff)}, " +
+            //         "BG=${String.format(Locale.US, "%.0f", z)}, " +
+            //         "predBG=${String.format(Locale.US, "%.0f", xPredEff[0])}, " +
+            //         "innov=${String.format(Locale.US, "%.1f", innovation)}, " +
+            //         "|ν|/σ=${String.format(Locale.US, "%.1f", absn)}, " +
+            //         "qScale=${String.format(Locale.US, "%.1f", qScale)}, " +
+            //         "P[0]=${String.format(Locale.US, "%.1f", p[0])}, " +
+            //         "P[3]=${String.format(Locale.US, "%.4f", p[3])}"
+            // )
 
             val resultIdx = i - startIdx
             forwardResults[resultIdx] = x[0]

@@ -447,9 +447,9 @@
     <string name="openapsama_autosens_min_summary">Default value: 0.7\nThe other side of the autosens safety limits, putting a cap on how low autosens can adjust basals, and how high it can adjust ISF and BG targets.</string>
     <string name="pref_title_autosens_max">Autosens max</string>
     <string name="openapsama_autosens_max_summary">Default value: 1.2\nThis is a multiplier cap for autosens (and soon autotune) to set a 20%% max limit on how high the autosens ratio can be, which in turn determines how high autosens can adjust basals, how low it can adjust ISF, and how low it can set the BG target.</string>
-    <string name="pref_title_autoisf_min">AutoISF min</string>
+    <string name="pref_title_autoisf_min">AutoISF min (autoISF_min)</string>
     <string name="openapsama_autoISF_min_summary">Similar to autosens_min this defines how weak ISF can become.\n\nThe default value 1.0 effectively shuts off this effect.</string>
-    <string name="pref_title_autoisf_max">AutoISF max</string>
+    <string name="pref_title_autoisf_max">AutoISF max (autoISF_max)</string>
     <string name="openapsama_autoISF_max_summary">Similar to autosens_max this defines how strong ISF can become.\n\nThe default value 1.0 effectively shuts off this effect.\n\nWARNING: Be extremely careful when using values above 2.5</string>
     <string name="pref_title_bg_accel_weight">BG acceleration ISF weight (bgAccel_ISF_weight)</string>
     <string name="openapsama_bgAccel_ISF_weight_summary">This is the weight applied while glucose accelerates and which strengthens ISF thereby potentially increasing insulin delivery.\n\nThe default value 0.0 effectively shuts off this effect.</string>
@@ -459,19 +459,19 @@
     <string name="openapsama_lower_ISFrange_weight_summary">This is the weight applied while glucose is below target and which weakens ISF thereby potentially reducing insulin delivery.\n\nThe default value 0.0 effectively shuts off this effect.</string>
     <string name="pref_title_high_bg_weight">High BG range weight (higher_ISFrange_weight)</string>
     <string name="openapsama_higher_ISFrange_weight_summary">This is the weight applied while glucose is above target and which strengthens ISF thereby potentially increasing insulin delivery.\n\nThe default value 0.0 effectively shuts off this effect.</string>
-    <string name="pref_title_smb_delivery_ratio_bg_range">SMB delivery ratio BG range</string>
+    <string name="pref_title_smb_delivery_ratio_bg_range">SMB delivery ratio BG range (openapsama_smb_delivery_ratio_bg_range)</string>
     <string name="openapsama_smb_delivery_ratio_bg_range_summary">Default value: 0. The linearly increasing SMB delivery ratio is mapped to the glucose range [target_bg, target_bg+bg_range].\nAt target_bg the SMB ratio is smb_delivery_ratio_min, at target_bg+bg_range it is smb_delivery_ratio_max\nWith 0 the linearly increasing SMB ratio is disabled and the fixed smb_delivery_ratio is used.</string>
     <string name="pref_title_pp_weight">Post-prandial ISF weight (pp_ISF_weight)</string>
     <string name="openapsama_pp_ISF_weight_summary">This is the weight applied while glucose is rising and which strengthens ISF thereby potentially increasing insulin delivery.\n\nThe default value 0.0 effectively shuts off this effect.</string>
     <string name="pref_title_dura_weight">Duration ISF weight (dura_ISF_weight)</string>
     <string name="openapsama_dura_ISF_weight_summary">This is the weight applied during longer lasting, elevated glucose plateaus and which strengthens ISF thereby potentially increasing insulin delivery.\n\nThe default value 0.0 effectively shuts off this effect.</string>
-    <string name="pref_title_smb_delivery_ratio">SMB delivery ratio</string>
+    <string name="pref_title_smb_delivery_ratio">SMB delivery ratio (openapsama_smb_delivery_ratio)</string>
     <string name="openapsama_smb_delivery_ratio_summary">Default value: 0.5 This is another key OpenAPS safety cap, and specifies what share of the total insulin required can be delivered as SMB. This is to prevent people from getting into dangerous territory by setting SMB requests from the caregivers phone at the same time. Increase this experimental value slowly and with caution.</string>
-    <string name="pref_title_smb_delivery_ratio_min">SMB delivery ratio min</string>
+    <string name="pref_title_smb_delivery_ratio_min">SMB delivery ratio min (openapsama_smb_delivery_ratio_min)</string>
     <string name="openapsama_smb_delivery_ratio_min_summary">Default value: 0.5 This is the lower end of a linearly increasing ratio rather than the fix value above.</string>
-    <string name="pref_title_smb_delivery_ratio_max">SMB delivery ratio max</string>
+    <string name="pref_title_smb_delivery_ratio_max">SMB delivery ratio max (openapsama_smb_delivery_ratio_max)</string>
     <string name="openapsama_smb_delivery_ratio_max_summary">Default value: 0.5 This is the upper end of a linearly increasing ratio rather than the fix value above.</string>
-    <string name="pref_title_smb_max_range_extension">SMB max range extension</string>
+    <string name="pref_title_smb_max_range_extension">SMB max range extension (openapsama_smb_max_range_extension)</string>
     <string name="openapsama_smb_max_range_extension_summary">Default value: 1 This is another key OpenAPS safety cap, and specifies by what factor you can exceed the regular 120 maxSMB/maxUAM minutes. Increase this experimental value slowly and with caution.</string>
 
 
