@@ -35,7 +35,6 @@ import app.aaps.core.interfaces.utils.fabric.FabricPrivacy
 import android.database.CursorWindowAllocationException
 import android.database.sqlite.SQLiteOutOfMemoryException
 import app.aaps.database.AppRepository
-import app.aaps.database.ValueWrapper
 import app.aaps.database.DatabaseMaintenanceCoordinator
 import app.aaps.database.entities.Bolus
 import app.aaps.database.entities.BolusCalculatorResult
@@ -142,7 +141,6 @@ import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import javax.inject.Provider
 import kotlin.reflect.KClass
-import io.reactivex.rxjava3.core.Single
 
 @Reusable
 class PersistenceLayerImpl @Inject constructor(
@@ -153,15 +151,6 @@ class PersistenceLayerImpl @Inject constructor(
     private val apsResultProvider: Provider<APSResult>,
     private val fabricPrivacy: FabricPrivacy
 ) : PersistenceLayer {
-
-    @Suppress("unused")
-    private fun <S, D> Single<ValueWrapper<S>>.fromDb(converter: S.() -> D): Single<ValueWrapper<D>> =
-        this.map { wrapper ->
-            when (wrapper) {
-                is ValueWrapper.Existing -> ValueWrapper.Existing(wrapper.value.converter())
-                is ValueWrapper.Absent   -> ValueWrapper.Absent()
-            }
-        }
 
     private val compositeDisposable = CompositeDisposable()
     private suspend fun log(entries: List<UE>) {
@@ -177,7 +166,9 @@ class PersistenceLayerImpl @Inject constructor(
     override fun clearApsResults() = repository.clearApsResults()
     override suspend fun cleanupDatabase(keepDays: Long, deleteTrackedChanges: Boolean, runVacuum: Boolean): String =
         withContext(Dispatchers.IO) {
-            repository.cleanupDatabase(keepDays, deleteTrackedChanges, runVacuum)
+            val result = repository.cleanupDatabase(keepDays, deleteTrackedChanges)
+            if (runVacuum) repository.vacuumDatabase()
+            result
         }
 
     override suspend fun vacuumDatabase() = withContext(Dispatchers.IO) {

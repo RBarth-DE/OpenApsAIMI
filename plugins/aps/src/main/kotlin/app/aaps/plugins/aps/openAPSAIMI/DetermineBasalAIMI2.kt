@@ -1730,7 +1730,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             )
             val prebolusDelivered = recentBoluses.any {
                 it.type == BS.Type.NORMAL &&
-                    it.amount >= pendingLegacyPrebolusUnit * 0.45f
+                    it.amount >= pendingLegacyPrebolusUnit * 0.35f
             }
             if (prebolusDelivered) {
                 consoleLog.add(
@@ -8614,7 +8614,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         val prebolusAlreadyFiredThisSession =
             (dateUtil.now() - internalLastLegacyPrebolusMillis) < (14 * 60_000L)
         return mealruntime in 0..7
-            && lastBolusSMBUnit != pbolusM.toFloat()
+            // && lastBolusSMBUnit != pbolusM.toFloat()
             && !isLegacyPrebolusDeliveryPending(pbolusM.toFloat())
             && !prebolusAlreadyFiredThisSession
             && mealTime
@@ -8625,7 +8625,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         val prebolusAlreadyFiredThisSession =
             (dateUtil.now() - internalLastLegacyPrebolusMillis) < (14 * 60_000L)
         return bfastruntime in 0..7
-            && lastBolusSMBUnit != pbolusbfast.toFloat()
+            // && lastBolusSMBUnit != pbolusbfast.toFloat()
             && !isLegacyPrebolusDeliveryPending(pbolusbfast.toFloat())
             && !prebolusAlreadyFiredThisSession
             && bfastTime
@@ -8636,7 +8636,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         val prebolusAlreadyFiredThisSession =
             (dateUtil.now() - internalLastLegacyPrebolusMillis) < (14 * 60_000L)
         return lunchruntime in 0..7
-            && lastBolusSMBUnit != pbolusLunch.toFloat()
+            // && lastBolusSMBUnit != pbolusLunch.toFloat()
             && !isLegacyPrebolusDeliveryPending(pbolusLunch.toFloat())
             && !prebolusAlreadyFiredThisSession
             && lunchTime
@@ -8647,7 +8647,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         val prebolusAlreadyFiredThisSession =
             (dateUtil.now() - internalLastLegacyPrebolusMillis) < (14 * 60_000L)
         return dinnerruntime in 0..7
-            && lastBolusSMBUnit != pbolusDinner.toFloat()
+            // && lastBolusSMBUnit != pbolusDinner.toFloat()
             && !isLegacyPrebolusDeliveryPending(pbolusDinner.toFloat())
             && !prebolusAlreadyFiredThisSession
             && dinnerTime
@@ -8658,7 +8658,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         val prebolusAlreadyFiredThisSession =
             (dateUtil.now() - internalLastLegacyPrebolusMillis) < (14 * 60_000L)
         return highCarbrunTime in 0..7
-            && lastBolusSMBUnit != pbolusHC.toFloat()
+            // && lastBolusSMBUnit != pbolusHC.toFloat()
             && !isLegacyPrebolusDeliveryPending(pbolusHC.toFloat())
             && !prebolusAlreadyFiredThisSession
             && highCarbTime
@@ -8669,7 +8669,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         val prebolusAlreadyFiredThisSession =
             (dateUtil.now() - internalLastLegacyPrebolusMillis) < (14 * 60_000L)
         return snackrunTime in 0..7
-            && lastBolusSMBUnit != pbolussnack.toFloat()
+            // && lastBolusSMBUnit != pbolussnack.toFloat()
             && !isLegacyPrebolusDeliveryPending(pbolussnack.toFloat())
             && !prebolusAlreadyFiredThisSession
             && snackTime
@@ -8682,7 +8682,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         val prebolusAlreadyFiredInP2Window =
             (dateUtil.now() - internalLastLegacyPrebolusMillis) < (10 * 60_000L)
         return bfastruntime in LEGACY_MEAL_PRE2_MIN..LEGACY_MEAL_PRE2_MAX
-            && lastBolusSMBUnit != pbolusbfast2.toFloat()
+            // && lastBolusSMBUnit != pbolusbfast2.toFloat()
             && !isLegacyPrebolusDeliveryPending(pbolusbfast2.toFloat())
             && !prebolusAlreadyFiredInP2Window
             && bfastTime
@@ -8693,7 +8693,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         val prebolusAlreadyFiredInP2Window =
             (dateUtil.now() - internalLastLegacyPrebolusMillis) < (10 * 60_000L)
         return lunchruntime in LEGACY_MEAL_PRE2_MIN..LEGACY_MEAL_PRE2_MAX
-            && lastBolusSMBUnit != pbolusLunch2.toFloat()
+            // && lastBolusSMBUnit != pbolusLunch2.toFloat()
             && !isLegacyPrebolusDeliveryPending(pbolusLunch2.toFloat())
             && !prebolusAlreadyFiredInP2Window
             && lunchTime
@@ -8704,7 +8704,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         val prebolusAlreadyFiredInP2Window =
             (dateUtil.now() - internalLastLegacyPrebolusMillis) < (10 * 60_000L)
         return dinnerruntime in LEGACY_MEAL_PRE2_MIN..LEGACY_MEAL_PRE2_MAX
-            && lastBolusSMBUnit != pbolusDinner2.toFloat()
+            // && lastBolusSMBUnit != pbolusDinner2.toFloat()
             && !isLegacyPrebolusDeliveryPending(pbolusDinner2.toFloat())
             && !prebolusAlreadyFiredInP2Window
             && dinnerTime
@@ -8715,7 +8715,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         val prebolusAlreadyFiredInP2Window =
             (dateUtil.now() - internalLastLegacyPrebolusMillis) < (10 * 60_000L)
         return highCarbrunTime in LEGACY_MEAL_PRE2_MIN..LEGACY_MEAL_PRE2_MAX
-            && lastBolusSMBUnit != pbolusHC.toFloat()
+            // && lastBolusSMBUnit != pbolusHC.toFloat()
             && !isLegacyPrebolusDeliveryPending(pbolusHC.toFloat())
             && !prebolusAlreadyFiredInP2Window
             && highCarbTime

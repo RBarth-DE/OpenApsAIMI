@@ -83,7 +83,8 @@ android {
         buildConfigField("String", "HEAD",         "\"${gitDescribeProvider.getOrElse("NoGitSystemAvailable")}\"")
         buildConfigField("String", "COMMITTED",    "\"${gitStatusProvider.getOrElse(false)}\"")
 
-        testInstrumentationRunner = "app.aaps.runners.InjectedTestRunner"
+        // For Hilt injected instrumentation tests in app module
+        testInstrumentationRunner = "app.aaps.runners.HiltTestRunner"
     }
 
     flavorDimensions += "standard"
@@ -268,6 +269,10 @@ dependencies {
     ksp(libs.com.google.dagger.compiler)
     implementation(libs.com.google.dagger.hilt.android)
     ksp(libs.com.google.dagger.hilt.compiler)
+    // Hilt instrumentation testing: lets androidTest reuse the production @InstallIn graph
+    // (single source of truth) with @TestInstallIn overrides instead of a hand-maintained component.
+    androidTestImplementation(libs.com.google.dagger.hilt.android.testing)
+    kspAndroidTest(libs.com.google.dagger.hilt.compiler)
 
     // MainApp
     api(libs.com.uber.rxdogtag2.rxdogtag)

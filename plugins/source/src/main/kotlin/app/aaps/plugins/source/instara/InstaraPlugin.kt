@@ -27,7 +27,6 @@ import app.aaps.core.ui.compose.icons.IcGenericCgm
 import app.aaps.core.ui.compose.preference.PreferenceSubScreenDef
 import app.aaps.plugins.source.AbstractBgSourcePlugin
 import app.aaps.plugins.source.compose.BgSourceComposeContent
-import dagger.android.HasAndroidInjector
 import kotlinx.coroutines.Dispatchers
 import org.json.JSONArray
 import org.json.JSONException
@@ -90,7 +89,6 @@ class InstaraPlugin @Inject constructor(
         params: WorkerParameters
     ) : LoggingWorker(context, params, Dispatchers.IO) {
 
-        @Inject lateinit var injector: HasAndroidInjector
         @Inject lateinit var instaraPlugin: InstaraPlugin
         @Inject lateinit var persistenceLayer: PersistenceLayer
 

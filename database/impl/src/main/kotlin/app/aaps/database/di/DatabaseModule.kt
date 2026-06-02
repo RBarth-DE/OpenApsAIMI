@@ -5,20 +5,22 @@ import androidx.annotation.VisibleForTesting
 import androidx.room.Room
 import androidx.room.RoomDatabase.Callback
 import androidx.room.migration.Migration
-import androidx.sqlite.db.SupportSQLiteDatabase
+import androidx.sqlite.SQLiteConnection
+import androidx.sqlite.driver.bundled.BundledSQLiteDriver
+import androidx.sqlite.execSQL
 import app.aaps.database.AppDatabase
 import app.aaps.database.entities.TABLE_APS_RESULTS
 import app.aaps.database.entities.TABLE_AUTOISF_VALUES
 import app.aaps.database.entities.TABLE_BOLUSES
 import app.aaps.database.entities.TABLE_EFFECTIVE_PROFILE_SWITCHES
 import app.aaps.database.entities.TABLE_HEART_RATE
-import app.aaps.database.entities.TABLE_TOTAL_DAILY_DOSES
 import app.aaps.database.entities.TABLE_PREFERENCE_CHANGES
 import app.aaps.database.entities.TABLE_PROFILE_SWITCHES
 import app.aaps.database.entities.TABLE_RUNNING_MODE
 import app.aaps.database.entities.TABLE_STEPS_COUNT
 import app.aaps.database.entities.TABLE_TEMPORARY_BASALS
 import app.aaps.database.entities.TABLE_THERAPY_EVENTS
+import app.aaps.database.entities.TABLE_TOTAL_DAILY_DOSES
 import app.aaps.database.entities.TABLE_USER_ENTRY
 import dagger.Module
 import dagger.Provides
@@ -40,11 +42,18 @@ open class DatabaseModule {
     internal fun provideAppDatabase(context: Context, @DbFileName fileName: String) =
         Room
             .databaseBuilder(context, AppDatabase::class.java, fileName)
+            // Bundled SQLite driver: ships its own SQLite compiled from source instead of the
+            // device's framework SQLite. This is Google's recommended driver (consistent engine
+            // across all devices) and, crucially, it does not allocate the framework CursorWindow
+            // ashmem buffer, eliminating CursorWindowAllocationException on memory-constrained devices.
+            .setDriver(BundledSQLiteDriver())
             .addMigrations(*migrations)
             .addCallback(object : Callback() {
-                override fun onOpen(db: SupportSQLiteDatabase) {
-                    super.onOpen(db)
-                    createCustomIndexes(db)
+                // Driver mode delivers an SQLiteConnection (not a SupportSQLiteConnection), so the
+                // SupportSQLiteDatabase overload of onOpen never fires here — the connection overload must.
+                override fun onOpen(connection: SQLiteConnection) {
+                    super.onOpen(connection)
+                    createCustomIndexes(connection)
                 }
             })
             .fallbackToDestructiveMigration(false)
@@ -53,56 +62,33 @@ open class DatabaseModule {
     @Qualifier
     annotation class DbFileName
 
-    private fun createCustomIndexes(database: SupportSQLiteDatabase) {
-        database.execSQL("CREATE INDEX IF NOT EXISTS `index_temporaryBasals_end` ON `temporaryBasals` (`timestamp` + `duration`)")
-        database.execSQL("CREATE INDEX IF NOT EXISTS `index_extendedBoluses_end` ON `extendedBoluses` (`timestamp` + `duration`)")
-        database.execSQL("CREATE INDEX IF NOT EXISTS `index_temporaryTargets_end` ON `temporaryTargets` (`timestamp` + `duration`)")
-        database.execSQL("CREATE INDEX IF NOT EXISTS `index_carbs_end` ON `carbs` (`timestamp` + `duration`)")
-        database.execSQL("CREATE INDEX IF NOT EXISTS `index_runningModes_end` ON `runningModes` (`timestamp` + `duration`)")
+    private fun createCustomIndexes(connection: SQLiteConnection) {
+        connection.execSQL("CREATE INDEX IF NOT EXISTS `index_temporaryBasals_end` ON `temporaryBasals` (`timestamp` + `duration`)")
+        connection.execSQL("CREATE INDEX IF NOT EXISTS `index_extendedBoluses_end` ON `extendedBoluses` (`timestamp` + `duration`)")
+        connection.execSQL("CREATE INDEX IF NOT EXISTS `index_temporaryTargets_end` ON `temporaryTargets` (`timestamp` + `duration`)")
+        connection.execSQL("CREATE INDEX IF NOT EXISTS `index_carbs_end` ON `carbs` (`timestamp` + `duration`)")
+        connection.execSQL("CREATE INDEX IF NOT EXISTS `index_runningModes_end` ON `runningModes` (`timestamp` + `duration`)")
     }
 
-    private fun dropCustomIndexes(database: SupportSQLiteDatabase) {
-        database.execSQL("DROP INDEX IF EXISTS `index_temporaryBasals_end`")
-        database.execSQL("DROP INDEX IF EXISTS `index_extendedBoluses_end`")
-        database.execSQL("DROP INDEX IF EXISTS `index_temporaryTargets_end`")
-        database.execSQL("DROP INDEX IF EXISTS `index_carbs_end`")
-        database.execSQL("DROP INDEX IF EXISTS `index_runningModes_end`")
-    }
-
-    internal val migration20to21 = object : Migration(20, 21) {
-        override fun migrate(db: SupportSQLiteDatabase) {
-            db.execSQL("DROP TABLE IF EXISTS offlineEvents")
-            db.execSQL("CREATE TABLE IF NOT EXISTS `offlineEvents` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `version` INTEGER NOT NULL, `dateCreated` INTEGER NOT NULL, `isValid` INTEGER NOT NULL, `referenceId` INTEGER, `timestamp` INTEGER NOT NULL, `utcOffset` INTEGER NOT NULL, `reason` TEXT NOT NULL, `duration` INTEGER NOT NULL, `nightscoutSystemId` TEXT, `nightscoutId` TEXT, `pumpType` TEXT, `pumpSerial` TEXT, `temporaryId` INTEGER, `pumpId` INTEGER, `startId` INTEGER, `endId` INTEGER, FOREIGN KEY(`referenceId`) REFERENCES `offlineEvents`(`id`) ON UPDATE NO ACTION ON DELETE NO ACTION )")
-            db.execSQL("CREATE INDEX IF NOT EXISTS `index_offlineEvents_id` ON offlineEvents (`id`)")
-            db.execSQL("CREATE INDEX IF NOT EXISTS `index_offlineEvents_isValid` ON offlineEvents (`isValid`)")
-            db.execSQL("CREATE INDEX IF NOT EXISTS `index_offlineEvents_nightscoutId` ON offlineEvents (`nightscoutId`)")
-            db.execSQL("CREATE INDEX IF NOT EXISTS `index_offlineEvents_referenceId` ON offlineEvents (`referenceId`)")
-            db.execSQL("CREATE INDEX IF NOT EXISTS `index_offlineEvents_timestamp` ON offlineEvents (`timestamp`)")
-            // Custom indexes must be dropped on migration to pass room schema checking after upgrade
-            dropCustomIndexes(db)
-        }
-    }
-
-    internal val migration21to22 = object : Migration(21, 22) {
-        override fun migrate(db: SupportSQLiteDatabase) {
-            db.execSQL("ALTER TABLE `carbs` ADD COLUMN `notes` TEXT")
-            db.execSQL("ALTER TABLE `boluses` ADD COLUMN `notes` TEXT")
-            // Custom indexes must be dropped on migration to pass room schema checking after upgrade
-            dropCustomIndexes(db)
-        }
+    private fun dropCustomIndexes(connection: SQLiteConnection) {
+        connection.execSQL("DROP INDEX IF EXISTS `index_temporaryBasals_end`")
+        connection.execSQL("DROP INDEX IF EXISTS `index_extendedBoluses_end`")
+        connection.execSQL("DROP INDEX IF EXISTS `index_temporaryTargets_end`")
+        connection.execSQL("DROP INDEX IF EXISTS `index_carbs_end`")
+        connection.execSQL("DROP INDEX IF EXISTS `index_runningModes_end`")
     }
 
     internal val migration22to23 = object : Migration(22, 23) {
-        override fun migrate(db: SupportSQLiteDatabase) {
-            db.execSQL("ALTER TABLE `deviceStatus` ADD COLUMN `isCharging` INTEGER")
+        override fun migrate(connection: SQLiteConnection) {
+            connection.execSQL("ALTER TABLE `deviceStatus` ADD COLUMN `isCharging` INTEGER")
             // Custom indexes must be dropped on migration to pass room schema checking after upgrade
-            dropCustomIndexes(db)
+            dropCustomIndexes(connection)
         }
     }
 
     internal val migration23to24 = object : Migration(23, 24) {
-        override fun migrate(db: SupportSQLiteDatabase) {
-            db.execSQL(
+        override fun migrate(connection: SQLiteConnection) {
+            connection.execSQL(
                 """CREATE TABLE IF NOT EXISTS `$TABLE_HEART_RATE` (
                     `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
                     `duration` INTEGER NOT NULL,
@@ -122,334 +108,333 @@ open class DatabaseModule {
                     `pumpId` INTEGER, `startId` INTEGER,
                     `endId` INTEGER)""".trimIndent()
             )
-            db.execSQL("""CREATE INDEX IF NOT EXISTS `index_heartRate_id` ON `$TABLE_HEART_RATE` (`id`)""")
-            db.execSQL("""CREATE INDEX IF NOT EXISTS `index_heartRate_timestamp` ON `$TABLE_HEART_RATE` (`timestamp`)""")
+            connection.execSQL("""CREATE INDEX IF NOT EXISTS `index_heartRate_id` ON `$TABLE_HEART_RATE` (`id`)""")
+            connection.execSQL("""CREATE INDEX IF NOT EXISTS `index_heartRate_timestamp` ON `$TABLE_HEART_RATE` (`timestamp`)""")
             // Custom indexes must be dropped on migration to pass room schema checking after upgrade
-            dropCustomIndexes(db)
+            dropCustomIndexes(connection)
         }
     }
     internal val migration24to25 = object : Migration(24, 25) {
-        override fun migrate(db: SupportSQLiteDatabase) {
+        override fun migrate(connection: SQLiteConnection) {
             // Creation of table TABLE_STEPS_COUNT
-            db.execSQL(
+            connection.execSQL(
                 "CREATE TABLE IF NOT EXISTS `${TABLE_STEPS_COUNT}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `duration` INTEGER NOT NULL, `timestamp` INTEGER NOT NULL, `steps5min` INTEGER NOT NULL, `steps10min` INTEGER NOT NULL, `steps15min` INTEGER NOT NULL, `steps30min` INTEGER NOT NULL, `steps60min` INTEGER NOT NULL, `steps180min` INTEGER NOT NULL, `device` TEXT NOT NULL, `utcOffset` INTEGER NOT NULL, `version` INTEGER NOT NULL, `dateCreated` INTEGER NOT NULL, `isValid` INTEGER NOT NULL, `referenceId` INTEGER, `nightscoutSystemId` TEXT, `nightscoutId` TEXT, `pumpType` TEXT, `pumpSerial` TEXT, `temporaryId` INTEGER, `pumpId` INTEGER, `startId` INTEGER, `endId` INTEGER)"
             )
             // Creation of index for table TABLE_STEPS_COUNT
-            db.execSQL("CREATE INDEX IF NOT EXISTS `index_stepsCount_id` ON `${TABLE_STEPS_COUNT}` (`id`)")
-            db.execSQL("CREATE INDEX IF NOT EXISTS `index_stepsCount_timestamp` ON `${TABLE_STEPS_COUNT}` (`timestamp`)")
+            connection.execSQL("CREATE INDEX IF NOT EXISTS `index_stepsCount_id` ON `${TABLE_STEPS_COUNT}` (`id`)")
+            connection.execSQL("CREATE INDEX IF NOT EXISTS `index_stepsCount_timestamp` ON `${TABLE_STEPS_COUNT}` (`timestamp`)")
 
             // Custom indexes must be dropped on migration to pass room schema checking after upgrade
-            dropCustomIndexes(db)
+            dropCustomIndexes(connection)
         }
     }
 
     internal val migration25to26 = object : Migration(25, 26) {
-        override fun migrate(db: SupportSQLiteDatabase) {
-            db.execSQL("DROP TABLE IF EXISTS $TABLE_APS_RESULTS")
-            db.execSQL("CREATE TABLE IF NOT EXISTS `${TABLE_APS_RESULTS}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `version` INTEGER NOT NULL, `dateCreated` INTEGER NOT NULL, `isValid` INTEGER NOT NULL, `referenceId` INTEGER, `timestamp` INTEGER NOT NULL, `utcOffset` INTEGER NOT NULL, `algorithm` TEXT NOT NULL, `glucoseStatusJson` TEXT NOT NULL, `currentTempJson` TEXT NOT NULL, `iobDataJson` TEXT NOT NULL, `profileJson` TEXT NOT NULL, `autosensDataJson` TEXT, `mealDataJson` TEXT NOT NULL, `resultJson` TEXT NOT NULL, `nightscoutSystemId` TEXT, `nightscoutId` TEXT, `pumpType` TEXT, `pumpSerial` TEXT, `temporaryId` INTEGER, `pumpId` INTEGER, `startId` INTEGER, `endId` INTEGER, FOREIGN KEY(`referenceId`) REFERENCES `apsResults`(`id`) ON UPDATE NO ACTION ON DELETE NO ACTION )")
-            db.execSQL("CREATE INDEX IF NOT EXISTS `index_apsResults_referenceId` ON `${TABLE_APS_RESULTS}` (`referenceId`)")
-            db.execSQL("CREATE INDEX IF NOT EXISTS `index_apsResults_timestamp` ON `${TABLE_APS_RESULTS}` (`timestamp`)")
-            db.execSQL("DROP TABLE IF EXISTS apsResultLinks")
-            db.execSQL("DROP TABLE IF EXISTS multiwaveBolusLinks")
+        override fun migrate(connection: SQLiteConnection) {
+            connection.execSQL("DROP TABLE IF EXISTS $TABLE_APS_RESULTS")
+            connection.execSQL("CREATE TABLE IF NOT EXISTS `${TABLE_APS_RESULTS}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `version` INTEGER NOT NULL, `dateCreated` INTEGER NOT NULL, `isValid` INTEGER NOT NULL, `referenceId` INTEGER, `timestamp` INTEGER NOT NULL, `utcOffset` INTEGER NOT NULL, `algorithm` TEXT NOT NULL, `glucoseStatusJson` TEXT NOT NULL, `currentTempJson` TEXT NOT NULL, `iobDataJson` TEXT NOT NULL, `profileJson` TEXT NOT NULL, `autosensDataJson` TEXT, `mealDataJson` TEXT NOT NULL, `resultJson` TEXT NOT NULL, `nightscoutSystemId` TEXT, `nightscoutId` TEXT, `pumpType` TEXT, `pumpSerial` TEXT, `temporaryId` INTEGER, `pumpId` INTEGER, `startId` INTEGER, `endId` INTEGER, FOREIGN KEY(`referenceId`) REFERENCES `apsResults`(`id`) ON UPDATE NO ACTION ON DELETE NO ACTION )")
+            connection.execSQL("CREATE INDEX IF NOT EXISTS `index_apsResults_referenceId` ON `${TABLE_APS_RESULTS}` (`referenceId`)")
+            connection.execSQL("CREATE INDEX IF NOT EXISTS `index_apsResults_timestamp` ON `${TABLE_APS_RESULTS}` (`timestamp`)")
+            connection.execSQL("DROP TABLE IF EXISTS apsResultLinks")
+            connection.execSQL("DROP TABLE IF EXISTS multiwaveBolusLinks")
             // Custom indexes must be dropped on migration to pass room schema checking after upgrade
-            dropCustomIndexes(db)
+            dropCustomIndexes(connection)
         }
     }
 
     internal val migration26to27 = object : Migration(26, 27) {
-        override fun migrate(db: SupportSQLiteDatabase) {
-            db.execSQL("DROP TABLE IF EXISTS $TABLE_APS_RESULTS")
-            db.execSQL("CREATE TABLE IF NOT EXISTS `${TABLE_APS_RESULTS}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `version` INTEGER NOT NULL, `dateCreated` INTEGER NOT NULL, `isValid` INTEGER NOT NULL, `referenceId` INTEGER, `timestamp` INTEGER NOT NULL, `utcOffset` INTEGER NOT NULL, `algorithm` TEXT NOT NULL, `glucoseStatusJson` TEXT, `currentTempJson` TEXT, `iobDataJson` TEXT, `profileJson` TEXT, `autosensDataJson` TEXT, `mealDataJson` TEXT, `resultJson` TEXT NOT NULL, `nightscoutSystemId` TEXT, `nightscoutId` TEXT, `pumpType` TEXT, `pumpSerial` TEXT, `temporaryId` INTEGER, `pumpId` INTEGER, `startId` INTEGER, `endId` INTEGER, FOREIGN KEY(`referenceId`) REFERENCES `apsResults`(`id`) ON UPDATE NO ACTION ON DELETE NO ACTION )")
-            db.execSQL("CREATE INDEX IF NOT EXISTS `index_apsResults_referenceId` ON `${TABLE_APS_RESULTS}` (`referenceId`)")
-            db.execSQL("CREATE INDEX IF NOT EXISTS `index_apsResults_timestamp` ON `${TABLE_APS_RESULTS}` (`timestamp`)")
+        override fun migrate(connection: SQLiteConnection) {
+            connection.execSQL("DROP TABLE IF EXISTS $TABLE_APS_RESULTS")
+            connection.execSQL("CREATE TABLE IF NOT EXISTS `${TABLE_APS_RESULTS}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `version` INTEGER NOT NULL, `dateCreated` INTEGER NOT NULL, `isValid` INTEGER NOT NULL, `referenceId` INTEGER, `timestamp` INTEGER NOT NULL, `utcOffset` INTEGER NOT NULL, `algorithm` TEXT NOT NULL, `glucoseStatusJson` TEXT, `currentTempJson` TEXT, `iobDataJson` TEXT, `profileJson` TEXT, `autosensDataJson` TEXT, `mealDataJson` TEXT, `resultJson` TEXT NOT NULL, `nightscoutSystemId` TEXT, `nightscoutId` TEXT, `pumpType` TEXT, `pumpSerial` TEXT, `temporaryId` INTEGER, `pumpId` INTEGER, `startId` INTEGER, `endId` INTEGER, FOREIGN KEY(`referenceId`) REFERENCES `apsResults`(`id`) ON UPDATE NO ACTION ON DELETE NO ACTION )")
+            connection.execSQL("CREATE INDEX IF NOT EXISTS `index_apsResults_referenceId` ON `${TABLE_APS_RESULTS}` (`referenceId`)")
+            connection.execSQL("CREATE INDEX IF NOT EXISTS `index_apsResults_timestamp` ON `${TABLE_APS_RESULTS}` (`timestamp`)")
             // Custom indexes must be dropped on migration to pass room schema checking after upgrade
-            dropCustomIndexes(db)
+            dropCustomIndexes(connection)
         }
     }
 
     internal val migration27to28 = object : Migration(27, 28) {
-        override fun migrate(db: SupportSQLiteDatabase) {
-            db.execSQL("DELETE FROM $TABLE_APS_RESULTS")
+        override fun migrate(connection: SQLiteConnection) {
+            connection.execSQL("DELETE FROM $TABLE_APS_RESULTS")
             // Custom indexes must be dropped on migration to pass room schema checking after upgrade
-            dropCustomIndexes(db)
+            dropCustomIndexes(connection)
         }
     }
 
     internal val migration28to29 = object : Migration(28, 29) {
-        override fun migrate(db: SupportSQLiteDatabase) {
-            db.execSQL("DROP TABLE IF EXISTS $TABLE_PREFERENCE_CHANGES")
-            db.execSQL("CREATE TABLE IF NOT EXISTS `$TABLE_PREFERENCE_CHANGES` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `timestamp` INTEGER NOT NULL, `utcOffset` INTEGER NOT NULL, `key` TEXT NOT NULL, `value` TEXT NOT NULL)")
-            db.execSQL("DROP TABLE IF EXISTS $TABLE_USER_ENTRY")
-            db.execSQL("CREATE TABLE IF NOT EXISTS `$TABLE_USER_ENTRY` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `timestamp` INTEGER NOT NULL, `utcOffset` INTEGER NOT NULL, `action` TEXT NOT NULL, `source` TEXT NOT NULL, `note` TEXT NOT NULL, `values` TEXT NOT NULL)")
-            db.execSQL("CREATE INDEX IF NOT EXISTS `index_userEntry_source` ON `$TABLE_USER_ENTRY` (`source`)")
-            db.execSQL("CREATE INDEX IF NOT EXISTS `index_userEntry_timestamp` ON `$TABLE_USER_ENTRY` (`timestamp`)")
+        override fun migrate(connection: SQLiteConnection) {
+            connection.execSQL("DROP TABLE IF EXISTS $TABLE_PREFERENCE_CHANGES")
+            connection.execSQL("CREATE TABLE IF NOT EXISTS `$TABLE_PREFERENCE_CHANGES` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `timestamp` INTEGER NOT NULL, `utcOffset` INTEGER NOT NULL, `key` TEXT NOT NULL, `value` TEXT NOT NULL)")
+            connection.execSQL("DROP TABLE IF EXISTS $TABLE_USER_ENTRY")
+            connection.execSQL("CREATE TABLE IF NOT EXISTS `$TABLE_USER_ENTRY` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `timestamp` INTEGER NOT NULL, `utcOffset` INTEGER NOT NULL, `action` TEXT NOT NULL, `source` TEXT NOT NULL, `note` TEXT NOT NULL, `values` TEXT NOT NULL)")
+            connection.execSQL("CREATE INDEX IF NOT EXISTS `index_userEntry_source` ON `$TABLE_USER_ENTRY` (`source`)")
+            connection.execSQL("CREATE INDEX IF NOT EXISTS `index_userEntry_timestamp` ON `$TABLE_USER_ENTRY` (`timestamp`)")
             // Custom indexes must be dropped on migration to pass room schema checking after upgrade
-            dropCustomIndexes(db)
+            dropCustomIndexes(connection)
         }
     }
 
     internal val migration29to30 = object : Migration(29, 30) {
-        override fun migrate(db: SupportSQLiteDatabase) {
-            db.execSQL("DROP TABLE IF EXISTS `offlineEvents`")
+        override fun migrate(connection: SQLiteConnection) {
+            connection.execSQL("DROP TABLE IF EXISTS `offlineEvents`")
 
-            db.execSQL("CREATE TABLE IF NOT EXISTS `$TABLE_RUNNING_MODE` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `version` INTEGER NOT NULL, `dateCreated` INTEGER NOT NULL, `isValid` INTEGER NOT NULL, `referenceId` INTEGER, `timestamp` INTEGER NOT NULL, `utcOffset` INTEGER NOT NULL, `mode` TEXT NOT NULL, `duration` INTEGER NOT NULL, `autoForced` INTEGER NOT NULL, `reasons` TEXT, `nightscoutSystemId` TEXT, `nightscoutId` TEXT, `pumpType` TEXT, `pumpSerial` TEXT, `temporaryId` INTEGER, `pumpId` INTEGER, `startId` INTEGER, `endId` INTEGER, FOREIGN KEY(`referenceId`) REFERENCES `runningModes`(`id`) ON UPDATE NO ACTION ON DELETE NO ACTION )")
-            db.execSQL("CREATE INDEX IF NOT EXISTS `index_runningModes_id` ON `$TABLE_RUNNING_MODE` (`id`)")
-            db.execSQL("CREATE INDEX IF NOT EXISTS `index_runningModes_nightscoutId` ON `$TABLE_RUNNING_MODE` (`nightscoutId`)")
-            db.execSQL("CREATE INDEX IF NOT EXISTS `index_runningModes_referenceId` ON `$TABLE_RUNNING_MODE` (`referenceId`)")
-            db.execSQL("CREATE INDEX IF NOT EXISTS `index_runningModes_timestamp` ON `$TABLE_RUNNING_MODE` (`timestamp`)")
+            connection.execSQL("CREATE TABLE IF NOT EXISTS `$TABLE_RUNNING_MODE` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `version` INTEGER NOT NULL, `dateCreated` INTEGER NOT NULL, `isValid` INTEGER NOT NULL, `referenceId` INTEGER, `timestamp` INTEGER NOT NULL, `utcOffset` INTEGER NOT NULL, `mode` TEXT NOT NULL, `duration` INTEGER NOT NULL, `autoForced` INTEGER NOT NULL, `reasons` TEXT, `nightscoutSystemId` TEXT, `nightscoutId` TEXT, `pumpType` TEXT, `pumpSerial` TEXT, `temporaryId` INTEGER, `pumpId` INTEGER, `startId` INTEGER, `endId` INTEGER, FOREIGN KEY(`referenceId`) REFERENCES `runningModes`(`id`) ON UPDATE NO ACTION ON DELETE NO ACTION )")
+            connection.execSQL("CREATE INDEX IF NOT EXISTS `index_runningModes_id` ON `$TABLE_RUNNING_MODE` (`id`)")
+            connection.execSQL("CREATE INDEX IF NOT EXISTS `index_runningModes_nightscoutId` ON `$TABLE_RUNNING_MODE` (`nightscoutId`)")
+            connection.execSQL("CREATE INDEX IF NOT EXISTS `index_runningModes_referenceId` ON `$TABLE_RUNNING_MODE` (`referenceId`)")
+            connection.execSQL("CREATE INDEX IF NOT EXISTS `index_runningModes_timestamp` ON `$TABLE_RUNNING_MODE` (`timestamp`)")
             // Custom indexes must be dropped on migration to pass room schema checking after upgrade
-            dropCustomIndexes(db)
+            dropCustomIndexes(connection)
         }
     }
 
     internal val migration30to31 = object : Migration(30, 31) {
-        override fun migrate(db: SupportSQLiteDatabase) {
-            db.execSQL("ALTER TABLE `$TABLE_THERAPY_EVENTS` ADD COLUMN `location` TEXT")
-            db.execSQL("ALTER TABLE `$TABLE_THERAPY_EVENTS` ADD COLUMN `arrow` TEXT")
+        override fun migrate(connection: SQLiteConnection) {
+            connection.execSQL("ALTER TABLE `$TABLE_THERAPY_EVENTS` ADD COLUMN `location` TEXT")
+            connection.execSQL("ALTER TABLE `$TABLE_THERAPY_EVENTS` ADD COLUMN `arrow` TEXT")
             // Custom indexes must be dropped on migration to pass room schema checking after upgrade
-            dropCustomIndexes(db)
+            dropCustomIndexes(connection)
         }
     }
 
     internal val migration31to32 = object : Migration(31, 32) {
-        override fun migrate(db: SupportSQLiteDatabase) {
+        override fun migrate(connection: SQLiteConnection) {
             // Creation of table TABLE_AUTOISF_VALUES
-            db.execSQL(
+            connection.execSQL(
                 "CREATE TABLE IF NOT EXISTS `${TABLE_AUTOISF_VALUES}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `timestamp` INTEGER NOT NULL, `acceIsf` REAL NOT NULL, `bgIsf` REAL NOT NULL, `ppIsf` REAL NOT NULL, `driftIsf` REAL NOT NULL, `duraIsf` REAL NOT NULL, `finalIsf` REAL NOT NULL, `iobThEffective` REAL NOT NULL, `utcOffset` INTEGER NOT NULL, `version` INTEGER NOT NULL, `dateCreated` INTEGER NOT NULL, `isValid` INTEGER NOT NULL, `referenceId` INTEGER, `nightscoutSystemId` TEXT, `nightscoutId` TEXT, `pumpType` TEXT, `pumpSerial` TEXT, `temporaryId` INTEGER, `pumpId` INTEGER, `startId` INTEGER, `endId` INTEGER)"
             )
             // Creation of index for table TABLE_AUTOISF_VALUES
-            db.execSQL("CREATE INDEX IF NOT EXISTS `index_autoIsfValues_id` ON `${TABLE_AUTOISF_VALUES}` (`id`)")
-            db.execSQL("CREATE INDEX IF NOT EXISTS `index_autoIsfValues_timestamp` ON `${TABLE_AUTOISF_VALUES}` (`timestamp`)")
+            connection.execSQL("CREATE INDEX IF NOT EXISTS `index_autoIsfValues_id` ON `${TABLE_AUTOISF_VALUES}` (`id`)")
+            connection.execSQL("CREATE INDEX IF NOT EXISTS `index_autoIsfValues_timestamp` ON `${TABLE_AUTOISF_VALUES}` (`timestamp`)")
 
 
             // Add carbInsulin column to TDD table — cached data, old rows get default 0 and will be recalculated
-            db.execSQL("DELETE FROM $TABLE_TOTAL_DAILY_DOSES")
-            db.execSQL("ALTER TABLE `$TABLE_TOTAL_DAILY_DOSES` ADD COLUMN `carbInsulin` REAL NOT NULL DEFAULT 0")
+            connection.execSQL("DELETE FROM $TABLE_TOTAL_DAILY_DOSES")
+            connection.execSQL("ALTER TABLE `$TABLE_TOTAL_DAILY_DOSES` ADD COLUMN `carbInsulin` REAL NOT NULL DEFAULT 0")
             // Custom indexes must be dropped on migration to pass room schema checking after upgrade
-            dropCustomIndexes(db)
+            dropCustomIndexes(connection)
         }
     }
 
     internal val migration32to33 = object : Migration(32, 33) {
-        override fun migrate(db: SupportSQLiteDatabase) {
+        override fun migrate(connection: SQLiteConnection) {
             // Migration of boluses table (insulinPeakTime must be migrated in MainApp)
-            db.execSQL("CREATE TABLE IF NOT EXISTS new_boluses (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `version` INTEGER NOT NULL, `dateCreated` INTEGER NOT NULL, `isValid` INTEGER NOT NULL, `referenceId` INTEGER, `timestamp` INTEGER NOT NULL, `utcOffset` INTEGER NOT NULL, `amount` REAL NOT NULL, `type` TEXT NOT NULL, `notes` TEXT, `isBasalInsulin` INTEGER NOT NULL, `nightscoutSystemId` TEXT, `nightscoutId` TEXT, `pumpType` TEXT, `pumpSerial` TEXT, `temporaryId` INTEGER, `pumpId` INTEGER, `startId` INTEGER, `endId` INTEGER, `insulinLabel` TEXT NOT NULL, `insulinEndTime` INTEGER NOT NULL, `insulinPeakTime` INTEGER NOT NULL, `concentration` REAL NOT NULL, FOREIGN KEY(`referenceId`) REFERENCES `boluses`(`id`) ON UPDATE NO ACTION ON DELETE NO ACTION )")
-            db.execSQL(
+            connection.execSQL("CREATE TABLE IF NOT EXISTS new_boluses (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `version` INTEGER NOT NULL, `dateCreated` INTEGER NOT NULL, `isValid` INTEGER NOT NULL, `referenceId` INTEGER, `timestamp` INTEGER NOT NULL, `utcOffset` INTEGER NOT NULL, `amount` REAL NOT NULL, `type` TEXT NOT NULL, `notes` TEXT, `isBasalInsulin` INTEGER NOT NULL, `nightscoutSystemId` TEXT, `nightscoutId` TEXT, `pumpType` TEXT, `pumpSerial` TEXT, `temporaryId` INTEGER, `pumpId` INTEGER, `startId` INTEGER, `endId` INTEGER, `insulinLabel` TEXT NOT NULL, `insulinEndTime` INTEGER NOT NULL, `insulinPeakTime` INTEGER NOT NULL, `concentration` REAL NOT NULL, FOREIGN KEY(`referenceId`) REFERENCES `boluses`(`id`) ON UPDATE NO ACTION ON DELETE NO ACTION )")
+            connection.execSQL(
                 """
                 INSERT INTO new_boluses (id, version, dateCreated, isValid, referenceId, timestamp, utcOffset, amount, type, notes, isBasalInsulin, nightscoutSystemId, nightscoutId, pumpType, pumpSerial, temporaryId, pumpId, startId, endId, insulinLabel, insulinEndTime, insulinPeakTime, concentration)
                 SELECT id, version, dateCreated, isValid, referenceId, timestamp, utcOffset, amount, type, notes, isBasalInsulin, nightscoutSystemId, nightscoutId, pumpType, pumpSerial, temporaryId, pumpId, startId, endId, '', -1, -1, 1.0 
                 FROM `$TABLE_BOLUSES`
                 """.trimIndent()
             )
-            db.execSQL("DROP TABLE `$TABLE_BOLUSES`")
-            db.execSQL("ALTER TABLE new_boluses RENAME TO `$TABLE_BOLUSES`")
-            db.execSQL("CREATE INDEX IF NOT EXISTS `index_boluses_id` ON `$TABLE_BOLUSES` (`id`)")
-            db.execSQL("CREATE INDEX IF NOT EXISTS `index_boluses_pumpId` ON `$TABLE_BOLUSES` (`pumpId`)")
-            db.execSQL("CREATE INDEX IF NOT EXISTS `index_boluses_referenceId` ON `$TABLE_BOLUSES` (`referenceId`)")
-            db.execSQL("CREATE INDEX IF NOT EXISTS `index_boluses_timestamp` ON `$TABLE_BOLUSES` (`timestamp`)")
-            db.execSQL("CREATE INDEX IF NOT EXISTS `index_boluses_nightscoutId` ON `$TABLE_BOLUSES` (`nightscoutId`)")
+            connection.execSQL("DROP TABLE `$TABLE_BOLUSES`")
+            connection.execSQL("ALTER TABLE new_boluses RENAME TO `$TABLE_BOLUSES`")
+            connection.execSQL("CREATE INDEX IF NOT EXISTS `index_boluses_id` ON `$TABLE_BOLUSES` (`id`)")
+            connection.execSQL("CREATE INDEX IF NOT EXISTS `index_boluses_pumpId` ON `$TABLE_BOLUSES` (`pumpId`)")
+            connection.execSQL("CREATE INDEX IF NOT EXISTS `index_boluses_referenceId` ON `$TABLE_BOLUSES` (`referenceId`)")
+            connection.execSQL("CREATE INDEX IF NOT EXISTS `index_boluses_timestamp` ON `$TABLE_BOLUSES` (`timestamp`)")
+            connection.execSQL("CREATE INDEX IF NOT EXISTS `index_boluses_nightscoutId` ON `$TABLE_BOLUSES` (`nightscoutId`)")
 
             // Migration of effectiveProfileSwitches table (insulinPeakTime must be migrated in MainApp)
-            db.execSQL(
+            connection.execSQL(
                 "CREATE TABLE IF NOT EXISTS new_effectiveProfileSwitches (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `version` INTEGER NOT NULL, `dateCreated` INTEGER NOT NULL, `isValid` INTEGER NOT NULL, `referenceId` INTEGER, `timestamp` INTEGER NOT NULL, `utcOffset` INTEGER NOT NULL, `basalBlocks` TEXT NOT NULL, `isfBlocks` TEXT NOT NULL, `icBlocks` TEXT NOT NULL, `targetBlocks` TEXT NOT NULL, `glucoseUnit` TEXT NOT NULL, `originalProfileName` TEXT NOT NULL, `originalCustomizedName` TEXT NOT NULL, `originalTimeshift` INTEGER NOT NULL, `originalPercentage` INTEGER NOT NULL, `originalDuration` INTEGER NOT NULL, `originalEnd` INTEGER NOT NULL, `nightscoutSystemId` TEXT, `nightscoutId` TEXT, `pumpType` TEXT, `pumpSerial` TEXT, `temporaryId` INTEGER, `pumpId` INTEGER, `startId` INTEGER, `endId` INTEGER, `insulinLabel` TEXT NOT NULL, `insulinEndTime` INTEGER NOT NULL, `insulinPeakTime` INTEGER NOT NULL, `concentration` REAL NOT NULL, FOREIGN KEY(`referenceId`) REFERENCES `effectiveProfileSwitches`(`id`) ON UPDATE NO ACTION ON DELETE NO ACTION )"
             )
-            db.execSQL(
+            connection.execSQL(
                 """
                 INSERT INTO new_effectiveProfileSwitches (id, version, dateCreated, isValid, referenceId, timestamp, utcOffset, basalBlocks, isfBlocks, icBlocks, targetBlocks, glucoseUnit, originalProfileName, originalCustomizedName, originalTimeshift, originalPercentage, originalDuration, originalEnd, nightscoutSystemId, nightscoutId, pumpType, pumpSerial, temporaryId, pumpId, startId, endId, insulinLabel, insulinEndTime, insulinPeakTime, concentration)
                 SELECT id, version, dateCreated, isValid, referenceId, timestamp, utcOffset, basalBlocks, isfBlocks, icBlocks, targetBlocks, glucoseUnit, originalProfileName, originalCustomizedName, originalTimeshift, originalPercentage, originalDuration, originalEnd, nightscoutSystemId, nightscoutId, pumpType, pumpSerial, temporaryId, pumpId, startId, endId, '', -1, -1, 1.0 
                 FROM `$TABLE_EFFECTIVE_PROFILE_SWITCHES`
                 """.trimIndent()
             )
-            db.execSQL("DROP TABLE `$TABLE_EFFECTIVE_PROFILE_SWITCHES`")
-            db.execSQL("ALTER TABLE new_effectiveProfileSwitches RENAME TO `$TABLE_EFFECTIVE_PROFILE_SWITCHES`")
-            db.execSQL("CREATE INDEX IF NOT EXISTS `index_effectiveProfileSwitches_id` ON `$TABLE_EFFECTIVE_PROFILE_SWITCHES` (`id`)")
-            db.execSQL("CREATE INDEX IF NOT EXISTS `index_effectiveProfileSwitches_referenceId` ON `$TABLE_EFFECTIVE_PROFILE_SWITCHES` (`referenceId`)")
-            db.execSQL("CREATE INDEX IF NOT EXISTS `index_effectiveProfileSwitches_timestamp` ON `$TABLE_EFFECTIVE_PROFILE_SWITCHES` (`timestamp`)")
-            db.execSQL("CREATE INDEX IF NOT EXISTS `index_effectiveProfileSwitches_nightscoutId` ON `$TABLE_EFFECTIVE_PROFILE_SWITCHES` (`nightscoutId`)")
+            connection.execSQL("DROP TABLE `$TABLE_EFFECTIVE_PROFILE_SWITCHES`")
+            connection.execSQL("ALTER TABLE new_effectiveProfileSwitches RENAME TO `$TABLE_EFFECTIVE_PROFILE_SWITCHES`")
+            connection.execSQL("CREATE INDEX IF NOT EXISTS `index_effectiveProfileSwitches_id` ON `$TABLE_EFFECTIVE_PROFILE_SWITCHES` (`id`)")
+            connection.execSQL("CREATE INDEX IF NOT EXISTS `index_effectiveProfileSwitches_referenceId` ON `$TABLE_EFFECTIVE_PROFILE_SWITCHES` (`referenceId`)")
+            connection.execSQL("CREATE INDEX IF NOT EXISTS `index_effectiveProfileSwitches_timestamp` ON `$TABLE_EFFECTIVE_PROFILE_SWITCHES` (`timestamp`)")
+            connection.execSQL("CREATE INDEX IF NOT EXISTS `index_effectiveProfileSwitches_nightscoutId` ON `$TABLE_EFFECTIVE_PROFILE_SWITCHES` (`nightscoutId`)")
 
             // Migration of profileSwitches table (insulinPeakTime must be migrated in MainApp)
-            db.execSQL("CREATE TABLE IF NOT EXISTS new_profileSwitches (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `version` INTEGER NOT NULL, `dateCreated` INTEGER NOT NULL, `isValid` INTEGER NOT NULL, `referenceId` INTEGER, `timestamp` INTEGER NOT NULL, `utcOffset` INTEGER NOT NULL, `basalBlocks` TEXT NOT NULL, `isfBlocks` TEXT NOT NULL, `icBlocks` TEXT NOT NULL, `targetBlocks` TEXT NOT NULL, `glucoseUnit` TEXT NOT NULL, `profileName` TEXT NOT NULL, `timeshift` INTEGER NOT NULL, `percentage` INTEGER NOT NULL, `duration` INTEGER NOT NULL, `nightscoutSystemId` TEXT, `nightscoutId` TEXT, `pumpType` TEXT, `pumpSerial` TEXT, `temporaryId` INTEGER, `pumpId` INTEGER, `startId` INTEGER, `endId` INTEGER, `insulinLabel` TEXT NOT NULL, `insulinEndTime` INTEGER NOT NULL, `insulinPeakTime` INTEGER NOT NULL, `concentration` REAL NOT NULL, FOREIGN KEY(`referenceId`) REFERENCES `profileSwitches`(`id`) ON UPDATE NO ACTION ON DELETE NO ACTION )")
-            db.execSQL(
+            connection.execSQL("CREATE TABLE IF NOT EXISTS new_profileSwitches (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `version` INTEGER NOT NULL, `dateCreated` INTEGER NOT NULL, `isValid` INTEGER NOT NULL, `referenceId` INTEGER, `timestamp` INTEGER NOT NULL, `utcOffset` INTEGER NOT NULL, `basalBlocks` TEXT NOT NULL, `isfBlocks` TEXT NOT NULL, `icBlocks` TEXT NOT NULL, `targetBlocks` TEXT NOT NULL, `glucoseUnit` TEXT NOT NULL, `profileName` TEXT NOT NULL, `timeshift` INTEGER NOT NULL, `percentage` INTEGER NOT NULL, `duration` INTEGER NOT NULL, `nightscoutSystemId` TEXT, `nightscoutId` TEXT, `pumpType` TEXT, `pumpSerial` TEXT, `temporaryId` INTEGER, `pumpId` INTEGER, `startId` INTEGER, `endId` INTEGER, `insulinLabel` TEXT NOT NULL, `insulinEndTime` INTEGER NOT NULL, `insulinPeakTime` INTEGER NOT NULL, `concentration` REAL NOT NULL, FOREIGN KEY(`referenceId`) REFERENCES `profileSwitches`(`id`) ON UPDATE NO ACTION ON DELETE NO ACTION )")
+            connection.execSQL(
                 """
                 INSERT INTO new_profileSwitches (id, version, dateCreated, isValid, referenceId, timestamp, utcOffset, basalBlocks, isfBlocks, icBlocks, targetBlocks, glucoseUnit, profileName, timeshift, percentage, duration, nightscoutSystemId, nightscoutId, pumpType, pumpSerial, temporaryId, pumpId, startId, endId, insulinLabel, insulinEndTime, insulinPeakTime, concentration)
                 SELECT id, version, dateCreated, isValid, referenceId, timestamp, utcOffset, basalBlocks, isfBlocks, icBlocks, targetBlocks, glucoseUnit, profileName, timeshift, percentage, duration, nightscoutSystemId, nightscoutId, pumpType, pumpSerial, temporaryId, pumpId, startId, endId, '', -1, -1, 1.0 
                 FROM `$TABLE_PROFILE_SWITCHES`
                 """.trimIndent()
             )
-            db.execSQL("DROP TABLE `$TABLE_PROFILE_SWITCHES`")
-            db.execSQL("ALTER TABLE new_profileSwitches RENAME TO `$TABLE_PROFILE_SWITCHES`")
-            db.execSQL("CREATE INDEX IF NOT EXISTS `index_profileSwitches_id` ON `$TABLE_PROFILE_SWITCHES` (`id`)")
-            db.execSQL("CREATE INDEX IF NOT EXISTS `index_profileSwitches_referenceId` ON `$TABLE_PROFILE_SWITCHES` (`referenceId`)")
-            db.execSQL("CREATE INDEX IF NOT EXISTS `index_profileSwitches_timestamp` ON `$TABLE_PROFILE_SWITCHES` (`timestamp`)")
-            db.execSQL("CREATE INDEX IF NOT EXISTS `index_profileSwitches_nightscoutId` ON `$TABLE_PROFILE_SWITCHES` (`nightscoutId`)")
+            connection.execSQL("DROP TABLE `$TABLE_PROFILE_SWITCHES`")
+            connection.execSQL("ALTER TABLE new_profileSwitches RENAME TO `$TABLE_PROFILE_SWITCHES`")
+            connection.execSQL("CREATE INDEX IF NOT EXISTS `index_profileSwitches_id` ON `$TABLE_PROFILE_SWITCHES` (`id`)")
+            connection.execSQL("CREATE INDEX IF NOT EXISTS `index_profileSwitches_referenceId` ON `$TABLE_PROFILE_SWITCHES` (`referenceId`)")
+            connection.execSQL("CREATE INDEX IF NOT EXISTS `index_profileSwitches_timestamp` ON `$TABLE_PROFILE_SWITCHES` (`timestamp`)")
+            connection.execSQL("CREATE INDEX IF NOT EXISTS `index_profileSwitches_nightscoutId` ON `$TABLE_PROFILE_SWITCHES` (`nightscoutId`)")
 
             // Custom indexes must be dropped on migration to pass room schema checking after upgrade
-            dropCustomIndexes(db)
+            dropCustomIndexes(connection)
         }
     }
 
     internal val migration33to34 = object : Migration(33, 34) {
-        override fun migrate(db: SupportSQLiteDatabase) {
+        override fun migrate(connection: SQLiteConnection) {
 
-db.execSQL(
+            connection.execSQL(
                 "CREATE TABLE IF NOT EXISTS `${TABLE_AUTOISF_VALUES}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `timestamp` INTEGER NOT NULL, `acceIsf` REAL NOT NULL, `bgIsf` REAL NOT NULL, `ppIsf` REAL NOT NULL, `driftIsf` REAL NOT NULL, `duraIsf` REAL NOT NULL, `finalIsf` REAL NOT NULL, `iobThEffective` REAL NOT NULL, `utcOffset` INTEGER NOT NULL, `version` INTEGER NOT NULL, `dateCreated` INTEGER NOT NULL, `isValid` INTEGER NOT NULL, `referenceId` INTEGER, `nightscoutSystemId` TEXT, `nightscoutId` TEXT, `pumpType` TEXT, `pumpSerial` TEXT, `temporaryId` INTEGER, `pumpId` INTEGER, `startId` INTEGER, `endId` INTEGER)"
             )
             // Creation of index for table TABLE_AUTOISF_VALUES
-            db.execSQL("CREATE INDEX IF NOT EXISTS `index_autoIsfValues_id` ON `${TABLE_AUTOISF_VALUES}` (`id`)")
-            db.execSQL("CREATE INDEX IF NOT EXISTS `index_autoIsfValues_timestamp` ON `${TABLE_AUTOISF_VALUES}` (`timestamp`)")
-            db.execSQL("ALTER TABLE `$TABLE_EFFECTIVE_PROFILE_SWITCHES` ADD COLUMN `originalPsId` INTEGER DEFAULT NULL")
+            connection.execSQL("CREATE INDEX IF NOT EXISTS `index_autoIsfValues_id` ON `${TABLE_AUTOISF_VALUES}` (`id`)")
+            connection.execSQL("CREATE INDEX IF NOT EXISTS `index_autoIsfValues_timestamp` ON `${TABLE_AUTOISF_VALUES}` (`timestamp`)")
+            connection.execSQL("ALTER TABLE `$TABLE_EFFECTIVE_PROFILE_SWITCHES` ADD COLUMN `originalPsId` INTEGER DEFAULT NULL")
             // Remove redundant indexes on primary key columns
-            db.execSQL("DROP INDEX IF EXISTS `index_effectiveProfileSwitches_id`")
-            db.execSQL("DROP INDEX IF EXISTS `index_boluses_id`")
-            db.execSQL("DROP INDEX IF EXISTS `index_bolusCalculatorResults_id`")
-            db.execSQL("DROP INDEX IF EXISTS `index_bolusCalculatorResults_isValid`")
-            db.execSQL("DROP INDEX IF EXISTS `index_carbs_id`")
-            db.execSQL("DROP INDEX IF EXISTS `index_carbs_isValid`")
-            db.execSQL("DROP INDEX IF EXISTS `index_extendedBoluses_id`")
-            db.execSQL("DROP INDEX IF EXISTS `index_extendedBoluses_isValid`")
-            db.execSQL("DROP INDEX IF EXISTS `index_extendedBoluses_pumpSerial`")
-            db.execSQL("DROP INDEX IF EXISTS `index_extendedBoluses_pumpType`")
-            db.execSQL("DROP INDEX IF EXISTS `index_glucoseValues_id`")
-            db.execSQL("DROP INDEX IF EXISTS `index_glucoseValues_sourceSensor`")
-            db.execSQL("DROP INDEX IF EXISTS `index_profileSwitches_id`")
-            db.execSQL("DROP INDEX IF EXISTS `index_temporaryBasals_id`")
-            db.execSQL("DROP INDEX IF EXISTS `index_temporaryBasals_isValid`")
-            db.execSQL("DROP INDEX IF EXISTS `index_temporaryBasals_pumpType`")
-            db.execSQL("DROP INDEX IF EXISTS `index_temporaryBasals_pumpSerial`")
-            db.execSQL("CREATE INDEX IF NOT EXISTS `index_temporaryBasals_pumpId` ON `$TABLE_TEMPORARY_BASALS` (`pumpId`)")
-            db.execSQL("DROP INDEX IF EXISTS `index_temporaryTargets_id`")
-            db.execSQL("DROP INDEX IF EXISTS `index_temporaryTargets_isValid`")
-            db.execSQL("DROP INDEX IF EXISTS `index_therapyEvents_id`")
-            db.execSQL("DROP INDEX IF EXISTS `index_therapyEvents_isValid`")
-            db.execSQL("DROP INDEX IF EXISTS `index_totalDailyDoses_id`")
-            db.execSQL("DROP INDEX IF EXISTS `index_totalDailyDoses_isValid`")
-            db.execSQL("DROP INDEX IF EXISTS `index_totalDailyDoses_pumpType`")
-            db.execSQL("DROP INDEX IF EXISTS `index_totalDailyDoses_pumpSerial`")
-            db.execSQL("DROP INDEX IF EXISTS `index_foods_id`")
-            db.execSQL("DROP INDEX IF EXISTS `index_foods_isValid`")
-            db.execSQL("DROP INDEX IF EXISTS `index_deviceStatus_id`")
-            db.execSQL("DROP INDEX IF EXISTS `index_runningModes_id`")
-            db.execSQL("DROP INDEX IF EXISTS `index_heartRate_id`")
-            db.execSQL("DROP INDEX IF EXISTS `index_stepsCount_id`")
+            connection.execSQL("DROP INDEX IF EXISTS `index_effectiveProfileSwitches_id`")
+            connection.execSQL("DROP INDEX IF EXISTS `index_boluses_id`")
+            connection.execSQL("DROP INDEX IF EXISTS `index_bolusCalculatorResults_id`")
+            connection.execSQL("DROP INDEX IF EXISTS `index_bolusCalculatorResults_isValid`")
+            connection.execSQL("DROP INDEX IF EXISTS `index_carbs_id`")
+            connection.execSQL("DROP INDEX IF EXISTS `index_carbs_isValid`")
+            connection.execSQL("DROP INDEX IF EXISTS `index_extendedBoluses_id`")
+            connection.execSQL("DROP INDEX IF EXISTS `index_extendedBoluses_isValid`")
+            connection.execSQL("DROP INDEX IF EXISTS `index_extendedBoluses_pumpSerial`")
+            connection.execSQL("DROP INDEX IF EXISTS `index_extendedBoluses_pumpType`")
+            connection.execSQL("DROP INDEX IF EXISTS `index_glucoseValues_id`")
+            connection.execSQL("DROP INDEX IF EXISTS `index_glucoseValues_sourceSensor`")
+            connection.execSQL("DROP INDEX IF EXISTS `index_profileSwitches_id`")
+            connection.execSQL("DROP INDEX IF EXISTS `index_temporaryBasals_id`")
+            connection.execSQL("DROP INDEX IF EXISTS `index_temporaryBasals_isValid`")
+            connection.execSQL("DROP INDEX IF EXISTS `index_temporaryBasals_pumpType`")
+            connection.execSQL("DROP INDEX IF EXISTS `index_temporaryBasals_pumpSerial`")
+            connection.execSQL("CREATE INDEX IF NOT EXISTS `index_temporaryBasals_pumpId` ON `$TABLE_TEMPORARY_BASALS` (`pumpId`)")
+            connection.execSQL("DROP INDEX IF EXISTS `index_temporaryTargets_id`")
+            connection.execSQL("DROP INDEX IF EXISTS `index_temporaryTargets_isValid`")
+            connection.execSQL("DROP INDEX IF EXISTS `index_therapyEvents_id`")
+            connection.execSQL("DROP INDEX IF EXISTS `index_therapyEvents_isValid`")
+            connection.execSQL("DROP INDEX IF EXISTS `index_totalDailyDoses_id`")
+            connection.execSQL("DROP INDEX IF EXISTS `index_totalDailyDoses_isValid`")
+            connection.execSQL("DROP INDEX IF EXISTS `index_totalDailyDoses_pumpType`")
+            connection.execSQL("DROP INDEX IF EXISTS `index_totalDailyDoses_pumpSerial`")
+            connection.execSQL("DROP INDEX IF EXISTS `index_foods_id`")
+            connection.execSQL("DROP INDEX IF EXISTS `index_foods_isValid`")
+            connection.execSQL("DROP INDEX IF EXISTS `index_deviceStatus_id`")
+            connection.execSQL("DROP INDEX IF EXISTS `index_runningModes_id`")
+            connection.execSQL("DROP INDEX IF EXISTS `index_heartRate_id`")
+            connection.execSQL("DROP INDEX IF EXISTS `index_stepsCount_id`")
             // Custom indexes must be dropped on migration to pass room schema checking after upgrade
-            dropCustomIndexes(db)
+            dropCustomIndexes(connection)
         }
     }
 
     // Brings any v34 database (our fork's v34 OR upstream MTR v34) to v35.
     // Uses PRAGMA checks before referencing columns that may be absent on MTR devices.
     internal val migration34to35 = object : Migration(34, 35) {
-        private fun hasColumn(db: SupportSQLiteDatabase, table: String, column: String): Boolean {
-            val cursor = db.query("PRAGMA table_info(`$table`)")
-            return cursor.use {
-                var found = false
-                while (it.moveToNext()) {
-                    if (it.getString(it.getColumnIndexOrThrow("name")) == column) { found = true; break }
+        private fun hasColumn(connection: SQLiteConnection, table: String, column: String): Boolean {
+            // PRAGMA table_info columns: cid, name, type, notnull, dflt_value, pk — name is index 1.
+            return connection.prepare("PRAGMA table_info(`$table`)").use { stmt ->
+                while (stmt.step()) {
+                    if (stmt.getText(1) == column) return@use true
                 }
-                found
+                false
             }
         }
 
-        override fun migrate(db: SupportSQLiteDatabase) {
+        override fun migrate(connection: SQLiteConnection) {
             // --- autoIsfValues: create if missing, or recreate to fix DOUBLE→REAL type bug ---
             val autoIsfCreateSql =
                 "CREATE TABLE IF NOT EXISTS `${TABLE_AUTOISF_VALUES}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `timestamp` INTEGER NOT NULL, `acceIsf` REAL NOT NULL, `bgIsf` REAL NOT NULL, `ppIsf` REAL NOT NULL, `driftIsf` REAL NOT NULL, `duraIsf` REAL NOT NULL, `finalIsf` REAL NOT NULL, `iobThEffective` REAL NOT NULL, `utcOffset` INTEGER NOT NULL, `version` INTEGER NOT NULL, `dateCreated` INTEGER NOT NULL, `isValid` INTEGER NOT NULL, `referenceId` INTEGER, `nightscoutSystemId` TEXT, `nightscoutId` TEXT, `pumpType` TEXT, `pumpSerial` TEXT, `temporaryId` INTEGER, `pumpId` INTEGER, `startId` INTEGER, `endId` INTEGER)"
-            val autoIsfExists = db.query(
+            val autoIsfExists = connection.prepare(
                 "SELECT name FROM sqlite_master WHERE type='table' AND name='${TABLE_AUTOISF_VALUES}'"
-            ).use { it.count > 0 }
+            ).use { it.step() }
             if (autoIsfExists) {
-                db.execSQL("ALTER TABLE `${TABLE_AUTOISF_VALUES}` RENAME TO `autoIsfValues_old`")
-                db.execSQL(autoIsfCreateSql)
-                db.execSQL("INSERT INTO `${TABLE_AUTOISF_VALUES}` SELECT * FROM `autoIsfValues_old`")
-                db.execSQL("DROP TABLE `autoIsfValues_old`")
+                connection.execSQL("ALTER TABLE `${TABLE_AUTOISF_VALUES}` RENAME TO `autoIsfValues_old`")
+                connection.execSQL(autoIsfCreateSql)
+                connection.execSQL("INSERT INTO `${TABLE_AUTOISF_VALUES}` SELECT * FROM `autoIsfValues_old`")
+                connection.execSQL("DROP TABLE `autoIsfValues_old`")
             } else {
-                db.execSQL(autoIsfCreateSql)
+                connection.execSQL(autoIsfCreateSql)
             }
-            db.execSQL("CREATE INDEX IF NOT EXISTS `index_autoIsfValues_id` ON `${TABLE_AUTOISF_VALUES}` (`id`)")
-            db.execSQL("CREATE INDEX IF NOT EXISTS `index_autoIsfValues_timestamp` ON `${TABLE_AUTOISF_VALUES}` (`timestamp`)")
+            connection.execSQL("CREATE INDEX IF NOT EXISTS `index_autoIsfValues_id` ON `${TABLE_AUTOISF_VALUES}` (`id`)")
+            connection.execSQL("CREATE INDEX IF NOT EXISTS `index_autoIsfValues_timestamp` ON `${TABLE_AUTOISF_VALUES}` (`timestamp`)")
 
             // --- totalDailyDoses: add carbInsulin if missing (MTR v34 may not have it) ---
-            if (!hasColumn(db, TABLE_TOTAL_DAILY_DOSES, "carbInsulin")) {
-                db.execSQL("DELETE FROM `$TABLE_TOTAL_DAILY_DOSES`")
-                db.execSQL("ALTER TABLE `$TABLE_TOTAL_DAILY_DOSES` ADD COLUMN `carbInsulin` REAL NOT NULL DEFAULT 0")
+            if (!hasColumn(connection, TABLE_TOTAL_DAILY_DOSES, "carbInsulin")) {
+                connection.execSQL("DELETE FROM `$TABLE_TOTAL_DAILY_DOSES`")
+                connection.execSQL("ALTER TABLE `$TABLE_TOTAL_DAILY_DOSES` ADD COLUMN `carbInsulin` REAL NOT NULL DEFAULT 0")
             }
 
             // --- boluses: recreate with nullable insulinConfiguration columns ---
             // Source may have them as NOT NULL (our fork v33 path) or absent (MTR v34 path).
-            val bolusHasInsulin = hasColumn(db, TABLE_BOLUSES, "insulinLabel")
-            db.execSQL(
+            val bolusHasInsulin = hasColumn(connection, TABLE_BOLUSES, "insulinLabel")
+            connection.execSQL(
                 "CREATE TABLE IF NOT EXISTS `new_boluses` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `version` INTEGER NOT NULL, `dateCreated` INTEGER NOT NULL, `isValid` INTEGER NOT NULL, `referenceId` INTEGER, `timestamp` INTEGER NOT NULL, `utcOffset` INTEGER NOT NULL, `amount` REAL NOT NULL, `type` TEXT NOT NULL, `notes` TEXT, `isBasalInsulin` INTEGER NOT NULL, `nightscoutSystemId` TEXT, `nightscoutId` TEXT, `pumpType` TEXT, `pumpSerial` TEXT, `temporaryId` INTEGER, `pumpId` INTEGER, `startId` INTEGER, `endId` INTEGER, `insulinLabel` TEXT, `insulinEndTime` INTEGER, `insulinPeakTime` INTEGER, `concentration` REAL, FOREIGN KEY(`referenceId`) REFERENCES `boluses`(`id`) ON UPDATE NO ACTION ON DELETE NO ACTION )"
             )
             if (bolusHasInsulin) {
-                db.execSQL(
+                connection.execSQL(
                     "INSERT INTO new_boluses (id, version, dateCreated, isValid, referenceId, timestamp, utcOffset, amount, type, notes, isBasalInsulin, nightscoutSystemId, nightscoutId, pumpType, pumpSerial, temporaryId, pumpId, startId, endId, insulinLabel, insulinEndTime, insulinPeakTime, concentration) SELECT id, version, dateCreated, isValid, referenceId, timestamp, utcOffset, amount, type, notes, isBasalInsulin, nightscoutSystemId, nightscoutId, pumpType, pumpSerial, temporaryId, pumpId, startId, endId, insulinLabel, insulinEndTime, insulinPeakTime, concentration FROM `$TABLE_BOLUSES`"
                 )
             } else {
-                db.execSQL(
+                connection.execSQL(
                     "INSERT INTO new_boluses (id, version, dateCreated, isValid, referenceId, timestamp, utcOffset, amount, type, notes, isBasalInsulin, nightscoutSystemId, nightscoutId, pumpType, pumpSerial, temporaryId, pumpId, startId, endId) SELECT id, version, dateCreated, isValid, referenceId, timestamp, utcOffset, amount, type, notes, isBasalInsulin, nightscoutSystemId, nightscoutId, pumpType, pumpSerial, temporaryId, pumpId, startId, endId FROM `$TABLE_BOLUSES`"
                 )
             }
-            db.execSQL("DROP TABLE `$TABLE_BOLUSES`")
-            db.execSQL("ALTER TABLE new_boluses RENAME TO `$TABLE_BOLUSES`")
-            db.execSQL("CREATE INDEX IF NOT EXISTS `index_boluses_pumpId` ON `$TABLE_BOLUSES` (`pumpId`)")
-            db.execSQL("CREATE INDEX IF NOT EXISTS `index_boluses_referenceId` ON `$TABLE_BOLUSES` (`referenceId`)")
-            db.execSQL("CREATE INDEX IF NOT EXISTS `index_boluses_timestamp` ON `$TABLE_BOLUSES` (`timestamp`)")
-            db.execSQL("CREATE INDEX IF NOT EXISTS `index_boluses_nightscoutId` ON `$TABLE_BOLUSES` (`nightscoutId`)")
+            connection.execSQL("DROP TABLE `$TABLE_BOLUSES`")
+            connection.execSQL("ALTER TABLE new_boluses RENAME TO `$TABLE_BOLUSES`")
+            connection.execSQL("CREATE INDEX IF NOT EXISTS `index_boluses_pumpId` ON `$TABLE_BOLUSES` (`pumpId`)")
+            connection.execSQL("CREATE INDEX IF NOT EXISTS `index_boluses_referenceId` ON `$TABLE_BOLUSES` (`referenceId`)")
+            connection.execSQL("CREATE INDEX IF NOT EXISTS `index_boluses_timestamp` ON `$TABLE_BOLUSES` (`timestamp`)")
+            connection.execSQL("CREATE INDEX IF NOT EXISTS `index_boluses_nightscoutId` ON `$TABLE_BOLUSES` (`nightscoutId`)")
 
             // --- effectiveProfileSwitches / profileSwitches: add insulin columns if missing ---
-            if (!hasColumn(db, TABLE_EFFECTIVE_PROFILE_SWITCHES, "insulinLabel")) {
-                db.execSQL("ALTER TABLE `$TABLE_EFFECTIVE_PROFILE_SWITCHES` ADD COLUMN `insulinLabel` TEXT NOT NULL DEFAULT ''")
-                db.execSQL("ALTER TABLE `$TABLE_EFFECTIVE_PROFILE_SWITCHES` ADD COLUMN `insulinEndTime` INTEGER NOT NULL DEFAULT -1")
-                db.execSQL("ALTER TABLE `$TABLE_EFFECTIVE_PROFILE_SWITCHES` ADD COLUMN `insulinPeakTime` INTEGER NOT NULL DEFAULT -1")
-                db.execSQL("ALTER TABLE `$TABLE_EFFECTIVE_PROFILE_SWITCHES` ADD COLUMN `concentration` REAL NOT NULL DEFAULT 1.0")
+            if (!hasColumn(connection, TABLE_EFFECTIVE_PROFILE_SWITCHES, "insulinLabel")) {
+                connection.execSQL("ALTER TABLE `$TABLE_EFFECTIVE_PROFILE_SWITCHES` ADD COLUMN `insulinLabel` TEXT NOT NULL DEFAULT ''")
+                connection.execSQL("ALTER TABLE `$TABLE_EFFECTIVE_PROFILE_SWITCHES` ADD COLUMN `insulinEndTime` INTEGER NOT NULL DEFAULT -1")
+                connection.execSQL("ALTER TABLE `$TABLE_EFFECTIVE_PROFILE_SWITCHES` ADD COLUMN `insulinPeakTime` INTEGER NOT NULL DEFAULT -1")
+                connection.execSQL("ALTER TABLE `$TABLE_EFFECTIVE_PROFILE_SWITCHES` ADD COLUMN `concentration` REAL NOT NULL DEFAULT 1.0")
             }
-            if (!hasColumn(db, TABLE_PROFILE_SWITCHES, "insulinLabel")) {
-                db.execSQL("ALTER TABLE `$TABLE_PROFILE_SWITCHES` ADD COLUMN `insulinLabel` TEXT NOT NULL DEFAULT ''")
-                db.execSQL("ALTER TABLE `$TABLE_PROFILE_SWITCHES` ADD COLUMN `insulinEndTime` INTEGER NOT NULL DEFAULT -1")
-                db.execSQL("ALTER TABLE `$TABLE_PROFILE_SWITCHES` ADD COLUMN `insulinPeakTime` INTEGER NOT NULL DEFAULT -1")
-                db.execSQL("ALTER TABLE `$TABLE_PROFILE_SWITCHES` ADD COLUMN `concentration` REAL NOT NULL DEFAULT 1.0")
+            if (!hasColumn(connection, TABLE_PROFILE_SWITCHES, "insulinLabel")) {
+                connection.execSQL("ALTER TABLE `$TABLE_PROFILE_SWITCHES` ADD COLUMN `insulinLabel` TEXT NOT NULL DEFAULT ''")
+                connection.execSQL("ALTER TABLE `$TABLE_PROFILE_SWITCHES` ADD COLUMN `insulinEndTime` INTEGER NOT NULL DEFAULT -1")
+                connection.execSQL("ALTER TABLE `$TABLE_PROFILE_SWITCHES` ADD COLUMN `insulinPeakTime` INTEGER NOT NULL DEFAULT -1")
+                connection.execSQL("ALTER TABLE `$TABLE_PROFILE_SWITCHES` ADD COLUMN `concentration` REAL NOT NULL DEFAULT 1.0")
             }
 
             // --- originalPsId: add to effectiveProfileSwitches if missing ---
-            if (!hasColumn(db, TABLE_EFFECTIVE_PROFILE_SWITCHES, "originalPsId")) {
-                db.execSQL("ALTER TABLE `$TABLE_EFFECTIVE_PROFILE_SWITCHES` ADD COLUMN `originalPsId` INTEGER DEFAULT NULL")
+            if (!hasColumn(connection, TABLE_EFFECTIVE_PROFILE_SWITCHES, "originalPsId")) {
+                connection.execSQL("ALTER TABLE `$TABLE_EFFECTIVE_PROFILE_SWITCHES` ADD COLUMN `originalPsId` INTEGER DEFAULT NULL")
             }
 
             // --- drop stale indexes that MTR v34 may still have ---
-            db.execSQL("DROP INDEX IF EXISTS `index_effectiveProfileSwitches_id`")
-            db.execSQL("DROP INDEX IF EXISTS `index_boluses_id`")
-            db.execSQL("DROP INDEX IF EXISTS `index_bolusCalculatorResults_id`")
-            db.execSQL("DROP INDEX IF EXISTS `index_bolusCalculatorResults_isValid`")
-            db.execSQL("DROP INDEX IF EXISTS `index_carbs_id`")
-            db.execSQL("DROP INDEX IF EXISTS `index_carbs_isValid`")
-            db.execSQL("DROP INDEX IF EXISTS `index_extendedBoluses_id`")
-            db.execSQL("DROP INDEX IF EXISTS `index_extendedBoluses_isValid`")
-            db.execSQL("DROP INDEX IF EXISTS `index_extendedBoluses_pumpSerial`")
-            db.execSQL("DROP INDEX IF EXISTS `index_extendedBoluses_pumpType`")
-            db.execSQL("DROP INDEX IF EXISTS `index_glucoseValues_id`")
-            db.execSQL("DROP INDEX IF EXISTS `index_glucoseValues_sourceSensor`")
-            db.execSQL("DROP INDEX IF EXISTS `index_profileSwitches_id`")
-            db.execSQL("DROP INDEX IF EXISTS `index_temporaryBasals_id`")
-            db.execSQL("DROP INDEX IF EXISTS `index_temporaryBasals_isValid`")
-            db.execSQL("DROP INDEX IF EXISTS `index_temporaryBasals_pumpType`")
-            db.execSQL("DROP INDEX IF EXISTS `index_temporaryBasals_pumpSerial`")
-            db.execSQL("CREATE INDEX IF NOT EXISTS `index_temporaryBasals_pumpId` ON `$TABLE_TEMPORARY_BASALS` (`pumpId`)")
-            db.execSQL("DROP INDEX IF EXISTS `index_temporaryTargets_id`")
-            db.execSQL("DROP INDEX IF EXISTS `index_temporaryTargets_isValid`")
-            db.execSQL("DROP INDEX IF EXISTS `index_therapyEvents_id`")
-            db.execSQL("DROP INDEX IF EXISTS `index_therapyEvents_isValid`")
-            db.execSQL("DROP INDEX IF EXISTS `index_totalDailyDoses_id`")
-            db.execSQL("DROP INDEX IF EXISTS `index_totalDailyDoses_isValid`")
-            db.execSQL("DROP INDEX IF EXISTS `index_totalDailyDoses_pumpType`")
-            db.execSQL("DROP INDEX IF EXISTS `index_totalDailyDoses_pumpSerial`")
-            db.execSQL("DROP INDEX IF EXISTS `index_foods_id`")
-            db.execSQL("DROP INDEX IF EXISTS `index_foods_isValid`")
-            db.execSQL("DROP INDEX IF EXISTS `index_deviceStatus_id`")
-            db.execSQL("DROP INDEX IF EXISTS `index_runningModes_id`")
-            db.execSQL("DROP INDEX IF EXISTS `index_heartRate_id`")
-            db.execSQL("DROP INDEX IF EXISTS `index_stepsCount_id`")
+            connection.execSQL("DROP INDEX IF EXISTS `index_effectiveProfileSwitches_id`")
+            connection.execSQL("DROP INDEX IF EXISTS `index_boluses_id`")
+            connection.execSQL("DROP INDEX IF EXISTS `index_bolusCalculatorResults_id`")
+            connection.execSQL("DROP INDEX IF EXISTS `index_bolusCalculatorResults_isValid`")
+            connection.execSQL("DROP INDEX IF EXISTS `index_carbs_id`")
+            connection.execSQL("DROP INDEX IF EXISTS `index_carbs_isValid`")
+            connection.execSQL("DROP INDEX IF EXISTS `index_extendedBoluses_id`")
+            connection.execSQL("DROP INDEX IF EXISTS `index_extendedBoluses_isValid`")
+            connection.execSQL("DROP INDEX IF EXISTS `index_extendedBoluses_pumpSerial`")
+            connection.execSQL("DROP INDEX IF EXISTS `index_extendedBoluses_pumpType`")
+            connection.execSQL("DROP INDEX IF EXISTS `index_glucoseValues_id`")
+            connection.execSQL("DROP INDEX IF EXISTS `index_glucoseValues_sourceSensor`")
+            connection.execSQL("DROP INDEX IF EXISTS `index_profileSwitches_id`")
+            connection.execSQL("DROP INDEX IF EXISTS `index_temporaryBasals_id`")
+            connection.execSQL("DROP INDEX IF EXISTS `index_temporaryBasals_isValid`")
+            connection.execSQL("DROP INDEX IF EXISTS `index_temporaryBasals_pumpType`")
+            connection.execSQL("DROP INDEX IF EXISTS `index_temporaryBasals_pumpSerial`")
+            connection.execSQL("CREATE INDEX IF NOT EXISTS `index_temporaryBasals_pumpId` ON `$TABLE_TEMPORARY_BASALS` (`pumpId`)")
+            connection.execSQL("DROP INDEX IF EXISTS `index_temporaryTargets_id`")
+            connection.execSQL("DROP INDEX IF EXISTS `index_temporaryTargets_isValid`")
+            connection.execSQL("DROP INDEX IF EXISTS `index_therapyEvents_id`")
+            connection.execSQL("DROP INDEX IF EXISTS `index_therapyEvents_isValid`")
+            connection.execSQL("DROP INDEX IF EXISTS `index_totalDailyDoses_id`")
+            connection.execSQL("DROP INDEX IF EXISTS `index_totalDailyDoses_isValid`")
+            connection.execSQL("DROP INDEX IF EXISTS `index_totalDailyDoses_pumpType`")
+            connection.execSQL("DROP INDEX IF EXISTS `index_totalDailyDoses_pumpSerial`")
+            connection.execSQL("DROP INDEX IF EXISTS `index_foods_id`")
+            connection.execSQL("DROP INDEX IF EXISTS `index_foods_isValid`")
+            connection.execSQL("DROP INDEX IF EXISTS `index_deviceStatus_id`")
+            connection.execSQL("DROP INDEX IF EXISTS `index_runningModes_id`")
+            connection.execSQL("DROP INDEX IF EXISTS `index_heartRate_id`")
+            connection.execSQL("DROP INDEX IF EXISTS `index_stepsCount_id`")
 
-            dropCustomIndexes(db)
+            dropCustomIndexes(connection)
         }
     }
 
@@ -458,68 +443,70 @@ db.execSQL(
     // that migration33to34 would have dropped. Use IF EXISTS so it's safe for devices that already
     // ran migration33to34.
     internal val migration35to34 = object : Migration(35, 34) {
-        override fun migrate(db: SupportSQLiteDatabase) {
-            db.execSQL("DROP INDEX IF EXISTS `index_effectiveProfileSwitches_id`")
-            db.execSQL("DROP INDEX IF EXISTS `index_boluses_id`")
-            db.execSQL("DROP INDEX IF EXISTS `index_bolusCalculatorResults_id`")
-            db.execSQL("DROP INDEX IF EXISTS `index_bolusCalculatorResults_isValid`")
-            db.execSQL("DROP INDEX IF EXISTS `index_carbs_id`")
-            db.execSQL("DROP INDEX IF EXISTS `index_carbs_isValid`")
-            db.execSQL("DROP INDEX IF EXISTS `index_extendedBoluses_id`")
-            db.execSQL("DROP INDEX IF EXISTS `index_extendedBoluses_isValid`")
-            db.execSQL("DROP INDEX IF EXISTS `index_extendedBoluses_pumpSerial`")
-            db.execSQL("DROP INDEX IF EXISTS `index_extendedBoluses_pumpType`")
-            db.execSQL("DROP INDEX IF EXISTS `index_glucoseValues_id`")
-            db.execSQL("DROP INDEX IF EXISTS `index_glucoseValues_sourceSensor`")
-            db.execSQL("DROP INDEX IF EXISTS `index_profileSwitches_id`")
-            db.execSQL("DROP INDEX IF EXISTS `index_temporaryBasals_id`")
-            db.execSQL("DROP INDEX IF EXISTS `index_temporaryBasals_isValid`")
-            db.execSQL("DROP INDEX IF EXISTS `index_temporaryBasals_pumpType`")
-            db.execSQL("DROP INDEX IF EXISTS `index_temporaryBasals_pumpSerial`")
-            db.execSQL("CREATE INDEX IF NOT EXISTS `index_temporaryBasals_pumpId` ON `$TABLE_TEMPORARY_BASALS` (`pumpId`)")
-            db.execSQL("DROP INDEX IF EXISTS `index_temporaryTargets_id`")
-            db.execSQL("DROP INDEX IF EXISTS `index_temporaryTargets_isValid`")
-            db.execSQL("DROP INDEX IF EXISTS `index_therapyEvents_id`")
-            db.execSQL("DROP INDEX IF EXISTS `index_therapyEvents_isValid`")
-            db.execSQL("DROP INDEX IF EXISTS `index_totalDailyDoses_id`")
-            db.execSQL("DROP INDEX IF EXISTS `index_totalDailyDoses_isValid`")
-            db.execSQL("DROP INDEX IF EXISTS `index_totalDailyDoses_pumpType`")
-            db.execSQL("DROP INDEX IF EXISTS `index_totalDailyDoses_pumpSerial`")
-            db.execSQL("DROP INDEX IF EXISTS `index_foods_id`")
-            db.execSQL("DROP INDEX IF EXISTS `index_foods_isValid`")
-            db.execSQL("DROP INDEX IF EXISTS `index_deviceStatus_id`")
-            db.execSQL("DROP INDEX IF EXISTS `index_runningModes_id`")
-            db.execSQL("DROP INDEX IF EXISTS `index_heartRate_id`")
-            db.execSQL("DROP INDEX IF EXISTS `index_stepsCount_id`")
+        override fun migrate(connection: SQLiteConnection) {
+            connection.execSQL("DROP INDEX IF EXISTS `index_effectiveProfileSwitches_id`")
+            connection.execSQL("DROP INDEX IF EXISTS `index_boluses_id`")
+            connection.execSQL("DROP INDEX IF EXISTS `index_bolusCalculatorResults_id`")
+            connection.execSQL("DROP INDEX IF EXISTS `index_bolusCalculatorResults_isValid`")
+            connection.execSQL("DROP INDEX IF EXISTS `index_carbs_id`")
+            connection.execSQL("DROP INDEX IF EXISTS `index_carbs_isValid`")
+            connection.execSQL("DROP INDEX IF EXISTS `index_extendedBoluses_id`")
+            connection.execSQL("DROP INDEX IF EXISTS `index_extendedBoluses_isValid`")
+            connection.execSQL("DROP INDEX IF EXISTS `index_extendedBoluses_pumpSerial`")
+            connection.execSQL("DROP INDEX IF EXISTS `index_extendedBoluses_pumpType`")
+            connection.execSQL("DROP INDEX IF EXISTS `index_glucoseValues_id`")
+            connection.execSQL("DROP INDEX IF EXISTS `index_glucoseValues_sourceSensor`")
+            connection.execSQL("DROP INDEX IF EXISTS `index_profileSwitches_id`")
+            connection.execSQL("DROP INDEX IF EXISTS `index_temporaryBasals_id`")
+            connection.execSQL("DROP INDEX IF EXISTS `index_temporaryBasals_isValid`")
+            connection.execSQL("DROP INDEX IF EXISTS `index_temporaryBasals_pumpType`")
+            connection.execSQL("DROP INDEX IF EXISTS `index_temporaryBasals_pumpSerial`")
+            connection.execSQL("CREATE INDEX IF NOT EXISTS `index_temporaryBasals_pumpId` ON `$TABLE_TEMPORARY_BASALS` (`pumpId`)")
+            connection.execSQL("DROP INDEX IF EXISTS `index_temporaryTargets_id`")
+            connection.execSQL("DROP INDEX IF EXISTS `index_temporaryTargets_isValid`")
+            connection.execSQL("DROP INDEX IF EXISTS `index_therapyEvents_id`")
+            connection.execSQL("DROP INDEX IF EXISTS `index_therapyEvents_isValid`")
+            connection.execSQL("DROP INDEX IF EXISTS `index_totalDailyDoses_id`")
+            connection.execSQL("DROP INDEX IF EXISTS `index_totalDailyDoses_isValid`")
+            connection.execSQL("DROP INDEX IF EXISTS `index_totalDailyDoses_pumpType`")
+            connection.execSQL("DROP INDEX IF EXISTS `index_totalDailyDoses_pumpSerial`")
+            connection.execSQL("DROP INDEX IF EXISTS `index_foods_id`")
+            connection.execSQL("DROP INDEX IF EXISTS `index_foods_isValid`")
+            connection.execSQL("DROP INDEX IF EXISTS `index_deviceStatus_id`")
+            connection.execSQL("DROP INDEX IF EXISTS `index_runningModes_id`")
+            connection.execSQL("DROP INDEX IF EXISTS `index_heartRate_id`")
+            connection.execSQL("DROP INDEX IF EXISTS `index_stepsCount_id`")
             // originalPsId may be missing on devices that skipped migration33to34
-            val cursor = db.query("PRAGMA table_info(`$TABLE_EFFECTIVE_PROFILE_SWITCHES`)")
-            var hasOriginalPsId = false
-            while (cursor.moveToNext()) {
-                if (cursor.getString(cursor.getColumnIndexOrThrow("name")) == "originalPsId") {
-                    hasOriginalPsId = true
-                    break
+            // PRAGMA table_info columns: cid, name, type, notnull, dflt_value, pk — name is index 1.
+            val hasOriginalPsId = connection.prepare("PRAGMA table_info(`$TABLE_EFFECTIVE_PROFILE_SWITCHES`)").use { stmt ->
+                var found = false
+                while (stmt.step()) {
+                    if (stmt.getText(1) == "originalPsId") {
+                        found = true
+                        break
+                    }
                 }
+                found
             }
-            cursor.close()
             if (!hasOriginalPsId) {
-                db.execSQL("ALTER TABLE `$TABLE_EFFECTIVE_PROFILE_SWITCHES` ADD COLUMN `originalPsId` INTEGER DEFAULT NULL")
+                connection.execSQL("ALTER TABLE `$TABLE_EFFECTIVE_PROFILE_SWITCHES` ADD COLUMN `originalPsId` INTEGER DEFAULT NULL")
             }
             // autoIsfValues may be missing on devices that skipped both migration31to32 and migration33to34
-            val tableExists = db.query(
+            val tableExists = connection.prepare(
                 "SELECT name FROM sqlite_master WHERE type='table' AND name='$TABLE_AUTOISF_VALUES'"
-            ).use { it.count > 0 }
+            ).use { it.step() }
             if (!tableExists) {
-                db.execSQL(
+                connection.execSQL(
                     "CREATE TABLE IF NOT EXISTS `${TABLE_AUTOISF_VALUES}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `timestamp` INTEGER NOT NULL, `acceIsf` REAL NOT NULL, `bgIsf` REAL NOT NULL, `ppIsf` REAL NOT NULL, `driftIsf` REAL NOT NULL, `duraIsf` REAL NOT NULL, `finalIsf` REAL NOT NULL, `iobThEffective` REAL NOT NULL, `utcOffset` INTEGER NOT NULL, `version` INTEGER NOT NULL, `dateCreated` INTEGER NOT NULL, `isValid` INTEGER NOT NULL, `referenceId` INTEGER, `nightscoutSystemId` TEXT, `nightscoutId` TEXT, `pumpType` TEXT, `pumpSerial` TEXT, `temporaryId` INTEGER, `pumpId` INTEGER, `startId` INTEGER, `endId` INTEGER)"
                 )
-                db.execSQL("CREATE INDEX IF NOT EXISTS `index_autoIsfValues_id` ON `${TABLE_AUTOISF_VALUES}` (`id`)")
-                db.execSQL("CREATE INDEX IF NOT EXISTS `index_autoIsfValues_timestamp` ON `${TABLE_AUTOISF_VALUES}` (`timestamp`)")
+                connection.execSQL("CREATE INDEX IF NOT EXISTS `index_autoIsfValues_id` ON `${TABLE_AUTOISF_VALUES}` (`id`)")
+                connection.execSQL("CREATE INDEX IF NOT EXISTS `index_autoIsfValues_timestamp` ON `${TABLE_AUTOISF_VALUES}` (`timestamp`)")
             }
-            dropCustomIndexes(db)
+            dropCustomIndexes(connection)
         }
     }
 
     /** List of all migrations for easy reply in tests. */
     @VisibleForTesting
-    internal val migrations = arrayOf(migration20to21, migration21to22, migration22to23, migration23to24, migration24to25, migration25to26, migration26to27, migration27to28, migration28to29, migration29to30, migration30to31, migration31to32, migration32to33, migration33to34, migration34to35, migration35to34)
+    internal val migrations = arrayOf(migration22to23, migration23to24, migration24to25, migration25to26, migration26to27, migration27to28, migration28to29, migration29to30, migration30to31, migration31to32, migration32to33, migration33to34)
 }
