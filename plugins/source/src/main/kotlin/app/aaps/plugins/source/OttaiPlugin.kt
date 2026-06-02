@@ -16,6 +16,7 @@ import app.aaps.core.interfaces.logging.LTag
 import app.aaps.core.interfaces.plugin.PluginDescription
 import app.aaps.core.interfaces.resources.ResourceHelper
 import app.aaps.core.interfaces.source.BgSource
+import app.aaps.core.interfaces.utils.fabric.FabricPrivacy
 import app.aaps.core.keys.interfaces.Preferences
 import app.aaps.core.objects.workflow.LoggingWorker
 import app.aaps.core.ui.compose.icons.IcGenericCgm
@@ -50,8 +51,10 @@ class OttaiPlugin @Inject constructor(
 ), BgSource {
     class OttaiWorker(
         context: Context,
-        params: WorkerParameters
-    ) : LoggingWorker(context, params, Dispatchers.IO) {
+        params: WorkerParameters,
+        aapsLogger: AAPSLogger,
+        fabricPrivacy: FabricPrivacy
+    ) : LoggingWorker(context, params, Dispatchers.IO, aapsLogger , fabricPrivacy) {
 
         @Inject lateinit var injector: HasAndroidInjector
         @Inject lateinit var ottaiPlugin: OttaiPlugin
