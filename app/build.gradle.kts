@@ -29,6 +29,19 @@ repositories {
     maven("https://jitpack.io")
 }
 
+fun generateGitBuild(): String {
+    try {
+        val processBuilder = ProcessBuilder("git", "describe", "--always", "--abbrev=7")
+        val output = File.createTempFile("git-build", "")
+        processBuilder.redirectOutput(output)
+        val process = processBuilder.start()
+        process.waitFor()
+        return output.readText().trim()
+    } catch (_: Exception) {
+        return "NoGitSystemAvailable"
+    }
+}
+
 fun DependencyHandler.`kapt`(dependencyNotation: Any): Dependency? =
     add("kapt", dependencyNotation)
 
