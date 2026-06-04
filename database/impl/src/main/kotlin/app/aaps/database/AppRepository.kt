@@ -231,24 +231,41 @@ class AppRepository @Inject internal constructor(
         removed
             .filter { it.second > 0 }
             .forEach { ret.append(it.first + " " + it.second + "<br>") }
-        // VACUUM is intentionally NOT run here. It is memory heavy and crashed (SQLITE_NOMEM) when
-        // it overlapped live DB activity; defragmenting VACUUM now runs only at startup while the
-        // DB is quiescent (see vacuumDatabase / MainApp.vacuumDatabaseIfDue).
+        // VACUUM is intentionally NOT run inline here (SQLITE_NOMEM risk); use [vacuumDatabase] when
+        // [runVacuum] is requested from maintenance UI. Startup uses [maintainDatabaseAtStartup] only.
         database.useWriterConnection { connection -> connection.usePrepared("PRAGMA wal_checkpoint(TRUNCATE)") { it.step() } }
         return ret.toString()
     }
 
     /**
+     * Startup-safe maintenance without VACUUM (see [vacuumDatabase] for full defragmentation).
+     */
+    suspend fun maintainDatabaseAtStartup() {
+        DatabaseMaintenanceCoordinator.markCompactionStarted()
+        try {
+            database.useWriterConnection { connection ->
+                connection.usePrepared("PRAGMA optimize") { it.step() }
+                connection.usePrepared("PRAGMA wal_checkpoint(TRUNCATE)") { it.step() }
+            }
+        } finally {
+            DatabaseMaintenanceCoordinator.markCompactionFinished()
+        }
+    }
+
+    /**
      * Full VACUUM: defragments the DB file and returns free pages to the OS. Heavy and memory
-     * intensive, so call only when nothing else is using the DB (e.g. at app startup before
-     * plugins/loop/sync start). [cleanupDatabase] only deletes; this reclaims and defragments.
-     * May throw if the DB is busy/locked; callers must handle that and treat only a clean return
-     * as success.
+     * intensive — use only for explicit user-initiated maintenance ([cleanupDatabase] with
+     * [runVacuum]). May throw if the DB is busy/locked.
      */
     suspend fun vacuumDatabase() {
-        database.useWriterConnection { connection ->
-            connection.usePrepared("PRAGMA wal_checkpoint(TRUNCATE)") { it.step() }
-            connection.usePrepared("VACUUM") { it.step() }
+        DatabaseMaintenanceCoordinator.markCompactionStarted()
+        try {
+            database.useWriterConnection { connection ->
+                connection.usePrepared("PRAGMA wal_checkpoint(TRUNCATE)") { it.step() }
+                connection.usePrepared("VACUUM") { it.step() }
+            }
+        } finally {
+            DatabaseMaintenanceCoordinator.markCompactionFinished()
         }
     }
 

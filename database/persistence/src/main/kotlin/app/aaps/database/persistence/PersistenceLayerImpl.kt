@@ -171,6 +171,10 @@ class PersistenceLayerImpl @Inject constructor(
             result
         }
 
+    override suspend fun maintainDatabaseAtStartup() = withContext(Dispatchers.IO) {
+        repository.maintainDatabaseAtStartup()
+    }
+
     override suspend fun vacuumDatabase() = withContext(Dispatchers.IO) {
         repository.vacuumDatabase()
     }
