@@ -1266,6 +1266,7 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
         }
         return maxIob
     }
+
     fun detectMealOnset(delta: Float, predictedDelta: Float, acceleration: Float): Boolean {
         val combinedDelta = (delta + predictedDelta) / 2.0f
         return combinedDelta > 3.0f && acceleration > 1.2f

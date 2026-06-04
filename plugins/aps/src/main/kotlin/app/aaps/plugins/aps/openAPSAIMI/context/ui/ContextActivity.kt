@@ -83,20 +83,32 @@ class ContextActivity : TranslatedDaggerAppCompatActivity() {
                         
                         if (ids.isNotEmpty()) {
                             binding.editChatInput.text?.clear()
-                            Toast.makeText(this@ContextActivity, "${ids.size} contexte(s) ajouté(s)", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(this@ContextActivity, "${ids.size} context(s) added", Toast.LENGTH_SHORT).show()
                         } else {
                             // Feedback detailed on failure
                             val isLLMEnabled = sp.getBoolean(app.aaps.core.keys.BooleanKey.OApsAIMIContextLLMEnabled.key, false)
                             val provider = sp.getString(app.aaps.core.keys.StringKey.AimiAdvisorProvider.key, "OPENAI")
                             
                             val msg = if (isLLMEnabled) {
-                                "Aucun contexte détecté via IA ($provider).\n\nCauses possibles :\n1. Clé API manquante ou invalide (Préférences AIMI > Advisor)\n2. Timeout réseau\n3. Description trop vague\n\nFallback : Essayez des mots-clés simples (ex: 'Sport 1h', 'Malade')."
+                                "No context detected via AI (\$provider).\n" +
+                                    "\n" +
+                                    "Possible causes:\n" +
+                                    "1. Missing or invalid API key (AIMI Preferences > Advisor)\n" +
+                                    "2. Network timeout\n" +
+                                    "3. Description too vague\n" +
+                                    "\n" +
+                                    "Fallback: Try simple keywords (e.g., ‘Sports 1h’, ‘Sick’)."
                             } else {
-                                "Aucun contexte détecté via mots-clés.\nEssayez des commandes simples :\n- 'Cardio 1h'\n- 'Malade'\n- 'Stress'\n- 'Repas surprise'"
+                                "No context detected based on keywords.\n" +
+                                    "Try some simple commands:\n" +
+                                    "- ‘1-hour cardio’\n" +
+                                    "- ‘Sick’\n" +
+                                    "- ‘Stress’\n" +
+                                    "- 'Surprise meal'"
                             }
                             
                             MaterialAlertDialogBuilder(this@ContextActivity)
-                                .setTitle("Analyse échouée")
+                                .setTitle("Analysis failed")
                                 .setMessage(msg)
                                 .setPositiveButton(android.R.string.ok, null)
                                 .show()
@@ -104,7 +116,7 @@ class ContextActivity : TranslatedDaggerAppCompatActivity() {
                         
                         refreshUI()
                     } catch (e: Exception) {
-                        Toast.makeText(this@ContextActivity, "Erreur: ${e.message}", Toast.LENGTH_LONG).show()
+                        Toast.makeText(this@ContextActivity, "Error: ${e.message}", Toast.LENGTH_LONG).show()
                     } finally {
                         binding.progressParsing.visibility = View.GONE
                         binding.btnSendChat.isEnabled = true
@@ -121,12 +133,12 @@ class ContextActivity : TranslatedDaggerAppCompatActivity() {
         // Clear all button
         binding.btnClearAll.setOnClickListener {
             MaterialAlertDialogBuilder(this)
-                .setTitle("Supprimer tous les contextes ?")
-                .setPositiveButton("Supprimer") { _, _ ->
+                .setTitle("Delete all contexts?")
+                .setPositiveButton("Delete") { _, _ ->
                     contextManager.clearAll()
                     refreshUI()
                 }
-                .setNegativeButton("Annuler", null)
+                .setNegativeButton("Cancel", null)
                 .show()
         }
         
@@ -179,25 +191,25 @@ class ContextActivity : TranslatedDaggerAppCompatActivity() {
         activityScope.launch {
             try {
                 contextManager.addPreset(preset)
-                Toast.makeText(this@ContextActivity, "Contexte ajouté", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this@ContextActivity, "Context added", Toast.LENGTH_SHORT).show()
                 refreshUI()
             } catch (e: Exception) {
-                Toast.makeText(this@ContextActivity, "Erreur: ${e.message}", Toast.LENGTH_LONG).show()
+                Toast.makeText(this@ContextActivity, "Error: ${e.message}", Toast.LENGTH_LONG).show()
             }
         }
     }
     
     private fun showExtendDialog(intentId: String) {
-        val options = arrayOf("15 min", "30 min", "1 heure", "2 heures")
+        val options = arrayOf("15 min", "30 min", "1 hour", "2 hours")
         val durations = arrayOf(15, 30, 60, 120)
         
         MaterialAlertDialogBuilder(this)
-            .setTitle("Prolonger le contexte")
+            .setTitle("Expand the context")
             .setItems(options) { _, which ->
                 contextManager.extendDuration(intentId, durations[which].minutes)
                 refreshUI()
             }
-            .setNegativeButton("Annuler", null)
+            .setNegativeButton("Cancel", null)
             .show()
     }
     
@@ -206,8 +218,8 @@ class ContextActivity : TranslatedDaggerAppCompatActivity() {
         val remaining = (intent.endTimeMs - now) / 1000 / 60 // minutes
         
         return when {
-            remaining <= 0 -> "Expiré"
-            remaining < 60 -> "${remaining}min restantes"
+            remaining <= 0 -> "Expired"
+            remaining < 60 -> "${remaining}minutes remaining"
             else -> "${remaining / 60}h ${remaining % 60}min"
         }
     }

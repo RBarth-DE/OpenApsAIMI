@@ -1805,13 +1805,16 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         // Uses ≥45% threshold to handle AAPS-level SMB capping (e.g. 7.5U
         // configured but only 3.75U delivered due to maxSMBBasalMinutes).
         if (pendingLegacyPrebolusUnit > 0.0f && internalLastLegacyPrebolusMillis > 0L) {
-            val recentBoluses = getBolusesFromTimeCached(
-                internalLastLegacyPrebolusMillis, ascending = true
-            )
-            val prebolusDelivered = recentBoluses.any {
-                it.type == BS.Type.NORMAL &&
-                    it.amount >= pendingLegacyPrebolusUnit * 0.35f
-            }
+            val prebolusDelivered = try {
+                kotlinx.coroutines.runBlocking {
+                    persistenceLayer
+                        .getBolusesFromTime(internalLastLegacyPrebolusMillis, true)
+                        .any {
+                            (it.type == BS.Type.NORMAL || it.type == BS.Type.SMB) &&
+                                it.amount >= pendingLegacyPrebolusUnit * 0.35f
+                        }
+                }
+            } catch (_: Exception) { false }
             if (prebolusDelivered) {
                 consoleLog.add(
                     "🍱 PREBOLUS_DELIVERED_CONFIRMED: clearing pending " +
@@ -1821,6 +1824,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                 pendingLegacyPrebolusExpiry = 0L
             }
         }
+// ─────────────────────────────────────────────────────────────────────
         // ────────────────────────────────────────────────────────────────────────
         this.maxIob = preferences.get(DoubleKey.ApsSmbMaxIob)
         // Tarciso Dynamic Max IOB
@@ -10790,9 +10794,29 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             consoleLog.add("MEAL_TBR_MANUAL[$logTag] rate=${"%.2f".format(rateUh)}U/h dur=30m rt=${runtimeMin}m")
         }
 
+        if (pendingLegacyPrebolusUnit > 0.0f && dateUtil.now() < pendingLegacyPrebolusExpiry) {
+            val anyMealActive = lunchTime || dinnerTime || bfastTime || mealTime || highCarbTime || snackTime
+            val anyRuntime = when {
+                lunchTime   -> lunchruntime
+                dinnerTime  -> dinnerruntime
+                bfastTime   -> bfastruntime
+                mealTime    -> mealruntime
+                highCarbTime -> highCarbrunTime
+                snackTime   -> snackrunTime
+                else        -> 0L
+            }
+            if (anyMealActive && anyRuntime in 0..29) {
+                manualMealModeTbr(anyRuntime, "MAINT_PB1_PRIORITY", overrideSafetyLimits = false)
+                rT.units = pendingLegacyPrebolusUnit.toDouble()
+                consoleLog.add("🍱 LEGACY_PB1_PRIORITY_CARRY: ${pendingLegacyPrebolusUnit}U (PB1 vor PB2)")
+                return rT
+            }
+        }
+
         if (isMealModeCondition()) {
             manualMealModeTbr(mealruntime, "MEAL_P1", overrideSafetyLimits = false)
             rT.units = rbf(DoubleKey.OApsAIMIMealPrebolus)
+            rT.deliverAt = dateUtil.now()
             rT.reason.append(context.getString(R.string.manual_meal_prebolus, rT.units))
             consoleLog.add("🍱 LEGACY_MODE_MEAL P1=${"%.2f".format(rT.units ?: 0.0)}U")
             markLegacyMealDecision()
@@ -10801,6 +10825,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         if (isbfastModeCondition()) {
             manualMealModeTbr(bfastruntime, "BF_P1", overrideSafetyLimits = false)
             rT.units = rbf(DoubleKey.OApsAIMIBFPrebolus)
+            rT.deliverAt = dateUtil.now()
             rT.reason.append(context.getString(R.string.reason_prebolus_bfast1, rT.units))
             consoleLog.add("🍱 LEGACY_MODE_BFAST P1=${"%.2f".format(rT.units ?: 0.0)}U")
             markLegacyMealDecision()
@@ -10809,6 +10834,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         if (isbfast2ModeCondition()) {
             manualMealModeTbr(bfastruntime, "BF_P2", overrideSafetyLimits = false)
             rT.units = rbf(DoubleKey.OApsAIMIBFPrebolus2)
+            rT.deliverAt = dateUtil.now()
             rT.reason.append(context.getString(R.string.reason_prebolus_bfast2, rT.units))
             consoleLog.add("🍱 LEGACY_MODE_BFAST P2=${"%.2f".format(rT.units ?: 0.0)}U")
             markLegacyMealDecision()
@@ -10817,6 +10843,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         if (isLunchModeCondition()) {
             manualMealModeTbr(lunchruntime, "LUNCH_P1", overrideSafetyLimits = false)
             rT.units = rbf(DoubleKey.OApsAIMILunchPrebolus)
+            rT.deliverAt = dateUtil.now()
             rT.reason.append(context.getString(R.string.reason_prebolus_lunch1, rT.units))
             consoleLog.add("🍱 LEGACY_MODE_LUNCH P1=${"%.2f".format(rT.units ?: 0.0)}U")
             markLegacyMealDecision()
@@ -10825,6 +10852,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         if (isLunch2ModeCondition()) {
             manualMealModeTbr(lunchruntime, "LUNCH_P2", overrideSafetyLimits = false)
             rT.units = rbf(DoubleKey.OApsAIMILunchPrebolus2)
+            rT.deliverAt = dateUtil.now()
             rT.reason.append(context.getString(R.string.reason_prebolus_lunch2, rT.units))
             consoleLog.add("🍱 LEGACY_MODE_LUNCH P2=${"%.2f".format(rT.units ?: 0.0)}U")
             markLegacyMealDecision()
@@ -10833,6 +10861,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         if (isDinnerModeCondition()) {
             manualMealModeTbr(dinnerruntime, "DINNER_P1", overrideSafetyLimits = false)
             rT.units = rbf(DoubleKey.OApsAIMIDinnerPrebolus)
+            rT.deliverAt = dateUtil.now()
             rT.reason.append(context.getString(R.string.reason_prebolus_dinner1, rT.units))
             consoleLog.add("🍱 LEGACY_MODE_DINNER P1=${"%.2f".format(rT.units ?: 0.0)}U")
             markLegacyMealDecision()
@@ -10841,6 +10870,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         if (isDinner2ModeCondition()) {
             manualMealModeTbr(dinnerruntime, "DINNER_P2", overrideSafetyLimits = false)
             rT.units = rbf(DoubleKey.OApsAIMIDinnerPrebolus2)
+            rT.deliverAt = dateUtil.now()
             rT.reason.append(context.getString(R.string.reason_prebolus_dinner2, rT.units))
             consoleLog.add("🍱 LEGACY_MODE_DINNER P2=${"%.2f".format(rT.units ?: 0.0)}U")
             markLegacyMealDecision()
@@ -10849,6 +10879,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         if (isHighCarbModeCondition()) {
             manualMealModeTbr(highCarbrunTime, "HC_P1", overrideSafetyLimits = false)
             rT.units = rbf(DoubleKey.OApsAIMIHighCarbPrebolus)
+            rT.deliverAt = dateUtil.now()
             rT.reason.append(context.getString(R.string.reason_prebolus_highcarb, rT.units))
             consoleLog.add("🍱 LEGACY_MODE_HIGHCARB P1=${"%.2f".format(rT.units ?: 0.0)}U")
             markLegacyMealDecision()
@@ -10857,6 +10888,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         if (isHighCarb2ModeCondition()) {
             manualMealModeTbr(highCarbrunTime, "HC_P2", overrideSafetyLimits = false)
             rT.units = rbf(DoubleKey.OApsAIMIHighCarbPrebolus2)
+            rT.deliverAt = dateUtil.now()
             rT.reason.append(context.getString(R.string.reason_prebolus_highcarb, rT.units))
             consoleLog.add("🍱 LEGACY_MODE_HIGHCARB P2=${"%.2f".format(rT.units ?: 0.0)}U")
             markLegacyMealDecision()
@@ -10865,6 +10897,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         if (issnackModeCondition()) {
             manualMealModeTbr(snackrunTime, "SNACK_P1", overrideSafetyLimits = false)
             rT.units = rbf(DoubleKey.OApsAIMISnackPrebolus)
+            rT.deliverAt = dateUtil.now()
             rT.reason.append(context.getString(R.string.reason_prebolus_snack, rT.units))
             consoleLog.add("🍱 LEGACY_MODE_SNACK P1=${"%.2f".format(rT.units ?: 0.0)}U")
             markLegacyMealDecision()
@@ -10883,27 +10916,14 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         if (legacyMealMaint != null) {
             manualMealModeTbr(legacyMealMaint.first, legacyMealMaint.second,
                               overrideSafetyLimits = false)
-            // Re-propagate pending prebolus if still in delivery window
-            if (pendingLegacyPrebolusUnit > 0.0f && internalLastLegacyPrebolusMillis > 0L) {
-                val prebolusDelivered = try {
-                    kotlinx.coroutines.runBlocking {
-                        persistenceLayer
-                            .getBolusesFromTime(internalLastLegacyPrebolusMillis, true)
-                            .any {
-                                it.type == BS.Type.NORMAL &&
-                                    it.amount >= pendingLegacyPrebolusUnit * 0.45f
-                            }
-                    }
-                } catch (_: Exception) { false }
-
-                if (prebolusDelivered) {
-                    consoleLog.add(
-                        "🍱 PREBOLUS_DELIVERED_CONFIRMED: clearing pending " +
-                            "${pendingLegacyPrebolusUnit}U"
-                    )
-                    pendingLegacyPrebolusUnit = 0.0f
-                    pendingLegacyPrebolusExpiry = 0L
-                }
+            if (pendingLegacyPrebolusUnit > 0.0f
+                && dateUtil.now() < pendingLegacyPrebolusExpiry) {
+                rT.units = pendingLegacyPrebolusUnit.toDouble()
+                rT.deliverAt = dateUtil.now()
+                consoleLog.add("🍱 LEGACY_MAINT_PREBOLUS_CARRY[...] ...")
+            } else {
+                rT.units = null
+                consoleLog.add("🍱 LEGACY_MEAL_TBR_MAINT[...] ...")
             }
             return rT
         }

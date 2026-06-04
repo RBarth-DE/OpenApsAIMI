@@ -17,7 +17,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/context_description"
-            android:textAppearance="?attr/textAppearanceBodyMedium"
+            android:textAppearance="?attr/textAppearanceBody1"
             android:layout_marginBottom="8dp"/>
 
         <com.google.android.material.textfield.TextInputLayout
@@ -74,8 +74,8 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Quick Presets"
-            android:textAppearance="?attr/textAppearanceHeadlineSmall"
+            android:text="@string/context_quick_presets"
+            android:textAppearance="?attr/textAppearanceHeadline5"
             android:layout_marginTop="16dp"
             android:layout_marginBottom="8dp"/>
 
@@ -157,7 +157,7 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="@string/context_active_intents"
-                android:textAppearance="?attr/textAppearanceHeadlineSmall"/>
+                android:textAppearance="?attr/textAppearanceHeadline5"/>
 
             <Button
                 android:id="@+id/btnClearAll"
@@ -191,7 +191,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/context_settings_title"
-            android:textAppearance="?attr/textAppearanceHeadlineSmall"
+            android:textAppearance="?attr/textAppearanceHeadline5"
             android:layout_marginTop="24dp"
             android:layout_marginBottom="8dp"/>
 

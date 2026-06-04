@@ -751,6 +751,7 @@
     <string name="context_btn_ai_parse">🤖 AI Parse</string>
     <string name="context_btn_clear">Clear</string>
     <string name="context_btn_clear_all">Clear All</string>
+    <string name="context_quick_presets">Quick Presets</string>
     <string name="context_preset_cardio">🏃 Cardio</string>
     <string name="context_preset_strength">💪 Strength</string>
     <string name="context_preset_yoga">🧘 Yoga</string>
