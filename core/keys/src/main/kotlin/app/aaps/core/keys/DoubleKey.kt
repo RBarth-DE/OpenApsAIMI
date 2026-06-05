@@ -246,7 +246,7 @@ enum class DoubleKey(
         titleResId = R.string.pref_title_dura_weight,
         summaryResId = R.string.openapsama_dura_ISF_weight_summary,
         defaultedBySM = true,
-        unitType = UnitType.DOUBLE
+        unitType = UnitType.DOUBLE_2
     ),
     ApsAutoIsfSmbDeliveryRatio(
         key = "openapsama_smb_delivery_ratio",
