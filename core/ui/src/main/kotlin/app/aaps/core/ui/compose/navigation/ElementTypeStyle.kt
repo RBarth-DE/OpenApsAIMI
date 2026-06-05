@@ -57,6 +57,7 @@ import app.aaps.core.ui.compose.icons.Pump
 fun ElementType.color(): Color = when (this) {
     ElementType.INSULIN,
     ElementType.TREATMENT,
+    ElementType.AFREZZA,
     ElementType.FILL                    -> AapsTheme.elementColors.insulin
 
     ElementType.CARBS                   -> AapsTheme.elementColors.carbs
@@ -118,6 +119,7 @@ fun ElementType.color(): Color = when (this) {
 
 fun ElementType.icon(): ImageVector = when (this) {
     ElementType.INSULIN                 -> IcBolus
+    ElementType.AFREZZA                 -> IcBolus
     ElementType.CARBS                   -> IcCarbs
     ElementType.BOLUS_WIZARD            -> IcCalculator
     ElementType.QUICK_WIZARD,
@@ -174,6 +176,7 @@ fun ElementType.icon(): ImageVector = when (this) {
 
 fun ElementType.labelResId(): Int = when (this) {
     ElementType.INSULIN                 -> R.string.overview_insulin_label
+    ElementType.AFREZZA                 -> R.string.overview_afrezza_label
     ElementType.CARBS                   -> R.string.carbs
     ElementType.BOLUS_WIZARD            -> R.string.boluswizard
     ElementType.QUICK_WIZARD            -> 0 // dynamic label
@@ -225,6 +228,7 @@ fun ElementType.labelResId(): Int = when (this) {
 
 fun ElementType.descriptionResId(): Int = when (this) {
     ElementType.INSULIN                 -> R.string.treatment_insulin_desc
+    ElementType.AFREZZA                 -> R.string.treatment_afrezza_desc
     ElementType.CARBS                   -> R.string.treatment_carbs_desc
     ElementType.BOLUS_WIZARD            -> R.string.treatment_calculator_desc
     ElementType.TREATMENT               -> R.string.treatment_desc
