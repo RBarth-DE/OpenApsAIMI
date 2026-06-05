@@ -2857,13 +2857,14 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                 restingHeartRateBpm = snapshot.rhrResting,
                 basePhysioMultipliers = lastBasePhysioMultipliers,
             )
+            val iobRow = ctx.iobDataArray.firstOrNull() ?: IobTotal(ctx.currentTime)
             refreshMealAbsorptionPhase(
                 combinedDelta = combinedDelta,
                 stepsLast15m = snapshot.stepsLast15m,
                 heartRateBpm = snapshot.hrNow,
                 restingHeartRateBpm = snapshot.rhrResting,
-                mealContext = buildMealSafetyContext(isExplicitAdvisorRun = false, iobData = ctx.iobData),
-                lastBolusTimeMs = ctx.iobData.lastBolusTime.takeIf { it > 0L },
+                mealContext = buildMealSafetyContext(isExplicitAdvisorRun = false, iobData = iobRow),
+                lastBolusTimeMs = iobRow.lastBolusTime.takeIf { it > 0L },
                 nowMs = dateUtil.now(),
             )
             val physioPolicy = lastPhysiologicalPhaseOutput?.policy
@@ -4401,8 +4402,8 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                     ) -> {
                 val runTime = MealAbsorptionMemory.lastActiveAtMs.takeIf { it > 0L }?.let {
                     ((dateUtil.now() - it) / 60_000L).toInt().coerceAtLeast(0)
-                } ?: listOf(mealruntime, lunchruntime, dinnerruntime, highCarbrunTime, bfastruntime, snackrunTime)
-                    .maxOrNull() ?: 0
+                } ?: (listOf(mealruntime, lunchruntime, dinnerruntime, highCarbrunTime, bfastruntime, snackrunTime)
+                    .maxOrNull() ?: 0L).toInt()
                 val target = targetBg
                 val rocketStart = delta > 5.0f || bg > targetBg + 40
                 val safeMax = if (rocketStart) profile.max_basal else if (mealModesMaxBasal > 0) mealModesMaxBasal else profileCurrentBasal * 2.0
