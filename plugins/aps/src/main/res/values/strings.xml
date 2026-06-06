@@ -153,7 +153,37 @@
 
     <string name="oaps_aimi_shortname">AIMI</string>
     <string name="openapsaimi">"AIMI 3.3"</string>
+    <string name="openapsaimi_maxsmb_summary">Max SMB value when BG is below 120</string>
+    <string name="openapsaimi_maxsmb_title">Max SMB LOW BG</string>
     <string name="description_openapsaimi">Small micro-boluses based on Artificial Intelligence and Machine Learning.</string>
+    <!-- ❌ TIME-BASED REACTIVITY TITLES/SUMMARIES REMOVED -->
+    <string name="DynISFAdjusthyper_summary"><![CDATA[Increasing this value will increase the speed to send SMB when BG > 120]]></string>
+    <string name="DynISFAdjusthyper_title"><![CDATA[DynISF Adjustment factor % BG > 120]]></string>
+    <string name="prebolus_meal_mode_summary">If you set a note on the action page with the word "meal", you will receive this value one time as a pre-bolus.</string>
+    <string name="prebolus_meal_mode_title">Prebolus</string>
+    <string name="prebolus_highcarb_mode_title">Prebolus 1/2</string>
+    <string name="prebolus2_highcarb_mode_title">Prebolus 2/2</string>
+    <string name="prebolus_highcarb_mode_summary">High Carb Mode Prebolus 1/2</string>
+    <string name="prebolus2_highcarb_mode_summary">High Carb Mode Prebolus 2/2</string>
+    <string name="number_day_ML_training_summary">Number of days to train the model</string>
+    <string name="nb_day_ML_training_title">ML Number of Training Days</string>
+    <string name="nb_minutes_ML_training_title">Number of minutes to train the data</string>
+    <string name="number_minutes_training_summary">Number of minutes to train the data for the ML engine</string>
+    <string name="number_epoch_training_summary">Number of epochs to train the data</string>
+    <string name="nb_epoch_ML_training_title">Number of epochs to train the data</string>
+    <string name="number_learningrate_training_summary">Learning rate to train the data</string>
+    <string name="nb_learningrate_ML_training_title">Learning rate to train the data</string>
+    <string name="number_iteration_training_summary">Number of times it will try before stopping the loop if it cannot get a satisfying result</string>
+    <string name="nb_iteration_ML_training_title">Number of iterations to stop the loop</string>
+    <string name="DynISF_Adjust_summary" formatted="false">Increase this value above 100 if you want to receive more SMB. The opposite is true if you receive too much SMB.</string>
+    <string name="DynISF_Adjust_title" formatted="false">DynISF factor to increase or decrease the number of SMB</string>
+    <string name="oaps_aimi_mealAdjFact_summary">DynISF adjustment factor for Meal Mode</string>
+    <string name="oaps_aimi_mealAdjFact_title">Meal Mode DynISF Factor</string>
+    <string name="Enable_basal_title">Enable Basal</string>
+    <string name="Enable_basal_summary">This option will enable basal from the profile when BG is greater than 80 and delta is not negative.</string>
+    <string name="oaps_aimi_enableDeleteLine_title">Enable the possibility to delete one day in ML Training</string>
+    <string name="countsteps_watch_title">Step counting watch (if disable, use phone)</string>
+    <string name="countsteps_watch_summary">This option enables step counting by receiving data from the watch instead of the phone.</string>
 
     <string name="pref_aimi_steps_source_title">Steps &amp; Heart Rate Data Source</string>
     <string name="pref_aimi_steps_source_wear">Prefer Wear OS (Direct)</string>
@@ -266,8 +296,10 @@
     <string name="aimi_adv_rec_htr_enable_desc">Sustained hyper with Autodrive V3 active but weak SMB delivery. HTR lifts V3 micro-bolus when scenario projection confirms a rise (not a fixed 200 mg/dL rule).</string>
     <string name="aimi_adv_rec_rbt_shadow_title">Enable Recursive Belief Tree (shadow)</string>
     <string name="aimi_adv_rec_rbt_shadow_desc">Autodrive V3 is active. Turn on RBT shadow mode to export multi-scale belief unfold in AIMI_Decisions.jsonl before enabling release authority.</string>
+    <string name="aimi_adv_rec_rbt_authority_title">Enable Recursive Belief Tree authority</string>
+    <string name="aimi_adv_rec_rbt_authority_desc">RBT shadow is on and JSONL unfold looks stable. Enable authority so cross-scale tensions drive SMB release (replaces parallel HTR when release authority is active). Review the unfold section below first.</string>
     <string name="aimi_rbt_unfold_section_title">RECURSIVE BELIEF UNFOLD</string>
-    <string name="aimi_rbt_unfold_section_desc">Latest multi-scale belief export from AIMI_Decisions.jsonl (shadow or authority). Enable RBT shadow in AIMI settings when Autodrive V3 is active.</string>
+    <string name="aimi_rbt_unfold_section_desc">Latest multi-scale belief export from AIMI_Decisions.jsonl (recursive_belief and physiological_patterns sections). Enable RBT shadow first, review several loop ticks, then enable authority if unfold looks coherent.</string>
     <string name="aimi_rbt_unfold_mode">Mode: shadow=%1$s authority=%2$s wavelet=%3$s</string>
     <string name="aimi_rbt_unfold_no_data">No recursive_belief export yet. Run the loop with RBT shadow enabled for at least one tick.</string>
     <string name="aimi_rbt_unfold_summary">Last tick: auth=%1$s smb=%2$.2fU paradoxes=%3$d shadow=%4$s</string>
@@ -607,7 +639,9 @@
     <string name="honeymoon_meal_slope">Honeymoon meal slope.</string>
     <string name="aimi_plateau_high_boost">Boost =&gt; Hyper greater than 180 stable bg</string>
 
-    <string name="hypo_risk_notification_text">Hypo risk detected: Rapid drop!</string>
+    <string name="hypo_risk_notification_title">Hypo Risk</string>
+    <string name="hypo_risk_notification_text">Hypo risk: rapid drop detected. Check your glucose now.</string>
+    <string name="aimi_hypo_risk_alarm_summary">AIMI posts a unified URGENT alarm (NotificationId.HYPO_RISK_ALARM) with AAPS alarm sound. Snooze or dismiss from the notification list or dashboard dialog.</string>
     <string name="meal_dinner_maintain">Dinner mode maintain (%.1f floor)</string>
     <string name="reason_bg_dropping_floor">Drop (Δ%.1f), safety floor (%.2f)</string>
 
@@ -777,6 +811,23 @@
     <string name="context_module_enabled">Enable Context Module</string>
     <string name="context_llm_enabled">Enable AI Parsing (LLM)</string>
     <string name="aimi_physio_title">🏥 Physiological Assistant</string>
+    <string name="aimi_physio_enable_title">Enable Assistant</string>
+    <string name="aimi_physio_enable_summary">Adjusts insulin using Health Connect vitals and a 28-pattern physiological catalogue (dawn, meals, stress, recovery). Active patterns export to AIMI_Decisions.jsonl and feed RBT leaves and HTR caps.</string>
+    <string name="aimi_physio_pattern_catalog_title">Physiological pattern catalogue</string>
+    <string name="aimi_physio_pattern_catalog_summary">28 hysteresis-gated patterns (sleep, HRV, meals, stress, cycle). Tap for details.</string>
+    <string name="aimi_physio_pattern_catalog_detail">When the assistant is enabled, each loop tick runs the pattern detector on physio + CGM context. Matches export as physiological_patterns in AIMI_Decisions.jsonl and can cap HTR or inform RBT belief leaves. Requires Health Connect permissions for sleep and HRV when those sources are enabled. See repo docs/AIMI_PHYSIOLOGICAL_PATTERN_CATALOG.md for the full list.</string>
+    <string name="aimi_physio_data_sources_title">Data Sources</string>
+    <string name="aimi_physio_sleep_enable_title">Sync Sleep Data</string>
+    <string name="aimi_physio_sleep_enable_summary">Use Health Connect to fetch sleep stages and efficiency.</string>
+    <string name="aimi_physio_hrv_enable_title">Sync HRV &amp; RHR</string>
+    <string name="aimi_physio_hrv_enable_summary">Use heart rate variability to detect stress/fatigue.</string>
+    <string name="aimi_physio_advanced_title">Analysis &amp; Logs</string>
+    <string name="aimi_physio_llm_enable_title">LLM Narrative Analysis</string>
+    <string name="aimi_physio_llm_enable_summary">Send physio data to LLM for daily health summaries (Optional).</string>
+    <string name="aimi_physio_debug_title">Debug Logging</string>
+    <string name="aimi_physio_debug_summary">Log detailed physiological states to the console.</string>
+
+    <!-- 🌸 Endometriosis & Cycle Settings -->
     <string name="endo_preferences_title">Endometriosis Settings</string>
     <string name="aimi_iob_surveillance_guard_title">IOB surveillance (anti-stacking)</string>
     <string name="aimi_iob_surveillance_guard_summary">When BG is above target with meaningful IOB, the trend is no longer a fast rise (plateau), and predictions point downward, SMB is capped and temp basal is slightly favoured so onboard insulin can act—without blocking sharp rises or strong meal absorption (COB/UAM). Meal-rise bypass: Δ≥2.0 or short-avg≥2.5 mg/dL/5m while meal-priority context is on. Constants: InsulinStackingStance.kt. Analytics: adjustments.iob_surveillance in Documents/AAPS/AIMI_Decisions.jsonl each loop.</string>
