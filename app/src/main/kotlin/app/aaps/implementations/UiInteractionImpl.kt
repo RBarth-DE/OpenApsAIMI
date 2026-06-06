@@ -117,14 +117,15 @@ class UiInteractionImpl @Inject constructor(
     }
 
     override fun startAlarm(@RawRes sound: Int, reason: String) {
-        // Fork-only entry point used by NotificationStore for in-shade sound alarms.
-        // Mapped onto AlarmNotificationManager.postSoundAlarmNotification — `reason` is the
+        // Fork-only entry point used by NotificationStore for in-shade alarms.
+        // Mapped onto AlarmNotificationManager.postSilentAlarmNotification — `reason` is the
         // body text; reason.hashCode() acts as the per-notification key (stopAlarm cancels
-        // every active sound alarm via cancelAlarm, matching the prior service behavior).
+        // every active alarm via cancelAlarm, matching the prior service behavior).
+        // Audio now flows through AlarmSoundPlayer (driven by NotificationManagerImpl), so this
+        // visual-only path no longer rings; `sound` is retained for the interface/log only.
         aapsLogger.debug(LTag.CORE, "startAlarm sound=$sound reason=$reason")
-        alarmNotificationManager.postSoundAlarmNotification(
+        alarmNotificationManager.postSilentAlarmNotification(
             notificationKey = reason.hashCode(),
-            soundId = sound,
             title = reason,
             body = reason,
             urgent = true

@@ -101,7 +101,13 @@ fun MaintenanceDialogs(
             onToggleLogCloud = { maintenanceViewModel.toggleLogCloud(it) },
             onToggleCsvLocal = { maintenanceViewModel.toggleCsvLocal(it) },
             onToggleCsvCloud = { maintenanceViewModel.toggleCsvCloud(it) },
-            onToggleAimiCloud = { maintenanceViewModel.toggleAimiCloud(it) }
+            onToggleAimiCloud = { maintenanceViewModel.toggleAimiCloud(it) },
+            showDevTools = maintenanceViewModel.isDevMode,
+            onTestInternalAlarm = { maintenanceViewModel.testInternalAlarm() },
+            onTestInternalUrgentAlarm = { maintenanceViewModel.testInternalUrgentAlarm() },
+            onTestFullScreenAlarm = { maintenanceViewModel.testFullScreenAlarm() },
+            onTestImportantNotification = { maintenanceViewModel.testImportantNotification() },
+            onStopTestAlarms = { maintenanceViewModel.stopTestAlarms() }
         )
     }
 
