@@ -103,6 +103,11 @@ import app.aaps.plugins.aps.openAPSAIMI.physio.MealAbsorptionMemory
 import app.aaps.plugins.aps.openAPSAIMI.physio.MealAbsorptionPhase
 import app.aaps.plugins.aps.openAPSAIMI.physio.MealAbsorptionPhaseEngine
 import app.aaps.plugins.aps.openAPSAIMI.physio.PhysiologicalPhaseClassifier
+import app.aaps.plugins.aps.openAPSAIMI.physio.PhysioContextMTR
+import app.aaps.plugins.aps.openAPSAIMI.physio.pattern.PhysiologicalPatternDetector
+import app.aaps.plugins.aps.openAPSAIMI.physio.pattern.PhysiologicalPatternExport
+import app.aaps.plugins.aps.openAPSAIMI.physio.pattern.PhysiologicalPatternInputBuilder
+import app.aaps.plugins.aps.openAPSAIMI.physio.pattern.PhysiologicalPatternSnapshot
 import app.aaps.plugins.aps.openAPSAIMI.safety.CorrectionAggressionGate
 import app.aaps.plugins.aps.openAPSAIMI.safety.HypoGuard
 import app.aaps.plugins.aps.openAPSAIMI.safety.signalEventualDrop
@@ -238,6 +243,8 @@ internal data class AimiDecisionContext(
         var hyper_trajectory_release: HyperTrajectoryReleaseExport? = null,
         /** Physiological phase + behavioral risk policy (HTR / MPC / scenario) */
         var physiological_phase: PhysiologicalPhaseExport? = null,
+        /** Multi-label body-state pattern catalog (RBT meta + HTR caps) */
+        var physiological_patterns: org.json.JSONObject? = null,
         /** Unified meal absorption belief + phase (IOB / HTR / SMB priority) */
         var meal_absorption_phase: MealAbsorptionPhaseExport? = null,
         /** Recursive Belief Tree — full JSON object for AIMI_Decisions.jsonl */
@@ -499,6 +506,9 @@ internal data class AimiDecisionContext(
                 pJson.put("physio_smb_factor_fused", p.physio_smb_factor_fused ?: org.json.JSONObject.NULL)
                 pJson.put("physio_phase_source", p.physio_phase_source ?: org.json.JSONObject.NULL)
                 adj.put("physiological_phase", pJson)
+            }
+            adjustments.physiological_patterns?.let { pp ->
+                adj.put("physiological_patterns", pp)
             }
             adjustments.meal_absorption_phase?.let { m ->
                 val mJson = org.json.JSONObject()
@@ -1373,6 +1383,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         lastHyperTrajectoryRelease = null
         lastRecursiveBeliefSnapshot = null
         lastPhysiologicalPhaseOutput = null
+        lastPhysiologicalPatternSnapshot = null
         lastMealAbsorptionOutput = null
         EndogenousPhaseHysteresis.reset()
         pendingTrajSpiralBasal = null
@@ -2760,6 +2771,8 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             null
         }
         val physioTrace = physioAdapter.getLastDecisionTrace()
+        val physioCtx = physioAdapter.getEffectiveContext()
+        val wearableSnap = physioAdapter.getLatestSnapshot()
         val auditorVerdict = try {
             app.aaps.plugins.aps.openAPSAIMI.advisor.auditor.AuditorVerdictCache.get(300_000)?.verdict
         } catch (_: Exception) {
@@ -2814,6 +2827,10 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             shadowOrchestratorActive = physioTrace?.shadowOrchestratorEnabled == true,
             tuningContextLabel = preferences.get(StringKey.AimiTuningContextSelection),
             htrLeafSmbFloorU = htr.smbFloorU,
+            sleepDebtMinutes = wearableSnap.sleepDebtMinutes.toDouble().takeIf { it > 0 },
+            physioMtrStateOrdinal = physioCtx.state.ordinal,
+            hrvDeviationZ = physioCtx.hrvDeviationZ.takeIf { physioCtx.confidence > 0.0 },
+            sleepQualityScore = physioCtx.features?.sleepQualityScore,
         )
     }
 
@@ -2901,6 +2918,61 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             mpcFeedForwardRa = mpcFeedForwardRa,
             cbfShieldDeltaU = cbfShieldDeltaU,
         )
+        val physioContext = physioAdapter.getEffectiveContext()
+        val wearableSnap = physioAdapter.getLatestSnapshot()
+        val contextSnap = try {
+            if (preferences.get(BooleanKey.OApsAIMIContextEnabled)) {
+                contextManager.getSnapshot(dateUtil.now())
+            } else {
+                null
+            }
+        } catch (_: Exception) {
+            null
+        }
+        val patternInput = PhysiologicalPatternInputBuilder.build(
+            bgMgdl = bg,
+            targetBgMgdl = targetBg.toDouble(),
+            highBgPreferenceMgdl = preferences.get(DoubleKey.OApsAIMIHighBg),
+            deltaMgdlPer5 = delta.toDouble(),
+            shortAvgDeltaMgdlPer5 = shortAvgDelta.toDouble(),
+            combinedDeltaMgdlPer5 = combinedDelta.toDouble(),
+            mealCobG = rT.COB?.toDouble() ?: 0.0,
+            hourOfDay = hourOfDay,
+            stepsLast15m = stepsLast15m,
+            heartRateBpm = heartRateBpm,
+            restingHeartRateBpm = wearableSnap.rhrResting,
+            iobU = iob.toDouble(),
+            maxIobU = maxIob,
+            bestTerminalMgdl = bestTerminal,
+            floorTerminalMgdl = floorTerminal,
+            phaseOutput = lastPhysiologicalPhaseOutput,
+            physioContext = physioContext,
+            sleepDebtMinutes = wearableSnap.sleepDebtMinutes,
+            sleepEfficiency = wearableSnap.sleepEfficiency,
+            mealAbsorption = lastMealAbsorptionOutput,
+            stackingEval = stackingEval,
+            endogenousCounterRegulatory = endogenousCounterRegulatory,
+            postHypoOrdinal = extended.postHypoOrdinal,
+            exerciseLockout = exerciseInsulinLockoutActive,
+            sportTime = sportTime,
+            sleepTime = sleepTime,
+            contextSnapshot = contextSnap,
+            compressionImpossibleRise = extended.compressionImpossibleRise,
+            dwellAboveHighBgMinutes = dwellAboveHighBgMinutes(),
+            trajectoryRelevanceScore = lastFusedPhysioMultipliers?.trajectoryRelevanceScore?.toDouble()
+                ?: lastBasePhysioMultipliers.trajectoryRelevanceScore.toDouble(),
+            nowMs = dateUtil.now(),
+        )
+        val patternSnapshot = PhysiologicalPatternDetector.detect(patternInput)
+        lastPhysiologicalPatternSnapshot = patternSnapshot
+        patternSnapshot.dominant?.let { dominant ->
+            consoleLog.add(
+                "🧬 PATTERN: dominant=$dominant conf=${"%.2f".format(patternSnapshot.dominantConfidence)} " +
+                    "cap=${patternSnapshot.smbCapU?.let { "%.2f".format(it) + "U" } ?: "none"} " +
+                    "mealSupp=${patternSnapshot.suppressMealInterpretation} " +
+                    "hyperSupp=${patternSnapshot.suppressHyperRelease} | ${patternSnapshot.reasonSummary}",
+            )
+        }
         val ctx = RecursiveBeliefTickContext(
             bgMgdl = bg,
             targetBgMgdl = targetBg.toDouble(),
@@ -2917,6 +2989,8 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             mealAbsorption = lastMealAbsorptionOutput,
             physioPhase = lastPhysiologicalPhaseOutput,
             behavioralRisk = lastPhysiologicalPhaseOutput?.policy,
+            physioContext = physioContext,
+            physiologicalPatterns = patternSnapshot,
             trajectoryAnalysis = trajectoryGuard.getLastAnalysis(),
             trajectoryRelevanceScore = lastFusedPhysioMultipliers?.trajectoryRelevanceScore?.toDouble()
                 ?: lastBasePhysioMultipliers.trajectoryRelevanceScore.toDouble(),
@@ -3286,9 +3360,12 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             val stackingCapU = lastInsulinStackingEvaluation?.takeIf {
                 it.kind == InsulinStackingStance.Kind.SURVEILLANCE_IOB
             }?.smbAbsoluteCapU
+            val patternCapU = lastPhysiologicalPatternSnapshot?.smbCapU
             val rbtAuthority = rbtPrefs.authorityEnabled &&
                 rbtSnapshot?.resolutions?.releaseAuthority != ReleaseAuthority.NONE
-            val effectiveHtr = if (rbtSnapshot != null && (rbtAuthority || physioCapU != null || stackingCapU != null)) {
+            val effectiveHtr = if (rbtSnapshot != null &&
+                (rbtAuthority || physioCapU != null || stackingCapU != null || patternCapU != null)
+            ) {
                 val r = rbtSnapshot.resolutions
                 val rawLifted = if (rbtAuthority) {
                     max(htr.v3SmbBeforeU, r.smbDemandU)
@@ -3298,6 +3375,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                 var lifted = rawLifted
                 physioCapU?.let { lifted = min(lifted, it) }
                 stackingCapU?.let { lifted = min(lifted, it) }
+                patternCapU?.let { lifted = min(lifted, it) }
                 htr.copy(
                     active = lifted > htr.v3SmbBeforeU + 0.02,
                     smbFloorU = if (rbtAuthority) min(r.smbDemandU, lifted) else min(htr.smbFloorU, lifted),
@@ -6157,6 +6235,9 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         decisionCtx.adjustments.scenario_projection = lastScenarioProjection?.toDecisionContextExport()
         decisionCtx.adjustments.hyper_trajectory_release = lastHyperTrajectoryRelease?.toDecisionContextExport()
         decisionCtx.adjustments.physiological_phase = physiologicalPhaseExport()
+        lastPhysiologicalPatternSnapshot?.takeIf { it.active.isNotEmpty() }?.let { patterns ->
+            decisionCtx.adjustments.physiological_patterns = PhysiologicalPatternExport.toJsonObject(patterns)
+        }
         decisionCtx.adjustments.meal_absorption_phase = mealAbsorptionPhaseExport()
         lastRecursiveBeliefSnapshot?.let { snap ->
             val rbtPrefs = RecursiveBeliefPreferences.from(preferences)
@@ -7134,6 +7215,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
     private var lastHyperTrajectoryRelease: HyperTrajectoryReleaseResult? = null
     private var lastRecursiveBeliefSnapshot: RecursiveBeliefSnapshot? = null
     private var lastPhysiologicalPhaseOutput: PhysiologicalPhaseClassifier.Output? = null
+    private var lastPhysiologicalPatternSnapshot: PhysiologicalPatternSnapshot? = null
     private var lastMealAbsorptionOutput: MealAbsorptionPhaseEngine.Output? = null
     private var lastInsulinStackingEvaluation: InsulinStackingStance.Evaluation? = null
     private var lastBasePhysioMultipliers: PhysioMultipliersMTR = PhysioMultipliersMTR.NEUTRAL
