@@ -66,6 +66,8 @@ import com.patrykandpatrick.vico.compose.cartesian.axis.VerticalAxis
 import com.patrykandpatrick.vico.compose.cartesian.data.CartesianChartModelProducer
 import com.patrykandpatrick.vico.compose.cartesian.data.CartesianValueFormatter
 import com.patrykandpatrick.vico.compose.cartesian.data.CartesianLayerRangeProvider
+import com.patrykandpatrick.vico.compose.cartesian.data.lineModel
+import com.patrykandpatrick.vico.compose.cartesian.decoration.HorizontalBox
 import com.patrykandpatrick.vico.compose.cartesian.data.lineSeries
 import com.patrykandpatrick.vico.compose.cartesian.layer.LineCartesianLayer
 import com.patrykandpatrick.vico.compose.cartesian.layer.rememberLineCartesianLayer
@@ -101,6 +103,21 @@ private const val SERIES_DASHBOARD_SMB = "dashboard_smb"
 
 /** All prediction series identifiers */
 private val PREDICTION_SERIES = listOf(SERIES_PRED_IOB, SERIES_PRED_COB, SERIES_PRED_ACOB, SERIES_PRED_UAM, SERIES_PRED_ZT)
+
+private fun interpolateBgAtTimestamp(timestamp: Long, sortedPoints: List<BgDataPoint>): Double {
+    if (sortedPoints.isEmpty()) return 0.0
+    val before = sortedPoints.lastOrNull { it.timestamp <= timestamp }
+    val after = sortedPoints.firstOrNull { it.timestamp > timestamp }
+    return when {
+        before == null -> after!!.value
+        after == null  -> before.value
+
+        else           -> {
+            val t = (timestamp - before.timestamp).toDouble() / (after.timestamp - before.timestamp).toDouble()
+            before.value + t * (after.value - before.value)
+        }
+    }
+}
 
 /**
  * BG Graph using Vico — dual-layer chart.
@@ -273,11 +290,13 @@ fun BgGraphCompose(
         val bucketedPoints = seriesRegistry[SERIES_BUCKETED] ?: emptyList()
         val smbPoints = seriesRegistry[SERIES_DASHBOARD_SMB] ?: emptyList()
 
-        if (regularPoints.isEmpty() && bucketedPoints.isEmpty() && smbPoints.isEmpty()) return
+        // Note: do NOT early-return when there are no BG points. With a clean DB the chart must
+        // still build its frame (axes, now-line, in-range belt) via the normalizer + dummy layers,
+        // matching the COB graph. The per-layer logic below already handles empty series.
 
         modelProducer.runTransaction {
             // Block 1 → BG layer (layer 0, start axis)
-            lineSeries {
+            lineModel {
                 val activeSeries = mutableListOf<String>()
 
                 if (regularPoints.isNotEmpty()) {
@@ -323,7 +342,7 @@ fun BgGraphCompose(
             }
 
             // Block 2 → Basal layer (layer 1, end axis)
-            lineSeries {
+            lineModel {
                 if (currentBasalData.profileBasal.size >= 2) {
                     val pts = currentBasalData.profileBasal
                         .map { timestampToX(it.timestamp, minTimestamp) to it.value }
@@ -346,7 +365,7 @@ fun BgGraphCompose(
             }
 
             // Block 3 → Target line layer (layer 2, start axis)
-            lineSeries {
+            lineModel {
                 if (currentTargetData.targets.size >= 2) {
                     val pts = currentTargetData.targets
                         .map { timestampToX(it.timestamp, minTimestamp) to viewModel.glucoseMgdlToChartY(it.value) }
@@ -362,10 +381,8 @@ fun BgGraphCompose(
                 series(x = listOf(0.0, maxX), y = listOf(lowY,  lowY))   // low mark
             }
 
-            // Block 4 → EPS layer (layer 3, end axis — Y-values normalized to basal coordinate space)
-            // EPS shares End axis with basal, so Y-values must fit within basalMaxY range.
-            // Place icons at 75% of chart height for 100% profile, scaled proportionally.
-            lineSeries {
+            // Block 4 → EPS layer (layer 3, start axis — Y at interpolated BG value at switch timestamp)
+            lineModel {
                 if (currentEpsPoints.isNotEmpty()) {
                     val epsBaseline = currentBasalData.maxBasal * 4.0 * 0.75 // 75% of basalMaxY
                     val pts = currentEpsPoints
@@ -380,13 +397,13 @@ fun BgGraphCompose(
 
             // Block 5 → Activity layer (layer 4, start axis — Y-values normalized to BG coordinate space)
             // Scale so maxActivity maps to 80% of maxBgY (same as legacy: maxY * 0.8 / maxIAValue)
-            lineSeries {
+            lineModel {
                 val maxAct = currentActivityData.maxActivity
                 if (!showActivityOnMainChart || maxAct <= 0.0 || currentActivityData.activity.size < 2) {
                     // Activity disabled or no data — emit dummy series (history + prediction)
                     series(x = listOf(0.0, 1.0), y = listOf(0.0, 0.0))
                     series(x = listOf(0.0, 1.0), y = listOf(0.0, 0.0))
-                    return@lineSeries
+                    return@lineModel
                 }
                 val scaleFactor = currentMaxBgY * 0.8 / maxAct
 
@@ -1042,66 +1059,62 @@ fun BgGraphCompose(
     ) {
         key(generalUnits) {
 
-        CartesianChartHost(
-            chart = rememberCartesianChart(
-                // Layer 0: BG (start axis, visible)
-                rememberLineCartesianLayer(
-                    lineProvider = LineCartesianLayer.LineProvider.series(bgLines),
-                    rangeProvider = startAxisRangeProvider,
-                    verticalAxisPosition = Axis.Position.Vertical.Start
-                ),
-                // Layer 1: Basal (end axis, hidden — no endAxis parameter)
-                rememberLineCartesianLayer(
-                    lineProvider = LineCartesianLayer.LineProvider.series(basalLines),
-                    rangeProvider = endAxisRangeProvider,
-                    verticalAxisPosition = Axis.Position.Vertical.End
-                ),
-                // Layer 2: Target line (start axis — shares BG Y-axis range)
-                rememberLineCartesianLayer(
-                    lineProvider = LineCartesianLayer.LineProvider.series(targetLines),
-                    rangeProvider = startAxisRangeProvider,
-                    verticalAxisPosition = Axis.Position.Vertical.Start
-                ),
-                // Layer 3: EPS (end axis — shares basalMaxY range, EPS Y-values normalized in rebuildChart)
-                rememberLineCartesianLayer(
-                    lineProvider = LineCartesianLayer.LineProvider.series(epsLines),
-                    rangeProvider = endAxisRangeProvider,
-                    verticalAxisPosition = Axis.Position.Vertical.End
-                ),
-                // Layer 4: Activity (start axis — shares BG Y-axis range, values normalized in rebuildChart)
-                rememberLineCartesianLayer(
-                    lineProvider = LineCartesianLayer.LineProvider.series(activityLines),
-                    rangeProvider = startAxisRangeProvider,
-                    verticalAxisPosition = Axis.Position.Vertical.Start
-                ),
-                // Layer 5: SMB markers (start axis — triangle points fixed at lowMark, no line)
-                rememberLineCartesianLayer(
-                    lineProvider = LineCartesianLayer.LineProvider.series(smbLines),
-                    rangeProvider = startAxisRangeProvider,
-                    verticalAxisPosition = Axis.Position.Vertical.Start
-                ),
-                startAxis = VerticalAxis.rememberStart(
-                    itemPlacer = VerticalAxis.ItemPlacer.step({ yAxisStep }),
-                    valueFormatter = bgStartAxisValueFormatter,
-                    label = rememberTextComponent(
-                        style = TextStyle(color = axisLabelColor),
-                        minWidth = TextComponent.MinWidth.fixed(30.dp)
+            CartesianChartHost(
+                chart = rememberCartesianChart(
+                    // Layer 0: BG (start axis, visible)
+                    rememberLineCartesianLayer(
+                        lineProvider = LineCartesianLayer.LineProvider.series(bgLines),
+                        rangeProvider = startAxisRangeProvider,
+                        verticalAxisPosition = Axis.Position.Vertical.Start
                     ),
-                    guideline = LineComponent(fill = Fill(scheme.outlineVariant.copy(alpha = gridGuideAlpha)))
-                ),
-                bottomAxis = HorizontalAxis.rememberBottom(
-                    valueFormatter = timeFormatter,
-                    itemPlacer = bottomAxisItemPlacer,
-                    label = rememberTextComponent(
-                        style = TextStyle(color = axisLabelColor)
+                    // Layer 1: Basal (end axis, hidden — no endAxis parameter)
+                    rememberLineCartesianLayer(
+                        lineProvider = LineCartesianLayer.LineProvider.series(basalLines),
+                        rangeProvider = endAxisRangeProvider,
+                        verticalAxisPosition = Axis.Position.Vertical.End
                     ),
-                    guideline = LineComponent(fill = Fill(scheme.outlineVariant.copy(alpha = gridGuideAlpha)))
-                ),
-                decorations = decorations,
-                marker = if (dashboardSmbTapController != null) dashboardSmbTapMarker else null,
-                markerController = dashboardSmbTapController ?: defaultMarkerController,
-
-                getXStep = { 1.0 }
+                    // Layer 2: Target line (start axis — shares BG Y-axis range)
+                    rememberLineCartesianLayer(
+                        lineProvider = LineCartesianLayer.LineProvider.series(targetLines),
+                        rangeProvider = startAxisRangeProvider,
+                        verticalAxisPosition = Axis.Position.Vertical.Start
+                    ),
+                    // Layer 3: EPS (start axis — Y at interpolated BG value, same range as BG layer)
+                    rememberLineCartesianLayer(
+                        lineProvider = LineCartesianLayer.LineProvider.series(epsLines),
+                        rangeProvider = startAxisRangeProvider,
+                        verticalAxisPosition = Axis.Position.Vertical.Start
+                    ),
+                    // Layer 4: Activity (start axis — shares BG Y-axis range, values normalized in rebuildChart)
+                    rememberLineCartesianLayer(
+                        lineProvider = LineCartesianLayer.LineProvider.series(activityLines),
+                        rangeProvider = startAxisRangeProvider,
+                        verticalAxisPosition = Axis.Position.Vertical.Start
+                    ),
+                    // Layer 5: SMB markers (start axis — triangle points fixed at lowMark, no line)
+                    rememberLineCartesianLayer(
+                        lineProvider = LineCartesianLayer.LineProvider.series(smbLines),
+                        rangeProvider = startAxisRangeProvider,
+                        verticalAxisPosition = Axis.Position.Vertical.Start
+                    ),
+                    startAxis = VerticalAxis.rememberStart(
+                        itemPlacer = VerticalAxis.ItemPlacer.step({ 1.0 }),
+                        label = rememberTextComponent(
+                            style = TextStyle(color = MaterialTheme.colorScheme.onSurface),
+                            minWidth = TextComponent.MinWidth.fixed(30.dp)
+                        ),
+                        guideline = LineComponent(fill = Fill(MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)))
+                    ),
+                    bottomAxis = HorizontalAxis.rememberBottom(
+                        valueFormatter = timeFormatter,
+                        itemPlacer = bottomAxisItemPlacer,
+                        label = rememberTextComponent(
+                            style = TextStyle(color = MaterialTheme.colorScheme.onSurface)
+                        ),
+                        guideline = LineComponent(fill = Fill(MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)))
+                    ),
+                    decorations = decorations,
+                    getXStep = { _, _, _ -> 1.0 }
             ),
             modelProducer = modelProducer,
             modifier = modifier
@@ -1114,68 +1127,68 @@ fun BgGraphCompose(
     }
 }
 
-    private fun interpolateBgForDashboardMarker(
-        epochMs: Long,
-        sortedAsc: List<BgDataPoint>,
-        fallbackY: Double,
-    ): Double {
-        if (sortedAsc.isEmpty()) return fallbackY
-        if (sortedAsc.size == 1) return sortedAsc.first().value
-        if (epochMs <= sortedAsc.first().timestamp) return sortedAsc.first().value
-        if (epochMs >= sortedAsc.last().timestamp) return sortedAsc.last().value
-        for (i in 0 until sortedAsc.lastIndex) {
-            val a = sortedAsc[i]
-            val b = sortedAsc[i + 1]
-            if (epochMs < a.timestamp || epochMs > b.timestamp) continue
-            val span = (b.timestamp - a.timestamp).toDouble().coerceAtLeast(1.0)
-            val t = ((epochMs - a.timestamp).toDouble() / span).coerceIn(0.0, 1.0)
-            return a.value + t * (b.value - a.value)
+        private fun interpolateBgForDashboardMarker(
+            epochMs: Long,
+            sortedAsc: List<BgDataPoint>,
+            fallbackY: Double,
+        ): Double {
+            if (sortedAsc.isEmpty()) return fallbackY
+            if (sortedAsc.size == 1) return sortedAsc.first().value
+            if (epochMs <= sortedAsc.first().timestamp) return sortedAsc.first().value
+            if (epochMs >= sortedAsc.last().timestamp) return sortedAsc.last().value
+            for (i in 0 until sortedAsc.lastIndex) {
+                val a = sortedAsc[i]
+                val b = sortedAsc[i + 1]
+                if (epochMs < a.timestamp || epochMs > b.timestamp) continue
+                val span = (b.timestamp - a.timestamp).toDouble().coerceAtLeast(1.0)
+                val t = ((epochMs - a.timestamp).toDouble() / span).coerceIn(0.0, 1.0)
+                return a.value + t * (b.value - a.value)
+            }
+            return sortedAsc.last().value
         }
-        return sortedAsc.last().value
-    }
 
-    /**
-     * Shows nothing; enables Vico's tap pipeline so we can match [LineCartesianLayerMarkerTarget]s for the
-     * dashboard SMB series without duplicating scroll/zoom → model-X math.
-     */
-    private class DashboardSmbTapMarkerController(
-        private val smbs: List<ChartSmbMarker>,
-        private val minTimestamp: Long,
-        private val onSmbTap: (ChartSmbMarker) -> Unit,
-    ) : CartesianMarkerController {
+        /**
+         * Shows nothing; enables Vico's tap pipeline so we can match [LineCartesianLayerMarkerTarget]s for the
+         * dashboard SMB series without duplicating scroll/zoom → model-X math.
+         */
+        private class DashboardSmbTapMarkerController(
+            private val smbs: List<ChartSmbMarker>,
+            private val minTimestamp: Long,
+            private val onSmbTap: (ChartSmbMarker) -> Unit,
+        ) : CartesianMarkerController {
 
-        override val acceptsLongPress: Boolean get() = false
+            override val acceptsLongPress: Boolean get() = false
 
-        override fun shouldAcceptInteraction(
-            interaction: Interaction,
-            targets: List<CartesianMarker.Target>,
-        ): Boolean {
-            if (interaction !is Interaction.Tap || targets.isEmpty()) return true
-            val tapX = interaction.point.x
-            var bestSmb: ChartSmbMarker? = null
-            var bestDist = Float.POSITIVE_INFINITY
-            for (t in targets) {
-                if (t !is LineCartesianLayerMarkerTarget) continue
-                val smb = smbs.firstOrNull { smb ->
-                    abs(timestampToX(smb.timestampEpochMs, minTimestamp) - t.x) < MODEL_X_MATCH_EPS
-                } ?: continue
-                val d = abs(t.canvasX - tapX)
-                if (d <= SMB_TAP_MAX_CANVAS_X_DIST_PX && d < bestDist) {
-                    bestDist = d
-                    bestSmb = smb
+            override fun shouldAcceptInteraction(
+                interaction: Interaction,
+                targets: List<CartesianMarker.Target>,
+            ): Boolean {
+                if (interaction !is Interaction.Tap || targets.isEmpty()) return true
+                val tapX = interaction.point.x
+                var bestSmb: ChartSmbMarker? = null
+                var bestDist = Float.POSITIVE_INFINITY
+                for (t in targets) {
+                    if (t !is LineCartesianLayerMarkerTarget) continue
+                    val smb = smbs.firstOrNull { smb ->
+                        abs(timestampToX(smb.timestampEpochMs, minTimestamp) - t.x) < MODEL_X_MATCH_EPS
+                    } ?: continue
+                    val d = abs(t.canvasX - tapX)
+                    if (d <= SMB_TAP_MAX_CANVAS_X_DIST_PX && d < bestDist) {
+                        bestDist = d
+                        bestSmb = smb
+                    }
                 }
+                if (bestSmb != null) {
+                    onSmbTap(bestSmb)
+                    return false
+                }
+                return true
             }
-            if (bestSmb != null) {
-                onSmbTap(bestSmb)
-                return false
+
+            override fun shouldShowMarker(interaction: Interaction, targets: List<CartesianMarker.Target>): Boolean = false
+
+            private companion object {
+                private const val MODEL_X_MATCH_EPS = 0.02
+                private const val SMB_TAP_MAX_CANVAS_X_DIST_PX = 56f
             }
-            return true
         }
-
-        override fun shouldShowMarker(interaction: Interaction, targets: List<CartesianMarker.Target>): Boolean = false
-
-        private companion object {
-            private const val MODEL_X_MATCH_EPS = 0.02
-            private const val SMB_TAP_MAX_CANVAS_X_DIST_PX = 56f
-        }
-    }
