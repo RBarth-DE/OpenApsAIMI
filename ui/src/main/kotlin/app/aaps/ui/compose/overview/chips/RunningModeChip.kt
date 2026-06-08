@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalMinimumInteractiveComponentSize
 import androidx.compose.material3.MaterialTheme
@@ -30,8 +29,6 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.sp
 import app.aaps.core.data.model.RM
 import app.aaps.core.ui.compose.AapsSpacing
 import app.aaps.core.ui.compose.AapsTheme
@@ -46,7 +43,6 @@ import app.aaps.core.ui.compose.icons.IcLoopPausedPump
 import app.aaps.core.ui.compose.icons.IcLoopSuperbolus
 import app.aaps.core.ui.compose.loopColor
 import app.aaps.ui.compose.overview.graphs.TriangleShape
-
 
 @Composable
 fun RunningModeChip(
@@ -84,7 +80,7 @@ fun RunningModeChip(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier
                         .fillMaxHeight()
-                        .padding(start = AapsSpacing.medium, end = AapsSpacing.small, top = AapsSpacing.small, bottom = AapsSpacing.small)
+                        .padding(start = AapsSpacing.small, end = AapsSpacing.extraSmall, top = 0.dp , bottom = 0.dp)
                 ) {
                     Box(modifier = Modifier.size(AapsSpacing.chipIconSize)) {
                         Icon(
@@ -102,10 +98,11 @@ fun RunningModeChip(
                                     .background(AapsTheme.elementColors.insulin, TriangleShape)
                             )
                         }
-                    }
-                    if (remaining.isNotEmpty()) {
+                    }  // <-- Icon-Box endet hier
+                    val displayText = remaining.ifEmpty { text }
+                    if (displayText.isNotEmpty()) {
                         Text(
-                            text = remaining,
+                            text = displayText,
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.padding(start = AapsSpacing.small)

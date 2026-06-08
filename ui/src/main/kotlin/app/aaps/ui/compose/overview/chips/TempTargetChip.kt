@@ -2,6 +2,7 @@ package app.aaps.ui.compose.overview.chips
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -35,7 +36,7 @@ import app.aaps.core.ui.compose.icons.IcTtHypo
 import app.aaps.core.ui.compose.icons.IcTtManual
 import app.aaps.core.ui.compose.ttReasonColor
 import app.aaps.ui.compose.main.TempTargetChipState
-
+import androidx.compose.foundation.layout.fillMaxHeight
 
 @Composable
 fun TempTargetChip(
@@ -64,16 +65,21 @@ fun TempTargetChip(
         onClick = { haptic.performHapticFeedback(HapticFeedbackType.LongPress); onClick() },
         shape = RoundedCornerShape(AapsSpacing.chipCornerRadius),
         color = containerColor,
+        shadowElevation = 0.dp,
+        tonalElevation = 0.dp,
         modifier = modifier
             .fillMaxWidth()
             .height(AapsSpacing.chipHeight)
     ) {
-        Box(modifier = Modifier.fillMaxSize()) {
+        Column (
+            modifier = Modifier.fillMaxHeight()
+        ){
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier
-                    .fillMaxSize()
-                    .padding(horizontal = AapsSpacing.medium, vertical = AapsSpacing.small)
+                    .weight(1f)
+                    .fillMaxWidth()
+                    .padding(horizontal = AapsSpacing.small, vertical = 0.dp)
             ) {
                 Icon(
                     imageVector = reason.toIcon(),
@@ -91,16 +97,21 @@ fun TempTargetChip(
                     SceneBadge(modifier = Modifier.padding(start = AapsSpacing.small))
                 }
             }
-            if (progress > 0f) {
-                LinearProgressIndicator(
-                    progress = { progress },
-                    modifier = Modifier
-                        .align(Alignment.BottomCenter)
-                        .fillMaxWidth()
-                        .height(AapsSpacing.chipProgressHeight),
-                    color = iconColor,
-                    trackColor = iconColor.copy(alpha = 0.3f)
-                )
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(AapsSpacing.chipProgressHeight)
+            ) {
+                if (progress > 0f) {
+                    LinearProgressIndicator(
+                        progress = { progress },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(AapsSpacing.chipProgressHeight),
+                        color = iconColor,
+                        trackColor = iconColor.copy(alpha = 0.3f)
+                    )
+                }
             }
         }
     }

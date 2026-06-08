@@ -97,10 +97,10 @@ fun OverviewChipsColumn(
                 modifier = Modifier
             )
         }
-        SensitivityChipBlock(
-            state = sensitivityUiState,
-            modifier = Modifier.fillMaxWidth()
-        )
+        // SensitivityChipBlock(
+        //     state = sensitivityUiState,
+        //     modifier = Modifier.fillMaxWidth()
+        // )
     }
 }
 
@@ -120,35 +120,34 @@ private fun NarrowChips(
     onNavigate: (NavigationRequest) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    if (runningModeText.isNotEmpty()) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            RunningModeChip(
-                mode = runningMode,
-                text = runningModeText,
-                progress = runningModeProgress,
-                modifier = Modifier.weight(1f),
-                remaining = runningModeRemaining,
-                sceneManaged = runningModeSceneManaged,
-                smbEnabled = smbEnabled,
-                onClick = { onNavigate(NavigationRequest.Element(ElementType.RUNNING_MODE)) }
-            )
-        }
-    }
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(AapsSpacing.small)
+    Column(
+        modifier = modifier,
+        verticalArrangement = Arrangement.spacedBy(2.dp)
     ) {
-        if (tempTargetText.isNotEmpty()) {
-            TempTargetChip(
-                targetText = tempTargetText,
-                state = tempTargetState,
-                progress = tempTargetProgress,
-                reason = tempTargetReason,
-                onClick = { onNavigate(NavigationRequest.Element(ElementType.TEMP_TARGET_MANAGEMENT)) },
-                modifier = Modifier.fillMaxWidth(),
-                sceneManaged = tempTargetSceneManaged
-            )
+        if (runningModeText.isNotEmpty()) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                RunningModeChip(
+                    mode = runningMode,
+                    text = runningModeText,
+                    progress = runningModeProgress,
+                    modifier = Modifier.weight(1f),
+                    remaining = runningModeRemaining,
+                    sceneManaged = runningModeSceneManaged,
+                    smbEnabled = smbEnabled,
+                    onClick = { onNavigate(NavigationRequest.Element(ElementType.RUNNING_MODE)) }
+                )
+            }
+            if (tempTargetText.isNotEmpty()) {
+                TempTargetChip(
+                    targetText = tempTargetText,
+                    state = tempTargetState,
+                    progress = tempTargetProgress,
+                    reason = tempTargetReason,
+                    onClick = { onNavigate(NavigationRequest.Element(ElementType.TEMP_TARGET_MANAGEMENT)) },
+                    modifier = Modifier.fillMaxWidth(),
+                    sceneManaged = tempTargetSceneManaged
+                )
+            }
         }
     }
 }
-
