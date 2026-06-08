@@ -6,11 +6,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -18,26 +14,31 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import app.aaps.core.data.model.RM
 import app.aaps.core.data.model.TT
+import app.aaps.core.interfaces.overview.graph.TbrState
+import app.aaps.core.ui.compose.AapsSpacing
 import app.aaps.core.ui.compose.icons.IcSettingsOff
 import app.aaps.core.ui.compose.navigation.ElementType
 import app.aaps.core.ui.compose.navigation.NavigationRequest
 import app.aaps.ui.compose.main.TempTargetChipState
 import app.aaps.ui.compose.overview.chips.RunningModeChip
+import app.aaps.ui.compose.overview.chips.SensitivityUiState
+import app.aaps.ui.compose.overview.chips.TbrChip
 import app.aaps.ui.compose.overview.chips.TempTargetChip
 
 @Composable
 fun OverviewChipsColumn(
     runningMode: RM.Mode,
     runningModeText: String,
+    runningModeRemaining: String,
     runningModeProgress: Float,
     runningModeSceneManaged: Boolean = false,
     smbEnabled: Boolean = false,
-    isSimpleMode: Boolean,
     tempTargetText: String,
     tempTargetState: TempTargetChipState,
     tempTargetProgress: Float,
     tempTargetReason: TT.Reason?,
     tempTargetSceneManaged: Boolean = false,
+    sensitivityUiState: SensitivityUiState,
     onNavigate: (NavigationRequest) -> Unit,
     modifier: Modifier = Modifier,
     trailingContent: @Composable (RowScope.() -> Unit)? = null
@@ -60,10 +61,10 @@ fun OverviewChipsColumn(
                         NarrowChips(
                             runningMode = runningMode,
                             runningModeText = runningModeText,
+                            runningModeRemaining = runningModeRemaining,
                             runningModeProgress = runningModeProgress,
                             runningModeSceneManaged = runningModeSceneManaged,
                             smbEnabled = smbEnabled,
-                            isSimpleMode = isSimpleMode,
                             tempTargetText = tempTargetText,
                             tempTargetState = tempTargetState,
                             tempTargetProgress = tempTargetProgress,
@@ -83,10 +84,10 @@ fun OverviewChipsColumn(
             NarrowChips(
                 runningMode = runningMode,
                 runningModeText = runningModeText,
+                runningModeRemaining = runningModeRemaining,
                 runningModeProgress = runningModeProgress,
                 runningModeSceneManaged = runningModeSceneManaged,
                 smbEnabled = smbEnabled,
-                isSimpleMode = isSimpleMode,
                 tempTargetText = tempTargetText,
                 tempTargetState = tempTargetState,
                 tempTargetProgress = tempTargetProgress,
@@ -96,6 +97,10 @@ fun OverviewChipsColumn(
                 modifier = Modifier
             )
         }
+        SensitivityChipBlock(
+            state = sensitivityUiState,
+            modifier = Modifier.fillMaxWidth()
+        )
     }
 }
 
@@ -103,10 +108,10 @@ fun OverviewChipsColumn(
 private fun NarrowChips(
     runningMode: RM.Mode,
     runningModeText: String,
+    runningModeRemaining: String,
     runningModeProgress: Float,
     runningModeSceneManaged: Boolean,
     smbEnabled: Boolean,
-    isSimpleMode: Boolean,
     tempTargetText: String,
     tempTargetState: TempTargetChipState,
     tempTargetProgress: Float,
@@ -115,33 +120,24 @@ private fun NarrowChips(
     onNavigate: (NavigationRequest) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Column(
-        modifier = modifier,
-        verticalArrangement = Arrangement.spacedBy(2.dp)
-        ) {
-        if (runningModeText.isNotEmpty()) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                RunningModeChip(
-                    mode = runningMode,
-                    text = runningModeText,
-                    progress = runningModeProgress,
-                    modifier = Modifier.weight(1f),
-                    sceneManaged = runningModeSceneManaged,
-                    smbEnabled = smbEnabled,
-                    onClick = { onNavigate(NavigationRequest.Element(ElementType.RUNNING_MODE)) }
-                )
-                if (isSimpleMode) {
-                    Icon(
-                        imageVector = IcSettingsOff,
-                        contentDescription = stringResource(app.aaps.core.ui.R.string.simple_mode),
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier
-                            .padding(start = 4.dp)
-                            .size(20.dp)
-                    )
-                }
-            }
+    if (runningModeText.isNotEmpty()) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            RunningModeChip(
+                mode = runningMode,
+                text = runningModeText,
+                progress = runningModeProgress,
+                modifier = Modifier.weight(1f),
+                remaining = runningModeRemaining,
+                sceneManaged = runningModeSceneManaged,
+                smbEnabled = smbEnabled,
+                onClick = { onNavigate(NavigationRequest.Element(ElementType.RUNNING_MODE)) }
+            )
         }
+    }
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(AapsSpacing.small)
+    ) {
         if (tempTargetText.isNotEmpty()) {
             TempTargetChip(
                 targetText = tempTargetText,

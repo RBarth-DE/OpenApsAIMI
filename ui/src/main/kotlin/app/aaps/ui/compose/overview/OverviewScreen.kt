@@ -1,5 +1,6 @@
 package app.aaps.ui.compose.overview
 
+import android.content.res.Configuration
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.PaddingValues
@@ -47,6 +48,7 @@ fun OverviewScreen(
     tempTargetRecordId: Long = 0,
     runningMode: RM.Mode,
     runningModeText: String,
+    runningModeRemaining: String,
     runningModeProgress: Float,
     runningModeRecordId: Long = 0,
     smbEnabled: Boolean,
@@ -102,7 +104,9 @@ fun OverviewScreen(
     val profileSceneManaged = activeSceneState?.priorState?.scenePsId
         ?.let { it == profilePsId && it > 0 } == true
 
-    val isTablet = LocalConfiguration.current.smallestScreenWidthDp >= TABLET_MIN_SW_DP
+    val configuration = LocalConfiguration.current
+    val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+    val isTablet = configuration.smallestScreenWidthDp >= TABLET_MIN_SW_DP && isLandscape
 
     Box(modifier = modifier.fillMaxSize()) {
         if (isTablet) {
@@ -114,6 +118,7 @@ fun OverviewScreen(
                 tempTargetSceneManaged = tempTargetSceneManaged,
                 runningMode = runningMode,
                 runningModeText = runningModeText,
+                runningModeRemaining = runningModeRemaining,
                 runningModeProgress = runningModeProgress,
                 runningModeSceneManaged = runningModeSceneManaged,
                 smbEnabled = smbEnabled,
@@ -133,7 +138,7 @@ fun OverviewScreen(
                 formatDuration = formatDuration
             )
         } else BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
-            if (maxWidth >= SPLIT_LAYOUT_MIN_WIDTH) {
+            if (isLandscape && maxWidth >= SPLIT_LAYOUT_MIN_WIDTH) {
                 OverviewScreenSplit(
                     tempTargetText = tempTargetText,
                     tempTargetState = tempTargetState,
@@ -142,6 +147,7 @@ fun OverviewScreen(
                     tempTargetSceneManaged = tempTargetSceneManaged,
                     runningMode = runningMode,
                     runningModeText = runningModeText,
+                    runningModeRemaining = runningModeRemaining,
                     runningModeProgress = runningModeProgress,
                     runningModeSceneManaged = runningModeSceneManaged,
                     smbEnabled = smbEnabled,
@@ -169,6 +175,7 @@ fun OverviewScreen(
                     tempTargetSceneManaged = tempTargetSceneManaged,
                     runningMode = runningMode,
                     runningModeText = runningModeText,
+                    runningModeRemaining = runningModeRemaining,
                     runningModeProgress = runningModeProgress,
                     runningModeSceneManaged = runningModeSceneManaged,
                     isSimpleMode = isSimpleMode,

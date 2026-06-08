@@ -237,6 +237,7 @@ fun MainScreen(
                         tempTargetRecordId = uiState.tempTargetRecordId,
                         runningMode = uiState.runningMode,
                         runningModeText = uiState.runningModeText,
+                        runningModeRemaining = uiState.runningModeRemaining,
                         runningModeProgress = uiState.runningModeProgress,
                         runningModeRecordId = uiState.runningModeRecordId,
                         smbEnabled = uiState.smbEnabled,
@@ -301,37 +302,37 @@ fun MainScreen(
                                 .background(MaterialTheme.colorScheme.surface)
                         )
 
-                        // Top bar overlay
-                        AnimatedVisibility(
-                            visible = showChrome,
-                            enter = slideInVertically { -it },
-                            exit = slideOutVertically { -it },
-                            modifier = Modifier
-                                .align(Alignment.TopCenter)
-                                .padding(top = scaffoldPadding.calculateTopPadding())
-                        ) {
-                            MainTopBar(
-                                searchUiState = searchUiState,
-                                onMenuClick = {
-                                    scope.launch {
-                                        drawerState.open()
-                                        onMenuClick()
-                                    }
-                                },
-                                onUserManualClick = onUserManualClick,
-                                onPreferencesClick = { onNavigate(NavigationRequest.Element(ElementType.SETTINGS)) },
-                                onSearchQueryChange = onSearchQueryChange,
-                                onSearchClear = onSearchClear,
-                                onSearchActiveChange = onSearchActiveChange,
-                                // Guard against transient 0 heights during AnimatedVisibility exit:
-                                // the resulting contentPadding invalidation can schedule a remeasure
-                                // on a node that's losing its owner — crashes in dispatchDraw.
-                                graphViewModel = graphViewModel,
-                                modifier = Modifier.onSizeChanged {
-                                    if (it.height > 0 && it.height != topBarHeightPx) topBarHeightPx = it.height
+                    // Top bar overlay
+                    AnimatedVisibility(
+                        visible = showChrome,
+                        enter = slideInVertically { -it },
+                        exit = slideOutVertically { -it },
+                        modifier = Modifier
+                            .align(Alignment.TopCenter)
+                            .padding(top = scaffoldPadding.calculateTopPadding())
+                    ) {
+                        MainTopBar(
+                            searchUiState = searchUiState,
+                            onMenuClick = {
+                                scope.launch {
+                                    drawerState.open()
+                                    onMenuClick()
                                 }
-                            )
-                        }
+                            },
+                            onUserManualClick = onUserManualClick,
+                            onPreferencesClick = { onNavigate(NavigationRequest.Element(ElementType.SETTINGS)) },
+                            onSearchQueryChange = onSearchQueryChange,
+                            onSearchClear = onSearchClear,
+                            onSearchActiveChange = onSearchActiveChange,
+                            // Guard against transient 0 heights during AnimatedVisibility exit:
+                            // the resulting contentPadding invalidation can schedule a remeasure
+                            // on a node that's losing its owner — crashes in dispatchDraw.
+                            graphViewModel = graphViewModel,
+                            modifier = Modifier.onSizeChanged {
+                                if (it.height > 0 && it.height != topBarHeightPx) topBarHeightPx = it.height
+                            }
+                        )
+                    }
 
                     // Bottom bar overlay
                     AnimatedVisibility(

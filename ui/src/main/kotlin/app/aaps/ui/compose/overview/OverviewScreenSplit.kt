@@ -56,6 +56,7 @@ fun OverviewScreenSplit(
     tempTargetSceneManaged: Boolean = false,
     runningMode: RM.Mode,
     runningModeText: String,
+    runningModeRemaining: String,
     runningModeProgress: Float,
     runningModeSceneManaged: Boolean = false,
     smbEnabled: Boolean,
@@ -169,14 +170,15 @@ fun OverviewScreenSplit(
                         OverviewChipsColumn(
                             runningMode = runningMode,
                             runningModeText = runningModeText,
+                            runningModeRemaining = runningModeRemaining,
                             runningModeProgress = runningModeProgress,
                             runningModeSceneManaged = runningModeSceneManaged,
-                            isSimpleMode = isSimpleMode,
                             tempTargetText = tempTargetText,
                             tempTargetState = tempTargetState,
                             tempTargetProgress = tempTargetProgress,
                             tempTargetReason = tempTargetReason,
                             tempTargetSceneManaged = tempTargetSceneManaged,
+                            sensitivityUiState = sensitivityUiState,
                             onNavigate = onNavigate,
                         )
                         OverviewStatusPanel(

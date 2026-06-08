@@ -77,6 +77,7 @@ fun OverviewScreenStacked(
     tempTargetSceneManaged: Boolean = false,
     runningMode: RM.Mode,
     runningModeText: String,
+    runningModeRemaining: String,
     runningModeProgress: Float,
     runningModeSceneManaged: Boolean = false,
     smbEnabled: Boolean,
@@ -180,15 +181,16 @@ fun OverviewScreenStacked(
                 OverviewChipsColumn(
                     runningMode = runningMode,
                     runningModeText = runningModeText,
+                    runningModeRemaining = runningModeRemaining,
                     runningModeProgress = runningModeProgress,
                     runningModeSceneManaged = runningModeSceneManaged,
                     smbEnabled = smbEnabled,
-                    isSimpleMode = isSimpleMode,
                     tempTargetText = tempTargetText,
                     tempTargetState = tempTargetState,
                     tempTargetProgress = tempTargetProgress,
                     tempTargetReason = tempTargetReason,
                     tempTargetSceneManaged = tempTargetSceneManaged,
+                    sensitivityUiState = sensitivityUiState,
                     onNavigate = onNavigate
                 )
                 // HR, Steps,LastSMB, Basal, IOB

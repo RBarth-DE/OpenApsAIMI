@@ -56,6 +56,7 @@ fun OverviewScreenTablet(
     tempTargetSceneManaged: Boolean = false,
     runningMode: RM.Mode,
     runningModeText: String,
+    runningModeRemaining: String,
     runningModeProgress: Float,
     runningModeSceneManaged: Boolean = false,
     smbEnabled: Boolean,
@@ -131,7 +132,6 @@ fun OverviewScreenTablet(
                             timeAgoText = bgInfoState.timeAgoText,
                             showTimeAgo = false
                         )
-                        SensitivityChipBlock(state = sensitivityUiState)
                     }
 
                     Column(
@@ -147,15 +147,16 @@ fun OverviewScreenTablet(
                         OverviewChipsColumn(
                             runningMode = runningMode,
                             runningModeText = runningModeText,
+                            runningModeRemaining = runningModeRemaining,
                             runningModeProgress = runningModeProgress,
                             runningModeSceneManaged = runningModeSceneManaged,
                             smbEnabled = smbEnabled,
-                            isSimpleMode = isSimpleMode,
                             tempTargetText = tempTargetText,
                             tempTargetState = tempTargetState,
                             tempTargetProgress = tempTargetProgress,
                             tempTargetReason = tempTargetReason,
                             tempTargetSceneManaged = tempTargetSceneManaged,
+                            sensitivityUiState = sensitivityUiState,
                             onNavigate = onNavigate,
                         )
                     }
