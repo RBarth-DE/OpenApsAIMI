@@ -11,9 +11,13 @@ import androidx.health.connect.client.records.SleepSessionRecord
 import androidx.health.connect.client.records.SkinTemperatureRecord
 import androidx.health.connect.client.records.StepsRecord
 import app.aaps.plugins.aps.openAPSAIMI.physio.thermal.BasalBodyTemperatureMTR
+import app.aaps.plugins.aps.openAPSAIMI.physio.thermal.HcRecoveryProxyThermalSource
+import app.aaps.plugins.aps.openAPSAIMI.physio.thermal.OuraApiThermalClient
 import app.aaps.plugins.aps.openAPSAIMI.physio.thermal.ThermalDataCache
+import app.aaps.plugins.aps.openAPSAIMI.physio.thermal.ThermalDataOrigins
 import app.aaps.plugins.aps.openAPSAIMI.physio.thermal.ThermalDataWindowMTR
 import app.aaps.plugins.aps.openAPSAIMI.physio.thermal.ThermalSampleMTR
+import app.aaps.plugins.aps.openAPSAIMI.physio.thermal.ThermalSourceTier
 import androidx.health.connect.client.request.ReadRecordsRequest
 import androidx.health.connect.client.request.AggregateRequest
 import androidx.health.connect.client.time.TimeRangeFilter
@@ -53,7 +57,7 @@ import androidx.health.connect.client.records.metadata.DataOrigin
 class AIMIPhysioDataRepositoryMTR @Inject constructor(
     private val context: Context,
     private val aapsLogger: AAPSLogger,
-    private val unifiedActivityProvider: UnifiedActivityProviderMTR  // neu
+    private val ouraApiThermalClient: OuraApiThermalClient,
 ) {
 
     companion object {
@@ -365,24 +369,11 @@ class AIMIPhysioDataRepositoryMTR @Inject constructor(
      * Fetches the most recent Heart Rate sample (Real-Time check)
      * Lookback window: 1 hour
      */
-
-    fun fetchLastHeartRate(): Int {
-        // First UnifiedProvider (Garmin/Wear/HC)
-        val result = unifiedActivityProvider.getLatestHeartRate(3600_000L) // 1h Window
-        if (result != null) {
-            aapsLogger.debug(LTag.APS, "[$TAG] fetchLastHeartRate: ${result.bpm}bpm (source=${result.source})")
-            return result.bpm.toInt()
-        }
-        // HC Fallback bleibt wie bisher
-        return fetchLastHeartRateFromHC()
-    }
-
-    fun fetchLastHeartRateFromHC(): Int {
+    suspend fun fetchLastHeartRate(): Int {
         val client = healthConnectClient ?: return 0
         return try {
-            runBlocking {
-                withTimeout(API_TIMEOUT_MS) {
-                    withContext(Dispatchers.IO) {
+            withTimeout(API_TIMEOUT_MS) {
+                withContext(Dispatchers.IO) {
                         val now = Instant.now()
                         val start = now.minusSeconds(3600) // 1 hour lookback
                         val request = ReadRecordsRequest(
@@ -395,7 +386,6 @@ class AIMIPhysioDataRepositoryMTR @Inject constructor(
                         val lastRecord = response.records.firstOrNull()
                         // Get the last sample in the record series
                         lastRecord?.samples?.lastOrNull()?.beatsPerMinute?.toInt() ?: 0
-                    }
                 }
             }
         } catch (e: Exception) {
@@ -523,96 +513,6 @@ class AIMIPhysioDataRepositoryMTR @Inject constructor(
     // ═══════════════════════════════════════════════════════════════════════
     // STEPS DATA
     // ═══════════════════════════════════════════════════════════════════════
-
-    fun fetchRecentSteps(windowMinutes: Int = 15): Int {
-        val safeMins = windowMinutes.coerceAtLeast(1)
-        val windowMs = safeMins * 60 * 1000L
-        val cacheKey = "recentSteps_${safeMins}min"
-
-        // Cache check (60s TTL für Real-time)
-        val cached = cache[cacheKey]
-        if (cached != null && cached.isValid()) {
-            aapsLogger.debug(LTag.APS, "[$TAG] fetchRecentSteps: cache hit → ${cached.data}")
-            return (cached.data ?: 0 ) as Int
-        }
-
-        // UnifiedActivityProvider nutzen → Garmin > Wear > Phone > HC
-        val result = unifiedActivityProvider.getLatestSteps(windowMs)
-
-        val steps = result?.steps ?: run {
-            aapsLogger.debug(LTag.APS, "[$TAG] fetchRecentSteps: no data from UnifiedProvider, trying HC fallback")
-            fetchRecentStepsFromHC(safeMins)  // HC als letzter Fallback
-        }
-
-        val nowMs = System.currentTimeMillis()
-        cache[cacheKey] = CachedData(steps, nowMs, expiresAt = nowMs + 60_000L)
-
-        aapsLogger.info(LTag.APS, "[$TAG] ✅ fetchRecentSteps: steps=$steps over last $safeMins min" +
-            " (source=${result?.source ?: "HC-fallback"})")
-        return steps
-    }
-
-    /**
-     * Fetches steps count for the last [windowMinutes] minutes.
-     * Designed for real-time activity detection in the loop (e.g. steps15).
-     * Uses Health Connect aggregation with a short time window.
-     *
-     * @param windowMinutes  Look-back window in minutes (default: 15)
-     * @return Step count as Int, or 0 on error / unsupported mode
-     */
-    fun fetchRecentStepsFromHC(windowMinutes: Int = 15): Int {
-        val safeMins = windowMinutes.coerceAtLeast(1)
-        val cacheKey = "recentSteps_hc_${safeMins}min"
-
-        // Check preference first
-        val mode = UnifiedActivityProviderMTR.getMode(context)
-        if (mode == UnifiedActivityProviderMTR.MODE_DISABLED) return 0
-
-        // Fix:
-        val cached = cache[cacheKey]
-        if (cached != null && cached.isValid()) {
-            aapsLogger.debug(LTag.APS, "[$TAG] fetchRecentSteps: cache hit ($safeMins min) → ${cached.data}")
-            return (cached.data ?: 0) as Int
-        }
-
-        val client = healthConnectClient ?: return 0
-
-        return try {
-            runBlocking {
-                withTimeout(API_TIMEOUT_MS) {
-                    withContext(Dispatchers.IO) {
-                        val now = Instant.now()
-                        val startTime = now.minusSeconds((safeMins * 60).toLong())
-
-                        val response = client.aggregate(
-                            AggregateRequest(
-                                metrics = setOf(StepsRecord.COUNT_TOTAL),
-                                timeRangeFilter = TimeRangeFilter.between(startTime, now),
-                                dataOriginFilter = setOf(DataOrigin("com.garmin.android.apps.connectmobile"))
-                            )
-                        )
-
-                        val steps = (response[StepsRecord.COUNT_TOTAL] ?: 0L).toInt()
-
-                        val now2 = System.currentTimeMillis()
-                        cache[cacheKey] = CachedData(steps, now2, expiresAt = now2 + 60_000L)  // 60s TTL
-
-                        aapsLogger.info(LTag.APS, "[$TAG] ✅ fetchRecentSteps: steps=$steps over last $safeMins min")
-                        steps
-                    }
-                }
-            }
-        } catch (e: IllegalArgumentException) {
-            aapsLogger.warn(LTag.APS, "[$TAG] fetchRecentSteps: invalid time range – ${e.message}")
-            0
-        } catch (e: kotlinx.coroutines.TimeoutCancellationException) {
-            aapsLogger.warn(LTag.APS, "[$TAG] fetchRecentSteps: timeout after ${API_TIMEOUT_MS}ms")
-            0
-        } catch (e: Exception) {
-            aapsLogger.error(LTag.APS, "[$TAG] fetchRecentSteps: unexpected error – ${e.message}")
-            0
-        }
-    }
 
     /**
      * Fetches steps for last 7 days (daily totals)
@@ -893,7 +793,10 @@ class AIMIPhysioDataRepositoryMTR @Inject constructor(
     // ═══════════════════════════════════════════════════════════════════════
 
     /**
-     * Fetches skin-temperature deltas and latest basal body temperature for thermal belief.
+     * Fetches thermal data using a source chain:
+     * 1) Health Connect skin temperature (Samsung / future writers)
+     * 2) Oura API daily readiness deviation (Garmin/Oura do not write skin temp to HC)
+     * 3) HC recovery proxy from RHR + HRV (Garmin and Oura via HC)
      */
     internal suspend fun fetchThermalWindow(daysBack: Int = 3): ThermalDataWindowMTR {
         val cacheKey = "thermal_${daysBack}d"
@@ -902,7 +805,7 @@ class AIMIPhysioDataRepositoryMTR @Inject constructor(
             return cached.data ?: ThermalDataWindowMTR()
         }
 
-        val client = healthConnectClient ?: return ThermalDataWindowMTR()
+        val client = healthConnectClient
         val fetchedAtMs = System.currentTimeMillis()
 
         return try {
@@ -910,28 +813,83 @@ class AIMIPhysioDataRepositoryMTR @Inject constructor(
                 withContext(Dispatchers.IO) {
                     val now = Instant.now()
                     val start = now.minusSeconds(daysBack * 24L * 60L * 60L)
-                    val skinSamples = fetchSkinTemperatureSamples(client, start, now)
-                    val basal = fetchLatestBasalBodyTemperature(client, start, now)
-                    val window = ThermalDataWindowMTR(
-                        skinSamples = skinSamples,
-                        basalBodyTemperature = basal,
-                        fetchedAtMs = fetchedAtMs,
-                    )
-                    cache[cacheKey] = CachedData(window, System.currentTimeMillis())
-                    ThermalDataCache.update(window)
-                    if (skinSamples.isNotEmpty() || basal != null) {
-                        aapsLogger.info(
-                            LTag.APS,
-                            "[$TAG] ✅ Thermal: ${skinSamples.size} skin samples, basal=${basal?.temperatureCelsius}",
+
+                    if (client != null) {
+                        val hcSkin = fetchSkinTemperatureSamples(client, start, now)
+                        val basal = fetchLatestBasalBodyTemperature(client, start, now)
+                        if (hcSkin.isNotEmpty() || basal != null) {
+                            return@withContext storeThermalWindow(
+                                cacheKey = cacheKey,
+                                window = ThermalDataWindowMTR(
+                                    skinSamples = hcSkin,
+                                    basalBodyTemperature = basal,
+                                    fetchedAtMs = fetchedAtMs,
+                                    sourceTier = ThermalSourceTier.MEASURED,
+                                    resolvedSource = ThermalDataOrigins.HC_SKIN,
+                                ),
+                                logLabel = "HC skin: ${hcSkin.size} samples, basal=${basal?.temperatureCelsius}",
+                            )
+                        }
+                    }
+
+                    val ouraSamples = ouraApiThermalClient.fetchSamples(daysBack)
+                    if (ouraSamples.isNotEmpty()) {
+                        return@withContext storeThermalWindow(
+                            cacheKey = cacheKey,
+                            window = ThermalDataWindowMTR(
+                                skinSamples = ouraSamples,
+                                fetchedAtMs = fetchedAtMs,
+                                sourceTier = ThermalSourceTier.MEASURED,
+                                resolvedSource = ThermalDataOrigins.OURA_API,
+                            ),
+                            logLabel = "Oura API: ${ouraSamples.size} readiness samples",
                         )
                     }
-                    window
+
+                    val vitalsDays = daysBack.coerceAtLeast(7)
+                    val rhr = fetchMorningRHR(vitalsDays)
+                    val hrv = fetchHRVData(vitalsDays)
+                    val proxySamples = HcRecoveryProxyThermalSource.build(
+                        rhrPoints = rhr,
+                        hrvPoints = hrv,
+                        daysBack = daysBack,
+                        nowMs = fetchedAtMs,
+                    )
+                    if (proxySamples.isNotEmpty()) {
+                        val origin = proxySamples.last().dataOrigin
+                        return@withContext storeThermalWindow(
+                            cacheKey = cacheKey,
+                            window = ThermalDataWindowMTR(
+                                skinSamples = proxySamples,
+                                fetchedAtMs = fetchedAtMs,
+                                sourceTier = ThermalSourceTier.INFERRED,
+                                resolvedSource = origin,
+                            ),
+                            logLabel = "HC proxy: ${proxySamples.size} recovery samples ($origin)",
+                        )
+                    }
+
+                    ThermalDataWindowMTR(fetchedAtMs = fetchedAtMs).also {
+                        cache[cacheKey] = CachedData(it, System.currentTimeMillis())
+                        ThermalDataCache.update(it)
+                    }
                 }
             }
         } catch (e: Exception) {
             aapsLogger.warn(LTag.APS, "[$TAG] Thermal fetch failed: ${e.message}")
             ThermalDataWindowMTR(fetchedAtMs = fetchedAtMs)
         }
+    }
+
+    private fun storeThermalWindow(
+        cacheKey: String,
+        window: ThermalDataWindowMTR,
+        logLabel: String,
+    ): ThermalDataWindowMTR {
+        cache[cacheKey] = CachedData(window, System.currentTimeMillis())
+        ThermalDataCache.update(window)
+        aapsLogger.info(LTag.APS, "[$TAG] ✅ Thermal: $logLabel")
+        return window
     }
 
     private suspend fun fetchSkinTemperatureSamples(
