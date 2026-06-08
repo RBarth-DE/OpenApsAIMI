@@ -959,6 +959,12 @@ fun BgGraphCompose(
                 rangeProvider = startAxisRangeProvider,
                 verticalAxisPosition = Axis.Position.Vertical.Start
             ),
+            // Layer 5: SMB markers (start axis — triangle points fixed at lowMark, no line)
+            rememberLineCartesianLayer(
+                lineProvider = LineCartesianLayer.LineProvider.series(smbLines),
+                rangeProvider = startAxisRangeProvider,
+                verticalAxisPosition = Axis.Position.Vertical.Start
+            ),
             startAxis = VerticalAxis.rememberStart(
                 itemPlacer = VerticalAxis.ItemPlacer.step({ 1.0 }),
                 label = rememberTextComponent(
