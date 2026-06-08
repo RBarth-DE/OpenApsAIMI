@@ -3,10 +3,12 @@ package app.aaps.plugins.aps.openAPSAIMI.physio
 import androidx.health.connect.client.HealthConnectClient
 import androidx.health.connect.client.HealthConnectFeatures
 import androidx.health.connect.client.permission.HealthPermission
+import androidx.health.connect.client.records.BasalBodyTemperatureRecord
 import androidx.health.connect.client.records.HeartRateRecord
 import androidx.health.connect.client.records.HeartRateVariabilityRmssdRecord
 import androidx.health.connect.client.records.RestingHeartRateRecord
 import androidx.health.connect.client.records.SleepSessionRecord
+import androidx.health.connect.client.records.SkinTemperatureRecord
 import androidx.health.connect.client.records.StepsRecord
 
 /**
@@ -30,8 +32,15 @@ object AIMIHealthConnectPermissions {
         HealthPermission.getReadPermission(SleepSessionRecord::class),
         HealthPermission.getReadPermission(HeartRateVariabilityRmssdRecord::class),
         HealthPermission.getReadPermission(HeartRateRecord::class),
-        // Garmin / plusieurs apps écrivent la FC repos comme type dédié (pas seulement min FC le matin)
-        HealthPermission.getReadPermission(RestingHeartRateRecord::class)
+        HealthPermission.getReadPermission(RestingHeartRateRecord::class),
+    )
+
+    /**
+     * Optional thermal rhythm (Garmin / Oura). Not required to unblock physio pipeline.
+     */
+    val THERMAL_OPTIONAL_PERMISSIONS = setOf(
+        HealthPermission.getReadPermission(SkinTemperatureRecord::class),
+        HealthPermission.getReadPermission(BasalBodyTemperatureRecord::class),
     )
 
     /**
@@ -60,7 +69,9 @@ object AIMIHealthConnectPermissions {
         HealthPermission.getReadPermission(HeartRateVariabilityRmssdRecord::class) to "Heart Rate Variability (HRV)",
         HealthPermission.getReadPermission(HeartRateRecord::class) to "Heart Rate",
         HealthPermission.getReadPermission(RestingHeartRateRecord::class) to "Resting Heart Rate",
-        HealthPermission.getReadPermission(StepsRecord::class) to "Steps"
+        HealthPermission.getReadPermission(StepsRecord::class) to "Steps",
+        HealthPermission.getReadPermission(SkinTemperatureRecord::class) to "Skin Temperature",
+        HealthPermission.getReadPermission(BasalBodyTemperatureRecord::class) to "Basal Body Temperature",
     )
 
     /**
