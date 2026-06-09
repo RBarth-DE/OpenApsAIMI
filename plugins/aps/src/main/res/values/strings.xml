@@ -788,7 +788,13 @@
     <string name="aimi_pkpd_hypo_peak">Early hypoglycemia: Delay the peak (by 1–2 minutes) to smooth out the curve.</string>
     <string name="aimi_pkpd_hypo_damping">Risk of hypoglycemia: Increase damping to reduce SMBs at the end of the DIA.</string>
     <string name="aimi_pkpd_hypo_isf_reduce">Frequent lows with high ISF-fusion headroom: consider lowering max fusion from %1$sx to ~%2$sx with your clinician to cap aggressive corrections.</string>
-    <string name="aimi_pkpd_hyper_damping_reduce">Persistent highs with strong SMB tail damping (%1$s): if hypos are rare, discuss a modest damping decrease to ~%2$s instead of only ever increasing it.</string>
+    <string name="aimi_pkpd_hyper_damping_reduce">Persistent highs with strong SMB tail damping (floor %1$s): if hypos are rare, consider weakening the damping by raising the tail floor to ~%2$s to allow more late delivery.</string>
+    <string name="aimi_meal_advisor_title">AIMI Meal Advisor</string>
+
+
+    <!-- AI Decision Auditor -->
+    <string name="aimi_auditor_enabled_title">Enable AI Decision Auditor</string>
+    <string name="aimi_auditor_enabled_summary">Activate the Second Brain to challenge and modulate AIMI decisions</string>
     <string name="aimi_auditor_mode_title">Auditor Mode</string>
     <string name="context_title">AIMI Context</string>
     <string name="context_description">Describe your current situation to help AIMI adapt insulin delivery</string>
