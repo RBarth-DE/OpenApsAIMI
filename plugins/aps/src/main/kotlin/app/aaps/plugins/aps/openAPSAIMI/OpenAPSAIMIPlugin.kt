@@ -1486,8 +1486,6 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
                     add(IntKey.ApsUamMaxMinutesOfBasalToLimitSmb)
                     add(BooleanKey.ApsUseUam)
                     add(IntKey.ApsCarbsRequestThreshold)
-
-                    // Mettiamo il sotto-blocco avanzato qui dentro, così si sposta insieme a tutto il gruppo
                     add(
                         PreferenceSubScreenDef(
                             key = "openapsaimi_absorption_advanced",
@@ -1503,7 +1501,6 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
                 }
             )
         )
-
         add(
             PreferenceSubScreenDef(
                 key = "aimi_user_preferences",
@@ -1602,9 +1599,9 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
                 },
             )
         )
-       // add(BooleanKey.OApsAIMIMLtraining)
-       // add(DoubleKey.OApsAIMIMaxSMB)
-       // add(DoubleKey.OApsAIMIHighBGMaxSMB)
+        //add(BooleanKey.OApsAIMIMLtraining)
+        add(DoubleKey.OApsAIMIMaxSMB)
+        add(DoubleKey.OApsAIMIHighBGMaxSMB)
         add(DoubleKey.OApsAIMIweight)
         add(DoubleKey.OApsAIMICHO)
         add(DoubleKey.OApsAIMITDD7)
@@ -1742,8 +1739,6 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
                 add(IntKey.ApsKetoacidosisProtectionBasal)
             },
         )
-
-    // ketoScreen.addPreference(AdaptiveIntPreferenceItem(ctx = context, intKey = IntKey.ApsKetoacidosisProtectionBasal, dialogMessage = R.string.ketoacidosis_protection_basal_summary, title = R.string.ketoacidosis_protection_basal_title))
 
     private fun aimiComposeInflammatorySubScreen(): PreferenceSubScreenDef =
         PreferenceSubScreenDef(
@@ -1925,8 +1920,6 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
                 add(DoubleKey.OApsAIMIMpcInsulinUPerKgPerStep)
                 //add(DoubleKey.OApsAIMIautodrivesmallPrebolus)
                 //add(DoubleKey.OApsAIMIautodrivePrebolus)
-                add(DoubleKey.OApsAIMIMaxSMB)
-                add(DoubleKey.OApsAIMIHighBGMaxSMB)
                 add(
                     PreferenceSubScreenDef(
                         key = "aimi_compose_autodrive_prebolus_vars",
