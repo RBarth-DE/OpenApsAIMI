@@ -2,6 +2,7 @@ package app.aaps.ui.compose.main
 
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.height
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Fastfood
 import androidx.compose.material.icons.filled.GppMaybe
@@ -67,7 +68,7 @@ fun MainNavigationBar(
         containerColor = MaterialTheme.colorScheme.surface,
         contentColor = MaterialTheme.colorScheme.onSurface,
         windowInsets = WindowInsets(0),
-        modifier = modifier
+        modifier = modifier.height(40.dp)  // instead default 80dp
     ) {
         // Treatment action button (opens bottom sheet)
         NavigationBarItem(
@@ -90,7 +91,7 @@ fun MainNavigationBar(
                     )
                 }
             },
-            label = { Text(text = stringResource(CoreUiR.string.treatments)) },
+            label = null, //{ Text(text = stringResource(CoreUiR.string.treatments)) },
             colors = navColors
         )
 
@@ -118,7 +119,7 @@ fun MainNavigationBar(
                         )
                     }
                 },
-                label = { Text(text = stringResource(CoreUiR.string.scenes)) },
+                label = null, // { Text(text = stringResource(CoreUiR.string.scenes)) },
                 colors = navColors
             )
         }
@@ -133,7 +134,7 @@ fun MainNavigationBar(
                     contentDescription = stringResource(CoreUiR.string.manage)
                 )
             },
-            label = { Text(text = stringResource(CoreUiR.string.manage)) },
+            label = null, //{ Text(text = stringResource(CoreUiR.string.manage)) },
             colors = navColors
         )
 
@@ -154,7 +155,7 @@ fun MainNavigationBar(
                         )
                     }
                 },
-                label = { Text(text = label) },
+                label = null, //{ Text(text = label) },
                 colors = navColors
             )
         }
@@ -190,7 +191,7 @@ fun MainNavigationBar(
                         )
                     }
                 },
-                label = { Text(text = label) },
+                label = null,//{ Text(text = label) },
                 colors = navColors
             )
         }
@@ -225,7 +226,7 @@ fun MainNavigationBar(
                         )
                     }
                 },
-                label = { Text(text = label) },
+                label = null,//{ Text(text = label) },
                 colors = navColors
             )
         }
@@ -250,7 +251,7 @@ fun MainNavigationBar(
                         )
                     }
                 },
-                label = { Text(text = stringResource(R.string.loop_accept_nav_label)) },
+                label = null,// { Text(text = stringResource(R.string.loop_accept_nav_label)) },
                 colors = navColors
             )
         }
@@ -268,7 +269,7 @@ fun MainNavigationBar(
                         )
                     }
                 },
-                label = { Text(text = stringResource(R.string.permission_nav_label)) },
+                label = null,//{ Text(text = stringResource(R.string.permission_nav_label)) },
                 colors = navColors.copy(
                     unselectedIconColor = MaterialTheme.colorScheme.error,
                     unselectedTextColor = MaterialTheme.colorScheme.error,
