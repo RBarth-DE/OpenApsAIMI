@@ -12024,10 +12024,12 @@ class DetermineBasalaimiSMB2 @Inject constructor(
     private var lastLegacyPrebolusTimestampMem: Long = 0L
 
     private var internalLastLegacyPrebolusMillis: Long
-        get() = Math.max(
-            lastLegacyPrebolusTimestampMem,
-            preferences.get(AimiLongKey.LastLegacyPrebolusTime)
-        )
+        get() {
+            val stored = preferences.get(AimiLongKey.LastLegacyPrebolusTime)
+            // Ignoriere Timestamps älter als 24h — können kein aktiver Prebolus sein
+            val validStored = if (stored > 0L && (dateUtil.now() - stored) < 24 * 3_600_000L) stored else 0L
+            return Math.max(lastLegacyPrebolusTimestampMem, validStored)
+        }
         set(value) {
             lastLegacyPrebolusTimestampMem = value
             preferences.put(AimiLongKey.LastLegacyPrebolusTime, value)

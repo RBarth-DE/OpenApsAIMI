@@ -328,6 +328,8 @@
 
 
     <string name="user_preferences">Preferences user</string>
+    <string name="aimi_core_smb_title">Core parameters</string>
+    <string name="aimi_core_smb_summary">Max SMB, weight, carbs, TDD — always active</string>
     <string name="training_ml_modes_preferences">Manual Mode</string>
     <string name="autodrive_preferences">Autodrive</string>
     <string name="OApsAIMI_PregnancyDueDate_title">Due Date (Terme)</string>
