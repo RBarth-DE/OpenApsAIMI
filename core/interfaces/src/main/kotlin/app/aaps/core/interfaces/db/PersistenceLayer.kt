@@ -31,6 +31,24 @@ import kotlinx.coroutines.flow.Flow
 import kotlin.reflect.KClass
 import io.reactivex.rxjava3.core.Single
 
+/**
+ * Read-only diagnostics gathered before a startup VACUUM.
+ * @property dbSizeBytes size of the main DB file incl. `-wal`/`-shm` (0 if it could not be read)
+ * @property availableBytes free space on the DB's volume, or -1 if unknown
+ * @property totalRows sum of rows across all tables
+ * @property deletableRows rows older than the retention window (the cleanup backlog)
+ * @property changeRows tracked-change rows (`referenceId IS NOT NULL`) across all tables
+ * @property report human-readable per-table counts (total / older-than-retention / tracked-changes)
+ */
+data class DatabaseMaintenanceInfo(
+    val dbSizeBytes: Long,
+    val availableBytes: Long,
+    val totalRows: Long,
+    val deletableRows: Long,
+    val changeRows: Long,
+    val report: String
+)
+
 interface PersistenceLayer {
 
     /**
@@ -63,6 +81,13 @@ interface PersistenceLayer {
      * May throw if the DB is busy/locked.
      */
     suspend fun vacuumDatabase()
+
+    /**
+     * Collect DB size, free space and per-table row counts (total, older-than-retention, tracked
+     * changes) for logging before a startup VACUUM. Read-only and failure-tolerant.
+     * @param retentionDays the cleanup window, used to count the deletable backlog (rows older than it)
+     */
+    suspend fun databaseMaintenanceInfo(retentionDays: Long): DatabaseMaintenanceInfo
 
     // Flow-based change observation
     /**
