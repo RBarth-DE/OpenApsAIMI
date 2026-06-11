@@ -292,8 +292,8 @@ enum class DoubleKey(
     // === Tes ajouts AIMI / custom ===
     EquilMaxBolus("equil_maxbolus", 10.0, 0.1, 25.0),
 
-    OApsAIMIMaxSMB("key_openapsaimi_max_smb", 1.0, 0.05, 30.0),
-    OApsAIMIHighBGMaxSMB("key_openapsaimi_high_bg_max_smb", 1.0, 0.05, 30.0),
+    OApsAIMIMaxSMB("key_openapsaimi_max_smb", 1.0, 0.05, 30.0, unitType = UnitType.DOUBLE_2),
+    OApsAIMIHighBGMaxSMB("key_openapsaimi_high_bg_max_smb", 1.0, 0.05, 30.0, unitType = UnitType.DOUBLE_2),
 
     OApsAIMIweight("key_aimiweight", 50.0, 1.0, 200.0),
     /** MPC: max insulin (U) per kg body weight per 5-minute dose search; combined with Max SMB / High BG SMB caps. */

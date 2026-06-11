@@ -222,7 +222,9 @@
     <string name="aimi_physio_hc_permissions_summary">Öffnen Sie den Bildschirm, um Schlaf-, HRV- und Herzfrequenzzugriff über Health Connect zu gewähren.</string>
     <string name="aimi_inflammatory_diseases_title">Entzündliche / Autoimmunerkrankungen</string>
     <string name="aimi_ai_auditor_section_title">KI-Entscheidungsprüfer</string>
+    <!-- keep english version for data analyis of AI
     <string name="aimi_trajectory_section_title">Trajektorie-Wächter</string>
+    -->
     <string name="oaps_aimi_thyroid_title">🦋 Hyperthyreose (Basedow) Modul</string>
     <string name="autodrive_prebolus_variables">Vorbolus-Grenzen und -Bedingungen</string>
     <string name="training_ml_breakfast_modes_preferences">Frühstück</string>
@@ -232,10 +234,12 @@
     <string name="training_ml_snack_modes_preferences">Snack</string>
     <string name="training_ml_generic_meal_modes_preferences">Allgemeine Mahlzeit</string>
     <string name="training_ml_sleep_modes_preferences">Ruhe</string>
+    <!-- keep english version for data analyis of AI
     <string name="oaps_aimi_ngr_title">Nächtlicher Wachstumswiderstand</string>
     <string name="oaps_aimi_ngr_headroom">NGR Puffer: +%1$.2fU (Grenze %2$.2fU).</string>
     <string name="oaps_aimi_ngr_basal_applied">NGR Basalraten-Verstärkung ×%1$.2f → %2$.2fU/h.</string>
     <string name="oaps_aimi_ngr_smb_applied">NGR SMB-Verstärkung ×%1$.2f (angefordert %2$.3fU, Begrenzung %3$.3fU).</string>
+    -->
     <string name="folder_documents">Dokumente</string>
     <string name="uam_model_status"> 📦 UAM-Modell: %1$s (%2$s, %3$s)</string>
     <string name="sanitize_info"> 🧹 Bereinigung: %1$d unvollständige Werte -&gt; 0</string>
