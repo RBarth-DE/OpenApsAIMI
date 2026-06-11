@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version='1.0' encoding='utf-8'?>
 <resources>
     <string name="pref_title_simple_mode">Einfacher Modus</string>
     <string name="pref_title_low_end_stability_mode">Stabilitätsmodus für Low-End-Geräte</string>
@@ -213,8 +213,6 @@
     <string name="uam_smb_max_minutes">Maximale Minuten für UAM-SMB</string>
     <string name="pref_title_carbs_request_threshold">Schwellenwert für Kohlenhydratbedarf</string>
     <string name="carbs_req_threshold_summary">Mindestmenge an Kohlenhydraten in Gramm, ab der eine Benachrichtigung mit einem Kohlenhydratvorschlag angezeigt wird. Kohlenhydratvorschläge unterhalb dieses Wertes lösen keine Benachrichtigung aus.</string>
-    <string name="pref_title_half_basal_exercise_target">Halbes Basal-Ziel bei körperlicher Aktivität</string>
-    <string name="half_basal_exercise_target_summary">Stellen Sie einen Wert ein, z. B. 160. Das bedeutet: Wenn der temporäre Zielwert 160 mg/dL beträgt und „High temptarget“ die Empfindlichkeit auf „true“ setzt, wird bei diesem Wert 50 % der Basalrate abgegeben (120 = 75 %; 140 = 60 %).</string>
     <string name="pref_title_iob_threshold_percent">IOB-Schwellenwert in Prozent (iob_threshold_percent)</string>
     <string name="openapsama_iob_threshold_percent_summary" formatted="false">Prozentualer Anteil von maxIOB, ab dem SMBs deaktiviert werden.\nStandardwert: 100 %\nBei 100 % ist diese Funktion effektiv deaktiviert.</string>
     <string name="pref_title_dynisf_adjustment_factor">DynamicISF-Anpassungsfaktor</string>
@@ -372,215 +370,161 @@
 
     <string name="pref_title_max_bolus">Maximaler Bolus</string>
 
-
-    <string name="pref_title_max_basal">Maximale Basalrate</string>
-    <string name="openapsma_max_basal_summary">Dieser Wert wird im OpenAPS-Kontext als „Max Basal“ bezeichnet</string>
-    <string name="pref_title_smb_max_iob">Max. IOB für SMB</string>
-    <string name="openapssmb_max_iob_summary">Dieser Wert wird im OpenAPS-Kontext als „Max IOB“ bezeichnet\nOpenAPS fügt kein zusätzliches Insulin hinzu, wenn der aktuelle IOB-Wert größer als dieser Wert ist</string>
-    <string name="pref_title_ama_max_iob">Maximaler IOB für AMA</string>
-    <string name="openapsma_max_iob_summary">Dieser Wert wird im OpenAPS-Kontext als „Max IOB“ bezeichnet\nDies ist die maximale Insulinmenge in [U], die APS auf einmal abgeben kann.</string>
-    <string name="pref_title_max_daily_multiplier">Maximaler täglicher Sicherheitsmultiplikator</string>
-    <string name="openapsama_max_daily_safety_multiplier_summary">Standardwert: 3 Dies ist eine wichtige Sicherheitsgrenze in OpenAPS. Sie begrenzt Ihre Basalraten auf das 3-fache (bei dieser Person) Ihrer höchsten Basalrate. Sie werden diesen Wert wahrscheinlich nicht ändern müssen, sollten sich jedoch bewusst sein, dass dies das ist, was unter „3x max daily; 4-faches des aktuellen Wertes“ bei den Sicherheitsgrenzen.</string>
-    <string name="pref_title_current_basal_multiplier">Aktueller Basal-Sicherheitsmultiplikator</string>
-    <string name="openapsama_current_basal_safety_multiplier_summary">Standardwert: 4 Dies ist die andere Hälfte der wichtigsten OpenAPS-Sicherheitsgrenzen und die andere Hälfte von „3-faches Tagesmaximum; 4x aktuell“ der Sicherheitsgrenzen. Das bedeutet, dass Ihre Basalrate, unabhängig von der an Ihrer Pumpe eingestellten maximalen Basalrate, nicht höher sein darf als dieser Wert multipliziert mit dem aktuellen Wert Ihrer Basalrate. Dies soll verhindern, dass Nutzer in einen gefährlichen Bereich geraten, indem sie übermäßig hohe maximale Basalraten einstellen, bevor sie verstehen, wie der Algorithmus funktioniert. Auch hier beträgt der Standardwert 4x; die meisten Menschen werden dies nie anpassen müssen und müssen stattdessen eher andere Einstellungen anpassen, wenn sie das Gefühl haben, an diese Sicherheitsgrenze zu stoßen.</string>
-    <string name="pref_title_bolus_snooze_divisor">Bolus-Snooze-DIA-Teiler</string>
-    <string name="openapsama_bolus_snooze_dia_divisor_summary">Standardwert: 2\nDie Bolus-Schlummerfunktion wird nach der Verabreichung eines Mahlzeitbolus aktiviert, damit die Schleife nicht mit niedrigen Werten kollidiert, wenn Sie gerade gegessen haben. Das hier gezeigte Beispiel und der Standardwert sind 2; ein DIA von 3 Stunden bedeutet also, dass der Bolus-Snooze über 1,5 Stunden (3DIA/2) schrittweise ausläuft.</string>
-    <string name="pref_title_ama_min_5m_carbs_impact">AMA min 5m Kohlenhydrat-Auswirkung</string>
-    <string name="pref_title_smb_min_5m_carbs_impact">SMB-Auswirkung bei 5 g Kohlenhydraten pro 5 Minuten</string>
-    <string name="openapsama_min_5m_carb_impact_summary">Standardwert: 3,0 (AMA) oder 8,0 (SMB). Dies ist eine Einstellung für die standardmäßige Auswirkung der Kohlenhydratabsorption pro 5 Minuten. Der Standardwert beträgt voraussichtlich 3 mg/dl/5 Min. Dies beeinflusst, wie schnell COB abgebaut werden und wie viel Kohlenhydratabsorption bei der Berechnung des zukünftigen prognostizierten Blutzuckers angenommen wird, wenn der Blutzucker stärker als erwartet fällt oder nicht so stark wie erwartet ansteigt.</string>
-    <string name="pref_title_absorption_cutoff">Absorptionsgrenze</string>
-    <string name="absorption_cutoff_summary">Zeitpunkt, zu dem eine Mahlzeit als absorbiert gilt. Verbleibende Kohlenhydrate werden nicht mehr berücksichtigt.</string>
-    <string name="pref_title_absorption_maxtime">Maximale Absorptionszeit</string>
-    <string name="absorption_max_time_summary">Zeit in Stunden, in der erwartet wird, dass alle Kohlenhydrate aus der Mahlzeit absorbiert sind</string>
-    <string name="pref_title_autosens_min">Autosens-Minimum</string>
-    <string name="openapsama_autosens_min_summary">Standardwert: 0,7\nDie andere Seite der Autosens-Sicherheitsgrenzen, die festlegt, wie tief Autosens die Basalraten senken und wie hoch es den ISF-Wert und die Blutzuckerzielwerte anheben kann.</string>
-    <string name="pref_title_autosens_max">Autosens max</string>
-    <string name="openapsama_autosens_max_summary">Standardwert: 1,2\nDies ist eine Multiplikator-Obergrenze für Autosens (und bald auch für Autotune), um eine maximale Grenze von 20 % festzulegen, wie hoch das Autosens-Verhältnis sein darf. Dies bestimmt wiederum, wie hoch Autosens die Basalraten anpassen kann, wie niedrig es den ISF anpassen kann und wie niedrig es den BG-Zielwert festlegen kann. </string>
-    <string name="pref_title_autoisf_min">AutoISF min (autoISF_min)</string>
-    <string name="openapsama_autoISF_min_summary">Ähnlich wie bei autosens_min legt dies fest, wie schwach der ISF werden kann.\n\nDer Standardwert 1,0 schaltet diesen Effekt effektiv aus.</string>
-    <string name="pref_title_autoisf_max">AutoISF max (autoISF_max)</string>
-    <string name="openapsama_autoISF_max_summary">Ähnlich wie bei autosens_max legt dies fest, wie stark der ISF werden kann.\n\nDer Standardwert 1,0 schaltet diesen Effekt effektiv aus.\n\nWARNUNG: Seien Sie äußerst vorsichtig bei der Verwendung von Werten über 2,5</string>
-    <string name="pref_title_bg_accel_weight">ISF-Gewichtung der Hintergrundbeschleunigung (bgAccel_ISF_weight)</string>
-    <string name="openapsama_bgAccel_ISF_weight_summary">Dies ist das Gewicht, das bei steigendem Blutzucker angewendet wird und das den ISF verstärkt, wodurch die Insulinabgabe potenziell erhöht wird.  Der Standardwert 0,0 schaltet diesen Effekt praktisch aus.</string>
-    <string name="pref_title_bg_brake_weight">ISF-Gewicht für Blutzucker-Bremse (bgBrake_ISF_weight)</string>
-    <string name="openapsama_bgBrake_ISF_weight_summary">Dies ist die Gewichtung, die angewendet wird, wenn der Blutzucker sinkt, und die den ISF abschwächt, wodurch die Insulinabgabe potenziell reduziert wird.  Der Standardwert 0,0 schaltet diesen Effekt effektiv aus.</string>
-    <string name="pref_title_low_bg_weight">Gewichtung für niedrigen Blutzuckerbereich (lower_ISFrange_weight)</string>
-    <string name="openapsama_lower_ISFrange_weight_summary">Dies ist die Gewichtung, die angewendet wird, wenn der Blutzucker unter dem Zielwert liegt, und die den ISF abschwächt, wodurch die Insulinabgabe potenziell reduziert wird.  Der Standardwert 0,0 schaltet diesen Effekt effektiv aus.</string>
-    <string name="pref_title_high_bg_weight">Gewichtung für hohen Blutzuckerbereich (higher_ISFrange_weight)</string>
-    <string name="openapsama_higher_ISFrange_weight_summary">Dies ist die Gewichtung, die angewendet wird, wenn der Blutzucker über dem Zielwert liegt, und die den ISF verstärkt, wodurch die Insulinabgabe potenziell erhöht wird.  Der Standardwert 0,0 schaltet diesen Effekt effektiv aus.</string>
-    <string name="pref_title_smb_delivery_ratio_bg_range">SMB-Abgabeverhältnis für Blutzuckerbereich (openapsama_smb_delivery_ratio_bg_range)</string>
-    <string name="openapsama_smb_delivery_ratio_bg_range_summary">Standardwert: 0. Die linear ansteigende SMB-Abgaberate wird dem Blutzuckerbereich [target_bg, target_bg+bg_range] zugeordnet.\ Bei target_bg beträgt die SMB-Rate smb_delivery_ratio_min, bei target_bg+bg_range beträgt sie smb_delivery_ratio_max\nBei 0 ist die linear ansteigende SMB-Rate deaktiviert und es wird die feste smb_delivery_ratio verwendet.</string>
-    <string name="pref_title_pp_weight">Gewichtung des postprandialen ISF (pp_ISF_weight)</string>
-    <string name="openapsama_pp_ISF_weight_summary">Dies ist das Gewicht, das angewendet wird, während der Glukosespiegel ansteigt, und das den ISF verstärkt, wodurch die Insulinabgabe potenziell erhöht wird.  Der Standardwert 0,0 schaltet diesen Effekt effektiv aus.</string>
-    <string name="pref_title_dura_weight">Dauer-ISF-Gewicht (dura_ISF_weight)</string>
-    <string name="openapsama_dura_ISF_weight_summary">Dies ist die Gewichtung, die bei länger anhaltenden, erhöhten Glukoseplateaus angewendet wird und die den ISF verstärkt, wodurch die Insulinabgabe potenziell erhöht wird.\n\nDer Standardwert 0,0 schaltet diesen Effekt effektiv aus.</string>
-    <string name="pref_title_smb_delivery_ratio">SMB-Abgabeverhältnis (openapsama_smb_delivery_ratio)</string>
-    <string name="openapsama_smb_delivery_ratio_summary">Standardwert: 0,5 Dies ist eine weitere wichtige Sicherheitsgrenze von OpenAPS, die festlegt, welcher Anteil des gesamten benötigten Insulins als SMB verabreicht werden darf. Damit soll verhindert werden, dass Nutzer in einen gefährlichen Bereich geraten, indem gleichzeitig SMB-Anforderungen über das Telefon der Pflegeperson gestellt werden. Erhöhen Sie diesen experimentellen Wert langsam und mit Vorsicht.</string>
-    <string name="pref_title_smb_delivery_ratio_min">SMB-Abgabeverhältnis min (openapsama_smb_delivery_ratio_min)</string>
-    <string name="openapsama_smb_delivery_ratio_min_summary">Standardwert: 0,5 Dies ist die Untergrenze eines linear ansteigenden Verhältnisses und kein fester Wert wie oben.</string>
-    <string name="pref_title_smb_delivery_ratio_max">Maximale SMB-Zustellungsquote (openapsama_smb_delivery_ratio_max)</string>
-    <string name="openapsama_smb_delivery_ratio_max_summary">Standardwert: 0,5 Dies ist das obere Ende einer linear ansteigenden Quote und kein fester Wert wie oben.</string>
-    <string name="pref_title_smb_max_range_extension">Maximale Reichweitenausweitung für SMB (openapsama_smb_max_range_extension)</string>
-    <string name="openapsama_smb_max_range_extension_summary">Standardwert: 1 Dies ist eine weitere wichtige Sicherheitsgrenze von OpenAPS, die festlegt, um welchen Faktor die regulären 120 maxSMB/maxUAM-Minuten überschritten werden dürfen. Erhöhen Sie diesen experimentellen Wert langsam und mit Vorsicht.</string>
-
-
-    <string name="pref_title_low_mark">Markierung für niedrigen Blutzucker</string>
-    <string name="pref_title_high_mark">Markierung für hohen Blutzucker</string>
+    <!-- keep english version for data analyis of AI
+        <string name="pref_title_max_basal">Maximale Basalrate</string>
+        <string name="openapsma_max_basal_summary">Dieser Wert wird im OpenAPS-Kontext als „Max Basal“ bezeichnet</string>
+        <string name="pref_title_smb_max_iob">Max. IOB für SMB</string>
+        <string name="openapssmb_max_iob_summary">Dieser Wert wird im OpenAPS-Kontext als „Max IOB“ bezeichnet\nOpenAPS fügt kein zusätzliches Insulin hinzu, wenn der aktuelle IOB-Wert größer als dieser Wert ist</string>
+        <string name="pref_title_ama_max_iob">Maximaler IOB für AMA</string>
+        <string name="openapsma_max_iob_summary">Dieser Wert wird im OpenAPS-Kontext als „Max IOB“ bezeichnet\nDies ist die maximale Insulinmenge in [U], die APS auf einmal abgeben kann.</string>
+        <string name="pref_title_max_daily_multiplier">Maximaler täglicher Sicherheitsmultiplikator</string>
+        <string name="openapsama_max_daily_safety_multiplier_summary">Standardwert: 3 Dies ist eine wichtige Sicherheitsgrenze in OpenAPS. Sie begrenzt Ihre Basalraten auf das 3-fache (bei dieser Person) Ihrer höchsten Basalrate. Sie werden diesen Wert wahrscheinlich nicht ändern müssen, sollten sich jedoch bewusst sein, dass dies das ist, was unter „3x max daily; 4-faches des aktuellen Wertes“ bei den Sicherheitsgrenzen.</string>
+        <string name="pref_title_current_basal_multiplier">Aktueller Basal-Sicherheitsmultiplikator</string>
+        <string name="openapsama_current_basal_safety_multiplier_summary">Standardwert: 4 Dies ist die andere Hälfte der wichtigsten OpenAPS-Sicherheitsgrenzen und die andere Hälfte von „3-faches Tagesmaximum; 4x aktuell“ der Sicherheitsgrenzen. Das bedeutet, dass Ihre Basalrate, unabhängig von der an Ihrer Pumpe eingestellten maximalen Basalrate, nicht höher sein darf als dieser Wert multipliziert mit dem aktuellen Wert Ihrer Basalrate. Dies soll verhindern, dass Nutzer in einen gefährlichen Bereich geraten, indem sie übermäßig hohe maximale Basalraten einstellen, bevor sie verstehen, wie der Algorithmus funktioniert. Auch hier beträgt der Standardwert 4x; die meisten Menschen werden dies nie anpassen müssen und müssen stattdessen eher andere Einstellungen anpassen, wenn sie das Gefühl haben, an diese Sicherheitsgrenze zu stoßen.</string>
+        <string name="pref_title_bolus_snooze_divisor">Bolus-Snooze-DIA-Teiler</string>
+        <string name="openapsama_bolus_snooze_dia_divisor_summary">Standardwert: 2\nDie Bolus-Schlummerfunktion wird nach der Verabreichung eines Mahlzeitbolus aktiviert, damit die Schleife nicht mit niedrigen Werten kollidiert, wenn Sie gerade gegessen haben. Das hier gezeigte Beispiel und der Standardwert sind 2; ein DIA von 3 Stunden bedeutet also, dass der Bolus-Snooze über 1,5 Stunden (3DIA/2) schrittweise ausläuft.</string>
+        <string name="pref_title_ama_min_5m_carbs_impact">AMA min 5m Kohlenhydrat-Auswirkung</string>
+        <string name="pref_title_smb_min_5m_carbs_impact">SMB-Auswirkung bei 5 g Kohlenhydraten pro 5 Minuten</string>
+        <string name="openapsama_min_5m_carb_impact_summary">Standardwert: 3,0 (AMA) oder 8,0 (SMB). Dies ist eine Einstellung für die standardmäßige Auswirkung der Kohlenhydratabsorption pro 5 Minuten. Der Standardwert beträgt voraussichtlich 3 mg/dl/5 Min. Dies beeinflusst, wie schnell COB abgebaut werden und wie viel Kohlenhydratabsorption bei der Berechnung des zukünftigen prognostizierten Blutzuckers angenommen wird, wenn der Blutzucker stärker als erwartet fällt oder nicht so stark wie erwartet ansteigt.</string>
+        <string name="pref_title_absorption_cutoff">Absorptionsgrenze</string>
+        <string name="absorption_cutoff_summary">Zeitpunkt, zu dem eine Mahlzeit als absorbiert gilt. Verbleibende Kohlenhydrate werden nicht mehr berücksichtigt.</string>
+        <string name="pref_title_absorption_maxtime">Maximale Absorptionszeit</string>
+        <string name="absorption_max_time_summary">Zeit in Stunden, in der erwartet wird, dass alle Kohlenhydrate aus der Mahlzeit absorbiert sind</string>
+        <string name="pref_title_autosens_min">Autosens-Minimum</string>
+        <string name="openapsama_autosens_min_summary">Standardwert: 0,7\nDie andere Seite der Autosens-Sicherheitsgrenzen, die festlegt, wie tief Autosens die Basalraten senken und wie hoch es den ISF-Wert und die Blutzuckerzielwerte anheben kann.</string>
+        <string name="pref_title_autosens_max">Autosens max</string>
+        <string name="openapsama_autosens_max_summary">Standardwert: 1,2\nDies ist eine Multiplikator-Obergrenze für Autosens (und bald auch für Autotune), um eine maximale Grenze von 20 % festzulegen, wie hoch das Autosens-Verhältnis sein darf. Dies bestimmt wiederum, wie hoch Autosens die Basalraten anpassen kann, wie niedrig es den ISF anpassen kann und wie niedrig es den BG-Zielwert festlegen kann. </string>
+        <string name="pref_title_autoisf_min">AutoISF min (autoISF_min)</string>
+        <string name="openapsama_autoISF_min_summary">Ähnlich wie bei autosens_min legt dies fest, wie schwach der ISF werden kann.\n\nDer Standardwert 1,0 schaltet diesen Effekt effektiv aus.</string>
+        <string name="pref_title_autoisf_max">AutoISF max (autoISF_max)</string>
+        <string name="openapsama_autoISF_max_summary">Ähnlich wie bei autosens_max legt dies fest, wie stark der ISF werden kann.\n\nDer Standardwert 1,0 schaltet diesen Effekt effektiv aus.\n\nWARNUNG: Seien Sie äußerst vorsichtig bei der Verwendung von Werten über 2,5</string>
+        <string name="pref_title_bg_accel_weight">ISF-Gewichtung der Hintergrundbeschleunigung (bgAccel_ISF_weight)</string>
+        <string name="openapsama_bgAccel_ISF_weight_summary">Dies ist das Gewicht, das bei steigendem Blutzucker angewendet wird und das den ISF verstärkt, wodurch die Insulinabgabe potenziell erhöht wird.  Der Standardwert 0,0 schaltet diesen Effekt praktisch aus.</string>
+        <string name="pref_title_bg_brake_weight">ISF-Gewicht für Blutzucker-Bremse (bgBrake_ISF_weight)</string>
+        <string name="openapsama_bgBrake_ISF_weight_summary">Dies ist die Gewichtung, die angewendet wird, wenn der Blutzucker sinkt, und die den ISF abschwächt, wodurch die Insulinabgabe potenziell reduziert wird.  Der Standardwert 0,0 schaltet diesen Effekt effektiv aus.</string>
+        <string name="pref_title_low_bg_weight">Gewichtung für niedrigen Blutzuckerbereich (lower_ISFrange_weight)</string>
+        <string name="openapsama_lower_ISFrange_weight_summary">Dies ist die Gewichtung, die angewendet wird, wenn der Blutzucker unter dem Zielwert liegt, und die den ISF abschwächt, wodurch die Insulinabgabe potenziell reduziert wird.  Der Standardwert 0,0 schaltet diesen Effekt effektiv aus.</string>
+        <string name="pref_title_high_bg_weight">Gewichtung für hohen Blutzuckerbereich (higher_ISFrange_weight)</string>
+        <string name="openapsama_higher_ISFrange_weight_summary">Dies ist die Gewichtung, die angewendet wird, wenn der Blutzucker über dem Zielwert liegt, und die den ISF verstärkt, wodurch die Insulinabgabe potenziell erhöht wird.  Der Standardwert 0,0 schaltet diesen Effekt effektiv aus.</string>
+        <string name="pref_title_smb_delivery_ratio_bg_range">SMB-Abgabeverhältnis für Blutzuckerbereich (openapsama_smb_delivery_ratio_bg_range)</string>
+        <string name="openapsama_smb_delivery_ratio_bg_range_summary">Standardwert: 0. Die linear ansteigende SMB-Abgaberate wird dem Blutzuckerbereich [target_bg, target_bg+bg_range] zugeordnet.\ Bei target_bg beträgt die SMB-Rate smb_delivery_ratio_min, bei target_bg+bg_range beträgt sie smb_delivery_ratio_max\nBei 0 ist die linear ansteigende SMB-Rate deaktiviert und es wird die feste smb_delivery_ratio verwendet.</string>
+        <string name="pref_title_pp_weight">Gewichtung des postprandialen ISF (pp_ISF_weight)</string>
+        <string name="openapsama_pp_ISF_weight_summary">Dies ist das Gewicht, das angewendet wird, während der Glukosespiegel ansteigt, und das den ISF verstärkt, wodurch die Insulinabgabe potenziell erhöht wird.  Der Standardwert 0,0 schaltet diesen Effekt effektiv aus.</string>
+        <string name="pref_title_dura_weight">Dauer-ISF-Gewicht (dura_ISF_weight)</string>
+        <string name="openapsama_dura_ISF_weight_summary">Dies ist die Gewichtung, die bei länger anhaltenden, erhöhten Glukoseplateaus angewendet wird und die den ISF verstärkt, wodurch die Insulinabgabe potenziell erhöht wird.\n\nDer Standardwert 0,0 schaltet diesen Effekt effektiv aus.</string>
+        <string name="pref_title_smb_delivery_ratio">SMB-Abgabeverhältnis (openapsama_smb_delivery_ratio)</string>
+        <string name="openapsama_smb_delivery_ratio_summary">Standardwert: 0,5 Dies ist eine weitere wichtige Sicherheitsgrenze von OpenAPS, die festlegt, welcher Anteil des gesamten benötigten Insulins als SMB verabreicht werden darf. Damit soll verhindert werden, dass Nutzer in einen gefährlichen Bereich geraten, indem gleichzeitig SMB-Anforderungen über das Telefon der Pflegeperson gestellt werden. Erhöhen Sie diesen experimentellen Wert langsam und mit Vorsicht.</string>
+        <string name="pref_title_smb_delivery_ratio_min">SMB-Abgabeverhältnis min (openapsama_smb_delivery_ratio_min)</string>
+        <string name="openapsama_smb_delivery_ratio_min_summary">Standardwert: 0,5 Dies ist die Untergrenze eines linear ansteigenden Verhältnisses und kein fester Wert wie oben.</string>
+        <string name="pref_title_smb_delivery_ratio_max">Maximale SMB-Zustellungsquote (openapsama_smb_delivery_ratio_max)</string>
+        <string name="openapsama_smb_delivery_ratio_max_summary">Standardwert: 0,5 Dies ist das obere Ende einer linear ansteigenden Quote und kein fester Wert wie oben.</string>
+        <string name="pref_title_smb_max_range_extension">Maximale Reichweitenausweitung für SMB (openapsama_smb_max_range_extension)</string>
+        <string name="openapsama_smb_max_range_extension_summary">Standardwert: 1 Dies ist eine weitere wichtige Sicherheitsgrenze von OpenAPS, die festlegt, um welchen Faktor die regulären 120 maxSMB/maxUAM-Minuten überschritten werden dürfen. Erhöhen Sie diesen experimentellen Wert langsam und mit Vorsicht.</string>
 
 
-    <string name="pref_title_lgs_threshold">LGS-Schwellenwert</string>
-    <string name="lgs_threshold_summary">BG-Wert, unterhalb dessen die Insulinabgabe ausgesetzt wird. Der Standardwert verwendet das Standard-Zielmodell. Der Benutzer kann einen Wert zwischen 60 mg/dl (3,3 mmol/l) und 100 mg/dl (5,5 mmol/l) einstellen. Werte unter 65/3,6 führen zur Verwendung des Standardmodells</string>
+        <string name="pref_title_low_mark">Markierung für niedrigen Blutzucker</string>
+        <string name="pref_title_high_mark">Markierung für hohen Blutzucker</string>
+
+
+        <string name="pref_title_lgs_threshold">LGS-Schwellenwert</string>
+        <string name="lgs_threshold_summary">BG-Wert, unterhalb dessen die Insulinabgabe ausgesetzt wird. Der Standardwert verwendet das Standard-Zielmodell. Der Benutzer kann einen Wert zwischen 60 mg/dl (3,3 mmol/l) und 100 mg/dl (5,5 mmol/l) einstellen. Werte unter 65/3,6 führen zur Verwendung des Standardmodells</string>
 
 
 
 
-    <string name="prefs_range_title">Bereich für die Visualisierung</string>
-    <string name="pref_title_aimi_advisor_personal_oref_ml">AIMI Advisor: persönliches Risikomodell auf dem Gerät</string>
-    <string name="pref_summary_aimi_advisor_personal_oref_ml">Wenn Sie Advisor öffnen, werden kleine Modelle anhand aktueller Loop+CGM-Merkmale trainiert. Nur zu Informationszwecken; hat keinen Einfluss auf die Insulinabgabe.</string>
-    <string name="pref_title_aimi_advisor_llm_rich_oref">AI Coach: Strukturierte OREF-Erkenntnisse einbeziehen</string>
-    <string name="pref_summary_aimi_advisor_llm_rich_oref">Fügt einen Block mit Fakten in einfacher Sprache für den Coach-LLM hinzu. Deaktivieren Sie diese Option für eine kürzere Cloud-Eingabeaufforderung.</string>
-    <string name="pref_title_aimi_straight_line_tube">Straight-Line-Tube-Berater (SMB-Obergrenzen)</string>
-    <string name="pref_summary_aimi_straight_line_tube">Diskrete Kurzzeitregelung für maximales SMB: Hält den vorhergesagten minimalen BG mithilfe der PKPD-Min-Kurve über einem Mindestwert, bevorzugt größere Obergrenzen, wenn der endgültige BG hoch ist, und bestraft eine zickzackförmige SMB-Dimensionierung. Ersetzt weder PKPD noch Sicherheitsnetze. Standardmäßig deaktiviert.</string>
-    <string name="pref_summary_aimi_dyn_isf_trajectory_max_fraction">Obergrenze für die relative ISF-Anpassung anhand der Kursentwicklung (z. B. 0,06 = bei starkem Anstieg höchstens etwa 6 % strengere ISF oder bei starkem Rückgang 6 % lockerere ISF). Ein niedrigerer Wert bedeutet mehr Sicherheit, aber einen geringeren Nutzen.</string>
-    <string name="pref_title_aimi_peak_governor_enabled">TAP-G-Spitzenregler</string>
-    <string name="pref_summary_aimi_peak_governor_enabled">Wenn die adaptive PK/PD aktiviert ist, wird der Spitzenwert des Insulinprofils mit dem erlernten PK/PD-Spitzenwert für die Schleife „peakTime“ kombiniert (siehe Forschungsdokument TAP_G_PEAK_GOVERNOR_RFC).</string>
-    <string name="pref_title_aimi_peak_governor_learned_weight">TAP-G-gelernte Gewichtung für die Peak-Mischung</string>
-    <string name="pref_summary_aimi_peak_governor_learned_weight">0 = nur Insulin-Anker, 1 = nur gelernter PKPD-Peak. Standardwert 0,55.</string>
-    <string name="pref_title_unified_reactivity">Unified Reactivity Learners aktivieren</string>
-    <string name="pref_summary_unified_reactivity">Ersetzt das zeitbasierte Bucket-System durch eine Analyse auf Basis tatsächlicher klinischer Kennzahlen</string>
-    <string name="pref_title_xdripOM">XDrip One Minute verwenden</string>
-    <string name="pref_summary_xdripOM">Unterstützung für XDrip-Blutzuckerwerte im Minutentakt aktivieren</string>
-    <string name="pref_summary_aimi_autodrive_v3_authoritative">Wenn Autodrive V3 aktiv ist und einen sicheren SMB/TBR ausgibt, darf SMB nicht mit dem alten MPC/PI-Blender neu berechnet werden (verhindert ein Überschwingen nach dem Hypo). Nur zu Debugging-Zwecken deaktivieren.</string>
-    <string name="aimi_tube_advanced_title">Straight-line tube (Feinabstimmung)</string>
-    <string name="aimi_tube_hypo_floor_title">Tube: prognostizierter Mindestblutzuckerwert (mg/dL)</string>
-    <string name="aimi_tube_hypo_floor_summary">Robuste Hypoglykämie-Einschränkung: Die SMB-Obergrenze ist nur zulässig, wenn der prognostizierte Mindestblutzuckerwert abzüglich des geschätzten SMB-Effekts auf oder über diesem Wert bleibt.</string>
-    <string name="aimi_tube_hyper_band_title">Tube: Hyper-Band oberhalb des Zielwerts (mg/dL)</string>
-    <string name="aimi_tube_hyper_band_summary">Ein eventueller Blutzuckerwert oberhalb des Zielwerts + dieses Band löst eine stärkere Tendenz zu höheren SMB-Obergrenzen aus (innerhalb der Hypo-Tube).</string>
-    <string name="aimi_tube_aggressiveness_title">Tube: Aggressivität</string>
-    <string name="aimi_tube_aggressiveness_summary">1,0 = Standard. Höher = stärkerer Korrekturbedarf (stärkere Hyper-Anpassung, weniger Glättung der Befehle). Niedriger = sanftere Obergrenzen.</string>
-    <string name="aimi_tube_basal_trim_title">Tube: Maximaler Basal-Trim (Anteil)</string>
-    <string name="aimi_tube_basal_trim_summary">Wenn SMB-Obergrenzen reduziert werden, werden auch das Profil-Basal und das maximale Tagesbasal um bis zu diesen Anteil skaliert (0 = aus). Interner Mindestwert 0,88.</string>
-    <string name="aimi_tube_kappa_margin_title">Tube: Kappa-Sicherheitsmarge</string>
-    <string name="aimi_tube_kappa_margin_summary">Erhöht den geschätzten Blutzuckerabfall pro SMB-Einheit (0 = Standard). Verwenden Sie 0,05–0,15, wenn Sie eine konservativere Tube wünschen.</string>
-    <string name="aimi_gov_hypo_rate_enter_title">Governance: Hypoglykämie-Rate für den Übergang in den HOLD-Modus</string>
-    <string name="aimi_gov_hypo_rate_enter_summary">Anteil der jüngsten Messwerte mit einem Blutzuckerwert unterhalb des für den Übergang in den konservativen HOLD-Modus erforderlichen Hypoglykämie-Schwellenwerts (0–1). Je niedriger, desto schwieriger auszulösen.</string>
-    <string name="aimi_gov_hypo_rate_exit_title">Governance: Hypo-Rate zum Verlassen von HOLD</string>
-    <string name="aimi_gov_hypo_rate_exit_summary">Muss unter diesem Wert bleiben (und keine schwerwiegende Probe enthalten), um HOLD nach der Hysterese zu verlassen. Sollte niedriger sein als die Eintrittsrate.</string>
-    <string name="aimi_gov_hypo_bg_mgdl_title">Governance: Schwellenwert für hypoglykämischen Blutzucker (mg/dL)</string>
-    <string name="aimi_gov_hypo_bg_mgdl_summary">Ein Blutzuckerwert nach der Messung unter diesem Wert zählt zur Hypo-Rate im rollierenden Governance-Fenster.</string>
-    <string name="aimi_gov_severe_hypo_bg_mgdl_title">Governance: Schwere Hypoglykämie-Blutzucker (mg/dL)</string>
-    <string name="aimi_gov_severe_hypo_bg_mgdl_summary">Jede Probe, die diesen Wert erreicht oder unterschreitet, unterliegt den strengeren Untergrenzen und Abklingzeiten der schweren Stufe. Wird streng unterhalb des Hypoglykämie-Schwellenwerts gehalten.</string>
-    <string name="aimi_gov_hold_basal_floor_rate_title">HOLD: Basal-Skalierungsuntergrenze (Ratenstufe)</string>
-    <string name="aimi_gov_hold_basal_floor_rate_summary">Mindestwert für den universellen Basal-Skalierungsfaktor, während HOLD gilt, ohne dass sich ein schwerwiegender Wert im Fenster befindet.</string>
-    <string name="aimi_gov_hold_basal_decay_rate_title">HOLD: Basal-Abklingrate pro Aktualisierung (Ratenstufe)</string>
-    <string name="aimi_gov_hold_basal_decay_rate_summary">Jedes Lern-Update multipliziert die Basal-Skalierung während HOLD mit diesem Wert (Ratenstufe). Muss &lt; 1 sein.</string>
-    <string name="aimi_gov_hold_agg_floor_rate_title">HOLD: T3C-Aggressivitätsuntergrenze (Ratenstufe)</string>
-    <string name="aimi_gov_hold_agg_floor_rate_summary">Mindestwert für den T3C-Aggressivitätsfaktor während HOLD (Ratenstufe).</string>
-    <string name="aimi_gov_hold_agg_decay_rate_title">HOLD: T3C-Aggressivitätsabfall (Ratenstufe)</string>
-    <string name="aimi_gov_hold_agg_decay_rate_summary">Multiplikativer Abklingfaktor pro Aktualisierung für die Aggressivität während HOLD (Ratenstufe).</string>
-    <string name="aimi_gov_hold_basal_floor_severe_title">HOLD: Basal-Skalierungsuntergrenze (schwere Stufe)</string>
-    <string name="aimi_gov_hold_basal_floor_severe_summary">Wird verwendet, wenn mindestens eine Probe im Fenster den Wert für schwere Hypoglykämie erreicht oder unterschreitet.</string>
-    <string name="aimi_gov_hold_basal_decay_severe_title">HOLD: Basalabfall (Stufe „schwer”)</string>
-    <string name="aimi_gov_hold_basal_decay_severe_summary">Multiplikativer Abklingfaktor für die Basisskalierung pro Aktualisierung während HOLD, wenn die Stufe „severe“ gilt.</string>
-    <string name="aimi_gov_hold_agg_floor_severe_title">HOLD: Untergrenze für T3C-Aggressivität (Stufe „severe“)</string>
-    <string name="aimi_gov_hold_agg_floor_severe_summary">Mindestaggressivität, wenn die Stufe „severe“ gilt.</string>
-    <string name="aimi_gov_hold_agg_decay_severe_title">HOLD: T3C-Aggressivitätsabfall (Stufe „severe“)</string>
-    <string name="aimi_gov_hold_agg_decay_severe_summary">Aggressivitätsabfall pro Aktualisierung, wenn die Stufe „schwerwiegend“ gilt.</string>
-    <string name="aimi_gov_anticipation_lookback_samples_title">Governance: Rückblick auf Vorhersagen (Beispiele)</string>
-    <string name="aimi_gov_anticipation_lookback_samples_summary">Wie viele aktuelle Lernbeispiele (typischerweise im Abstand von 5 Minuten) werden verwendet, um die Entlastung bei der Kurzzeitprognose zu bewerten. Auf eine ganze Zahl gerundet.</string>
-    <string name="aimi_gov_anticipation_margin_mgdl_title">Governance: Antizipationsmarge über dem Hypoglykämiewert (mg/dL)</string>
-    <string name="aimi_gov_anticipation_margin_mgdl_summary">Der prognostizierte Mindestblutzuckerwert muss mindestens dem Hypo-Schwellenwert zuzüglich dieser Marge entsprechen, damit er für die Entlastung als erholungsorientiert gilt.</string>
-    <string name="aimi_gov_anticipation_hypo_damp_title">Governance: Dämpfung der Hypo-Antizipation</string>
-    <string name="aimi_gov_anticipation_hypo_damp_summary">Bei hoher Entlastung wird die gewichtete Hypo-Rate für HOLD-Eintritt/Austritt mit (1 minus diesem Bruchteil mal Entlastung) multipliziert. 0 deaktiviert die Hypo-Dämpfung aus Vorhersagen.</string>
-    <string name="aimi_gov_anticipation_decay_blend_max_title">Governance: Abmilderung des HOLD-Abklingens durch Antizipation</string>
-    <string name="aimi_gov_anticipation_decay_blend_max_summary">Begrenzt, wie stark das Abklingen von HOLD-Basal/Aggressivität in Richtung Neutral gelockert wird, wenn die Vorhersage-Entlastung hoch ist. 0 lässt das Abklingen durch Antizipation unverändert.</string>
-
-    <!-- General preferences -->
-    <!-- Overview preferences -->
-    <!-- Pump preferences -->
-    <!-- Alert preferences -->
-    <!-- BG Source preferences -->
-    <!-- APS preferences -->
-    <!-- Maintenance preferences -->
-    <!-- Autotune preferences -->
-    <!-- SMS preferences -->
-    <!-- Virtual pump preferences -->
-    <!-- NS Client preferences -->
-    <!-- OpenHumans preferences -->
-    <!-- xDrip preferences -->
-    <!-- Wear preferences -->
-    <!-- Wizard preferences -->
-    <!-- Site rotation preferences -->
-    <!-- IntKey: Overview preferences -->
-    <!-- IntKey: Protection preferences -->
-    <!-- Protection type entries (canonical location - also used by core/ui) -->
-    <!-- IntKey: Safety preferences -->
-    <!-- IntKey: Loop preferences -->
-    <!-- IntKey: APS preferences -->
-    <!-- IntKey: Maintenance preferences -->
-    <!-- IntKey: Alert preferences -->
-    <!-- IntKey: Insulin preferences -->
-    <!-- IntKey: Autotune preferences -->
-    <!-- IntKey: SMS preferences -->
-    <!-- IntKey: BG Source preferences -->
-    <!-- IntKey: NS Client preferences -->
-    <!-- IntKey: Site rotation preferences -->
-    <!-- StringKey: General preferences -->
-    <!-- Formatted unit strings with value only -->
-    <!-- Formatted unit strings with value and range -->
-    <!-- StringKey: Directory preferences -->
-    <!-- StringKey: Protection preferences -->
-    <!-- Theme switcher dark and light mode-->
-    <!-- StringKey: Safety preferences -->
-    <!-- StringKey: Maintenance preferences -->
-    <!-- StringKey: Automation preferences -->
-    <!-- StringKey: SMS preferences -->
-    <!-- StringKey: Virtual pump preferences -->
-    <!-- StringKey: NS Client preferences -->
-    <!-- DoubleKey: Overview preferences -->
-    <!-- DoubleKey: Actions preferences -->
-    <!-- DoubleKey: Safety preferences -->
-    <!-- DoubleKey: APS preferences -->
-    <!-- UnitDoubleKey: Overview preferences -->
-    <!-- UnitDoubleKey: APS preferences -->
-    <!-- IntentKey preferences -->
-    <!--    Appearance preferences-->
-
-    <string name="ketoacidosis_protection_title">Ketoazidose-Schutz</string>
-    <string name="ketoacidosis_protection_summary">Aktiviert eine kleine Sicherheits-TBR anstelle von null TBR, um das Risiko einer Ketoazidose zu verringern.</string>
-    <string name="ketoacidosis_protection_strategy_title">Variable Strategie?</string>
-    <string name="ketoacidosis_protection_strategy_summary">Wenn diese Funktion aktiviert ist, wird die kleine Sicherheits-TBR aktiviert, wenn der IOB im negativen Bereich liegt, als ob eine halbe Stunde lang kein Basalinsulin abgegeben worden wäre. Wenn diese Funktion deaktiviert ist, wird jeder Zero Temp durch die kleine TBR ersetzt.</string>
-    <string name="ketoacidosis_protection_basal_title">Sicherheits-TBR in [%]</string>
-    <string name="ketoacidosis_protection_basal_summary">Standard: 10</string>
-    <string name="pref_activ_mon_title_activity_detection">Aktivitätsanzeige aktivieren</string>
-    <string name="pref_activ_mon_sum_activity_detection">Hauptschalter. Aus → activityRatio = 1,0 zu jeder Zeit, keine Auswirkung auf ISF/Basal.</string>
-    <string name="pref_activ_mon_title_ignore_inactivity_overnight">Nächtliche Inaktivität ignorieren</string>
-    <string name="pref_activ_mon_sum_ignore_inactivity_overnight">Verhindert, dass längeres Stillliegen während des Schlafs als „Inaktivität“ gewertet wird und fälschlicherweise die Inaktivitätsstrafe auslöst.</string>
-    <string name="pref_activ_mon_title_act_mon_use_steps">Schritte aus verschiedenen Quellen bewerten</string>
-    <string name="pref_activ_mon_sum_inactivity_idle_start">Wenn die Nachtunterdrückung in Kraft tritt (z. B. 22 = 22:00 Uhr).         + (später) → kürzeres Nachtfenster, Inaktivitätserkennung wird früher wieder aktiviert         - (früher) → längeres Nachtfenster</string>
-    <string name="pref_activ_mon_sum_inactivity_idle_end">Bis zu welcher Uhrzeit gilt die Nachtunterdrückung (z. B. 6 = 6:00 Uhr). Unterstützt den Übergang über Mitternacht hinweg (IdleStart > IdleEnd).         + (später aufwachen) → längeres Nachtfenster         - (früher aufwachen) → kürzeres Nachtfenster</string>
-    <string name="pref_activ_mon_sum_activity_scale_factor">Verstärkt die Empfindlichkeitssteigerung, wenn eine Bewegung erkannt wird.         + → stärkere ISF-Erhöhung bei Aktivität (activityRatio sinkt stärker, mehr Insulin)         - → schwächerer Effekt, sanfterer Übergang</string>
-    <string name="pref_activ_mon_sum_inactivity_scale_factor">Verstärkt den ISF-Schutz bei Inaktivität.         + → stärkere Senkung des Insulinspiegels bei Inaktivität (der activityRatio steigt stärker an)         - → schwächerer Effekt</string>
-    <string name="eversense_use_smoothing">ESEL-Glättung verwenden</string>
-    <string name="eversense_cloud_upload_enabled">Eversense-Cloud-Upload aktivieren</string>
-    <string name="eversense_cloud_upload_toast">Ergebnis des Cloud-Uploads anzeigen</string>
-    <string name="pref_title_overview_use_dashboard_layout">Dashboard als Startseite verwenden</string>
-    <string name="pref_summary_overview_use_dashboard_layout">Verwenden Sie das AIMI-Hybrid-Dashboard als Hauptinhalt der Startseite. In der modernen Benutzeroberfläche (Compose) bleiben die Suchfunktion, die Verwaltung und die untere Leiste weiterhin verfügbar; in der klassischen Benutzeroberfläche wechselt die Registerkarte „Startseite“ zwischen dem Dashboard und der bisherigen Übersicht.</string>
-    <string name="pref_title_overview_show_hybrid_aimi_pulse">Letzten AIMI-Lauf auf dem Dashboard anzeigen</string>
-    <string name="pref_summary_overview_show_hybrid_aimi_pulse">Wenn diese Option aktiviert ist, wird die Übersichtskarte unter dem Glukosering angezeigt (letzter Loop, SMB usw.). Standardmäßig ist diese Option deaktiviert, um mehr Platz für das Diagramm zu schaffen.</string>
-    <string name="pref_title_overview_dashboard_extended_metrics">Dashboard: Erweiterte Kennzahlen</string>
-    <string name="pref_summary_overview_dashboard_extended_metrics">Vollständige zweispaltige Statistiken und AIMI-Verlaufsanzeige. Aus = kompakte Zeile (Schritte, IOB, Herzfrequenz, TBR).</string>
-    <string name="prefs_vico_chart_appearance_title">Darstellung des Startdiagramms (Vico)</string>
-    <string name="pref_title_vico_bg_reading_tint">BZ Punktfarbe</string>
-    <string name="pref_summary_vico_bg_reading_tint">Farbton für einzelne CGM-Punkte im Hauptglukosediagramm. Die nach Bereichen farblich gekennzeichneten Punkte bleiben unverändert.</string>
-    <string name="pref_title_vico_chart_backdrop">Hintergrundstil des Diagramms</string>
-    <string name="pref_summary_vico_chart_backdrop">Hintergrund hinter dem Armaturenbrett / Übersicht über die Blutzuckerkurve.</string>
-    <string name="pref_vico_tint_theme">Standarddesign</string>
-    <string name="pref_vico_backdrop_theme">Standarddesign</string>
-    <string name="pref_title_aimi_dyn_isf_trajectory_tuning">DynISF: Verlaufsoptimierung (CGM-Geometrie)</string>
-    <string name="pref_summary_aimi_dyn_isf_trajectory_tuning">Verwendet dieselben CGM-Funktionen mit kurzem Zeithorizont wie AutoISF (Deltas, parabolische Projektion, Beschleunigung), jedoch nur, wenn die Qualitätskriterien erfüllt sind. Begrenzte Änderung pro Tick; wird übersprungen, wenn die physikalische Modellierung die ISF bereits stark strafft. Erfordert dynamische Empfindlichkeit. Standardmäßig deaktiviert.</string>
-    <string name="pref_title_aimi_dyn_isf_trajectory_shadow">DynISF-Trajektorie: nur Schatten</string>
-    <string name="pref_summary_aimi_dyn_isf_trajectory_shadow">Wenn diese Option aktiviert ist, wird der voraussichtliche ISF-Multiplikator protokolliert, der angezeigte DynISF-Wert wird jedoch nicht geändert. Deaktivieren Sie diese Option, sobald Sie dem Signal in den Protokollen vertrauen.</string>
-    <string name="pref_title_aimi_dyn_isf_trajectory_max_fraction">DynISF-Verlauf: maximale ISF-Änderung pro Tick</string>
-    <string name="pref_title_aimi_autodrive_v3_authoritative">"Autodrive V3 maßgeblich SMB "</string>
-</resources>
+        <string name="prefs_range_title">Bereich für die Visualisierung</string>
+        <string name="pref_title_aimi_advisor_personal_oref_ml">AIMI Advisor: persönliches Risikomodell auf dem Gerät</string>
+        <string name="pref_summary_aimi_advisor_personal_oref_ml">Wenn Sie Advisor öffnen, werden kleine Modelle anhand aktueller Loop+CGM-Merkmale trainiert. Nur zu Informationszwecken; hat keinen Einfluss auf die Insulinabgabe.</string>
+        <string name="pref_title_aimi_advisor_llm_rich_oref">AI Coach: Strukturierte OREF-Erkenntnisse einbeziehen</string>
+        <string name="pref_summary_aimi_advisor_llm_rich_oref">Fügt einen Block mit Fakten in einfacher Sprache für den Coach-LLM hinzu. Deaktivieren Sie diese Option für eine kürzere Cloud-Eingabeaufforderung.</string>
+        <string name="pref_title_aimi_straight_line_tube">Straight-Line-Tube-Berater (SMB-Obergrenzen)</string>
+        <string name="pref_summary_aimi_straight_line_tube">Diskrete Kurzzeitregelung für maximales SMB: Hält den vorhergesagten minimalen BG mithilfe der PKPD-Min-Kurve über einem Mindestwert, bevorzugt größere Obergrenzen, wenn der endgültige BG hoch ist, und bestraft eine zickzackförmige SMB-Dimensionierung. Ersetzt weder PKPD noch Sicherheitsnetze. Standardmäßig deaktiviert.</string>
+        <string name="pref_summary_aimi_dyn_isf_trajectory_max_fraction">Obergrenze für die relative ISF-Anpassung anhand der Kursentwicklung (z. B. 0,06 = bei starkem Anstieg höchstens etwa 6 % strengere ISF oder bei starkem Rückgang 6 % lockerere ISF). Ein niedrigerer Wert bedeutet mehr Sicherheit, aber einen geringeren Nutzen.</string>
+        <string name="pref_title_aimi_peak_governor_enabled">TAP-G-Spitzenregler</string>
+        <string name="pref_summary_aimi_peak_governor_enabled">Wenn die adaptive PK/PD aktiviert ist, wird der Spitzenwert des Insulinprofils mit dem erlernten PK/PD-Spitzenwert für die Schleife „peakTime“ kombiniert (siehe Forschungsdokument TAP_G_PEAK_GOVERNOR_RFC).</string>
+        <string name="pref_title_aimi_peak_governor_learned_weight">TAP-G-gelernte Gewichtung für die Peak-Mischung</string>
+        <string name="pref_summary_aimi_peak_governor_learned_weight">0 = nur Insulin-Anker, 1 = nur gelernter PKPD-Peak. Standardwert 0,55.</string>
+        <string name="pref_title_xdripOM">XDrip One Minute verwenden</string>
+        <string name="pref_summary_xdripOM">Unterstützung für XDrip-Blutzuckerwerte im Minutentakt aktivieren</string>
+        <string name="pref_summary_aimi_autodrive_v3_authoritative">Wenn Autodrive V3 aktiv ist und einen sicheren SMB/TBR ausgibt, darf SMB nicht mit dem alten MPC/PI-Blender neu berechnet werden (verhindert ein Überschwingen nach dem Hypo). Nur zu Debugging-Zwecken deaktivieren.</string>
+        <string name="aimi_tube_advanced_title">Straight-line tube (Feinabstimmung)</string>
+        <string name="aimi_tube_hypo_floor_title">Tube: prognostizierter Mindestblutzuckerwert (mg/dL)</string>
+        <string name="aimi_tube_hypo_floor_summary">Robuste Hypoglykämie-Einschränkung: Die SMB-Obergrenze ist nur zulässig, wenn der prognostizierte Mindestblutzuckerwert abzüglich des geschätzten SMB-Effekts auf oder über diesem Wert bleibt.</string>
+        <string name="aimi_tube_hyper_band_title">Tube: Hyper-Band oberhalb des Zielwerts (mg/dL)</string>
+        <string name="aimi_tube_hyper_band_summary">Ein eventueller Blutzuckerwert oberhalb des Zielwerts + dieses Band löst eine stärkere Tendenz zu höheren SMB-Obergrenzen aus (innerhalb der Hypo-Tube).</string>
+        <string name="aimi_tube_aggressiveness_title">Tube: Aggressivität</string>
+        <string name="aimi_tube_aggressiveness_summary">1,0 = Standard. Höher = stärkerer Korrekturbedarf (stärkere Hyper-Anpassung, weniger Glättung der Befehle). Niedriger = sanftere Obergrenzen.</string>
+        <string name="aimi_tube_basal_trim_title">Tube: Maximaler Basal-Trim (Anteil)</string>
+        <string name="aimi_tube_basal_trim_summary">Wenn SMB-Obergrenzen reduziert werden, werden auch das Profil-Basal und das maximale Tagesbasal um bis zu diesen Anteil skaliert (0 = aus). Interner Mindestwert 0,88.</string>
+        <string name="aimi_tube_kappa_margin_title">Tube: Kappa-Sicherheitsmarge</string>
+        <string name="aimi_tube_kappa_margin_summary">Erhöht den geschätzten Blutzuckerabfall pro SMB-Einheit (0 = Standard). Verwenden Sie 0,05–0,15, wenn Sie eine konservativere Tube wünschen.</string>
+        <string name="aimi_gov_hypo_rate_enter_title">Governance: Hypoglykämie-Rate für den Übergang in den HOLD-Modus</string>
+        <string name="aimi_gov_hypo_rate_enter_summary">Anteil der jüngsten Messwerte mit einem Blutzuckerwert unterhalb des für den Übergang in den konservativen HOLD-Modus erforderlichen Hypoglykämie-Schwellenwerts (0–1). Je niedriger, desto schwieriger auszulösen.</string>
+        <string name="aimi_gov_hypo_rate_exit_title">Governance: Hypo-Rate zum Verlassen von HOLD</string>
+        <string name="aimi_gov_hypo_rate_exit_summary">Muss unter diesem Wert bleiben (und keine schwerwiegende Probe enthalten), um HOLD nach der Hysterese zu verlassen. Sollte niedriger sein als die Eintrittsrate.</string>
+        <string name="aimi_gov_hypo_bg_mgdl_title">Governance: Schwellenwert für hypoglykämischen Blutzucker (mg/dL)</string>
+        <string name="aimi_gov_hypo_bg_mgdl_summary">Ein Blutzuckerwert nach der Messung unter diesem Wert zählt zur Hypo-Rate im rollierenden Governance-Fenster.</string>
+        <string name="aimi_gov_severe_hypo_bg_mgdl_title">Governance: Schwere Hypoglykämie-Blutzucker (mg/dL)</string>
+        <string name="aimi_gov_severe_hypo_bg_mgdl_summary">Jede Probe, die diesen Wert erreicht oder unterschreitet, unterliegt den strengeren Untergrenzen und Abklingzeiten der schweren Stufe. Wird streng unterhalb des Hypoglykämie-Schwellenwerts gehalten.</string>
+        <string name="aimi_gov_hold_basal_floor_rate_title">HOLD: Basal-Skalierungsuntergrenze (Ratenstufe)</string>
+        <string name="aimi_gov_hold_basal_floor_rate_summary">Mindestwert für den universellen Basal-Skalierungsfaktor, während HOLD gilt, ohne dass sich ein schwerwiegender Wert im Fenster befindet.</string>
+        <string name="aimi_gov_hold_basal_decay_rate_title">HOLD: Basal-Abklingrate pro Aktualisierung (Ratenstufe)</string>
+        <string name="aimi_gov_hold_basal_decay_rate_summary">Jedes Lern-Update multipliziert die Basal-Skalierung während HOLD mit diesem Wert (Ratenstufe). Muss &lt; 1 sein.</string>
+        <string name="aimi_gov_hold_agg_floor_rate_title">HOLD: T3C-Aggressivitätsuntergrenze (Ratenstufe)</string>
+        <string name="aimi_gov_hold_agg_floor_rate_summary">Mindestwert für den T3C-Aggressivitätsfaktor während HOLD (Ratenstufe).</string>
+        <string name="aimi_gov_hold_agg_decay_rate_title">HOLD: T3C-Aggressivitätsabfall (Ratenstufe)</string>
+        <string name="aimi_gov_hold_agg_decay_rate_summary">Multiplikativer Abklingfaktor pro Aktualisierung für die Aggressivität während HOLD (Ratenstufe).</string>
+        <string name="aimi_gov_hold_basal_floor_severe_title">HOLD: Basal-Skalierungsuntergrenze (schwere Stufe)</string>
+        <string name="aimi_gov_hold_basal_floor_severe_summary">Wird verwendet, wenn mindestens eine Probe im Fenster den Wert für schwere Hypoglykämie erreicht oder unterschreitet.</string>
+        <string name="aimi_gov_hold_basal_decay_severe_title">HOLD: Basalabfall (Stufe „schwer”)</string>
+        <string name="aimi_gov_hold_basal_decay_severe_summary">Multiplikativer Abklingfaktor für die Basisskalierung pro Aktualisierung während HOLD, wenn die Stufe „severe“ gilt.</string>
+        <string name="aimi_gov_hold_agg_floor_severe_title">HOLD: Untergrenze für T3C-Aggressivität (Stufe „severe“)</string>
+        <string name="aimi_gov_hold_agg_floor_severe_summary">Mindestaggressivität, wenn die Stufe „severe“ gilt.</string>
+        <string name="aimi_gov_hold_agg_decay_severe_title">HOLD: T3C-Aggressivitätsabfall (Stufe „severe“)</string>
+        <string name="aimi_gov_hold_agg_decay_severe_summary">Aggressivitätsabfall pro Aktualisierung, wenn die Stufe „schwerwiegend“ gilt.</string>
+        <string name="aimi_gov_anticipation_lookback_samples_title">Governance: Rückblick auf Vorhersagen (Beispiele)</string>
+        <string name="aimi_gov_anticipation_lookback_samples_summary">Wie viele aktuelle Lernbeispiele (typischerweise im Abstand von 5 Minuten) werden verwendet, um die Entlastung bei der Kurzzeitprognose zu bewerten. Auf eine ganze Zahl gerundet.</string>
+        <string name="aimi_gov_anticipation_margin_mgdl_title">Governance: Antizipationsmarge über dem Hypoglykämiewert (mg/dL)</string>
+        <string name="aimi_gov_anticipation_margin_mgdl_summary">Der prognostizierte Mindestblutzuckerwert muss mindestens dem Hypo-Schwellenwert zuzüglich dieser Marge entsprechen, damit er für die Entlastung als erholungsorientiert gilt.</string>
+        <string name="aimi_gov_anticipation_hypo_damp_title">Governance: Dämpfung der Hypo-Antizipation</string>
+        <string name="aimi_gov_anticipation_hypo_damp_summary">Bei hoher Entlastung wird die gewichtete Hypo-Rate für HOLD-Eintritt/Austritt mit (1 minus diesem Bruchteil mal Entlastung) multipliziert. 0 deaktiviert die Hypo-Dämpfung aus Vorhersagen.</string>
+        <string name="aimi_gov_anticipation_decay_blend_max_title">Governance: Abmilderung des HOLD-Abklingens durch Antizipation</string>
+        <string name="aimi_gov_anticipation_decay_blend_max_summary">Begrenzt, wie stark das Abklingen von HOLD-Basal/Aggressivität in Richtung Neutral gelockert wird, wenn die Vorhersage-Entlastung hoch ist. 0 lässt das Abklingen durch Antizipation unverändert.</string>
+    -->
+        <string name="ketoacidosis_protection_title">Ketoazidose-Schutz</string>
+        <string name="ketoacidosis_protection_summary">Aktiviert eine kleine Sicherheits-TBR anstelle von null TBR, um das Risiko einer Ketoazidose zu verringern.</string>
+        <string name="ketoacidosis_protection_strategy_title">Variable Strategie?</string>
+        <string name="ketoacidosis_protection_strategy_summary">Wenn diese Funktion aktiviert ist, wird die kleine Sicherheits-TBR aktiviert, wenn der IOB im negativen Bereich liegt, als ob eine halbe Stunde lang kein Basalinsulin abgegeben worden wäre. Wenn diese Funktion deaktiviert ist, wird jeder Zero Temp durch die kleine TBR ersetzt.</string>
+        <string name="ketoacidosis_protection_basal_title">Sicherheits-TBR in [%]</string>
+        <string name="ketoacidosis_protection_basal_summary">Standard: 10</string>
+        <string name="pref_activ_mon_title_activity_detection">Aktivitätsanzeige aktivieren</string>
+        <string name="pref_activ_mon_sum_activity_detection">Hauptschalter. Aus → activityRatio = 1,0 zu jeder Zeit, keine Auswirkung auf ISF/Basal.</string>
+        <string name="pref_activ_mon_title_ignore_inactivity_overnight">Nächtliche Inaktivität ignorieren</string>
+        <string name="pref_activ_mon_sum_ignore_inactivity_overnight">Verhindert, dass längeres Stillliegen während des Schlafs als „Inaktivität“ gewertet wird und fälschlicherweise die Inaktivitätsstrafe auslöst.</string>
+        <string name="pref_activ_mon_title_act_mon_use_steps">Schritte aus verschiedenen Quellen bewerten</string>
+        <string name="pref_activ_mon_sum_inactivity_idle_start">Wenn die Nachtunterdrückung in Kraft tritt (z. B. 22 = 22:00 Uhr).         + (später) → kürzeres Nachtfenster, Inaktivitätserkennung wird früher wieder aktiviert         - (früher) → längeres Nachtfenster</string>
+        <string name="pref_activ_mon_sum_inactivity_idle_end">Bis zu welcher Uhrzeit gilt die Nachtunterdrückung (z. B. 6 = 6:00 Uhr). Unterstützt den Übergang über Mitternacht hinweg (IdleStart &gt; IdleEnd).         + (später aufwachen) → längeres Nachtfenster         - (früher aufwachen) → kürzeres Nachtfenster</string>
+        <string name="pref_activ_mon_sum_activity_scale_factor">Verstärkt die Empfindlichkeitssteigerung, wenn eine Bewegung erkannt wird.         + → stärkere ISF-Erhöhung bei Aktivität (activityRatio sinkt stärker, mehr Insulin)         - → schwächerer Effekt, sanfterer Übergang</string>
+        <string name="pref_activ_mon_sum_inactivity_scale_factor">Verstärkt den ISF-Schutz bei Inaktivität.         + → stärkere Senkung des Insulinspiegels bei Inaktivität (der activityRatio steigt stärker an)         - → schwächerer Effekt</string>
+        <string name="eversense_cloud_upload_enabled">Eversense-Cloud-Upload aktivieren</string>
+        <string name="eversense_cloud_upload_toast">Ergebnis des Cloud-Uploads anzeigen</string>
+        <string name="pref_title_overview_use_dashboard_layout">Dashboard als Startseite verwenden</string>
+        <string name="pref_summary_overview_use_dashboard_layout">Verwenden Sie das AIMI-Hybrid-Dashboard als Hauptinhalt der Startseite. In der modernen Benutzeroberfläche (Compose) bleiben die Suchfunktion, die Verwaltung und die untere Leiste weiterhin verfügbar; in der klassischen Benutzeroberfläche wechselt die Registerkarte „Startseite“ zwischen dem Dashboard und der bisherigen Übersicht.</string>
+        <string name="pref_title_overview_show_hybrid_aimi_pulse">Letzten AIMI-Lauf auf dem Dashboard anzeigen</string>
+        <string name="pref_summary_overview_show_hybrid_aimi_pulse">Wenn diese Option aktiviert ist, wird die Übersichtskarte unter dem Glukosering angezeigt (letzter Loop, SMB usw.). Standardmäßig ist diese Option deaktiviert, um mehr Platz für das Diagramm zu schaffen.</string>
+        <string name="pref_title_overview_dashboard_extended_metrics">Dashboard: Erweiterte Kennzahlen</string>
+        <string name="pref_summary_overview_dashboard_extended_metrics">Vollständige zweispaltige Statistiken und AIMI-Verlaufsanzeige. Aus = kompakte Zeile (Schritte, IOB, Herzfrequenz, TBR).</string>
+        <string name="prefs_vico_chart_appearance_title">Darstellung des Startdiagramms (Vico)</string>
+        <string name="pref_title_vico_bg_reading_tint">BZ Punktfarbe</string>
+        <string name="pref_summary_vico_bg_reading_tint">Farbton für einzelne CGM-Punkte im Hauptglukosediagramm. Die nach Bereichen farblich gekennzeichneten Punkte bleiben unverändert.</string>
+        <string name="pref_title_vico_chart_backdrop">Hintergrundstil des Diagramms</string>
+        <string name="pref_summary_vico_chart_backdrop">Hintergrund hinter dem Armaturenbrett / Übersicht über die Blutzuckerkurve.</string>
+        <string name="pref_vico_tint_theme">Standarddesign</string>
+        <string name="pref_vico_backdrop_theme">Standarddesign</string>
+        <string name="pref_title_aimi_dyn_isf_trajectory_tuning">DynISF: Verlaufsoptimierung (CGM-Geometrie)</string>
+        <string name="pref_summary_aimi_dyn_isf_trajectory_tuning">Verwendet dieselben CGM-Funktionen mit kurzem Zeithorizont wie AutoISF (Deltas, parabolische Projektion, Beschleunigung), jedoch nur, wenn die Qualitätskriterien erfüllt sind. Begrenzte Änderung pro Tick; wird übersprungen, wenn die physikalische Modellierung die ISF bereits stark strafft. Erfordert dynamische Empfindlichkeit. Standardmäßig deaktiviert.</string>
+        <string name="pref_title_aimi_dyn_isf_trajectory_shadow">DynISF-Trajektorie: nur Schatten</string>
+        <string name="pref_summary_aimi_dyn_isf_trajectory_shadow">Wenn diese Option aktiviert ist, wird der voraussichtliche ISF-Multiplikator protokolliert, der angezeigte DynISF-Wert wird jedoch nicht geändert. Deaktivieren Sie diese Option, sobald Sie dem Signal in den Protokollen vertrauen.</string>
+        <string name="pref_title_aimi_dyn_isf_trajectory_max_fraction">DynISF-Verlauf: maximale ISF-Änderung pro Tick</string>
+        <string name="pref_title_aimi_autodrive_v3_authoritative">"Autodrive V3 maßgeblich SMB "</string>
+    </resources>

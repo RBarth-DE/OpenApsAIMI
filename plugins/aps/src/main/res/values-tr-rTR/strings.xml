@@ -109,7 +109,6 @@ Aktif Karbonhidratın ne kadar hızlı sindirildiğine ve KŞ\'nin beklenenden d
     <string name="autotune_profile_invalid">Profil geçersiz</string>
     <string name="pump_disconnected">Pompa bağlantısı kesildi</string>
     
-    <string name="half_basal_exercise_target_summary">Örneğin 160 gibi bir sayıya ayarlayın; bunun anlamı, geçici hedef 160 mg/dL olduğunda ve Yüksek geçici hedef duyarlılığı arttırır= doğru olduğunda, bu seviyede 50%% bazal çalışır (120 = 75%%; 140 = 60%%).</string>
     <string name="autoISF_settings_title">OtoİDF Ayarları</string>
     <string name="smb_delivery_settings_title">SMB iletim ayarları</string>
     <string name="openapsama_autoISF_max_summary">otoduyarlılık_maks\'a benzer şekilde İDF\'nin ne kadar güçlü olabileceğini tanımlar.\n\nVarsayılan değer 1.0 Bu şekilde kapalıdır.\n\nUYARI: 2.5\'in üzerindeki değerleri kullanırken son derece dikkatli olun</string>
@@ -138,29 +137,19 @@ Aktif Karbonhidratın ne kadar hızlı sindirildiğine ve KŞ\'nin beklenenden d
     <string name="oaps_aimi_pkpd_section_title">Adaptive PK/PD</string>
     <string name="aimi_pkpd_compose_title">PK/PD setup</string>
     <string name="aimi_pkpd_compose_summary">Guided presets, comfort tuning, and expert parameters in one screen</string>
-    <string name="aimi_pkpd_loop_summary_title">Currently used by the loop</string>
-    <string name="aimi_pkpd_loop_summary_format">Learned DIA %1$.1f h · peak %2$.0f min</string>
     <string name="aimi_pkpd_preset_section_title">Insulin profile preset</string>
     <string name="aimi_pkpd_preset_ultra_fast">Ultra-fast (e.g. Fiasp / Lyumjev)</string>
     <string name="aimi_pkpd_preset_rapid">Rapid (e.g. Humalog / NovoRapid)</string>
     <string name="aimi_pkpd_preset_standard">Standard / slower</string>
     <string name="aimi_pkpd_preset_custom">Custom (adjust sliders below)</string>
     <string name="aimi_pkpd_preset_applied">Insulin profile applied</string>
-    <string name="aimi_pkpd_sync_state_action">Align loop state to initial &amp; bounds</string>
     <string name="aimi_pkpd_sync_done">Loop DIA and peak aligned to initial values and bounds.</string>
-    <string name="aimi_pkpd_section_comfort">Comfort &amp; SMB shaping</string>
-    <string name="aimi_pkpd_section_learning">Learning (initial &amp; bounds)</string>
     <string name="aimi_pkpd_section_expert">Advanced caps &amp; guards</string>
     <string name="oaps_aimi_pkpd_enabled_title">Enable adaptive PK/PD</string>
-    <string name="oaps_aimi_pkpd_enabled_summary">Learn DIA and peak time continuously to refine AIMI dosing.</string>
-    <string name="oaps_aimi_pkpd_initial_dia_title">Initial DIA (h)</string>
-    <string name="oaps_aimi_pkpd_initial_peak_title">Initial peak time (min)</string>
     <string name="oaps_aimi_pkpd_dia_min_title">Minimum DIA (h)</string>
     <string name="oaps_aimi_pkpd_dia_max_title">Maximum DIA (h)</string>
     <string name="oaps_aimi_pkpd_peak_min_title">Minimum peak time (min)</string>
     <string name="oaps_aimi_pkpd_peak_max_title">Maximum peak time (min)</string>
-    <string name="oaps_aimi_pkpd_max_dia_delta_title">Max DIA change per day (h)</string>
-    <string name="oaps_aimi_pkpd_max_peak_delta_title">Max peak change per day (min)</string>
     <string name="oaps_aimi_isf_fusion_min_title">ISF fusion minimum factor</string>
     <string name="oaps_aimi_isf_fusion_max_title">ISF fusion maximum factor</string>
     <string name="oaps_aimi_isf_fusion_slope_title">Max ISF change per tick</string>

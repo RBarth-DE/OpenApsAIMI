@@ -1,11 +1,9 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-
     <string name="pref_title_simple_mode">Simple mode</string>
     <string name="pref_title_low_end_stability_mode">Low-end device stability mode</string>
     <string name="pref_title_insulin_concentration">Insulin concentration support</string>
     <string name="pref_summary_insulin_concentration">Enable support for different insulin concentrations (U50, U200, etc.)</string>
-
 
     <string name="pref_title_keep_screen_on">Keep screen on</string>
     <string name="pref_summary_keep_screen_on">Prevent Android to turn screen off. It will consume lot of energy when not plugged to power outlet.</string>
@@ -46,10 +44,8 @@
     <string name="pref_title_use_super_bolus">Use super bolus</string>
     <string name="pref_summary_use_super_bolus">Enable super bolus feature which borrows insulin from basal for immediate delivery.</string>
 
-
     <string name="pref_title_bt_watchdog">BT Watchdog</string>
     <string name="pref_summary_bt_watchdog">Switches off the phone\'s bluetooth for one second if no connection to the pump is possible. This may help on some phones where the bluetooth stack freezes.</string>
-
 
     <string name="pref_title_alert_missed_bg_reading">Alert if no BG data is received</string>
     <string name="pref_title_alert_pump_unreachable">Alert if pump is unreachable</string>
@@ -59,11 +55,9 @@
     <string name="pref_title_alert_override_dnd">Override Do Not Disturb mode</string>
     <string name="pref_summary_alert_override_dnd">When enabled, AAPS alarms play through silent and Do Not Disturb modes (alarm stream). When disabled, alarms respect silent/DND (notification stream).</string>
 
-
     <string name="pref_title_bg_source_upload_to_ns">Upload BG data to NS</string>
     <string name="pref_title_bg_source_create_sensor_change">Log sensor change</string>
     <string name="pref_summary_bg_source_create_sensor_change">Create sensor change therapy event when sensor is inserted.</string>
-
 
     <string name="pref_title_aps_use_dynamic_sensitivity">Use dynamic sensitivity</string>
     <string name="pref_summary_aps_use_dynamic_sensitivity">Use DynamicISF for sensitivity adjustment instead of Autosens.</string>
@@ -101,10 +95,8 @@
     <string name="pref_title_aps_smb_on_even_target">Enable SMB on even target</string>
     <string name="pref_summary_aps_smb_on_even_target">Alternative activation of SMB always based on target glucose value.</string>
 
-
     <string name="pref_title_maintenance_enable_fabric">Enable Fabric crash reporting</string>
     <string name="pref_title_maintenance_enable_export_automation">Enable automated settings export</string>
-
 
     <string name="pref_title_autotune_auto_switch_profile">Auto switch profile</string>
     <string name="pref_summary_autotune_auto_switch_profile">Automatically switch to the Autotune-generated profile after calculation.</string>
@@ -115,14 +107,11 @@
     <string name="pref_summary_autotune_circadian_ic_isf">Apply circadian variation to IC and ISF in Autotune calculations.</string>
     <string name="pref_title_autotune_additional_log">Additional logging</string>
 
-
     <string name="pref_title_sms_allow_remote_commands">Allow remote commands via SMS</string>
     <string name="pref_title_sms_report_pump_unreachable">Report pump unreachable via SMS</string>
     <string name="pref_summary_sms_report_pump_unreachable">Send SMS notification when pump becomes unreachable.</string>
 
-
     <string name="pref_title_virtual_pump_status_upload">Upload pump status to NS</string>
-
 
     <string name="pref_title_ns_upload_data">Upload data to NS</string>
     <string name="pref_summary_ns_upload_data">Upload treatments, temp basals, and other data to Nightscout.</string>
@@ -158,17 +147,14 @@
     <string name="pref_title_ns_use_ws">Use websockets</string>
     <string name="pref_summary_ns_use_ws">Use websockets for real-time communication with Nightscout.</string>
 
-
     <string name="pref_title_openhumans_wifi_only">WiFi only</string>
     <string name="pref_title_openhumans_charging_only">Charging only</string>
-
 
     <string name="pref_title_xdrip_send_status">Send status to xDrip+</string>
     <string name="pref_title_xdrip_send_detailed_iob">Send detailed IOB</string>
     <string name="pref_summary_xdrip_send_detailed_iob">Send detailed IOB information to xDrip+ for display on watch faces.</string>
     <string name="pref_title_xdrip_send_bgi">Show BGI</string>
     <string name="pref_summary_xdrip_send_bgi">Show Blood Glucose Impact in xDrip+ status line.</string>
-
 
     <string name="pref_title_wear_control">Wear control</string>
     <string name="pref_summary_wear_control">Control AAPS from Android Wear watch.</string>
@@ -183,14 +169,11 @@
     <string name="pref_title_wear_broadcast_data">Broadcast data to watch</string>
     <string name="pref_summary_wear_broadcast_data">Broadcast AAPS data to 3rd party watch apps via intent.</string>
 
-
     <string name="pref_title_wizard_calculation_visible">Show wizard calculation</string>
     <string name="pref_title_wizard_correction_percent">Use correction percent</string>
 
-
     <string name="pref_title_site_rotation_manage_pump">Manage pump site rotation</string>
     <string name="pref_title_site_rotation_manage_cgm">Manage CGM site rotation</string>
-
 
     <string name="pref_title_carbs_button_increment_1">Carbs button increment 1</string>
     <string name="pref_title_carbs_button_increment_2">Carbs button increment 2</string>
@@ -215,7 +198,6 @@
     <string name="pref_title_reset_bolus_percentage_time">Reset bolus percentage time</string>
     <string name="deliver_part_of_boluswizard_reset_time">Deliver full bolus (100%) if glycemia is older than</string>
 
-
     <string name="pref_title_protection_timeout">Protection timeout</string>
     <string name="pref_title_protection_type_application">Level 0: Application protection</string>
     <string name="pref_summary_protection_type_application">App launch. Independent from other levels</string>
@@ -230,13 +212,10 @@
     <string name="custom_password">Custom password</string>
     <string name="custom_pin">Custom PIN</string>
 
-
     <string name="pref_title_max_carbs">Maximum carbs allowed</string>
-
 
     <string name="pref_title_open_mode_min_change">Open mode minimum change</string>
     <string name="loop_open_mode_min_change_summary" formatted="false">Open Loop will popup new change request only if change is bigger than this value in %. Default value is 20%</string>
-
 
     <string name="pref_title_smb_frequency">SMB interval</string>
     <string name="pref_title_smb_max_minutes">Max minutes of basal to limit SMB</string>
@@ -244,8 +223,6 @@
     <string name="uam_smb_max_minutes">UAM SMB max minutes</string>
     <string name="pref_title_carbs_request_threshold">Carbs required threshold</string>
     <string name="carbs_req_threshold_summary">Minimum grams of carbs to display a carbs suggestion alert. Carbs suggestions below this number will not trigger a notification.</string>
-    <string name="pref_title_half_basal_exercise_target">Half basal exercise target</string>
-    <string name="half_basal_exercise_target_summary">Set to a number, e.g. 160, which means when temp target is 160 mg/dL and High temptarget raises sensitivity=true, run 50%% basal at this level (120 = 75%%; 140 = 60%%).</string>
     <string name="pref_title_iob_threshold_percent">IOB threshold percent (iob_threshold_percent)</string>
     <string name="openapsama_iob_threshold_percent_summary" formatted="false">Percentage of maxIOB above which SMBs are disabled.\nDefault value: 100%\nWith 100% this feature is effectively disabled.</string>
     <string name="pref_title_dynisf_adjustment_factor">DynamicISF adjustment factor</string>
@@ -253,34 +230,24 @@
     <string name="pref_title_autosens_period">Autosens period</string>
     <string name="openapsama_autosens_period_summary">Amount of hours in the past for sensitivity detection (carbs absorption time is excluded)</string>
 
-
     <string name="pref_title_logs_amount">Number of logs to send</string>
-
 
     <string name="pref_title_stale_data_threshold">Stale data threshold</string>
     <string name="pref_title_pump_unreachable_threshold">Pump unreachable threshold</string>
 
-
-
-
     <string name="pref_title_autotune_days">Default tune days</string>
     <string name="autotune_default_tune_days_summary">Default number of days of data to be processed by Autotune (up to 30)</string>
 
-
     <string name="pref_title_sms_remote_bolus_distance">Remote bolus min distance</string>
-
 
     <string name="pref_title_random_bg_interval">Random BG interval</string>
     <string name="pref_title_random_bg_randomize">Randomize BG data</string>
     <string name="pref_summary_random_bg_randomize">Add noise, jitter timestamps, randomize trend arrows, and emit occasional random carbs. Disable for a clean deterministic sine wave with the trend arrow derived from the sine slope.</string>
 
-
     <string name="pref_title_alarm_stale_data">Stale data alarm threshold</string>
     <string name="pref_title_urgent_alarm_stale_data">Urgent stale data alarm threshold</string>
 
-
     <string name="pref_title_site_rotation_profile">User profile for site rotation</string>
-
 
     <string name="pref_title_units">Units</string>
     <string name="units_mgdl">mg/dL</string>
@@ -296,7 +263,6 @@
     <string name="units_years">y</string>
     <string name="units_percent">%</string>
 
-
     <string name="units_format_grams">%1$d g</string>
     <string name="units_format_min">%1$d min</string>
     <string name="units_format_sec">%1$d sec</string>
@@ -311,7 +277,6 @@
     <string name="units_format_double">%1$.1f</string>
     <string name="units_format_double_2">%1$.2f</string>
     <string name="units_format_double_3">%1$.3f</string>
-
 
     <string name="units_format_grams_range">%1$d g (%2$d - %3$d)</string>
     <string name="units_format_min_range">%1$d min (%2$d - %3$d)</string>
@@ -357,9 +322,7 @@
     <string name="pref_title_patient_name">Name</string>
     <string name="pref_summary_patient_name">Name to identify this AAPS instance (shown in reports and sync)</string>
 
-
     <string name="pref_title_aaps_directory">AAPS directory</string>
-
 
     <string name="pref_title_master_password">Master password</string>
     <string name="pref_title_settings_password">Settings password</string>
@@ -369,7 +332,6 @@
     <string name="pref_title_bolus_password">Bolus password</string>
     <string name="pref_title_bolus_pin">Bolus PIN</string>
 
-
     <string name="pref_summary_theme_switcher">Choose dark, light, or to follow the system theme</string>
     <string name="pref_title_app_color_scheme">App Color Scheme</string>
     <string name="pref_dark_theme">Dark theme</string>
@@ -377,28 +339,22 @@
     <string name="pref_follow_system_theme">Use device theme</string>
     <string name="pref_title_skin">Overview layout</string>
 
-
     <string name="pref_title_patient_age">Patient age</string>
-
 
     <string name="maintenance_email">Email recipient</string>
     <string name="pref_title_identification">Identification for crash reports</string>
-
 
     <string name="pref_title_automation_location">Location service</string>
     <string name="automation_location_passive">Use passive location</string>
     <string name="automation_location_network">Use network location</string>
     <string name="automation_location_gps">Use GPS location</string>
 
-
     <string name="smscommunicator_allowednumbers">Allowed phone numbers</string>
     <string name="smscommunicator_allowednumbers_summary">+XXXXXXXXXX;+YYYYYYYYYY</string>
     <string name="smscommunicator_otp_pin">Additional mandatory PIN at token end</string>
     <string name="smscommunicator_otp_pin_summary">Additional digits that should be memorised and glued at end of each generated One Time Password</string>
 
-
     <string name="pref_title_virtual_pump_type">Pump type</string>
-
 
     <string name="ns_client_url_title">Nightscout URL</string>
     <string name="ns_client_url_summary">Enter your Nightscout URL (i.e. https://yoursitename.yourplatform.dom)</string>
@@ -409,21 +365,15 @@
     <string name="ns_wifi_ssids">WiFi SSID</string>
     <string name="ns_wifi_ssids_summary">Allowed SSIDs (semicolon separated)</string>
 
-
     <string name="pref_title_insulin_button_increment_1">Insulin button increment 1</string>
     <string name="pref_title_insulin_button_increment_2">Insulin button increment 2</string>
     <string name="pref_title_insulin_button_increment_3">Insulin button increment 3</string>
     <string name="insulin_increment_button_message">Amount of insulin to add when button is pressed</string>
 
-
     <string name="pref_title_fill_button_1">Fill button 1</string>
     <string name="pref_title_fill_button_2">Fill button 2</string>
     <string name="pref_title_fill_button_3">Fill button 3</string>
-
-
     <string name="pref_title_max_bolus">Maximum bolus</string>
-
-
     <string name="pref_title_max_basal">Maximum basal rate</string>
     <string name="openapsma_max_basal_summary">This value is called max basal in OpenAPS context</string>
     <string name="pref_title_smb_max_iob">Max IOB for SMB</string>
@@ -474,16 +424,11 @@
     <string name="pref_title_smb_max_range_extension">SMB max range extension (openapsama_smb_max_range_extension)</string>
     <string name="openapsama_smb_max_range_extension_summary">Default value: 1 This is another key OpenAPS safety cap, and specifies by what factor you can exceed the regular 120 maxSMB/maxUAM minutes. Increase this experimental value slowly and with caution.</string>
 
-
     <string name="pref_title_low_mark">Low BG mark</string>
     <string name="pref_title_high_mark">High BG mark</string>
 
-
     <string name="pref_title_lgs_threshold">LGS threshold</string>
     <string name="lgs_threshold_summary">BG value below which insulin is suspended. Default value uses standard target model. User can set value between 60mg/dl (3.3mmol/l) and 100mg/dl(5.5mmol/l). Values below 65/3.6 result in use of default model</string>
-
-
-
 
     <string name="prefs_range_title">Range for visualization</string>
 
@@ -503,8 +448,6 @@
     <string name="pref_summary_aimi_peak_governor_enabled">When adaptive PK/PD is on, blend the insulin profile peak with the learned PKPD peak for loop peakTime (see research doc TAP_G_PEAK_GOVERNOR_RFC).</string>
     <string name="pref_title_aimi_peak_governor_learned_weight">TAP-G learned peak blend weight</string>
     <string name="pref_summary_aimi_peak_governor_learned_weight">0 = insulin anchor only, 1 = learned PKPD peak only. Default 0.55.</string>
-    <string name="pref_title_unified_reactivity">Enable Unified Reactivity Learners</string>
-    <string name="pref_summary_unified_reactivity">Replaces the time-based bucket system with an analysis based on actual clinical metrics</string>
     <string name="pref_title_xdripOM">Use XDrip One Minute</string>
     <string name="pref_summary_xdripOM">Enable support for XDrip one minute BG values</string>
     <string name="pref_title_aimi_autodrive_v3_authoritative">Autodrive V3 authoritative SMB</string>
@@ -569,7 +512,7 @@
     <string name="aimi_gov_anticipation_decay_blend_max_title">Governance: anticipation HOLD decay softening</string>
     <string name="aimi_gov_anticipation_decay_blend_max_summary">Caps how much HOLD basal/aggressiveness decay is eased toward neutral when prediction relief is high. 0 leaves decay unchanged by anticipation.</string>
 
-    // Ketoacidosis Protection
+    <!-- Ketoacidosis Protection -->
     <string name="ketoacidosis_protection_title">Ketoacidosis Protection</string>
     <string name="ketoacidosis_protection_summary">Enables a small safety TBR instead of 0 TBR to reduce the ketoacidosis risk.</string>
     <string name="ketoacidosis_protection_strategy_title">Variable strategy?</string>
@@ -577,7 +520,7 @@
     <string name="ketoacidosis_protection_basal_title">Quantity of the safety TBR [%]</string>
     <string name="ketoacidosis_protection_basal_summary">Default: 10</string>
 
-    // Activity Monitor
+    <!-- Activity Monitor -->
     <string name="pref_activ_mon_title_activity_detection">Enable Activity Monitor</string>
     <string name="pref_activ_mon_sum_activity_detection">Master switch. Off → activityRatio = 1.0 at all times, no effect on ISF/Basal.</string>
     <string name="pref_activ_mon_title_ignore_inactivity_overnight">Ignore Inactivity at Night</string>
@@ -586,7 +529,7 @@
     <string name="pref_activ_mon_sum_inactivity_idle_start">When nighttime suppression takes effect (e.g., 22 = 10:00 PM).
         + (later) → shorter night window, inactivity detection active again earlier
         - (earlier) → longer night window</string>
-    <string name="pref_activ_mon_sum_inactivity_idle_end">Until what time night suppression applies (e.g., 6 = 6:00 a.m.). Supports crossing midnight (IdleStart > IdleEnd).
+    <string name="pref_activ_mon_sum_inactivity_idle_end">Until what time night suppression applies (e.g., 6 = 6:00 a.m.). Supports crossing midnight (IdleStart &gt; IdleEnd).
         + (wake up later) → longer night window
         - (wake up earlier) → shorter night window</string>b
     <string name="pref_activ_mon_sum_activity_scale_factor">Amplifies the sensitivity boost when movement is detected.
@@ -597,8 +540,6 @@
         - → weaker effect</string>
 
 
-    <string name="eversense_use_smoothing">Use ESEL smoothing</string>
     <string name="eversense_cloud_upload_enabled">Enable Eversense cloud upload</string>
     <string name="eversense_cloud_upload_toast">Show cloud upload result</string>
 </resources>
-

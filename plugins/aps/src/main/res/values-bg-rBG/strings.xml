@@ -1,6 +1,6 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <!--Autotune-->
+    
     <string name="dyn_isf_adjust_title" formatted="false">DynamicISF коефицент %</string>
     <string name="openapssmb">OpenAPS SMB</string>
     <string name="openaps_smb_dynamic_isf">Динамично ISF</string>
@@ -64,7 +64,7 @@
     <string name="loop_smb_execution_time_label">Време за изпълнение на SMB</string>
     <string name="loop_smb_set_by_pump_label">SMB в помпата</string>
     <string name="fallback_to_isf_no_tdd">Обратно към чувствителността в профила. Няма достатъчно данни. Причина: %1$s</string>
-    <!-- Autotune -->
+    
     <string name="autotune_description">Помага с потенциална настройка на профила (ISF, въглехидратно число и базали)</string>
     <string name="autotune_shortname">AT</string>
     <string name="autotune_default_tune_days_title">Брой дни с данни</string>
@@ -93,7 +93,7 @@
     <string name="autotune_update_local_profile_message">Да се обнови ли %1$s профил с Autotune профил?</string>
     <string name="autotune_revert_local_profile_message">Сменете профил %1$s с началния профил?</string>
     <string name="autotune_profile_invalid">Невалиден профил</string>
-    <!--    autoISF -->
+    
     <string name="autoISF_settings_title">AutoISF настройки</string>
     <string name="smb_delivery_settings_title">Настройки за SMB</string>
 
@@ -104,12 +104,10 @@
     <string name="autotune_log_ic_isf" translatable="false">| %1$4.4s | %2$3.3f |\t%3$3.3f |\n</string>
     <string name="autotune_log_basal" translatable="false">|\t%1$02.0f\t| %2$3.3f |%3$3.3f\t| %5$.0f%% / %4$d\n</string>
     <string name="autotune_log_sum_basal" translatable="false">|\t∑\t|\t%1$3.1f |\t%2$3.1f |\n</string>
-    <string name="not_available_full">Not available</string>
     <string name="pump_disconnected">Pump disconnected</string>
 
 
 
-    <string name="half_basal_exercise_target_summary">Set to a number, e.g. 160, which means when temp target is 160 mg/dL and High temptarget raises sensitivity=true, run 50%% basal at this level (120 = 75%%; 140 = 60%%).</string>
     <string name="openapsama_autoISF_max_summary">Similar to autosens_max this defines how strong ISF can become.\n\nThe default value 1.0 effectively shuts off this effect.\n\nWARNING: Be extremely careful when using values above 2.5</string>
     <string name="openapsama_autoISF_min_summary">Similar to autosens_min this defines how weak ISF can become.\n\nThe default value 1.0 effectively shuts off this effect.</string>
     <string name="openapsama_dura_ISF_weight_summary">This is the weight applied during longer lasting, elevated glucose plateaus and which strengthens ISF thereby potentially increasing insulin delivery.\n\nThe default value 0.0 effectively shuts off this effect.</string>

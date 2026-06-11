@@ -1,6 +1,6 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-
+    
     <string name="dyn_isf_adjust_title" formatted="false">DynamicISF Adjustment Factor %</string>
     <string name="dyn_isf_adjust_summary" formatted="false">Adjustment factor for DynamicISF. Set more than 100% for more aggressive correction doses, and less than 100% for less aggressive corrections.</string>
     <string name="openapssmb">OpenAPS SMB</string>
@@ -50,15 +50,15 @@
     <string name="uam_disabled_in_preferences">UAM disabled in preferences</string>
     <string name="autosens_disabled_in_preferences">Autosens disabled in preferences</string>
 
-
+    
     <string name="limiting_iob">Limiting IOB to %1$.1f U because of %2$s</string>
     <string name="maxvalueinpreferences">max value in preferences</string>
     <string name="hardlimit">hard limit</string>
 
-
+    
     <string name="insulin_peak">Peak</string>
 
-
+    
     <string name="smb_frequency_exceeded">A bolus was delivered within the last 3 minutes, skipping SMB</string>
     <string name="pump_not_initialized">Pump not initialized!</string>
     <string name="loop_shortname">LOOP</string>
@@ -84,7 +84,7 @@
     <string name="fallback_smb_no_tdd">Fallback to SMB. Not enough TDD data.</string>
     <string name="fallback_to_isf_no_tdd">Fallback to profile sensitivity. Not enough data. Reason: %1$s</string>
 
-
+    
     <string name="autotune_description">Help for potential adjustments of profile (ISF, carb ratio, and basal rates)</string>
     <string name="autotune_shortname">AT</string>
     <string name="autotune_default_tune_days_title">Number of days of data</string>
@@ -124,8 +124,7 @@
     <string name="pump_disconnected">Pump disconnected</string>
 
 
-
-    <string name="half_basal_exercise_target_summary">Set to a number, e.g. 160, which means when temp target is 160 mg/dL and High temptarget raises sensitivity=true, run 50%% basal at this level (120 = 75%%; 140 = 60%%).</string>
+    
     <string name="autoISF_settings_title">AutoISF settings</string>
     <string name="smb_delivery_settings_title">SMB delivery settings</string>
     <string name="openapsama_autoISF_max_summary">Similar to autosens_max this defines how strong ISF can become.\n\nThe default value 1.0 effectively shuts off this effect.\n\nWARNING: Be extremely careful when using values above 2.5</string>
@@ -143,53 +142,21 @@
     <string name="openapsama_smb_max_range_extension_summary">Default value: 1 This is another key OpenAPS safety cap, and specifies by what factor you can exceed the regular 120 maxSMB/maxUAM minutes. Increase this experimental value slowly and with caution.</string>
     <string name="openapsama_iob_threshold_percent_summary" formatted="false">Percentage of maxIOB above which SMBs are disabled.\nDefault value: 100%\nWith 100% this feature is effectively disabled.</string>
 
-    <!--    Activity Monitor -->
+    
     <string name="activity_monitor_title">Activity Monitor</string>
     <string name="activity_monitor_summary">Activity is detected in form of steps as measured by the phone. It does not replace an explicit sport adjustment but is a lower level complement.</string>
-    <string name="activity_mode_source_title">Use your WATCH\'s step counter (Wear OS only)\nDefault: false (= Do NOT use WATCH\'s step counter)</string>
-    <string name="activity_mode_source_summary">It is recommended that you use your PHONE\'s step counter instead! This offers the following advantages: \n- Detection when the watch is not worn (otherwise inactivity can be falsely detected).\n- Cycling is recognized as movement.</string>
-    <string name="activity_save_steps_from_smartphone_title">Save steps from smartphone</string>
-    <string name="activity_save_steps_from_smartphone_summary">Default: true</string>
-
     <string name="oaps_aimi_shortname">AIMI</string>
     <string name="openapsaimi">"AIMI 3.3"</string>
-    <string name="openapsaimi_maxsmb_summary">Max SMB value when BG is below 120</string>
     <string name="openapsaimi_maxsmb_title">Max SMB LOW BG</string>
-    <string name="description_openapsaimi">Small micro-boluses based on Artificial Intelligence and Machine Learning.</string>
-    <!-- ❌ TIME-BASED REACTIVITY TITLES/SUMMARIES REMOVED -->
-    <string name="DynISFAdjusthyper_summary"><![CDATA[Increasing this value will increase the speed to send SMB when BG > 120]]></string>
-    <string name="DynISFAdjusthyper_title"><![CDATA[DynISF Adjustment factor % BG > 120]]></string>
-    <string name="prebolus_meal_mode_summary">If you set a note on the action page with the word "meal", you will receive this value one time as a pre-bolus.</string>
-    <string name="prebolus_meal_mode_title">Prebolus</string>
-    <string name="prebolus_highcarb_mode_title">Prebolus 1/2</string>
-    <string name="prebolus2_highcarb_mode_title">Prebolus 2/2</string>
-    <string name="prebolus_highcarb_mode_summary">High Carb Mode Prebolus 1/2</string>
-    <string name="prebolus2_highcarb_mode_summary">High Carb Mode Prebolus 2/2</string>
-    <string name="number_day_ML_training_summary">Number of days to train the model</string>
-    <string name="nb_day_ML_training_title">ML Number of Training Days</string>
-    <string name="nb_minutes_ML_training_title">Number of minutes to train the data</string>
-    <string name="number_minutes_training_summary">Number of minutes to train the data for the ML engine</string>
-    <string name="number_epoch_training_summary">Number of epochs to train the data</string>
-    <string name="nb_epoch_ML_training_title">Number of epochs to train the data</string>
-    <string name="number_learningrate_training_summary">Learning rate to train the data</string>
-    <string name="nb_learningrate_ML_training_title">Learning rate to train the data</string>
-    <string name="number_iteration_training_summary">Number of times it will try before stopping the loop if it cannot get a satisfying result</string>
-    <string name="nb_iteration_ML_training_title">Number of iterations to stop the loop</string>
-    <string name="DynISF_Adjust_summary" formatted="false">Increase this value above 100 if you want to receive more SMB. The opposite is true if you receive too much SMB.</string>
-    <string name="DynISF_Adjust_title" formatted="false">DynISF factor to increase or decrease the number of SMB</string>
-    <string name="oaps_aimi_mealAdjFact_summary">DynISF adjustment factor for Meal Mode</string>
-    <string name="oaps_aimi_mealAdjFact_title">Meal Mode DynISF Factor</string>
-    <string name="Enable_basal_title">Enable Basal</string>
-    <string name="Enable_basal_summary">This option will enable basal from the profile when BG is greater than 80 and delta is not negative.</string>
-    <string name="oaps_aimi_enableDeleteLine_title">Enable the possibility to delete one day in ML Training</string>
-    <string name="countsteps_watch_title">Step counting watch (if disable, use phone)</string>
-    <string name="countsteps_watch_summary">This option enables step counting by receiving data from the watch instead of the phone.</string>
-
+    <string name="description_openapsaimi">AIMI loop: adaptive PK/PD, Autodrive V3, physiological assistant (Health Connect + 28-pattern catalogue), optional Recursive Belief Tree (RBT/HTR), and unified hypo-risk alarms. Native Eversense E3/365 and standard CGM sources supported.</string>
+    
     <string name="pref_aimi_steps_source_title">Steps &amp; Heart Rate Data Source</string>
     <string name="pref_aimi_steps_source_wear">Prefer Wear OS (Direct)</string>
     <string name="pref_aimi_steps_source_auto">Auto (Wear OS → Health Connect)</string>
     <string name="pref_aimi_steps_source_hc">Health Connect Only</string>
     <string name="pref_aimi_steps_source_disabled">Disabled</string>
+    <string name="oaps_aimi_weight_title">Weight in kg</string>
+    <string name="oaps_aimi_tdd7_title">TDD 7 days</string>
     <string name="oaps_aimi_pkpd_section_title">Adaptive PK/PD</string>
     <string name="aimi_pkpd_compose_title">PK/PD setup</string>
     <string name="aimi_pkpd_compose_summary">Guided presets, comfort tuning, and expert parameters in one screen</string>
@@ -244,41 +211,23 @@
     <string name="aimi_pkpd_wizard_done">Done</string>
     <string name="aimi_pkpd_wizard_skip">Skip</string>
     <string name="aimi_pkpd_rerun_wizard">Run setup guide again</string>
-    <string name="aimi_pkpd_loop_summary_title">Currently used by the loop</string>
-    <string name="aimi_pkpd_loop_summary_format">Learned DIA %1$.1f h · peak %2$.0f min</string>
     <string name="aimi_pkpd_tap_g_detail">TAP-G branch: %1$s\nEffective peak %2$.1f min (insulin prior %3$.1f)\nPhysio offset %4$.1f min, site offset %5$.1f min, trajectory %6$.1f min</string>
-    <string name="aimi_peak_gov_advice_prior">Advisor: the insulin profile peak is driving the effective peak this tick.</string>
-    <string name="aimi_peak_gov_advice_physio">Advisor: the physio / trajectory gate offset (steps, HR, stress kernel) is the main peak adjustment.</string>
-    <string name="aimi_peak_gov_advice_learned">Advisor: adaptive PKPD learning is pulling the governed peak within your bounds.</string>
-    <string name="aimi_peak_gov_advice_trajectory">Advisor: phase-space trajectory geometry added a small bounded peak-time nudge.</string>
-    <string name="aimi_peak_gov_advice_generic">Advisor: dominant branch %1$s — see numeric breakdown above.</string>
     <string name="aimi_pkpd_preset_section_title">Insulin profile preset</string>
     <string name="aimi_pkpd_preset_ultra_fast">Ultra-fast (e.g. Fiasp / Lyumjev)</string>
     <string name="aimi_pkpd_preset_rapid">Rapid (e.g. Humalog / NovoRapid)</string>
     <string name="aimi_pkpd_preset_standard">Standard / slower</string>
     <string name="aimi_pkpd_preset_custom">Custom (adjust sliders below)</string>
     <string name="aimi_pkpd_preset_applied">Insulin profile applied</string>
-    <string name="aimi_pkpd_sync_state_action">Align loop state to initial &amp; bounds</string>
     <string name="aimi_pkpd_sync_done">Loop DIA and peak aligned to initial values and bounds.</string>
     <string name="aimi_dyn_isf_trajectory_section_title">DynISF trajectory (CGM geometry)</string>
-    <string name="aimi_pkpd_section_comfort">Comfort &amp; SMB shaping</string>
-    <string name="aimi_pkpd_section_learning">Learning (initial &amp; bounds)</string>
     <string name="aimi_pkpd_section_expert">Advanced caps &amp; guards</string>
     <string name="oaps_aimi_pkpd_enabled_title">Enable adaptive PK/PD</string>
-    <string name="oaps_aimi_pkpd_enabled_summary">Learn DIA and peak time continuously to refine AIMI dosing.</string>
-    <string name="oaps_aimi_pkpd_initial_dia_title">Initial DIA (h)</string>
-    <string name="oaps_aimi_pkpd_initial_peak_title">Initial peak time (min)</string>
     <string name="oaps_aimi_pkpd_dia_min_title">Minimum DIA (h)</string>
     <string name="oaps_aimi_pkpd_dia_max_title">Maximum DIA (h)</string>
     <string name="oaps_aimi_pkpd_peak_min_title">Minimum peak time (min)</string>
     <string name="oaps_aimi_pkpd_peak_max_title">Maximum peak time (min)</string>
-    <string name="oaps_aimi_pkpd_max_dia_delta_title">Max DIA change per day (h)</string>
-    <string name="oaps_aimi_pkpd_max_peak_delta_title">Max peak change per day (min)</string>
-    <string name="oaps_aimi_pkpd_max_peak_delta_summary">Limits how quickly the learned peak time can change each day.</string>
     <string name="oaps_aimi_pkpd_anchor_dia_title">Learning anchor DIA (h)</string>
-    <string name="oaps_aimi_pkpd_anchor_dia_summary">Soft target the online learner pulls DIA toward (regularization). Use ~4 h for ultra-fast insulin.</string>
     <string name="oaps_aimi_pkpd_anchor_peak_title">Learning anchor peak (min)</string>
-    <string name="oaps_aimi_pkpd_anchor_peak_summary">Soft target for learned peak time. Match your insulin (e.g. ~55 min for Lyumjev/Fiasp).</string>
     <string name="oaps_aimi_isf_fusion_min_title">ISF fusion minimum factor</string>
     <string name="oaps_aimi_isf_fusion_max_title">ISF fusion maximum factor</string>
     <string name="oaps_aimi_isf_fusion_slope_title">Max ISF change per tick</string>
@@ -290,8 +239,6 @@
     <string name="oaps_aimi_redcarpet_restore_title">Red Carpet restore threshold</string>
     <string name="oaps_aimi_priority_max_iob_factor_title">Priority MaxIOB factor</string>
     <string name="oaps_aimi_priority_max_iob_extra_title">Priority MaxIOB extra (U)</string>
-    <string name="oaps_aimi_priority_max_iob_extra_summary">Range 0.0-5.0U (default 2.0U). Increase when correction remains insufficient after raising factor; decrease if lows appear in the 1-3h post-correction window.</string>
-
     <string name="aimi_adv_rec_htr_enable_title">Enable hyper trajectory SMB release (HTR)</string>
     <string name="aimi_adv_rec_htr_enable_desc">Sustained hyper with Autodrive V3 active but weak SMB delivery. HTR lifts V3 micro-bolus when scenario projection confirms a rise (not a fixed 200 mg/dL rule).</string>
     <string name="aimi_adv_rec_rbt_shadow_title">Enable Recursive Belief Tree (shadow)</string>
@@ -315,6 +262,7 @@
     <string name="aimi_adv_rec_priority_maxiob_desc">Current priority MaxIOB settings are factor=%1$s and extra=%2$sU. Consider ~1.20 and +2.0U in explicit aggressive contexts.</string>
     <string name="oaps_aimi_smb_exercise_damping_title">Exercise damping factor</string>
     <string name="oaps_aimi_smb_late_fat_damping_title">Late meal damping factor</string>
+    <string name="oaps_aimi_cho_title">Average carbohydrate amount lunch/dinner</string>
     <string name="aimi_adv_support_title">Expert Support</string>
     <string name="aimi_adv_support_msg">Enter the access code provided by MTR to export diagnostics.</string>
     <string name="aimi_adv_support_verify">Verify</string>
@@ -332,10 +280,14 @@
     <string name="aimi_core_smb_summary">Max SMB, weight, carbs, TDD — always active</string>
     <string name="training_ml_modes_preferences">Manual Mode</string>
     <string name="autodrive_preferences">Autodrive</string>
+    <string name="oaps_aimi_enableMlTraining_title">Enable A.I. Training</string>
+    <string name="OApsAIMI_Enable_pregnancy">Pregnancy Mode</string>
     <string name="OApsAIMI_PregnancyDueDate_title">Due Date (Terme)</string>
     <string name="OApsAIMI_PregnancyDueDate_summary">Enter estimated delivery date (YYYY-MM-DD) to enable gestational autopilot.</string>
     <string name="OApsAIMI_RemoteControlPin_title">Remote control PIN</string>
     <string name="OApsAIMI_RemoteControlPin_summary">PIN for AIMI remote control features.</string>
+    <string name="OApsAIMI_Enable_honeymoon">Child Mode (insulin needs lower than adult)</string>
+    <string name="openapsaimi_highBG_maxsmb_title">Max SMB High BG</string>
     <string name="aimi_sos_title">🚨 Emergency SOS (Hypo)</string>
     <string name="aimi_sos_permissions_title">📍 Grant SMS, Call &amp; Location Permissions</string>
     <string name="aimi_sos_permissions_summary">Tap to authorize AAPS to send SMS, make calls, and access background location for emergencies.</string>
@@ -367,8 +319,9 @@
     <string name="sos_sms_footer_recovery">\nBLOOD SUGAR IS SLOWLY RISING — WAIT FOR CONFIRMATION</string>
     <string name="sos_sms_footer_low">\nWAITING FOR RECOVERY OR USER ACTION</string>
 
-
+    
     <string name="oaps_aimi_thyroid_title">🦋 Hyperthyroidism (Basedow) Module</string>
+    <string name="oaps_aimi_thyroid_enabled_title">Enable Thyroid Module</string>
     <string-array name="oaps_aimi_thyroid_mode_entries">
         <item>Manual Selection</item>
         <item>Auto (Labs + Physio) - Experimental</item>
@@ -421,8 +374,13 @@
         <item>HIGH</item>
     </string-array>
 
-
+    
+    <string name="oaps_aimi_enableMlautoDrive_title">Enable Auto Drive – automatic meal detection – EXPERIMENTAL</string>
+    <string name="oaps_aimi_enableMlautoDriveActive_title">Enable Auto Drive V3 – Continuous MPC Engine (DANGER - EXPERIMENTAL)</string>
     <string name="autodrive_prebolus_variables">Prebolus limits and conditions</string>
+    <string name="prebolus_autodrive_mode_title">Meal Pre-bolus</string>
+    <string name="aimi_mpc_u_per_kg_title">Autodrive MPC: insulin per kg (5 min)</string>
+    <string name="prebolussmall_autodrive_mode_title">Light snack pre-bolus</string>
     <string name="training_ml_breakfast_modes_preferences">Breakfast</string>
     <string name="training_ml_lunch_modes_preferences">Lunch</string>
     <string name="training_ml_dinner_modes_preferences">Dinner</string>
@@ -432,11 +390,12 @@
     <string name="training_ml_sleep_modes_preferences">Rest</string>
 
     <string name="oaps_aimi_ngr_title">Night growth resistance</string>
+    <string name="oaps_aimi_ngr_enabled_title">Enable night growth resistance monitor</string>
     <string name="oaps_aimi_ngr_headroom">NGR headroom: +%1$.2fU (limit %2$.2fU).</string>
     <string name="oaps_aimi_ngr_basal_applied">NGR basal boost ×%1$.2f → %2$.2fU/h.</string>
     <string name="oaps_aimi_ngr_smb_applied">NGR SMB boost ×%1$.2f (req %2$.3fU, clamp %3$.3fU).</string>
 
-
+    
     <string name="folder_documents">Documents</string>
     <string name="uam_model_status"> 📦 UAM model: %1$s (%2$s, %3$s)</string>
     <string name="sanitize_info"> 🧹 Sanitize: %1$d incomplete values -&gt; 0</string>
@@ -458,7 +417,7 @@
     <string name="log_failed_init_uam">Failed to init UAM model: %1$s</string>
     <string name="log_error_closing_interpreter">Error closing interpreter: %1$s</string>
 
-
+    
 
     <string name="bg_drop_high_critical">CRITICAL drop below 85 (%1$.1f mg/dL/h), BASAL STOP;</string>
     <string name="bg_drop_high_warning">Moderate drop below 110 (%1$.1f mg/dL/h), basal reduced 50%;</string>
@@ -483,7 +442,7 @@
     <string name="steps"> | Steps=%1$d</string>
     <string name="heart_rate"> | HR=%1$s bpm</string>
     <string name="smb_disabled">SMB disabled (!microBolusAllowed)</string>
-
+    
     <string name="reason_iob_adjustment_inverted">  • IOB Activity Acceleration: -%1$.1f min\n</string>
     <string name="reason_bio_sync_stress">  • 🔴 Bio-Sync STRESS (HR %1$d, Steps %2$d) ➝ Peak slowed x1.25\n</string>
     <string name="reason_bio_sync_flow">  • 🟢 Bio-Sync FLOW (Steps %1$d, HR %2$d) ➝ Peak faster x%3$.2f\n</string>
@@ -497,15 +456,6 @@
     <string name="lgs_triggered">🛑 LGS: BG=%1$s ≤ %2$s → TBR 0U/h (30m)\n</string>
     <string name="lgs_triggered_min_pred">🛑 LGS: minPred=%1$s mg/dL ≤ %2$s (current BG above threshold) → TBR 0U/h (30m)\n</string>
     <string name="lgs_triggered_predicted">🛑 LGS: pred=%1$s eventual=%2$s ≤ %3$s → TBR 0U/h (30m)\n</string>
-    <string name="bg_insufficient_fallback_force_exact">⚠️ BG data insufficient, but meal override enforced.\n</string>
-    <string name="bg_insufficient_fallback">⚠️ BG data insufficient or invalid → fallback\n</string>
-    <string name="temp_basal_info">Temporary basal %1$s U/h for %2$d minutes\n</string>
-    <string name="force_exact_meal_override">Manual meal mode: forced basal %1$s U/h for %2$d minutes.\n</string>
-    <string name="lgs_override">🛑 Low Glucose Suspend (LGS) override → TBR 0U/h\n</string>
-    <string name="bypass_safety">→ safety bypass%1$s\n</string>
-    <string name="meal_mode"> (meal mode)</string>
-    <string name="early_autodrive"> (early autodrive)</string>
-    <string name="rate_adjusted_bg_trend">→ rate adjusted based on BG trend\n</string>
     <string name="temp_basal_pose">Temp basal %1$s U/h for %2$d minutes\n</string>
     <string name="no_bg_history">✘ No recent glucose history available.\n</string>
     <string name="bg_trend_analysis">→ BG Trend Analysis\n</string>
@@ -608,7 +558,7 @@
     <string name="reason_iob_max">IOB %.2f &gt; maxIOB %.2f</string>
     <string name="reason_bg_dropping">, BG is dropping (delta %1$.0f), setting basal to 0.</string>
     <string name="reason_set_temp_basal">; setting current basal of %1$.2f as temp.</string>
-
+    
     <string name="smb_enabled_meal_mode">SMB enabled: meal mode rising (BG %1$s, Δ=%2$.1f, eventual %3$s)</string>
     <string name="reason_meal_high_iob_relaxed">Meal mode rising: IOB %1$.2f &gt; max %2$.2f → SMB damped to %3$d%%.</string>
     <string name="reason_meal_hold_profile_basal">Meal mode rising: IOB %1$.2f &gt; max %2$.2f → basal kept at profile minimum.\n</string>
@@ -640,14 +590,14 @@
     <string name="honeymoon_small_slope">Honeymoon small slope.</string>
     <string name="honeymoon_meal_slope">Honeymoon meal slope.</string>
     <string name="aimi_plateau_high_boost">Boost =&gt; Hyper greater than 180 stable bg</string>
-
+    
     <string name="hypo_risk_notification_title">Hypo Risk</string>
     <string name="hypo_risk_notification_text">Hypo risk: rapid drop detected. Check your glucose now.</string>
     <string name="aimi_hypo_risk_alarm_summary">AIMI posts a unified URGENT alarm (NotificationId.HYPO_RISK_ALARM) with AAPS alarm sound. Snooze or dismiss from the notification list or dashboard dialog.</string>
     <string name="meal_dinner_maintain">Dinner mode maintain (%.1f floor)</string>
     <string name="reason_bg_dropping_floor">Drop (Δ%.1f), safety floor (%.2f)</string>
 
-
+    
     <string name="aimi_advisor_score_label_excellent">Excellent</string>
     <string name="aimi_advisor_score_label_good">Bon</string>
     <string name="aimi_advisor_score_label_warning">À améliorer</string>
@@ -656,22 +606,13 @@
 
     <string name="aimi_advisor_recommendations_title">Recommandations</string>
 
-
+    
 
     <string name="aimi_prefs_ai_title">🤖 Assistant AI</string>
     <string name="aimi_prefs_provider_openai">OpenAI (GPT-5.2)</string>
     <string name="aimi_prefs_provider_gemini">Gemini (2.5 Flash)</string>
     <string name="aimi_prefs_provider_deepseek">DeepSeek (Chat)</string>
     <string name="aimi_prefs_provider_claude">Claude (3.5 Sonnet)</string>
-    <string name="aimi_prefs_openai_key_title">OpenAI API Key</string>
-    <string name="aimi_prefs_openai_key_summary">Enter your OpenAI API Key (sk-...)</string>
-    <string name="aimi_prefs_gemini_key_title">Gemini API Key</string>
-    <string name="aimi_prefs_gemini_key_summary">Enter your Google Gemini API Key (AIza...)</string>
-    <string name="aimi_prefs_deepseek_key_title">DeepSeek API Key</string>
-    <string name="aimi_prefs_deepseek_key_summary">Enter your DeepSeek API Key</string>
-    <string name="aimi_prefs_claude_key_title">Claude API Key</string>
-    <string name="aimi_prefs_claude_key_summary">Enter your Anthropic Claude API Key</string>
-    <!-- Tuning context (Advisor) -->
     <string name="aimi_tuning_section_title">TUNING CONTEXT</string>
     <string name="aimi_tuning_section_desc">Choose what you want to improve. Step size adapts to your CGM burden (small / moderate / strong).</string>
     <string name="aimi_tuning_context_meal_rise">Meal rise</string>
@@ -694,7 +635,7 @@
     <string name="aimi_tuning_result_export_skipped">Settings export skipped — enable unattended export and set password in Maintenance.</string>
     <string name="aimi_tuning_result_export_expired">Settings export skipped — export password expired. Re-enter it in Maintenance.</string>
     <string name="aimi_tuning_result_export_failed">Settings export failed — check Maintenance export settings.</string>
-    <!-- AIMI ADVISOR STRINGS -->
+    
     <string name="aimi_advisor_title">AIMI Advisor</string>
     <string name="aimi_adv_loading">Analyzing...</string>
     <string name="aimi_adv_error_prefix">"Error: "</string>
@@ -736,17 +677,17 @@
     <string name="aimi_adv_analysis_intro_good">Good work, but a few adjustments could be made.</string>
     <string name="aimi_adv_analysis_intro_poor">Please note that adjustments are needed to improve the balance.</string>
     <string name="aimi_adv_analysis_issues_header">Identified areas of concern:</string>
-    <string name="aimi_adv_analysis_all_good">Aucun problème majeur détecté.</string>
+    <string name="aimi_adv_analysis_all_good">No major issues were detected.</string>
     <string name="aimi_adv_generated_footer">Generated on %1$s • OpenAPS AIMI</string>
 
-    <string name="aimi_advisor_model_title">Choisir le modèle IA</string>
+    <string name="aimi_advisor_model_title">Choose the AI model</string>
 
-    <string name="aimi_adv_rec_hypos_desc">%1$d%% of the time was spent below 54 mg/dL. We recommend reducing the intensity.</string>
+    <string name="aimi_adv_rec_hypos_desc">Detected %1$d%% of time below 54 mg/dL. Recommendation to reduce the sensitivity.</string>
     <string name="aimi_adv_rec_control_desc">Shooting %1$d%% below target. Suggestion: increase aggressiveness.</string>
     <string name="aimi_adv_rec_hypers_desc">Time &gt; 180 is too high (%1$d%%). Check your meal ratios.</string>
     <string name="aimi_adv_rec_basal_desc">The basal rate (%1$d%%) is high. Check to see if your basal rate is correct.</string>
-    <string name="aimi_adv_rec_profile_ok_title">Profil Excellent</string>
-    <string name="aimi_adv_rec_profile_ok_desc">Aucun ajustement majeur nécessaire.</string>
+    <string name="aimi_adv_rec_profile_ok_title">Excellent Profile</string>
+    <string name="aimi_adv_rec_profile_ok_desc">No major adjustments are necessary.</string>
 
     <string name="aimi_adv_rec_oref_isf_hypo_title">Hypo pattern: discuss ISF with your care team</string>
     <string name="aimi_adv_rec_oref_isf_hypo_desc">On-device OREF/ML marks hypo priority. About %1$s%% of CGM time was below 70 mg/dL. Ask your clinician whether a modestly higher ISF (more mg/dL per unit = gentler corrections) fits your profile—avoid abrupt one-step jumps.</string>
@@ -789,12 +730,7 @@
     <string name="aimi_pkpd_hypo_damping">Risk of hypoglycemia: Increase damping to reduce SMBs at the end of the DIA.</string>
     <string name="aimi_pkpd_hypo_isf_reduce">Frequent lows with high ISF-fusion headroom: consider lowering max fusion from %1$sx to ~%2$sx with your clinician to cap aggressive corrections.</string>
     <string name="aimi_pkpd_hyper_damping_reduce">Persistent highs with strong SMB tail damping (floor %1$s): if hypos are rare, consider weakening the damping by raising the tail floor to ~%2$s to allow more late delivery.</string>
-    <string name="aimi_meal_advisor_title">AIMI Meal Advisor</string>
-
-
-    <!-- AI Decision Auditor -->
     <string name="aimi_auditor_enabled_title">Enable AI Decision Auditor</string>
-    <string name="aimi_auditor_enabled_summary">Activate the Second Brain to challenge and modulate AIMI decisions</string>
     <string name="aimi_auditor_mode_title">Auditor Mode</string>
     <string name="context_title">AIMI Context</string>
     <string name="context_description">Describe your current situation to help AIMI adapt insulin delivery</string>
@@ -813,7 +749,6 @@
     <string name="context_btn_clear">Clear</string>
     <string name="context_btn_clear_all">Clear All</string>
     <string name="context_quick_presets_title">Quick Presets</string>
-    <string name="context_quick_presets">Quick Presets</string>
     <string name="context_preset_cardio">🏃 Cardio</string>
     <string name="context_preset_strength">💪 Strength</string>
     <string name="context_preset_yoga">🧘 Yoga</string>
@@ -831,22 +766,13 @@
     <string name="context_llm_enabled">Enable AI Parsing (LLM)</string>
     <string name="aimi_physio_title">🏥 Physiological Assistant</string>
     <string name="aimi_physio_enable_title">Enable Assistant</string>
-    <string name="aimi_physio_enable_summary">Adjusts insulin using Health Connect vitals and a 28-pattern physiological catalogue (dawn, meals, stress, recovery). Active patterns export to AIMI_Decisions.jsonl and feed RBT leaves and HTR caps.</string>
     <string name="aimi_physio_pattern_catalog_title">Physiological pattern catalogue</string>
     <string name="aimi_physio_pattern_catalog_summary">28 hysteresis-gated patterns (sleep, HRV, meals, stress, cycle). Tap for details.</string>
     <string name="aimi_physio_pattern_catalog_detail">When the assistant is enabled, each loop tick runs the pattern detector on physio + CGM context. Matches export as physiological_patterns in AIMI_Decisions.jsonl and can cap HTR or inform RBT belief leaves. Requires Health Connect permissions for sleep and HRV when those sources are enabled. See repo docs/AIMI_PHYSIOLOGICAL_PATTERN_CATALOG.md for the full list.</string>
-    <string name="aimi_physio_data_sources_title">Data Sources</string>
     <string name="aimi_physio_sleep_enable_title">Sync Sleep Data</string>
-    <string name="aimi_physio_sleep_enable_summary">Use Health Connect to fetch sleep stages and efficiency.</string>
     <string name="aimi_physio_hrv_enable_title">Sync HRV &amp; RHR</string>
-    <string name="aimi_physio_hrv_enable_summary">Use heart rate variability to detect stress/fatigue.</string>
     <string name="aimi_oura_pat_title">Oura temperature API token (optional)</string>
     <string name="aimi_oura_pat_summary">Personal access token from cloud.ouraring.com — enables measured skin temperature deviation when Oura does not export it to Health Connect. Garmin users rely on inferred recovery rhythm from HC sleep/RHR.</string>
-    <string name="aimi_physio_advanced_title">Analysis &amp; Logs</string>
-    <string name="aimi_physio_llm_enable_title">LLM Narrative Analysis</string>
-    <string name="aimi_physio_llm_enable_summary">Send physio data to LLM for daily health summaries (Optional).</string>
-    <string name="aimi_physio_debug_title">Debug Logging</string>
-    <string name="aimi_physio_debug_summary">Log detailed physiological states to the console.</string>
     <string name="aimi_control_center_entry_title">AIMI Control Center</string>
     <string name="aimi_control_center_entry_summary">See how AIMI interprets your current settings before simplifying them into behavior families.</string>
     <string name="aimi_control_center_title">AIMI Control Center</string>
@@ -912,8 +838,9 @@
     <string name="aimi_control_center_autonomy_assisted">Assisted application</string>
     <string name="aimi_control_center_autonomy_controlled">Controlled authority</string>
 
-    <!-- 🌸 Endometriosis & Cycle Settings -->
+    
     <string name="endo_preferences_title">Endometriosis Settings</string>
+    <string name="endo_enable_title">Enable Endometriosis Logic</string>
     <string name="aimi_iob_surveillance_guard_title">IOB surveillance (anti-stacking)</string>
     <string name="aimi_iob_surveillance_guard_summary">When BG is above target with meaningful IOB, the trend is no longer a fast rise (plateau), and predictions point downward, SMB is capped and temp basal is slightly favoured so onboard insulin can act—without blocking sharp rises or strong meal absorption (COB/UAM). Meal-rise bypass: Δ≥2.0 or short-avg≥2.5 mg/dL/5m while meal-priority context is on. Constants: InsulinStackingStance.kt. Analytics: adjustments.iob_surveillance in Documents/AAPS/AIMI_Decisions.jsonl each loop.</string>
     <string name="aimi_iob_surveillance_applied">IOB surveillance: high active insulin and falling prediction — SMB reduced; prefer TBR. Wait for stacked insulin to work.</string>
@@ -951,7 +878,7 @@
     <string name="aimi_auditor_section_evidence">EVIDENCE</string>
     <string name="aimi_auditor_section_debug">DEBUG CHECKS</string>
 
-    <!-- AutoISF Advisor -->
+    
     <string name="autoisf_advisor_title">AutoISF Advisor</string>
     <string name="autoisf_advisor_summary">Analyze your AutoISF settings and get tuning recommendations</string>
     <string name="autoisf_adv_loading">Analyzing…</string>
@@ -970,8 +897,4 @@
     <string name="advisor_cooldown_dh">%1$dd %2$dh</string>
     <string name="advisor_cooldown_hm">%1$dh %2$dm</string>
     <string name="advisor_cooldown_m">%1$dm</string>
-    <string name="aimi_auditor_verdict_title">🧠 AI Auditor Report</string>
-    <string name="run_now">Run now</string>
-    <string name="use_dynamic_sensitivity_summary">Modify the algorithm so that dynamic sensitivity is used instead of the profile value</string>
-
-</resources>
+    </resources>
