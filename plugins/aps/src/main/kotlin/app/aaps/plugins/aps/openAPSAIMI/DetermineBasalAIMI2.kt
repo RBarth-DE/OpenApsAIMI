@@ -7719,13 +7719,6 @@ class DetermineBasalaimiSMB2 @Inject constructor(
     private var maxSMBHB = 0.5
     private var lastBolusSMBUnit = 0.0f
 
-    // Pending delivery state for legacy meal prebolus.
-    // Set by markLegacyMealDecision() instead of lastBolusSMBUnit, so a Medtrum
-    // BLE disconnect at the P1 tick does not permanently consume the one-shot
-    // window.  Cleared when DB confirms delivery (cacheSmbTimestamp catches up)
-    // or when the TTL expires — whichever comes first.
-    private var pendingLegacyPrebolusUnit: Float = 0.0f
-    private var pendingLegacyPrebolusExpiry: Long = 0L
     private var tdd7DaysPerHour = 0.0f
     private var tdd2DaysPerHour = 0.0f
     private var tddPerHour = 0.0f
@@ -7838,7 +7831,41 @@ class DetermineBasalaimiSMB2 @Inject constructor(
 
         private var lastLegacyPrebolusTimestampMem: Long = 0L
 
+        // Pending delivery state for legacy meal prebolus.
+        // Set by markLegacyMealDecision() instead of lastBolusSMBUnit, so a Medtrum
+        // BLE disconnect at the P1 tick does not permanently consume the one-shot
+        // window. Cleared when DB confirms delivery (cacheSmbTimestamp catches up)
+        // or when the TTL expires – whichever comes first.
+        //
+        // Persisted via companion + Preferences: DetermineBasalaimiSMB2 may be
+        // re-instantiated between loop cycles, so plain instance fields would
+        // silently reset to 0 on the very next tick (P1 fires, P2 overwrites
+        // nothing, P1 is lost forever).
+        private var pendingLegacyPrebolusUnitMem: Float = 0.0f
+        private var pendingLegacyPrebolusExpiryMem: Long = 0L
+
     }
+
+    private var pendingLegacyPrebolusUnit: Float
+        get() {
+            if (pendingLegacyPrebolusUnitMem > 0.0f) return pendingLegacyPrebolusUnitMem
+            // Stored as milli-units (Long) to avoid needing a Float pref key
+            return preferences.get(AimiLongKey.PendingLegacyPrebolusUnitMilli) / 1000.0f
+        }
+        set(value) {
+            pendingLegacyPrebolusUnitMem = value
+            preferences.put(AimiLongKey.PendingLegacyPrebolusUnitMilli, (value * 1000).toLong())
+        }
+
+    private var pendingLegacyPrebolusExpiry: Long
+        get() {
+            if (pendingLegacyPrebolusExpiryMem > 0L) return pendingLegacyPrebolusExpiryMem
+            return preferences.get(AimiLongKey.PendingLegacyPrebolusExpiry)
+        }
+        set(value) {
+            pendingLegacyPrebolusExpiryMem = value
+            preferences.put(AimiLongKey.PendingLegacyPrebolusExpiry, value)
+        }
 
     private var internalLastSmbMillis: Long
         get() = Math.max(lastSmbTimestampMem, preferences.get(AimiLongKey.LastPrebolusTime))
@@ -10500,7 +10527,8 @@ class DetermineBasalaimiSMB2 @Inject constructor(
      *  Blocks re-fire during the pending window to prevent double-dosing, but
      *  allows retry once the TTL expires without DB confirmation (Medtrum drop). */
     private fun isLegacyPrebolusDeliveryPending(targetUnits: Float): Boolean =
-        pendingLegacyPrebolusUnit == targetUnits && dateUtil.now() < pendingLegacyPrebolusExpiry
+        abs(pendingLegacyPrebolusUnit - targetUnits) < 0.01f &&
+            dateUtil.now() < pendingLegacyPrebolusExpiry
 
     // ── P1 functions (window 0..7 min) — block 14 min ────────────────────────
 
@@ -12187,6 +12215,17 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                 adaptiveMultiplier = 1.0
             )
             consoleLog.add("MEAL_TBR_MANUAL[$logTag] rate=${"%.2f".format(rateUh)}U/h dur=30m rt=${runtimeMin}m")
+        }
+
+        if (pendingLegacyPrebolusUnit > 0.0f && dateUtil.now() < pendingLegacyPrebolusExpiry) {
+            val anyMealActive = lunchTime || dinnerTime || bfastTime || mealTime || highCarbTime || snackTime
+            if (anyMealActive) {
+                manualMealModeTbr(lunchruntime, "MAINT_PB1_PRIORITY", overrideSafetyLimits = false)
+                rT.units = pendingLegacyPrebolusUnit.toDouble()
+                rT.deliverAt = dateUtil.now()
+                consoleLog.add("🍱 LEGACY_PB1_PRIORITY_CARRY: ${pendingLegacyPrebolusUnit}U (vor P2)")
+                return rT
+            }
         }
 
         if (pendingLegacyPrebolusUnit > 0.0f && dateUtil.now() < pendingLegacyPrebolusExpiry) {
