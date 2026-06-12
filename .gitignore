@@ -40,3 +40,4 @@ tmpclaude-*
 .venv_onnx/
 .tmp_eversense_patches/
 eversense_upstream_patches/
+core/keys/bin/
