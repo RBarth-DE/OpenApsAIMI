@@ -1703,7 +1703,7 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
                 DoubleKey.OApsAIMICHO,
                 DoubleKey.OApsAIMITDD7,
                 BooleanKey.OApsAIMIUnifiedReactivityEnabled,
-                BooleanKey.OApsAIMIEnableBasal,
+                // BooleanKey.OApsAIMIEnableBasal, // ORPHANED — not read by DetermineBasalAIMI2.kt
                 BooleanKey.OApsAIMIIobSurveillanceGuard,
             ),
         )

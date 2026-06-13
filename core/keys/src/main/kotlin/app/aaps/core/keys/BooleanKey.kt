@@ -204,7 +204,7 @@ enum class BooleanKey(
     SiteRotationManageCgm("site_rotation_manage_cgm", defaultValue = false, titleResId = R.string.pref_title_site_rotation_manage_cgm),
 
     OApsAIMIMLtraining("key_enable_ML_training", false),
-    OApsAIMIEnableBasal("key_enable_basal", false),
+    // OApsAIMIEnableBasal("key_enable_basal", false), // ORPHANED — not read by DetermineBasalAIMI2.kt
     OApsAIMIEnableStepsFromWatch("count_steps_watch", false),
     OApsAIMIpregnancy("key_use_AimiPregnancy",false),
     OApsAIMIforcelimits("key_use_AimiForceLimits",false),
