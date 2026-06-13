@@ -8917,6 +8917,9 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                 hypo = hypoGuard,
                 delta = delta.toDouble(),
                 mealContext = effectiveMealContext,
+                ignoreMinPredictedCurve =
+                    lastHyperTrajectoryRelease?.hypoMinPredIgnored == true ||
+                        lastRecursiveBeliefSnapshot?.resolutions?.hypoMinPredIgnored == true,
             )
             if (lgsReason != null) {
                 val lgsLine = when (lgsReason) {
