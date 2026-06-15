@@ -1075,7 +1075,7 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
 
             // Cosine / activity integration uses the same governed peak as OapsProfileAimi.peakTime
             val safepk = peakTimeMinutesForProfile.toInt().coerceAtLeast(35)
-            
+
             for (i in -4..0) { //MP: calculate 5-minute-insulin activity centering around peakTime
                 val iob = iobCobCalculator.calculateFromTreatmentsAndTemps(System.currentTimeMillis() + TimeUnit.MINUTES.toMillis(safepk.toLong() - i), profile)
                 futureActivity += iob.activity
@@ -1682,11 +1682,11 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
                 // T3c Brittle
                 BooleanKey.OApsAIMIT3cBrittleMode,
                 DoubleKey.OApsAIMIT3cActivationThreshold,
-                // DoubleKey.OApsAIMIT3cAggressiveness,  // ORPHANED — not read by DetermineBasalAIMI2.kt
+                DoubleKey.OApsAIMIT3cAggressiveness,  // Read by BasalNeuralLearner.kt::getT3cAdaptiveFactor — not orphaned
                 DoubleKey.OApsAIMIT3cAnticipationStrength,
                 // Adaptive Basal Gate + Governance (formerly aimiComposeAdaptiveBasalSubScreen — merged)
-                DoubleKey.OApsAIMIHighBg,               // Plateau correction threshold (from merged AdaptiveBasal screen)
                 BooleanKey.OApsAIMIT3cAdaptiveBasalEnabled,
+                DoubleKey.OApsAIMIHighBg,               // Plateau correction threshold (from merged AdaptiveBasal screen)
                 DoubleKey.OApsAIMIGovernanceHypoRateEnter,
                 DoubleKey.OApsAIMIGovernanceHypoRateExit,
                 DoubleKey.OApsAIMIGovernanceHypoBgMgdl,
