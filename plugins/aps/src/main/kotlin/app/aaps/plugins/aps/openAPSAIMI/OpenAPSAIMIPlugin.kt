@@ -1392,7 +1392,22 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
 
     override suspend fun isSMBModeEnabled(value: Constraint<Boolean>): Constraint<Boolean> {
         val enabled = preferences.get(BooleanKey.ApsUseSmb)
-        if (!enabled) value.set(false, rh.gs(R.string.smb_disabled_in_preferences), this)
+        if (!enabled) {
+            value.set(false, rh.gs(R.string.smb_disabled_in_preferences), this)
+            return value
+        }
+        // If globally enabled but ALL individual flags are off
+        // (e.g. Scene/Automation disabled them), treat as SMB OFF.
+        // Prevents AIMI's CGate from overriding an explicit user choice.
+        val anyFlagEnabled =
+            preferences.get(BooleanKey.ApsUseSmbAlways) ||
+                preferences.get(BooleanKey.ApsUseSmbWithCob) ||
+                preferences.get(BooleanKey.ApsUseSmbWithLowTt) ||
+                preferences.get(BooleanKey.ApsUseSmbAfterCarbs) ||
+                preferences.get(BooleanKey.ApsUseSmbWithHighTt)
+        if (!anyFlagEnabled) {
+            value.set(false, "SMB disabled: all flags off (Scene/Automation)", this)
+        }
         return value
     }
 

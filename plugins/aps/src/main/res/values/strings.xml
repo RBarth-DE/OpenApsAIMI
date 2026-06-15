@@ -381,6 +381,7 @@
     <string name="prebolus_autodrive_mode_title">Meal Pre-bolus</string>
     <string name="aimi_mpc_u_per_kg_title">Autodrive MPC: insulin per kg (5 min)</string>
     <string name="prebolussmall_autodrive_mode_title">Light snack pre-bolus</string>
+    <string name="autodrive_max_basal_title">Fixed basal 30 min if meal detected (U/h)</string>
     <string name="training_ml_breakfast_modes_preferences">Breakfast</string>
     <string name="training_ml_lunch_modes_preferences">Lunch</string>
     <string name="training_ml_dinner_modes_preferences">Dinner</string>
@@ -389,6 +390,7 @@
     <string name="training_ml_generic_meal_modes_preferences">Generic Meal</string>
     <string name="training_ml_sleep_modes_preferences">Rest</string>
 
+    <string name="meal_modes_max_basal_title">Fixed basal 30 min at meal start (U/h)</string>
     <string name="oaps_aimi_ngr_title">Night growth resistance</string>
     <string name="oaps_aimi_ngr_enabled_title">Enable night growth resistance monitor</string>
     <string name="oaps_aimi_ngr_headroom">NGR headroom: +%1$.2fU (limit %2$.2fU).</string>
