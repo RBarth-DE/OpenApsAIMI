@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AIMI Analyzer — Quick Guide</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
+
+  :root {
+    --ink: #0f1117;
+    --ink2: #3d4258;
+    --ink3: #7b82a0;
+    --paper: #f8f8fc;
+    --accent: #6c63ff;
+    --accent-soft: #ede9ff;
+    --green: #00a878;
+    --green-soft: #e0f5ef;
+    --red: #e84560;
+    --red-soft: #fdeef1;
+    --yellow: #f59e0b;
+    --yellow-soft: #fef3c7;
+    --border: #e2e2ef;
+    --mono: 'JetBrains Mono', monospace;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Inter', system-ui, sans-serif;
+    background: var(--paper);
+    color: var(--ink);
+    font-size: 13px;
+    line-height: 1.55;
+  }
+
+  /* ── Page layout ── */
+  .page {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 36px 32px 48px;
+  }
+
+  /* ── Header ── */
+  header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 28px;
+    padding-bottom: 20px;
+    border-bottom: 2px solid var(--ink);
+    gap: 20px;
+  }
+  .header-left h1 {
+    font-size: 22px;
+    font-weight: 600;
+    letter-spacing: -.03em;
+    line-height: 1.1;
+    margin-bottom: 4px;
+  }
+  .header-left .tagline {
+    color: var(--ink3);
+    font-size: 12px;
+  }
+  .header-right {
+    text-align: right;
+    font-size: 11px;
+    color: var(--ink3);
+    line-height: 1.7;
+    flex-shrink: 0;
+  }
+  .header-right code {
+    font-family: var(--mono);
+    background: var(--accent-soft);
+    color: var(--accent);
+    padding: 1px 5px;
+    border-radius: 3px;
+    font-size: 10px;
+  }
+
+  /* ── Grid ── */
+  .grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 14px;
+    margin-bottom: 14px;
+  }
+  .grid-2 { grid-template-columns: 1fr 1fr; }
+  .grid-wide { grid-template-columns: 2fr 1fr; }
+
+  /* ── Sections ── */
+  .section {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 16px;
+  }
+  .section-title {
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: var(--ink3);
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .section-title .dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  /* ── Steps ── */
+  .steps { display: flex; flex-direction: column; gap: 8px; }
+  .step {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+  }
+  .step-num {
+    width: 20px; height: 20px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: #fff;
+    font-size: 10px;
+    font-weight: 600;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+  .step-body { flex: 1; }
+  .step-body strong { display: block; font-size: 12px; margin-bottom: 1px; }
+  .step-body span { color: var(--ink2); font-size: 11.5px; }
+
+  /* ── Tab pills ── */
+  .tabs { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 10px; }
+  .tab {
+    display: inline-flex; align-items: center; gap: 4px;
+    background: var(--paper);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 3px 8px;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--ink2);
+  }
+  .tab.accent { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+  .tab.green  { background: var(--green-soft);  border-color: var(--green);  color: var(--green); }
+  .tab.yellow { background: var(--yellow-soft); border-color: var(--yellow); color: #92580a; }
+  .tab.red    { background: var(--red-soft);    border-color: var(--red);    color: var(--red); }
+
+  /* ── Table ── */
+  table { width: 100%; border-collapse: collapse; font-size: 11.5px; }
+  td, th { padding: 5px 6px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  th { font-weight: 600; color: var(--ink3); font-size: 10px; text-transform: uppercase; letter-spacing: .06em; }
+  td:first-child { font-family: var(--mono); font-size: 10px; color: var(--accent); white-space: nowrap; }
+  tr:last-child td { border-bottom: none; }
+
+  /* ── Tips ── */
+  .tip {
+    display: flex; gap: 8px; align-items: flex-start;
+    font-size: 11.5px; color: var(--ink2);
+    padding: 6px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .tip:last-child { border-bottom: none; padding-bottom: 0; }
+  .tip-icon { font-size: 13px; flex-shrink: 0; margin-top: 1px; }
+
+  /* ── Gate badges ── */
+  .gate-row { display: flex; align-items: center; gap: 6px; font-size: 11px; padding: 4px 0; border-bottom: 1px solid var(--border); }
+  .gate-row:last-child { border-bottom: none; }
+  .gate { font-family: var(--mono); font-size: 10px; color: var(--ink3); }
+  .badge {
+    font-size: 10px; font-weight: 600; padding: 1px 6px; border-radius: 99px;
+    white-space: nowrap;
+  }
+  .badge-on  { background: var(--green-soft);  color: var(--green); }
+  .badge-off { background: var(--red-soft);    color: var(--red); }
+
+  /* ── Flow ── */
+  .flow { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; font-size: 11px; }
+  .flow-step {
+    background: #fff; border: 1px solid var(--border);
+    border-radius: 5px; padding: 4px 8px;
+    font-weight: 500; white-space: nowrap;
+  }
+  .flow-arrow { color: var(--ink3); font-size: 14px; }
+
+  /* ── Model table ── */
+  .model-row { display: flex; gap: 8px; padding: 5px 0; border-bottom: 1px solid var(--border); font-size: 11.5px; }
+  .model-row:last-child { border-bottom: none; }
+  .model-name { font-weight: 600; min-width: 140px; }
+  .model-desc { color: var(--ink2); flex: 1; }
+  .model-badge { font-size: 10px; font-weight: 600; padding: 1px 6px; border-radius: 99px; white-space: nowrap; align-self: flex-start; margin-top: 2px; }
+
+  /* ── Footer ── */
+  footer {
+    margin-top: 24px;
+    padding-top: 14px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 11px;
+    color: var(--ink3);
+  }
+  footer code { font-family: var(--mono); font-size: 10px; }
+
+  @media print {
+    body { background: #fff; }
+    .page { padding: 20px; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- Header -->
+  <header>
+    <div class="header-left">
+      <h1>AIMI Parameter Analyzer</h1>
+      <div class="tagline">CGM analysis · Parameter optimization · AI-assisted review · Branch dev_OAPSAIMI_RB</div>
+    </div>
+    <div class="header-right">
+      Access via browser<br>
+      <code>http://&lt;NUC-IP&gt;:8765</code><br>
+      Docker · FastAPI · Single-page app
+    </div>
+  </header>
+
+  <!-- Row 1: First-time setup + Workflow -->
+  <div class="grid grid-wide" style="margin-bottom:14px">
+
+    <div class="section">
+      <div class="section-title"><span class="dot" style="background:var(--accent)"></span>First-time setup</div>
+      <div class="steps">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-body">
+            <strong>Config tab → Nightscout</strong>
+            <span>Enter your Nightscout URL and API token. Set your analysis period (7 days recommended).</span>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-body">
+            <strong>Config tab → AI keys</strong>
+            <span>Add your Anthropic or DeepSeek API key. Keys are saved in browser localStorage only — never sent to any server except during an AI call.</span>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-body">
+            <strong>Import tab → decrypt AAPS export</strong>
+            <span>AAPS → ☰ → Maintenance → Export settings. Drop the JSON file here, enter your master password. Active feature gates are auto-detected from your settings.</span>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">4</div>
+          <div class="step-body">
+            <strong>Dashboard → Start analysis</strong>
+            <span>Fetches CGM entries and treatments from Nightscout. Displays TIR, CV, GMI, hypo/hyper rates, and rule-based parameter recommendations.</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title"><span class="dot" style="background:var(--green)"></span>Regular workflow</div>
+      <div class="flow" style="margin-bottom:10px">
+        <div class="flow-step">Export from AAPS</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step">Import tab</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step">Snapshot saved</div>
+      </div>
+      <div class="flow" style="margin-bottom:12px">
+        <div class="flow-step">Dashboard analysis</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step">AI tab</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step">Adjust settings</div>
+      </div>
+      <div style="font-size:11.5px;color:var(--ink2)">
+        After each settings change in AAPS: export again, import again — a new snapshot is saved automatically (max 10). Wait 2–3 days, then use the <strong>Diff tab</strong> to compare TIR/CV before and after.
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Row 2: Tabs overview, AI models, Gate logic -->
+  <div class="grid" style="margin-bottom:14px">
+
+    <div class="section">
+      <div class="section-title"><span class="dot" style="background:var(--ink)"></span>Tab overview</div>
+      <div class="tabs" style="margin-bottom:8px">
+        <span class="tab accent">📊 Dashboard</span>
+        <span class="tab">🗂 Features</span>
+        <span class="tab">⚙️ Parameters</span>
+        <span class="tab">🔀 Diff</span>
+        <span class="tab accent">🤖 AI</span>
+        <span class="tab">📂 Import</span>
+        <span class="tab">🔧 Config</span>
+      </div>
+      <table>
+        <tr><td>Dashboard</td><td>CGM metrics, TIR chart, rule-based recommendations</td></tr>
+        <tr><td>Features</td><td>All 38 AIMI feature groups — green = always active, yellow = gate active, red = disabled</td></tr>
+        <tr><td>Parameters</td><td>Browse all 115 active parameters. Filter by feature group, impact, active gates</td></tr>
+        <tr><td>Diff</td><td>Compare two snapshots — shows changed params + TIR/CV delta between periods</td></tr>
+        <tr><td>AI</td><td>Claude or DeepSeek analysis with full AIMI algorithm context pre-loaded</td></tr>
+        <tr><td>Import</td><td>Decrypt AAPS export, view all parameters grouped by feature, see gate status</td></tr>
+      </table>
+    </div>
+
+    <div class="section">
+      <div class="section-title"><span class="dot" style="background:var(--accent)"></span>AI models</div>
+      <div class="model-row">
+        <div class="model-name">Claude Sonnet 4.6</div>
+        <div class="model-desc">Fast, precise, low cost. Good for routine analysis.</div>
+        <div class="model-badge" style="background:var(--accent-soft);color:var(--accent)">default</div>
+      </div>
+      <div class="model-row">
+        <div class="model-name">Claude Opus 4.5</div>
+        <div class="model-desc">Strongest causal reasoning. Best for "why" questions and verifying user observations.</div>
+        <div class="model-badge" style="background:var(--green-soft);color:var(--green)">recommended</div>
+      </div>
+      <div class="model-row">
+        <div class="model-name">DeepSeek V3</div>
+        <div class="model-desc">Fast and cheap. Structured output, good for parameter lists.</div>
+        <div class="model-badge" style="background:var(--yellow-soft);color:#92580a">budget</div>
+      </div>
+      <div class="model-row">
+        <div class="model-name">DeepSeek R1</div>
+        <div class="model-desc">Reasoning model. Explains each conclusion step by step — best when you want to understand the logic.</div>
+        <div class="model-badge" style="background:var(--yellow-soft);color:#92580a">reasoning</div>
+      </div>
+      <div style="margin-top:10px;font-size:11px;color:var(--ink3)">All models receive full AIMI algorithm context (Decision flow, 9 features, 117 parameter summaries, 3 known bugs) — pre-loaded from source code analysis.</div>
+    </div>
+
+    <div class="section">
+      <div class="section-title"><span class="dot" style="background:var(--yellow)"></span>Gate-aware filtering</div>
+      <div style="font-size:11.5px;color:var(--ink2);margin-bottom:8px">
+        Recommendations and AI analysis only show parameters for features that are actually <strong>enabled</strong> in your settings. Import your AAPS export to activate gate detection.
+      </div>
+      <div class="gate-row"><span class="badge badge-on">● Active</span><span>Gate = true in your settings → parameters shown</span></div>
+      <div class="gate-row"><span class="badge badge-off">● Disabled</span><span>Gate = false → parameters filtered from all recommendations</span></div>
+      <div class="gate-row"><span class="badge" style="background:#f0f0f8;color:var(--ink3)">⚠ Orphaned</span><span>Defined in UI but not read by DetermineBasalAIMI2.kt → excluded from analysis</span></div>
+      <div style="margin-top:10px;font-size:11px;color:var(--ink3)">
+        Key gates: <code style="font-family:monospace;font-size:10px">T3c adaptive basal</code> · <code style="font-family:monospace;font-size:10px">PKPD</code> · <code style="font-family:monospace;font-size:10px">Autodrive</code> · <code style="font-family:monospace;font-size:10px">NGR</code> · <code style="font-family:monospace;font-size:10px">WCycle</code>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Row 3: AI user observations + Tips + Settings path -->
+  <div class="grid grid-wide" style="margin-bottom:14px">
+
+    <div class="section">
+      <div class="section-title"><span class="dot" style="background:var(--green)"></span>Getting the most from AI analysis</div>
+      <div class="tips">
+        <div class="tip">
+          <div class="tip-icon">✍️</div>
+          <div><strong>Use the observations field.</strong> Describe patterns you've noticed in plain language — "post-meal hypos", "overnight highs", "correction too aggressive". The AI will verify or refute against your CGM data and identify the most likely parameter cause.</div>
+        </div>
+        <div class="tip">
+          <div class="tip-icon">🔀</div>
+          <div><strong>Run a Diff first.</strong> Export → import before and after a parameter change. The Diff tab shows exactly which parameters changed and the resulting TIR/CV delta. Paste the diff period into the AI tab for a before/after comparison.</div>
+        </div>
+        <div class="tip">
+          <div class="tip-icon">📍</div>
+          <div><strong>Every recommendation shows its location.</strong> Parameter keys in AI output are automatically annotated with their settings path (e.g. <em>📍 AIMI → T3c &amp; adaptive basal · Requires: T3C Adaptive Basal = ON</em>).</div>
+        </div>
+        <div class="tip">
+          <div class="tip-icon">⚠️</div>
+          <div><strong>Known issue: LastLegacyPrebolusTime.</strong> If your AAPS settings contain a timestamp from 2020+, the prebolus delivery detection is permanently stuck. The AI is aware of this bug and will flag it if relevant to your analysis.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title"><span class="dot" style="background:var(--red)"></span>After settings change</div>
+      <div class="steps">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-body">
+            <strong>Change settings in AAPS</strong>
+            <span>Make your adjustment in the AIMI preferences screen.</span>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-body">
+            <strong>Export + import</strong>
+            <span>New snapshot is saved automatically with the new parameter values.</span>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-body">
+            <strong>Wait 2–5 days</strong>
+            <span>Enough CGM data for a meaningful comparison.</span>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">4</div>
+          <div class="step-body">
+            <strong>Diff tab → compare snapshots</strong>
+            <span>Select before/after. View TIR/hypo/CV deltas alongside changed parameters.</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Row 4: Updating data files -->
+  <div class="section" style="margin-bottom:14px">
+    <div class="section-title"><span class="dot" style="background:var(--ink3)"></span>Updating data files (NUC server)</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;font-size:11.5px">
+      <div>
+        <strong style="display:block;margin-bottom:4px">Parameters only changed</strong>
+        <span style="color:var(--ink2)">Copy <code style="font-family:monospace;font-size:10px">aimi_parameters.json</code> to <code style="font-family:monospace;font-size:10px">~/aimi-analyzer/data/</code><br><br>Then: <code style="font-family:monospace;font-size:10px;background:var(--paper);padding:2px 5px;border-radius:3px">docker compose restart</code></span>
+      </div>
+      <div>
+        <strong style="display:block;margin-bottom:4px">Settings restructured</strong>
+        <span style="color:var(--ink2)">Run <code style="font-family:monospace;font-size:10px">generate_settings_paths.py</code>, then <code style="font-family:monospace;font-size:10px">merge_settings_paths.py</code>. Copy updated <code style="font-family:monospace;font-size:10px">aimi_parameters.json</code>. Restart.</span>
+      </div>
+      <div>
+        <strong style="display:block;margin-bottom:4px">Backend/frontend changed</strong>
+        <span style="color:var(--ink2)">Copy new <code style="font-family:monospace;font-size:10px">app.py</code> / <code style="font-family:monospace;font-size:10px">index.html</code> to the respective folders.<br><br><code style="font-family:monospace;font-size:10px;background:var(--paper);padding:2px 5px;border-radius:3px">docker compose up -d --build</code></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer>
+    <div>AIMI Parameter Analyzer · <code>dev_OAPSAIMI_RB</code> · Stack: Docker · FastAPI · Python · Single-page HTML</div>
+    <div>115 active params · 38 feature groups · 117 parameter summaries · 3 known bugs tracked</div>
+  </footer>
+
+</div>
+</body>
+</html>
