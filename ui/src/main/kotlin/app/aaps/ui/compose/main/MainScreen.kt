@@ -227,6 +227,9 @@ fun MainScreen(
 
                 val activeSceneState by mainViewModel.activeSceneState.collectAsStateWithLifecycle()
                 val sceneExpired by mainViewModel.sceneExpired.collectAsStateWithLifecycle()
+                val masterReachable by mainViewModel.masterReachable.collectAsStateWithLifecycle()
+                // (Probe-while-offline is now global — see ComposeMainActivity. This screen still reads
+                // masterReachable for its own gating.)
                 Box(modifier = Modifier.fillMaxSize()) {
                     // Main content
                     OverviewScreen(
@@ -258,6 +261,7 @@ fun MainScreen(
                         sceneExpired = sceneExpired,
                         onEndScene = { mainViewModel.requestSceneDeactivation() },
                         onDismissScene = { mainViewModel.dismissExpiredScene() },
+                        endSceneEnabled = masterReachable,
                         formatDuration = mainViewModel::formatDuration,
                         paddingValues = contentPadding,
                         fabBottomOffset = if (hasToolbar && showChrome) 56.dp else 0.dp,
@@ -455,32 +459,34 @@ fun MainScreen(
         )
     }
 
-        // Shared confirmation dialog (automation actions, TT presets, scene end — from toolbar or
-        // bottom sheets). When the confirmation carries a secondary action (e.g., scene chain skip),
-        // render a 3-button dialog; otherwise the standard 2-button OK/Cancel.
-        val actionConfirmation by mainViewModel.actionConfirmation.collectAsStateWithLifecycle()
-        actionConfirmation?.let { confirmation ->
-            val secondaryAction = confirmation.secondaryAction
-            val secondaryLabel = confirmation.secondaryLabel
-            if (secondaryAction != null && secondaryLabel != null) {
-                ThreeButtonDialog(
-                    title = confirmation.title,
-                    message = confirmation.message,
-                    primaryLabel = confirmation.confirmLabel ?: stringResource(R.string.ok),
-                    onPrimary = { mainViewModel.executeConfirmableAction(confirmation.onConfirmAction) },
-                    secondaryLabel = secondaryLabel,
-                    onSecondary = { mainViewModel.executeConfirmableAction(secondaryAction) },
-                    onDismiss = { mainViewModel.dismissActionConfirmation() }
-                )
-            } else {
-                OkCancelDialog(
-                    title = confirmation.title,
-                    message = confirmation.message,
-                    onConfirm = { mainViewModel.executeConfirmableAction(confirmation.onConfirmAction) },
-                    onDismiss = { mainViewModel.dismissActionConfirmation() }
-                )
-            }
+    // Shared confirmation dialog (automation actions, TT presets, scene end — from toolbar or
+    // bottom sheets). When the confirmation carries a secondary action (e.g., scene chain skip),
+    // render a 3-button dialog; otherwise the standard 2-button OK/Cancel.
+    val actionConfirmation by mainViewModel.actionConfirmation.collectAsStateWithLifecycle()
+    actionConfirmation?.let { confirmation ->
+        val secondaryAction = confirmation.secondaryAction
+        val secondaryLabel = confirmation.secondaryLabel
+        if (secondaryAction != null && secondaryLabel != null) {
+            ThreeButtonDialog(
+                title = confirmation.title,
+                message = confirmation.message,
+                icon = confirmation.icon,
+                primaryLabel = confirmation.confirmLabel ?: stringResource(R.string.ok),
+                onPrimary = { mainViewModel.executeConfirmableAction(confirmation.onConfirmAction) },
+                secondaryLabel = secondaryLabel,
+                onSecondary = { mainViewModel.executeConfirmableAction(secondaryAction) },
+                onDismiss = { mainViewModel.dismissActionConfirmation() }
+            )
+        } else {
+            OkCancelDialog(
+                title = confirmation.title,
+                message = confirmation.message,
+                icon = confirmation.icon,
+                onConfirm = { mainViewModel.executeConfirmableAction(confirmation.onConfirmAction) },
+                onDismiss = { mainViewModel.dismissActionConfirmation() }
+            )
         }
+    }
 
     // Maintenance dialogs (sheets, confirmations, export chain)
     MaintenanceDialogs(

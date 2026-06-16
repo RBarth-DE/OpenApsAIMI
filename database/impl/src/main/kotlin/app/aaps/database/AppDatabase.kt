@@ -7,6 +7,7 @@ import app.aaps.database.daos.APSResultDao
 import app.aaps.database.daos.AutoIsfValuesDao
 import app.aaps.database.daos.BolusCalculatorResultDao
 import app.aaps.database.daos.BolusDao
+import app.aaps.database.daos.CalibrationEntryDao
 import app.aaps.database.daos.CarbsDao
 import app.aaps.database.daos.DeviceStatusDao
 import app.aaps.database.daos.EffectiveProfileSwitchDao
@@ -27,6 +28,7 @@ import app.aaps.database.daos.VersionChangeDao
 import app.aaps.database.entities.AutoIsfValues
 import app.aaps.database.entities.Bolus
 import app.aaps.database.entities.BolusCalculatorResult
+import app.aaps.database.entities.CalibrationEntry
 import app.aaps.database.entities.Carbs
 import app.aaps.database.entities.DeviceStatus
 import app.aaps.database.entities.EffectiveProfileSwitch
@@ -53,7 +55,8 @@ const val DATABASE_VERSION = 35
         EffectiveProfileSwitch::class, ExtendedBolus::class, GlucoseValue::class, ProfileSwitch::class,
         TemporaryBasal::class, TemporaryTarget::class, TherapyEvent::class, TotalDailyDose::class,
         PreferenceChange::class, VersionChange::class, UserEntry::class,
-        Food::class, DeviceStatus::class, RunningMode::class, HeartRate::class, StepsCount::class, AutoIsfValues::class],
+        Food::class, DeviceStatus::class, RunningMode::class, HeartRate::class, StepsCount::class, AutoIsfValues::class,
+        CalibrationEntry::class],
     exportSchema = true
 )
 @TypeConverters(Converters::class)
@@ -100,4 +103,6 @@ internal abstract class AppDatabase : RoomDatabase() {
     abstract val stepsCountDao: StepsCountDao
 
     abstract val autoIsfValuesDao: AutoIsfValuesDao
+
+    abstract val calibrationEntryDao: CalibrationEntryDao
 }

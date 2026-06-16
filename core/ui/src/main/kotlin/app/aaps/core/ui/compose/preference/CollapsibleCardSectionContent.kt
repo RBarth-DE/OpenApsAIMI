@@ -43,6 +43,7 @@ fun CollapsibleCardSectionContent(
     expanded: Boolean,
     onToggle: () -> Unit,
     icon: ImageVector? = null,
+    collapsible: Boolean = true,
     content: @Composable () -> Unit
 ) {
     val theme = LocalPreferenceTheme.current
@@ -62,12 +63,15 @@ fun CollapsibleCardSectionContent(
                 expanded = expanded,
                 onToggle = onToggle,
                 insideCard = true,
-                icon = icon
+                icon = icon,
+                collapsible = collapsible
             )
 
-            // Avoid AnimatedVisibility(expandVertically): it can break hit-testing for nested clickable rows
-            // inside a single LazyColumn item (plugin preference cards).
-            if (expanded) {
+            AnimatedVisibility(
+                visible = expanded || !collapsible,
+                enter = expandVertically(),
+                exit = shrinkVertically()
+            ) {
                 Column(modifier = Modifier.padding(bottom = theme.cardContentBottomPadding)) {
                     content()
                 }

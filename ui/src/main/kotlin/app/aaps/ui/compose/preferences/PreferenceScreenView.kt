@@ -1,6 +1,22 @@
 package app.aaps.ui.compose.preferences
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import app.aaps.core.ui.compose.AapsTopAppBar
+import app.aaps.core.ui.compose.ComposeScreenContent
+import app.aaps.core.ui.compose.LocalSnackbarHostState
+import app.aaps.core.ui.compose.MasterOfflineBanner
+import app.aaps.core.ui.compose.masterEditingEnabled
+import app.aaps.core.ui.compose.preference.LocalHighlightKey
+import app.aaps.core.ui.compose.preference.LocalNavigateToCompose
 import app.aaps.core.ui.compose.preference.PreferenceSubScreenDef
 import app.aaps.core.ui.compose.preference.PreferenceSubScreenHost
 
@@ -21,9 +37,75 @@ fun PreferenceScreenView(
     highlightKey: String? = null,
     onBackClick: () -> Unit
 ) {
-    PreferenceSubScreenHost(
-        screenDef = screenDef,
-        highlightKey = highlightKey,
-        onBackClick = onBackClick
-    )
+    val title = if (screenDef.titleResId != 0) {
+        stringResource(screenDef.titleResId)
+    } else {
+        screenDef.key
+    }
+
+    val sectionState = rememberPreferenceSectionState()
+    val snackbarHostState = LocalSnackbarHostState.current
+    val snackbarScope = rememberCoroutineScope()
+    val onShowMessage: (String) -> Unit = { message ->
+        snackbarScope.launch { snackbarHostState.showSnackbar(message) }
+    }
+    var composeScreen: ComposeScreenContent? by remember { mutableStateOf(null) }
+
+    // Auto-expand the main section
+    LaunchedEffect(screenDef.key) {
+        sectionState.toggle("${screenDef.key}_main", SectionLevel.TOP_LEVEL)
+    }
+
+    BackHandler(enabled = composeScreen != null) {
+        composeScreen = null
+    }
+
+    composeScreen?.let { screen ->
+        screen.Content(onBack = { composeScreen = null })
+        return
+    }
+
+    CompositionLocalProvider(
+        LocalHighlightKey provides highlightKey,
+        LocalNavigateToCompose provides { screen -> composeScreen = screen }
+    ) {
+        ProvidePreferenceTheme {
+            Scaffold(
+                topBar = {
+                    AapsTopAppBar(
+                        title = {
+                            Text(
+                                text = title,
+                                style = MaterialTheme.typography.titleLarge
+                            )
+                        },
+                        navigationIcon = {
+                            IconButton(onClick = onBackClick) {
+                                Icon(
+                                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                    contentDescription = stringResource(app.aaps.core.ui.R.string.back)
+                                )
+                            }
+                        }
+                    )
+                }
+            ) { paddingValues ->
+                val listState = rememberLazyListState()
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(paddingValues)
+                        .verticalScrollIndicators(listState),
+                    state = listState
+                ) {
+                    item { MasterOfflineBanner(editingEnabled = masterEditingEnabled()) }
+                    addPreferenceContent(
+                        content = screenDef,
+                        onShowMessage = onShowMessage,
+                        sectionState = sectionState
+                    )
+                }
+            }
+        }
+    }
 }

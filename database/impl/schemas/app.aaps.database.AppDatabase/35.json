@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 35,
-    "identityHash": "9f831a105423bdab4b95d9ae5864c159",
+    "identityHash": "de2c0dc8f7ce1ed85f88ac708fe77fcf",
     "entities": [
       {
         "tableName": "apsResults",
@@ -174,7 +174,7 @@
       },
       {
         "tableName": "boluses",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `version` INTEGER NOT NULL, `dateCreated` INTEGER NOT NULL, `isValid` INTEGER NOT NULL, `referenceId` INTEGER, `timestamp` INTEGER NOT NULL, `utcOffset` INTEGER NOT NULL, `amount` REAL NOT NULL, `type` TEXT NOT NULL, `notes` TEXT, `isBasalInsulin` INTEGER NOT NULL, `nightscoutSystemId` TEXT, `nightscoutId` TEXT, `pumpType` TEXT, `pumpSerial` TEXT, `temporaryId` INTEGER, `pumpId` INTEGER, `startId` INTEGER, `endId` INTEGER, `insulinLabel` TEXT, `insulinEndTime` INTEGER, `insulinPeakTime` INTEGER, `concentration` REAL, FOREIGN KEY(`referenceId`) REFERENCES `boluses`(`id`) ON UPDATE NO ACTION ON DELETE NO ACTION )",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `version` INTEGER NOT NULL, `dateCreated` INTEGER NOT NULL, `isValid` INTEGER NOT NULL, `referenceId` INTEGER, `timestamp` INTEGER NOT NULL, `utcOffset` INTEGER NOT NULL, `amount` REAL NOT NULL, `type` TEXT NOT NULL, `notes` TEXT, `isBasalInsulin` INTEGER NOT NULL, `nightscoutSystemId` TEXT, `nightscoutId` TEXT, `pumpType` TEXT, `pumpSerial` TEXT, `temporaryId` INTEGER, `pumpId` INTEGER, `startId` INTEGER, `endId` INTEGER, `insulinLabel` TEXT NOT NULL, `insulinEndTime` INTEGER NOT NULL, `insulinPeakTime` INTEGER NOT NULL, `concentration` REAL NOT NULL, FOREIGN KEY(`referenceId`) REFERENCES `boluses`(`id`) ON UPDATE NO ACTION ON DELETE NO ACTION )",
         "fields": [
           {
             "fieldPath": "id",
@@ -283,22 +283,26 @@
           {
             "fieldPath": "insulinConfiguration.insulinLabel",
             "columnName": "insulinLabel",
-            "affinity": "TEXT"
+            "affinity": "TEXT",
+            "notNull": true
           },
           {
             "fieldPath": "insulinConfiguration.insulinEndTime",
             "columnName": "insulinEndTime",
-            "affinity": "INTEGER"
+            "affinity": "INTEGER",
+            "notNull": true
           },
           {
             "fieldPath": "insulinConfiguration.insulinPeakTime",
             "columnName": "insulinPeakTime",
-            "affinity": "INTEGER"
+            "affinity": "INTEGER",
+            "notNull": true
           },
           {
             "fieldPath": "insulinConfiguration.concentration",
             "columnName": "concentration",
-            "affinity": "REAL"
+            "affinity": "REAL",
+            "notNull": true
           }
         ],
         "primaryKey": {
@@ -3181,6 +3185,153 @@
         ]
       },
       {
+        "tableName": "calibrationEntries",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `version` INTEGER NOT NULL, `dateCreated` INTEGER NOT NULL, `isValid` INTEGER NOT NULL, `referenceId` INTEGER, `timestamp` INTEGER NOT NULL, `utcOffset` INTEGER NOT NULL, `fingerstickMgdl` REAL NOT NULL, `sensorMgdlAtPairing` REAL NOT NULL, `nightscoutSystemId` TEXT, `nightscoutId` TEXT, `pumpType` TEXT, `pumpSerial` TEXT, `temporaryId` INTEGER, `pumpId` INTEGER, `startId` INTEGER, `endId` INTEGER, FOREIGN KEY(`referenceId`) REFERENCES `calibrationEntries`(`id`) ON UPDATE NO ACTION ON DELETE NO ACTION )",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "version",
+            "columnName": "version",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "dateCreated",
+            "columnName": "dateCreated",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "isValid",
+            "columnName": "isValid",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "referenceId",
+            "columnName": "referenceId",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "timestamp",
+            "columnName": "timestamp",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "utcOffset",
+            "columnName": "utcOffset",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "fingerstickMgdl",
+            "columnName": "fingerstickMgdl",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "sensorMgdlAtPairing",
+            "columnName": "sensorMgdlAtPairing",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "interfaceIDs_backing.nightscoutSystemId",
+            "columnName": "nightscoutSystemId",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "interfaceIDs_backing.nightscoutId",
+            "columnName": "nightscoutId",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "interfaceIDs_backing.pumpType",
+            "columnName": "pumpType",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "interfaceIDs_backing.pumpSerial",
+            "columnName": "pumpSerial",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "interfaceIDs_backing.temporaryId",
+            "columnName": "temporaryId",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "interfaceIDs_backing.pumpId",
+            "columnName": "pumpId",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "interfaceIDs_backing.startId",
+            "columnName": "startId",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "interfaceIDs_backing.endId",
+            "columnName": "endId",
+            "affinity": "INTEGER"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_calibrationEntries_nightscoutId",
+            "unique": false,
+            "columnNames": [
+              "nightscoutId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_calibrationEntries_nightscoutId` ON `${TABLE_NAME}` (`nightscoutId`)"
+          },
+          {
+            "name": "index_calibrationEntries_referenceId",
+            "unique": false,
+            "columnNames": [
+              "referenceId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_calibrationEntries_referenceId` ON `${TABLE_NAME}` (`referenceId`)"
+          },
+          {
+            "name": "index_calibrationEntries_timestamp",
+            "unique": false,
+            "columnNames": [
+              "timestamp"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_calibrationEntries_timestamp` ON `${TABLE_NAME}` (`timestamp`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "calibrationEntries",
+            "onDelete": "NO ACTION",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "referenceId"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      },
+      {
         "tableName": "autoIsfValues",
         "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `timestamp` INTEGER NOT NULL, `acceIsf` REAL NOT NULL, `bgIsf` REAL NOT NULL, `ppIsf` REAL NOT NULL, `driftIsf` REAL NOT NULL, `duraIsf` REAL NOT NULL, `finalIsf` REAL NOT NULL, `iobThEffective` REAL NOT NULL, `utcOffset` INTEGER NOT NULL, `version` INTEGER NOT NULL, `dateCreated` INTEGER NOT NULL, `isValid` INTEGER NOT NULL, `referenceId` INTEGER, `nightscoutSystemId` TEXT, `nightscoutId` TEXT, `pumpType` TEXT, `pumpSerial` TEXT, `temporaryId` INTEGER, `pumpId` INTEGER, `startId` INTEGER, `endId` INTEGER)",
         "fields": [
@@ -3338,7 +3489,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '9f831a105423bdab4b95d9ae5864c159')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'de2c0dc8f7ce1ed85f88ac708fe77fcf')"
     ]
   }
 }

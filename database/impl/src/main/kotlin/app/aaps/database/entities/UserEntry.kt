@@ -131,6 +131,7 @@ data class UserEntry(
         ACCE_WEIGHT_SET,
         SCENE_ACTIVATED,
         SCENE_DEACTIVATED,
+        REMOTE_CONFIG_CHANGED,
         UNKNOWN
         ;
     }

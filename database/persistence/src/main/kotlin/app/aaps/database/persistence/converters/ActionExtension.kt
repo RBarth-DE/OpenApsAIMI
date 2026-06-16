@@ -111,6 +111,7 @@ fun UserEntry.Action.fromDb(): Action =
         UserEntry.Action.CHANGE_INSULIN_CONCENTRATION    -> Action.CHANGE_INSULIN_CONCENTRATION
         UserEntry.Action.SCENE_ACTIVATED                 -> Action.SCENE_ACTIVATED
         UserEntry.Action.SCENE_DEACTIVATED               -> Action.SCENE_DEACTIVATED
+        UserEntry.Action.REMOTE_CONFIG_CHANGED           -> Action.REMOTE_CONFIG_CHANGED
     }
 
 fun Action.toDb(): UserEntry.Action =
@@ -221,5 +222,6 @@ fun Action.toDb(): UserEntry.Action =
         Action.CHANGE_INSULIN_CONCENTRATION    -> UserEntry.Action.CHANGE_INSULIN_CONCENTRATION
         Action.SCENE_ACTIVATED                 -> UserEntry.Action.SCENE_ACTIVATED
         Action.SCENE_DEACTIVATED               -> UserEntry.Action.SCENE_DEACTIVATED
+        Action.REMOTE_CONFIG_CHANGED           -> UserEntry.Action.REMOTE_CONFIG_CHANGED
     }
 

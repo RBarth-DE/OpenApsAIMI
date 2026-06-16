@@ -97,7 +97,7 @@ fun AdaptiveStringListPreferenceItem(
     ListPreference(
         state = state,
         values = values,
-        title = { Text(titleText) },
+        title = { PreferenceTitleWithSyncBadge(effectiveTitleResId, stringKey) },
         enabled = visibility.enabled,
         summary = { Text(currentEntry) },
         dialogSummary = dialogSummary,

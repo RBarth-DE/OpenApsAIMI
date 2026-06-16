@@ -3,6 +3,7 @@ package app.aaps.database
 import app.aaps.database.daos.APSResultDao
 import app.aaps.database.daos.BolusCalculatorResultDao
 import app.aaps.database.daos.BolusDao
+import app.aaps.database.daos.CalibrationEntryDao
 import app.aaps.database.daos.CarbsDao
 import app.aaps.database.daos.DeviceStatusDao
 import app.aaps.database.daos.EffectiveProfileSwitchDao
@@ -14,7 +15,6 @@ import app.aaps.database.daos.PreferenceChangeDao
 import app.aaps.database.daos.ProfileSwitchDao
 import app.aaps.database.daos.RunningModeDao
 import app.aaps.database.daos.StepsCountDao
-import app.aaps.database.daos.AutoIsfValuesDao
 import app.aaps.database.daos.TemporaryBasalDao
 import app.aaps.database.daos.TemporaryTargetDao
 import app.aaps.database.daos.TherapyEventDao
@@ -24,6 +24,7 @@ import app.aaps.database.daos.VersionChangeDao
 import app.aaps.database.daos.delegated.DelegatedAPSResultDao
 import app.aaps.database.daos.delegated.DelegatedBolusCalculatorResultDao
 import app.aaps.database.daos.delegated.DelegatedBolusDao
+import app.aaps.database.daos.delegated.DelegatedCalibrationEntryDao
 import app.aaps.database.daos.delegated.DelegatedCarbsDao
 import app.aaps.database.daos.delegated.DelegatedDeviceStatusDao
 import app.aaps.database.daos.delegated.DelegatedEffectiveProfileSwitchDao
@@ -35,7 +36,6 @@ import app.aaps.database.daos.delegated.DelegatedPreferenceChangeDao
 import app.aaps.database.daos.delegated.DelegatedProfileSwitchDao
 import app.aaps.database.daos.delegated.DelegatedRunningModeDao
 import app.aaps.database.daos.delegated.DelegatedStepsCountDao
-import app.aaps.database.daos.delegated.DelegatedAutoIsfValuesDao
 import app.aaps.database.daos.delegated.DelegatedTemporaryBasalDao
 import app.aaps.database.daos.delegated.DelegatedTemporaryTargetDao
 import app.aaps.database.daos.delegated.DelegatedTherapyEventDao
@@ -66,6 +66,6 @@ internal class DelegatedAppDatabase(val changes: MutableList<DBEntry>, val datab
     val runningModeDao: RunningModeDao = DelegatedRunningModeDao(changes, database.runningModeDao)
     val heartRateDao: HeartRateDao = DelegatedHeartRateDao(changes, database.heartRateDao)
     val stepsCountDao: StepsCountDao = DelegatedStepsCountDao(changes, database.stepsCountDao)
-    val autoIsfValuesDao: AutoIsfValuesDao = DelegatedAutoIsfValuesDao(changes, database.autoIsfValuesDao)
+    val calibrationEntryDao: CalibrationEntryDao = DelegatedCalibrationEntryDao(changes, database.calibrationEntryDao)
     fun clearAllTables() = database.clearAllTables()
 }

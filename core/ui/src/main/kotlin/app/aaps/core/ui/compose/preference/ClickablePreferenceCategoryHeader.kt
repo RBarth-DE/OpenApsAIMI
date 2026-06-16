@@ -58,7 +58,8 @@ internal fun ClickablePreferenceCategoryHeader(
     onToggle: () -> Unit,
     modifier: Modifier = Modifier,
     insideCard: Boolean = false,
-    icon: ImageVector? = null
+    icon: ImageVector? = null,
+    collapsible: Boolean = true
 ) {
     val theme = LocalPreferenceTheme.current
     val rotationAngle = animateFloatAsState(
@@ -91,7 +92,8 @@ internal fun ClickablePreferenceCategoryHeader(
             .fillMaxWidth()
             .padding(headerPadding)
             .background(backgroundColor)
-            .clickable(onClick = onToggle),
+            .then(if (collapsible) Modifier.clickable(onClick = onToggle) else Modifier)
+            .padding(headerPadding),
         verticalAlignment = Alignment.CenterVertically
     ) {
         CompositionLocalProvider(LocalContentColor provides theme.categoryColor) {
@@ -120,13 +122,15 @@ internal fun ClickablePreferenceCategoryHeader(
                     }
                 }
             }
-            Icon(
-                imageVector = Icons.Default.ExpandMore,
-                contentDescription = stringResource(if (expanded) app.aaps.core.ui.R.string.collapse else app.aaps.core.ui.R.string.expand),
-                modifier = Modifier
-                    .size(theme.expandIconSize)
-                    .graphicsLayer { rotationZ = rotationAngle.value }
-            )
+            if (collapsible) {
+                Icon(
+                    imageVector = Icons.Default.ExpandMore,
+                    contentDescription = stringResource(if (expanded) app.aaps.core.ui.R.string.collapse else app.aaps.core.ui.R.string.expand),
+                    modifier = Modifier
+                        .size(theme.expandIconSize)
+                        .graphicsLayer { rotationZ = rotationAngle.value }
+                )
+            }
         }
     }
 }

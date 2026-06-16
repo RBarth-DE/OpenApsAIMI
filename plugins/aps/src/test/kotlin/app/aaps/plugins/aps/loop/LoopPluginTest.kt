@@ -11,7 +11,6 @@ import app.aaps.core.data.ue.Sources
 import app.aaps.core.interfaces.constraints.Constraint
 import app.aaps.core.interfaces.constraints.ConstraintsChecker
 import app.aaps.core.interfaces.db.PersistenceLayer
-import app.aaps.core.interfaces.iob.GlucoseStatusProvider
 import app.aaps.core.interfaces.logging.UserEntryLogger
 import app.aaps.core.interfaces.nsclient.ProcessedDeviceStatusData
 import app.aaps.core.interfaces.pump.PumpStatusProvider
@@ -20,8 +19,6 @@ import app.aaps.core.interfaces.queue.CommandQueue
 import app.aaps.core.interfaces.receivers.ReceiverStatusStore
 import app.aaps.core.interfaces.ui.UiInteraction
 import app.aaps.core.interfaces.utils.HardLimits
-import app.aaps.core.nssdk.interfaces.RunningConfiguration
-import app.aaps.plugins.aps.openAPSAIMI.GlucoseStatusCalculatorAimi
 import app.aaps.core.objects.constraints.ConstraintObject
 import app.aaps.shared.tests.TestBaseWithProfile
 import com.google.common.truth.Truth.assertThat
@@ -49,12 +46,9 @@ class LoopPluginTest : TestBaseWithProfile() {
     @Mock lateinit var androidNotificationManager: NotificationManager
     @Mock lateinit var persistenceLayer: PersistenceLayer
     @Mock lateinit var uel: UserEntryLogger
-    @Mock lateinit var runningConfiguration: RunningConfiguration
     @Mock lateinit var uiInteraction: UiInteraction
     @Mock lateinit var processedDeviceStatusData: ProcessedDeviceStatusData
     @Mock lateinit var pumpStatusProvider: PumpStatusProvider
-    @Mock lateinit var glucoseStatusProvider: GlucoseStatusProvider
-    @Mock lateinit var glucoseStatusCalculatorAimi: GlucoseStatusCalculatorAimi
 
     private lateinit var loopPlugin: LoopPlugin
     private val testScope = CoroutineScope(Dispatchers.Unconfined)
@@ -63,8 +57,8 @@ class LoopPluginTest : TestBaseWithProfile() {
         whenever(config.APS).thenReturn(true)
         loopPlugin = LoopPlugin(
             aapsLogger, rxBus, preferences, config,
-            constraintChecker, rh, profileFunction, context, commandQueue, activePlugin, iobCobCalculator, glucoseStatusProvider, processedTbrEbData, receiverStatusStore, fabricPrivacy, dateUtil, uel,
-            persistenceLayer, runningConfiguration, uiInteraction, notificationManager, pumpEnactResultProvider, processedDeviceStatusData, pumpStatusProvider, decimalFormatter, ch, testScope
+            constraintChecker, rh, profileFunction, context, commandQueue, activePlugin, processedTbrEbData, receiverStatusStore, fabricPrivacy, dateUtil, uel,
+            persistenceLayer, uiInteraction, notificationManager, pumpEnactResultProvider, processedDeviceStatusData, pumpStatusProvider, decimalFormatter, ch, testScope
         )
         whenever(activePlugin.activePump).thenReturn(virtualPumpPlugin)
         whenever(context.getSystemService(Context.NOTIFICATION_SERVICE)).thenReturn(androidNotificationManager)
@@ -350,17 +344,7 @@ class LoopPluginTest : TestBaseWithProfile() {
 
     private fun setupForPreCheck() = runTest {
         // Default setup: All constraints pass, pump is not suspended.
-        whenever(activePlugin.activePump.isInitialized()).thenReturn(true)
-        whenever(activePlugin.activePump.isConnected()).thenReturn(true)
-        whenever(activePlugin.activePump.isConnecting()).thenReturn(false)
-        whenever(activePlugin.activePump.isHandshakeInProgress()).thenReturn(false)
         whenever(activePlugin.activePump.isSuspended()).thenReturn(false)
-        whenever(activePlugin.activePump.isSuspendedForRunningModeReconciliation()).thenAnswer {
-            activePlugin.activePump.isSuspended()
-        }
-        whenever(commandQueue.cancelTempBasal(any(), any())).thenReturn(
-            pumpEnactResultProvider.get().success(true).enacted(true)
-        )
         whenever(constraintChecker.isLoopInvocationAllowed()).thenReturn(ConstraintObject(true, aapsLogger))
         whenever(constraintChecker.isClosedLoopAllowed()).thenReturn(ConstraintObject(true, aapsLogger))
         whenever(constraintChecker.isLgsForced()).thenReturn(ConstraintObject(false, aapsLogger))
@@ -385,7 +369,6 @@ class LoopPluginTest : TestBaseWithProfile() {
         // The current mode in the DB is CLOSED_LOOP, but the pump reports it's suspended
         mockCurrentMode(RM(mode = RM.Mode.CLOSED_LOOP, timestamp = dateUtil.now(), duration = 0))
         whenever(activePlugin.activePump.isSuspended()).thenReturn(true)
-        whenever(activePlugin.activePump.isSuspendedForRunningModeReconciliation()).thenReturn(true)
 
         // Act
         loopPlugin.runningModeRecord() // Accessing the property triggers the pre-check
@@ -411,7 +394,6 @@ class LoopPluginTest : TestBaseWithProfile() {
         val suspendedByPumpMode = RM(mode = RM.Mode.SUSPENDED_BY_PUMP, timestamp = dateUtil.now() - T.mins(5).msecs(), duration = 0)
         val previousMode = RM(mode = RM.Mode.CLOSED_LOOP, timestamp = dateUtil.now() - T.mins(10).msecs(), duration = T.mins(5).msecs())
         whenever(activePlugin.activePump.isSuspended()).thenReturn(false)
-        whenever(activePlugin.activePump.isSuspendedForRunningModeReconciliation()).thenReturn(false)
         whenever(rh.gs(app.aaps.core.ui.R.string.pump_running)).thenReturn("Pump running")
 
         // 1. First time getRunningModeActiveAt is called, return the suspended mode.
