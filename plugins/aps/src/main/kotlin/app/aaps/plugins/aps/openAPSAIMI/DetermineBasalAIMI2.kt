@@ -918,7 +918,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             // Aggressive boosts removed. All physio modulation is now handled 
             // by AIMIInsulinDecisionAdapterMTR via getMultipliers().
             // We return only the Learner's factor here.
-            return if (::unifiedReactivityLearner.isInitialized) unifiedReactivityLearner.getCombinedFactor() else 1.0
+            return if (::unifiedReactivityLearner.isInitialized) unifiedReactivityLearner.getCombinedFactor(hourOfDay) else 1.0
         }
     @Inject lateinit var aapsLogger: AAPSLogger  // 📊 Logger for health monitoring
 
@@ -6369,7 +6369,8 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             consoleLog.add("📊 REACTIVITY_LEARNER:")
             consoleLog.add("  │ globalFactor: ${"%.3f".format(Locale.US, analysis.globalFactor)}")
             consoleLog.add("  │ shortTermFactor: ${"%.3f".format(Locale.US, analysis.shortTermFactor)}")
-            consoleLog.add("  │ combinedFactor: ${"%.3f".format(Locale.US, unifiedReactivityLearner.getCombinedFactor())}")
+            consoleLog.add("  │ segmentFactor (${analysis.segmentDaypart.name}): ${"%.3f".format(Locale.US, analysis.segmentFactor)}")
+            consoleLog.add("  │ combinedFactor: ${"%.3f".format(Locale.US, unifiedReactivityLearner.getCombinedFactor(hourOfDay))}")
             consoleLog.add("  │ TIR 70-180: ${analysis.tir70_180.toInt()}%")
             consoleLog.add("  │ CV%: ${analysis.cv_percent.toInt()}%")
             consoleLog.add("  │ Hypo count (24h): ${analysis.hypo_count}")
@@ -6496,7 +6497,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                 learnersParts.add("ISF:" + runtime.fusedIsf.toInt())
             }
         }
-        val reactivityFactor = unifiedReactivityLearner.getCombinedFactor()
+        val reactivityFactor = unifiedReactivityLearner.getCombinedFactor(hourOfDay)
         if (kotlin.math.abs(reactivityFactor - 1.0) > 0.01) {
             learnersParts.add("React×" + String.format(Locale.US, "%.2f", reactivityFactor))
         }
@@ -6545,7 +6546,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             consoleLog.add("📊 Learners applied to finalResult.reason: [" + learnersSummary + "]")
         }
 
-        val urFactor = unifiedReactivityLearner.getCombinedFactor()
+        val urFactor = unifiedReactivityLearner.getCombinedFactor(hourOfDay)
         val profileIsf = b.profile.sens
         val fusedIsf = b.pkpdRuntime?.fusedIsf
         val pkpdDiaMin = b.pkpdRuntime?.params?.diaHrs?.let { (it * 60).toInt() }
