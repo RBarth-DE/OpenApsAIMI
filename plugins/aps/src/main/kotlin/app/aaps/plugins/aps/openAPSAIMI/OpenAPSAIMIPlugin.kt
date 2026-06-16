@@ -1672,7 +1672,7 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
     // REMOVED: aimiComposeAdaptiveBasalSubScreen() — merged into aimiComposeT3cSubScreen()
     //   - OApsAIMIHighBg moved to T3c as plateau correction threshold
     //   - Governance params uncommented in T3c with proper dependency on OApsAIMIT3cAdaptiveBasalEnabled
-    //   - OApsAIMIAdaptiveBasalMaxScaling was orphaned (only non-governance param, not read by DetermineBasalAIMI2.kt)
+    //   - OApsAIMIAdaptiveBasalMaxScaling added back below (read by BasalNeuralLearner.kt::getUniversalBasalMultiplier)
 
     private fun aimiComposeT3cSubScreen(): PreferenceSubScreenDef =
         PreferenceSubScreenDef(
@@ -1686,6 +1686,7 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
                 DoubleKey.OApsAIMIT3cAnticipationStrength,
                 // Adaptive Basal Gate + Governance (formerly aimiComposeAdaptiveBasalSubScreen — merged)
                 BooleanKey.OApsAIMIT3cAdaptiveBasalEnabled,
+                DoubleKey.OApsAIMIAdaptiveBasalMaxScaling,  // Read by BasalNeuralLearner.kt::getUniversalBasalMultiplier
                 DoubleKey.OApsAIMIHighBg,               // Plateau correction threshold (from merged AdaptiveBasal screen)
                 DoubleKey.OApsAIMIGovernanceHypoRateEnter,
                 DoubleKey.OApsAIMIGovernanceHypoRateExit,
