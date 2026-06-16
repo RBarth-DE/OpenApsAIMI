@@ -119,6 +119,8 @@ import kotlin.math.exp
 import app.aaps.plugins.aps.openAPSAIMI.advisor.AimiAdvisorService
 import app.aaps.plugins.aps.openAPSAIMI.compose.AimiControlCenterScreen
 import app.aaps.plugins.aps.openAPSAIMI.compose.AimiPkpdSettingsScreen
+import app.aaps.plugins.aps.openAPSAIMI.tpo.TpoOrchestrator
+import app.aaps.plugins.aps.openAPSAIMI.ml.AimiSmbTrainer
 import kotlinx.coroutines.withContext
 import app.aaps.plugins.aps.openAPSAIMI.learning.AimiMlTrainingScheduler
 import app.aaps.plugins.aps.openAPSAIMI.utils.AimiBackupManager
@@ -186,7 +188,8 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
     private val trajectoryHistoryProvider: TrajectoryHistoryProvider,
     private val trajectoryGuard: TrajectoryGuard,
     private val loopProvider: Provider<Loop>,
-    private val dynIsfTrajectoryTuning: DynIsfTrajectoryTuning
+    private val dynIsfTrajectoryTuning: DynIsfTrajectoryTuning,
+    private val tpoOrchestrator: TpoOrchestrator,
 ) : PluginBaseWithPreferences(
     PluginDescription()
         .mainType(PluginType.APS)
@@ -1567,6 +1570,20 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
             )
         )
         add(AimiStringKey.RemoteControlPin)
+        add(aimiComposeTpoSubScreen())
+        add(
+            ApsIntentKey.AimiControlCenter.withCompose(
+                ComposeScreenContent { onBack ->
+                    AimiControlCenterScreen(
+                        preferences = preferences,
+                        tpoOrchestrator = tpoOrchestrator,
+                        onBack = onBack,
+                    )
+                },
+            ),
+        )
+        add(aimiComposePkpdGuidedSubScreen())
+        add(aimiComposePatientContextSubScreen())
         add(
             PreferenceSubScreenDef(
                 key = "aimi_compose_sos",
@@ -1600,6 +1617,7 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
                 ComposeScreenContent { onBack ->
                     AimiControlCenterScreen(
                         preferences = preferences,
+                        tpoOrchestrator = tpoOrchestrator,
                         onBack = onBack,
                     )
                 },
@@ -1642,6 +1660,7 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
         // add(aimiComposePkpdGuidedSubScreen()) //included in aimiComposePkpdSubScreen()
         add(aimiComposePkpdSubScreen())
 
+
         // ── 4. Adaptive & Safety ──
         add(aimiComposeAutodriveSubScreen())
 
@@ -1655,6 +1674,37 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
         add(aimiComposeWomenCycleSubScreen())
         add(aimiComposeNightGrowthSubScreen())
     }
+
+    private fun aimiComposeTpoSubScreen(): PreferenceSubScreenDef =
+        PreferenceSubScreenDef(
+            key = "aimi_compose_tpo",
+            titleResId = R.string.aimi_tpo_prefs_subscreen_title,
+            items = listOf(
+                BooleanKey.OApsAIMITpoEnabled,
+                BooleanKey.OApsAIMITpoLlmConfirmEnabled,
+                BooleanKey.OApsAIMITpoNotifyOnApply,
+            ),
+        )
+
+    private fun aimiComposePatientContextSubScreen(): PreferenceSubScreenDef =
+        PreferenceSubScreenDef(
+            key = "aimi_compose_patient_context",
+            titleResId = R.string.aimi_patient_context_title,
+            items = buildList {
+                add(DoubleKey.OApsAIMIweight)
+                add(DoubleKey.OApsAIMICHO)
+                add(DoubleKey.OApsAIMITDD7)
+                add(BooleanKey.OApsAIMIpregnancy)
+                add(AimiStringKey.PregnancyDueDateString)
+                add(BooleanKey.OApsAIMIhoneymoon)
+                add(BooleanKey.OApsAIMInight)
+                add(aimiComposeWomenCycleSubScreen())
+                add(aimiComposeInflammatorySubScreen())
+                add(aimiComposeThyroidModuleSubScreen())
+                add(aimiComposeEndometriosisSubScreen())
+                add(aimiComposeNightGrowthSubScreen())
+            },
+        )
 
     // REMOVED: aimiComposeAdaptiveBasalSubScreen() — merged into aimiComposeT3cSubScreen()
     //   - OApsAIMIHighBg moved to T3c as plateau correction threshold
