@@ -22,6 +22,7 @@ import app.aaps.plugins.sync.nsclientV3.data.ProcessedDeviceStatusDataImpl
 import app.aaps.plugins.sync.nsclientV3.services.NSClientV3Service
 import app.aaps.plugins.sync.smsCommunicator.SmsCommunicatorPlugin
 import app.aaps.plugins.sync.tidepool.auth.AuthFlowIn
+import app.aaps.plugins.sync.wear.activities.CwfInfosActivity
 import app.aaps.plugins.sync.wear.receivers.WearDataReceiver
 import app.aaps.plugins.sync.wear.wearintegration.DataLayerListenerServiceMobile
 import app.aaps.plugins.sync.xdrip.DataSyncSelectorXdripImpl
@@ -45,10 +46,6 @@ import dagger.hilt.components.SingletonComponent
 @Suppress("unused")
 abstract class SyncModule {
 
-    @ContributesAndroidInjector abstract fun contributesNSClientFragment(): NSClientFragment
-    @ContributesAndroidInjector abstract fun contributesRemoteControlFragment(): app.aaps.plugins.sync.nsShared.RemoteControlFragment
-
-    @ContributesAndroidInjector abstract fun contributesNSClientService(): NSClientService
     @ContributesAndroidInjector abstract fun contributesNSClientV3Service(): NSClientV3Service
 
     // NSClient / NSClientV3 / Xdrip sync workers migrated to @HiltWorker (constructed by HiltWorkerFactory).
@@ -56,10 +53,6 @@ abstract class SyncModule {
     @ContributesAndroidInjector abstract fun contributesWearDataReceiver(): WearDataReceiver
     @ContributesAndroidInjector abstract fun contributesWatchUpdaterService(): DataLayerListenerServiceMobile
     @ContributesAndroidInjector abstract fun contributesCustomWatchfaceInfosActivity(): CwfInfosActivity
-
-    // Premium License Dialogs
-    @ContributesAndroidInjector abstract fun contributesLicenseKeyDialog(): app.aaps.plugins.sync.nsShared.LicenseKeyDialog
-    @ContributesAndroidInjector abstract fun contributesRemoteAccessLoginDialog(): app.aaps.plugins.sync.nsShared.RemoteAccessLoginDialog
 
     @Module
     @InstallIn(SingletonComponent::class)

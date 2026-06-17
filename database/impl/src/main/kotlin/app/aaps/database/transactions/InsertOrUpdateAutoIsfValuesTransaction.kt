@@ -8,9 +8,8 @@ class InsertOrUpdateAutoIsfValuesTransaction(private val autoIsfValues: AutoIsfV
     override suspend fun run(): TransactionResult {
         val existing = if (autoIsfValues.id == 0L) null else database.autoIsfValuesDao.findById(autoIsfValues.id)
         return if (existing == null) {
-            database.autoIsfValuesDao.insertNewEntry(autoIsfValues).let {
-                TransactionResult(listOf(autoIsfValues), emptyList())
-            }
+            database.autoIsfValuesDao.insertNewEntry(autoIsfValues)
+            TransactionResult(listOf(autoIsfValues), emptyList())
         } else {
             database.autoIsfValuesDao.updateExistingEntry(autoIsfValues)
             TransactionResult(emptyList(), listOf(autoIsfValues))

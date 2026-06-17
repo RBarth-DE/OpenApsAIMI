@@ -736,7 +736,7 @@ class OverviewFragment : DaggerFragment(), View.OnClickListener, View.OnLongClic
                     (lastRun.lastOpenModeAccept == 0L || lastRun.lastOpenModeAccept < lastRun.lastAPSRun) &&// never accepted or before last result
                     changeRequested // change is requested
 
-            val events = automation.userEvents()
+            val events = automation.events.value
             val runnableEvents = withContext(Dispatchers.IO) {
                 events.filter { it.isEnabled && it.canRun() }
             }

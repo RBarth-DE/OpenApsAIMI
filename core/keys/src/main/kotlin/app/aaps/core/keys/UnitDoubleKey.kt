@@ -28,8 +28,6 @@ enum class UnitDoubleKey(
     OverviewEatingSoonTarget(key = "eatingsoon_target", defaultValue =90.0, minMgdl =72, maxMgdl =160, defaultedBySM = true),
     OverviewActivityTarget(key = "activity_target", defaultValue =140.0, minMgdl =108, maxMgdl =180, defaultedBySM = true),
     OverviewHypoTarget(key = "hypo_target", defaultValue =160.0, minMgdl =108, maxMgdl =180, defaultedBySM = true),
-    OverviewLowMark(key = "low_mark", defaultValue = 72.0, minMgdl = 25, maxMgdl = 160, titleResId = R.string.pref_title_low_mark, showInNsClientMode = false, hideParentScreenIfHidden = true),
-    OverviewHighMark(key = "high_mark", defaultValue = 180.0, minMgdl = 90, maxMgdl = 250, titleResId = R.string.pref_title_high_mark, showInNsClientMode = false),
     OverviewLowMark(key = "low_mark", defaultValue = 72.0, minMgdl = 25, maxMgdl = 160, titleResId = R.string.pref_title_low_mark, sync = SyncSpec(SyncChannel.Cold, SyncDirection.Bidirectional)),
     OverviewHighMark(key = "high_mark", defaultValue = 180.0, minMgdl = 90, maxMgdl = 250, titleResId = R.string.pref_title_high_mark, sync = SyncSpec(SyncChannel.Cold, SyncDirection.Bidirectional)),
     ApsLgsThreshold(

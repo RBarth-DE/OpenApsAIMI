@@ -20,6 +20,8 @@ import app.aaps.core.interfaces.di.ApplicationScope
 import app.aaps.core.interfaces.iob.IobCobCalculator
 import app.aaps.core.interfaces.logging.AAPSLogger
 import app.aaps.core.interfaces.logging.LTag
+import app.aaps.core.interfaces.logging.UserEntryLogger
+import app.aaps.core.interfaces.pump.DetailedBolusInfo
 import app.aaps.core.interfaces.profile.Profile
 import app.aaps.core.interfaces.profile.ProfileFunction
 import app.aaps.core.interfaces.profile.ProfileUtil
@@ -55,6 +57,7 @@ class LoopHubImpl @Inject constructor(
     private val processedTbrEbData: ProcessedTbrEbData,
     private val dateUtil: DateUtil,
     private val wizardBolusExecutor: WizardBolusExecutor,
+    private val userEntryLogger: UserEntryLogger,
     @ApplicationScope private val appScope: CoroutineScope
 ) : LoopHub {
 

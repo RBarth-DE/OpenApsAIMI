@@ -57,7 +57,7 @@ open class DatabaseModule {
                     createCustomIndexes(connection)
                 }
             })
-            .fallbackToDestructiveMigration(false)
+            .fallbackToDestructiveMigration(true)
             .build()
 
     @Qualifier
@@ -507,19 +507,19 @@ open class DatabaseModule {
         }
     }
 
-    internal val migration34to35 = object : Migration(34, 35) {
+    internal val migration36to37 = object : Migration(36, 37) {
         override fun migrate(connection: SQLiteConnection) {
-            connection.execSQL("DROP TABLE IF EXISTS `$TABLE_CALIBRATION_ENTRIES`")
-            connection.execSQL("CREATE TABLE IF NOT EXISTS `$TABLE_CALIBRATION_ENTRIES` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `version` INTEGER NOT NULL, `dateCreated` INTEGER NOT NULL, `isValid` INTEGER NOT NULL, `referenceId` INTEGER, `timestamp` INTEGER NOT NULL, `utcOffset` INTEGER NOT NULL, `fingerstickMgdl` REAL NOT NULL, `sensorMgdlAtPairing` REAL NOT NULL, `nightscoutSystemId` TEXT, `nightscoutId` TEXT, `pumpType` TEXT, `pumpSerial` TEXT, `temporaryId` INTEGER, `pumpId` INTEGER, `startId` INTEGER, `endId` INTEGER, FOREIGN KEY(`referenceId`) REFERENCES `$TABLE_CALIBRATION_ENTRIES`(`id`) ON UPDATE NO ACTION ON DELETE NO ACTION )")
+            connection.execSQL(
+                "CREATE TABLE IF NOT EXISTS `$TABLE_CALIBRATION_ENTRIES` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `version` INTEGER NOT NULL, `dateCreated` INTEGER NOT NULL, `isValid` INTEGER NOT NULL, `referenceId` INTEGER, `timestamp` INTEGER NOT NULL, `utcOffset` INTEGER NOT NULL, `fingerstickMgdl` REAL NOT NULL, `sensorMgdlAtPairing` REAL NOT NULL, `nightscoutSystemId` TEXT, `nightscoutId` TEXT, `pumpType` TEXT, `pumpSerial` TEXT, `temporaryId` INTEGER, `pumpId` INTEGER, `startId` INTEGER, `endId` INTEGER, FOREIGN KEY(`referenceId`) REFERENCES `$TABLE_CALIBRATION_ENTRIES`(`id`) ON UPDATE NO ACTION ON DELETE NO ACTION )"
+            )
             connection.execSQL("CREATE INDEX IF NOT EXISTS `index_calibrationEntries_nightscoutId` ON `$TABLE_CALIBRATION_ENTRIES` (`nightscoutId`)")
             connection.execSQL("CREATE INDEX IF NOT EXISTS `index_calibrationEntries_referenceId` ON `$TABLE_CALIBRATION_ENTRIES` (`referenceId`)")
             connection.execSQL("CREATE INDEX IF NOT EXISTS `index_calibrationEntries_timestamp` ON `$TABLE_CALIBRATION_ENTRIES` (`timestamp`)")
-            // Custom indexes must be dropped on migration to pass room schema checking after upgrade
             dropCustomIndexes(connection)
         }
     }
 
     /** List of all migrations for easy reply in tests. */
     @VisibleForTesting
-    internal val migrations = arrayOf(migration22to23, migration23to24, migration24to25, migration25to26, migration26to27, migration27to28, migration28to29, migration29to30, migration30to31, migration31to32, migration32to33, migration33to34, migration34to35)
+    internal val migrations = arrayOf(migration22to23, migration23to24, migration24to25, migration25to26, migration26to27, migration27to28, migration28to29, migration29to30, migration30to31, migration31to32, migration32to33, migration33to34, migration35to34, migration36to37)
 }

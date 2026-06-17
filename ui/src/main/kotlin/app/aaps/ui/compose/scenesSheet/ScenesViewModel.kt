@@ -13,14 +13,10 @@ import app.aaps.core.interfaces.plugin.ActivePlugin
 import app.aaps.core.interfaces.profile.ProfileFunction
 import app.aaps.core.interfaces.resources.ResourceHelper
 import app.aaps.core.interfaces.rx.bus.RxBus
-import app.aaps.core.interfaces.rx.events.EventAutomationDataChanged
-import app.aaps.core.interfaces.rx.events.EventRefreshOverview
 import app.aaps.core.interfaces.rx.events.EventAppInitialized
 import app.aaps.core.interfaces.rx.events.EventInitializationChanged
 import app.aaps.core.interfaces.rx.events.EventLoopUpdateGui
 import app.aaps.core.interfaces.rx.events.EventPumpStatusChanged
-import app.aaps.ui.compose.scenes.SceneExecutor
-import app.aaps.ui.compose.scenes.SceneRepository
 import app.aaps.core.interfaces.rx.events.EventRefreshOverview
 import app.aaps.core.interfaces.sync.NsClient
 import app.aaps.core.interfaces.scenes.SceneActions
@@ -100,8 +96,6 @@ class ScenesViewModel @Inject constructor(
         // init { refreshState() } below covers the cold start.
         rxBus.toFlow(EventRefreshOverview::class.java)
             .onEach { refreshState() }.launchIn(viewModelScope)
-        rxBus.toFlow(EventAutomationDataChanged::class.java)
-            .drop(1).onEach { refreshState() }.launchIn(viewModelScope)
         rxBus.toFlow(EventAppInitialized::class.java)
         // StateFlow — drop(1) since init{} already reads current automation events; only react to changes.
         automation.events.drop(1)

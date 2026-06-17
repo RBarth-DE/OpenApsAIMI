@@ -3,6 +3,7 @@ package app.aaps.plugins.main.general.overview.notifications
 import app.aaps.core.data.time.T
 import app.aaps.core.interfaces.logging.AAPSLogger
 import app.aaps.core.interfaces.logging.LTag
+import app.aaps.core.interfaces.sync.NsClient
 import app.aaps.core.interfaces.notifications.Notification
 import app.aaps.core.interfaces.nsclient.NSAlarm
 import app.aaps.core.interfaces.plugin.ActivePlugin
@@ -64,7 +65,7 @@ class NotificationWithAction(
         }
         buttonText = app.aaps.core.ui.R.string.snooze
         action = Runnable {
-            activePlugin.activeNsClient?.handleClearAlarm(nsAlarm, 60 * 60 * 1000L)
+            activePlugin.activeSyncs.filterIsInstance<NsClient>().firstOrNull()?.handleClearAlarm(nsAlarm, 60 * 60 * 1000L)
             // Adding current time to snooze if we got staleData
             aapsLogger.debug(LTag.NOTIFICATION, "Notification text is: $text")
             val msToSnooze = preferences.get(IntKey.NsClientAlarmStaleData) * 60 * 1000L

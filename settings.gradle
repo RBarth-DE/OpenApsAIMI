@@ -34,7 +34,7 @@ include ':plugins:smoothing'
 include ':plugins:source'
 include ':plugins:eversense'
 include ':plugins:sync'
-include ':pump:apex'
+// include ':pump:apex'  // Temporarily disabled — needs upstream Pump.kt interface update
 include ':pump:combov2'
 include ':pump:combov2:comboctl'
 include ':pump:dana'

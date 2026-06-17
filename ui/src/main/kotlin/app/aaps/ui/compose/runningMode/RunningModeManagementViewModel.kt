@@ -22,7 +22,6 @@ import app.aaps.core.interfaces.di.ApplicationScope
 import app.aaps.core.interfaces.logging.AAPSLogger
 import app.aaps.core.interfaces.logging.LTag
 import app.aaps.core.interfaces.plugin.ActivePlugin
-import app.aaps.core.interfaces.resources.ResourceHelper
 import app.aaps.core.interfaces.profile.ProfileFunction
 import app.aaps.core.interfaces.resources.ResourceHelper
 import app.aaps.core.interfaces.rx.bus.RxBus
@@ -32,7 +31,6 @@ import app.aaps.core.interfaces.utils.DateUtil
 import app.aaps.core.interfaces.utils.Translator
 import app.aaps.core.keys.BooleanNonKey
 import app.aaps.core.keys.interfaces.Preferences
-import app.aaps.ui.R
 import app.aaps.core.ui.R
 import app.aaps.ui.compose.overview.chips.toIcon
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -65,7 +63,6 @@ class RunningModeManagementViewModel @Inject constructor(
     private val persistenceLayer: PersistenceLayer,
     private val aapsLogger: AAPSLogger,
     private val rxBus: RxBus,
-    private val rh: ResourceHelper,
     private val dateUtil: DateUtil,
     private val config: Config,
     private val batchExecutor: BatchExecutor,
@@ -167,7 +164,7 @@ class RunningModeManagementViewModel @Inject constructor(
                 // Master-local validation failure, or a client offline; a client round-trip failure already showed on the app modal.
                 is ActionProgress.Rejected -> {
                     if (!config.AAPSCLIENT || prepared.reason == FailureReason.NotReachable)
-                        rxBus.send(EventShowSnackbar(prepared.detail ?: rh.gs(R.string.running_mode_change_not_allowed), EventShowSnackbar.Type.Error))
+                        rxBus.send(EventShowSnackbar(prepared.detail ?: rh.gs(app.aaps.core.ui.R.string.running_mode_change_not_allowed), EventShowSnackbar.Type.Error))
                 }
 
                 else                       -> Unit // Unconfirmed → handled by the app-level pending modal

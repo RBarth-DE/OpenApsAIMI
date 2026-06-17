@@ -134,11 +134,8 @@ fun RunningModeScreen(
             if (showPumpSuspendedResume) {
                 PumpSuspendedResumeSection(
                     onAction = { action ->
-                        if (showOkCancel) pendingAction = action
-                        else {
-                            executeAction(viewModel, action)
-                            onNavigateBack()
-                        }
+                        executeAction(viewModel, action)
+                        onNavigateBack()
                     }
                 )
             }
@@ -265,7 +262,7 @@ private fun PumpSuspendedResumeSection(
             CompactButton(
                 resumeText,
                 RM.Mode.RESUME,
-                { onAction(PendingRunningModeAction(RM.Mode.RESUME, Action.RESUME, 0, resumeText)) }
+                { onAction(PendingRunningModeAction(RM.Mode.RESUME, Action.RESUME, 0)) }
             )
         }
     }

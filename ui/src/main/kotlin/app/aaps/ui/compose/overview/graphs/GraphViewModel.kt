@@ -541,7 +541,7 @@ class GraphViewModel @AssistedInject constructor(
 
     val modesFlow: StateFlow<ModesUiState> = ticker30s.map {
         ModesUiState(
-            events = automation.userEvents()
+            events = automation.events.value
                 .filter { it.isEnabled }
                 .take(10)
                 .map { AutomationEventData(id = it.id, title = it.title) }
@@ -562,7 +562,7 @@ class GraphViewModel @AssistedInject constructor(
 
     fun runAutomationEvent(eventId: String) {
         viewModelScope.launch(Dispatchers.IO) {
-            val event = automation.userEvents().firstOrNull { it.id == eventId } ?: return@launch
+            val event = automation.events.value.firstOrNull { it.id == eventId } ?: return@launch
             automation.processEvent(event)
         }
     }

@@ -49,15 +49,6 @@ enum class BooleanKey(
         defaultedBySM = true,
         showInNsClientMode = false
     ),
-    OverviewShowNotesInDialogs(key = "show_notes_entry_dialogs", defaultValue = false, titleResId = R.string.pref_title_show_notes_in_dialogs, defaultedBySM = true),
-    OverviewUseBolusAdvisor("use_bolus_advisor", true, R.string.pref_title_use_bolus_advisor, R.string.pref_summary_use_bolus_advisor, defaultedBySM = true, sync = SyncSpec(SyncChannel.Cold, SyncDirection.Bidirectional)),
-    OverviewKeepScreenOn("keep_screen_on", false, R.string.pref_title_keep_screen_on, R.string.pref_summary_keep_screen_on, calculatedDefaultValue = true),
-    OverviewShowTreatmentButton("show_treatment_button", false, R.string.pref_title_show_treatment_button, defaultedBySM = true, hideParentScreenIfHidden = true),
-    OverviewShowWizardButton("show_wizard_button", true, R.string.pref_title_show_wizard_button, defaultedBySM = true),
-    OverviewShowInsulinButton("show_insulin_button", true, R.string.pref_title_show_insulin_button, defaultedBySM = true),
-    OverviewShowCarbsButton("show_carbs_button", true, R.string.pref_title_show_carbs_button, defaultedBySM = true),
-    OverviewShowCgmButton("show_cgm_button", false, R.string.pref_title_show_cgm_button, R.string.pref_summary_show_cgm_button, defaultedBySM = true, showInNsClientMode = false),
-    /** Must read stored value in simple mode so Home can switch AIMI dashboard vs legacy overview. */
     OverviewUseDashboardLayout(
         "overview_use_dashboard", true,
         R.string.pref_title_overview_use_dashboard_layout,
@@ -76,7 +67,6 @@ enum class BooleanKey(
         R.string.pref_title_overview_dashboard_extended_metrics,
         R.string.pref_summary_overview_dashboard_extended_metrics
     ),
-    OverviewShowCalibrationButton("show_calibration_button", false, R.string.pref_title_show_calibration_button, R.string.pref_summary_show_calibration_button, defaultedBySM = true, showInNsClientMode = false),
     OverviewShowNotesInDialogs("show_notes_entry_dialogs", false, R.string.pref_title_show_notes_in_dialogs, defaultedBySM = true),
     OverviewUseBolusAdvisor("use_bolus_advisor", true, R.string.pref_title_use_bolus_advisor, R.string.pref_summary_use_bolus_advisor, defaultedBySM = true),
     OverviewUseBolusReminder("use_bolus_reminder", true, R.string.pref_title_use_bolus_reminder, R.string.pref_summary_use_bolus_reminder, defaultedBySM = true),

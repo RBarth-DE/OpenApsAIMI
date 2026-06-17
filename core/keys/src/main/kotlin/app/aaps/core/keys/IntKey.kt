@@ -82,8 +82,6 @@ enum class IntKey(
 
     OverviewHypoDuration("hypo_duration", 60, 15, 180, defaultedBySM = true),
     //OverviewHypoDuration(key = "hypo_duration", defaultValue = 60, min = 15, max = 180, titleResId = R.string.pref_title_hypo_duration, defaultedBySM = true, unitType = UnitType.MIN),
-    OverviewCageWarning(key = "statuslights_cage_warning", defaultValue = 48, min = 24, max = 240, titleResId = R.string.pref_title_cage_warning, defaultedBySM = true, unitType = UnitType.HOURS),
-    OverviewCageCritical(key = "statuslights_cage_critical", defaultValue = 72, min = 24, max = 240, titleResId = R.string.pref_title_cage_critical, defaultedBySM = true, unitType = UnitType.HOURS),
     OverviewCageWarning(
         key = "statuslights_cage_warning",
         defaultValue = 48,

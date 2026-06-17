@@ -18,7 +18,6 @@ import app.aaps.core.interfaces.rx.events.EventPumpStatusChanged
 import app.aaps.core.interfaces.stats.TddCalculator
 import app.aaps.core.interfaces.utils.DateUtil
 import app.aaps.core.interfaces.utils.DecimalFormatter
-import app.aaps.core.keys.BooleanKey
 import app.aaps.core.keys.IntKey
 import app.aaps.core.keys.interfaces.IntPreferenceKey
 import app.aaps.core.keys.interfaces.Preferences
@@ -105,18 +104,9 @@ class StatusViewModel @Inject constructor(
     private var lastTickRefreshAtMs: Long = 0L
 
     init {
-        observePerformanceProfile()
         observeRefreshRequests()
         setupEventListeners()
         requestRefresh(RefreshReason.Initialization)
-    }
-
-    private fun observePerformanceProfile() {
-        preferences.observe(BooleanKey.GeneralLowEndStabilityMode)
-            .onEach { enabled ->
-                performanceProfile.value = if (enabled) PerformanceProfile.SAFE else PerformanceProfile.BALANCED
-            }
-            .launchIn(viewModelScope)
     }
 
     private fun setupEventListeners() {
