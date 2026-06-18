@@ -145,6 +145,7 @@ class AuditorOrchestrator @Inject constructor(
         eventualBg: Double?,
         inPrebolusWindow: Boolean,
         effectiveProfile: EffectiveProfile? = null,
+        onSyncDisposition: (AuditorJsonlExport.TickDisposition) -> Unit = {},
         callback: ((AuditorVerdict?, DecisionResult) -> Unit)? = null
     ) {
         val now = System.currentTimeMillis()
@@ -154,6 +155,7 @@ class AuditorOrchestrator @Inject constructor(
             aapsLogger.debug(LTag.APS, "AI Auditor: Disabled")
             AuditorStatusTracker.updateStatus(AuditorStatusTracker.Status.OFF)
             stateManager.transitionTo(AuditorUIState.Idle, "Auditor preference disabled")
+            onSyncDisposition(AuditorJsonlExport.TickDisposition.DISABLED)
             callback?.invoke(null, createUnmodulatedDecision(smbProposed, tbrRate, tbrDuration, intervalMin, "Auditor disabled"))
             return
         }
@@ -178,6 +180,7 @@ class AuditorOrchestrator @Inject constructor(
             aapsLogger.debug(LTag.APS, "AI Auditor: No trigger conditions met")
             AuditorStatusTracker.updateStatus(AuditorStatusTracker.Status.SKIPPED_NO_TRIGGER)
             stateManager.transitionTo(AuditorUIState.Idle, "Conditions not met")
+            onSyncDisposition(AuditorJsonlExport.TickDisposition.SKIPPED_NO_TRIGGER)
             auditorStatusLiveData.notifyUpdate()
             callback?.invoke(null, createUnmodulatedDecision(smbProposed, tbrRate, tbrDuration, intervalMin, "No trigger"))
             return
@@ -189,6 +192,7 @@ class AuditorOrchestrator @Inject constructor(
             aapsLogger.warn(LTag.APS, "AI Auditor: Data too stale (${dataAgeMs / 60000} min)")
             AuditorStatusTracker.updateStatus(AuditorStatusTracker.Status.SKIPPED_NO_TRIGGER)
             stateManager.transitionTo(AuditorUIState.Error("Stale CGM Data"), "Security: Exceeded 15m threshold")
+            onSyncDisposition(AuditorJsonlExport.TickDisposition.SKIPPED_STALE_DATA)
             auditorStatusLiveData.notifyUpdate()
             callback?.invoke(null, createUnmodulatedDecision(smbProposed, tbrRate, tbrDuration, intervalMin, "Stale data"))
             return
@@ -259,7 +263,8 @@ class AuditorOrchestrator @Inject constructor(
             
             // 🔧 FIX: Update status tracker to reflect Sentinel-only operation
             AuditorStatusTracker.updateStatus(AuditorStatusTracker.Status.OK_CONFIRM)
-            
+            onSyncDisposition(AuditorJsonlExport.TickDisposition.SENTINEL_ONLY)
+
             val combined = DualBrainHelpers.combineAdvice(sentinelAdvice, null)
             val modulated = combined.toDecisionResult(smbProposed, tbrRate, tbrDuration, intervalMin)
 
@@ -293,6 +298,7 @@ class AuditorOrchestrator @Inject constructor(
             aapsLogger.info(LTag.APS, "🌐 External: Skipped (No valid trigger)")
             AuditorStatusTracker.updateStatus(AuditorStatusTracker.Status.SKIPPED_NO_TRIGGER)
             auditorStatusLiveData.notifyUpdate()
+            onSyncDisposition(AuditorJsonlExport.TickDisposition.SKIPPED_NO_TRIGGER)
             callback?.invoke(null, createUnmodulatedDecision(smbProposed, tbrRate, tbrDuration, intervalMin, "No Trigger"))
             return
         }
@@ -300,6 +306,7 @@ class AuditorOrchestrator @Inject constructor(
         if (!checkSmartRateLimit(now, triggerType)) {
             aapsLogger.info(LTag.APS, "🌐 External: Rate limited ($triggerType), using Sentinel only")
             AuditorStatusTracker.updateStatus(AuditorStatusTracker.Status.SKIPPED_RATE_LIMITED)
+            onSyncDisposition(AuditorJsonlExport.TickDisposition.SENTINEL_RATE_LIMITED)
             val combined = DualBrainHelpers.combineAdvice(sentinelAdvice, null)
             val modulated = combined.toDecisionResult(smbProposed, tbrRate, tbrDuration, intervalMin)
             aapsLogger.info(LTag.APS, "✅ ${combined.toLogString()}")
@@ -312,6 +319,8 @@ class AuditorOrchestrator @Inject constructor(
 
         // Get physio snapshot (safe call)
         val physioCtx = try { physioAdapter.getLatestSnapshot().toStartSnapshot() } catch (e: Exception) { null }
+
+        onSyncDisposition(AuditorJsonlExport.TickDisposition.EXTERNAL_PENDING)
 
         // Launch async audit
         scope.launch {
