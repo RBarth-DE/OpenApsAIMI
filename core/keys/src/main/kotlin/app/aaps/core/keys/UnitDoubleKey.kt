@@ -38,8 +38,7 @@ enum class UnitDoubleKey(
         titleResId = R.string.pref_title_lgs_threshold,
         summaryResId = R.string.lgs_threshold_summary,
         defaultedBySM = true,
-        dependency = BooleanKey.ApsUseDynamicSensitivity
-    ),
-    ApsAutoIsfHalfBasalExerciseTarget( key = "half_basal_exercise_target", defaultValue = 160.0, minMgdl = 120, maxMgdl = 200, defaultedBySM = true)
-
+        dependency = BooleanKey.ApsUseDynamicSensitivity,
+        sync = SyncSpec(SyncChannel.Cold, SyncDirection.Bidirectional)
+    )
 }

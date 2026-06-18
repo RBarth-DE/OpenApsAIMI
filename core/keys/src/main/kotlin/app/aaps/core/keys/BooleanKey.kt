@@ -92,25 +92,29 @@ enum class BooleanKey(
 
     ApsUseDynamicSensitivity("use_dynamic_sensitivity", false, R.string.pref_title_aps_use_dynamic_sensitivity, R.string.pref_summary_aps_use_dynamic_sensitivity, sync = SyncSpec(SyncChannel.Cold, SyncDirection.Bidirectional)),
     ApsUseAutosens("openapsama_useautosens", true, R.string.pref_title_aps_use_autosens, defaultedBySM = true, negativeDependency = ApsUseDynamicSensitivity, sync = SyncSpec(SyncChannel.Cold, SyncDirection.Bidirectional)),
-    ApsUseSmb("use_smb", true, R.string.pref_title_aps_use_smb, R.string.pref_summary_aps_use_smb, defaultedBySM = true),
-    ApsUseSmbWithHighTt("enableSMB_with_high_temptarget", false, R.string.pref_title_aps_use_smb_with_high_tt, R.string.pref_summary_aps_use_smb_with_high_tt, defaultedBySM = true, dependency = ApsUseSmb),
+    ApsUseSmb("use_smb", true, R.string.pref_title_aps_use_smb, R.string.pref_summary_aps_use_smb, defaultedBySM = true, sync = SyncSpec(SyncChannel.Cold, SyncDirection.Bidirectional)),
+    ApsUseSmbWithHighTt("enableSMB_with_high_temptarget", false, R.string.pref_title_aps_use_smb_with_high_tt, R.string.pref_summary_aps_use_smb_with_high_tt, defaultedBySM = true, dependency = ApsUseSmb, sync = SyncSpec(SyncChannel.Cold, SyncDirection.Bidirectional)),
     ApsUseSmbAlways(
         "enableSMB_always", true, R.string.pref_title_aps_use_smb_always, R.string.pref_summary_aps_use_smb_always, defaultedBySM = true, dependency = ApsUseSmb,
-        visibility = PreferenceVisibility.ADVANCED_FILTERING
+        visibility = PreferenceVisibility.ADVANCED_FILTERING,
+        sync = SyncSpec(SyncChannel.Cold, SyncDirection.Bidirectional)
     ),
     ApsUseSmbWithCob(
         "enableSMB_with_COB", true, R.string.pref_title_aps_use_smb_with_cob, R.string.pref_summary_aps_use_smb_with_cob, defaultedBySM = true, dependency = ApsUseSmb,
-        visibility = PreferenceVisibility { !it.preferences.get(ApsUseSmbAlways) || !it.advancedFilteringSupported }
+        visibility = PreferenceVisibility { !it.preferences.get(ApsUseSmbAlways) || !it.advancedFilteringSupported },
+        sync = SyncSpec(SyncChannel.Cold, SyncDirection.Bidirectional)
     ),
     ApsUseSmbWithLowTt(
         "enableSMB_with_temptarget", true, R.string.pref_title_aps_use_smb_with_low_tt, R.string.pref_summary_aps_use_smb_with_low_tt, defaultedBySM = true, dependency = ApsUseSmb,
-        visibility = PreferenceVisibility { !it.preferences.get(ApsUseSmbAlways) || !it.advancedFilteringSupported }
+        visibility = PreferenceVisibility { !it.preferences.get(ApsUseSmbAlways) || !it.advancedFilteringSupported },
+        sync = SyncSpec(SyncChannel.Cold, SyncDirection.Bidirectional)
     ),
     ApsUseSmbAfterCarbs(
         "enableSMB_after_carbs", true, R.string.pref_title_aps_use_smb_after_carbs, R.string.pref_summary_aps_use_smb_after_carbs, defaultedBySM = true, dependency = ApsUseSmb,
-        visibility = PreferenceVisibility { !it.preferences.get(ApsUseSmbAlways) && it.advancedFilteringSupported }
+        visibility = PreferenceVisibility { !it.preferences.get(ApsUseSmbAlways) && it.advancedFilteringSupported },
+        sync = SyncSpec(SyncChannel.Cold, SyncDirection.Bidirectional)
     ),
-    ApsUseUam("use_uam", true, R.string.pref_title_aps_use_uam, R.string.pref_summary_aps_use_uam, defaultedBySM = true),
+    ApsUseUam("use_uam", true, R.string.pref_title_aps_use_uam, R.string.pref_summary_aps_use_uam, defaultedBySM = true, sync = SyncSpec(SyncChannel.Cold, SyncDirection.Bidirectional)),
     ApsSensitivityRaisesTarget(
         "sensitivity_raises_target", true, R.string.pref_title_aps_sensitivity_raises_target, R.string.pref_summary_aps_sensitivity_raises_target, defaultedBySM = true,
         visibility = PreferenceVisibility {
@@ -119,7 +123,8 @@ enum class BooleanKey(
             } else {
                 it.preferences.get(ApsUseAutosens)
             }
-        }
+        },
+        sync = SyncSpec(SyncChannel.Cold, SyncDirection.Bidirectional)
     ),
     ApsResistanceLowersTarget(
         "resistance_lowers_target", true, R.string.pref_title_aps_resistance_lowers_target, R.string.pref_summary_aps_resistance_lowers_target, defaultedBySM = true,
@@ -129,7 +134,8 @@ enum class BooleanKey(
             } else {
                 it.preferences.get(ApsUseAutosens)
             }
-        }
+        },
+        sync = SyncSpec(SyncChannel.Cold, SyncDirection.Bidirectional)
     ),
     ApsAlwaysUseShortDeltas("always_use_shortavg", false, R.string.pref_title_aps_always_use_short_deltas, R.string.pref_summary_aps_always_use_short_deltas, defaultedBySM = true, hideParentScreenIfHidden = true),
     ApsDynIsfAdjustSensitivity("dynisf_adjust_sensitivity", false, R.string.pref_title_aps_dynisf_adjust_sensitivity, R.string.pref_summary_aps_dynisf_adjust_sensitivity, defaultedBySM = true, dependency = ApsUseDynamicSensitivity),

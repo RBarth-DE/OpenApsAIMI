@@ -173,7 +173,7 @@ open class OpenAPSAutoISFPlugin @Inject constructor(
     val iobThresholdPercent; get() = preferences.get(IntKey.ApsAutoIsfIobThPercent)
     private val exerciseMode; get() = SMBDefaults.exercise_mode
     private val highTemptargetRaisesSensitivity; get() = preferences.get(BooleanKey.ApsAutoIsfHighTtRaisesSens)
-    val mgdlHalfBasalExerciseTarget;  get() = preferences.get(UnitDoubleKey.ApsAutoIsfHalfBasalExerciseTarget) * if (profileFunction.getUnits() == GlucoseUnit.MMOL) GlucoseUnit.MMOLL_TO_MGDL else 1.0
+    val mgdlHalfBasalExerciseTarget;  get() = preferences.get(IntKey.ApsAutoIsfHalfBasalExerciseTarget) * if (profileFunction.getUnits() == GlucoseUnit.MMOL) GlucoseUnit.MMOLL_TO_MGDL else 1.0
     val normalTarget = Constants.NORMAL_TARGET_MGDL
     val calibrationDuration = preferences.get(IntKey.FslCalibrationDuration)
     private val minutesClass; get() = if (preferences.get(IntKey.ApsMaxSmbFrequency) == 1) 6L else 30L  // ga-zelle: later get correct 1 min CGM flag from glucoseStatus ? ... or from apsResults?
@@ -392,7 +392,7 @@ open class OpenAPSAutoISFPlugin @Inject constructor(
             }
             autosensResult = autosensData.autosensResult
         } else autosensResult.sensResult = "autosens disabled"
-        val iobArray = iobCobCalculator.calculateIobArrayForSMB(autosensResult, preferences.get(BooleanKey.ApsAutoIsfHighTtRaisesSens), preferences.get(UnitDoubleKey.ApsAutoIsfHalfBasalExerciseTarget).toInt(), isTempTarget)
+        val iobArray = iobCobCalculator.calculateIobArrayForSMB(autosensResult, preferences.get(BooleanKey.ApsAutoIsfHighTtRaisesSens), preferences.get(IntKey.ApsAutoIsfHalfBasalExerciseTarget), isTempTarget)
         val mealData = iobCobCalculator.getMealDataWithWaitingForCalculationFinish()
         val iobData = iobArray[0]
         val profile_percentage = if (profile is ProfileSealed.EPS) profile.value.originalPercentage else 100
@@ -446,7 +446,7 @@ open class OpenAPSAutoISFPlugin @Inject constructor(
             resistance_lowers_target = preferences.get(BooleanKey.ApsResistanceLowersTarget),
             adv_target_adjustments = SMBDefaults.adv_target_adjustments,
             exercise_mode = SMBDefaults.exercise_mode,
-            half_basal_exercise_target = preferences.get(UnitDoubleKey.ApsAutoIsfHalfBasalExerciseTarget),
+            half_basal_exercise_target = preferences.get(IntKey.ApsAutoIsfHalfBasalExerciseTarget),
             // mod activity mode
             activity_detection = preferences.get(BooleanKey.ApsActivityDetection),
             recent_steps_5_minutes  = recentSteps5Minutes,
@@ -1329,7 +1329,7 @@ open class OpenAPSAutoISFPlugin @Inject constructor(
             BooleanKey.ApsResistanceLowersTarget,
             BooleanKey.ApsAutoIsfHighTtRaisesSens,
             BooleanKey.ApsAutoIsfLowTtLowersSens,
-            UnitDoubleKey.ApsAutoIsfHalfBasalExerciseTarget,
+            IntKey.ApsAutoIsfHalfBasalExerciseTarget,
             BooleanKey.ApsUseSmb,
             BooleanKey.ApsUseSmbWithHighTt,
             BooleanKey.ApsUseSmbAlways,
