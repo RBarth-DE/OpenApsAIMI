@@ -1,0 +1,14 @@
+services:
+  aimi-analyzer:
+    build: ./backend
+    ports:
+      - "8765:8000"
+    volumes:
+      - ./data:/data:ro
+      - ./frontend:/frontend:ro
+    restart: unless-stopped
+    environment:
+      - PYTHONUNBUFFERED=1
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1

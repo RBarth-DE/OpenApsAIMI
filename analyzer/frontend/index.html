@@ -1,0 +1,1310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AIMI Analyzer</title>
+<style>
+:root{
+  --bg:#0d0f14;--bg2:#13161e;--bg3:#1a1e28;
+  --border:#252836;--border2:#2e3245;
+  --text:#e8eaf0;--text2:#7b82a0;--text3:#4a5070;
+  --accent:#6c63ff;--accent2:#8b84ff;--accent-soft:rgba(108,99,255,.12);
+  --green:#00d68f;--green-soft:rgba(0,214,143,.1);
+  --red:#ff4757;--red-soft:rgba(255,71,87,.1);
+  --yellow:#ffc107;--yellow-soft:rgba(255,193,7,.1);
+  --orange:#ff6b35;
+  --critical:#ff4757;--high:#ff6b35;--medium:#ffc107;--low:#00d68f;
+  --radius:10px;--nav-h:52px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.5;min-height:100vh}
+
+/* ── NAV ── */
+nav{
+  position:fixed;top:0;left:0;right:0;z-index:100;
+  height:var(--nav-h);
+  background:var(--bg2);
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;padding:0 16px;gap:4px;
+}
+.nav-logo{font-weight:700;font-size:.95rem;letter-spacing:-.02em;margin-right:12px;white-space:nowrap;color:var(--text)}
+.nav-logo span{color:var(--accent)}
+nav button{
+  background:none;border:none;color:var(--text2);cursor:pointer;
+  padding:6px 12px;border-radius:7px;font-size:.82rem;font-weight:500;
+  transition:all .15s;white-space:nowrap;
+}
+nav button:hover{background:var(--bg3);color:var(--text)}
+nav button.active{background:var(--accent-soft);color:var(--accent-soft);color:var(--accent2)}
+.nav-spacer{flex:1}
+.nav-dot{width:7px;height:7px;border-radius:50%;background:var(--green);margin-left:6px;display:none}
+.nav-dot.show{display:inline-block}
+
+/* More dropdown */
+.more-wrap{position:relative}
+#more-dropdown{
+  display:none;position:absolute;top:calc(100% + 8px);right:0;
+  background:var(--bg2);border:1px solid var(--border2);
+  border-radius:var(--radius);padding:6px;min-width:160px;
+  box-shadow:0 8px 32px rgba(0,0,0,.5);z-index:200;
+}
+#more-dropdown.open{display:block}
+#more-dropdown button{display:block;width:100%;text-align:left;padding:8px 12px;border-radius:6px;font-size:.83rem}
+
+/* Gear / Config panel */
+.gear-btn{
+  width:34px;height:34px;border-radius:8px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:1rem;margin-left:4px;
+  background:none;border:none;color:var(--text2);cursor:pointer;transition:all .15s;
+}
+.gear-btn:hover{background:var(--bg3);color:var(--text)}
+#config-panel{
+  display:none;position:fixed;top:var(--nav-h);right:0;bottom:0;
+  width:320px;background:var(--bg2);border-left:1px solid var(--border);
+  z-index:99;overflow-y:auto;padding:20px;
+  animation:slideIn .2s ease;
+}
+#config-panel.open{display:block}
+@keyframes slideIn{from{transform:translateX(20px);opacity:0}to{transform:translateX(0);opacity:1}}
+
+/* ── LAYOUT ── */
+.page{margin-top:var(--nav-h);padding:20px 16px;max-width:1100px;margin-left:auto;margin-right:auto}
+.tab-content{display:none}.tab-content.active{display:block}
+
+/* ── CARDS ── */
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:14px}
+.card-title{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text2);margin-bottom:12px;display:flex;align-items:center;gap:6px}
+
+/* ── METRICS GRID ── */
+.metrics-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:10px;margin-bottom:14px}
+.metric{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:12px 10px;text-align:center}
+.metric-val{font-size:1.5rem;font-weight:700;line-height:1.1}
+.metric-lbl{font-size:.65rem;color:var(--text2);margin-top:3px;text-transform:uppercase;letter-spacing:.05em}
+.metric.good .metric-val{color:var(--green)}
+.metric.warn .metric-val{color:var(--yellow)}
+.metric.bad  .metric-val{color:var(--red)}
+
+/* TIR bar */
+.tir-bar{height:14px;border-radius:99px;overflow:hidden;display:flex;margin-bottom:14px;background:var(--bg3)}
+.tir-seg{height:100%;transition:width .4s}
+
+/* Hourly chart */
+.hourly-chart{display:flex;align-items:flex-end;gap:2px;height:48px;margin:10px 0 4px}
+.hourly-bar{flex:1;min-width:2px;border-radius:2px 2px 0 0;background:var(--accent);opacity:.6;transition:height .3s}
+.hourly-labels{display:flex;justify-content:space-between;font-size:.6rem;color:var(--text3)}
+
+/* ── RECOMMENDATIONS ── */
+.rec{
+  background:var(--bg3);border:1px solid var(--border);border-radius:9px;
+  padding:12px 14px;margin-bottom:10px;
+  display:flex;justify-content:space-between;align-items:flex-start;gap:12px;
+  border-left:3px solid var(--border2);
+}
+.rec.critical{border-left-color:var(--critical)}
+.rec.high{border-left-color:var(--high)}
+.rec.medium{border-left-color:var(--medium)}
+.rec.low{border-left-color:var(--low)}
+.rec-title{font-weight:600;font-size:.88rem;margin-bottom:2px}
+.rec-key{font-family:monospace;font-size:.72rem;color:var(--accent2);margin-bottom:5px}
+.rec-reason{font-size:.8rem;color:var(--text2);line-height:1.45}
+.rec-values{text-align:right;flex-shrink:0;min-width:80px}
+.rec-arrow{font-size:1.4rem;font-weight:800;line-height:1}
+.rec-arrow.decrease{color:var(--red)}.rec-arrow.increase{color:var(--green)}.rec-arrow.toggle{color:var(--accent)}
+.section-label{font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--text2);margin:14px 0 8px;padding-bottom:6px;border-bottom:1px solid var(--border)}
+
+/* ── TAGS ── */
+.tag{font-size:.65rem;padding:2px 7px;border-radius:99px;background:var(--bg2);border:1px solid var(--border2);color:var(--text2);margin-right:3px}
+.tag.critical{background:rgba(255,71,87,.12);border-color:var(--critical);color:var(--critical)}
+.tag.high{background:rgba(255,107,53,.12);border-color:var(--high);color:var(--high)}
+.tag.medium{background:rgba(255,193,7,.12);border-color:var(--yellow);color:var(--yellow)}
+.tag.low{background:var(--green-soft);border-color:var(--green);color:var(--green)}
+.tag.conf-high{background:var(--accent-soft);border-color:var(--accent);color:var(--accent2)}
+
+/* ── FEATURE GROUPS ── */
+.fg-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px}
+.fg-card{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px 12px;cursor:pointer;transition:all .15s}
+.fg-card:hover{border-color:var(--accent);background:var(--accent-soft)}
+.fg-card .fg-name{font-size:.82rem;font-weight:600;margin-bottom:2px}
+.fg-card .fg-meta{font-size:.7rem;color:var(--text2)}
+.fg-status{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+
+/* ── PARAMS ── */
+.param-card{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:8px}
+.param-header{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+.param-name{font-weight:600;font-size:.85rem}
+.param-key{font-family:monospace;font-size:.7rem;color:var(--text2);margin-top:1px}
+.param-val{font-size:1rem;font-weight:700;color:var(--accent2);white-space:nowrap}
+.param-default{font-size:.68rem;color:var(--text3)}
+.param-changed{color:var(--yellow)}
+.param-meta{display:flex;gap:5px;margin-top:6px;flex-wrap:wrap}
+.gate-badge{font-size:.65rem;padding:2px 7px;border-radius:99px;font-weight:600}
+.gate-on{background:var(--green-soft);color:var(--green);border:1px solid rgba(0,214,143,.3)}
+.gate-off{background:var(--red-soft);color:var(--red);border:1px solid rgba(255,71,87,.3)}
+
+/* ── FORMS ── */
+.form-group{margin-bottom:12px}
+.form-group label{display:block;font-size:.75rem;font-weight:600;color:var(--text2);margin-bottom:5px;text-transform:uppercase;letter-spacing:.04em}
+input,select,textarea{
+  width:100%;background:var(--bg3);border:1px solid var(--border2);
+  color:var(--text);border-radius:7px;padding:9px 11px;font-size:.85rem;
+  outline:none;transition:border .15s;font-family:inherit;
+}
+input:focus,select:focus{border-color:var(--accent)}
+input[type=number]{width:100%}
+
+/* ── BUTTONS ── */
+.btn{
+  background:var(--accent);color:#fff;border:none;border-radius:8px;
+  padding:10px 18px;font-size:.85rem;font-weight:600;cursor:pointer;
+  transition:all .15s;
+}
+.btn:hover{background:var(--accent2);transform:translateY(-1px)}
+.btn:disabled{opacity:.4;pointer-events:none}
+.btn-ghost{background:var(--bg3);color:var(--text);border:1px solid var(--border2)}
+.btn-ghost:hover{background:var(--border);transform:none}
+.btn-sm{padding:6px 12px;font-size:.78rem}
+.btn-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+
+/* ── ALERTS ── */
+.alert{padding:10px 14px;border-radius:8px;font-size:.83rem;margin-bottom:10px}
+.alert.info{background:var(--accent-soft);border:1px solid rgba(108,99,255,.3);color:var(--accent2)}
+.alert.success{background:var(--green-soft);border:1px solid rgba(0,214,143,.3);color:var(--green)}
+.alert.error{background:var(--red-soft);border:1px solid rgba(255,71,87,.3);color:var(--red)}
+.alert.warn{background:var(--yellow-soft);border:1px solid rgba(255,193,7,.3);color:var(--yellow)}
+
+/* ── LOADING ── */
+.loading{display:flex;align-items:center;gap:10px;color:var(--text2);font-size:.85rem;padding:20px 0}
+.spinner{width:18px;height:18px;border:2px solid var(--border2);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ── DIFF ── */
+.diff-card{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;gap:12px}
+.diff-key{font-family:monospace;font-size:.75rem;color:var(--accent2)}
+.diff-change{display:flex;align-items:center;gap:8px;font-size:.85rem;font-weight:600}
+
+/* ── SNAPSHOTS ── */
+.snap-item{display:flex;justify-content:space-between;align-items:center;padding:8px 10px;border-radius:7px;background:var(--bg3);border:1px solid var(--border);margin-bottom:6px;gap:10px}
+.snap-label{font-size:.8rem;font-weight:500}
+.snap-meta{font-size:.7rem;color:var(--text2)}
+
+/* ── IMPORT DROP ZONE ── */
+#drop-zone{
+  border:2px dashed var(--border2);border-radius:var(--radius);
+  padding:32px;text-align:center;cursor:pointer;transition:all .2s;
+  background:var(--bg3);
+}
+#drop-zone:hover,#drop-zone.drag{border-color:var(--accent);background:var(--accent-soft)}
+#drop-zone .drop-icon{font-size:2rem;margin-bottom:8px}
+#drop-zone .drop-hint{font-size:.82rem;color:var(--text2)}
+
+/* ── AI RESULT ── */
+#ai-result-text{
+  background:var(--bg3);border:1px solid var(--border);border-radius:8px;
+  padding:16px;font-size:.84rem;line-height:1.7;white-space:pre-wrap;
+  max-height:600px;overflow-y:auto;color:var(--text);
+}
+#ai-result-text strong{color:var(--accent2)}
+#ai-result-text code{font-family:monospace;font-size:.8rem;background:var(--bg2);padding:1px 5px;border-radius:4px;color:var(--yellow)}
+
+/* ── QUICK STATUS BAR (dashboard) ── */
+.status-bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:14px;font-size:.78rem;color:var(--text2)}
+.status-pill{padding:3px 10px;border-radius:99px;border:1px solid var(--border2);background:var(--bg3);display:flex;align-items:center;gap:5px}
+
+/* ── IMPORT QUICK ACTION on dashboard ── */
+.import-cta{
+  background:var(--bg3);border:1px solid var(--border2);border-radius:var(--radius);
+  padding:14px 16px;display:flex;align-items:center;gap:12px;margin-bottom:14px;cursor:pointer;
+  transition:all .15s;
+}
+.import-cta:hover{border-color:var(--accent);background:var(--accent-soft)}
+.import-cta .cta-icon{font-size:1.4rem;flex-shrink:0}
+.import-cta .cta-text strong{display:block;font-size:.88rem;margin-bottom:1px}
+.import-cta .cta-text span{font-size:.75rem;color:var(--text2)}
+.import-cta .cta-arrow{margin-left:auto;color:var(--text3);font-size:1.1rem}
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:99px}
+
+/* ── CONFIG PANEL HEADER ── */
+.config-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
+.config-header h3{font-size:.95rem;font-weight:700}
+.close-btn{background:none;border:none;color:var(--text2);cursor:pointer;font-size:1.2rem;padding:4px}
+
+/* ── FILTER BAR ── */
+.filter-bar{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+.filter-bar input,.filter-bar select{flex:1;min-width:140px}
+
+/* ── MODAL OVERLAY for gate status ── */
+.gate-row{display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--border);font-size:.8rem}
+.gate-row:last-child{border-bottom:none}
+</style>
+</head>
+<body>
+
+<!-- ── NAV ── -->
+<nav>
+  <div class="nav-logo">AIMI <span>Analyzer</span></div>
+  <button onclick="showTab('dashboard')" id="nav-dashboard" class="active">📊 Dashboard</button>
+  <button onclick="showTab('import')" id="nav-import">📂 Import <span id="import-dot" class="nav-dot"></span></button>
+  <button onclick="showTab('ai')" id="nav-ai">🤖 AI</button>
+  <div class="more-wrap">
+    <button onclick="toggleMore(event)" id="nav-more">More ▾</button>
+    <div id="more-dropdown">
+      <button onclick="showTab('features');closeMore()">🗂 Features</button>
+      <button onclick="showTab('params');closeMore()">⚙️ Parameters</button>
+      <button onclick="showTab('diff');closeMore()">🔀 Diff</button>
+    </div>
+  </div>
+  <div class="nav-spacer"></div>
+  <button class="gear-btn" onclick="toggleConfig()" title="Settings">⚙️</button>
+</nav>
+
+<!-- ── CONFIG PANEL ── -->
+<div id="config-panel">
+  <div class="config-header">
+    <h3>Settings</h3>
+    <button class="close-btn" onclick="closeConfig()">✕</button>
+  </div>
+
+  <div style="font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text2);margin-bottom:8px">Nightscout</div>
+  <div class="form-group"><label>URL</label><input type="text" id="cfg-url" placeholder="https://ns.example.com"></div>
+  <div class="form-group"><label>Token / API Secret</label>
+    <div style="position:relative">
+      <input type="password" id="cfg-token" placeholder="token or api-secret" style="padding-right:38px">
+      <button onclick="togglePw('cfg-token')" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text2);cursor:pointer">👁</button>
+    </div>
+  </div>
+  <div class="form-group"><label>Days to analyze</label><input type="number" id="cfg-days" value="7" min="1" max="90"></div>
+
+  <div style="font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text2);margin:16px 0 8px">AI Provider</div>
+  <div class="form-group"><label>Provider</label>
+    <select id="cfg-provider" style="width:100%">
+      <option value="anthropic">🟣 Anthropic (Claude)</option>
+      <option value="deepseek">🔵 DeepSeek</option>
+      <option value="openai">🟢 OpenAI (ChatGPT)</option>
+    </select>
+  </div>
+  <div class="form-group"><label>Anthropic API Key</label>
+    <div style="position:relative">
+      <input type="password" id="cfg-ant-key" placeholder="sk-ant-..." style="padding-right:38px">
+      <button onclick="togglePw('cfg-ant-key')" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text2);cursor:pointer">👁</button>
+    </div>
+  </div>
+  <div class="form-group"><label>DeepSeek API Key</label>
+    <div style="position:relative">
+      <input type="password" id="cfg-ds-key" placeholder="sk-..." style="padding-right:38px">
+      <button onclick="togglePw('cfg-ds-key')" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text2);cursor:pointer">👁</button>
+    </div>
+  </div>
+  <div class="form-group"><label>OpenAI API Key</label>
+    <div style="position:relative">
+      <input type="password" id="cfg-oai-key" placeholder="sk-..." style="padding-right:38px">
+      <button onclick="togglePw('cfg-oai-key')" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text2);cursor:pointer">👁</button>
+    </div>
+  </div>
+  <button class="btn" onclick="saveConfig()" style="width:100%;margin-top:4px">💾 Save settings</button>
+
+  <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border)">
+    <div style="font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text2);margin-bottom:8px">Parameter Overrides</div>
+    <div id="cfg-override-count" style="font-size:.78rem;color:var(--text2);margin-bottom:8px">0 overrides active</div>
+    <button class="btn btn-ghost btn-sm" onclick="saveOverrides()">💾 Save overrides</button>
+    <div id="override-table" style="margin-top:10px;max-height:300px;overflow-y:auto"></div>
+  </div>
+</div>
+
+<!-- ── PAGES ── -->
+<div class="page">
+
+<!-- DASHBOARD -->
+<div id="tab-dashboard" class="tab-content active">
+  <!-- Quick status bar -->
+  <div class="status-bar" id="dash-status-bar" style="display:none">
+    <div class="status-pill" id="sp-tir">—</div>
+    <div class="status-pill" id="sp-hypo">—</div>
+    <div class="status-pill" id="sp-cv">—</div>
+    <div class="status-pill" id="sp-gmi">—</div>
+    <div class="status-pill" id="sp-smb">—</div>
+  </div>
+
+  <!-- Import CTA (shown until import loaded) -->
+  <div class="import-cta" id="import-cta" onclick="showTab('import')">
+    <div class="cta-icon">📂</div>
+    <div class="cta-text">
+      <strong>Load AAPS settings</strong>
+      <span>Import your export to enable gate-aware recommendations</span>
+    </div>
+    <div class="cta-arrow">→</div>
+  </div>
+
+  <!-- Analysis form -->
+  <div class="card">
+    <div class="card-title">📡 Nightscout analysis</div>
+    <div style="display:grid;grid-template-columns:1fr auto auto;gap:8px;align-items:flex-end">
+      <div class="form-group" style="margin:0">
+        <label>Nightscout URL</label>
+        <input type="text" id="dash-url" placeholder="https://ns.example.com">
+      </div>
+      <div class="form-group" style="margin:0;width:90px">
+        <label>Days</label>
+        <input type="number" id="dash-days" value="7" min="1" max="90">
+      </div>
+      <div class="form-group" style="margin:0">
+        <label>Token</label>
+        <input type="password" id="dash-token" placeholder="api token" style="width:140px">
+      </div>
+    </div>
+    <div class="btn-row" style="margin-top:12px">
+      <button class="btn" onclick="runAnalysis()">🚀 Run analysis</button>
+    </div>
+    <div id="dash-error" style="display:none;margin-top:10px"></div>
+  </div>
+
+  <div id="dash-loading" style="display:none" class="card">
+    <div class="loading"><div class="spinner"></div>Fetching Nightscout data…</div>
+  </div>
+
+  <div id="dash-results" style="display:none">
+    <!-- CGM chart -->
+    <div class="card">
+      <div class="card-title">📈 Glucose — last 24h</div>
+      <canvas id="glucose-chart" height="80" style="width:100%"></canvas>
+    </div>
+
+    <!-- Metrics -->
+    <div class="metrics-grid" id="metrics-grid"></div>
+
+    <!-- TIR bar -->
+    <div class="card" style="padding:12px 14px">
+      <div style="display:flex;justify-content:space-between;font-size:.72rem;color:var(--text2);margin-bottom:6px">
+        <span>Time in Range</span><span id="tir-label"></span>
+      </div>
+      <div class="tir-bar" id="tir-bar"></div>
+      <div style="display:flex;justify-content:space-between;font-size:.65rem;color:var(--text3);margin-top:4px">
+        <span>Hypo &lt;54</span><span>70–180 in range</span><span>Hyper &gt;250</span>
+      </div>
+    </div>
+
+    <!-- Hourly pattern -->
+    <div class="card">
+      <div class="card-title">🕐 Hourly BG pattern</div>
+      <div class="hourly-chart" id="hourly-chart"></div>
+      <div class="hourly-labels"><span>00</span><span>06</span><span>12</span><span>18</span><span>23</span></div>
+    </div>
+
+    <!-- Recommendations -->
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <div style="font-weight:700;font-size:.95rem">Recommendations</div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span id="rec-count" style="font-size:.75rem;color:var(--text2)"></span>
+          <span id="rec-gate-note" style="font-size:.7rem;color:var(--text3)"></span>
+        </div>
+      </div>
+      <div id="rec-list"></div>
+    </div>
+  </div>
+</div>
+
+<!-- IMPORT -->
+<div id="tab-import" class="tab-content">
+  <div class="card">
+    <div class="card-title">📂 Decrypt AAPS export</div>
+    <div id="drop-zone" onclick="document.getElementById('file-input').click()"
+         ondrop="handleDrop(event)" ondragover="e=>{e.preventDefault();document.getElementById('drop-zone').classList.add('drag')}"
+         ondragleave="document.getElementById('drop-zone').classList.remove('drag')">
+      <div class="drop-icon">📄</div>
+      <div style="font-weight:600;margin-bottom:4px">Drop AAPS export here</div>
+      <div class="drop-hint">or click to browse · JSON encrypted export from AAPS → ☰ → Maintenance → Export settings</div>
+      <div id="file-name" style="margin-top:8px;font-size:.8rem;color:var(--accent2);font-family:monospace"></div>
+    </div>
+    <input type="file" id="file-input" accept=".json" style="display:none" onchange="handleFile(this)">
+    <div class="form-group" style="margin-top:12px">
+      <label>Master password</label>
+      <div style="position:relative">
+        <input type="password" id="imp-password" placeholder="Your AAPS master password" style="padding-right:38px">
+        <button onclick="togglePw('imp-password')" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text2);cursor:pointer">👁</button>
+      </div>
+    </div>
+    <div class="alert warn" style="font-size:.75rem">🔒 Password never stored — used only for this decryption.</div>
+    <div class="btn-row">
+      <button class="btn" id="imp-btn" onclick="decryptImport()" disabled>🔓 Decrypt</button>
+    </div>
+    <div id="imp-loading" style="display:none;margin-top:10px"><div class="loading"><div class="spinner"></div>Decrypting…</div></div>
+    <div id="imp-error" style="display:none;margin-top:10px"></div>
+  </div>
+
+  <div id="imp-results" style="display:none">
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <div style="font-weight:700">Settings loaded</div>
+        <div class="btn-row" style="margin:0">
+          <button class="btn btn-ghost btn-sm" onclick="applyImport()">📥 Apply to config</button>
+          <button class="btn btn-ghost btn-sm" onclick="exportImpJSON()">⬇️ Export JSON</button>
+        </div>
+      </div>
+      <div id="imp-summary" class="alert success"></div>
+      <div class="filter-bar">
+        <input type="text" id="imp-filter" placeholder="Filter parameters…" oninput="filterImp()">
+        <select id="imp-filter-fg" onchange="filterImp()"><option value="">All features</option></select>
+        <select id="imp-filter-state" onchange="filterImp()">
+          <option value="">All</option>
+          <option value="changed">Changed from default</option>
+          <option value="gate_off">Gate inactive</option>
+        </select>
+      </div>
+      <div id="imp-list"></div>
+    </div>
+  </div>
+</div>
+
+<!-- AI -->
+<div id="tab-ai" class="tab-content">
+  <div class="card">
+    <div class="card-title">🤖 AI analysis</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div class="form-group">
+        <label>Provider</label>
+        <select id="ai-provider" onchange="updateAiKey()" style="width:100%">
+          <option value="anthropic">🟣 Anthropic (Claude)</option>
+          <option value="deepseek">🔵 DeepSeek</option>
+          <option value="openai">🟢 OpenAI (ChatGPT)</option>
+        </select>
+      </div>
+      <div class="form-group" id="ai-model-group">
+        <label>Model</label>
+        <select id="ai-model" style="width:100%">
+          <option value="claude-sonnet-4-6">Sonnet 4.6 — fast, cheap</option>
+          <option value="claude-opus-4-5">Opus 4.5 — best reasoning</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label id="ai-key-lbl">Anthropic API Key</label>
+      <div style="position:relative">
+        <input type="password" id="ai-key" placeholder="sk-ant-..." style="padding-right:38px">
+        <button onclick="togglePw('ai-key')" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text2);cursor:pointer">👁</button>
+      </div>
+      <div id="ai-key-hint" style="display:none;font-size:.72rem;color:var(--green);margin-top:4px"></div>
+    </div>
+    <div class="form-group">
+      <label>Your observations <span style="color:var(--text3);font-weight:400">(optional)</span></label>
+      <textarea id="ai-user-input" rows="3" placeholder="Describe patterns you've noticed: post-meal hypos, overnight highs, correction too aggressive…" style="resize:vertical"></textarea>
+    </div>
+    <div id="ai-data-status" style="margin-bottom:10px"></div>
+    <button class="btn" id="ai-btn" onclick="runAI()">🤖 Run analysis</button>
+    <div id="ai-status" style="margin-top:10px"></div>
+  </div>
+
+  <div id="ai-result-card" class="card" style="display:none">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <div style="font-weight:700">Analysis</div>
+      <div style="display:flex;gap:6px">
+        <span id="ai-model-used" style="font-size:.72rem;color:var(--text2)"></span>
+        <button class="btn btn-ghost btn-sm" onclick="copyAI()">📋</button>
+        <button class="btn btn-ghost btn-sm" onclick="document.getElementById('ai-result-card').style.display='none'">✕</button>
+      </div>
+    </div>
+    <div id="ai-result-text"></div>
+    <div id="ai-token-info" style="margin-top:8px;font-size:.7rem;color:var(--text3)"></div>
+  </div>
+</div>
+
+<!-- FEATURES -->
+<div id="tab-features" class="tab-content">
+  <div class="card">
+    <div class="card-title">🗂 Feature groups</div>
+    <div class="filter-bar">
+      <input type="text" id="fg-filter" placeholder="Search features…" oninput="renderFeatureGroups()">
+      <select id="fg-state" onchange="renderFeatureGroups()">
+        <option value="">All</option>
+        <option value="active">Active</option>
+        <option value="inactive">Inactive</option>
+      </select>
+    </div>
+    <div id="fg-grid" class="fg-grid"></div>
+  </div>
+  <div id="fg-detail" style="display:none"></div>
+</div>
+
+<!-- PARAMETERS -->
+<div id="tab-params" class="tab-content">
+  <div class="card">
+    <div class="card-title">⚙️ Parameters <span id="param-count" style="font-weight:400;color:var(--text2)"></span></div>
+    <div class="filter-bar">
+      <input type="text" id="param-filter" placeholder="Search by name or key…" oninput="filterParams()">
+      <select id="param-fg" onchange="filterParams()"><option value="">All features</option></select>
+      <select id="param-impact" onchange="filterParams()">
+        <option value="">All impact</option>
+        <option value="critical">Critical</option>
+        <option value="high">High</option>
+        <option value="medium">Medium</option>
+        <option value="low">Low</option>
+      </select>
+      <select id="param-gate" onchange="filterParams()">
+        <option value="">All gates</option>
+        <option value="active">Gate active</option>
+        <option value="inactive">Gate inactive</option>
+        <option value="orphaned">Orphaned</option>
+      </select>
+    </div>
+    <div id="param-list"></div>
+  </div>
+</div>
+
+<!-- DIFF -->
+<div id="tab-diff" class="tab-content">
+  <div class="card">
+    <div class="card-title">🔀 Snapshot comparison</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      <div class="form-group">
+        <label>Before</label>
+        <select id="diff-snap-a" style="width:100%"><option>No snapshots yet</option></select>
+      </div>
+      <div class="form-group">
+        <label>After</label>
+        <select id="diff-snap-b" style="width:100%"><option>No snapshots yet</option></select>
+      </div>
+    </div>
+    <button class="btn" onclick="runDiff()">🔀 Compare</button>
+  </div>
+
+  <div id="diff-results" style="display:none">
+    <div id="diff-metrics-row" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px"></div>
+    <div class="card">
+      <div class="card-title">Changed parameters</div>
+      <div class="filter-bar">
+        <input type="text" id="diff-filter" placeholder="Filter…" oninput="filterDiff()">
+        <select id="diff-filter-impact" onchange="filterDiff()">
+          <option value="">All</option>
+          <option value="critical">Critical</option>
+          <option value="high">High</option>
+          <option value="medium">Medium</option>
+        </select>
+      </div>
+      <div id="diff-list"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+      <div style="font-weight:700;font-size:.88rem">Saved snapshots</div>
+    </div>
+    <div id="snap-list"></div>
+  </div>
+</div>
+
+</div><!-- .page -->
+
+<script>
+const IMPACT_EMOJI={critical:'🔴',high:'🟠',medium:'🟡',low:'🟢'};
+const IORD={critical:0,high:1,medium:2,low:3};
+let allParams=[],featureGroups=[],analysisResult=null,importedParams=[];
+let activeGates={},currentDiff=[];
+let config=JSON.parse(localStorage.getItem('aimi_config')||'{}');
+let overrides=JSON.parse(localStorage.getItem('aimi_overrides')||'{}');
+
+// ── NAV ──
+function showTab(name){
+  document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('nav button[id^=nav-]').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+  const nb=document.getElementById('nav-'+name);
+  if(nb) nb.classList.add('active');
+  closeMore();
+  if(name==='features') renderFeatureGroups();
+  if(name==='params') { renderFeatureGroupSelect(); filterParams(); }
+  if(name==='diff') refreshSnaps();
+}
+function toggleMore(e){e.stopPropagation();document.getElementById('more-dropdown').classList.toggle('open');}
+function closeMore(){document.getElementById('more-dropdown').classList.remove('open');}
+document.addEventListener('click',closeMore);
+function toggleConfig(){document.getElementById('config-panel').classList.toggle('open');}
+function closeConfig(){document.getElementById('config-panel').classList.remove('open');}
+function togglePw(id){const i=document.getElementById(id);i.type=i.type==='password'?'text':'password';}
+
+// ── CONFIG ──
+function applySavedConfig(){
+  if(config.url){document.getElementById('cfg-url').value=config.url;document.getElementById('dash-url').value=config.url;}
+  if(config.token){document.getElementById('cfg-token').value=config.token;document.getElementById('dash-token').value=config.token;}
+  if(config.days){document.getElementById('cfg-days').value=config.days;document.getElementById('dash-days').value=config.days;}
+  if(config.anthropic_key) document.getElementById('cfg-ant-key').value=config.anthropic_key;
+  if(config.deepseek_key)  document.getElementById('cfg-ds-key').value=config.deepseek_key;
+  if(config.openai_key)    document.getElementById('cfg-oai-key').value=config.openai_key;
+  if(config.ai_provider)   document.getElementById('cfg-provider').value=config.ai_provider;
+  updateAiKey();
+  renderOverrideTable();
+}
+function saveConfig(){
+  config={
+    url:document.getElementById('cfg-url').value.trim(),
+    token:document.getElementById('cfg-token').value.trim(),
+    days:parseInt(document.getElementById('cfg-days').value)||7,
+    anthropic_key:document.getElementById('cfg-ant-key').value.trim(),
+    deepseek_key:document.getElementById('cfg-ds-key').value.trim(),
+    openai_key:document.getElementById('cfg-oai-key').value.trim(),
+    ai_provider:document.getElementById('cfg-provider').value,
+  };
+  localStorage.setItem('aimi_config',JSON.stringify(config));
+  document.getElementById('dash-url').value=config.url;
+  document.getElementById('dash-token').value=config.token;
+  document.getElementById('dash-days').value=config.days;
+  updateAiKey();
+  alert('✅ Saved');
+}
+function renderOverrideTable(){
+  const keys=Object.keys(overrides);
+  document.getElementById('cfg-override-count').textContent=`${keys.length} overrides active`;
+  document.getElementById('override-table').innerHTML=keys.slice(0,20).map(k=>
+    `<div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px solid var(--border);font-size:.75rem">
+      <span style="font-family:monospace;color:var(--accent2)">${k}</span>
+      <span style="color:var(--yellow)">${overrides[k]}</span>
+     </div>`
+  ).join('')+(keys.length>20?`<div style="font-size:.7rem;color:var(--text3);margin-top:6px">…and ${keys.length-20} more</div>`:'');
+}
+function saveOverrides(){localStorage.setItem('aimi_overrides',JSON.stringify(overrides));alert(`✅ ${Object.keys(overrides).length} overrides saved`);}
+
+// ── API ──
+async function apiFetch(path,opts={}){
+  const r=await fetch(path,{headers:{'Content-Type':'application/json'},...opts});
+  if(!r.ok){const t=await r.text();throw new Error(t);}
+  return r.json();
+}
+
+// ── INIT ──
+async function init(){
+  applySavedConfig();
+  try{
+    const d=await apiFetch('/api/parameters');
+    allParams=d.parameters||[];
+    featureGroups=d.feature_groups||[];
+    renderFeatureGroupSelect();
+    filterParams();
+  }catch(e){console.error('Init failed:',e);}
+}
+
+// ── GATES ──
+function gateActive(k){
+  const v=activeGates[k];
+  if(v!=null){if(typeof v==='string') return v.toLowerCase()==='true'; return !!v;}
+  for(const p of importedParams){if(p.key===k){const pv=p.value;return typeof pv==='boolean'?pv:String(pv).toLowerCase()==='true';}}
+  const GATES_OFF=[
+    'key_use_aimi_t3c_adaptive_basal','key_aimi_pkpd_enabled','key_use_Aimi_autoDrive',
+    'key_use_aimi_autodrive_active','key_use_Aimi_wcycle','key_oaps_aimi_ngr_enabled',
+    'key_use_AimiPregnancy','key_use_Aimi_honeymoon','aimi_physio_assistant_enable',
+    'aimi_auditor_enabled','key_aimi_trajectory_guard_enabled','key_aimi_straight_line_tube_enabled',
+    'aimi_endo_enable','key_aimi_thyroid_enabled','key_enable_ML_training',
+    'key_aimi_t3c_brittle_mode','aimi_emergency_sos_enable','key_aimi_context_enabled',
+  ];
+  return !GATES_OFF.includes(k);
+}
+
+// ── ANALYSIS ──
+async function runAnalysis(){
+  const url=document.getElementById('dash-url').value.trim();
+  const token=document.getElementById('dash-token').value.trim();
+  const days=parseInt(document.getElementById('dash-days').value)||7;
+  if(!url){alert('Please enter your Nightscout URL');return;}
+  document.getElementById('dash-loading').style.display='';
+  document.getElementById('dash-results').style.display='none';
+  document.getElementById('dash-error').style.display='none';
+  try{
+    const d=await apiFetch('/api/analyze',{method:'POST',body:JSON.stringify({
+      nightscout_url:url,nightscout_token:token,days,
+      current_params:importedParams,active_gates:activeGates,overrides})});
+    analysisResult=d;
+    renderDashboard(d);
+    document.getElementById('dash-results').style.display='';
+    document.getElementById('dash-status-bar').style.display='flex';
+    updateAiDataCheck();
+    if(importedParams.length) saveSnapshot(d);
+  }catch(e){
+    const el=document.getElementById('dash-error');
+    el.innerHTML=`<div class="alert error">⚠️ ${e.message}</div>`;
+    el.style.display='';
+  }finally{document.getElementById('dash-loading').style.display='none';}
+}
+
+function renderDashboard(data){
+  const cgm=data.cgm||{};
+  const trt=data.treatments||{};
+
+  // Status pills
+  document.getElementById('sp-tir').textContent=`TIR ${cgm.tir_pct??'—'}%`;
+  document.getElementById('sp-hypo').textContent=`Hypo ${cgm.hypo_l1_pct??'—'}%`;
+  document.getElementById('sp-cv').textContent=`CV ${cgm.cv??'—'}%`;
+  document.getElementById('sp-gmi').textContent=`GMI ${cgm.gmi??'—'}%`;
+  document.getElementById('sp-smb').textContent=`SMBs ${trt.smb_count??'—'}`;
+
+  // Metrics grid
+  const metrics=[
+    {id:'tir',label:'TIR 70–180',val:cgm.tir_pct,unit:'%',good:v=>v>=70,warn:v=>v>=60},
+    {id:'hypo',label:'Hypo <70',val:cgm.hypo_l1_pct,unit:'%',good:v=>v<4,warn:v=>v<8,invert:true},
+    {id:'hypo2',label:'Severe <54',val:cgm.hypo_l2_pct,unit:'%',good:v=>v<1,warn:v=>v<2,invert:true},
+    {id:'hyper',label:'Hyper >180',val:cgm.hyper_l1_pct,unit:'%',good:v=>v<15,warn:v=>v<25,invert:true},
+    {id:'mean',label:'Mean BG',val:cgm.mean_glucose,unit:' mg/dL',good:v=>v>=90&&v<=140,warn:v=>v>=80&&v<=160},
+    {id:'cv',label:'CV',val:cgm.cv,unit:'%',good:v=>v<36,warn:v=>v<40,invert:true},
+    {id:'gmi',label:'GMI',val:cgm.gmi,unit:'%',good:v=>v<7,warn:v=>v<7.5,invert:true},
+    {id:'night',label:'Night avg',val:cgm.night_avg,unit:' mg/dL',good:v=>v>=80&&v<=140,warn:v=>v>=70&&v<=160},
+  ];
+  document.getElementById('metrics-grid').innerHTML=metrics.map(m=>{
+    const v=m.val;
+    let cls='';
+    if(v!=null){
+      const ok=m.good(parseFloat(v)), borderline=m.warn(parseFloat(v));
+      cls=ok?'good':borderline?'warn':'bad';
+    }
+    return `<div class="metric ${cls}"><div class="metric-val">${v??'—'}${v!=null?m.unit:''}</div><div class="metric-lbl">${m.label}</div></div>`;
+  }).join('');
+
+  // TIR bar
+  const l2=parseFloat(cgm.hypo_l2_pct)||0;
+  const l1=(parseFloat(cgm.hypo_l1_pct)||0)-l2;
+  const tir=parseFloat(cgm.tir_pct)||0;
+  const h1=(parseFloat(cgm.hyper_l1_pct)||0);
+  const h2=Math.max(0,(parseFloat(cgm.hyper_l2_pct)||0));
+  document.getElementById('tir-label').textContent=`${tir}% in range`;
+  document.getElementById('tir-bar').innerHTML=
+    `<div class="tir-seg" style="width:${l2}%;background:#8b0000"></div>`+
+    `<div class="tir-seg" style="width:${l1}%;background:var(--red)"></div>`+
+    `<div class="tir-seg" style="width:${tir}%;background:var(--green)"></div>`+
+    `<div class="tir-seg" style="width:${h1-h2}%;background:var(--yellow)"></div>`+
+    `<div class="tir-seg" style="width:${h2}%;background:var(--orange)"></div>`;
+
+  renderHourlyChart(data.hourly_chart||cgm.hourly_pattern||[]);
+  renderGlucoseChart(data.glucose_chart||cgm.last24h||[]);
+  renderRecs(data.recommendations||[], data.active_gates||{});
+}
+
+function setMetric(id,val,cls){}
+
+function renderHourlyChart(hourly){
+  if(!hourly.length) return;
+  const vals=hourly.map(h=>h.avg||h.avg_glucose||0).filter(v=>v>0);
+  if(!vals.length) return;
+  const max=Math.max(...vals)||200;
+  const min=Math.min(...vals)||70;
+  document.getElementById('hourly-chart').innerHTML=hourly.map(h=>{
+    const v=h.avg||h.avg_glucose||0;
+    if(!v) return `<div class="hourly-bar" style="height:3%;background:var(--bg3)"></div>`;
+    const pct=Math.round(((v-min)/(max-min||1))*100);
+    const col=v<70?'var(--red)':v>180?'var(--yellow)':'var(--green)';
+    return `<div class="hourly-bar" style="height:${Math.max(5,pct)}%;background:${col}" title="${h.hour}h: ${Math.round(v)} mg/dL"></div>`;
+  }).join('');
+}
+
+function renderGlucoseChart(points){
+  const canvas=document.getElementById('glucose-chart');
+  if(!canvas||!points.length) return;
+  // Use setTimeout to ensure canvas has rendered width
+  const draw = () => {
+    const W=canvas.offsetWidth||800;
+    const H=canvas.height||80;
+    canvas.width=W;
+    const ctx=canvas.getContext('2d');
+    ctx.clearRect(0,0,W,H);
+    const vals=points.map(p=>p.sgv||100).filter(v=>v>0);
+    if(!vals.length) return;
+    const mn=Math.min(...vals,60),mx=Math.max(...vals,200);
+    const x=i=>i/(points.length-1)*W;
+    const y=v=>H-Math.max(0,(v-mn)/(mx-mn||1))*H;
+    // Target band
+    ctx.fillStyle='rgba(0,214,143,.07)';
+    ctx.fillRect(0,y(180),W,y(70)-y(180));
+    // Reference lines
+    [[70,'rgba(255,71,87,.4)'],[180,'rgba(255,193,7,.4)']].forEach(([v,c])=>{
+      ctx.beginPath();ctx.strokeStyle=c;ctx.setLineDash([4,4]);ctx.lineWidth=1;
+      ctx.moveTo(0,y(v));ctx.lineTo(W,y(v));ctx.stroke();ctx.setLineDash([]);
+    });
+    // Glucose line
+    ctx.beginPath();ctx.strokeStyle='#6c63ff';ctx.lineWidth=1.5;ctx.lineJoin='round';
+    points.forEach((p,i)=>{
+      if(!p.sgv) return;
+      i===0?ctx.moveTo(x(i),y(p.sgv)):ctx.lineTo(x(i),y(p.sgv));
+    });
+    ctx.stroke();
+  };
+  if(canvas.offsetWidth>0) draw();
+  else setTimeout(draw, 100);
+}
+
+// ── RECOMMENDATIONS ──
+function renderRecs(recs, gates){
+  if(gates) Object.assign(activeGates,gates);
+  const container=document.getElementById('rec-list');
+  const featureRecs=recs.filter(r=>r.type==='feature');
+  const paramRecs=recs.filter(r=>r.type!=='feature'&&(!r.gate_key||gateActive(r.gate_key)));
+  const gated_off=recs.filter(r=>r.type!=='feature'&&r.gate_key&&!gateActive(r.gate_key)).length;
+  const total=featureRecs.length+paramRecs.length;
+  document.getElementById('rec-count').textContent=`${total} recommendation${total!==1?'s':''}`;
+  document.getElementById('rec-gate-note').textContent=gated_off?`(${gated_off} filtered — gate inactive)`:'';
+  if(!total){container.innerHTML=`<div class="alert success">✅ No optimizations needed based on current data.</div>`;return;}
+  let html='';
+  if(featureRecs.length){
+    html+=`<div class="section-label">🔧 Feature recommendations</div>`;
+    html+=featureRecs.map(r=>{
+      const isEn=r.direction==='enable';
+      const col=isEn?'var(--green)':'var(--red)';
+      return `<div class="rec high" style="border-left-color:${col}">
+        <div>
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
+            <span style="font-size:.7rem;font-weight:700;color:${col};background:${isEn?'var(--green-soft)':'var(--red-soft)'};padding:2px 8px;border-radius:99px">${isEn?'✅ Enable':'🚫 Disable'}</span>
+            <span style="font-size:.68rem;color:var(--text2)">Risk: ${r.risk||'?'}</span>
+          </div>
+          <div class="rec-title">${r.name}</div>
+          <div class="rec-key">${r.key}</div>
+          <div class="rec-reason">${r.reason}</div>
+          ${r.settings_path?`<div style="font-size:.68rem;color:var(--text2);margin-top:4px">📍 ${r.settings_path}</div>`:''}
+        </div>
+        <div class="rec-values" style="min-width:64px;text-align:center">
+          <div style="font-size:1.5rem">${isEn?'⬆️':'⬇️'}</div>
+          <div style="font-size:.65rem;color:var(--text2);margin-top:4px">Now</div>
+          <div style="font-weight:700;color:${r.current_state?'var(--green)':'var(--text3)'}">${r.current_state?'ON':'OFF'}</div>
+          <div style="font-size:.65rem;color:var(--text2);margin-top:5px">→</div>
+          <div style="font-weight:700;color:${col}">${isEn?'ON':'OFF'}</div>
+        </div>
+      </div>`;
+    }).join('');
+  }
+  if(paramRecs.length){
+    if(featureRecs.length) html+=`<div class="section-label">⚙️ Parameter optimizations</div>`;
+    html+=paramRecs.map(r=>{
+      const arrow=r.direction==='decrease'?'↓':r.direction==='increase'?'↑':'⇄';
+      const acls=r.direction==='decrease'?'decrease':r.direction==='increase'?'increase':'toggle';
+      return `<div class="rec ${r.impact}">
+        <div>
+          <div class="rec-title">${r.name}</div>
+          <div class="rec-key">${r.key}</div>
+          <div class="rec-reason">${r.reason}</div>
+          ${r.settings_path?`<div style="font-size:.68rem;color:var(--text2);margin-top:4px;font-family:monospace">📍 ${r.settings_path}${r.settings_gate?` · <span style="color:var(--yellow)">${r.settings_gate}</span>`:''}</div>`:''}
+          <div style="margin-top:6px">
+            <span class="tag ${r.impact}">${IMPACT_EMOJI[r.impact]} ${r.impact}</span>
+            <span class="tag">${r.feature_name||r.category}</span>
+          </div>
+          ${r.min!=null?`<div style="font-size:.67rem;color:var(--text3);margin-top:3px">Range: ${r.min}–${r.max} · Default: ${r.default}</div>`:''}
+        </div>
+        <div class="rec-values">
+          <div class="rec-arrow ${acls}">${arrow}</div>
+          <div style="font-size:.67rem;color:var(--text2)">Now</div>
+          <div style="font-weight:700;font-size:1rem">${r.current??'—'}</div>
+          <div style="font-size:.67rem;color:var(--text2);margin-top:5px">→</div>
+          <div style="font-weight:700;font-size:1rem;color:var(--accent2)">${r.suggested??'—'}</div>
+        </div>
+      </div>`;
+    }).join('');
+  }
+  container.innerHTML=html;
+}
+
+// ── FEATURES ──
+function renderFeatureGroups(){
+  const q=(document.getElementById('fg-filter')?.value||'').toLowerCase();
+  const state=document.getElementById('fg-state')?.value||'';
+  let html='';
+  (featureGroups||[]).forEach(fg=>{
+    const gate=fg.gate_key;
+    const isOn=gate?gateActive(gate):true;
+    if(state==='active'&&!isOn) return;
+    if(state==='inactive'&&isOn) return;
+    if(q&&!fg.name.toLowerCase().includes(q)&&!fg.id.toLowerCase().includes(q)) return;
+    const dot=fg.always_active?'var(--green)':isOn?'var(--yellow)':'var(--red)';
+    const params=allParams.filter(p=>p.feature_group===fg.id&&!p.orphaned);
+    html+=`<div class="fg-card" onclick="showFgDetail('${fg.id}')">
+      <div style="display:flex;align-items:center;gap:8px">
+        <div class="fg-status" style="background:${dot}"></div>
+        <div class="fg-name">${fg.name||fg.id}</div>
+      </div>
+      <div class="fg-meta">${params.length} params · ${fg.always_active?'Always active':isOn?'Active':'Gate inactive'}${gate?` · <span style="font-family:monospace">${gate}</span>`:''}</div>
+    </div>`;
+  });
+  document.getElementById('fg-grid').innerHTML=html||'<div style="color:var(--text2);font-size:.85rem">No features match filter.</div>';
+}
+function showFgDetail(fgId){
+  const fg=featureGroups.find(f=>f.id===fgId);
+  if(!fg) return;
+  const params=allParams.filter(p=>p.feature_group===fgId&&!p.orphaned);
+  const gate=fg.gate_key;
+  const isOn=gate?gateActive(gate):true;
+  document.getElementById('fg-detail').style.display='';
+  document.getElementById('fg-detail').innerHTML=`<div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <div style="font-weight:700">${fg.name||fgId}</div>
+      <button class="btn btn-ghost btn-sm" onclick="document.getElementById('fg-detail').style.display='none'">✕</button>
+    </div>
+    ${gate?`<div class="alert ${isOn?'success':'warn'}">Gate: <code>${gate}</code> — ${isOn?'Active':'Inactive'}</div>`:''}
+    ${params.map(p=>renderParamCard(p,!isOn)).join('')}
+  </div>`;
+  document.getElementById('fg-detail').scrollIntoView({behavior:'smooth',block:'start'});
+}
+function renderFeatureGroupSelect(){
+  const sel=document.getElementById('param-fg');
+  if(!sel) return;
+  sel.innerHTML='<option value="">All features</option>';
+  [...new Set(allParams.map(p=>p.feature_group).filter(Boolean))].sort().forEach(fg=>{
+    const o=document.createElement('option');o.value=fg;o.textContent=fg;sel.appendChild(o);
+  });
+  const impSel=document.getElementById('imp-filter-fg');
+  if(impSel){impSel.innerHTML=sel.innerHTML;}
+}
+
+// ── PARAMS ──
+function filterParams(){
+  const q=(document.getElementById('param-filter')?.value||'').toLowerCase();
+  const fg=document.getElementById('param-fg')?.value||'';
+  const impact=document.getElementById('param-impact')?.value||'';
+  const gate=document.getElementById('param-gate')?.value||'';
+  let visible=allParams.filter(p=>{
+    if(gate==='orphaned') return !!p.orphaned;
+    if(p.orphaned) return false;
+    if(q&&!p.name?.toLowerCase().includes(q)&&!p.key?.toLowerCase().includes(q)) return false;
+    if(fg&&p.feature_group!==fg) return false;
+    if(impact&&p.impact!==impact) return false;
+    if(gate==='active'&&p.gate_key&&!gateActive(p.gate_key)) return false;
+    if(gate==='inactive'&&(!p.gate_key||gateActive(p.gate_key))) return false;
+    return true;
+  });
+  document.getElementById('param-count').textContent=`(${visible.length})`;
+  document.getElementById('param-list').innerHTML=visible.slice(0,150).map(p=>renderParamCard(p)).join('');
+}
+function renderParamCard(p, inactive=false){
+  const gate=p.gate_key;
+  const gateOn=gate?gateActive(gate):true;
+  const ov=overrides[p.key];
+  const curVal=ov??p.value??'—';
+  const changed=p.default!=null&&String(curVal)!==String(p.default);
+  return `<div class="param-card${inactive||!gateOn?' ':' '}">
+    <div class="param-header">
+      <div>
+        <div class="param-name">${p.name||p.key}</div>
+        <div class="param-key">${p.key}</div>
+      </div>
+      <div style="text-align:right">
+        <div class="param-val ${changed?'param-changed':''}">${curVal}</div>
+        ${p.default!=null?`<div class="param-default">default: ${p.default}</div>`:''}
+      </div>
+    </div>
+    <div class="param-meta">
+      <span class="tag ${p.impact}">${IMPACT_EMOJI[p.impact]||''} ${p.impact||'?'}</span>
+      ${p.orphaned?`<span class="tag" style="color:var(--text3)">orphaned</span>`:''}
+      ${gate?`<span class="gate-badge ${gateOn?'gate-on':'gate-off'}">${gateOn?'● active':'● gate off'}</span>`:''}
+      ${p.logic_summary?`<span style="font-size:.7rem;color:var(--text2);margin-top:4px;display:block;line-height:1.4">${p.logic_summary}</span>`:''}
+    </div>
+    ${p.settings_path?`<div style="font-size:.67rem;color:var(--text3);margin-top:5px">📍 ${p.settings_path}</div>`:''}
+  </div>`;
+}
+
+// ── IMPORT ──
+let selectedFile=null;
+function handleFile(inp){selectedFile=inp.files[0];if(selectedFile){document.getElementById('file-name').textContent=selectedFile.name;document.getElementById('imp-btn').disabled=false;}}
+function handleDrop(e){e.preventDefault();document.getElementById('drop-zone').classList.remove('drag');selectedFile=e.dataTransfer.files[0];if(selectedFile?.name.endsWith('.json')){document.getElementById('file-name').textContent=selectedFile.name;document.getElementById('imp-btn').disabled=false;}}
+async function decryptImport(){
+  if(!selectedFile) return;
+  const pw=document.getElementById('imp-password').value;
+  if(!pw){alert('Please enter your master password');return;}
+  const btn=document.getElementById('imp-btn');
+  btn.disabled=true;
+  document.getElementById('imp-loading').style.display='';
+  document.getElementById('imp-error').style.display='none';
+  try{
+    const fd=new FormData();fd.append('file',selectedFile);fd.append('password',pw);
+    const r=await fetch('/api/decrypt-export',{method:'POST',body:fd});
+    if(!r.ok){const t=await r.text();throw new Error(t);}
+    const data=await r.json();
+    Object.assign(activeGates,data.active_gates||{});
+    importedParams=data.aimi_parameters.map(p=>({...p,gate_active:p.gate_key?(activeGates[p.gate_key]??false):true}));
+    document.getElementById('import-cta').style.display='none';
+    document.getElementById('import-dot').classList.add('show');
+    renderImportResults(data);
+    document.getElementById('imp-results').style.display='';
+    saveSnapshot({source:'import',timestamp:Date.now(),params:importedParams.length});
+    updateAiDataCheck();
+  }catch(e){
+    const el=document.getElementById('imp-error');
+    el.innerHTML=`<div class="alert error">⚠️ ${e.message}</div>`;
+    el.style.display='';
+  }finally{btn.disabled=false;document.getElementById('imp-loading').style.display='none';}
+}
+function renderImportResults(data){
+  const params=data.aimi_parameters||[];
+  const hasKnowledge=allParams.length>0;
+  const nonDefault=params.filter(p=>p.is_default===false&&!p.orphaned);
+  const gateOff=params.filter(p=>p.gate_key&&!gateActive(p.gate_key));
+  document.getElementById('imp-summary').innerHTML=hasKnowledge
+    ? `✅ Loaded ${params.length} parameters · ${nonDefault.length} non-default · ${gateOff.length} gate-inactive`
+    : `✅ Loaded ${params.length} parameters · <span style="color:var(--yellow)">⚠️ No parameter knowledge base — run deploy.sh on laptop for full analysis</span>`;
+  // Feature group select
+  const sel=document.getElementById('imp-filter-fg');
+  if(sel){
+    const fgs=[...new Set(params.map(p=>p.feature_group).filter(Boolean))].sort();
+    sel.innerHTML='<option value="">All features</option>'+fgs.map(f=>`<option value="${f}">${f}</option>`).join('');
+  }
+  filterImp();
+}
+function filterImp(){
+  const q=(document.getElementById('imp-filter')?.value||'').toLowerCase();
+  const fg=document.getElementById('imp-filter-fg')?.value||'';
+  const state=document.getElementById('imp-filter-state')?.value||'';
+  // Only filter orphaned when we have real parameter knowledge loaded
+  const hasKnowledge=allParams.length>0;
+  const visible=importedParams.filter(p=>{
+    if(hasKnowledge&&p.orphaned) return false;
+    if(q&&!p.name?.toLowerCase().includes(q)&&!p.key?.toLowerCase().includes(q)) return false;
+    if(fg&&p.feature_group!==fg) return false;
+    if(state==='changed'&&p.is_default!==false) return false;
+    if(state==='gate_off'&&gateActive(p.gate_key||'')) return false;
+    return true;
+  });
+  const el=document.getElementById('imp-list');
+  if(!visible.length){
+    el.innerHTML=`<div class="alert info">No parameters match the current filter.</div>`;
+    return;
+  }
+  el.innerHTML=visible.slice(0,300).map(p=>renderParamCard(p,p.gate_key&&!gateActive(p.gate_key))).join('')+
+    (visible.length>300?`<div style="color:var(--text2);padding:10px;font-size:.78rem">Showing 300 of ${visible.length} — use filters to narrow down</div>`:'');
+}
+function applyImport(){let c=0;importedParams.forEach(p=>{if(p.value!=null&&!p.is_sensitive){overrides[p.key]=p.value;c++;}});localStorage.setItem('aimi_overrides',JSON.stringify(overrides));renderOverrideTable();alert(`✅ ${c} values applied to config overrides.`);}
+function exportImpJSON(){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify({parameters:importedParams},null,2)],{type:'application/json'}));a.download='aimi_current_params.json';a.click();}
+
+// ── SNAPSHOTS ──
+function getSnaps(){try{return JSON.parse(localStorage.getItem('aimi_snapshots')||'[]');}catch{return[];}}
+function saveSnapshot(data){
+  const snaps=getSnaps();
+  const snap={
+    id:Date.now(),
+    label:`${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}`,
+    tir:data.cgm?.tir_pct,hypo:data.cgm?.hypo_l1_pct,cv:data.cgm?.cv,
+    params:data.recommendations?.length||0,
+    importedParams:[...importedParams],
+    cgm:data.cgm||{},treatments:data.treatments||{},
+    data,
+  };
+  snaps.unshift(snap);
+  localStorage.setItem('aimi_snapshots',JSON.stringify(snaps.slice(0,10)));
+  refreshSnaps();
+}
+function deleteSnap(id){localStorage.setItem('aimi_snapshots',JSON.stringify(getSnaps().filter(s=>s.id!=id)));refreshSnaps();}
+function refreshSnaps(){
+  const snaps=getSnaps();
+  const list=document.getElementById('snap-list');
+  if(!list) return;
+  if(!snaps.length){list.innerHTML=`<div style="color:var(--text2);font-size:.83rem">No snapshots yet. Run an analysis to save one.</div>`;return;}
+  list.innerHTML=snaps.map(s=>`<div class="snap-item">
+    <div>
+      <div class="snap-label">${s.label}</div>
+      <div class="snap-meta">TIR ${s.tir??'?'}% · Hypo ${s.hypo??'?'}% · CV ${s.cv??'?'}%</div>
+    </div>
+    <button class="btn btn-ghost btn-sm" style="color:var(--red)" onclick="deleteSnap(${s.id})">🗑</button>
+  </div>`).join('');
+  // Populate diff selects
+  ['diff-snap-a','diff-snap-b'].forEach(id=>{
+    const sel=document.getElementById(id);
+    if(!sel) return;
+    const cur=sel.value;
+    sel.innerHTML=snaps.map(s=>`<option value="${s.id}">${s.label} (TIR ${s.tir??'?'}%)</option>`).join('');
+    if(cur) sel.value=cur;
+  });
+  if(snaps.length>=2) document.getElementById('diff-snap-b').selectedIndex=1;
+}
+
+// ── DIFF ──
+async function runDiff(){
+  const snaps=getSnaps();
+  const idA=parseInt(document.getElementById('diff-snap-a').value);
+  const idB=parseInt(document.getElementById('diff-snap-b').value);
+  const a=snaps.find(s=>s.id===idA);
+  const b=snaps.find(s=>s.id===idB);
+  if(!a||!b){alert('Please select two snapshots');return;}
+  if(idA===idB){alert('Please select two different snapshots');return;}
+  // Ensure older is A, newer is B
+  const [older,newer]=new Date(a.timestamp)<new Date(b.timestamp)?[a,b]:[b,a];
+  try{
+    const d=await apiFetch('/api/diff',{method:'POST',body:JSON.stringify({
+      snapshot_a:{
+        parameters:older.importedParams||[],
+        cgm:older.cgm||{},treatments:older.treatments||{},
+        timestamp:older.timestamp,metadata:older.metadata||{}
+      },
+      snapshot_b:{
+        parameters:newer.importedParams||[],
+        cgm:newer.cgm||{},treatments:newer.treatments||{},
+        timestamp:newer.timestamp,metadata:newer.metadata||{}
+      },
+      nightscout_url:config.url||'',
+      nightscout_token:config.token||'',
+    })});
+    currentDiff=d.diff||[];
+    renderDiffResults(d);
+    document.getElementById('diff-results').style.display='';
+  }catch(e){alert('Diff error: '+e.message);}
+}
+function renderDiffResults(data){
+  const changes=data.diff||data.changes||[];
+  // Metric comparison
+  const mr=document.getElementById('diff-metrics-row');
+  const mets=[['TIR','tir_pct','%',true],['Hypo <70','hypo_l1_pct','%',false],['CV','cv','%',false],['Mean BG','mean_glucose',' mg/dL',true]];
+  mr.innerHTML=mets.map(([l,k,u,higher])=>{
+    const va=data.metrics_a?.[k],vb=data.metrics_b?.[k];
+    if(va==null||vb==null) return '';
+    const diff=((parseFloat(vb)-parseFloat(va))).toFixed(1);
+    const better=(higher&&diff>0)||(!higher&&diff<0);
+    return `<div class="card" style="padding:12px">
+      <div style="font-size:.7rem;color:var(--text2);margin-bottom:4px">${l}</div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="font-size:1.1rem;font-weight:700">${va}${u}</span>
+        <span style="color:var(--text3)">→</span>
+        <span style="font-size:1.1rem;font-weight:700">${vb}${u}</span>
+        <span style="font-size:.8rem;font-weight:700;color:${better?'var(--green)':'var(--red)'}">${diff>0?'+':''}${diff}${u}</span>
+      </div>
+    </div>`;
+  }).join('');
+  filterDiff();
+}
+function filterDiff(){
+  const q=(document.getElementById('diff-filter')?.value||'').toLowerCase();
+  const impact=document.getElementById('diff-filter-impact')?.value||'';
+  const visible=currentDiff.filter(c=>{
+    if(q&&!c.key?.toLowerCase().includes(q)&&!c.name?.toLowerCase().includes(q)) return false;
+    if(impact&&c.impact!==impact) return false;
+    return true;
+  });
+  document.getElementById('diff-list').innerHTML=visible.map(c=>{
+    const arrow=typeof c.value_a==='number'&&typeof c.value_b==='number'?
+      (c.value_b>c.value_a?'↑':'↓'):'→';
+    const col=arrow==='↑'?'var(--green)':arrow==='↓'?'var(--red)':'var(--accent)';
+    return `<div class="diff-card">
+      <div>
+        <div class="diff-key">${c.key}</div>
+        <div style="font-size:.78rem;color:var(--text2)">${c.name||''}</div>
+      </div>
+      <div class="diff-change">
+        <span>${c.value_a??'—'}</span>
+        <span style="color:${col}">${arrow}</span>
+        <span style="color:${col}">${c.value_b??'—'}</span>
+        <span class="tag ${c.impact}">${c.impact||''}</span>
+      </div>
+    </div>`;
+  }).join('')||`<div style="color:var(--text2);font-size:.83rem">No parameter changes found.</div>`;
+}
+
+// ── AI ──
+function updateAiKey(){
+  const p=document.getElementById('ai-provider')?.value||'anthropic';
+  document.getElementById('ai-key-lbl').textContent=p==='anthropic'?'Anthropic API Key':p==='openai'?'OpenAI API Key':'DeepSeek API Key';
+  document.getElementById('ai-key').placeholder=p==='anthropic'?'sk-ant-...':`sk-...`;
+  const modelSel=document.getElementById('ai-model');
+  if(modelSel){
+    if(p==='anthropic'){
+      modelSel.innerHTML=`<option value="claude-sonnet-4-6">Sonnet 4.6 — fast, precise</option><option value="claude-opus-4-5">Opus 4.5 — strongest reasoning</option>`;
+    } else if(p==='deepseek') {
+      modelSel.innerHTML=`<option value="deepseek-chat">DeepSeek V3 — fast, cheap</option><option value="deepseek-reasoner">DeepSeek R1 — step-by-step reasoning</option>`;
+    } else {
+      modelSel.innerHTML=`<option value="gpt-4o-mini">GPT-4o mini — fast, cheap</option><option value="gpt-4o">GPT-4o — strongest</option><option value="o1-mini">o1-mini — reasoning</option>`;
+    }
+    const saved=config[p+'_model'];
+    if(saved){const opt=modelSel.querySelector(`option[value="${saved}"]`);if(opt) modelSel.value=saved;}
+  }
+  const saved=p==='anthropic'?config.anthropic_key:p==='openai'?config.openai_key:config.deepseek_key;
+  if(saved){document.getElementById('ai-key').value=saved;const h=document.getElementById('ai-key-hint');if(h){h.style.display='';h.textContent='✅ Loaded from settings';}}
+  updateAiDataCheck();
+}
+function updateAiDataCheck(){
+  const el=document.getElementById('ai-data-status');
+  if(!el) return;
+  const hasCGM=!!analysisResult?.cgm?.tir_pct;
+  const hasImport=importedParams.length>0;
+  if(hasCGM&&hasImport) el.innerHTML=`<div class="alert success">✅ CGM data + settings loaded — ready for analysis</div>`;
+  else if(hasCGM) el.innerHTML=`<div class="alert warn">⚠️ No settings import — run analysis without gate filtering. <a href="#" onclick="showTab('import')" style="color:var(--yellow)">Import now →</a></div>`;
+  else if(hasImport) el.innerHTML=`<div class="alert warn">⚠️ No CGM data — run Dashboard analysis first.</div>`;
+  else el.innerHTML=`<div class="alert info">ℹ️ Run the Dashboard analysis and import your AAPS settings for best results.</div>`;
+}
+async function runAI(){
+  const provider=document.getElementById('ai-provider').value;
+  const apiKey=document.getElementById('ai-key').value.trim();
+  const model=document.getElementById('ai-model')?.value||'';
+  if(!apiKey){alert('Please enter your API key');return;}
+  const userInput=(document.getElementById('ai-user-input')?.value||'').trim();
+  config[provider+'_model']=model;
+  localStorage.setItem('aimi_config',JSON.stringify(config));
+  const btn=document.getElementById('ai-btn');
+  const status=document.getElementById('ai-status');
+  btn.disabled=true;status.innerHTML='<div class="loading"><div class="spinner"></div>AI is analysing…</div>';
+  document.getElementById('ai-result-card').style.display='none';
+  try{
+    const data=await apiFetch('/api/ai-analysis',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({provider,api_key:apiKey,model:model||null,
+        cgm_metrics:analysisResult?.cgm||{},
+        treatment_metrics:analysisResult?.treatments||{},
+        diff:currentDiff,
+        current_params:importedParams,
+        nightscout_days:parseInt(config.days||7),
+        active_gates:activeGates,
+        user_observations:userInput||null,
+        lang:'en'})});
+    document.getElementById('ai-result-text').innerHTML=formatAI(data.analysis||'');
+    document.getElementById('ai-model-used').textContent=`${data.provider} · ${data.model}`;
+    const u=data.tokens||{};
+    document.getElementById('ai-token-info').textContent=`Input: ${u.input_tokens||u.prompt_tokens||'?'} · Output: ${u.output_tokens||u.completion_tokens||'?'} tokens`;
+    document.getElementById('ai-result-card').style.display='';
+    status.innerHTML='';
+    buildParamPathIndex();
+  }catch(e){
+    status.innerHTML=`<div class="alert error">⚠️ ${e.message}</div>`;
+  }finally{btn.disabled=false;}
+}
+function buildParamPathIndex(){
+  const text=document.getElementById('ai-result-text').innerHTML;
+  const newText=text.replace(/`([^`]+)`/g,(m,key)=>{
+    const p=allParams.find(a=>a.key===key)||importedParams.find(a=>a.key===key);
+    if(!p?.settings_path) return m;
+    return `<code title="📍 ${p.settings_path}">${key}</code>`;
+  });
+  document.getElementById('ai-result-text').innerHTML=newText;
+}
+function formatAI(text){
+  // Build param index from allParams + importedParams
+  const paramIdx={};
+  [...allParams,...importedParams].forEach(p=>{
+    if(p.key&&p.settings_path){
+      paramIdx[p.key]={path:p.settings_path,gate:p.settings_gate,name:p.name};
+    }
+  });
+
+  let html=text
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')
+    .replace(/`([^`\n]+)`/g,(m,k)=>{
+      const info=paramIdx[k];
+      if(!info) return `<code>${k}</code>`;
+      const gate=info.gate?`<span style="color:var(--yellow);margin-left:5px;font-size:.7rem">· ${info.gate}</span>`:'';
+      return `<span style="display:inline-flex;align-items:baseline;flex-wrap:wrap;gap:4px">
+        <code>${k}</code>
+        <span style="font-size:.7rem;color:var(--text2);font-family:monospace;background:var(--bg3);padding:1px 6px;border-radius:4px;border:1px solid var(--border)">📍 ${info.path}${gate?'':''}</span>${gate}
+      </span>`;
+    })
+    .replace(/^#{1,3} (.+)$/gm,'<strong style="font-size:.95rem;display:block;margin:12px 0 5px;color:var(--accent2)">$1</strong>')
+    .replace(/^[-*] (.+)$/gm,'<div style="padding:2px 0 2px 14px;position:relative"><span style="position:absolute;left:0;color:var(--accent)">•</span>$1</div>')
+    .replace(/^(\d+)\. (.+)$/gm,'<div style="padding:2px 0 2px 20px;position:relative"><span style="position:absolute;left:0;color:var(--accent);font-weight:700">$1.</span>$2</div>')
+    .replace(/\n/g,'<br>');
+  return html;
+}
+function copyAI(){
+  const text=document.getElementById('ai-result-text').textContent;
+  const btn=event.target;
+  if(navigator.clipboard&&window.isSecureContext){
+    navigator.clipboard.writeText(text).then(()=>{btn.textContent='✅';setTimeout(()=>btn.textContent='📋',2000);});
+  } else {
+    const ta=document.createElement('textarea');ta.value=text;ta.style.position='fixed';ta.style.opacity='0';
+    document.body.appendChild(ta);ta.select();
+    try{document.execCommand('copy');btn.textContent='✅';setTimeout(()=>btn.textContent='📋',2000);}
+    catch{btn.textContent='❌';setTimeout(()=>btn.textContent='📋',2000);}
+    document.body.removeChild(ta);
+  }
+}
+
+init();
+</script>
+</body>
+</html>
