@@ -531,8 +531,25 @@ async def decrypt_export(file: UploadFile = File(...), password: str = Form(...)
     orphaned_count = sum(1 for p in enriched if p["orphaned"])
     non_default_count = sum(1 for p in enriched if p.get("is_default") is False and not p["orphaned"])
 
+    # Calculate export age from metadata
+    meta = outer.get("metadata", {})
+    export_ts = meta.get("created_at") or meta.get("exportDate") or meta.get("date")
+    export_age_hours = None
+    if export_ts:
+        try:
+            from datetime import datetime, timezone
+            if isinstance(export_ts, (int, float)):
+                # Unix timestamp in ms
+                export_dt = datetime.fromtimestamp(export_ts / 1000, tz=timezone.utc)
+            else:
+                export_dt = datetime.fromisoformat(str(export_ts).replace("Z", "+00:00"))
+            export_age_hours = round((datetime.now(timezone.utc) - export_dt).total_seconds() / 3600, 1)
+        except Exception:
+            pass
+
     return {
-        "metadata": outer.get("metadata",{}),
+        "metadata": meta,
+        "export_age_hours": export_age_hours,
         "security_info": {"iterations": iterations, "algorithm": "PBKDF2WithHmacSHA1+AES/GCM"},
         "total_preferences": len(all_prefs),
         "aimi_count": len([p for p in enriched if p["has_definition"]]),
