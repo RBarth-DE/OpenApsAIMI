@@ -456,7 +456,14 @@ enum class DoubleKey(
     OApsAIMINightGrowthMaxIobExtra("key_oaps_aimi_ngr_max_iob_extra", 0.5, 0.0, 3.0),
 
     // --- AIMI Adaptive Basal ---
-    OApsAIMIHighBg(key = "OApsAIMIHighBg", 180.0, 140.0, 250.0), // seuil haut déclenchant les corrections plateau
+    OApsAIMIHighBg(
+        key = "OApsAIMIHighBg",
+        defaultValue = 180.0,
+        min = 140.0,
+        max = 250.0,
+        titleResId = R.string.pref_title_aimi_high_bg,
+        summaryResId = R.string.pref_summary_aimi_high_bg,
+    ),
     OApsAIMIHyperEstablishedDevMgdl(
         key = "key_aimi_hyper_established_dev_mgdl",
         defaultValue = 0.0,
@@ -555,7 +562,14 @@ enum class DoubleKey(
     /** 0 = parabolic PI only (legacy). >0 blends eventual BG + prediction curve timing into T3C basal. */
     OApsAIMIT3cAnticipationStrength("key_aimi_t3c_anticipation_strength", 0.0, 0.0, 1.0),
     OApsAIMIT3cAggressiveness("key_aimi_t3c_aggressiveness", 1.0, 0.5, 3.0),
-    OApsAIMIAdaptiveBasalMaxScaling("key_aimi_adaptive_basal_max_scaling", 1.0, 0.5, 2.0),
+    OApsAIMIAdaptiveBasalMaxScaling(
+        key = "key_aimi_adaptive_basal_max_scaling",
+        defaultValue = 1.0,
+        min = 0.5,
+        max = 2.0,
+        titleResId = R.string.pref_title_aimi_adaptive_basal_max_scaling,
+        summaryResId = R.string.pref_summary_aimi_adaptive_basal_max_scaling,
+    ),
 
     // --- AIMI adaptive basal governance (on-device; depends on Universal Adaptive Basal) ---
     OApsAIMIGovernanceHypoRateEnter(

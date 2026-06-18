@@ -58,6 +58,7 @@
     "summary": "Used in AIMI internal calculations for HighBg.",
     "default": 180.0,
     "min": 140.0,
+    "max": 250.0,
     "orphaned": false,
     "is_gate": false,
     "negative_gate_key": null,
@@ -67,7 +68,7 @@
     "used_in": [
       {
         "file": "OpenAPSAIMIPlugin.kt",
-        "function": "aimiComposeT3cSubScreen"
+        "function": "aimiComposeCoreSmbSubScreen"
       },
       {
         "file": "DetermineBasalAIMI2.kt",
@@ -2592,6 +2593,7 @@
     "summary": "Maximum scaling of adaptive basal rate.",
     "default": 1.0,
     "min": 0.5,
+    "max": 2.0,
     "orphaned": false,
     "is_gate": false,
     "negative_gate_key": null,
@@ -2601,7 +2603,7 @@
     "used_in": [
       {
         "file": "OpenAPSAIMIPlugin.kt",
-        "function": "aimiComposeT3cSubScreen"
+        "function": "aimiComposeAdaptiveBasalSubScreen"
       },
       {
         "file": "BasalNeuralLearner.kt",
@@ -2762,7 +2764,7 @@
     "used_in": [
       {
         "file": "OpenAPSAIMIPlugin.kt",
-        "function": "aimiComposeT3cSubScreen"
+        "function": "aimiComposeAdaptiveBasalSubScreen"
       },
       {
         "file": "BasalNeuralLearner.kt",
@@ -2794,7 +2796,7 @@
     "used_in": [
       {
         "file": "OpenAPSAIMIPlugin.kt",
-        "function": "aimiComposeT3cSubScreen"
+        "function": "aimiComposeAdaptiveBasalSubScreen"
       },
       {
         "file": "BasalNeuralLearner.kt",
@@ -2826,7 +2828,7 @@
     "used_in": [
       {
         "file": "OpenAPSAIMIPlugin.kt",
-        "function": "aimiComposeT3cSubScreen"
+        "function": "aimiComposeAdaptiveBasalSubScreen"
       },
       {
         "file": "BasalNeuralLearner.kt",
@@ -2858,7 +2860,7 @@
     "used_in": [
       {
         "file": "OpenAPSAIMIPlugin.kt",
-        "function": "aimiComposeT3cSubScreen"
+        "function": "aimiComposeAdaptiveBasalSubScreen"
       },
       {
         "file": "BasalNeuralLearner.kt",
@@ -2890,7 +2892,7 @@
     "used_in": [
       {
         "file": "OpenAPSAIMIPlugin.kt",
-        "function": "aimiComposeT3cSubScreen"
+        "function": "aimiComposeAdaptiveBasalSubScreen"
       },
       {
         "file": "BasalNeuralLearner.kt",
@@ -2922,7 +2924,7 @@
     "used_in": [
       {
         "file": "OpenAPSAIMIPlugin.kt",
-        "function": "aimiComposeT3cSubScreen"
+        "function": "aimiComposeAdaptiveBasalSubScreen"
       },
       {
         "file": "BasalNeuralLearner.kt",
@@ -2954,7 +2956,7 @@
     "used_in": [
       {
         "file": "OpenAPSAIMIPlugin.kt",
-        "function": "aimiComposeT3cSubScreen"
+        "function": "aimiComposeAdaptiveBasalSubScreen"
       },
       {
         "file": "BasalNeuralLearner.kt",
@@ -2986,7 +2988,7 @@
     "used_in": [
       {
         "file": "OpenAPSAIMIPlugin.kt",
-        "function": "aimiComposeT3cSubScreen"
+        "function": "aimiComposeAdaptiveBasalSubScreen"
       },
       {
         "file": "BasalNeuralLearner.kt",
@@ -3018,7 +3020,7 @@
     "used_in": [
       {
         "file": "OpenAPSAIMIPlugin.kt",
-        "function": "aimiComposeT3cSubScreen"
+        "function": "aimiComposeAdaptiveBasalSubScreen"
       },
       {
         "file": "BasalNeuralLearner.kt",
@@ -3050,7 +3052,7 @@
     "used_in": [
       {
         "file": "OpenAPSAIMIPlugin.kt",
-        "function": "aimiComposeT3cSubScreen"
+        "function": "aimiComposeAdaptiveBasalSubScreen"
       },
       {
         "file": "BasalNeuralLearner.kt",
@@ -3082,7 +3084,7 @@
     "used_in": [
       {
         "file": "OpenAPSAIMIPlugin.kt",
-        "function": "aimiComposeT3cSubScreen"
+        "function": "aimiComposeAdaptiveBasalSubScreen"
       },
       {
         "file": "BasalNeuralLearner.kt",
@@ -3114,7 +3116,7 @@
     "used_in": [
       {
         "file": "OpenAPSAIMIPlugin.kt",
-        "function": "aimiComposeT3cSubScreen"
+        "function": "aimiComposeAdaptiveBasalSubScreen"
       },
       {
         "file": "BasalNeuralLearner.kt",
@@ -3146,7 +3148,7 @@
     "used_in": [
       {
         "file": "OpenAPSAIMIPlugin.kt",
-        "function": "aimiComposeT3cSubScreen"
+        "function": "aimiComposeAdaptiveBasalSubScreen"
       },
       {
         "file": "BasalNeuralLearner.kt",
@@ -3178,7 +3180,7 @@
     "used_in": [
       {
         "file": "OpenAPSAIMIPlugin.kt",
-        "function": "aimiComposeT3cSubScreen"
+        "function": "aimiComposeAdaptiveBasalSubScreen"
       },
       {
         "file": "BasalNeuralLearner.kt",
@@ -3210,7 +3212,7 @@
     "used_in": [
       {
         "file": "OpenAPSAIMIPlugin.kt",
-        "function": "aimiComposeT3cSubScreen"
+        "function": "aimiComposeAdaptiveBasalSubScreen"
       },
       {
         "file": "BasalNeuralLearner.kt",
@@ -3242,7 +3244,7 @@
     "used_in": [
       {
         "file": "OpenAPSAIMIPlugin.kt",
-        "function": "aimiComposeT3cSubScreen"
+        "function": "aimiComposeAdaptiveBasalSubScreen"
       },
       {
         "file": "BasalNeuralLearner.kt",
@@ -5851,7 +5853,7 @@
     "used_in": [
       {
         "file": "OpenAPSAIMIPlugin.kt",
-        "function": "aimiComposeT3cSubScreen"
+        "function": "aimiComposeAdaptiveBasalSubScreen"
       },
       {
         "file": "DetermineBasalAIMI2.kt",

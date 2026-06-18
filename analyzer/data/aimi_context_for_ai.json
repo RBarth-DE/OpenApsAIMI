@@ -1,6 +1,6 @@
 {
   "version": "2.2",
-  "generated_at": "2026-06-18T11:27:07.584384+00:00",
+  "generated_at": "2026-06-18T21:19:24.384219+00:00",
   "algorithm_overview": {
     "name": "AIMI (AI-powered Modular Insulin)",
     "base": "OpenAPS oref1 with extensive extensions",
@@ -429,7 +429,7 @@
       "workaround": "None — parameters are ineffective."
     }
   ],
-  "source_commit": "2219e2f89fe9becba4ea12eb1d13f4304eff48a9",
+  "source_commit": "6e44610ce62716478e6c2c4f8ddd16a1205679e1",
   "parameter_knowledge": [
     {
       "key": "AIMI_UAM_CONFIDENCE",
@@ -453,7 +453,7 @@
       "impact": "medium",
       "settings_path": "AIMI → Preferences user → Core",
       "usage_type": "",
-      "function": "aimiComposeT3cSubScreen"
+      "function": "aimiComposeCoreSmbSubScreen"
     },
     {
       "key": "OApsAIMILastEstimatedCarbTime",
@@ -1447,7 +1447,7 @@
       "impact": "medium",
       "settings_path": "AIMI → Preferences user → T3C Brittle Mode Settings",
       "usage_type": "",
-      "function": "aimiComposeT3cSubScreen"
+      "function": "aimiComposeAdaptiveBasalSubScreen"
     },
     {
       "key": "key_aimi_advisor_llm_rich_oref",
@@ -1519,7 +1519,7 @@
       "impact": "medium",
       "settings_path": "AIMI → Preferences user → Governance",
       "usage_type": "",
-      "function": "aimiComposeT3cSubScreen"
+      "function": "aimiComposeAdaptiveBasalSubScreen"
     },
     {
       "key": "key_aimi_gov_anticipation_hypo_damp",
@@ -1531,7 +1531,7 @@
       "impact": "critical",
       "settings_path": "AIMI → Preferences user → Governance",
       "usage_type": "",
-      "function": "aimiComposeT3cSubScreen"
+      "function": "aimiComposeAdaptiveBasalSubScreen"
     },
     {
       "key": "key_aimi_gov_anticipation_lookback_samples",
@@ -1543,7 +1543,7 @@
       "impact": "medium",
       "settings_path": "AIMI → Preferences user → Governance",
       "usage_type": "",
-      "function": "aimiComposeT3cSubScreen"
+      "function": "aimiComposeAdaptiveBasalSubScreen"
     },
     {
       "key": "key_aimi_gov_anticipation_margin_mgdl",
@@ -1555,7 +1555,7 @@
       "impact": "medium",
       "settings_path": "AIMI → Preferences user → Governance",
       "usage_type": "",
-      "function": "aimiComposeT3cSubScreen"
+      "function": "aimiComposeAdaptiveBasalSubScreen"
     },
     {
       "key": "key_aimi_gov_hold_agg_decay_rate",
@@ -1567,7 +1567,7 @@
       "impact": "medium",
       "settings_path": "AIMI → Preferences user → Governance",
       "usage_type": "",
-      "function": "aimiComposeT3cSubScreen"
+      "function": "aimiComposeAdaptiveBasalSubScreen"
     },
     {
       "key": "key_aimi_gov_hold_agg_decay_severe",
@@ -1579,7 +1579,7 @@
       "impact": "medium",
       "settings_path": "AIMI → Preferences user → Governance",
       "usage_type": "",
-      "function": "aimiComposeT3cSubScreen"
+      "function": "aimiComposeAdaptiveBasalSubScreen"
     },
     {
       "key": "key_aimi_gov_hold_agg_floor_rate",
@@ -1591,7 +1591,7 @@
       "impact": "medium",
       "settings_path": "AIMI → Preferences user → Governance",
       "usage_type": "",
-      "function": "aimiComposeT3cSubScreen"
+      "function": "aimiComposeAdaptiveBasalSubScreen"
     },
     {
       "key": "key_aimi_gov_hold_agg_floor_severe",
@@ -1603,7 +1603,7 @@
       "impact": "medium",
       "settings_path": "AIMI → Preferences user → Governance",
       "usage_type": "",
-      "function": "aimiComposeT3cSubScreen"
+      "function": "aimiComposeAdaptiveBasalSubScreen"
     },
     {
       "key": "key_aimi_gov_hold_basal_decay_rate",
@@ -1615,7 +1615,7 @@
       "impact": "medium",
       "settings_path": "AIMI → Preferences user → Governance",
       "usage_type": "",
-      "function": "aimiComposeT3cSubScreen"
+      "function": "aimiComposeAdaptiveBasalSubScreen"
     },
     {
       "key": "key_aimi_gov_hold_basal_decay_severe",
@@ -1627,7 +1627,7 @@
       "impact": "medium",
       "settings_path": "AIMI → Preferences user → Governance",
       "usage_type": "",
-      "function": "aimiComposeT3cSubScreen"
+      "function": "aimiComposeAdaptiveBasalSubScreen"
     },
     {
       "key": "key_aimi_gov_hold_basal_floor_rate",
@@ -1639,7 +1639,7 @@
       "impact": "medium",
       "settings_path": "AIMI → Preferences user → Governance",
       "usage_type": "",
-      "function": "aimiComposeT3cSubScreen"
+      "function": "aimiComposeAdaptiveBasalSubScreen"
     },
     {
       "key": "key_aimi_gov_hold_basal_floor_severe",
@@ -1651,7 +1651,7 @@
       "impact": "medium",
       "settings_path": "AIMI → Preferences user → Governance",
       "usage_type": "",
-      "function": "aimiComposeT3cSubScreen"
+      "function": "aimiComposeAdaptiveBasalSubScreen"
     },
     {
       "key": "key_aimi_gov_hypo_bg_mgdl",
@@ -1663,7 +1663,7 @@
       "impact": "critical",
       "settings_path": "AIMI → Preferences user → Governance",
       "usage_type": "",
-      "function": "aimiComposeT3cSubScreen"
+      "function": "aimiComposeAdaptiveBasalSubScreen"
     },
     {
       "key": "key_aimi_gov_hypo_rate_enter",
@@ -1675,7 +1675,7 @@
       "impact": "critical",
       "settings_path": "AIMI → Preferences user → Governance",
       "usage_type": "",
-      "function": "aimiComposeT3cSubScreen"
+      "function": "aimiComposeAdaptiveBasalSubScreen"
     },
     {
       "key": "key_aimi_gov_hypo_rate_exit",
@@ -1687,7 +1687,7 @@
       "impact": "critical",
       "settings_path": "AIMI → Preferences user → Governance",
       "usage_type": "",
-      "function": "aimiComposeT3cSubScreen"
+      "function": "aimiComposeAdaptiveBasalSubScreen"
     },
     {
       "key": "key_aimi_gov_severe_hypo_bg_mgdl",
@@ -1699,7 +1699,7 @@
       "impact": "critical",
       "settings_path": "AIMI → Preferences user → Governance",
       "usage_type": "",
-      "function": "aimiComposeT3cSubScreen"
+      "function": "aimiComposeAdaptiveBasalSubScreen"
     },
     {
       "key": "key_aimi_hyper_deep_dev_mgdl",
@@ -2883,7 +2883,7 @@
       "impact": "high",
       "settings_path": "AIMI → Preferences user → T3C Adaptive Basal",
       "usage_type": "",
-      "function": "aimiComposeT3cSubScreen"
+      "function": "aimiComposeAdaptiveBasalSubScreen"
     },
     {
       "key": "key_wcycle_avg_length",

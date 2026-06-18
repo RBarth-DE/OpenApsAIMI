@@ -132,18 +132,20 @@ import kotlinx.serialization.json.JsonObject
  * AIMI Settings Restructuring — 2026-06-10
  *
  * Changes:
- * - Merged aimiComposeAdaptiveBasalSubScreen() into aimiComposeT3cSubScreen()
+ * - Restored aimiComposeAdaptiveBasalSubScreen() as separate screen (Universal Adaptive Basal + Governance)
+ *   — independent from T3c Brittle Mode; both systems feed into adaptiveMult via different paths
+ * - Moved OApsAIMIHighBg to Core SMB screen (general high-BG threshold, no code dependency on T3c or Adaptive Basal)
  * - Added aimiComposeCoreSmbSubScreen() for always-active core params (MaxSMB, weight, CHO, TDD7, etc.)
  * - Removed duplicate inline params (MaxSMB, HighBGMaxSMB, weight, CHO, TDD7) now in CoreSMB screen
  * - Commented out orphaned parameters (defined but not read by DetermineBasalAIMI2.kt):
  *   - NGR: MinRiseSlope, MaxSmbClamp, DecayMinutes, MinDuration, MinEventualOverTarget
  *   - Meals: all *Factor params (BF, Lunch, Dinner, HC, Snack, Meal, FCL, Sleep)
  *   - T3c: Aggressiveness
- *   - AdaptiveBasal: AdaptiveBasalMaxScaling (orphaned; screen merged into T3c)
+ *   - AdaptiveBasal: AdaptiveBasalMaxScaling (restored; now in own sub-screen with Governance params)
  * - Restructured aimiComposeUserPreferenceItems() for logical grouping:
  *   1a. AI & SOS (AI keys, RemoteControlPin, SOS), 1b. Advisor (ControlCenter, PKPD guided, Physio),
  *   2. Core SMB (new), 3. PKPD (unchanged),
- *   4. Adaptive & Safety (T3c merged, Trajectory), 5. Biorhythm (Keto),
+ *   4. Adaptive & Safety (T3c, Adaptive Basal, Trajectory), 5. Biorhythm (Keto),
  *   6. Special populations (Women's Cycle, NGR)
  * - Removed aimiComposePatientContextSubScreen (duplicated items from CoreSMB + Section 6)
  * - Moved OApsAIMInight into NGR (was only unique item in PatientContext)
@@ -1651,7 +1653,8 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
         // ── 4. Adaptive & Safety ──
         add(aimiComposeAutodriveSubScreen())
 
-        add(aimiComposeT3cSubScreen())              // T3c + Adaptive Basal (merged)
+        add(aimiComposeT3cSubScreen())
+        add(aimiComposeAdaptiveBasalSubScreen())      // Universal Adaptive Basal + Governance
         add(aimiComposeTrajectorySubScreen())
 
         // ── 5. Biorhythm & Safety ──
@@ -1692,25 +1695,29 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
             },
         )
 
-    // REMOVED: aimiComposeAdaptiveBasalSubScreen() — merged into aimiComposeT3cSubScreen()
-    //   - OApsAIMIHighBg moved to T3c as plateau correction threshold
-    //   - Governance params uncommented in T3c with proper dependency on OApsAIMIT3cAdaptiveBasalEnabled
-    //   - OApsAIMIAdaptiveBasalMaxScaling added back below (read by BasalNeuralLearner.kt::getUniversalBasalMultiplier)
-
     private fun aimiComposeT3cSubScreen(): PreferenceSubScreenDef =
         PreferenceSubScreenDef(
             key = "aimi_compose_t3c",
             titleResId = R.string.aimi_t3c_settings_title,
             items = listOf(
-                // T3c Brittle
                 BooleanKey.OApsAIMIT3cBrittleMode,
                 DoubleKey.OApsAIMIT3cActivationThreshold,
-                DoubleKey.OApsAIMIT3cAggressiveness,  // Read by BasalNeuralLearner.kt::getT3cAdaptiveFactor — not orphaned
+                DoubleKey.OApsAIMIT3cAggressiveness,  // Read by BasalNeuralLearner.kt::getT3cAdaptiveFactor
                 DoubleKey.OApsAIMIT3cAnticipationStrength,
-                // Adaptive Basal Gate + Governance (formerly aimiComposeAdaptiveBasalSubScreen — merged)
+            ),
+        )
+
+    // Universal Adaptive Basal runs in BOTH T3c and standard AIMI paths via adaptiveMult.
+    // Separate screen because T3cBrittleMode gates executeT3cBrittleMode() (PI-only),
+    // while T3cAdaptiveBasalEnabled gates getUniversalBasalMultiplier() which feeds
+    // adaptiveMult in all code paths. The two systems are independent.
+    private fun aimiComposeAdaptiveBasalSubScreen(): PreferenceSubScreenDef =
+        PreferenceSubScreenDef(
+            key = "aimi_compose_adaptive_basal",
+            titleResId = R.string.oaps_aimi_adaptive_basal_title,
+            items = listOf(
                 BooleanKey.OApsAIMIT3cAdaptiveBasalEnabled,
                 DoubleKey.OApsAIMIAdaptiveBasalMaxScaling,  // Read by BasalNeuralLearner.kt::getUniversalBasalMultiplier
-                DoubleKey.OApsAIMIHighBg,               // Plateau correction threshold (from merged AdaptiveBasal screen)
                 DoubleKey.OApsAIMIGovernanceHypoRateEnter,
                 DoubleKey.OApsAIMIGovernanceHypoRateExit,
                 DoubleKey.OApsAIMIGovernanceHypoBgMgdl,
@@ -1741,6 +1748,7 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
                 DoubleKey.OApsAIMIweight,
                 DoubleKey.OApsAIMICHO,
                 DoubleKey.OApsAIMITDD7,
+                DoubleKey.OApsAIMIHighBg,              // General high-BG threshold — used across HTR, phase classifier, scenario projection, exercise overrides
                 BooleanKey.OApsAIMIUnifiedReactivityEnabled,
                 // BooleanKey.OApsAIMIEnableBasal, // ORPHANED — not read by DetermineBasalAIMI2.kt
                 // OApsAIMIIobSurveillanceGuard → in PKPD screen (Red Carpet / IOB Surveillance)
