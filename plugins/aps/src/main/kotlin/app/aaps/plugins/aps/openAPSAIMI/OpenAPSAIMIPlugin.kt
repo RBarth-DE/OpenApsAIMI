@@ -1582,8 +1582,6 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
                 },
             ),
         )
-        add(aimiComposePkpdGuidedSubScreen())
-        add(aimiComposePatientContextSubScreen())
         add(
             PreferenceSubScreenDef(
                 key = "aimi_compose_sos",
@@ -1611,18 +1609,7 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
             )
         )
 
-        // ── 1b. Advisor ──
-        add(
-            ApsIntentKey.AimiControlCenter.withCompose(
-                ComposeScreenContent { onBack ->
-                    AimiControlCenterScreen(
-                        preferences = preferences,
-                        tpoOrchestrator = tpoOrchestrator,
-                        onBack = onBack,
-                    )
-                },
-            ),
-        )
+        // ── 1b. Manual modes & Advisor ──
         add(aimiComposeManualModesSubScreen())
 
         add(
@@ -1670,9 +1657,8 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
         // ── 5. Biorhythm & Safety ──
         add(aimiComposeKetoProtectionSubScreen())
 
-        // ── 6. Special populations ──
-        add(aimiComposeWomenCycleSubScreen())
-        add(aimiComposeNightGrowthSubScreen())
+        // ── 6. Patient & Body ──
+        add(aimiComposePatientContextSubScreen())
     }
 
     private fun aimiComposeTpoSubScreen(): PreferenceSubScreenDef =
@@ -1691,18 +1677,18 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
             key = "aimi_compose_patient_context",
             titleResId = R.string.aimi_patient_context_title,
             items = buildList {
-                add(DoubleKey.OApsAIMIweight)
-                add(DoubleKey.OApsAIMICHO)
-                add(DoubleKey.OApsAIMITDD7)
+                // Basic patient data (weight/CHO/TDD7 are in Core SMB screen)
                 add(BooleanKey.OApsAIMIpregnancy)
                 add(AimiStringKey.PregnancyDueDateString)
                 add(BooleanKey.OApsAIMIhoneymoon)
                 add(BooleanKey.OApsAIMInight)
+                // Special populations
                 add(aimiComposeWomenCycleSubScreen())
+                add(aimiComposeNightGrowthSubScreen())
+                // Comorbidities
                 add(aimiComposeInflammatorySubScreen())
                 add(aimiComposeThyroidModuleSubScreen())
                 add(aimiComposeEndometriosisSubScreen())
-                add(aimiComposeNightGrowthSubScreen())
             },
         )
 
@@ -1757,7 +1743,7 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
                 DoubleKey.OApsAIMITDD7,
                 BooleanKey.OApsAIMIUnifiedReactivityEnabled,
                 // BooleanKey.OApsAIMIEnableBasal, // ORPHANED — not read by DetermineBasalAIMI2.kt
-                BooleanKey.OApsAIMIIobSurveillanceGuard,
+                // OApsAIMIIobSurveillanceGuard → in PKPD screen (Red Carpet / IOB Surveillance)
             ),
         )
 

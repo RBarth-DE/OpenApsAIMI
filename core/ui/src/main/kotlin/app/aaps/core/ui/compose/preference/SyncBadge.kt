@@ -56,7 +56,7 @@ fun SyncBadge(key: NonPreferenceKey?, modifier: Modifier = Modifier) =
 @Composable
 fun PreferenceTitleWithSyncBadge(titleResId: Int, key: NonPreferenceKey?) {
     Row(verticalAlignment = Alignment.CenterVertically) {
-        Text(stringResource(titleResId))
+        Text(preferenceDisplayTitle(titleResId, key?.key ?: ""))
         SyncBadge(key, Modifier.padding(start = 6.dp))
     }
 }

@@ -103,7 +103,7 @@ fun AdaptiveDoublePreferenceItem(
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
-                    text = stringResource(effectiveTitleResId),
+                    text = titleText,
                     style = theme.titleTextStyle,
                     color = theme.titleColor
                 )
