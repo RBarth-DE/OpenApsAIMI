@@ -12811,7 +12811,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         // duration 30 min, during the first 30 minutes of the mode — reaffirmed at each P1/P2 tick,
         // and via the *_MAINT tags below when no prebolus matches (e.g., minutes 8–14 or 23–29).
         fun manualMealModeTbr(runtimeMin: Long, logTag: String, overrideSafetyLimits: Boolean) {
-            if (runtimeMin < 0 || runtimeMin >= 60) return
+            if (runtimeMin < 0 || runtimeMin >= 30) return
             val rateUh = modeTbrLimit.coerceAtLeast(0.05)
             setTempBasal(
                 rateUh,
@@ -12848,7 +12848,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                 snackTime   -> snackrunTime
                 else        -> 0L
             }
-            if (anyMealActive && anyRuntime in 0..59) {
+            if (anyMealActive && anyRuntime in 0..29) {
                 manualMealModeTbr(anyRuntime, "MAINT_PB1_PRIORITY", overrideSafetyLimits = false)
                 rT.units = pendingLegacyPrebolusUnit.toDouble()
                 consoleLog.add("🍱 LEGACY_PB1_PRIORITY_CARRY: ${pendingLegacyPrebolusUnit}U (PB1 vor PB2)")
@@ -12948,13 +12948,13 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         }
         // Même priorité que les blocs prébolus ci‑dessus : premier mode actif dans les 30 premières minutes gagne.
         val legacyMealMaint = when {
-            mealTime     && mealruntime     in 0..59 -> mealruntime     to "MEAL_MAINT"
-            bfastTime    && bfastruntime    in 0..59 -> bfastruntime    to "BF_MAINT"
-            lunchTime    && lunchruntime    in 0..59 -> lunchruntime    to "LUNCH_MAINT"
-            dinnerTime   && dinnerruntime   in 0..59 -> dinnerruntime   to "DINNER_MAINT"
-            highCarbTime && highCarbrunTime in 0..59 -> highCarbrunTime to "HC_MAINT"
-            snackTime    && snackrunTime    in 0..59 -> snackrunTime    to "SNACK_MAINT"
-            else -> null
+            mealTime && mealruntime in 0..29         -> mealruntime to "MEAL_MAINT"
+            bfastTime && bfastruntime in 0..29       -> bfastruntime to "BF_MAINT"
+            lunchTime && lunchruntime in 0..29       -> lunchruntime to "LUNCH_MAINT"
+            dinnerTime && dinnerruntime in 0..29     -> dinnerruntime to "DINNER_MAINT"
+            highCarbTime && highCarbrunTime in 0..29 -> highCarbrunTime to "HC_MAINT"
+            snackTime && snackrunTime in 0..29       -> snackrunTime to "SNACK_MAINT"
+            else                                     -> null
         }
         if (legacyMealMaint != null) {
             manualMealModeTbr(legacyMealMaint.first, legacyMealMaint.second,
