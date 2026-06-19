@@ -21,7 +21,6 @@ import org.mockito.Mock
 import org.mockito.kotlin.any
 import org.mockito.kotlin.anyOrNull
 import org.mockito.kotlin.eq
-import org.mockito.kotlin.timeout
 import org.mockito.kotlin.never
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
@@ -67,10 +66,11 @@ class TidepoolPluginTest : TestBaseWithProfile() {
             receiverDelegate, authFlowOut, tidepoolRepository, dateUtil, persistenceLayer
         )
         runBlocking { plugin.onStart() }
+        Thread.sleep(500) // Ensure flow collector has started and processed initial value
         connectivityFlow.value = ConnectivityStatus("Connected", allowed = true, connected = true)
-        // Poll up to 5s for the Dispatchers.IO collector to process, instead of fixed sleeps that flake under
-        // CI load. The StateFlow replays its latest value on collection, so ordering vs onStart() is irrelevant.
-        verify(authFlowOut, timeout(5_000)).updateConnectionStatus(eq(AuthFlowOut.ConnectionStatus.FETCHING_TOKEN), eq("Connecting"))
+        Thread.sleep(1000) // Allow flow collector on Dispatchers.IO to process
+
+        verify(authFlowOut).updateConnectionStatus(eq(AuthFlowOut.ConnectionStatus.FETCHING_TOKEN), eq("Connecting"))
         runBlocking { plugin.onStop() }
     }
 
