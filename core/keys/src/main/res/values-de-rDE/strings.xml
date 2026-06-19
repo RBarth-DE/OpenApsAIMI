@@ -490,13 +490,14 @@
         <string name="aimi_gov_anticipation_hypo_damp_summary">Bei hoher Entlastung wird die gewichtete Hypo-Rate für HOLD-Eintritt/Austritt mit (1 minus diesem Bruchteil mal Entlastung) multipliziert. 0 deaktiviert die Hypo-Dämpfung aus Vorhersagen.</string>
         <string name="aimi_gov_anticipation_decay_blend_max_title">Governance: Abmilderung des HOLD-Abklingens durch Antizipation</string>
         <string name="aimi_gov_anticipation_decay_blend_max_summary">Begrenzt, wie stark das Abklingen von HOLD-Basal/Aggressivität in Richtung Neutral gelockert wird, wenn die Vorhersage-Entlastung hoch ist. 0 lässt das Abklingen durch Antizipation unverändert.</string>
-    -->
+
         <string name="ketoacidosis_protection_title">Ketoazidose-Schutz</string>
         <string name="ketoacidosis_protection_summary">Aktiviert eine kleine Sicherheits-TBR anstelle von null TBR, um das Risiko einer Ketoazidose zu verringern.</string>
         <string name="ketoacidosis_protection_strategy_title">Variable Strategie?</string>
         <string name="ketoacidosis_protection_strategy_summary">Wenn diese Funktion aktiviert ist, wird die kleine Sicherheits-TBR aktiviert, wenn der IOB im negativen Bereich liegt, als ob eine halbe Stunde lang kein Basalinsulin abgegeben worden wäre. Wenn diese Funktion deaktiviert ist, wird jeder Zero Temp durch die kleine TBR ersetzt.</string>
         <string name="ketoacidosis_protection_basal_title">Sicherheits-TBR in [%]</string>
         <string name="ketoacidosis_protection_basal_summary">Standard: 10</string>
+        -->
         <string name="pref_activ_mon_title_activity_detection">Aktivitätsanzeige aktivieren</string>
         <string name="pref_activ_mon_sum_activity_detection">Hauptschalter. Aus → activityRatio = 1,0 zu jeder Zeit, keine Auswirkung auf ISF/Basal.</string>
         <string name="pref_activ_mon_title_ignore_inactivity_overnight">Nächtliche Inaktivität ignorieren</string>
@@ -518,13 +519,15 @@
         <string name="pref_title_vico_bg_reading_tint">BZ Punktfarbe</string>
         <string name="pref_summary_vico_bg_reading_tint">Farbton für einzelne CGM-Punkte im Hauptglukosediagramm. Die nach Bereichen farblich gekennzeichneten Punkte bleiben unverändert.</string>
         <string name="pref_title_vico_chart_backdrop">Hintergrundstil des Diagramms</string>
-        <string name="pref_summary_vico_chart_backdrop">Hintergrund hinter dem Armaturenbrett / Übersicht über die Blutzuckerkurve.</string>
+        <string name="pref_summary_vico_chart_backdrop">Hintergrund hinter dem Dashboard / Übersicht über die Blutzuckerkurve.</string>
         <string name="pref_vico_tint_theme">Standarddesign</string>
         <string name="pref_vico_backdrop_theme">Standarddesign</string>
+    <!-- keep english version for data analyis of AIv
         <string name="pref_title_aimi_dyn_isf_trajectory_tuning">DynISF: Verlaufsoptimierung (CGM-Geometrie)</string>
         <string name="pref_summary_aimi_dyn_isf_trajectory_tuning">Verwendet dieselben CGM-Funktionen mit kurzem Zeithorizont wie AutoISF (Deltas, parabolische Projektion, Beschleunigung), jedoch nur, wenn die Qualitätskriterien erfüllt sind. Begrenzte Änderung pro Tick; wird übersprungen, wenn die physikalische Modellierung die ISF bereits stark strafft. Erfordert dynamische Empfindlichkeit. Standardmäßig deaktiviert.</string>
         <string name="pref_title_aimi_dyn_isf_trajectory_shadow">DynISF-Trajektorie: nur Schatten</string>
         <string name="pref_summary_aimi_dyn_isf_trajectory_shadow">Wenn diese Option aktiviert ist, wird der voraussichtliche ISF-Multiplikator protokolliert, der angezeigte DynISF-Wert wird jedoch nicht geändert. Deaktivieren Sie diese Option, sobald Sie dem Signal in den Protokollen vertrauen.</string>
         <string name="pref_title_aimi_dyn_isf_trajectory_max_fraction">DynISF-Verlauf: maximale ISF-Änderung pro Tick</string>
         <string name="pref_title_aimi_autodrive_v3_authoritative">"Autodrive V3 maßgeblich SMB "</string>
+        -->
     </resources>

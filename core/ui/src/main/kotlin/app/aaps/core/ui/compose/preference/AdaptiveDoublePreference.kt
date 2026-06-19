@@ -89,6 +89,7 @@ fun AdaptiveDoublePreferenceItem(
 
     // Get summary if available
     val summaryResId = doubleKey.summaryResId
+        ?: app.aaps.core.keys.AimiPreferenceSummaries.map[doubleKey.key]
     val summary = if (summaryResId != null && summaryResId != 0) stringResource(summaryResId) else null
 
     // Use slider if min/max range is specified (not default extreme values)

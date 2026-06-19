@@ -62,6 +62,7 @@ fun AdaptiveIntPreferenceItem(
 
     // Get summary if available
     val summaryResId = intKey.summaryResId
+        ?: app.aaps.core.keys.AimiPreferenceSummaries.map[intKey.key]
     val summary = if (summaryResId != null && summaryResId != 0) stringResource(summaryResId) else null
 
     // Use slider if min/max range is specified (not default extreme values)

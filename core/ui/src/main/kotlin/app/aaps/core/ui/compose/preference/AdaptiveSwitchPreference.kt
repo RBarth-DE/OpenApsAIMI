@@ -36,7 +36,9 @@ fun AdaptiveSwitchPreferenceItem(
     visibilityContext: PreferenceVisibilityContext? = null
 ) {
     val effectiveTitleResId = if (titleResId != 0) titleResId else booleanKey.titleResId
-    val effectiveSummaryResId = summaryResId ?: booleanKey.summaryResId
+    val effectiveSummaryResId = summaryResId
+        ?: booleanKey.summaryResId
+        ?: app.aaps.core.keys.AimiPreferenceSummaries.map[booleanKey.key]
     val titleText = preferenceDisplayTitle(effectiveTitleResId, booleanKey.key)
 
     val visibility = calculatePreferenceVisibility(
