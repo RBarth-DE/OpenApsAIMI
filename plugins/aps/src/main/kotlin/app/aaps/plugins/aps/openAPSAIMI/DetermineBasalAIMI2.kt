@@ -7061,6 +7061,13 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             finalAdaptiveMultiplier = 1.0
             lastDecisionSource = t3cNativePlan.decisionSource
             b.rT.reason.append("; 🌳T3C_NATIVE_BASAL_FIRST")
+        } else if (preferences.get(BooleanKey.OApsAIMIT3cBrittleMode)) {
+            // T3C brittle mode: when native T3C basal first is blocked,
+            // preserve original brittle behaviour — only prebolus1/prebolus2, no SMB
+            b.rT.units = 0.0
+            b.rT.insulinReq = 0.0
+            b.rT.reason.append("; 🌳T3C_NO_SMB")
+            consoleLog.add("🌳 T3C_NATIVE: SMB blocked (T3C brittle mode active, native basal first blocked)")
         }
 
         val finalResult = setTempBasal(
