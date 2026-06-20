@@ -11,8 +11,8 @@ import app.aaps.core.keys.IntKey
 import app.aaps.core.keys.StringKey
 import app.aaps.core.keys.interfaces.Preferences
 import app.aaps.plugins.aps.openAPSAIMI.pkpd.PkPdRuntime
-import app.aaps.plugins.aps.openAPSAIMI.model.*
 import app.aaps.plugins.aps.openAPSAIMI.advisor.auditor.ui.AuditorStatusLiveData
+import app.aaps.plugins.aps.openAPSAIMI.model.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -45,9 +45,9 @@ class AuditorOrchestrator @Inject constructor(
     private val preferences: Preferences,
     private val dataCollector: AuditorDataCollector,
     private val aiService: AuditorAIService,
+    private val auditorStatusLiveData: AuditorStatusLiveData,
     private val aapsLogger: AAPSLogger,
-    private val physioAdapter: app.aaps.plugins.aps.openAPSAIMI.physio.AIMIInsulinDecisionAdapterMTR,
-    private val auditorStatusLiveData: AuditorStatusLiveData
+    private val physioAdapter: app.aaps.plugins.aps.openAPSAIMI.physio.AIMIInsulinDecisionAdapterMTR
 ) {
     // 🔄 New State Transition Manager
     private val stateManager = AimiStateTransitionManager(aapsLogger)
@@ -149,7 +149,8 @@ class AuditorOrchestrator @Inject constructor(
         callback: ((AuditorVerdict?, DecisionResult) -> Unit)? = null
     ) {
         val now = System.currentTimeMillis()
-        
+        AuditorVerdictCache.noteCurrentBg(glucoseStatus?.date)
+
         // Check if auditor is enabled
         if (!isAuditorEnabled()) {
             aapsLogger.debug(LTag.APS, "AI Auditor: Disabled")
@@ -400,7 +401,8 @@ class AuditorOrchestrator @Inject constructor(
                     lastVerdictTime = now
                     
                     // Update global cache for RT instrumentation
-                    AuditorVerdictCache.update(verdict, modulated)
+                    AuditorVerdictCache.update(verdict, modulated, glucoseStatus?.date)
+                    auditorStatusLiveData.notifyUpdate()
 
                     // Update status tracker and notify UI (success path)
                     val okStatus = when (verdict.verdict) {
@@ -409,7 +411,6 @@ class AuditorOrchestrator @Inject constructor(
                         else -> AuditorStatusTracker.Status.OK_CONFIRM
                     }
                     AuditorStatusTracker.updateStatus(okStatus)
-                    auditorStatusLiveData.notifyUpdate()
 
                     callback?.invoke(verdict, modulated)
                 } else {
