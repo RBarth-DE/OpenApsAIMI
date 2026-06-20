@@ -10,6 +10,7 @@ import app.aaps.plugins.aps.openAPSAIMI.di.WCycleModule
 import app.aaps.plugins.aps.openAPSAIMI.advisor.AimiModeSettingsActivity
 import app.aaps.plugins.aps.openAPSAIMI.advisor.AimiProfileAdvisorActivity
 import app.aaps.plugins.aps.openAPSAutoISF.advisor.AutoIsfProfileAdvisorActivity
+import app.aaps.plugins.aps.openAPSAIMI.advisor.auditor.ui.AuditorReportActivity
 import app.aaps.plugins.aps.openAPSAIMI.advisor.meal.MealAdvisorActivity
 import app.aaps.plugins.aps.openAPSAIMI.context.ui.ContextActivity
 import dagger.Binds
@@ -34,6 +35,7 @@ abstract class ApsModule {
 
     @ContributesAndroidInjector abstract fun contributesAimiProfileAdvisorActivity(): AimiProfileAdvisorActivity
     @ContributesAndroidInjector abstract fun contributesAutoIsfProfileAdvisorActivity(): AutoIsfProfileAdvisorActivity
+    @ContributesAndroidInjector abstract fun contributesAuditorReportActivity(): AuditorReportActivity
     @ContributesAndroidInjector abstract fun contributesAimiModeSettingsActivity(): AimiModeSettingsActivity
     @ContributesAndroidInjector abstract fun contributesMealAdvisorActivity(): MealAdvisorActivity
     @ContributesAndroidInjector abstract fun contributesAimiPulseDetailActivity(): app.aaps.plugins.aps.openAPSAIMI.advisor.pulse.AimiPulseDetailActivity

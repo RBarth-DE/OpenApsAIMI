@@ -1,6 +1,6 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    
+
     <string name="dyn_isf_adjust_title" formatted="false">DynamicISF Adjustment Factor %</string>
     <string name="dyn_isf_adjust_summary" formatted="false">Adjustment factor for DynamicISF. Set more than 100% for more aggressive correction doses, and less than 100% for less aggressive corrections.</string>
     <string name="openapssmb">OpenAPS SMB</string>
@@ -50,15 +50,15 @@
     <string name="uam_disabled_in_preferences">UAM disabled in preferences</string>
     <string name="autosens_disabled_in_preferences">Autosens disabled in preferences</string>
 
-    
+
     <string name="limiting_iob">Limiting IOB to %1$.1f U because of %2$s</string>
     <string name="maxvalueinpreferences">max value in preferences</string>
     <string name="hardlimit">hard limit</string>
 
-    
+
     <string name="insulin_peak">Peak</string>
 
-    
+
     <string name="smb_frequency_exceeded">A bolus was delivered within the last 3 minutes, skipping SMB</string>
     <string name="pump_not_initialized">Pump not initialized!</string>
     <string name="loop_shortname">LOOP</string>
@@ -84,7 +84,7 @@
     <string name="fallback_smb_no_tdd">Fallback to SMB. Not enough TDD data.</string>
     <string name="fallback_to_isf_no_tdd">Fallback to profile sensitivity. Not enough data. Reason: %1$s</string>
 
-    
+
     <string name="autotune_description">Help for potential adjustments of profile (ISF, carb ratio, and basal rates)</string>
     <string name="autotune_shortname">AT</string>
     <string name="autotune_default_tune_days_title">Number of days of data</string>
@@ -124,7 +124,7 @@
     <string name="pump_disconnected">Pump disconnected</string>
 
 
-    
+
     <string name="autoISF_settings_title">AutoISF settings</string>
     <string name="smb_delivery_settings_title">SMB delivery settings</string>
     <string name="openapsama_autoISF_max_summary">Similar to autosens_max this defines how strong ISF can become.\n\nThe default value 1.0 effectively shuts off this effect.\n\nWARNING: Be extremely careful when using values above 2.5</string>
@@ -142,14 +142,14 @@
     <string name="openapsama_smb_max_range_extension_summary">Default value: 1 This is another key OpenAPS safety cap, and specifies by what factor you can exceed the regular 120 maxSMB/maxUAM minutes. Increase this experimental value slowly and with caution.</string>
     <string name="openapsama_iob_threshold_percent_summary" formatted="false">Percentage of maxIOB above which SMBs are disabled.\nDefault value: 100%\nWith 100% this feature is effectively disabled.</string>
 
-    
+
     <string name="activity_monitor_title">Activity Monitor</string>
     <string name="activity_monitor_summary">Activity is detected in form of steps as measured by the phone. It does not replace an explicit sport adjustment but is a lower level complement.</string>
     <string name="oaps_aimi_shortname">AIMI</string>
     <string name="openapsaimi">"AIMI 3.3"</string>
     <string name="openapsaimi_maxsmb_title">Max SMB LOW BG</string>
     <string name="description_openapsaimi">AIMI loop: adaptive PK/PD, Autodrive V3, physiological assistant (Health Connect + 28-pattern catalogue), optional Recursive Belief Tree (RBT/HTR), and unified hypo-risk alarms. Native Eversense E3/365 and standard CGM sources supported.</string>
-    
+
     <string name="pref_aimi_steps_source_title">Steps &amp; Heart Rate Data Source</string>
     <string name="pref_aimi_steps_source_wear">Prefer Wear OS (Direct)</string>
     <string name="pref_aimi_steps_source_auto">Auto (Wear OS → Health Connect)</string>
@@ -362,7 +362,7 @@
     <string name="sos_sms_footer_recovery">\nBLOOD SUGAR IS SLOWLY RISING — WAIT FOR CONFIRMATION</string>
     <string name="sos_sms_footer_low">\nWAITING FOR RECOVERY OR USER ACTION</string>
 
-    
+
     <string name="oaps_aimi_thyroid_title">🦋 Hyperthyroidism (Basedow) Module</string>
     <string name="oaps_aimi_thyroid_enabled_title">Enable Thyroid Module</string>
     <string-array name="oaps_aimi_thyroid_mode_entries">
@@ -417,7 +417,7 @@
         <item>HIGH</item>
     </string-array>
 
-    
+
     <string name="oaps_aimi_enableMlautoDrive_title">Enable Auto Drive – automatic meal detection – EXPERIMENTAL</string>
     <string name="oaps_aimi_enableMlautoDriveActive_title">Enable Auto Drive V3 – Continuous MPC Engine (DANGER - EXPERIMENTAL)</string>
     <string name="autodrive_prebolus_variables">Prebolus limits and conditions</string>
@@ -440,7 +440,7 @@
     <string name="oaps_aimi_ngr_basal_applied">NGR basal boost ×%1$.2f → %2$.2fU/h.</string>
     <string name="oaps_aimi_ngr_smb_applied">NGR SMB boost ×%1$.2f (req %2$.3fU, clamp %3$.3fU).</string>
 
-    
+
     <string name="folder_documents">Documents</string>
     <string name="uam_model_status"> 📦 UAM model: %1$s (%2$s, %3$s)</string>
     <string name="sanitize_info"> 🧹 Sanitize: %1$d incomplete values -&gt; 0</string>
@@ -462,7 +462,7 @@
     <string name="log_failed_init_uam">Failed to init UAM model: %1$s</string>
     <string name="log_error_closing_interpreter">Error closing interpreter: %1$s</string>
 
-    
+
 
     <string name="bg_drop_high_critical">CRITICAL drop below 85 (%1$.1f mg/dL/h), BASAL STOP;</string>
     <string name="bg_drop_high_warning">Moderate drop below 110 (%1$.1f mg/dL/h), basal reduced 50%;</string>
@@ -487,7 +487,7 @@
     <string name="steps"> | Steps=%1$d</string>
     <string name="heart_rate"> | HR=%1$s bpm</string>
     <string name="smb_disabled">SMB disabled (!microBolusAllowed)</string>
-    
+
     <string name="reason_iob_adjustment_inverted">  • IOB Activity Acceleration: -%1$.1f min\n</string>
     <string name="reason_bio_sync_stress">  • 🔴 Bio-Sync STRESS (HR %1$d, Steps %2$d) ➝ Peak slowed x1.25\n</string>
     <string name="reason_bio_sync_flow">  • 🟢 Bio-Sync FLOW (Steps %1$d, HR %2$d) ➝ Peak faster x%3$.2f\n</string>
@@ -603,7 +603,7 @@
     <string name="reason_iob_max">IOB %.2f &gt; maxIOB %.2f</string>
     <string name="reason_bg_dropping">, BG is dropping (delta %1$.0f), setting basal to 0.</string>
     <string name="reason_set_temp_basal">; setting current basal of %1$.2f as temp.</string>
-    
+
     <string name="smb_enabled_meal_mode">SMB enabled: meal mode rising (BG %1$s, Δ=%2$.1f, eventual %3$s)</string>
     <string name="reason_meal_high_iob_relaxed">Meal mode rising: IOB %1$.2f &gt; max %2$.2f → SMB damped to %3$d%%.</string>
     <string name="reason_meal_hold_profile_basal">Meal mode rising: IOB %1$.2f &gt; max %2$.2f → basal kept at profile minimum.\n</string>
@@ -635,14 +635,14 @@
     <string name="honeymoon_small_slope">Honeymoon small slope.</string>
     <string name="honeymoon_meal_slope">Honeymoon meal slope.</string>
     <string name="aimi_plateau_high_boost">Boost =&gt; Hyper greater than 180 stable bg</string>
-    
+
     <string name="hypo_risk_notification_title">Hypo Risk</string>
     <string name="hypo_risk_notification_text">Hypo risk: rapid drop detected. Check your glucose now.</string>
     <string name="aimi_hypo_risk_alarm_summary">AIMI posts a unified URGENT alarm (NotificationId.HYPO_RISK_ALARM) with AAPS alarm sound. Snooze or dismiss from the notification list or dashboard dialog.</string>
     <string name="meal_dinner_maintain">Dinner mode maintain (%.1f floor)</string>
     <string name="reason_bg_dropping_floor">Drop (Δ%.1f), safety floor (%.2f)</string>
 
-    
+
     <string name="aimi_advisor_score_label_excellent">Excellent</string>
     <string name="aimi_advisor_score_label_good">Bon</string>
     <string name="aimi_advisor_score_label_warning">À améliorer</string>
@@ -651,7 +651,7 @@
 
     <string name="aimi_advisor_recommendations_title">Recommandations</string>
 
-    
+
 
     <string name="aimi_prefs_ai_title">🤖 Assistant AI</string>
     <string name="aimi_prefs_provider_openai">OpenAI (GPT-5.2)</string>
@@ -680,7 +680,7 @@
     <string name="aimi_tuning_result_export_skipped">Settings export skipped — enable unattended export and set password in Maintenance.</string>
     <string name="aimi_tuning_result_export_expired">Settings export skipped — export password expired. Re-enter it in Maintenance.</string>
     <string name="aimi_tuning_result_export_failed">Settings export failed — check Maintenance export settings.</string>
-    
+
     <string name="aimi_advisor_title">AIMI Advisor</string>
     <string name="aimi_adv_loading">Analyzing...</string>
     <string name="aimi_adv_error_prefix">"Error: "</string>
@@ -777,6 +777,37 @@
     <string name="aimi_pkpd_hyper_damping_reduce">Persistent highs with strong SMB tail damping (floor %1$s): if hypos are rare, consider weakening the damping by raising the tail floor to ~%2$s to allow more late delivery.</string>
     <string name="aimi_auditor_enabled_title">Enable AI Decision Auditor</string>
     <string name="aimi_auditor_mode_title">Auditor Mode</string>
+    <string name="aimi_auditor_max_per_hour_title">Max Audits Per Hour</string>
+    <string name="aimi_auditor_max_per_hour_summary">Maximum number of AI audit calls per hour (default: 12)</string>
+    <string name="aimi_auditor_timeout_title">API Timeout (seconds)</string>
+    <string name="aimi_auditor_timeout_summary">Maximum wait time for AI provider response (default: 10s)</string>
+    <string name="aimi_auditor_min_confidence_title">Minimum Confidence (%)</string>
+    <string name="aimi_auditor_min_confidence_summary">Only apply modulations if AI confidence is above this threshold (default: 70%)</string>
+    <string name="aimi_auditor_notification_channel_name">AIMI Auditor insights</string>
+    <string name="aimi_auditor_notification_channel_description">Alerts when the AI Decision Auditor has a new recommendation.</string>
+    <string name="aimi_auditor_notification_title_ready">New Auditor report</string>
+    <string name="aimi_auditor_notification_title_warning">Important Auditor recommendation</string>
+    <string name="aimi_auditor_notification_summary_single">New recommendation available</string>
+    <string name="aimi_auditor_notification_summary_multiple" comment="%1$d=number of recommendations. Example: 3 recommendations available">%1$d recommendations available</string>
+    <string name="aimi_auditor_notification_tap_to_view" comment="Shown in expanded Android notification body">Tap to view the full report.</string>
+    <string name="aimi_auditor_notification_action_view">View report</string>
+    <string name="aimi_auditor_report_dialog_title">Auditor report</string>
+    <string name="aimi_auditor_report_no_cache">No recent auditor report is available. The last verdict may have expired.</string>
+    <string name="aimi_auditor_report_verdict_line" comment="%1$s=verdict label (e.g. SOFTEN), %2$d=confidence percent. Example: Verdict: SOFTEN (82% confidence)">Verdict: %1$s (%2$d%% confidence)</string>
+    <string name="aimi_auditor_report_status_line" comment="%1$s=tracker status message. Example: Status: OK_SOFTEN">Status: %1$s</string>
+    <string name="aimi_auditor_report_degraded_mode">Degraded mode: adjustments were capped for safety.</string>
+    <string name="aimi_auditor_report_evidence_header">Evidence:</string>
+    <string name="aimi_auditor_report_risk_flags_header">Risk flags:</string>
+    <string name="aimi_auditor_report_adjustments_header">Bounded adjustments:</string>
+    <string name="aimi_auditor_report_smb_factor" comment="%1$s=SMB factor multiplier. Example: SMB factor: 0.75">SMB factor: %1$s</string>
+    <string name="aimi_auditor_report_interval_add" comment="%1$d=minutes added to SMB interval. Example: Interval add: +3 min">Interval add: +%1$d min</string>
+    <string name="aimi_auditor_report_prefer_tbr_yes">Prefer TBR: yes</string>
+    <string name="aimi_auditor_report_prefer_tbr_no">Prefer TBR: no</string>
+    <string name="aimi_auditor_report_tbr_factor" comment="%1$s=TBR factor multiplier. Example: TBR factor: 1.05">TBR factor: %1$s</string>
+    <string name="aimi_auditor_in_app_notification_summary" comment="%1$s=short verdict or status summary. Example: SOFTEN — see full report">Auditor: %1$s</string>
+    <string name="aimi_auditor_indicator_processing">Analysis in progress, please wait…</string>
+    <string name="aimi_auditor_indicator_idle">Auditor will activate at the next trigger</string>
+
     <string name="context_title">AIMI Context</string>
     <string name="context_description">Describe your current situation to help AIMI adapt insulin delivery</string>
     <string name="context_patient_state_title">Current AIMI Understanding</string>
@@ -1006,7 +1037,7 @@
     <string name="aimi_control_center_autonomy_assisted">Assisted application</string>
     <string name="aimi_control_center_autonomy_controlled">Controlled authority</string>
 
-    
+
     <string name="endo_preferences_title">Endometriosis Settings</string>
     <string name="endo_enable_title">Enable Endometriosis Logic</string>
     <string name="aimi_iob_surveillance_guard_title">IOB surveillance (anti-stacking)</string>
@@ -1046,7 +1077,7 @@
     <string name="aimi_auditor_section_evidence">EVIDENCE</string>
     <string name="aimi_auditor_section_debug">DEBUG CHECKS</string>
 
-    
+
     <string name="autoisf_advisor_title">AutoISF Advisor</string>
     <string name="autoisf_advisor_summary">Analyze your AutoISF settings and get tuning recommendations</string>
     <string name="autoisf_adv_loading">Analyzing…</string>
