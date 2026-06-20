@@ -35,6 +35,7 @@ class AuditorNotificationManager @Inject constructor(
   private val aapsLogger: AAPSLogger,
 ) {
 
+
   @Volatile
   private var lastNotifiedVerdictTimestampMs: Long = 0L
 
@@ -196,7 +197,17 @@ class AuditorNotificationManager @Inject constructor(
   }
 
   companion object {
-    private const val CHANNEL_ID = "AIMI_AUDITOR_INSIGHTS_V2"
-    private const val NOTIFICATION_ID = 8888
-  }
+      private const val CHANNEL_ID = "AIMI_AUDITOR_INSIGHTS_V2"
+      private const val NOTIFICATION_ID = 8888
+
+      private const val CHANNEL_NAME = "AIMI Auditor Insights"
+
+        /**
+         * Static cancel — called from AuditorVerdictActivity.onCreate()
+         * so the notification dismisses when the report is opened.
+         */
+        fun cancelNotificationStatic(context: Context) {
+            NotificationManagerCompat.from(context).cancel(NOTIFICATION_ID)
+        }
+    }
 }

@@ -682,6 +682,7 @@
     <string name="aimi_tuning_result_export_failed">Settings export failed — check Maintenance export settings.</string>
 
     <string name="aimi_advisor_title">AIMI Advisor</string>
+    <string name="aimi_adv_loading_details" comment="Shown under the main Advisor report while RBT/T3c history sections load">Loading detailed history…</string>
     <string name="aimi_adv_loading">Analyzing...</string>
     <string name="aimi_adv_error_prefix">"Error: "</string>
     <string name="aimi_adv_error_oom">Not enough memory to finish. Close other apps and try again.</string>
