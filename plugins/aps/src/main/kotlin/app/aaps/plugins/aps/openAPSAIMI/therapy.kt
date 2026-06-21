@@ -8,6 +8,9 @@ import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicReference
 import java.util.regex.Pattern
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 
 class Therapy(private val persistenceLayer: PersistenceLayer) {
@@ -28,7 +31,27 @@ class Therapy(private val persistenceLayer: PersistenceLayer) {
     var deleteTime = false
     private var latestNoteEvents: List<TE> = emptyList()
 
-    fun updateStatesBasedOnTherapyEvents() {
+    fun updateStatesBasedOnTherapyEvents(forceRefresh: Boolean = false) {
+        if (forceRefresh) {
+            refreshBlocking()
+            return
+        }
+        snapshotRef.get()?.let { applySnapshot(it) }
+        refreshIfNeededAsync()
+    }
+
+    private fun refreshBlocking() {
+        runCatching {
+            runBlocking(Dispatchers.IO) { buildSnapshot() }
+        }.onSuccess { snapshot ->
+            snapshotRef.set(snapshot)
+            applySnapshot(snapshot)
+        }.onFailure {
+            snapshotRef.get()?.let { applySnapshot(it) } ?: resetAllStates()
+        }
+    }
+
+    private fun refreshIfNeededAsync() {
         val now = System.currentTimeMillis()
         val cached = snapshotRef.get()
         if (cached != null && now - cached.generatedAtMs < SNAPSHOT_TTL_MS) {
