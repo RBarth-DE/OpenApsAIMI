@@ -104,16 +104,18 @@ fun SecondaryGraphCompose(
     val primaryType = orderedTypes[0]
     val secondaryType = orderedTypes.getOrNull(1)
 
+    // Specific case: BGI and DEVIATIONS share the same mg/dL unit and should share the vertical scale
+    val shareAxis = (primaryType == SeriesType.BGI && secondaryType == SeriesType.DEVIATIONS) ||
+        (primaryType == SeriesType.DEVIATIONS && secondaryType == SeriesType.BGI)
+    val isDualAxis = secondaryType != null && !shareAxis
 
-
-// In SecondaryGraphCompose, primaryType/secondaryType-Block:
-    val isMultiSimple = seriesTypes.size > 1 && seriesTypes.all { it in SIMPLE_LINE_TYPES }
-    val isDualAxis    = secondaryType != null && !isMultiSimple  // ← das ist die Änderung
+    // In SecondaryGraphCompose, primaryType/secondaryType-Block:
+    //val isMultiSimple = seriesTypes.size > 1 && seriesTypes.all { it in SIMPLE_LINE_TYPES }
+    //val isDualAxis    = secondaryType != null && !isMultiSimple  // ← das ist die Änderung
 
     val hasIob = primaryType == SeriesType.IOB
     val hasCob = primaryType == SeriesType.COB
 
-    // Collect flows for primary series
     // Collect flows for primary series
     val iobData      = if (SeriesType.IOB             in seriesTypes || hasIob) viewModel.iobGraphFlow.collectAsStateWithLifecycle().value else null
     val cobData      = if (SeriesType.COB             in seriesTypes || hasCob) viewModel.cobGraphFlow.collectAsStateWithLifecycle().value else null
@@ -155,8 +157,8 @@ fun SecondaryGraphCompose(
         viewModel.basalGraphFlow.collectAsStateWithLifecycle().value else null
 
 
-    // Collect flow for secondary (right axis) series
-    val secondaryLineData = when (secondaryType) {
+    // Collect flow for secondary (right axis) series - (emptyList() if DEV and BGI together)
+    val secondaryLineData = if (!isDualAxis) emptyList() else when (secondaryType) {
         SeriesType.IOB             -> viewModel.iobGraphFlow.collectAsStateWithLifecycle().value.let {
             it.iob.map { p -> GraphDataPoint(p.timestamp, p.value) }
         }

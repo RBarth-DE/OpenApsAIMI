@@ -80,9 +80,7 @@ fun isMaster(): Boolean = !Versions.appVersion.contains("-")
 // Configuration Android
 // -----------------------------------------------------------------------------
 android {
-    compileSdk = 36
-    // Si tu n'as pas de variable pour compileSdk, mets-le en dur, ex. 34
-    // compileSdk = Versions.compileSdk
+    compileSdk = Versions.compileSdk
 
     namespace = "app.aaps"
 

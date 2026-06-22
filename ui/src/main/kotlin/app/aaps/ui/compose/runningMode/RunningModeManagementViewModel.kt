@@ -57,6 +57,7 @@ import javax.inject.Inject
 class RunningModeManagementViewModel @Inject constructor(
     private val loop: Loop,
     private val activePlugin: ActivePlugin,
+    private val profileFunction: ProfileFunction,
     private val translator: Translator,
     private val rh: ResourceHelper,
     private val preferences: Preferences,
@@ -87,6 +88,10 @@ class RunningModeManagementViewModel @Inject constructor(
                 val allowedModes = withContext(Dispatchers.IO) { loop.allowedNextModes() }
                 val pumpDescription = activePlugin.activePump.pumpDescription
                 val currentMode = runningModeRecord.mode
+                // Whether a profile is actually set. [Loop.allowedNextModes] returns an empty list both when no
+                // profile is set AND when the pump force-suspends (SUSPENDED_BY_PUMP); only the former should
+                // surface the "no profile set" card, so check the real condition instead of the empty list.
+                val profileSet = profileFunction.isProfileValid("RunningModeScreen")
 
                 _uiState.update {
                     it.copy(
@@ -94,6 +99,7 @@ class RunningModeManagementViewModel @Inject constructor(
                         currentModeText = translator.translate(currentMode),
                         reasons = runningModeRecord.reasons,
                         allowedNextModes = allowedModes,
+                        profileSet = profileSet,
                         tempDurationStep15mAllowed = pumpDescription.tempDurationStep15mAllowed,
                         tempDurationStep30mAllowed = pumpDescription.tempDurationStep30mAllowed,
                         isLoading = false
@@ -192,6 +198,7 @@ data class RunningModeManagementUiState(
     val currentModeText: String = "",
     val reasons: String? = null,
     val allowedNextModes: List<RM.Mode> = emptyList(),
+    val profileSet: Boolean = true,
     val tempDurationStep15mAllowed: Boolean = false,
     val tempDurationStep30mAllowed: Boolean = false,
     val isLoading: Boolean = true
