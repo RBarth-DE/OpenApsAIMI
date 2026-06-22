@@ -395,6 +395,12 @@ input[type=number]{width:100%}
       <div class="hourly-labels"><span>00</span><span>06</span><span>12</span><span>18</span><span>23</span></div>
     </div>
 
+    <!-- Profile card -->
+    <div class="card" id="profile-card" style="display:none">
+      <div class="card-title">👤 Active profile</div>
+      <div id="profile-content"></div>
+    </div>
+
     <!-- Recommendations -->
     <div class="card">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
@@ -603,8 +609,8 @@ input[type=number]{width:100%}
 const IMPACT_EMOJI={critical:'🔴',high:'🟠',medium:'🟡',low:'🟢'};
 const IORD={critical:0,high:1,medium:2,low:3};
 let allParams=[],featureGroups=[],analysisResult=null,importedParams=[];
-let activeGates={},currentDiff=[];
-let importExportAgeHours=null;  // hours since AAPS export — used for AI analysis readiness check
+let activeGates={},currentDiff=[],profileData={};
+let importExportAgeHours=null;
 let config=JSON.parse(localStorage.getItem('aimi_config')||'{}');
 let overrides=JSON.parse(localStorage.getItem('aimi_overrides')||'{}');
 
@@ -678,6 +684,11 @@ async function apiFetch(path,opts={}){
 // ── INIT ──
 async function init(){
   applySavedConfig();
+  // Restore export age from last import (survives page reload / NUC restart)
+  const storedTs=localStorage.getItem('aimi_export_timestamp');
+  if(storedTs){
+    importExportAgeHours=(Date.now()-parseFloat(storedTs))/(3600*1000);
+  }
   try{
     const d=await apiFetch('/api/parameters');
     allParams=d.parameters||[];
@@ -717,6 +728,7 @@ async function runAnalysis(){
       nightscout_url:url,nightscout_token:token,days,
       current_params:importedParams,active_gates:activeGates,overrides})});
     analysisResult=d;
+    if(d.profile&&!d.profile.error) profileData=d.profile;
     renderDashboard(d);
     document.getElementById('dash-results').style.display='';
     document.getElementById('dash-status-bar').style.display='flex';
@@ -777,10 +789,45 @@ function renderDashboard(data){
 
   renderHourlyChart(data.hourly_chart||cgm.hourly_pattern||[]);
   renderGlucoseChart(data.glucose_chart||cgm.last24h||[]);
+  renderProfileCard(data.profile||{});
   renderRecs(data.recommendations||[], data.active_gates||{});
 }
 
-function setMetric(id,val,cls){}
+function renderProfileCard(profile){
+  const card=document.getElementById('profile-card');
+  const content=document.getElementById('profile-content');
+  if(!profile||profile.error||!profile.avg_isf){card.style.display='none';return;}
+  card.style.display='';
+
+  const isf=profile.avg_isf, recIsf=profile.recommended_isf, delta=profile.isf_delta_pct;
+  const isfColor=delta==null?'var(--text)':Math.abs(delta)<10?'var(--green)':Math.abs(delta)<20?'var(--yellow)':'var(--red)';
+  const isfNote=delta==null?''
+    :delta<-15?`⚠️ ${Math.abs(delta)}% too aggressive (overcorrection risk)`
+    :delta>20?`⚠️ ${delta}% too conservative (undercorrection risk)`
+    :`✅ within ±10% of 1700/TDD rule`;
+
+  const bpct=profile.basal_pct_tdd;
+  const basalColor=bpct==null?'var(--text)':bpct>=38&&bpct<=55?'var(--green)':bpct>=30?'var(--yellow)':'var(--red)';
+  const basalNote=bpct==null?''
+    :bpct<35?`⚠️ Low (${bpct}% of TDD, target 40-50%)`
+    :bpct>58?`⚠️ High (${bpct}% of TDD, target 40-50%)`
+    :`✅ ${bpct}% of TDD`;
+
+  content.innerHTML=`
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;margin-bottom:10px">
+      <div class="metric"><div class="metric-val" style="color:${isfColor}">${isf}</div><div class="metric-lbl">ISF mg/dL/U</div></div>
+      <div class="metric"><div class="metric-val" style="color:var(--text2)">${recIsf||'—'}</div><div class="metric-lbl">Recommended ISF</div></div>
+      <div class="metric"><div class="metric-val" style="color:${basalColor}">${profile.daily_basal||'—'}</div><div class="metric-lbl">Basal U/day</div></div>
+      <div class="metric"><div class="metric-val" style="color:var(--text2)">${profile.avg_ic||'—'}</div><div class="metric-lbl">IC g/U</div></div>
+      <div class="metric"><div class="metric-val" style="color:var(--text2)">${profile.target||'—'}</div><div class="metric-lbl">Target mg/dL</div></div>
+      <div class="metric"><div class="metric-val" style="color:var(--text2)">${profile.tdd_used||'—'}</div><div class="metric-lbl">Avg TDD U</div></div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:4px;font-size:.8rem">
+      ${isfNote?`<div style="color:${isfColor}">${isfNote} · Profile ISF ${isf} vs recommended ${recIsf} mg/dL/U (1700 ÷ ${profile.tdd_used}U TDD)</div>`:''}
+      ${basalNote?`<div style="color:${basalColor}">${basalNote} · ${profile.daily_basal}U/day (${profile.avg_basal_per_hour}U/h)</div>`:''}
+      <div style="color:var(--text3)">Profile: ${profile.profile_name||'?'} · DIA: ${profile.dia||'?'}h</div>
+    </div>`;
+}
 
 function renderHourlyChart(hourly){
   if(!hourly.length) return;
@@ -1016,6 +1063,12 @@ async function decryptImport(){
     const data=await r.json();
     Object.assign(activeGates,data.active_gates||{});
     importedParams=data.aimi_parameters.map(p=>({...p,gate_active:p.gate_key?(activeGates[p.gate_key]??false):true}));
+    // Store the original AAPS export timestamp for age calculation after reload
+    if(data.export_age_hours!=null){
+      const exportTs=Date.now()-(data.export_age_hours*3600*1000);
+      localStorage.setItem('aimi_export_timestamp', String(exportTs));
+      importExportAgeHours=data.export_age_hours;
+    }
     document.getElementById('import-cta').style.display='none';
     document.getElementById('import-dot').classList.add('show');
     renderImportResults(data);
@@ -1280,6 +1333,7 @@ async function runAI(){
       body:JSON.stringify({provider,api_key:apiKey,model:model||null,
         cgm_metrics:analysisResult?.cgm||{},
         treatment_metrics:analysisResult?.treatments||{},
+        profile_data:profileData||{},
         diff:currentDiff,
         current_params:importedParams,
         nightscout_days:parseInt(config.days||7),

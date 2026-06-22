@@ -71,13 +71,14 @@ class AIAnalysisRequest(BaseModel):
     api_key: str
     cgm_metrics: dict
     treatment_metrics: dict
+    profile_data: dict = {}
     diff: list = []
     current_params: list = []
     nightscout_days: int = 7
     active_gates: dict = {}
     user_observations: str | None = None
     model: str | None = None
-    lang: str = "de"  # "de" or "en"
+    lang: str = "de"
 
 # ─── Nightscout ───────────────────────────────────────────────────────────────
 async def ns_fetch(url, token, path, params={}):
@@ -167,6 +168,17 @@ def analyze_treatments(treatments):
 
     smbs = [t for t in treatments if is_smb(t) and t.get("insulin")]
     smb_sizes = [t.get("insulin",0) for t in smbs if t.get("insulin")]
+
+    # TDD: group by calendar day and average
+    from collections import defaultdict
+    daily_totals = defaultdict(float)
+    for t in boluses:
+        try:
+            day = t.get("created_at","")[:10] or from_ms(t.get("timestamp",0)).strftime("%Y-%m-%d")
+            daily_totals[day] += float(t.get("insulin") or 0)
+        except: pass
+    tdd_avg = round(statistics.mean(daily_totals.values()), 1) if daily_totals else None
+
     return {
         "bolus_count": len(boluses),
         "total_insulin": round(sum(t.get("insulin",0) or 0 for t in boluses),1),
@@ -175,6 +187,7 @@ def analyze_treatments(treatments):
         "smb_count": len(smbs),
         "smb_avg_size": round(statistics.mean(smb_sizes),3) if smb_sizes else None,
         "smb_max_size": round(max(smb_sizes),3) if smb_sizes else None,
+        "tdd_avg": tdd_avg,
     }
 
 # ─── Gate-aware recommendations ───────────────────────────────────────────────
@@ -423,6 +436,170 @@ def get_feature_groups():
     result.sort(key=lambda x: (0 if x["always_active"] else 1, x["name"]))
     return result
 
+def analyze_profile(ns_profile, trt={}):
+    """Extract key profile values from Nightscout /api/v1/profile.json"""
+    try:
+        # NS returns list or single object
+        if isinstance(ns_profile, list):
+            profile = ns_profile[0] if ns_profile else {}
+        else:
+            profile = ns_profile
+
+        # Get the default/active store
+        default_store = profile.get("defaultProfile", "Default")
+        stores = profile.get("store", {})
+        store = stores.get(default_store) or (list(stores.values())[0] if stores else {})
+
+        def avg_schedule(schedule):
+            """Average a time-based schedule [{time, value, timeAsSeconds}]"""
+            if not schedule: return None
+            try: return round(sum(float(e.get("value",0)) for e in schedule) / len(schedule), 1)
+            except: return None
+
+        def first_value(schedule):
+            if not schedule: return None
+            try: return float(schedule[0].get("value", 0))
+            except: return None
+
+        isf_schedule  = store.get("sens", [])
+        basal_schedule = store.get("basal", [])
+        ic_schedule   = store.get("carbratio", [])
+        target_low    = store.get("target_low", [])
+        target_high   = store.get("target_high", [])
+
+        avg_isf   = avg_schedule(isf_schedule)
+        avg_basal = avg_schedule(basal_schedule)
+        avg_ic    = avg_schedule(ic_schedule)
+        daily_basal = round(avg_basal * 24, 1) if avg_basal else None
+
+        tgt_lo = avg_schedule(target_low)
+        tgt_hi = avg_schedule(target_high)
+        target = round((tgt_lo + tgt_hi) / 2, 0) if tgt_lo and tgt_hi else (tgt_lo or tgt_hi)
+
+        # Insulin type from dia or insulin field
+        dia   = store.get("dia") or profile.get("dia")
+        units = store.get("units", "mg/dl")
+
+        # Recommended ISF based on TDD (1700 rule for rapid insulin, ~1600 for Lyumjev)
+        tdd = trt.get("tdd_avg")
+        recommended_isf = round(1700 / tdd, 0) if tdd and tdd > 0 else None
+        isf_delta_pct   = round((avg_isf - recommended_isf) / recommended_isf * 100, 0) \
+                          if avg_isf and recommended_isf else None
+
+        # Recommended basal: 40-50% of TDD
+        recommended_basal_daily = round(tdd * 0.45, 1) if tdd else None
+        basal_pct_tdd = round(daily_basal / tdd * 100, 0) if daily_basal and tdd else None
+
+        return {
+            "profile_name": default_store,
+            "units": units,
+            "dia": dia,
+            "avg_isf": avg_isf,
+            "avg_basal_per_hour": avg_basal,
+            "daily_basal": daily_basal,
+            "avg_ic": avg_ic,
+            "target": target,
+            "recommended_isf": recommended_isf,
+            "isf_delta_pct": isf_delta_pct,
+            "recommended_basal_daily": recommended_basal_daily,
+            "basal_pct_tdd": basal_pct_tdd,
+            "tdd_used": tdd,
+            "isf_schedule": isf_schedule[:6],   # first 6 entries for display
+            "basal_schedule": basal_schedule[:6],
+        }
+    except Exception as e:
+        return {"error": str(e)}
+
+
+def generate_profile_recommendations(profile, cgm, trt):
+    """Generate profile-level recommendations (ISF, basal, target)."""
+    recs = []
+    if not profile or profile.get("error"): return recs
+
+    avg_isf  = profile.get("avg_isf")
+    rec_isf  = profile.get("recommended_isf")
+    delta    = profile.get("isf_delta_pct")
+    tdd      = profile.get("tdd_used", 0) or 0
+    daily_b  = profile.get("daily_basal")
+    rec_b    = profile.get("recommended_basal_daily")
+    basal_pct = profile.get("basal_pct_tdd")
+    hypo     = cgm.get("hypo_l1_pct", 0)
+    tir      = cgm.get("tir_pct", 0)
+
+    # ISF recommendation
+    if avg_isf and rec_isf and delta is not None:
+        if delta < -15:  # ISF too aggressive (low number = more insulin per unit)
+            recs.append({
+                "type": "profile", "impact": "high",
+                "name": "Profile ISF too aggressive",
+                "key": "Profile → Insulin Sensitivity Factor",
+                "current": f"{avg_isf} mg/dL/U",
+                "suggested": f"{rec_isf} mg/dL/U",
+                "direction": "increase",
+                "reason": f"Profile ISF {avg_isf} mg/dL/U is {abs(int(delta))}% lower than the 1700/TDD rule "
+                          f"({rec_isf} mg/dL/U for TDD {tdd:.0f}U). "
+                          f"Too-aggressive ISF causes overcorrection → hypos. "
+                          f"AIMI scales dynamically but uses this as anchor.",
+                "settings_path": "AAPS → Profile → ISF",
+                "category": "Profile",
+                "feature_name": "Profile",
+                "gate_key": None, "gate_active": True,
+            })
+        elif delta > 20:  # ISF too conservative
+            recs.append({
+                "type": "profile", "impact": "medium",
+                "name": "Profile ISF too conservative",
+                "key": "Profile → Insulin Sensitivity Factor",
+                "current": f"{avg_isf} mg/dL/U",
+                "suggested": f"{rec_isf} mg/dL/U",
+                "direction": "decrease",
+                "reason": f"Profile ISF {avg_isf} mg/dL/U is {int(delta)}% higher than the 1700/TDD rule "
+                          f"({rec_isf} mg/dL/U for TDD {tdd:.0f}U). "
+                          f"Conservative ISF limits AIMI's correction ability → persistent highs.",
+                "settings_path": "AAPS → Profile → ISF",
+                "category": "Profile",
+                "feature_name": "Profile",
+                "gate_key": None, "gate_active": True,
+            })
+
+    # Basal recommendation
+    if daily_b and rec_b and basal_pct is not None:
+        if basal_pct < 35:
+            recs.append({
+                "type": "profile", "impact": "medium",
+                "name": "Profile basal too low",
+                "key": "Profile → Basal Rate",
+                "current": f"{daily_b}U/day ({basal_pct:.0f}% of TDD)",
+                "suggested": f"{rec_b}U/day (~45% of TDD)",
+                "direction": "increase",
+                "reason": f"Basal is only {basal_pct:.0f}% of TDD. "
+                          f"Recommended 40-50% ({rec_b}U/day). "
+                          f"Low basal forces AIMI to rely heavily on SMBs for coverage, "
+                          f"increasing stacking risk.",
+                "settings_path": "AAPS → Profile → Basal Rate",
+                "category": "Profile",
+                "feature_name": "Profile",
+                "gate_key": None, "gate_active": True,
+            })
+        elif basal_pct > 60:
+            recs.append({
+                "type": "profile", "impact": "medium",
+                "name": "Profile basal high",
+                "key": "Profile → Basal Rate",
+                "current": f"{daily_b}U/day ({basal_pct:.0f}% of TDD)",
+                "suggested": f"{rec_b}U/day (~45% of TDD)",
+                "direction": "decrease",
+                "reason": f"Basal is {basal_pct:.0f}% of TDD — above the 40-50% target. "
+                          f"High baseline basal increases nocturnal hypo risk.",
+                "settings_path": "AAPS → Profile → Basal Rate",
+                "category": "Profile",
+                "feature_name": "Profile",
+                "gate_key": None, "gate_active": True,
+            })
+
+    return recs
+
+
 @app.post("/api/analyze")
 async def analyze(req: AnalysisRequest):
     try:
@@ -435,17 +612,29 @@ async def analyze(req: AnalysisRequest):
         cgm  = analyze_cgm(entries, req.days)
         trt  = analyze_treatments(treatments)
 
+        # Fetch current profile from Nightscout
+        profile_data = {}
+        try:
+            ns_profile = await ns_fetch(req.nightscout_url, req.nightscout_token,
+                "/api/v1/profile.json", {})
+            profile_data = analyze_profile(ns_profile, trt)
+        except Exception:
+            pass  # profile optional
+
         # Determine active gates from current_params list + explicit active_gates dict
-        active_gates = dict(req.active_gates)  # start with explicitly passed gates
+        active_gates = dict(req.active_gates)
         for p in req.current_params:
             if isinstance(p, dict):
                 k, v = p.get("key"), p.get("value")
                 if k and (isinstance(v, bool) or str(v).lower() in ("true","false")):
                     active_gates[k] = v if isinstance(v, bool) else str(v).lower() == "true"
-        # Also apply overrides
         for k, v in req.overrides.items():
             active_gates[k] = v
         recs = generate_recommendations(cgm, trt, req.current_params, active_gates)
+
+        # Profile-based recommendations
+        profile_recs = generate_profile_recommendations(profile_data, cgm, trt)
+        recs = profile_recs + recs  # profile recs first
 
         recent_cutoff = to_ts(now - timedelta(hours=24))
         recent = sorted([e for e in entries if e.get("date",0)>=recent_cutoff],
@@ -456,6 +645,7 @@ async def analyze(req: AnalysisRequest):
         hourly_chart = [{"hour": h, "avg": cgm.get("hourly_avg",{}).get(h)} for h in range(24)]
 
         return {"cgm": cgm, "treatments": trt, "recommendations": recs,
+                "profile": profile_data,
                 "hourly_chart": hourly_chart, "glucose_chart": glucose_chart,
                 "fetched_at": now.isoformat(), "entry_count": len(entries),
                 "active_gates": active_gates}
@@ -854,6 +1044,18 @@ async def ai_analysis(req: AIAnalysisRequest):
 ## {l['treatment']}
 - SMBs: {trt.get('smb_count','?')} · Ø {trt.get('smb_avg_size','?')} U · Max {trt.get('smb_max_size','?')} U
 - Carbs: {trt.get('total_carbs','?')} g · Insulin: {trt.get('total_insulin','?')} U
+- TDD avg: {trt.get('tdd_avg','?')} U/day
+
+## Profile
+{f"""- Profile ISF: {req.profile_data.get('avg_isf','?')} mg/dL/U  (1700/TDD rule → recommended: {req.profile_data.get('recommended_isf','?')} mg/dL/U, delta: {req.profile_data.get('isf_delta_pct','?')}%)
+- Basal: {req.profile_data.get('avg_basal_per_hour','?')} U/h = {req.profile_data.get('daily_basal','?')} U/day ({req.profile_data.get('basal_pct_tdd','?')}% of TDD, target 40-50%)
+- IC ratio: {req.profile_data.get('avg_ic','?')} g/U
+- BG target: {req.profile_data.get('target','?')} mg/dL
+- DIA: {req.profile_data.get('dia','?')} h
+- Profile: {req.profile_data.get('profile_name','?')}
+IMPORTANT: If ISF delta is negative (ISF too low/aggressive), this is a primary driver of hypoglycemia.
+If basal % of TDD is outside 40-50%, flag this as a profile calibration issue."""
+if req.profile_data and not req.profile_data.get('error') else '(not available)'}
 
 ## {l['params_header']}
 {params_block}

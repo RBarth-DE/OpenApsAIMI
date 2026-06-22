@@ -3717,7 +3717,7 @@
       },
       {
         "file": "DetermineBasalAIMI2.kt",
-        "function": "executeT3cBrittleMode"
+        "function": "buildRbtExtendedSignals"
       }
     ]
   },
