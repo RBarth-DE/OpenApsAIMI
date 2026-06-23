@@ -709,6 +709,7 @@ open class OpenAPSAutoISFPlugin @Inject constructor(
             } else {
                 aapsLogger.debug(LTag.APS, "Activity Monitor: No records found in last 210 mins")
             }
+
             val valid5 = allStepsCounts.filter { it.timestamp >= timeMillis5 }.maxByOrNull { it.timestamp }
 
             val fallbackRecord = if (valid5 == null) {
