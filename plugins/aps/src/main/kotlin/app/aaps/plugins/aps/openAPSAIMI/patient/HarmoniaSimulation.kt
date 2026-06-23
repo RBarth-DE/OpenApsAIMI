@@ -126,6 +126,7 @@ enum class HarmoniaSimulationAction {
     BASAL_FIRST,
     MEAL_SUPPORT,
     PROTECTIVE_REDUCTION,
+    STABILIZE,
     BLOCKED,
 }
 
@@ -148,6 +149,7 @@ internal object HarmoniaSimulationEngine {
             HarmoniaSimulationAction.MEAL_SUPPORT -> 1.10
             HarmoniaSimulationAction.PROTECTIVE_REDUCTION -> 0.70
             HarmoniaSimulationAction.OBSERVE,
+            HarmoniaSimulationAction.STABILIZE,
             HarmoniaSimulationAction.BLOCKED,
             -> 1.0
         }
