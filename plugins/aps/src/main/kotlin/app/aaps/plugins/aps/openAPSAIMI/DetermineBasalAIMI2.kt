@@ -2697,6 +2697,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         restingHeartRateBpm: Int,
         bestTerminalMgdl: Double,
         floorTerminalMgdl: Double,
+        mealAbsorptionMemoryActive: Boolean,
     ): PhysiologicalPhaseClassifier.Input {
         val htrClass = classifyHyperSeverityForTick(rT, combinedDelta, preferences.get(DoubleKey.OApsAIMITDD7))
         ensureWCycleInfo()
@@ -2721,6 +2722,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             wCyclePhase = wInfo?.phase,
             htrTier = htrClass.tier,
             plateauSustain = htrClass.plateauSustain,
+            mealAbsorptionMemoryActive = mealAbsorptionMemoryActive,
         )
     }
 
@@ -2748,6 +2750,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                 restingHeartRateBpm = restingHeartRateBpm,
                 bestTerminalMgdl = rawBestT,
                 floorTerminalMgdl = floorT,
+                mealAbsorptionMemoryActive = MealAbsorptionMemory.isActive(dateUtil.now()),
             ),
             basePhysioMultipliers,
         )
@@ -8535,6 +8538,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                 restingHeartRateBpm = restingHeartRateBpm,
                 bestTerminalMgdl = previewBest,
                 floorTerminalMgdl = floorPreview,
+                mealAbsorptionMemoryActive = MealAbsorptionMemory.isActive(dateUtil.now()),
             ),
             physioMultipliers,
         )
