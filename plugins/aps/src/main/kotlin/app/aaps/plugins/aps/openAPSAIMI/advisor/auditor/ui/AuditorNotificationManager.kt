@@ -50,12 +50,12 @@ class AuditorNotificationManager @Inject constructor(
   fun showInsightAvailable(uiState: AuditorUIState): Boolean {
     if (!uiState.shouldNotify || !uiState.isActive()) return false
 
-    val cached = AuditorVerdictCache.getDisplayable() ?: return false
-    if (cached.timestamp == lastNotifiedVerdictTimestampMs) return false
+    val cached = AuditorVerdictCache.resolveForDisplay() ?: return false
+    if (cached.cached.timestamp == lastNotifiedVerdictTimestampMs) return false
 
     val posted = postInAppNotification() || postSystemNotification(uiState)
     if (posted) {
-      lastNotifiedVerdictTimestampMs = cached.timestamp
+      lastNotifiedVerdictTimestampMs = cached.cached.timestamp
     }
     return posted
   }
@@ -71,7 +71,7 @@ class AuditorNotificationManager @Inject constructor(
   fun openReport(hostContext: Context, onFinish: (() -> Unit)? = null) {
     auditorStatusLiveData.markAsRead()
     cancelNotification()
-    val message = AuditorReportFormatter.buildFullReportMessage(context)
+    val (message, _) = AuditorReportFormatter.buildFullReportMessageWithFallback(context)
     uiInteraction.showOkDialog(
       hostContext,
       context.getString(R.string.aimi_auditor_report_dialog_title),
@@ -93,7 +93,7 @@ class AuditorNotificationManager @Inject constructor(
         },
       ),
       validityCheck = {
-        AuditorVerdictCache.getDisplayable() != null
+        AuditorVerdictCache.resolveForDisplay() != null
       },
     )
     return true
