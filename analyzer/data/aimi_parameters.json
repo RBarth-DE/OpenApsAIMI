@@ -1,13 +1,13 @@
 {
   "version": "3.0",
-  "source_commit": "6c3b735a69f524b9582ddadf9f43185000a6128d",
-  "generated_at": "2026-06-22T07:33:03.994368+00:00",
-  "total": 269,
-  "active": 222,
-  "orphaned": 47,
-  "with_used_in": 207,
+  "source_commit": "6f8b4fe4768b9ffb224bdad304c0c0e4fcc28c0d",
+  "generated_at": "2026-06-24T21:22:48.543591+00:00",
+  "total": 273,
+  "active": 227,
+  "orphaned": 46,
+  "with_used_in": 212,
   "with_negative_gate": 9,
-  "with_settings_path": 212,
+  "with_settings_path": 217,
   "parameters": [
     {
       "key": "AIMI_UAM_CONFIDENCE",
@@ -95,7 +95,7 @@
       "impact": "medium",
       "feature_group": "core",
       "is_gate": false,
-      "settings_path": "AIMI → Preferences user → Core",
+      "settings_path": "AIMI → Preferences user → Core parameters",
       "settings_gate": null
     },
     {
@@ -230,7 +230,13 @@
       "type": "Double",
       "default": 1.6,
       "min": 1.0,
-      "orphaned": true,
+      "used_in": [
+        {
+          "file": "DetermineBasalAIMI2.kt",
+          "function": "bootstrapPhysiologyAfterEarlyTick"
+        }
+      ],
+      "orphaned": false,
       "negative_gate_key": null,
       "negative_gate_note": null,
       "logic_summary": "Used in AIMI internal calculations for MaxMultiplier.",
@@ -239,7 +245,7 @@
       "impact": "medium",
       "feature_group": "adaptive_basal",
       "is_gate": false,
-      "settings_path": null,
+      "settings_path": "AIMI → Preferences user → Adaptive Basal",
       "settings_gate": null
     },
     {
@@ -355,7 +361,7 @@
       "impact": "medium",
       "feature_group": "core",
       "is_gate": false,
-      "settings_path": "AIMI → Preferences user → Core",
+      "settings_path": "AIMI → Preferences user → Patient context and body declarations → Night growth resistance",
       "settings_gate": null
     },
     {
@@ -470,7 +476,7 @@
       "impact": "medium",
       "feature_group": "core",
       "is_gate": false,
-      "settings_path": "AIMI → Preferences user → Core",
+      "settings_path": "AIMI → Preferences user → 🤖 Assistant AI",
       "settings_gate": null
     },
     {
@@ -508,7 +514,7 @@
       "impact": "medium",
       "feature_group": "core",
       "is_gate": false,
-      "settings_path": "AIMI → Preferences user → Core",
+      "settings_path": "AIMI → Preferences user → 🤖 Assistant AI",
       "settings_gate": null
     },
     {
@@ -546,7 +552,7 @@
       "impact": "medium",
       "feature_group": "core",
       "is_gate": false,
-      "settings_path": "AIMI → Preferences user → Core",
+      "settings_path": "AIMI → Preferences user → 🤖 Assistant AI",
       "settings_gate": null
     },
     {
@@ -584,7 +590,7 @@
       "impact": "medium",
       "feature_group": "core",
       "is_gate": false,
-      "settings_path": "AIMI → Preferences user → Core",
+      "settings_path": "AIMI → Preferences user → 🤖 Assistant AI",
       "settings_gate": null
     },
     {
@@ -622,7 +628,7 @@
       "impact": "medium",
       "feature_group": "core",
       "is_gate": false,
-      "settings_path": "AIMI → Preferences user → Core",
+      "settings_path": "AIMI → Preferences user → 🤖 Assistant AI",
       "settings_gate": null
     },
     {
@@ -660,7 +666,7 @@
       "impact": "medium",
       "feature_group": "auditor",
       "is_gate": true,
-      "settings_path": "AIMI → Preferences user → Auditor",
+      "settings_path": "AIMI → Preferences user → 🤖 Assistant AI → AI Decision Auditor",
       "settings_gate": null
     },
     {
@@ -691,7 +697,7 @@
       "impact": "medium",
       "feature_group": "auditor",
       "is_gate": false,
-      "settings_path": "AIMI → Preferences user → Auditor",
+      "settings_path": "AIMI → Preferences user → 🤖 Assistant AI → AI Decision Auditor",
       "settings_gate": null
     },
     {
@@ -722,7 +728,7 @@
       "impact": "medium",
       "feature_group": "auditor",
       "is_gate": false,
-      "settings_path": "AIMI → Preferences user → Auditor",
+      "settings_path": "AIMI → Preferences user → 🤖 Assistant AI → AI Decision Auditor",
       "settings_gate": null
     },
     {
@@ -752,7 +758,7 @@
       "impact": "medium",
       "feature_group": "auditor",
       "is_gate": false,
-      "settings_path": "AIMI → Preferences user → Auditor",
+      "settings_path": "AIMI → Preferences user → 🤖 Assistant AI → AI Decision Auditor",
       "settings_gate": null
     },
     {
@@ -783,7 +789,7 @@
       "impact": "medium",
       "feature_group": "auditor",
       "is_gate": false,
-      "settings_path": "AIMI → Preferences user → Auditor",
+      "settings_path": "AIMI → Preferences user → 🤖 Assistant AI → AI Decision Auditor",
       "settings_gate": null
     },
     {
@@ -1098,8 +1104,8 @@
       "impact": "high",
       "feature_group": "dyn_isf_trajectory",
       "is_gate": false,
-      "settings_path": "AIMI → Preferences user → Dyn Isf Trajectory",
-      "settings_gate": null
+      "settings_path": "AIMI → Preferences user → Adaptive PK/PD",
+      "settings_gate": "Requires: Aimi Dyn Isf Trajectory Tuning Enabled = ON"
     },
     {
       "key": "aimi_dyn_isf_trajectory_shadow_only",
@@ -1134,7 +1140,7 @@
       "impact": "high",
       "feature_group": "dyn_isf_trajectory",
       "is_gate": true,
-      "settings_path": "AIMI → Preferences user → Dyn Isf Trajectory",
+      "settings_path": "AIMI → Preferences user → Adaptive PK/PD",
       "settings_gate": null
     },
     {
@@ -1174,7 +1180,7 @@
       "impact": "high",
       "feature_group": "dyn_isf_trajectory",
       "is_gate": true,
-      "settings_path": "AIMI → Preferences user → Dyn Isf Trajectory",
+      "settings_path": "AIMI → Preferences user → Adaptive PK/PD",
       "settings_gate": null
     },
     {
@@ -1200,7 +1206,7 @@
       "impact": "critical",
       "feature_group": "sos_emergency",
       "is_gate": true,
-      "settings_path": "AIMI → Preferences user → Sos Emergency",
+      "settings_path": "AIMI → Preferences user → 🚨 Emergency SOS (Hypo)",
       "settings_gate": null
     },
     {
@@ -1227,7 +1233,7 @@
       "impact": "critical",
       "feature_group": "sos_emergency",
       "is_gate": false,
-      "settings_path": "AIMI → Preferences user → Sos Emergency",
+      "settings_path": "AIMI → Preferences user → 🚨 Emergency SOS (Hypo)",
       "settings_gate": null
     },
     {
@@ -1253,7 +1259,7 @@
       "impact": "critical",
       "feature_group": "sos_emergency",
       "is_gate": false,
-      "settings_path": "AIMI → Preferences user → Sos Emergency",
+      "settings_path": "AIMI → Preferences user → 🚨 Emergency SOS (Hypo)",
       "settings_gate": null
     },
     {
@@ -1279,7 +1285,7 @@
       "impact": "critical",
       "feature_group": "sos_emergency",
       "is_gate": false,
-      "settings_path": "AIMI → Preferences user → Sos Emergency",
+      "settings_path": "AIMI → Preferences user → 🚨 Emergency SOS (Hypo)",
       "settings_gate": null
     },
     {
@@ -1306,7 +1312,7 @@
       "impact": "critical",
       "feature_group": "sos_emergency",
       "is_gate": false,
-      "settings_path": "AIMI → Preferences user → Sos Emergency",
+      "settings_path": "AIMI → Preferences user → 🚨 Emergency SOS (Hypo)",
       "settings_gate": null
     },
     {
@@ -1333,7 +1339,7 @@
       "impact": "critical",
       "feature_group": "sos_emergency",
       "is_gate": false,
-      "settings_path": "AIMI → Preferences user → Sos Emergency",
+      "settings_path": "AIMI → Preferences user → 🚨 Emergency SOS (Hypo)",
       "settings_gate": null
     },
     {
@@ -1361,7 +1367,7 @@
       "impact": "high",
       "feature_group": "endometriosis",
       "is_gate": false,
-      "settings_path": "AIMI → Preferences user → Endometriosis",
+      "settings_path": "AIMI → Preferences user → Patient context and body declarations → Endometriosis Settings",
       "settings_gate": null
     },
     {
@@ -1391,7 +1397,7 @@
       "impact": "high",
       "feature_group": "endometriosis",
       "is_gate": true,
-      "settings_path": "AIMI → Preferences user → Endometriosis",
+      "settings_path": "AIMI → Preferences user → Patient context and body declarations → Endometriosis Settings",
       "settings_gate": null
     },
     {
@@ -1417,7 +1423,7 @@
       "impact": "high",
       "feature_group": "endometriosis",
       "is_gate": true,
-      "settings_path": "AIMI → Preferences user → Endometriosis",
+      "settings_path": "AIMI → Preferences user → Patient context and body declarations → Endometriosis Settings",
       "settings_gate": null
     },
     {
@@ -1440,7 +1446,7 @@
       "impact": "high",
       "feature_group": "endometriosis",
       "is_gate": false,
-      "settings_path": "AIMI → Preferences user → Endometriosis",
+      "settings_path": "AIMI → Preferences user → Patient context and body declarations → Endometriosis Settings",
       "settings_gate": null
     },
     {
@@ -1468,7 +1474,7 @@
       "impact": "high",
       "feature_group": "endometriosis",
       "is_gate": false,
-      "settings_path": "AIMI → Preferences user → Endometriosis",
+      "settings_path": "AIMI → Preferences user → Patient context and body declarations → Endometriosis Settings",
       "settings_gate": null
     },
     {
@@ -1524,7 +1530,7 @@
       "impact": "high",
       "feature_group": "ism_fusion",
       "is_gate": false,
-      "settings_path": "AIMI → Preferences user → Ism Fusion",
+      "settings_path": "AIMI → Preferences user → Adaptive PK/PD",
       "settings_gate": null
     },
     {
@@ -1564,7 +1570,7 @@
       "impact": "high",
       "feature_group": "ism_fusion",
       "is_gate": false,
-      "settings_path": "AIMI → Preferences user → Ism Fusion",
+      "settings_path": "AIMI → Preferences user → Adaptive PK/PD",
       "settings_gate": null
     },
     {
@@ -1604,7 +1610,7 @@
       "impact": "high",
       "feature_group": "ism_fusion",
       "is_gate": false,
-      "settings_path": "AIMI → Preferences user → Ism Fusion",
+      "settings_path": "AIMI → Preferences user → Adaptive PK/PD",
       "settings_gate": null
     },
     {
@@ -1672,7 +1678,7 @@
       "impact": "high",
       "feature_group": "autodrive_v3",
       "is_gate": false,
-      "settings_path": "AIMI → Preferences user → Autodrive V3",
+      "settings_path": "AIMI → Preferences user → Autodrive",
       "settings_gate": null
     },
     {
@@ -1702,7 +1708,7 @@
       "impact": "high",
       "feature_group": "core",
       "is_gate": false,
-      "settings_path": "AIMI → Preferences user → Core",
+      "settings_path": "AIMI → Preferences user → Adaptive PK/PD",
       "settings_gate": null
     },
     {
@@ -1740,7 +1746,7 @@
       "impact": "medium",
       "feature_group": "physiological_phase",
       "is_gate": true,
-      "settings_path": "AIMI → Preferences user → Physiological Phase",
+      "settings_path": "AIMI → Preferences user → 🏥 Physiological Assistant",
       "settings_gate": null
     },
     {
@@ -1762,7 +1768,7 @@
       "impact": "medium",
       "feature_group": "physiological_phase",
       "is_gate": true,
-      "settings_path": "AIMI → Preferences user → Physiological Phase",
+      "settings_path": "AIMI → Preferences user → 🏥 Physiological Assistant",
       "settings_gate": null
     },
     {
@@ -1796,7 +1802,7 @@
       "impact": "medium",
       "feature_group": "physiological_phase",
       "is_gate": true,
-      "settings_path": "AIMI → Preferences user → Physiological Phase",
+      "settings_path": "AIMI → Preferences user → 🏥 Physiological Assistant",
       "settings_gate": null
     },
     {
@@ -1826,7 +1832,7 @@
       "impact": "medium",
       "feature_group": "physiological_phase",
       "is_gate": true,
-      "settings_path": "AIMI → Preferences user → Physiological Phase",
+      "settings_path": "AIMI → Preferences user → 🏥 Physiological Assistant",
       "settings_gate": null
     },
     {
@@ -1886,7 +1892,7 @@
       "impact": "medium",
       "feature_group": "meal_modes",
       "is_gate": true,
-      "settings_path": "AIMI → Preferences user → Meal Modes",
+      "settings_path": "AIMI → Preferences user → 🏥 Physiological Assistant",
       "settings_gate": null
     },
     {
@@ -1994,7 +2000,7 @@
       "impact": "high",
       "feature_group": "pkpd",
       "is_gate": false,
-      "settings_path": "AIMI → Preferences user → Pkpd",
+      "settings_path": "AIMI → Preferences user → Adaptive PK/PD",
       "settings_gate": null
     },
     {
@@ -2034,7 +2040,7 @@
       "impact": "high",
       "feature_group": "pkpd",
       "is_gate": false,
-      "settings_path": "AIMI → Preferences user → Pkpd",
+      "settings_path": "AIMI → Preferences user → Adaptive PK/PD",
       "settings_gate": null
     },
     {
@@ -2074,7 +2080,7 @@
       "impact": "high",
       "feature_group": "pkpd",
       "is_gate": false,
-      "settings_path": "AIMI → Preferences user → Pkpd",
+      "settings_path": "AIMI → Preferences user → Adaptive PK/PD",
       "settings_gate": null
     },
     {
@@ -2114,7 +2120,7 @@
       "impact": "high",
       "feature_group": "pkpd",
       "is_gate": false,
-      "settings_path": "AIMI → Preferences user → Pkpd",
+      "settings_path": "AIMI → Preferences user → Adaptive PK/PD",
       "settings_gate": null
     },
     {
@@ -2154,7 +2160,7 @@
       "impact": "high",
       "feature_group": "pkpd",
       "is_gate": false,
-      "settings_path": "AIMI → Preferences user → Pkpd",
+      "settings_path": "AIMI → Preferences user → Adaptive PK/PD",
       "settings_gate": null
     },
     {
@@ -2194,7 +2200,7 @@
       "impact": "high",
       "feature_group": "pkpd",
       "is_gate": false,
-      "settings_path": "AIMI → Preferences user → Pkpd",
+      "settings_path": "AIMI → Preferences user → Adaptive PK/PD",
       "settings_gate": null
     },
     {
@@ -2230,7 +2236,7 @@
       "impact": "high",
       "feature_group": "pkpd",
       "is_gate": false,
-      "settings_path": "AIMI → Preferences user → Pkpd",
+      "settings_path": "AIMI → Preferences user → Adaptive PK/PD",
       "settings_gate": null
     },
     {
@@ -2266,7 +2272,7 @@
       "impact": "high",
       "feature_group": "pkpd",
       "is_gate": false,
-      "settings_path": "AIMI → Preferences user → Pkpd",
+      "settings_path": "AIMI → Preferences user → Adaptive PK/PD",
       "settings_gate": null
     },
     {
@@ -2306,7 +2312,7 @@
       "impact": "high",
       "feature_group": "pkpd",
       "is_gate": false,
-      "settings_path": "AIMI → Preferences user → Pkpd",
+      "settings_path": "AIMI → Preferences user → Adaptive PK/PD",
       "settings_gate": null
     },
     {
@@ -2554,7 +2560,7 @@
       "impact": "critical",
       "feature_group": "iob_surveillance",
       "is_gate": false,
-      "settings_path": "AIMI → Preferences user → Iob Surveillance",
+      "settings_path": "AIMI → Preferences user → Adaptive PK/PD",
       "settings_gate": null
     },
     {
@@ -2594,7 +2600,7 @@
       "impact": "critical",
       "feature_group": "iob_surveillance",
       "is_gate": false,
-      "settings_path": "AIMI → Preferences user → Iob Surveillance",
+      "settings_path": "AIMI → Preferences user → Adaptive PK/PD",
       "settings_gate": null
     },
     {
@@ -2634,7 +2640,7 @@
       "impact": "critical",
       "feature_group": "iob_surveillance",
       "is_gate": false,
-      "settings_path": "AIMI → Preferences user → Iob Surveillance",
+      "settings_path": "AIMI → Preferences user → Adaptive PK/PD",
       "settings_gate": null
     },
     {
@@ -2674,7 +2680,7 @@
       "impact": "critical",
       "feature_group": "smb_tail",
       "is_gate": false,
-      "settings_path": "AIMI → Preferences user → Smb Tail",
+      "settings_path": "AIMI → Preferences user → Adaptive PK/PD",
       "settings_gate": null
     },
     {
@@ -2714,7 +2720,7 @@
       "impact": "medium",
       "feature_group": "smb_tail",
       "is_gate": false,
-      "settings_path": "AIMI → Preferences user → Smb Tail",
+      "settings_path": "AIMI → Preferences user → Adaptive PK/PD",
       "settings_gate": null
     },
     {
@@ -2754,7 +2760,7 @@
       "impact": "critical",
       "feature_group": "smb_tail",
       "is_gate": false,
-      "settings_path": "AIMI → Preferences user → Smb Tail",
+      "settings_path": "AIMI → Preferences user → Adaptive PK/PD",
       "settings_gate": null
     },
     {
@@ -2794,7 +2800,7 @@
       "impact": "critical",
       "feature_group": "smb_tail",
       "is_gate": false,
-      "settings_path": "AIMI → Preferences user → Smb Tail",
+      "settings_path": "AIMI → Preferences user → Adaptive PK/PD",
       "settings_gate": null
     },
     {
@@ -3214,7 +3220,7 @@
       "impact": "medium",
       "feature_group": "core",
       "is_gate": false,
-      "settings_path": "AIMI → Preferences user → T3C Brittle Mode Settings",
+      "settings_path": "AIMI → Preferences user → Universal Adaptive Basal",
       "settings_gate": null
     },
     {
@@ -3240,7 +3246,7 @@
       "impact": "medium",
       "feature_group": "core",
       "is_gate": true,
-      "settings_path": "AIMI → Preferences user → Core",
+      "settings_path": "AIMI → Preferences user → 🤖 Assistant AI",
       "settings_gate": null
     },
     {
@@ -3266,7 +3272,7 @@
       "impact": "medium",
       "feature_group": "core",
       "is_gate": true,
-      "settings_path": "AIMI → Preferences user → Core",
+      "settings_path": "AIMI → Preferences user → 🤖 Assistant AI",
       "settings_gate": null
     },
     {
@@ -3306,7 +3312,7 @@
       "impact": "high",
       "feature_group": "autodrive_v3",
       "is_gate": true,
-      "settings_path": "AIMI → Preferences user → Autodrive V3",
+      "settings_path": "AIMI → Preferences user → Autodrive",
       "settings_gate": null
     },
     {
@@ -3417,8 +3423,8 @@
       "impact": "medium",
       "feature_group": "governance",
       "is_gate": false,
-      "settings_path": "AIMI → Preferences user → Governance",
-      "settings_gate": null
+      "settings_path": "AIMI → Preferences user → Universal Adaptive Basal",
+      "settings_gate": "Requires: T3C Adaptive Basal = ON"
     },
     {
       "key": "key_aimi_gov_anticipation_hypo_damp",
@@ -3452,8 +3458,8 @@
       "impact": "critical",
       "feature_group": "governance",
       "is_gate": false,
-      "settings_path": "AIMI → Preferences user → Governance",
-      "settings_gate": null
+      "settings_path": "AIMI → Preferences user → Universal Adaptive Basal",
+      "settings_gate": "Requires: T3C Adaptive Basal = ON"
     },
     {
       "key": "key_aimi_gov_anticipation_lookback_samples",
@@ -3487,8 +3493,8 @@
       "impact": "medium",
       "feature_group": "governance",
       "is_gate": false,
-      "settings_path": "AIMI → Preferences user → Governance",
-      "settings_gate": null
+      "settings_path": "AIMI → Preferences user → Universal Adaptive Basal",
+      "settings_gate": "Requires: T3C Adaptive Basal = ON"
     },
     {
       "key": "key_aimi_gov_anticipation_margin_mgdl",
@@ -3522,8 +3528,8 @@
       "impact": "medium",
       "feature_group": "governance",
       "is_gate": false,
-      "settings_path": "AIMI → Preferences user → Governance",
-      "settings_gate": null
+      "settings_path": "AIMI → Preferences user → Universal Adaptive Basal",
+      "settings_gate": "Requires: T3C Adaptive Basal = ON"
     },
     {
       "key": "key_aimi_gov_hold_agg_decay_rate",
@@ -3557,8 +3563,8 @@
       "impact": "medium",
       "feature_group": "governance",
       "is_gate": false,
-      "settings_path": "AIMI → Preferences user → Governance",
-      "settings_gate": null
+      "settings_path": "AIMI → Preferences user → Universal Adaptive Basal",
+      "settings_gate": "Requires: T3C Adaptive Basal = ON"
     },
     {
       "key": "key_aimi_gov_hold_agg_decay_severe",
@@ -3592,8 +3598,8 @@
       "impact": "medium",
       "feature_group": "governance",
       "is_gate": false,
-      "settings_path": "AIMI → Preferences user → Governance",
-      "settings_gate": null
+      "settings_path": "AIMI → Preferences user → Universal Adaptive Basal",
+      "settings_gate": "Requires: T3C Adaptive Basal = ON"
     },
     {
       "key": "key_aimi_gov_hold_agg_floor_rate",
@@ -3627,8 +3633,8 @@
       "impact": "medium",
       "feature_group": "governance",
       "is_gate": false,
-      "settings_path": "AIMI → Preferences user → Governance",
-      "settings_gate": null
+      "settings_path": "AIMI → Preferences user → Universal Adaptive Basal",
+      "settings_gate": "Requires: T3C Adaptive Basal = ON"
     },
     {
       "key": "key_aimi_gov_hold_agg_floor_severe",
@@ -3662,8 +3668,8 @@
       "impact": "medium",
       "feature_group": "governance",
       "is_gate": false,
-      "settings_path": "AIMI → Preferences user → Governance",
-      "settings_gate": null
+      "settings_path": "AIMI → Preferences user → Universal Adaptive Basal",
+      "settings_gate": "Requires: T3C Adaptive Basal = ON"
     },
     {
       "key": "key_aimi_gov_hold_basal_decay_rate",
@@ -3697,8 +3703,8 @@
       "impact": "medium",
       "feature_group": "governance",
       "is_gate": false,
-      "settings_path": "AIMI → Preferences user → Governance",
-      "settings_gate": null
+      "settings_path": "AIMI → Preferences user → Universal Adaptive Basal",
+      "settings_gate": "Requires: T3C Adaptive Basal = ON"
     },
     {
       "key": "key_aimi_gov_hold_basal_decay_severe",
@@ -3732,8 +3738,8 @@
       "impact": "medium",
       "feature_group": "governance",
       "is_gate": false,
-      "settings_path": "AIMI → Preferences user → Governance",
-      "settings_gate": null
+      "settings_path": "AIMI → Preferences user → Universal Adaptive Basal",
+      "settings_gate": "Requires: T3C Adaptive Basal = ON"
     },
     {
       "key": "key_aimi_gov_hold_basal_floor_rate",
@@ -3767,8 +3773,8 @@
       "impact": "medium",
       "feature_group": "governance",
       "is_gate": false,
-      "settings_path": "AIMI → Preferences user → Governance",
-      "settings_gate": null
+      "settings_path": "AIMI → Preferences user → Universal Adaptive Basal",
+      "settings_gate": "Requires: T3C Adaptive Basal = ON"
     },
     {
       "key": "key_aimi_gov_hold_basal_floor_severe",
@@ -3802,8 +3808,8 @@
       "impact": "medium",
       "feature_group": "governance",
       "is_gate": false,
-      "settings_path": "AIMI → Preferences user → Governance",
-      "settings_gate": null
+      "settings_path": "AIMI → Preferences user → Universal Adaptive Basal",
+      "settings_gate": "Requires: T3C Adaptive Basal = ON"
     },
     {
       "key": "key_aimi_gov_hypo_bg_mgdl",
@@ -3837,8 +3843,8 @@
       "impact": "critical",
       "feature_group": "governance",
       "is_gate": false,
-      "settings_path": "AIMI → Preferences user → Governance",
-      "settings_gate": null
+      "settings_path": "AIMI → Preferences user → Universal Adaptive Basal",
+      "settings_gate": "Requires: T3C Adaptive Basal = ON"
     },
     {
       "key": "key_aimi_gov_hypo_rate_enter",
@@ -3872,8 +3878,8 @@
       "impact": "critical",
       "feature_group": "governance",
       "is_gate": false,
-      "settings_path": "AIMI → Preferences user → Governance",
-      "settings_gate": null
+      "settings_path": "AIMI → Preferences user → Universal Adaptive Basal",
+      "settings_gate": "Requires: T3C Adaptive Basal = ON"
     },
     {
       "key": "key_aimi_gov_hypo_rate_exit",
@@ -3907,8 +3913,8 @@
       "impact": "critical",
       "feature_group": "governance",
       "is_gate": false,
-      "settings_path": "AIMI → Preferences user → Governance",
-      "settings_gate": null
+      "settings_path": "AIMI → Preferences user → Universal Adaptive Basal",
+      "settings_gate": "Requires: T3C Adaptive Basal = ON"
     },
     {
       "key": "key_aimi_gov_severe_hypo_bg_mgdl",
@@ -3942,8 +3948,8 @@
       "impact": "critical",
       "feature_group": "governance",
       "is_gate": false,
-      "settings_path": "AIMI → Preferences user → Governance",
-      "settings_gate": null
+      "settings_path": "AIMI → Preferences user → Universal Adaptive Basal",
+      "settings_gate": "Requires: T3C Adaptive Basal = ON"
     },
     {
       "key": "key_aimi_hyper_deep_dev_mgdl",
@@ -3984,8 +3990,8 @@
       "impact": "medium",
       "feature_group": "hyper_trajectory",
       "is_gate": false,
-      "settings_path": "AIMI → Preferences user → Hyper Trajectory",
-      "settings_gate": null
+      "settings_path": "AIMI → Preferences user → Autodrive",
+      "settings_gate": "Requires: Hyper Trajectory Release = ON"
     },
     {
       "key": "key_aimi_hyper_established_dev_mgdl",
@@ -4026,8 +4032,8 @@
       "impact": "medium",
       "feature_group": "hyper_trajectory",
       "is_gate": false,
-      "settings_path": "AIMI → Preferences user → Hyper Trajectory",
-      "settings_gate": null
+      "settings_path": "AIMI → Preferences user → Autodrive",
+      "settings_gate": "Requires: Hyper Trajectory Release = ON"
     },
     {
       "key": "key_aimi_hyper_trajectory_release",
@@ -4066,7 +4072,7 @@
       "impact": "high",
       "feature_group": "hyper_trajectory",
       "is_gate": true,
-      "settings_path": "AIMI → Preferences user → Hyper Trajectory",
+      "settings_path": "AIMI → Preferences user → Autodrive",
       "settings_gate": null
     },
     {
@@ -4106,7 +4112,7 @@
       "impact": "high",
       "feature_group": "hyper_trajectory",
       "is_gate": true,
-      "settings_path": "AIMI → Preferences user → Hyper Trajectory",
+      "settings_path": "AIMI → Preferences user → Autodrive",
       "settings_gate": null
     },
     {
@@ -4167,7 +4173,7 @@
       "impact": "medium",
       "feature_group": "iob_surveillance",
       "is_gate": true,
-      "settings_path": "AIMI → Preferences user → Iob Surveillance",
+      "settings_path": "AIMI → Preferences user → Adaptive PK/PD",
       "settings_gate": null
     },
     {
@@ -4238,7 +4244,7 @@
       "impact": "high",
       "feature_group": "governance",
       "is_gate": true,
-      "settings_path": "AIMI → Preferences user → Governance",
+      "settings_path": "AIMI → Preferences user → Adaptive PK/PD",
       "settings_gate": null
     },
     {
@@ -4276,7 +4282,7 @@
       "impact": "high",
       "feature_group": "pkpd",
       "is_gate": true,
-      "settings_path": "AIMI → Preferences user → Pkpd",
+      "settings_path": "AIMI → Preferences user → Adaptive PK/PD",
       "settings_gate": null
     },
     {
@@ -4314,7 +4320,7 @@
       "impact": "high",
       "feature_group": "pkpd",
       "is_gate": true,
-      "settings_path": "AIMI → Preferences user → Pkpd",
+      "settings_path": "AIMI → Preferences user → Adaptive PK/PD",
       "settings_gate": null
     },
     {
@@ -4380,7 +4386,7 @@
       "impact": "medium",
       "feature_group": "recursive_belief",
       "is_gate": true,
-      "settings_path": "AIMI → Preferences user → Recursive Belief",
+      "settings_path": "AIMI → Preferences user → Autodrive",
       "settings_gate": null
     },
     {
@@ -4420,7 +4426,7 @@
       "impact": "medium",
       "feature_group": "recursive_belief",
       "is_gate": true,
-      "settings_path": "AIMI → Preferences user → Recursive Belief",
+      "settings_path": "AIMI → Preferences user → Autodrive",
       "settings_gate": null
     },
     {
@@ -4456,7 +4462,7 @@
       "impact": "medium",
       "feature_group": "recursive_belief",
       "is_gate": true,
-      "settings_path": "AIMI → Preferences user → Recursive Belief",
+      "settings_path": "AIMI → Preferences user → Autodrive",
       "settings_gate": null
     },
     {
@@ -4517,7 +4523,7 @@
       "impact": "high",
       "feature_group": "tube_advisor",
       "is_gate": true,
-      "settings_path": "AIMI → Preferences user → Tube Advisor",
+      "settings_path": "AIMI → Preferences user → Trajectory Guard",
       "settings_gate": null
     },
     {
@@ -4545,7 +4551,7 @@
       "impact": "high",
       "feature_group": "t3c_adaptive_basal",
       "is_gate": false,
-      "settings_path": "AIMI → Preferences user → T3C Adaptive Basal",
+      "settings_path": "AIMI → Preferences user → T3C Brittle Mode Settings",
       "settings_gate": null
     },
     {
@@ -4601,7 +4607,7 @@
       "impact": "high",
       "feature_group": "t3c_adaptive_basal",
       "is_gate": false,
-      "settings_path": "AIMI → Preferences user → T3C Adaptive Basal",
+      "settings_path": "AIMI → Preferences user → T3C Brittle Mode Settings",
       "settings_gate": null
     },
     {
@@ -4639,6 +4645,108 @@
       "impact": "high",
       "feature_group": "t3c_adaptive_basal",
       "is_gate": true,
+      "settings_path": "AIMI → Preferences user → T3C Brittle Mode Settings",
+      "settings_gate": null
+    },
+    {
+      "key": "key_aimi_t3c_cfrd_cob_delay_min",
+      "name": "OApsAIMIT3cCfrdCobDelayMin",
+      "type": "Double",
+      "default": 0.0,
+      "min": 0.0,
+      "max": 90.0,
+      "used_in": [
+        {
+          "file": "OpenAPSAIMIPlugin.kt",
+          "function": "aimiComposeT3cSubScreen"
+        },
+        {
+          "file": "DetermineBasalAIMI2.kt",
+          "function": "executeT3cBrittleMode"
+        }
+      ],
+      "orphaned": false,
+      "negative_gate_key": null,
+      "negative_gate_note": null,
+      "logic_summary": "Used in AIMI internal calculations for t3c_cfrd_cob_delay_min.",
+      "effect_high": "Higher value — more insulin/greater effect",
+      "effect_low": "Lower value — less insulin/reduced effect",
+      "impact": "high",
+      "feature_group": "t3c_adaptive_basal",
+      "is_gate": false,
+      "settings_path": "AIMI → Preferences user → T3C Brittle Mode Settings",
+      "settings_gate": null
+    },
+    {
+      "key": "key_aimi_t3c_cfrd_exacerbation",
+      "name": "OApsAIMIT3cCfrdExacerbationMode",
+      "type": "Boolean",
+      "used_in": [
+        {
+          "file": "DetermineBasalAIMI2.kt",
+          "function": "executeT3cBrittleMode"
+        }
+      ],
+      "orphaned": false,
+      "negative_gate_key": null,
+      "negative_gate_note": null,
+      "logic_summary": "Boolean switch for t3c_cfrd_exacerbation.",
+      "effect_high": "Feature is active — associated functionality runs",
+      "effect_low": "Feature is inactive — associated functionality is disabled",
+      "impact": "high",
+      "feature_group": "t3c_adaptive_basal",
+      "is_gate": false,
+      "settings_path": "AIMI → Preferences user → T3C Adaptive Basal",
+      "settings_gate": null
+    },
+    {
+      "key": "key_aimi_t3c_cfrd_lgs_floor",
+      "name": "OApsAIMIT3cCfrdLgsFloorMgdl",
+      "type": "Double",
+      "default": 80.0,
+      "min": 70.0,
+      "max": 95.0,
+      "used_in": [
+        {
+          "file": "OpenAPSAIMIPlugin.kt",
+          "function": "aimiComposeT3cSubScreen"
+        },
+        {
+          "file": "DetermineBasalAIMI2.kt",
+          "function": "runT3cBrittleBypassOrReturn"
+        }
+      ],
+      "orphaned": false,
+      "negative_gate_key": null,
+      "negative_gate_note": null,
+      "logic_summary": "Used in AIMI internal calculations for t3c_cfrd_lgs_floor.",
+      "effect_high": "Higher value — more insulin/greater effect",
+      "effect_low": "Lower value — less insulin/reduced effect",
+      "impact": "high",
+      "feature_group": "t3c_adaptive_basal",
+      "is_gate": false,
+      "settings_path": "AIMI → Preferences user → T3C Brittle Mode Settings",
+      "settings_gate": null
+    },
+    {
+      "key": "key_aimi_t3c_cfrd_mode",
+      "name": "OApsAIMIT3cCfrdMode",
+      "type": "Boolean",
+      "used_in": [
+        {
+          "file": "DetermineBasalAIMI2.kt",
+          "function": "runT3cBrittleBypassOrReturn"
+        }
+      ],
+      "orphaned": false,
+      "negative_gate_key": null,
+      "negative_gate_note": null,
+      "logic_summary": "Boolean switch for t3c_cfrd_mode.",
+      "effect_high": "Feature is active — associated functionality runs",
+      "effect_low": "Feature is inactive — associated functionality is disabled",
+      "impact": "high",
+      "feature_group": "t3c_adaptive_basal",
+      "is_gate": false,
       "settings_path": "AIMI → Preferences user → T3C Adaptive Basal",
       "settings_gate": null
     },
@@ -4665,7 +4773,7 @@
       "impact": "medium",
       "feature_group": "thyroid",
       "is_gate": true,
-      "settings_path": "AIMI → Preferences user → Thyroid",
+      "settings_path": "AIMI → Preferences user → Patient context and body declarations → 🦋 Hyperthyroidism (Basedow) Module",
       "settings_gate": null
     },
     {
@@ -4695,7 +4803,7 @@
       "impact": "medium",
       "feature_group": "thyroid",
       "is_gate": true,
-      "settings_path": "AIMI → Preferences user → Thyroid",
+      "settings_path": "AIMI → Preferences user → Patient context and body declarations → 🦋 Hyperthyroidism (Basedow) Module",
       "settings_gate": null
     },
     {
@@ -4721,7 +4829,7 @@
       "impact": "medium",
       "feature_group": "thyroid",
       "is_gate": false,
-      "settings_path": "AIMI → Preferences user → Thyroid",
+      "settings_path": "AIMI → Preferences user → Patient context and body declarations → 🦋 Hyperthyroidism (Basedow) Module",
       "settings_gate": null
     },
     {
@@ -4747,7 +4855,7 @@
       "impact": "medium",
       "feature_group": "thyroid",
       "is_gate": false,
-      "settings_path": "AIMI → Preferences user → Thyroid",
+      "settings_path": "AIMI → Preferences user → Patient context and body declarations → 🦋 Hyperthyroidism (Basedow) Module",
       "settings_gate": null
     },
     {
@@ -4773,7 +4881,7 @@
       "impact": "medium",
       "feature_group": "thyroid",
       "is_gate": false,
-      "settings_path": "AIMI → Preferences user → Thyroid",
+      "settings_path": "AIMI → Preferences user → Patient context and body declarations → 🦋 Hyperthyroidism (Basedow) Module",
       "settings_gate": null
     },
     {
@@ -4799,7 +4907,7 @@
       "impact": "medium",
       "feature_group": "thyroid",
       "is_gate": false,
-      "settings_path": "AIMI → Preferences user → Thyroid",
+      "settings_path": "AIMI → Preferences user → Patient context and body declarations → 🦋 Hyperthyroidism (Basedow) Module",
       "settings_gate": null
     },
     {
@@ -4825,7 +4933,7 @@
       "impact": "medium",
       "feature_group": "tpo",
       "is_gate": true,
-      "settings_path": "AIMI → Preferences user → Tpo",
+      "settings_path": "AIMI → Preferences user → Transient protection (TPO)",
       "settings_gate": null
     },
     {
@@ -4852,7 +4960,7 @@
       "impact": "medium",
       "feature_group": "tpo",
       "is_gate": true,
-      "settings_path": "AIMI → Preferences user → Tpo",
+      "settings_path": "AIMI → Preferences user → Transient protection (TPO)",
       "settings_gate": null
     },
     {
@@ -4879,7 +4987,7 @@
       "impact": "medium",
       "feature_group": "tpo",
       "is_gate": true,
-      "settings_path": "AIMI → Preferences user → Tpo",
+      "settings_path": "AIMI → Preferences user → Transient protection (TPO)",
       "settings_gate": null
     },
     {
@@ -4952,8 +5060,8 @@
       "impact": "critical",
       "feature_group": "tube_advisor",
       "is_gate": false,
-      "settings_path": "AIMI → Preferences user → Tube Advisor",
-      "settings_gate": null
+      "settings_path": "AIMI → Preferences user → Trajectory Guard → Straight-line tube (tuning)",
+      "settings_gate": "Requires: Straight Line Tube Enabled = ON"
     },
     {
       "key": "key_aimi_tube_basal_trim_max",
@@ -4987,8 +5095,8 @@
       "impact": "high",
       "feature_group": "tube_advisor",
       "is_gate": false,
-      "settings_path": "AIMI → Preferences user → Tube Advisor",
-      "settings_gate": null
+      "settings_path": "AIMI → Preferences user → Trajectory Guard → Straight-line tube (tuning)",
+      "settings_gate": "Requires: Straight Line Tube Enabled = ON"
     },
     {
       "key": "key_aimi_tube_hyper_band_mgdl",
@@ -5022,8 +5130,8 @@
       "impact": "high",
       "feature_group": "tube_advisor",
       "is_gate": false,
-      "settings_path": "AIMI → Preferences user → Tube Advisor",
-      "settings_gate": null
+      "settings_path": "AIMI → Preferences user → Trajectory Guard → Straight-line tube (tuning)",
+      "settings_gate": "Requires: Straight Line Tube Enabled = ON"
     },
     {
       "key": "key_aimi_tube_hypo_floor_mgdl",
@@ -5065,8 +5173,8 @@
       "impact": "critical",
       "feature_group": "tube_advisor",
       "is_gate": false,
-      "settings_path": "AIMI → Preferences user → Tube Advisor",
-      "settings_gate": null
+      "settings_path": "AIMI → Preferences user → Trajectory Guard → Straight-line tube (tuning)",
+      "settings_gate": "Requires: Straight Line Tube Enabled = ON"
     },
     {
       "key": "key_aimi_tube_kappa_margin",
@@ -5100,8 +5208,8 @@
       "impact": "high",
       "feature_group": "tube_advisor",
       "is_gate": false,
-      "settings_path": "AIMI → Preferences user → Tube Advisor",
-      "settings_gate": null
+      "settings_path": "AIMI → Preferences user → Trajectory Guard → Straight-line tube (tuning)",
+      "settings_gate": "Requires: Straight Line Tube Enabled = ON"
     },
     {
       "key": "key_aimiweight",
@@ -5132,7 +5240,7 @@
       "impact": "medium",
       "feature_group": "core",
       "is_gate": false,
-      "settings_path": "AIMI → Preferences user → Core",
+      "settings_path": "AIMI → Preferences user → Core parameters",
       "settings_gate": null
     },
     {
@@ -5164,7 +5272,7 @@
       "impact": "medium",
       "feature_group": "core",
       "is_gate": false,
-      "settings_path": "AIMI → Preferences user → Core",
+      "settings_path": "AIMI → Preferences user → Core parameters",
       "settings_gate": null
     },
     {
@@ -5196,7 +5304,7 @@
       "impact": "high",
       "feature_group": "autodrive_v3",
       "is_gate": false,
-      "settings_path": "AIMI → Preferences user → Autodrive V3",
+      "settings_path": "AIMI → Preferences user → Autodrive → Prebolus limits and conditions",
       "settings_gate": null
     },
     {
@@ -5226,7 +5334,7 @@
       "impact": "medium",
       "feature_group": "core",
       "is_gate": false,
-      "settings_path": "AIMI → Preferences user → Core",
+      "settings_path": "AIMI → Preferences user → 🤖 Assistant AI",
       "settings_gate": null
     },
     {
@@ -5254,7 +5362,7 @@
       "impact": "high",
       "feature_group": "autodrive_v3",
       "is_gate": false,
-      "settings_path": "AIMI → Preferences user → Autodrive V3",
+      "settings_path": "AIMI → Preferences user → Autodrive → Prebolus limits and conditions",
       "settings_gate": null
     },
     {
@@ -5325,7 +5433,7 @@
       "impact": "medium",
       "feature_group": "core",
       "is_gate": false,
-      "settings_path": "AIMI → Preferences user → Core",
+      "settings_path": "AIMI → Preferences user → Manual Mode → Breakfast",
       "settings_gate": null
     },
     {
@@ -5414,7 +5522,7 @@
       "impact": "medium",
       "feature_group": "core",
       "is_gate": false,
-      "settings_path": "AIMI → Preferences user → Core",
+      "settings_path": "AIMI → Preferences user → Manual Mode → High Carb",
       "settings_gate": null
     },
     {
@@ -5441,7 +5549,7 @@
       "impact": "high",
       "feature_group": "autodrive_v3",
       "is_gate": false,
-      "settings_path": "AIMI → Preferences user → Autodrive V3",
+      "settings_path": "AIMI → Preferences user → Autodrive → Prebolus limits and conditions",
       "settings_gate": null
     },
     {
@@ -5533,7 +5641,7 @@
       "impact": "medium",
       "feature_group": "meal_modes",
       "is_gate": false,
-      "settings_path": "AIMI → Preferences user → Meal Modes",
+      "settings_path": "AIMI → Preferences user → Manual Mode → Dinner",
       "settings_gate": null
     },
     {
@@ -5648,7 +5756,7 @@
       "impact": "medium",
       "feature_group": "meal_modes",
       "is_gate": false,
-      "settings_path": "AIMI → Preferences user → Meal Modes",
+      "settings_path": "AIMI → Preferences user → Manual Mode → Lunch",
       "settings_gate": null
     },
     {
@@ -5711,7 +5819,7 @@
       "impact": "high",
       "feature_group": "meal_modes",
       "is_gate": false,
-      "settings_path": "AIMI → Preferences user → Meal Modes",
+      "settings_path": "AIMI → Preferences user → Manual Mode → Generic Meal",
       "settings_gate": null
     },
     {
@@ -5758,7 +5866,7 @@
       "impact": "high",
       "feature_group": "ngr",
       "is_gate": false,
-      "settings_path": "AIMI → Preferences user → Ngr",
+      "settings_path": "AIMI → Preferences user → Patient context and body declarations → Night growth resistance",
       "settings_gate": null
     },
     {
@@ -5782,7 +5890,7 @@
       "impact": "high",
       "feature_group": "ngr",
       "is_gate": false,
-      "settings_path": "AIMI → Preferences user → Ngr",
+      "settings_path": "AIMI → Preferences user → Patient context and body declarations → Night growth resistance",
       "settings_gate": null
     },
     {
@@ -5835,7 +5943,7 @@
       "impact": "high",
       "feature_group": "ngr",
       "is_gate": true,
-      "settings_path": "AIMI → Preferences user → Ngr",
+      "settings_path": "AIMI → Preferences user → Patient context and body declarations → Night growth resistance",
       "settings_gate": null
     },
     {
@@ -5863,7 +5971,7 @@
       "impact": "critical",
       "feature_group": "ngr",
       "is_gate": false,
-      "settings_path": "AIMI → Preferences user → Ngr",
+      "settings_path": "AIMI → Preferences user → Patient context and body declarations → Night growth resistance",
       "settings_gate": null
     },
     {
@@ -5983,7 +6091,7 @@
       "impact": "high",
       "feature_group": "ngr",
       "is_gate": false,
-      "settings_path": "AIMI → Preferences user → Ngr",
+      "settings_path": "AIMI → Preferences user → Patient context and body declarations → Night growth resistance",
       "settings_gate": null
     },
     {
@@ -6009,7 +6117,7 @@
       "impact": "high",
       "feature_group": "ngr",
       "is_gate": false,
-      "settings_path": "AIMI → Preferences user → Ngr",
+      "settings_path": "AIMI → Preferences user → Patient context and body declarations → Night growth resistance",
       "settings_gate": null
     },
     {
@@ -6033,7 +6141,7 @@
       "impact": "high",
       "feature_group": "ngr",
       "is_gate": false,
-      "settings_path": "AIMI → Preferences user → Ngr",
+      "settings_path": "AIMI → Preferences user → Patient context and body declarations → Night growth resistance",
       "settings_gate": null
     },
     {
@@ -6088,7 +6196,7 @@
       "impact": "medium",
       "feature_group": "meal_modes",
       "is_gate": false,
-      "settings_path": "AIMI → Preferences user → Meal Modes",
+      "settings_path": "AIMI → Preferences user → Manual Mode → Rest",
       "settings_gate": null
     },
     {
@@ -6147,7 +6255,7 @@
       "impact": "medium",
       "feature_group": "meal_modes",
       "is_gate": false,
-      "settings_path": "AIMI → Preferences user → Meal Modes",
+      "settings_path": "AIMI → Preferences user → Manual Mode → Snack",
       "settings_gate": null
     },
     {
@@ -6173,7 +6281,7 @@
       "impact": "medium",
       "feature_group": "wcycle",
       "is_gate": false,
-      "settings_path": "AIMI → Preferences user → Wcycle",
+      "settings_path": "AIMI → Preferences user → Patient context and body declarations → wcycle_preferences",
       "settings_gate": null
     },
     {
@@ -6199,7 +6307,7 @@
       "impact": "medium",
       "feature_group": "wcycle",
       "is_gate": false,
-      "settings_path": "AIMI → Preferences user → Wcycle",
+      "settings_path": "AIMI → Preferences user → Patient context and body declarations → Inflammatory / autoimmune diseases",
       "settings_gate": null
     },
     {
@@ -6225,7 +6333,7 @@
       "impact": "medium",
       "feature_group": "wcycle",
       "is_gate": false,
-      "settings_path": "AIMI → Preferences user → Wcycle",
+      "settings_path": "AIMI → Preferences user → Patient context and body declarations → wcycle_preferences",
       "settings_gate": null
     },
     {
@@ -6251,7 +6359,7 @@
       "impact": "medium",
       "feature_group": "wcycle",
       "is_gate": false,
-      "settings_path": "AIMI → Preferences user → Wcycle",
+      "settings_path": "AIMI → Preferences user → Patient context and body declarations → Inflammatory / autoimmune diseases",
       "settings_gate": null
     },
     {
@@ -6293,7 +6401,7 @@
       "impact": "critical",
       "feature_group": "core",
       "is_gate": false,
-      "settings_path": "AIMI → Preferences user → Core",
+      "settings_path": "AIMI → Preferences user → Core parameters",
       "settings_gate": null
     },
     {
@@ -6335,7 +6443,7 @@
       "impact": "critical",
       "feature_group": "core",
       "is_gate": false,
-      "settings_path": "AIMI → Preferences user → Core",
+      "settings_path": "AIMI → Preferences user → Core parameters",
       "settings_gate": null
     },
     {
@@ -6367,7 +6475,7 @@
       "impact": "high",
       "feature_group": "meal_modes",
       "is_gate": false,
-      "settings_path": "AIMI → Preferences user → Meal Modes",
+      "settings_path": "AIMI → Preferences user → Manual Mode → Breakfast",
       "settings_gate": null
     },
     {
@@ -6399,7 +6507,7 @@
       "impact": "high",
       "feature_group": "meal_modes",
       "is_gate": false,
-      "settings_path": "AIMI → Preferences user → Meal Modes",
+      "settings_path": "AIMI → Preferences user → Manual Mode → Dinner",
       "settings_gate": null
     },
     {
@@ -6431,7 +6539,7 @@
       "impact": "high",
       "feature_group": "meal_modes",
       "is_gate": false,
-      "settings_path": "AIMI → Preferences user → Meal Modes",
+      "settings_path": "AIMI → Preferences user → Manual Mode → Lunch",
       "settings_gate": null
     },
     {
@@ -6467,7 +6575,7 @@
       "impact": "high",
       "feature_group": "meal_modes",
       "is_gate": false,
-      "settings_path": "AIMI → Preferences user → Meal Modes",
+      "settings_path": "AIMI → Preferences user → Manual Mode → Breakfast",
       "settings_gate": null
     },
     {
@@ -6543,7 +6651,7 @@
       "impact": "high",
       "feature_group": "meal_modes",
       "is_gate": false,
-      "settings_path": "AIMI → Preferences user → Meal Modes",
+      "settings_path": "AIMI → Preferences user → Manual Mode → Dinner",
       "settings_gate": null
     },
     {
@@ -6579,7 +6687,7 @@
       "impact": "high",
       "feature_group": "meal_modes",
       "is_gate": false,
-      "settings_path": "AIMI → Preferences user → Meal Modes",
+      "settings_path": "AIMI → Preferences user → Manual Mode → High Carb",
       "settings_gate": null
     },
     {
@@ -6611,7 +6719,7 @@
       "impact": "high",
       "feature_group": "meal_modes",
       "is_gate": false,
-      "settings_path": "AIMI → Preferences user → Meal Modes",
+      "settings_path": "AIMI → Preferences user → Manual Mode → High Carb",
       "settings_gate": null
     },
     {
@@ -6647,7 +6755,7 @@
       "impact": "high",
       "feature_group": "meal_modes",
       "is_gate": false,
-      "settings_path": "AIMI → Preferences user → Meal Modes",
+      "settings_path": "AIMI → Preferences user → Manual Mode → Lunch",
       "settings_gate": null
     },
     {
@@ -6679,7 +6787,7 @@
       "impact": "high",
       "feature_group": "meal_modes",
       "is_gate": false,
-      "settings_path": "AIMI → Preferences user → Meal Modes",
+      "settings_path": "AIMI → Preferences user → Manual Mode → Generic Meal",
       "settings_gate": null
     },
     {
@@ -6707,7 +6815,7 @@
       "impact": "high",
       "feature_group": "meal_modes",
       "is_gate": false,
-      "settings_path": "AIMI → Preferences user → Meal Modes",
+      "settings_path": "AIMI → Preferences user → Manual Mode → Snack",
       "settings_gate": null
     },
     {
@@ -6783,7 +6891,7 @@
       "impact": "medium",
       "feature_group": "core",
       "is_gate": false,
-      "settings_path": "AIMI → Preferences user → Core",
+      "settings_path": "AIMI → Preferences user → Core parameters",
       "settings_gate": null
     },
     {
@@ -6813,7 +6921,7 @@
       "impact": "medium",
       "feature_group": "core",
       "is_gate": true,
-      "settings_path": "AIMI → Preferences user → Core",
+      "settings_path": "AIMI → Preferences user → Patient context and body declarations → wcycle_preferences",
       "settings_gate": null
     },
     {
@@ -6882,7 +6990,7 @@
       "impact": "medium",
       "feature_group": "core",
       "is_gate": true,
-      "settings_path": "AIMI → Preferences user → Core",
+      "settings_path": "AIMI → Preferences user → Patient context and body declarations → Night growth resistance",
       "settings_gate": null
     },
     {
@@ -6913,7 +7021,7 @@
       "impact": "medium",
       "feature_group": "wcycle",
       "is_gate": true,
-      "settings_path": "AIMI → Preferences user → Wcycle",
+      "settings_path": "AIMI → Preferences user → Patient context and body declarations → wcycle_preferences",
       "settings_gate": null
     },
     {
@@ -6939,7 +7047,7 @@
       "impact": "medium",
       "feature_group": "wcycle",
       "is_gate": true,
-      "settings_path": "AIMI → Preferences user → Wcycle",
+      "settings_path": "AIMI → Preferences user → Patient context and body declarations → wcycle_preferences",
       "settings_gate": null
     },
     {
@@ -6965,7 +7073,7 @@
       "impact": "medium",
       "feature_group": "wcycle",
       "is_gate": true,
-      "settings_path": "AIMI → Preferences user → Wcycle",
+      "settings_path": "AIMI → Preferences user → Patient context and body declarations → wcycle_preferences",
       "settings_gate": null
     },
     {
@@ -7021,7 +7129,7 @@
       "impact": "high",
       "feature_group": "autodrive_v3",
       "is_gate": true,
-      "settings_path": "AIMI → Preferences user → Autodrive V3",
+      "settings_path": "AIMI → Preferences user → Autodrive",
       "settings_gate": null
     },
     {
@@ -7081,7 +7189,7 @@
       "impact": "high",
       "feature_group": "t3c_adaptive_basal",
       "is_gate": true,
-      "settings_path": "AIMI → Preferences user → T3C Adaptive Basal",
+      "settings_path": "AIMI → Preferences user → Universal Adaptive Basal",
       "settings_gate": null
     },
     {
@@ -7108,7 +7216,7 @@
       "impact": "medium",
       "feature_group": "wcycle",
       "is_gate": false,
-      "settings_path": "AIMI → Preferences user → Wcycle",
+      "settings_path": "AIMI → Preferences user → Patient context and body declarations → wcycle_preferences",
       "settings_gate": null
     },
     {
@@ -7136,7 +7244,7 @@
       "impact": "medium",
       "feature_group": "wcycle",
       "is_gate": false,
-      "settings_path": "AIMI → Preferences user → Wcycle",
+      "settings_path": "AIMI → Preferences user → Patient context and body declarations → wcycle_preferences",
       "settings_gate": null
     },
     {
@@ -7164,7 +7272,7 @@
       "impact": "medium",
       "feature_group": "wcycle",
       "is_gate": false,
-      "settings_path": "AIMI → Preferences user → Wcycle",
+      "settings_path": "AIMI → Preferences user → Patient context and body declarations → wcycle_preferences",
       "settings_gate": null
     },
     {
@@ -7192,7 +7300,7 @@
       "impact": "medium",
       "feature_group": "wcycle",
       "is_gate": false,
-      "settings_path": "AIMI → Preferences user → Wcycle",
+      "settings_path": "AIMI → Preferences user → Patient context and body declarations → wcycle_preferences",
       "settings_gate": null
     },
     {
@@ -7216,8 +7324,8 @@
       "impact": "medium",
       "feature_group": "core",
       "is_gate": false,
-      "settings_path": "AIMI → Preferences user → Core",
-      "settings_gate": null
+      "settings_path": "AIMI → Advanced Settings",
+      "settings_gate": "Requires: Use Dynamic Sensitivity = ON"
     },
     {
       "key": "low_mark",
@@ -7319,7 +7427,7 @@
       "impact": "critical",
       "feature_group": "core",
       "is_gate": false,
-      "settings_path": "AIMI → Preferences user → Core",
+      "settings_path": "AIMI → Advanced Settings → Advanced Settings",
       "settings_gate": null
     },
     {
@@ -7361,7 +7469,7 @@
       "impact": "critical",
       "feature_group": "core",
       "is_gate": false,
-      "settings_path": "AIMI → Preferences user → Core",
+      "settings_path": "AIMI → Advanced Settings → Advanced Settings",
       "settings_gate": null
     },
     {
@@ -7504,7 +7612,7 @@
       "impact": "medium",
       "feature_group": "core",
       "is_gate": false,
-      "settings_path": "AIMI → Preferences user → Core",
+      "settings_path": "AIMI → Advanced Settings",
       "settings_gate": null
     },
     {
@@ -7530,7 +7638,7 @@
       "impact": "critical",
       "feature_group": "core",
       "is_gate": false,
-      "settings_path": "AIMI → Preferences user → Core",
+      "settings_path": "AIMI → Advanced Settings",
       "settings_gate": null
     },
     {
@@ -7584,7 +7692,7 @@
       "impact": "critical",
       "feature_group": "core",
       "is_gate": false,
-      "settings_path": "AIMI → Preferences user → Core",
+      "settings_path": "AIMI → Advanced Settings",
       "settings_gate": null
     },
     {

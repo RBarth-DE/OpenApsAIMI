@@ -192,12 +192,18 @@
     "summary": "Used in AIMI internal calculations for MaxMultiplier.",
     "default": 1.6,
     "min": 1.0,
-    "orphaned": true,
+    "orphaned": false,
     "is_gate": false,
     "negative_gate_key": null,
     "impact": "medium",
     "effect_high": "Higher value — more insulin/greater effect",
-    "effect_low": "Lower value — less insulin/reduced effect"
+    "effect_low": "Lower value — less insulin/reduced effect",
+    "used_in": [
+      {
+        "file": "DetermineBasalAIMI2.kt",
+        "function": "bootstrapPhysiologyAfterEarlyTick"
+      }
+    ]
   },
   "OApsAIMIPlateauBandAbs": {
     "key": "OApsAIMIPlateauBandAbs",
@@ -3795,6 +3801,96 @@
       {
         "file": "BasalNeuralLearner.kt",
         "function": "updateLearning"
+      }
+    ]
+  },
+  "key_aimi_t3c_cfrd_cob_delay_min": {
+    "key": "key_aimi_t3c_cfrd_cob_delay_min",
+    "name": "OApsAIMIT3cCfrdCobDelayMin",
+    "type": "Double",
+    "feature_group": "t3c_adaptive_basal",
+    "summary": "Used in AIMI internal calculations for t3c_cfrd_cob_delay_min.",
+    "default": 0.0,
+    "min": 0.0,
+    "max": 90.0,
+    "orphaned": false,
+    "is_gate": false,
+    "negative_gate_key": null,
+    "impact": "high",
+    "effect_high": "Higher value — more insulin/greater effect",
+    "effect_low": "Lower value — less insulin/reduced effect",
+    "used_in": [
+      {
+        "file": "OpenAPSAIMIPlugin.kt",
+        "function": "aimiComposeT3cSubScreen"
+      },
+      {
+        "file": "DetermineBasalAIMI2.kt",
+        "function": "executeT3cBrittleMode"
+      }
+    ]
+  },
+  "key_aimi_t3c_cfrd_exacerbation": {
+    "key": "key_aimi_t3c_cfrd_exacerbation",
+    "name": "OApsAIMIT3cCfrdExacerbationMode",
+    "type": "Boolean",
+    "feature_group": "t3c_adaptive_basal",
+    "summary": "Boolean switch for t3c_cfrd_exacerbation.",
+    "orphaned": false,
+    "is_gate": false,
+    "negative_gate_key": null,
+    "impact": "high",
+    "effect_high": "Feature is active — associated functionality runs",
+    "effect_low": "Feature is inactive — associated functionality is disabled",
+    "used_in": [
+      {
+        "file": "DetermineBasalAIMI2.kt",
+        "function": "executeT3cBrittleMode"
+      }
+    ]
+  },
+  "key_aimi_t3c_cfrd_lgs_floor": {
+    "key": "key_aimi_t3c_cfrd_lgs_floor",
+    "name": "OApsAIMIT3cCfrdLgsFloorMgdl",
+    "type": "Double",
+    "feature_group": "t3c_adaptive_basal",
+    "summary": "Used in AIMI internal calculations for t3c_cfrd_lgs_floor.",
+    "default": 80.0,
+    "min": 70.0,
+    "max": 95.0,
+    "orphaned": false,
+    "is_gate": false,
+    "negative_gate_key": null,
+    "impact": "high",
+    "effect_high": "Higher value — more insulin/greater effect",
+    "effect_low": "Lower value — less insulin/reduced effect",
+    "used_in": [
+      {
+        "file": "OpenAPSAIMIPlugin.kt",
+        "function": "aimiComposeT3cSubScreen"
+      },
+      {
+        "file": "DetermineBasalAIMI2.kt",
+        "function": "runT3cBrittleBypassOrReturn"
+      }
+    ]
+  },
+  "key_aimi_t3c_cfrd_mode": {
+    "key": "key_aimi_t3c_cfrd_mode",
+    "name": "OApsAIMIT3cCfrdMode",
+    "type": "Boolean",
+    "feature_group": "t3c_adaptive_basal",
+    "summary": "Boolean switch for t3c_cfrd_mode.",
+    "orphaned": false,
+    "is_gate": false,
+    "negative_gate_key": null,
+    "impact": "high",
+    "effect_high": "Feature is active — associated functionality runs",
+    "effect_low": "Feature is inactive — associated functionality is disabled",
+    "used_in": [
+      {
+        "file": "DetermineBasalAIMI2.kt",
+        "function": "runT3cBrittleBypassOrReturn"
       }
     ]
   },

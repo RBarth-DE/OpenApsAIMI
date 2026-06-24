@@ -1,0 +1,1775 @@
+{
+  "generated_at": "2026-06-24T21:22:42.825614+00:00",
+  "source_commit": "6f8b4fe4768b9ffb224bdad304c0c0e4fcc28c0d",
+  "paths": {
+    "openapsma_max_basal": {
+      "path": "AIMI → Advanced Settings",
+      "screen_titles": [
+        "AIMI",
+        "Advanced Settings"
+      ],
+      "gate_key": null
+    },
+    "openapsmb_max_iob": {
+      "path": "AIMI → Advanced Settings",
+      "screen_titles": [
+        "AIMI",
+        "Advanced Settings"
+      ],
+      "gate_key": null
+    },
+    "use_dynamic_sensitivity": {
+      "path": "AIMI → Advanced Settings",
+      "screen_titles": [
+        "AIMI",
+        "Advanced Settings"
+      ],
+      "gate_key": null
+    },
+    "openapsama_useautosens": {
+      "path": "AIMI → Advanced Settings",
+      "screen_titles": [
+        "AIMI",
+        "Advanced Settings"
+      ],
+      "gate_key": null
+    },
+    "DynISFAdjust": {
+      "path": "AIMI → Advanced Settings",
+      "screen_titles": [
+        "AIMI",
+        "Advanced Settings"
+      ],
+      "gate_key": "use_dynamic_sensitivity"
+    },
+    "lgsThreshold": {
+      "path": "AIMI → Advanced Settings",
+      "screen_titles": [
+        "AIMI",
+        "Advanced Settings"
+      ],
+      "gate_key": "use_dynamic_sensitivity"
+    },
+    "dynisf_adjust_sensitivity": {
+      "path": "AIMI → Advanced Settings",
+      "screen_titles": [
+        "AIMI",
+        "Advanced Settings"
+      ],
+      "gate_key": null
+    },
+    "sensitivity_raises_target": {
+      "path": "AIMI → Advanced Settings",
+      "screen_titles": [
+        "AIMI",
+        "Advanced Settings"
+      ],
+      "gate_key": null
+    },
+    "resistance_lowers_target": {
+      "path": "AIMI → Advanced Settings",
+      "screen_titles": [
+        "AIMI",
+        "Advanced Settings"
+      ],
+      "gate_key": null
+    },
+    "use_smb": {
+      "path": "AIMI → Advanced Settings",
+      "screen_titles": [
+        "AIMI",
+        "Advanced Settings"
+      ],
+      "gate_key": null
+    },
+    "enableSMB_with_high_temptarget": {
+      "path": "AIMI → Advanced Settings",
+      "screen_titles": [
+        "AIMI",
+        "Advanced Settings"
+      ],
+      "gate_key": null
+    },
+    "enableSMB_always": {
+      "path": "AIMI → Advanced Settings",
+      "screen_titles": [
+        "AIMI",
+        "Advanced Settings"
+      ],
+      "gate_key": null
+    },
+    "enableSMB_with_COB": {
+      "path": "AIMI → Advanced Settings",
+      "screen_titles": [
+        "AIMI",
+        "Advanced Settings"
+      ],
+      "gate_key": null
+    },
+    "enableSMB_with_temptarget": {
+      "path": "AIMI → Advanced Settings",
+      "screen_titles": [
+        "AIMI",
+        "Advanced Settings"
+      ],
+      "gate_key": null
+    },
+    "enableSMB_after_carbs": {
+      "path": "AIMI → Advanced Settings",
+      "screen_titles": [
+        "AIMI",
+        "Advanced Settings"
+      ],
+      "gate_key": null
+    },
+    "smbinterval": {
+      "path": "AIMI → Advanced Settings",
+      "screen_titles": [
+        "AIMI",
+        "Advanced Settings"
+      ],
+      "gate_key": "use_smb"
+    },
+    "smbmaxminutes": {
+      "path": "AIMI → Advanced Settings",
+      "screen_titles": [
+        "AIMI",
+        "Advanced Settings"
+      ],
+      "gate_key": "use_smb"
+    },
+    "uamsmbmaxminutes": {
+      "path": "AIMI → Advanced Settings",
+      "screen_titles": [
+        "AIMI",
+        "Advanced Settings"
+      ],
+      "gate_key": "use_smb"
+    },
+    "use_uam": {
+      "path": "AIMI → Advanced Settings",
+      "screen_titles": [
+        "AIMI",
+        "Advanced Settings"
+      ],
+      "gate_key": null
+    },
+    "carbsReqThreshold": {
+      "path": "AIMI → Advanced Settings",
+      "screen_titles": [
+        "AIMI",
+        "Advanced Settings"
+      ],
+      "gate_key": null
+    },
+    "aps_link_to_docs": {
+      "path": "AIMI → Advanced Settings → Advanced Settings",
+      "screen_titles": [
+        "AIMI",
+        "Advanced Settings",
+        "Advanced Settings"
+      ],
+      "gate_key": null
+    },
+    "always_use_shortavg": {
+      "path": "AIMI → Advanced Settings → Advanced Settings",
+      "screen_titles": [
+        "AIMI",
+        "Advanced Settings",
+        "Advanced Settings"
+      ],
+      "gate_key": null
+    },
+    "openapsama_max_daily_safety_multiplier": {
+      "path": "AIMI → Advanced Settings → Advanced Settings",
+      "screen_titles": [
+        "AIMI",
+        "Advanced Settings",
+        "Advanced Settings"
+      ],
+      "gate_key": null
+    },
+    "openapsama_current_basal_safety_multiplier": {
+      "path": "AIMI → Advanced Settings → Advanced Settings",
+      "screen_titles": [
+        "AIMI",
+        "Advanced Settings",
+        "Advanced Settings"
+      ],
+      "gate_key": null
+    },
+    "key_enable_ML_training": {
+      "path": "AIMI → Preferences user → 🤖 Assistant AI",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "🤖 Assistant AI"
+      ],
+      "gate_key": null
+    },
+    "aimi_advisor_provider": {
+      "path": "AIMI → Preferences user → 🤖 Assistant AI",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "🤖 Assistant AI"
+      ],
+      "gate_key": null
+    },
+    "aimi_advisor_openai_key": {
+      "path": "AIMI → Preferences user → 🤖 Assistant AI",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "🤖 Assistant AI"
+      ],
+      "gate_key": null
+    },
+    "aimi_advisor_gemini_key": {
+      "path": "AIMI → Preferences user → 🤖 Assistant AI",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "🤖 Assistant AI"
+      ],
+      "gate_key": null
+    },
+    "aimi_advisor_deepseek_key": {
+      "path": "AIMI → Preferences user → 🤖 Assistant AI",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "🤖 Assistant AI"
+      ],
+      "gate_key": null
+    },
+    "aimi_advisor_claude_key": {
+      "path": "AIMI → Preferences user → 🤖 Assistant AI",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "🤖 Assistant AI"
+      ],
+      "gate_key": null
+    },
+    "key_aimi_advisor_personal_oref_ml": {
+      "path": "AIMI → Preferences user → 🤖 Assistant AI",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "🤖 Assistant AI"
+      ],
+      "gate_key": null
+    },
+    "key_aimi_advisor_llm_rich_oref": {
+      "path": "AIMI → Preferences user → 🤖 Assistant AI",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "🤖 Assistant AI"
+      ],
+      "gate_key": null
+    },
+    "aimi_auditor_enabled": {
+      "path": "AIMI → Preferences user → 🤖 Assistant AI → AI Decision Auditor",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "🤖 Assistant AI",
+        "AI Decision Auditor"
+      ],
+      "gate_key": null
+    },
+    "aimi_auditor_mode": {
+      "path": "AIMI → Preferences user → 🤖 Assistant AI → AI Decision Auditor",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "🤖 Assistant AI",
+        "AI Decision Auditor"
+      ],
+      "gate_key": null
+    },
+    "aimi_auditor_max_per_hour": {
+      "path": "AIMI → Preferences user → 🤖 Assistant AI → AI Decision Auditor",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "🤖 Assistant AI",
+        "AI Decision Auditor"
+      ],
+      "gate_key": null
+    },
+    "aimi_auditor_timeout_seconds": {
+      "path": "AIMI → Preferences user → 🤖 Assistant AI → AI Decision Auditor",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "🤖 Assistant AI",
+        "AI Decision Auditor"
+      ],
+      "gate_key": null
+    },
+    "aimi_auditor_min_confidence": {
+      "path": "AIMI → Preferences user → 🤖 Assistant AI → AI Decision Auditor",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "🤖 Assistant AI",
+        "AI Decision Auditor"
+      ],
+      "gate_key": null
+    },
+    "aimi_remote_control_pin": {
+      "path": "AIMI → Preferences user",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user"
+      ],
+      "gate_key": null
+    },
+    "key_aimi_tpo_enabled": {
+      "path": "AIMI → Preferences user → Transient protection (TPO)",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "Transient protection (TPO)"
+      ],
+      "gate_key": null
+    },
+    "key_aimi_tpo_llm_confirm_enabled": {
+      "path": "AIMI → Preferences user → Transient protection (TPO)",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "Transient protection (TPO)"
+      ],
+      "gate_key": null
+    },
+    "key_aimi_tpo_notify_on_apply": {
+      "path": "AIMI → Preferences user → Transient protection (TPO)",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "Transient protection (TPO)"
+      ],
+      "gate_key": null
+    },
+    "aimi_control_center_compose": {
+      "path": "AIMI → Preferences user",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user"
+      ],
+      "gate_key": null
+    },
+    "aimi_emergency_sos_enable": {
+      "path": "AIMI → Preferences user → 🚨 Emergency SOS (Hypo)",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "🚨 Emergency SOS (Hypo)"
+      ],
+      "gate_key": null
+    },
+    "aimi_emergency_sos_phone": {
+      "path": "AIMI → Preferences user → 🚨 Emergency SOS (Hypo)",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "🚨 Emergency SOS (Hypo)"
+      ],
+      "gate_key": null
+    },
+    "aimi_emergency_sos_phone2": {
+      "path": "AIMI → Preferences user → 🚨 Emergency SOS (Hypo)",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "🚨 Emergency SOS (Hypo)"
+      ],
+      "gate_key": null
+    },
+    "aimi_emergency_sos_threshold": {
+      "path": "AIMI → Preferences user → 🚨 Emergency SOS (Hypo)",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "🚨 Emergency SOS (Hypo)"
+      ],
+      "gate_key": null
+    },
+    "aimi_emergency_sos_immediate_threshold": {
+      "path": "AIMI → Preferences user → 🚨 Emergency SOS (Hypo)",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "🚨 Emergency SOS (Hypo)"
+      ],
+      "gate_key": null
+    },
+    "aimi_emergency_sos_stale_threshold": {
+      "path": "AIMI → Preferences user → 🚨 Emergency SOS (Hypo)",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "🚨 Emergency SOS (Hypo)"
+      ],
+      "gate_key": null
+    },
+    "aimi_sos_permissions_compose": {
+      "path": "AIMI → Preferences user → 🚨 Emergency SOS (Hypo)",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "🚨 Emergency SOS (Hypo)"
+      ],
+      "gate_key": null
+    },
+    "aimi_hypo_risk_alarm_info": {
+      "path": "AIMI → Preferences user → 🚨 Emergency SOS (Hypo)",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "🚨 Emergency SOS (Hypo)"
+      ],
+      "gate_key": null
+    },
+    "meal_modes_max_basal": {
+      "path": "AIMI → Preferences user → Manual Mode",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "Manual Mode"
+      ],
+      "gate_key": null
+    },
+    "key_prebolus_BF_mode": {
+      "path": "AIMI → Preferences user → Manual Mode → Breakfast",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "Manual Mode",
+        "Breakfast"
+      ],
+      "gate_key": null
+    },
+    "key_prebolus2_BF_mode": {
+      "path": "AIMI → Preferences user → Manual Mode → Breakfast",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "Manual Mode",
+        "Breakfast"
+      ],
+      "gate_key": null
+    },
+    "key_oaps_aimi_BF_interval": {
+      "path": "AIMI → Preferences user → Manual Mode → Breakfast",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "Manual Mode",
+        "Breakfast"
+      ],
+      "gate_key": null
+    },
+    "key_prebolus_lunch_mode": {
+      "path": "AIMI → Preferences user → Manual Mode → Lunch",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "Manual Mode",
+        "Lunch"
+      ],
+      "gate_key": null
+    },
+    "key_prebolus2_lunch_mode": {
+      "path": "AIMI → Preferences user → Manual Mode → Lunch",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "Manual Mode",
+        "Lunch"
+      ],
+      "gate_key": null
+    },
+    "key_oaps_aimi_lunch_interval": {
+      "path": "AIMI → Preferences user → Manual Mode → Lunch",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "Manual Mode",
+        "Lunch"
+      ],
+      "gate_key": null
+    },
+    "key_prebolus_dinner_mode": {
+      "path": "AIMI → Preferences user → Manual Mode → Dinner",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "Manual Mode",
+        "Dinner"
+      ],
+      "gate_key": null
+    },
+    "key_prebolus2_dinner_mode": {
+      "path": "AIMI → Preferences user → Manual Mode → Dinner",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "Manual Mode",
+        "Dinner"
+      ],
+      "gate_key": null
+    },
+    "key_oaps_aimi_dinner_interval": {
+      "path": "AIMI → Preferences user → Manual Mode → Dinner",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "Manual Mode",
+        "Dinner"
+      ],
+      "gate_key": null
+    },
+    "key_prebolus_highcarb_mode": {
+      "path": "AIMI → Preferences user → Manual Mode → High Carb",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "Manual Mode",
+        "High Carb"
+      ],
+      "gate_key": null
+    },
+    "key_prebolus_highcarb_mode2": {
+      "path": "AIMI → Preferences user → Manual Mode → High Carb",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "Manual Mode",
+        "High Carb"
+      ],
+      "gate_key": null
+    },
+    "key_oaps_aimi_HC_interval": {
+      "path": "AIMI → Preferences user → Manual Mode → High Carb",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "Manual Mode",
+        "High Carb"
+      ],
+      "gate_key": null
+    },
+    "key_prebolus_snack_mode": {
+      "path": "AIMI → Preferences user → Manual Mode → Snack",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "Manual Mode",
+        "Snack"
+      ],
+      "gate_key": null
+    },
+    "key_oaps_aimi_snack_interval": {
+      "path": "AIMI → Preferences user → Manual Mode → Snack",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "Manual Mode",
+        "Snack"
+      ],
+      "gate_key": null
+    },
+    "key_prebolus_meal_mode": {
+      "path": "AIMI → Preferences user → Manual Mode → Generic Meal",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "Manual Mode",
+        "Generic Meal"
+      ],
+      "gate_key": null
+    },
+    "key_oaps_aimi_meal_interval": {
+      "path": "AIMI → Preferences user → Manual Mode → Generic Meal",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "Manual Mode",
+        "Generic Meal"
+      ],
+      "gate_key": null
+    },
+    "key_oaps_aimi_sleep_interval": {
+      "path": "AIMI → Preferences user → Manual Mode → Rest",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "Manual Mode",
+        "Rest"
+      ],
+      "gate_key": null
+    },
+    "aimi_physio_assistant_enable": {
+      "path": "AIMI → Preferences user → 🏥 Physiological Assistant",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "🏥 Physiological Assistant"
+      ],
+      "gate_key": null
+    },
+    "aimi_physio_pattern_catalog_info": {
+      "path": "AIMI → Preferences user → 🏥 Physiological Assistant",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "🏥 Physiological Assistant"
+      ],
+      "gate_key": null
+    },
+    "aimi_physio_hc_permissions_compose": {
+      "path": "AIMI → Preferences user → 🏥 Physiological Assistant",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "🏥 Physiological Assistant"
+      ],
+      "gate_key": null
+    },
+    "UnifiedActivityProviderMTR": {
+      "path": "AIMI → Preferences user → 🏥 Physiological Assistant",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "🏥 Physiological Assistant"
+      ],
+      "gate_key": null
+    },
+    "aimi_oura_personal_access_token": {
+      "path": "AIMI → Preferences user → 🏥 Physiological Assistant",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "🏥 Physiological Assistant"
+      ],
+      "gate_key": null
+    },
+    "aimi_physio_sleep_enable": {
+      "path": "AIMI → Preferences user → 🏥 Physiological Assistant",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "🏥 Physiological Assistant"
+      ],
+      "gate_key": null
+    },
+    "aimi_physio_hrv_enable": {
+      "path": "AIMI → Preferences user → 🏥 Physiological Assistant",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "🏥 Physiological Assistant"
+      ],
+      "gate_key": null
+    },
+    "aimi_physio_llm_enable": {
+      "path": "AIMI → Preferences user → 🏥 Physiological Assistant",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "🏥 Physiological Assistant"
+      ],
+      "gate_key": null
+    },
+    "aimi_physio_debug_logs": {
+      "path": "AIMI → Preferences user → 🏥 Physiological Assistant",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "🏥 Physiological Assistant"
+      ],
+      "gate_key": null
+    },
+    "key_openapsaimi_max_smb": {
+      "path": "AIMI → Preferences user → Core parameters",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "Core parameters"
+      ],
+      "gate_key": null
+    },
+    "key_openapsaimi_high_bg_max_smb": {
+      "path": "AIMI → Preferences user → Core parameters",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "Core parameters"
+      ],
+      "gate_key": null
+    },
+    "key_aimiweight": {
+      "path": "AIMI → Preferences user → Core parameters",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "Core parameters"
+      ],
+      "gate_key": null
+    },
+    "key_cho": {
+      "path": "AIMI → Preferences user → Core parameters",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "Core parameters"
+      ],
+      "gate_key": null
+    },
+    "key_tdd7": {
+      "path": "AIMI → Preferences user → Core parameters",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "Core parameters"
+      ],
+      "gate_key": null
+    },
+    "OApsAIMIHighBg": {
+      "path": "AIMI → Preferences user → Core parameters",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "Core parameters"
+      ],
+      "gate_key": null
+    },
+    "key_use_unified_reactivity": {
+      "path": "AIMI → Preferences user → Core parameters",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "Core parameters"
+      ],
+      "gate_key": null
+    },
+    "key_aimi_pkpd_enabled": {
+      "path": "AIMI → Preferences user → Adaptive PK/PD",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "Adaptive PK/PD"
+      ],
+      "gate_key": null
+    },
+    "key_aimi_peak_governor_enabled": {
+      "path": "AIMI → Preferences user → Adaptive PK/PD",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "Adaptive PK/PD"
+      ],
+      "gate_key": null
+    },
+    "aimi_peak_governor_learned_weight": {
+      "path": "AIMI → Preferences user → Adaptive PK/PD",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "Adaptive PK/PD"
+      ],
+      "gate_key": null
+    },
+    "aimi_pkpd_initial_dia_h": {
+      "path": "AIMI → Preferences user → Adaptive PK/PD",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "Adaptive PK/PD"
+      ],
+      "gate_key": null
+    },
+    "aimi_pkpd_initial_peak_min": {
+      "path": "AIMI → Preferences user → Adaptive PK/PD",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "Adaptive PK/PD"
+      ],
+      "gate_key": null
+    },
+    "aimi_pkpd_bounds_dia_min_h": {
+      "path": "AIMI → Preferences user → Adaptive PK/PD",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "Adaptive PK/PD"
+      ],
+      "gate_key": null
+    },
+    "aimi_pkpd_bounds_dia_max_h": {
+      "path": "AIMI → Preferences user → Adaptive PK/PD",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "Adaptive PK/PD"
+      ],
+      "gate_key": null
+    },
+    "aimi_pkpd_bounds_peak_min_min": {
+      "path": "AIMI → Preferences user → Adaptive PK/PD",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "Adaptive PK/PD"
+      ],
+      "gate_key": null
+    },
+    "aimi_pkpd_bounds_peak_min_max": {
+      "path": "AIMI → Preferences user → Adaptive PK/PD",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "Adaptive PK/PD"
+      ],
+      "gate_key": null
+    },
+    "aimi_pkpd_max_dia_change_per_day_h": {
+      "path": "AIMI → Preferences user → Adaptive PK/PD",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "Adaptive PK/PD"
+      ],
+      "gate_key": null
+    },
+    "aimi_pkpd_max_peak_change_per_day_min": {
+      "path": "AIMI → Preferences user → Adaptive PK/PD",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "Adaptive PK/PD"
+      ],
+      "gate_key": null
+    },
+    "aimi_isf_fusion_min_factor": {
+      "path": "AIMI → Preferences user → Adaptive PK/PD",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "Adaptive PK/PD"
+      ],
+      "gate_key": null
+    },
+    "aimi_isf_fusion_max_factor": {
+      "path": "AIMI → Preferences user → Adaptive PK/PD",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "Adaptive PK/PD"
+      ],
+      "gate_key": null
+    },
+    "aimi_isf_fusion_max_change_per_tick": {
+      "path": "AIMI → Preferences user → Adaptive PK/PD",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "Adaptive PK/PD"
+      ],
+      "gate_key": null
+    },
+    "aimi_dyn_isf_trajectory_tuning_enabled": {
+      "path": "AIMI → Preferences user → Adaptive PK/PD",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "Adaptive PK/PD"
+      ],
+      "gate_key": null
+    },
+    "aimi_dyn_isf_trajectory_shadow_only": {
+      "path": "AIMI → Preferences user → Adaptive PK/PD",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "Adaptive PK/PD"
+      ],
+      "gate_key": null
+    },
+    "aimi_dyn_isf_trajectory_max_fraction": {
+      "path": "AIMI → Preferences user → Adaptive PK/PD",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "Adaptive PK/PD"
+      ],
+      "gate_key": "aimi_dyn_isf_trajectory_tuning_enabled"
+    },
+    "aimi_smb_tail_threshold": {
+      "path": "AIMI → Preferences user → Adaptive PK/PD",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "Adaptive PK/PD"
+      ],
+      "gate_key": null
+    },
+    "aimi_smb_tail_damping": {
+      "path": "AIMI → Preferences user → Adaptive PK/PD",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "Adaptive PK/PD"
+      ],
+      "gate_key": null
+    },
+    "key_aimi_pkpd_pragmatic_relief_enabled": {
+      "path": "AIMI → Preferences user → Adaptive PK/PD",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "Adaptive PK/PD"
+      ],
+      "gate_key": null
+    },
+    "aimi_pkpd_pragmatic_relief_min_factor": {
+      "path": "AIMI → Preferences user → Adaptive PK/PD",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "Adaptive PK/PD"
+      ],
+      "gate_key": null
+    },
+    "aimi_red_carpet_restore_threshold": {
+      "path": "AIMI → Preferences user → Adaptive PK/PD",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "Adaptive PK/PD"
+      ],
+      "gate_key": null
+    },
+    "key_aimi_iob_surveillance_guard": {
+      "path": "AIMI → Preferences user → Adaptive PK/PD",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "Adaptive PK/PD"
+      ],
+      "gate_key": null
+    },
+    "aimi_priority_max_iob_factor": {
+      "path": "AIMI → Preferences user → Adaptive PK/PD",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "Adaptive PK/PD"
+      ],
+      "gate_key": null
+    },
+    "aimi_priority_max_iob_extra_u": {
+      "path": "AIMI → Preferences user → Adaptive PK/PD",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "Adaptive PK/PD"
+      ],
+      "gate_key": null
+    },
+    "aimi_smb_exercise_damping": {
+      "path": "AIMI → Preferences user → Adaptive PK/PD",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "Adaptive PK/PD"
+      ],
+      "gate_key": null
+    },
+    "aimi_smb_late_fat_damping": {
+      "path": "AIMI → Preferences user → Adaptive PK/PD",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "Adaptive PK/PD"
+      ],
+      "gate_key": null
+    },
+    "key_use_aimi_autodrive_active": {
+      "path": "AIMI → Preferences user → Autodrive",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "Autodrive"
+      ],
+      "gate_key": null
+    },
+    "key_aimi_autodrive_v3_authoritative": {
+      "path": "AIMI → Preferences user → Autodrive",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "Autodrive"
+      ],
+      "gate_key": null
+    },
+    "key_aimi_hyper_trajectory_release": {
+      "path": "AIMI → Preferences user → Autodrive",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "Autodrive"
+      ],
+      "gate_key": null
+    },
+    "key_aimi_hyper_trajectory_release_aggressive": {
+      "path": "AIMI → Preferences user → Autodrive",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "Autodrive"
+      ],
+      "gate_key": null
+    },
+    "key_aimi_recursive_belief_shadow": {
+      "path": "AIMI → Preferences user → Autodrive",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "Autodrive"
+      ],
+      "gate_key": null
+    },
+    "key_aimi_recursive_belief_authority": {
+      "path": "AIMI → Preferences user → Autodrive",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "Autodrive"
+      ],
+      "gate_key": null
+    },
+    "key_aimi_recursive_belief_wavelet": {
+      "path": "AIMI → Preferences user → Autodrive",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "Autodrive"
+      ],
+      "gate_key": null
+    },
+    "key_aimi_hyper_established_dev_mgdl": {
+      "path": "AIMI → Preferences user → Autodrive",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "Autodrive"
+      ],
+      "gate_key": "key_aimi_hyper_trajectory_release"
+    },
+    "key_aimi_hyper_deep_dev_mgdl": {
+      "path": "AIMI → Preferences user → Autodrive",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "Autodrive"
+      ],
+      "gate_key": "key_aimi_hyper_trajectory_release"
+    },
+    "autodrive_max_basal": {
+      "path": "AIMI → Preferences user → Autodrive",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "Autodrive"
+      ],
+      "gate_key": null
+    },
+    "aimi_mpc_insulin_u_per_kg_per_5min": {
+      "path": "AIMI → Preferences user → Autodrive",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "Autodrive"
+      ],
+      "gate_key": null
+    },
+    "key_oaps_aimi_autodriveBG": {
+      "path": "AIMI → Preferences user → Autodrive → Prebolus limits and conditions",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "Autodrive",
+        "Prebolus limits and conditions"
+      ],
+      "gate_key": null
+    },
+    "key_combinedDelta_autodrive_mode": {
+      "path": "AIMI → Preferences user → Autodrive → Prebolus limits and conditions",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "Autodrive",
+        "Prebolus limits and conditions"
+      ],
+      "gate_key": null
+    },
+    "key_mindeviation_autodrive_mode": {
+      "path": "AIMI → Preferences user → Autodrive → Prebolus limits and conditions",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "Autodrive",
+        "Prebolus limits and conditions"
+      ],
+      "gate_key": null
+    },
+    "key_aimi_t3c_brittle_mode": {
+      "path": "AIMI → Preferences user → T3C Brittle Mode Settings",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "T3C Brittle Mode Settings"
+      ],
+      "gate_key": null
+    },
+    "key_aimi_t3c_activation_threshold": {
+      "path": "AIMI → Preferences user → T3C Brittle Mode Settings",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "T3C Brittle Mode Settings"
+      ],
+      "gate_key": null
+    },
+    "key_aimi_t3c_aggressiveness": {
+      "path": "AIMI → Preferences user → T3C Brittle Mode Settings",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "T3C Brittle Mode Settings"
+      ],
+      "gate_key": null
+    },
+    "key_aimi_t3c_cfrd_lgs_floor": {
+      "path": "AIMI → Preferences user → T3C Brittle Mode Settings",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "T3C Brittle Mode Settings"
+      ],
+      "gate_key": null
+    },
+    "key_aimi_t3c_cfrd_cob_delay_min": {
+      "path": "AIMI → Preferences user → T3C Brittle Mode Settings",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "T3C Brittle Mode Settings"
+      ],
+      "gate_key": null
+    },
+    "key_aimi_t3c_anticipation_strength": {
+      "path": "AIMI → Preferences user → T3C Brittle Mode Settings",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "T3C Brittle Mode Settings"
+      ],
+      "gate_key": null
+    },
+    "key_use_aimi_t3c_adaptive_basal": {
+      "path": "AIMI → Preferences user → Universal Adaptive Basal",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "Universal Adaptive Basal"
+      ],
+      "gate_key": null
+    },
+    "key_aimi_adaptive_basal_max_scaling": {
+      "path": "AIMI → Preferences user → Universal Adaptive Basal",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "Universal Adaptive Basal"
+      ],
+      "gate_key": null
+    },
+    "key_aimi_gov_hypo_rate_enter": {
+      "path": "AIMI → Preferences user → Universal Adaptive Basal",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "Universal Adaptive Basal"
+      ],
+      "gate_key": "key_use_aimi_t3c_adaptive_basal"
+    },
+    "key_aimi_gov_hypo_rate_exit": {
+      "path": "AIMI → Preferences user → Universal Adaptive Basal",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "Universal Adaptive Basal"
+      ],
+      "gate_key": "key_use_aimi_t3c_adaptive_basal"
+    },
+    "key_aimi_gov_hypo_bg_mgdl": {
+      "path": "AIMI → Preferences user → Universal Adaptive Basal",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "Universal Adaptive Basal"
+      ],
+      "gate_key": "key_use_aimi_t3c_adaptive_basal"
+    },
+    "key_aimi_gov_severe_hypo_bg_mgdl": {
+      "path": "AIMI → Preferences user → Universal Adaptive Basal",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "Universal Adaptive Basal"
+      ],
+      "gate_key": "key_use_aimi_t3c_adaptive_basal"
+    },
+    "key_aimi_gov_hold_basal_floor_rate": {
+      "path": "AIMI → Preferences user → Universal Adaptive Basal",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "Universal Adaptive Basal"
+      ],
+      "gate_key": "key_use_aimi_t3c_adaptive_basal"
+    },
+    "key_aimi_gov_hold_basal_decay_rate": {
+      "path": "AIMI → Preferences user → Universal Adaptive Basal",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "Universal Adaptive Basal"
+      ],
+      "gate_key": "key_use_aimi_t3c_adaptive_basal"
+    },
+    "key_aimi_gov_hold_agg_floor_rate": {
+      "path": "AIMI → Preferences user → Universal Adaptive Basal",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "Universal Adaptive Basal"
+      ],
+      "gate_key": "key_use_aimi_t3c_adaptive_basal"
+    },
+    "key_aimi_gov_hold_agg_decay_rate": {
+      "path": "AIMI → Preferences user → Universal Adaptive Basal",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "Universal Adaptive Basal"
+      ],
+      "gate_key": "key_use_aimi_t3c_adaptive_basal"
+    },
+    "key_aimi_gov_hold_basal_floor_severe": {
+      "path": "AIMI → Preferences user → Universal Adaptive Basal",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "Universal Adaptive Basal"
+      ],
+      "gate_key": "key_use_aimi_t3c_adaptive_basal"
+    },
+    "key_aimi_gov_hold_basal_decay_severe": {
+      "path": "AIMI → Preferences user → Universal Adaptive Basal",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "Universal Adaptive Basal"
+      ],
+      "gate_key": "key_use_aimi_t3c_adaptive_basal"
+    },
+    "key_aimi_gov_hold_agg_floor_severe": {
+      "path": "AIMI → Preferences user → Universal Adaptive Basal",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "Universal Adaptive Basal"
+      ],
+      "gate_key": "key_use_aimi_t3c_adaptive_basal"
+    },
+    "key_aimi_gov_hold_agg_decay_severe": {
+      "path": "AIMI → Preferences user → Universal Adaptive Basal",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "Universal Adaptive Basal"
+      ],
+      "gate_key": "key_use_aimi_t3c_adaptive_basal"
+    },
+    "key_aimi_gov_anticipation_lookback_samples": {
+      "path": "AIMI → Preferences user → Universal Adaptive Basal",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "Universal Adaptive Basal"
+      ],
+      "gate_key": "key_use_aimi_t3c_adaptive_basal"
+    },
+    "key_aimi_gov_anticipation_margin_mgdl": {
+      "path": "AIMI → Preferences user → Universal Adaptive Basal",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "Universal Adaptive Basal"
+      ],
+      "gate_key": "key_use_aimi_t3c_adaptive_basal"
+    },
+    "key_aimi_gov_anticipation_hypo_damp": {
+      "path": "AIMI → Preferences user → Universal Adaptive Basal",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "Universal Adaptive Basal"
+      ],
+      "gate_key": "key_use_aimi_t3c_adaptive_basal"
+    },
+    "key_aimi_gov_anticipation_decay_blend_max": {
+      "path": "AIMI → Preferences user → Universal Adaptive Basal",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "Universal Adaptive Basal"
+      ],
+      "gate_key": "key_use_aimi_t3c_adaptive_basal"
+    },
+    "key_aimi_trajectory_guard_enabled": {
+      "path": "AIMI → Preferences user → Trajectory Guard",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "Trajectory Guard"
+      ],
+      "gate_key": null
+    },
+    "key_aimi_straight_line_tube_enabled": {
+      "path": "AIMI → Preferences user → Trajectory Guard",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "Trajectory Guard"
+      ],
+      "gate_key": null
+    },
+    "key_aimi_tube_hypo_floor_mgdl": {
+      "path": "AIMI → Preferences user → Trajectory Guard → Straight-line tube (tuning)",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "Trajectory Guard",
+        "Straight-line tube (tuning)"
+      ],
+      "gate_key": "key_aimi_straight_line_tube_enabled"
+    },
+    "key_aimi_tube_hyper_band_mgdl": {
+      "path": "AIMI → Preferences user → Trajectory Guard → Straight-line tube (tuning)",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "Trajectory Guard",
+        "Straight-line tube (tuning)"
+      ],
+      "gate_key": "key_aimi_straight_line_tube_enabled"
+    },
+    "key_aimi_tube_aggressiveness": {
+      "path": "AIMI → Preferences user → Trajectory Guard → Straight-line tube (tuning)",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "Trajectory Guard",
+        "Straight-line tube (tuning)"
+      ],
+      "gate_key": "key_aimi_straight_line_tube_enabled"
+    },
+    "key_aimi_tube_basal_trim_max": {
+      "path": "AIMI → Preferences user → Trajectory Guard → Straight-line tube (tuning)",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "Trajectory Guard",
+        "Straight-line tube (tuning)"
+      ],
+      "gate_key": "key_aimi_straight_line_tube_enabled"
+    },
+    "key_aimi_tube_kappa_margin": {
+      "path": "AIMI → Preferences user → Trajectory Guard → Straight-line tube (tuning)",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "Trajectory Guard",
+        "Straight-line tube (tuning)"
+      ],
+      "gate_key": "key_aimi_straight_line_tube_enabled"
+    },
+    "ketoacidosis_protection": {
+      "path": "AIMI → Preferences user → Ketoacidosis Protection",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "Ketoacidosis Protection"
+      ],
+      "gate_key": null
+    },
+    "ketoacidosis_protection_strategy": {
+      "path": "AIMI → Preferences user → Ketoacidosis Protection",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "Ketoacidosis Protection"
+      ],
+      "gate_key": null
+    },
+    "ketoacidosis_protection_basal": {
+      "path": "AIMI → Preferences user → Ketoacidosis Protection",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "Ketoacidosis Protection"
+      ],
+      "gate_key": null
+    },
+    "key_use_AimiPregnancy": {
+      "path": "AIMI → Preferences user → Patient context and body declarations → wcycle_preferences",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "Patient context and body declarations",
+        "wcycle_preferences"
+      ],
+      "gate_key": null
+    },
+    "aimi_pregnancy_due_date_string": {
+      "path": "AIMI → Preferences user → Patient context and body declarations → wcycle_preferences",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "Patient context and body declarations",
+        "wcycle_preferences"
+      ],
+      "gate_key": null
+    },
+    "key_use_Aimi_honeymoon": {
+      "path": "AIMI → Preferences user → Patient context and body declarations → Night growth resistance",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "Patient context and body declarations",
+        "Night growth resistance"
+      ],
+      "gate_key": null
+    },
+    "OApsAIMI_Enable_night": {
+      "path": "AIMI → Preferences user → Patient context and body declarations → Night growth resistance",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "Patient context and body declarations",
+        "Night growth resistance"
+      ],
+      "gate_key": null
+    },
+    "key_use_Aimi_wcycle": {
+      "path": "AIMI → Preferences user → Patient context and body declarations → wcycle_preferences",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "Patient context and body declarations",
+        "wcycle_preferences"
+      ],
+      "gate_key": null
+    },
+    "key_oaps_aimi_wcycle_tracking_mode": {
+      "path": "AIMI → Preferences user → Patient context and body declarations → wcycle_preferences",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "Patient context and body declarations",
+        "wcycle_preferences"
+      ],
+      "gate_key": null
+    },
+    "key_oaps_aimi_wcycle_contraceptive": {
+      "path": "AIMI → Preferences user → Patient context and body declarations → wcycle_preferences",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "Patient context and body declarations",
+        "wcycle_preferences"
+      ],
+      "gate_key": null
+    },
+    "key_wcycledateday": {
+      "path": "AIMI → Preferences user → Patient context and body declarations → wcycle_preferences",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "Patient context and body declarations",
+        "wcycle_preferences"
+      ],
+      "gate_key": null
+    },
+    "key_wcycle_avg_length": {
+      "path": "AIMI → Preferences user → Patient context and body declarations → wcycle_preferences",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "Patient context and body declarations",
+        "wcycle_preferences"
+      ],
+      "gate_key": null
+    },
+    "key_use_Aimi_wcycle_shadow": {
+      "path": "AIMI → Preferences user → Patient context and body declarations → wcycle_preferences",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "Patient context and body declarations",
+        "wcycle_preferences"
+      ],
+      "gate_key": null
+    },
+    "key_use_Aimi_wcycle_require_confirm": {
+      "path": "AIMI → Preferences user → Patient context and body declarations → wcycle_preferences",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "Patient context and body declarations",
+        "wcycle_preferences"
+      ],
+      "gate_key": null
+    },
+    "key_wcycle_clamp_min": {
+      "path": "AIMI → Preferences user → Patient context and body declarations → wcycle_preferences",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "Patient context and body declarations",
+        "wcycle_preferences"
+      ],
+      "gate_key": null
+    },
+    "key_wcycle_clamp_max": {
+      "path": "AIMI → Preferences user → Patient context and body declarations → wcycle_preferences",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "Patient context and body declarations",
+        "wcycle_preferences"
+      ],
+      "gate_key": null
+    },
+    "key_oaps_aimi_wcycle_thyroid": {
+      "path": "AIMI → Preferences user → Patient context and body declarations → Inflammatory / autoimmune diseases",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "Patient context and body declarations",
+        "Inflammatory / autoimmune diseases"
+      ],
+      "gate_key": null
+    },
+    "key_oaps_aimi_wcycle_verneuil": {
+      "path": "AIMI → Preferences user → Patient context and body declarations → Inflammatory / autoimmune diseases",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "Patient context and body declarations",
+        "Inflammatory / autoimmune diseases"
+      ],
+      "gate_key": null
+    },
+    "key_aimi_thyroid_enabled": {
+      "path": "AIMI → Preferences user → Patient context and body declarations → 🦋 Hyperthyroidism (Basedow) Module",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "Patient context and body declarations",
+        "🦋 Hyperthyroidism (Basedow) Module"
+      ],
+      "gate_key": null
+    },
+    "key_aimi_thyroid_mode": {
+      "path": "AIMI → Preferences user → Patient context and body declarations → 🦋 Hyperthyroidism (Basedow) Module",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "Patient context and body declarations",
+        "🦋 Hyperthyroidism (Basedow) Module"
+      ],
+      "gate_key": null
+    },
+    "key_aimi_thyroid_manual_status": {
+      "path": "AIMI → Preferences user → Patient context and body declarations → 🦋 Hyperthyroidism (Basedow) Module",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "Patient context and body declarations",
+        "🦋 Hyperthyroidism (Basedow) Module"
+      ],
+      "gate_key": null
+    },
+    "key_aimi_thyroid_treatment_phase": {
+      "path": "AIMI → Preferences user → Patient context and body declarations → 🦋 Hyperthyroidism (Basedow) Module",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "Patient context and body declarations",
+        "🦋 Hyperthyroidism (Basedow) Module"
+      ],
+      "gate_key": null
+    },
+    "key_aimi_thyroid_guard_level": {
+      "path": "AIMI → Preferences user → Patient context and body declarations → 🦋 Hyperthyroidism (Basedow) Module",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "Patient context and body declarations",
+        "🦋 Hyperthyroidism (Basedow) Module"
+      ],
+      "gate_key": null
+    },
+    "key_aimi_thyroid_debug": {
+      "path": "AIMI → Preferences user → Patient context and body declarations → 🦋 Hyperthyroidism (Basedow) Module",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "Patient context and body declarations",
+        "🦋 Hyperthyroidism (Basedow) Module"
+      ],
+      "gate_key": null
+    },
+    "aimi_endo_enable": {
+      "path": "AIMI → Preferences user → Patient context and body declarations → Endometriosis Settings",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "Patient context and body declarations",
+        "Endometriosis Settings"
+      ],
+      "gate_key": null
+    },
+    "aimi_endo_flare": {
+      "path": "AIMI → Preferences user → Patient context and body declarations → Endometriosis Settings",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "Patient context and body declarations",
+        "Endometriosis Settings"
+      ],
+      "gate_key": null
+    },
+    "aimi_endo_flare_duration": {
+      "path": "AIMI → Preferences user → Patient context and body declarations → Endometriosis Settings",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "Patient context and body declarations",
+        "Endometriosis Settings"
+      ],
+      "gate_key": null
+    },
+    "aimi_endo_basal_mult": {
+      "path": "AIMI → Preferences user → Patient context and body declarations → Endometriosis Settings",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "Patient context and body declarations",
+        "Endometriosis Settings"
+      ],
+      "gate_key": null
+    },
+    "aimi_endo_smb_dampen": {
+      "path": "AIMI → Preferences user → Patient context and body declarations → Endometriosis Settings",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "Patient context and body declarations",
+        "Endometriosis Settings"
+      ],
+      "gate_key": null
+    },
+    "key_oaps_aimi_ngr_enabled": {
+      "path": "AIMI → Preferences user → Patient context and body declarations → Night growth resistance",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "Patient context and body declarations",
+        "Night growth resistance"
+      ],
+      "gate_key": null
+    },
+    "key_oaps_aimi_ngr_age_years": {
+      "path": "AIMI → Preferences user → Patient context and body declarations → Night growth resistance",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "Patient context and body declarations",
+        "Night growth resistance"
+      ],
+      "gate_key": null
+    },
+    "key_oaps_aimi_ngr_night_start": {
+      "path": "AIMI → Preferences user → Patient context and body declarations → Night growth resistance",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "Patient context and body declarations",
+        "Night growth resistance"
+      ],
+      "gate_key": null
+    },
+    "key_oaps_aimi_ngr_night_end": {
+      "path": "AIMI → Preferences user → Patient context and body declarations → Night growth resistance",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "Patient context and body declarations",
+        "Night growth resistance"
+      ],
+      "gate_key": null
+    },
+    "key_oaps_aimi_ngr_max_iob_extra": {
+      "path": "AIMI → Preferences user → Patient context and body declarations → Night growth resistance",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "Patient context and body declarations",
+        "Night growth resistance"
+      ],
+      "gate_key": null
+    },
+    "key_oaps_aimi_ngr_smb_multiplier": {
+      "path": "AIMI → Preferences user → Patient context and body declarations → Night growth resistance",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "Patient context and body declarations",
+        "Night growth resistance"
+      ],
+      "gate_key": null
+    },
+    "key_oaps_aimi_ngr_basal_multiplier": {
+      "path": "AIMI → Preferences user → Patient context and body declarations → Night growth resistance",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "Patient context and body declarations",
+        "Night growth resistance"
+      ],
+      "gate_key": null
+    }
+  }
+}

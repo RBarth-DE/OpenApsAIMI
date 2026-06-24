@@ -542,6 +542,8 @@ FEATURE_DESCRIPTIONS = {
             "key_aimi_t3c_activation_threshold",
             "key_aimi_t3c_anticipation_strength",
             "key_aimi_t3c_aggressiveness",
+            "key_aimi_t3c_cfrd_lgs_floor",
+            "key_aimi_t3c_cfrd_cob_delay_min",
             "key_aimi_adaptive_basal_max_scaling",
         ],
     },

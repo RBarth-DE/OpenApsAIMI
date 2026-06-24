@@ -1,7 +1,7 @@
 # AIMI Algorithm Context
 Version: 2.2
-Source commit: 6c3b735a69f524b9582ddadf9f43185000a6128d
-Generated: 2026-06-22T07:33:04.037437+00:00
+Source commit: 6f8b4fe4768b9ffb224bdad304c0c0e4fcc28c0d
+Generated: 2026-06-24T21:22:48.641654+00:00
 
 ## Algorithm Overview
 AIMI (AI-powered Modular Insulin)
@@ -109,12 +109,14 @@ Gate: key_aimi_t3c_brittle_mode
 
 Special mode for pancreatogenic type-3c diabetics. Bypasses standard AIMI algorithm and uses a dedicated PI controller with parabolic projection and resistance factor. Only activates at BG >= thresholds. Triple-layer prebolus protection. NO SMB delivery — TBR only via PI controller.
 
-Key parameters (6):
+Key parameters (8):
 - key_aimi_adaptive_basal_max_scaling
 - key_aimi_t3c_activation_threshold
 - key_aimi_t3c_aggressiveness
 - key_aimi_t3c_anticipation_strength
 - key_aimi_t3c_brittle_mode
+- key_aimi_t3c_cfrd_cob_delay_min
+- key_aimi_t3c_cfrd_lgs_floor
 - key_use_aimi_t3c_adaptive_basal
 
 ### ngr
@@ -639,11 +641,15 @@ Key parameters (11):
 - `aimi_emergency_sos_stale_threshold` [default: 30]
 - `aimi_emergency_sos_threshold` [default: 55]
 
-### t3c_adaptive_basal (5 params)
+### t3c_adaptive_basal (9 params)
 - `key_aimi_t3c_activation_threshold` [default: 130.0]
 - `key_aimi_t3c_aggressiveness` [default: 1.0]
 - `key_aimi_t3c_anticipation_strength` [default: 0.0]
 - `key_aimi_t3c_brittle_mode`
+- `key_aimi_t3c_cfrd_cob_delay_min` [default: 0.0]
+- `key_aimi_t3c_cfrd_exacerbation`
+- `key_aimi_t3c_cfrd_lgs_floor` [default: 80.0]
+- `key_aimi_t3c_cfrd_mode`
 - `key_use_aimi_t3c_adaptive_basal`
 
 ### thyroid (6 params)
