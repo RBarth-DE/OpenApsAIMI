@@ -46,7 +46,8 @@ fun TempTargetChip(
     reason: TT.Reason?,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    sceneManaged: Boolean = false
+    sceneManaged: Boolean = false,
+    enabled: Boolean = true
 ) {
     val iconColor = when (state) {
         TempTargetChipState.Active   -> reason.toIconColor()
@@ -63,6 +64,7 @@ fun TempTargetChip(
 
     Surface(
         onClick = { haptic.performHapticFeedback(HapticFeedbackType.LongPress); onClick() },
+        enabled = enabled,
         shape = RoundedCornerShape(AapsSpacing.chipCornerRadius),
         color = containerColor,
         shadowElevation = 0.dp,

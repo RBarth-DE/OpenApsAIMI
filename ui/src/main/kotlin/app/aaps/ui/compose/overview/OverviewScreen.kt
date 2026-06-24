@@ -70,6 +70,8 @@ fun OverviewScreen(
     onEndScene: () -> Unit = {},
     onDismissScene: () -> Unit = {},
     endSceneEnabled: Boolean = true,
+    // Disables the command chips' click (running mode / profile / temp target) on an unpaired client — same gate as nav/Manage.
+    commandsAllowed: Boolean = true,
     formatDuration: (Long) -> String = { ms -> "${(ms / 60000L).toInt()}m" },
     paddingValues: PaddingValues,
     fabBottomOffset: Dp = 0.dp,
@@ -137,6 +139,7 @@ fun OverviewScreen(
                 onEndScene = onEndScene,
                 onDismissScene = onDismissScene,
                 endSceneEnabled = endSceneEnabled,
+                commandsAllowed = commandsAllowed,
                 formatDuration = formatDuration
             )
         } else BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
@@ -167,6 +170,7 @@ fun OverviewScreen(
                     onEndScene = onEndScene,
                     onDismissScene = onDismissScene,
                     endSceneEnabled = endSceneEnabled,
+                    commandsAllowed = commandsAllowed,
                     formatDuration = formatDuration
                 )
             } else {
@@ -196,6 +200,7 @@ fun OverviewScreen(
                     onEndScene = onEndScene,
                     onDismissScene = onDismissScene,
                     endSceneEnabled = endSceneEnabled,
+                    commandsAllowed = commandsAllowed,
                     formatDuration = formatDuration
                 )
             }

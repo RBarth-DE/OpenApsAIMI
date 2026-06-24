@@ -57,6 +57,8 @@
 
 
     <string name="insulin_peak">Peak</string>
+    <!--    Autotune   -->
+    <string name="autotune_peak">Peak</string>
 
 
     <string name="smb_frequency_exceeded">A bolus was delivered within the last 3 minutes, skipping SMB</string>

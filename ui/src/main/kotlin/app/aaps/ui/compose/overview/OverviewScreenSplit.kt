@@ -74,6 +74,7 @@ fun OverviewScreenSplit(
     onEndScene: () -> Unit = {},
     onDismissScene: () -> Unit = {},
     endSceneEnabled: Boolean = true,
+    commandsAllowed: Boolean = true,
     formatDuration: (Long) -> String = { ms -> "${(ms / 60000L).toInt()}m" },
     modifier: Modifier = Modifier
 ) {
@@ -175,6 +176,7 @@ fun OverviewScreenSplit(
                             runningModeRemaining = runningModeRemaining,
                             runningModeProgress = runningModeProgress,
                             runningModeSceneManaged = runningModeSceneManaged,
+                            smbEnabled = smbEnabled,
                             tempTargetText = tempTargetText,
                             tempTargetState = tempTargetState,
                             tempTargetProgress = tempTargetProgress,
@@ -182,7 +184,8 @@ fun OverviewScreenSplit(
                             tempTargetSceneManaged = tempTargetSceneManaged,
                             sensitivityUiState = sensitivityUiState,
                             onNavigate = onNavigate,
-                        )
+                            commandsAllowed = commandsAllowed
+                            )
                         OverviewStatusPanel(
                             state = statusPanelState,
                             modifier = Modifier.fillMaxWidth()
@@ -259,6 +262,7 @@ fun OverviewScreenSplit(
                     batteryStatus = statusState.batteryStatus,
                     showFill = statusState.showFill,
                     showPumpBatteryChange = statusState.showPumpBatteryChange,
+                    commandsAllowed = commandsAllowed,
                     onNavigate = onNavigate,
                     statusLightsDef = statusLightsDef,
                     onCopyFromNightscout = { manageViewModel.copyStatusLightsFromNightscout() },

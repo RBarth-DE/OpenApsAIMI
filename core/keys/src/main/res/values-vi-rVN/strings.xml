@@ -1,10 +1,10 @@
-<?xml version='1.0' encoding='utf-8'?>
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    
+    <!-- General preferences -->
     <string name="pref_title_simple_mode">Chế độ đơn giản</string>
     <string name="pref_title_insulin_concentration">Hỗ trợ nồng độ insulin</string>
     <string name="pref_summary_insulin_concentration">Bật hỗ trợ các nồng độ insulin khác nhau (U50, U200, v.v.)</string>
-    
+    <!-- Overview preferences -->
     <string name="pref_title_keep_screen_on">Giữ màn hình bật</string>
     <string name="pref_summary_keep_screen_on">Ngăn Android tắt màn hình. Tính năng này sẽ tiêu thụ rất nhiều năng lượng khi không cắm nguồn.</string>
     <string name="pref_title_show_treatment_button">Hiển thị nút điều trị</string>
@@ -22,10 +22,10 @@
     <string name="pref_summary_use_bolus_reminder">Bật thông báo nhắc tiêm liều bolus để giúp theo dõi việc tiêm insulin.</string>
     <string name="pref_title_use_super_bolus">Sử dụng super bolus</string>
     <string name="pref_summary_use_super_bolus">Bật tính năng super bolus, sử dụng insulin từ liều nền để cung cấp ngay lập tức.</string>
-    
+    <!-- Pump preferences -->
     <string name="pref_title_bt_watchdog">Theo dõi Bluetooth</string>
     <string name="pref_summary_bt_watchdog">Tắt Bluetooth 1 giây khi không kết nối được bơm (khắc phục lỗi treo Bluetooth).</string>
-    
+    <!-- Alert preferences -->
     <string name="pref_title_alert_missed_bg_reading">Cảnh báo khi không có dữ liệu BG</string>
     <string name="pref_title_alert_pump_unreachable">Cảnh báo khi bơm mất kết nối</string>
     <string name="pref_title_alert_carbs_required">Cảnh báo khi cần bổ sung carb</string>
@@ -33,11 +33,11 @@
     <string name="pref_title_alert_increase_volume">Tăng dần âm lượng thông báo</string>
     <string name="pref_title_alert_override_dnd">Bỏ qua chế độ Không làm phiền</string>
     <string name="pref_summary_alert_override_dnd">Khi bật, báo động của AAPS sẽ phát âm thanh ngay cả trong chế độ im lặng và Không làm phiền (luồng báo động). Khi tắt, báo động sẽ tuân theo chế độ im lặng/Không làm phiền (luồng thông báo).</string>
-    
+    <!-- BG Source preferences -->
     <string name="pref_title_bg_source_upload_to_ns">Tải dữ liệu đường huyết lên NS</string>
     <string name="pref_title_bg_source_create_sensor_change">Ghi lại thay đổi cảm biến</string>
     <string name="pref_summary_bg_source_create_sensor_change">Tạo sự kiện thay cảm biến khi cảm biến được lắp.</string>
-    
+    <!-- APS preferences -->
     <string name="pref_title_aps_use_dynamic_sensitivity">Sử dụng độ nhạy động</string>
     <string name="pref_summary_aps_use_dynamic_sensitivity">Sử dụng DynamicISF để điều chỉnh độ nhạy thay cho Autosens.</string>
     <string name="pref_title_aps_use_autosens">Sử dụng Autosens</string>
@@ -73,10 +73,10 @@
     <string name="pref_summary_aps_use_autoisf_weights">Bật AutoISF để điều chỉnh ISF dựa trên hệ số</string>
     <string name="pref_title_aps_smb_on_even_target">Bật SMB khi ở mức mục tiêu</string>
     <string name="pref_summary_aps_smb_on_even_target">Cách kích hoạt SMB thay thế, luôn dựa trên giá trị đường huyết mục tiêu.</string>
-    
+    <!-- Maintenance preferences -->
     <string name="pref_title_maintenance_enable_fabric">Bật báo cáo lỗi Fabric</string>
     <string name="pref_title_maintenance_enable_export_automation">Bật xuất cài đặt tự động</string>
-    
+    <!-- Autotune preferences -->
     <string name="pref_title_autotune_auto_switch_profile">Tự động chuyển cấu hình</string>
     <string name="pref_summary_autotune_auto_switch_profile">Tự động chuyển sang cấu hình do Autotune tạo sau khi tính toán.</string>
     <string name="pref_title_autotune_categorize_uam_as_basal">Phân loại UAM như liều nền</string>
@@ -85,13 +85,13 @@
     <string name="pref_title_autotune_circadian_ic_isf">Sử dụng IC/ISF theo nhịp sinh học</string>
     <string name="pref_summary_autotune_circadian_ic_isf">Áp dụng biến thiên theo nhịp sinh học cho IC và ISF trong tính toán Autotune.</string>
     <string name="pref_title_autotune_additional_log">Ghi nhật ký bổ sung</string>
-    
+    <!-- SMS preferences -->
     <string name="pref_title_sms_allow_remote_commands">Cho phép lệnh điều khiển từ xa qua SMS</string>
     <string name="pref_title_sms_report_pump_unreachable">Báo mất kết nối với bơm qua SMS</string>
     <string name="pref_summary_sms_report_pump_unreachable">Gửi thông báo SMS khi không thể kết nối với bơm.</string>
-    
+    <!-- Virtual pump preferences -->
     <string name="pref_title_virtual_pump_status_upload">Tải trạng thái bơm lên Nightscout</string>
-    
+    <!-- NS Client preferences -->
     <string name="pref_title_ns_upload_data">Tải dữ liệu lên NS</string>
     <string name="pref_summary_ns_upload_data">Tải lên các dữ liệu điều trị, liều nền tạm thời và dữ liệu khác lên Nightscout.</string>
     <string name="pref_title_ns_receive_cgm">Nhận dữ liệu CGM từ NS</string>
@@ -125,16 +125,18 @@
     <string name="pref_title_ns_slow_sync">Sử dụng đồng bộ chậm</string>
     <string name="pref_title_ns_use_ws">Sử dụng websockets</string>
     <string name="pref_summary_ns_use_ws">Sử dụng WebSocket để giao tiếp thời gian thực với Nightscout.</string>
-    
+    <string name="pref_title_ns_allow_client_control">Cho phép thiết bị phụ điều khiển</string>
+    <string name="pref_summary_ns_allow_client_control">Cho phép các thiết bị phụ đã ghép đôi gửi các lệnh đã ký xác thực (ví dụ: bắt đầu/dừng ngữ cảnh) qua Nightscout.</string>
+    <!-- OpenHumans preferences -->
     <string name="pref_title_openhumans_wifi_only">Chỉ dùng WiFi</string>
     <string name="pref_title_openhumans_charging_only">Chỉ sạc</string>
-    
+    <!-- xDrip preferences -->
     <string name="pref_title_xdrip_send_status">Gửi dữ liệu tới xDrip+</string>
     <string name="pref_title_xdrip_send_detailed_iob">Gửi chi tiết IOB</string>
     <string name="pref_summary_xdrip_send_detailed_iob">Gửi thông tin IOB chi tiết tới xDrip+ để hiển thị trên mặt đồng hồ.</string>
     <string name="pref_title_xdrip_send_bgi">Hiển thị BGI</string>
     <string name="pref_summary_xdrip_send_bgi">Hiển thị tác động đường huyết trong dòng trạng thái xDrip+.</string>
-    
+    <!-- Wear preferences -->
     <string name="pref_title_wear_control">Điều khiển Wear OS</string>
     <string name="pref_summary_wear_control">Điều khiển AAPS từ đồng hồ Wear OS.</string>
     <string name="pref_title_wear_wizard_bg">Bao gồm đường huyết trong wizard</string>
@@ -147,13 +149,10 @@
     <string name="pref_summary_wear_notify_on_smb">Gửi thông báo đến đồng hồ khi SMB được thực hiện.</string>
     <string name="pref_title_wear_broadcast_data">Gửi dữ liệu tới đồng hồ</string>
     <string name="pref_summary_wear_broadcast_data">Phát dữ liệu AAPS tới ứng dụng đồng hồ bên thứ ba qua intent.</string>
-    
-    <string name="pref_title_wizard_calculation_visible">Hiển thị trình hướng dẫn tính toán</string>
-    <string name="pref_title_wizard_correction_percent">Sử dụng phần trăm hiệu chỉnh</string>
-    
+    <!-- Site rotation preferences -->
     <string name="pref_title_site_rotation_manage_pump">Quản lý luân chuyển vị trí bơm</string>
     <string name="pref_title_site_rotation_manage_cgm">Quản lý luân chuyển vị trí CGM</string>
-    
+    <!-- IntKey: Overview preferences -->
     <string name="pref_title_carbs_button_increment_1">Nút carb tăng lần 1</string>
     <string name="pref_title_carbs_button_increment_2">Nút carb tăng lần 2</string>
     <string name="pref_title_carbs_button_increment_3">Nút carb tăng lần 3</string>
@@ -176,7 +175,7 @@
     <string name="deliverpartofboluswizard">Áp dụng giá trị này cho hiệu chỉnh đường huyết và carb trong kết quả của bolus wizard\'s</string>
     <string name="pref_title_reset_bolus_percentage_time">Đặt lại thời gian áp dụng phần trăm bolus</string>
     <string name="deliver_part_of_boluswizard_reset_time">Cung cấp bolus đầy đủ (100%) nếu dữ liệu đường huyết đã cũ hơn</string>
-    
+    <!-- IntKey: Protection preferences -->
     <string name="pref_title_protection_timeout">Thời gian chờ bảo vệ</string>
     <string name="pref_title_protection_type_application">Mức 0: Bảo vệ ứng dụng</string>
     <string name="pref_summary_protection_type_application">Khi khởi động ứng dụng. Độc lập với các mức khác</string>
@@ -184,51 +183,53 @@
     <string name="pref_summary_protection_type_bolus">Điều trị, kích hoạt cấu hình. Yêu cầu Mức 2</string>
     <string name="pref_title_protection_type_settings">Mức 2: Bảo vệ cài đặt</string>
     <string name="pref_summary_protection_type_settings">Chỉnh sửa cấu hình, tuỳ chọn</string>
-    
+    <!-- Protection type entries (canonical location - also used by core/ui) -->
     <string name="noprotection">Không bảo mật</string>
     <string name="biometric">Sinh trắc học</string>
     <string name="master_password">Mật khẩu chính</string>
     <string name="custom_password">Mật khẩu tùy chọn</string>
     <string name="custom_pin">Mã PIN tùy chọn</string>
-    
+    <!-- IntKey: Safety preferences -->
     <string name="pref_title_max_carbs">Lượng carb tối đa</string>
-    
+    <!-- IntKey: Loop preferences -->
     <string name="pref_title_open_mode_min_change">Mức thay đổi tối thiểu trong chế độ mở</string>
     <string name="loop_open_mode_min_change_summary" formatted="false">Mở vòng lặp sẽ chỉ hiển thị yêu cầu thay đổi mới nếu thay đổi lớn hơn giá trị này theo %. Giá trị mặc định là 20%</string>
-    
+    <!-- IntKey: APS preferences -->
     <string name="pref_title_smb_frequency">Khoảng thời gian SMB</string>
     <string name="pref_title_smb_max_minutes">Số phút liều nền tối đa để giới hạn cho SMB</string>
     <string name="pref_title_uam_smb_max_minutes">Số phút liều nền tối đa của UAM để giới hạn SMB</string>
     <string name="uam_smb_max_minutes">Số phút tối đa SMB cho UAM</string>
     <string name="pref_title_carbs_request_threshold">Ngưỡng cần nạp Carbs</string>
     <string name="carbs_req_threshold_summary">Số gram carbs tối thiểu để hiển thị cảnh báo gợi ý carbs. Gợi ý carbs dưới mức này sẽ không kích hoạt thông báo.</string>
+    <string name="pref_title_half_basal_exercise_target">Mục tiêu tập luyện với 50% liều nền</string>
+    <string name="half_basal_exercise_target_summary">Đặt thành một số, ví dụ 160, có nghĩa là khi mục tiêu tạm thời là 160 mg/dL và tùy chọn \'High temptarget raises sensitivity=true\' được bật, Aaps sẽ chạy 50%% liều nền ở mức này (120 = 75%%; 140 = 60%%).</string>
     <string name="pref_title_iob_threshold_percent">Ngưỡng phần trăm IOB</string>
     <string name="openapsama_iob_threshold_percent_summary" formatted="false">Phần trăm của maxIOB mà vượt quá mức đó thì SMB sẽ bị vô hiệu hóa.\nGiá trị mặc định: 100%\nVới 100%, tính năng này thực tế sẽ bị tắt.</string>
     <string name="pref_title_dynisf_adjustment_factor">Hệ số điều chỉnh DynamicISF</string>
     <string name="dyn_isf_adjust_summary" formatted="false">Hệ số điều chỉnh cho DynamicISF. Đặt lớn hơn 100% để có liều hiệu chỉnh mạnh hơn, và nhỏ hơn 100% để có liều hiệu chỉnh nhẹ hơn.</string>
     <string name="pref_title_autosens_period">Khoảng thời gian Autosens</string>
     <string name="openapsama_autosens_period_summary">Số giờ trong quá khứ được dùng để phát hiện độ nhạy (không tính thời gian hấp thụ carb)</string>
-    
+    <!-- IntKey: Maintenance preferences -->
     <string name="pref_title_logs_amount">Số lượng nhật ký cần gửi</string>
-    
+    <!-- IntKey: Alert preferences -->
     <string name="pref_title_stale_data_threshold">Ngưỡng dữ liệu lỗi thời</string>
     <string name="pref_title_pump_unreachable_threshold">Ngưỡng mất kết nối với bơm</string>
-    
-    
+    <!-- IntKey: Insulin preferences -->
+    <!-- IntKey: Autotune preferences -->
     <string name="pref_title_autotune_days">Ngày điều chỉnh mặc định</string>
     <string name="autotune_default_tune_days_summary">Số ngày dữ liệu mặc định được Autotune xử lý (tối đa 30)</string>
-    
+    <!-- IntKey: SMS preferences -->
     <string name="pref_title_sms_remote_bolus_distance">Khoảng tối thiểu bolus từ xa</string>
-    
+    <!-- IntKey: BG Source preferences -->
     <string name="pref_title_random_bg_interval">Khoảng thời gian BG ngẫu nhiên</string>
     <string name="pref_title_random_bg_randomize">Dữ liệu BG ngẫu nhiên</string>
     <string name="pref_summary_random_bg_randomize">Thêm nhiễu, làm lệch nhẹ dấu thời gian, ngẫu nhiên hóa mũi tên xu hướng và thỉnh thoảng tạo carb ngẫu nhiên. Tắt để dùng sóng sin xác định sạch với mũi tên xu hướng được suy ra từ độ dốc của sóng sin.</string>
-    
+    <!-- IntKey: NS Client preferences -->
     <string name="pref_title_alarm_stale_data">Ngưỡng báo động dữ liệu lỗi thời</string>
     <string name="pref_title_urgent_alarm_stale_data">Ngưỡng báo động khẩn cấp cho dữ liệu lỗi thời</string>
-    
+    <!-- IntKey: Site rotation preferences -->
     <string name="pref_title_site_rotation_profile">Cấu hình thay đổi vị trí tiêm</string>
-    
+    <!-- StringKey: General preferences -->
     <string name="pref_title_units">Đơn vị</string>
     <string name="units_mgdl">mg/dl</string>
     <string name="units_mmol">mmol/L</string>
@@ -242,7 +243,7 @@
     <string name="units_kg">kg</string>
     <string name="units_years">y</string>
     <string name="units_percent">%</string>
-    
+    <!-- Formatted unit strings with value only -->
     <string name="units_format_grams">%1$d g</string>
     <string name="units_format_min">%1$d phút</string>
     <string name="units_format_sec">%1$d giây</string>
@@ -257,7 +258,7 @@
     <string name="units_format_double">%1$.1f</string>
     <string name="units_format_double_2">%1$.2f</string>
     <string name="units_format_double_3">%1$.3f</string>
-    
+    <!-- Formatted unit strings with value and range -->
     <string name="units_format_grams_range">%1$d g (%2$d - %3$d)</string>
     <string name="units_format_min_range">%1$d phút (%2$d - %3$d)</string>
     <string name="units_format_sec_range">%1$d giây (%2$d - %3$d)</string>
@@ -301,9 +302,9 @@
     <string name="lang_zh_cn">Tiếng Trung, Giản thể</string>
     <string name="pref_title_patient_name">Tên</string>
     <string name="pref_summary_patient_name">Tên để nhận diện phiên bản AAPS này (hiển thị trong báo cáo và đồng bộ)</string>
-    
+    <!-- StringKey: Directory preferences -->
     <string name="pref_title_aaps_directory">Thư mục AAPS</string>
-    
+    <!-- StringKey: Protection preferences -->
     <string name="pref_title_master_password">Mật khẩu chính</string>
     <string name="pref_title_settings_password">Cài đặt mật khẩu</string>
     <string name="pref_title_settings_pin">Cài đặt mã PIN</string>
@@ -311,30 +312,30 @@
     <string name="pref_title_application_pin">Mã PIN ứng dụng</string>
     <string name="pref_title_bolus_password">Mật khẩu liều Bolus</string>
     <string name="pref_title_bolus_pin">Mã PIN liều Bolus</string>
-    
+    <!-- Theme switcher dark and light mode-->
     <string name="pref_summary_theme_switcher">Chọn chế độ tối, sáng hoặc theo giao diện hệ thống</string>
     <string name="pref_title_app_color_scheme">Bảng màu ứng dụng</string>
     <string name="pref_dark_theme">Chủ đề tối</string>
     <string name="pref_light_theme">Chủ đề sáng</string>
     <string name="pref_follow_system_theme">Sử dụng giao diện của thiết bị</string>
-    
+    <!-- StringKey: Safety preferences -->
     <string name="pref_title_patient_age">Độ tuổi người dùng</string>
-    
+    <!-- StringKey: Maintenance preferences -->
     <string name="maintenance_email">Người nhận email</string>
     <string name="pref_title_identification">Nhận diện báo cáo lỗi</string>
-    
+    <!-- StringKey: Automation preferences -->
     <string name="pref_title_automation_location">Dịch vụ vị trí</string>
     <string name="automation_location_passive">Sử dụng vị trí thụ động</string>
     <string name="automation_location_network">Sử dụng vị trí mạng</string>
     <string name="automation_location_gps">Sử dụng vị trí GPS</string>
-    
+    <!-- StringKey: SMS preferences -->
     <string name="smscommunicator_allowednumbers">Các số điện thoại được phép</string>
     <string name="smscommunicator_allowednumbers_summary">+XXXXXXXXXX;+YYYYYYYYYY</string>
     <string name="smscommunicator_otp_pin">Mã PIN bắt buộc bổ sung ở cuối token</string>
     <string name="smscommunicator_otp_pin_summary">Các chữ số bổ sung cần được ghi nhớ và gắn vào cuối mỗi mật khẩu dùng một lần (Otp) được tạo</string>
-    
+    <!-- StringKey: Virtual pump preferences -->
     <string name="pref_title_virtual_pump_type">Loại Bơm</string>
-    
+    <!-- StringKey: NS Client preferences -->
     <string name="ns_client_url_title">Nightscout URL</string>
     <string name="ns_client_url_summary">Nhập đường dẫn Nightscout của bạn (ví dụ: https://yoursitename.yourplatform.dom)</string>
     <string name="ns_client_secret_title">Nightscout API secret</string>
@@ -343,18 +344,18 @@
     <string name="nsclient_token_summary">Nhập access token Nightscout (≥17 ký tự)</string>
     <string name="ns_wifi_ssids">Tên Wi-Fi</string>
     <string name="ns_wifi_ssids_summary">SSID được phép (ngăn cách bằng dấu chấm phẩy)</string>
-    
+    <!-- DoubleKey: Overview preferences -->
     <string name="pref_title_insulin_button_increment_1">Bước tăng nút insulin 1</string>
     <string name="pref_title_insulin_button_increment_2">Bước tăng nút insulin 2</string>
     <string name="pref_title_insulin_button_increment_3">Bước tăng nút insulin 3</string>
     <string name="insulin_increment_button_message">Lượng insulin được thêm khi nhấn nút</string>
-    
+    <!-- DoubleKey: Actions preferences -->
     <string name="pref_title_fill_button_1">Nút làm đầy 1</string>
     <string name="pref_title_fill_button_2">Nút làm đầy 2</string>
     <string name="pref_title_fill_button_3">Nút làm đầy 3</string>
-    
+    <!-- DoubleKey: Safety preferences -->
     <string name="pref_title_max_bolus">Liều Bolus tối đa</string>
-    
+    <!-- DoubleKey: APS preferences -->
     <string name="pref_title_max_basal">Tỷ lệ liều nền tối đa</string>
     <string name="openapsma_max_basal_summary">Giá trị này được gọi là liều nền tối đa trong ngữ cảnh OpenAPS</string>
     <string name="pref_title_smb_max_iob">IOB tối đa cho SMB</string>
@@ -404,13 +405,13 @@
     <string name="openapsama_smb_delivery_ratio_max_summary">Giá trị mặc định: 0.5. Đây là giá trị giới hạn trên của một tỷ lệ tăng tuyến tính, thay vì là giá trị cố định như bên trên.</string>
     <string name="pref_title_smb_max_range_extension">Mở rộng phạm vi SMB tối đa</string>
     <string name="openapsama_smb_max_range_extension_summary">Giá trị mặc định: 1. Đây là một giới hạn an toàn quan trọng khác của OpenAPS, quy định hệ số cho phép bạn vượt quá giới hạn thông thường 120 phút maxSMB/maxUAM. Hãy tăng giá trị thử nghiệm này từ từ và thận trọng.</string>
-    
+    <!-- UnitDoubleKey: Overview preferences -->
     <string name="pref_title_low_mark">Dấu hiệu đường huyết thấp</string>
     <string name="pref_title_high_mark">Dấu hiệu đường huyết cao</string>
-    
+    <!-- UnitDoubleKey: APS preferences -->
     <string name="pref_title_lgs_threshold">Ngưỡng LGS</string>
     <string name="lgs_threshold_summary">Đường huyết dưới mức này sẽ tạm dừng việc tiêm insulin. Mức mặc định sử dụng mô hình mục tiêu chuẩn. Người dùng có thể đặt giá trị trong khoảng 60 mg/dL (3,3 mmol/L) đến 100 mg/dL (5,5 mmol/L). Các giá trị dưới 65 mg/dL (3,6 mmol/L) sẽ sử dụng mô hình mặc định</string>
-    
-    
+    <!-- IntentKey preferences -->
+    <!--    Appearance preferences-->
     <string name="prefs_range_title">Phạm vi để hiển thị</string>
 </resources>

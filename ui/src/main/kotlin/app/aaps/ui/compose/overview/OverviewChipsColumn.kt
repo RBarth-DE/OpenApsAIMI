@@ -40,6 +40,9 @@ fun OverviewChipsColumn(
     tempTargetSceneManaged: Boolean = false,
     sensitivityUiState: SensitivityUiState,
     onNavigate: (NavigationRequest) -> Unit,
+    // The command chips (running mode / profile / temp target) open mutating screens — their click is disabled on an
+    // unpaired client (same MASTER_OR_PAIRED_CLIENT gate as nav/Manage), while the chip stays visible as status.
+    commandsAllowed: Boolean = true,
     modifier: Modifier = Modifier,
     trailingContent: @Composable (RowScope.() -> Unit)? = null
 ) {
@@ -72,6 +75,7 @@ fun OverviewChipsColumn(
                             tempTargetSceneManaged = tempTargetSceneManaged,
                             onNavigate = onNavigate,
                             modifier = Modifier.width(chipsWidth),
+                            commandsAllowed = commandsAllowed
                         )
                     }
                     Row(
@@ -94,7 +98,8 @@ fun OverviewChipsColumn(
                 tempTargetReason = tempTargetReason,
                 tempTargetSceneManaged = tempTargetSceneManaged,
                 onNavigate = onNavigate,
-                modifier = Modifier
+                modifier = Modifier,
+                commandsAllowed = commandsAllowed
             )
         }
         // SensitivityChipBlock(
@@ -118,7 +123,8 @@ private fun NarrowChips(
     tempTargetReason: TT.Reason?,
     tempTargetSceneManaged: Boolean,
     onNavigate: (NavigationRequest) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    commandsAllowed: Boolean
 ) {
     Column(
         modifier = modifier,
@@ -134,6 +140,7 @@ private fun NarrowChips(
                     remaining = runningModeRemaining,
                     sceneManaged = runningModeSceneManaged,
                     smbEnabled = smbEnabled,
+                    enabled = commandsAllowed,
                     onClick = { onNavigate(NavigationRequest.Element(ElementType.RUNNING_MODE)) }
                 )
             }
@@ -144,6 +151,7 @@ private fun NarrowChips(
                     progress = tempTargetProgress,
                     reason = tempTargetReason,
                     onClick = { onNavigate(NavigationRequest.Element(ElementType.TEMP_TARGET_MANAGEMENT)) },
+                    enabled = commandsAllowed,
                     modifier = Modifier.fillMaxWidth(),
                     sceneManaged = tempTargetSceneManaged
                 )

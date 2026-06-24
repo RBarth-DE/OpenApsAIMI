@@ -3,7 +3,7 @@ package app.aaps.core.keys
 import app.aaps.core.keys.interfaces.BooleanPreferenceKey
 import app.aaps.core.keys.interfaces.IntPreferenceKey
 import app.aaps.core.keys.interfaces.PreferenceEnabledCondition
-import app.aaps.core.keys.interfaces.PreferenceVisibility
+import app.aaps.core.keys.interfaces.ElementVisibility
 import app.aaps.core.keys.interfaces.SyncChannel
 import app.aaps.core.keys.interfaces.SyncDirection
 import app.aaps.core.keys.interfaces.SyncSpec
@@ -27,7 +27,7 @@ enum class IntKey(
     override val hideParentScreenIfHidden: Boolean = false,
     override val engineeringModeOnly: Boolean = false,
     override val exportable: Boolean = true,
-    override val visibility: PreferenceVisibility = PreferenceVisibility.ALWAYS,
+    override val visibility: ElementVisibility = ElementVisibility.ALWAYS,
     override val enabledCondition: PreferenceEnabledCondition = PreferenceEnabledCondition.ALWAYS,
     override val unitType: UnitType = UnitType.NONE,
     override val sync: SyncSpec? = null
@@ -112,7 +112,7 @@ enum class IntKey(
         max = 240,
         titleResId = R.string.pref_title_iage_warning,
         defaultedBySM = true,
-        visibility = PreferenceVisibility.NON_PATCH_PUMP,
+        visibility = ElementVisibility.NON_PATCH_PUMP,
         unitType = UnitType.HOURS,
         sync = SyncSpec(SyncChannel.Cold, SyncDirection.Bidirectional)
     ),
@@ -123,7 +123,7 @@ enum class IntKey(
         max = 240,
         titleResId = R.string.pref_title_iage_critical,
         defaultedBySM = true,
-        visibility = PreferenceVisibility.NON_PATCH_PUMP,
+        visibility = ElementVisibility.NON_PATCH_PUMP,
         unitType = UnitType.HOURS,
         sync = SyncSpec(SyncChannel.Cold, SyncDirection.Bidirectional)
     ),
@@ -257,7 +257,7 @@ enum class IntKey(
         titleResId = R.string.pref_title_protection_timeout,
         defaultedBySM = true,
         unitType = UnitType.SEC,
-        visibility = PreferenceVisibility.stringNotEmpty { StringKey.ProtectionMasterPassword }
+        visibility = ElementVisibility.stringNotEmpty { StringKey.ProtectionMasterPassword }
     ),
 
     // Protection types sorted by level: 0 (Application) → 1 (Bolus) → 2 (Settings)
@@ -277,7 +277,7 @@ enum class IntKey(
             ProtectionType.CUSTOM_PASSWORD.ordinal to R.string.custom_password,
             ProtectionType.CUSTOM_PIN.ordinal to R.string.custom_pin
         ),
-        visibility = PreferenceVisibility.stringNotEmpty { StringKey.ProtectionMasterPassword }
+        visibility = ElementVisibility.stringNotEmpty { StringKey.ProtectionMasterPassword }
     ),
     ProtectionTypeBolus(
         key = "bolus_protection",
@@ -294,7 +294,7 @@ enum class IntKey(
             ProtectionType.CUSTOM_PASSWORD.ordinal to R.string.custom_password,
             ProtectionType.CUSTOM_PIN.ordinal to R.string.custom_pin
         ),
-        visibility = PreferenceVisibility.stringNotEmpty { StringKey.ProtectionMasterPassword },
+        visibility = ElementVisibility.stringNotEmpty { StringKey.ProtectionMasterPassword },
         enabledCondition = PreferenceEnabledCondition { ctx ->
             ctx.preferences.get(ProtectionTypeSettings) != ProtectionType.NONE.ordinal
         }
@@ -314,7 +314,7 @@ enum class IntKey(
             ProtectionType.CUSTOM_PASSWORD.ordinal to R.string.custom_password,
             ProtectionType.CUSTOM_PIN.ordinal to R.string.custom_pin
         ),
-        visibility = PreferenceVisibility.stringNotEmpty { StringKey.ProtectionMasterPassword }
+        visibility = ElementVisibility.stringNotEmpty { StringKey.ProtectionMasterPassword }
     ),
     SafetyMaxCarbs(key = "treatmentssafety_maxcarbs", defaultValue = 48, min = 1, max = 200, titleResId = R.string.pref_title_max_carbs, unitType = UnitType.GRAMS, sync = SyncSpec(SyncChannel.Cold, SyncDirection.Bidirectional)),
     LoopOpenModeMinChange(
@@ -331,7 +331,7 @@ enum class IntKey(
     ApsMaxMinutesOfBasalToLimitSmb(key = "smbmaxminutes", defaultValue = 30, min = 15, max = 120, titleResId = R.string.pref_title_smb_max_minutes, defaultedBySM = true, dependency = BooleanKey.ApsUseSmb, unitType = UnitType.MIN, sync = SyncSpec(SyncChannel.Cold, SyncDirection.Bidirectional)),
     ApsUamMaxMinutesOfBasalToLimitSmb(
         key = "uamsmbmaxminutes", defaultValue = 30, min = 15, max = 120, titleResId = R.string.pref_title_uam_smb_max_minutes, summaryResId = R.string.uam_smb_max_minutes, defaultedBySM = true, dependency = BooleanKey.ApsUseSmb,
-        visibility = PreferenceVisibility { it.preferences.get(BooleanKey.ApsUseUam) },
+        visibility = ElementVisibility { it.preferences.get(BooleanKey.ApsUseUam) },
         unitType = UnitType.MIN,
         sync = SyncSpec(SyncChannel.Cold, SyncDirection.Bidirectional)
     ),

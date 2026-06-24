@@ -95,6 +95,7 @@ fun OverviewScreenStacked(
     onEndScene: () -> Unit = {},
     onDismissScene: () -> Unit = {},
     endSceneEnabled: Boolean = true,
+    commandsAllowed: Boolean = true,
     formatDuration: (Long) -> String = { ms -> "${(ms / 60000L).toInt()}m" },
     modifier: Modifier = Modifier
 ) {
@@ -193,7 +194,8 @@ fun OverviewScreenStacked(
                     tempTargetReason = tempTargetReason,
                     tempTargetSceneManaged = tempTargetSceneManaged,
                     sensitivityUiState = sensitivityUiState,
-                    onNavigate = onNavigate
+                    onNavigate = onNavigate,
+                    commandsAllowed = commandsAllowed
                 )
                 // HR, Steps,LastSMB, Basal, IOB
                 OverviewStatusPanel(
@@ -287,6 +289,7 @@ fun OverviewScreenStacked(
             batteryStatus = statusState.batteryStatus,
             showFill = statusState.showFill,
             showPumpBatteryChange = statusState.showPumpBatteryChange,
+            commandsAllowed = commandsAllowed,
             onNavigate = onNavigate,
             statusLightsDef = statusLightsDef,
             onCopyFromNightscout = { manageViewModel.copyStatusLightsFromNightscout() },

@@ -1,8 +1,12 @@
-<?xml version='1.0' encoding='utf-8'?>
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="error_field_must_not_be_empty">Il campo non deve essere vuoto</string>
     <string name="error_mustbe4hexadidits">Devono essere 4 caratteri tra ABCDEF0123456789</string>
-
+    <string name="authorized_clients_manage_label">Client autorizzati</string>
+    <string name="authorized_clients_manage_desc">Gestisci i dispositivi client accoppiati che controllano questo master.</string>
+    <string name="pair_with_master_manage_label">Accoppia con master</string>
+    <string name="pair_with_master_manage_desc">Inserisci il PIN di accoppiamento di un master per consentire a questo client di inviare comandi firmati.</string>
+    <!--    General-->
     <string name="treatments">Trattamenti</string>
     <string name="treatments_history">Cronologia trattamenti</string>
     <string name="treatments_desc">Visualizza e gestisci la cronologia dei trattamenti</string>
@@ -16,6 +20,7 @@
     <string name="refresh">Aggiorna</string>
     <string name="no_history_records">Non è stato trovato alcun dato</string>
     <string name="error">Errore</string>
+    <string name="navigation_error_screen_not_found">Impossibile aprire lo schermo (non disponibile in questa configurazione)</string>
     <string name="profile_set_ok">Profilo basale aggiornato nel micro</string>
     <string name="invalid_input">Dati di input non validi</string>
     <string name="invalid_number">Numero non valido</string>
@@ -32,10 +37,12 @@
     <string name="loop_disabled">LOOP DISABILITATO DAI VINCOLI</string>
     <string name="loop_disabled_by_user">Loop disabilitato dall\'utente</string>
     <string name="event_type">Tipo evento</string>
-    <string name="mgdl">mg/dl</string>
-    <string name="mmol">mmol/l</string>
-    <string name="bg_mgdl">%1$d mg/dl</string>
-    <string name="bg_mmol">%1$.1f mmol/l</string>
+    <string name="mgdl">mg/dL</string>
+    <string name="mmol">mmol/L</string>
+    <string name="profile_isf_units_mgdl">mg/dL/U</string>
+    <string name="profile_isf_units_mmol">mmol/L/U</string>
+    <string name="bg_mgdl">%1$d mg/dL</string>
+    <string name="bg_mmol">%1$.1f mmol/L</string>
     <string name="save">Salva</string>
     <string name="skip">Salta</string>
     <string name="switch_to_edit">Modifica</string>
@@ -77,7 +84,7 @@
     <string name="configbuilder_general">Generale</string>
     <string name="protection">Protezione</string>
     <string name="value_unavailable_short">n/a</string>
-
+    <!-- master_password moved to core/keys/strings.xml -->
     <string name="ue_export_to_csv">Esporta voci utente in Excel (csv)</string>
     <string name="confirm">Conferma</string>
     <string name="pump">Micro</string>
@@ -102,8 +109,11 @@
     <string name="androidaps_start">AAPS avviato</string>
     <string name="formatsignedinsulinunits">%1$+.2f U</string>
     <string name="format_carbs">%1$d g</string>
+    <string name="format_carbs_split" comment="Compact carbs summary when a food type splits the entry into immediate + extended carbs. %1$d=immediate carbs (g), %2$d=extended (eCarbs) carbs (g). Example: 9+2 g">%1$d+%2$d g</string>
     <string name="format_hours">%1$.2f h</string>
     <string name="format_mins">%1$d min</string>
+    <string name="confirmation_line" comment="Confirmation-summary line, joins a label and an already-formatted value. %1$s = label, %2$s = value with its unit. Example: Bolus: 1.50 U">%1$s: %2$s</string>
+    <string name="value_with_unit" comment="A numeric value followed by its unit, when no dedicated value template exists. %1$s = value, %2$s = unit. Example: 120 mg/dl">%1$s %2$s</string>
     <string name="objectives">Obiettivi</string>
     <string name="please_wait">Attendi…</string>
     <string name="stop">Stop</string>
@@ -111,7 +121,7 @@
     <string name="carbs">CHO</string>
     <string name="invalid_profile">Profilo non valido!</string>
     <string name="no_profile_set">NESSUN PROFILO IMPOSTATO</string>
-    <string name="active">&lt;Active&gt;</string>
+    <string name="active"><![CDATA[<Active>]]></string>
     <string name="date">Data</string>
     <string name="units_label">Unità</string>
     <string name="insulin_nickname_label">Soprannome dell\'insulina</string>
@@ -190,6 +200,8 @@
     <string name="reset">Reset</string>
     <string name="profileswitch_ismissing">Nessun cambio profilo. Effettua un cambio profilo o premi \"Attiva profilo\" nella sezione Profilo locale.</string>
     <string name="profile">Profilo</string>
+    <string name="percentage_label">Percentuale</string>
+    <string name="timeshift_label">Timeshift</string>
     <string name="confirm_remove_multiple_items">Sicuro di voler eliminare %1$d elementi</string>
     <string name="overview_treatment_label">Trattamento</string>
     <string name="copytolocalprofile">Creare un nuovo profilo da questo profilo?</string>
@@ -242,29 +254,30 @@
     <string name="engineering_mode_enabled">Engineering mode abilitata</string>
     <string name="back">Indietro</string>
     <string name="next">Prossimo</string>
+    <string name="pref_syncs_with_main_phone">Sincronizza con il telefono principale</string>
     <string name="show_hide_records">Nascondi record di loop</string>
-
+    <!--    Protection-->
     <string name="wrongpassword">Password errata</string>
     <string name="wrongpin">PIN errato</string>
     <string name="passwords_dont_match">Le password non coincidono</string>
     <string name="pin_dont_match">I PIN non coincidono</string>
-
+    <!--    Profile-->
     <string name="basalprofilenotaligned">Valori basali non allineati alle ore: %1$s</string>
     <string name="minimalbasalvaluereplaced">Valore basale sostituito dal minimo valore supportato: %1$s</string>
     <string name="maximumbasalvaluereplaced">Valore basale sostituito dal massimo valore supportato: %1$s</string>
     <string name="profile_per_unit">/U</string>
     <string name="profile_ins_units_per_hour">U/h</string>
     <string name="profile_carbs_per_unit">g/U</string>
-
+    <!--    ProfileFunction-->
     <string name="startprofile">Avvia profilo %1$d%% per %2$d min</string>
-
+    <!--    APSResult-->
     <string name="cancel_temp">Cancella basale temporanea</string>
     <string name="let_temp_basal_run">Lascia eseguire la basale temporanea</string>
     <string name="rate">Tasso</string>
     <string name="duration">Durata</string>
     <string name="reason">Motivo</string>
     <string name="nochangerequested">Nessun cambiamento richiesto</string>
-
+    <!--    Insulin / Concentration-->
     <string name="ins_concentration_confirmed">Insulina %1$s confermata</string>
     <string name="current_insulin">Attualmente attivo</string>
     <string name="change_insulin">Cambiare</string>
@@ -293,7 +306,7 @@
     <!--    ProfileSwitch-->
     <!--    Temptarget-->
     <string name="mins">%1$d min</string>
-
+    <!--    Translator-->
     <string name="careportal">Portale</string>
     <string name="careportal_bgcheck">Controllo BG</string>
     <string name="careportal_mbg">BG manuale o Calibrazione</string>
@@ -328,6 +341,8 @@
     <string name="temporary_target">Target temporaneo</string>
     <string name="temporary_targets">Target temporanei</string>
     <string name="running_mode">Modalità esecuzione</string>
+    <string name="running_mode_change_not_allowed">Cambio modalità di esecuzione non disponibile</string>
+    <string name="pump_reconnect">Riconnetti micro</string>
     <string name="scene">Scena</string>
     <string name="scenes">Scene</string>
     <string name="scene_desc">Situazione preset — attivare azioni multiple contemporaneamente</string>
@@ -351,6 +366,7 @@
     <string name="scene_management_desc">Crea, modifica e gestisci scene</string>
     <string name="scene_action_count">Azioni %1$d</string>
     <string name="scene_start_from_template">Inizia da un modello</string>
+    <string name="scene_editor_reason">Motivo</string>
     <string name="scene_editor_target">Target</string>
     <string name="scene_editor_tt_preset">TT preset</string>
     <string name="scene_editor_no_tt_presets">Nessun preset TT configurato</string>
@@ -372,6 +388,39 @@
     <string name="scene_no_profile_store">Nessun archivio profilo disponibile</string>
     <string name="scene_no_actions">La scena non ha azioni</string>
     <string name="scene_profile_not_found">Profilo \"%1$s\" non trovato</string>
+    <string name="scene_lock_banner_master_offline">Dispositivo master irraggiungibile. I controlli della scena riprenderanno quando la connessione viene ripristinata.</string>
+    <string name="master_offline_banner">Dispositivo master irraggiungibile. La modifica è disabilitata fino al ripristino della connessione.</string>
+    <string name="scene_lock_reason_master_offline">Master disconnesso</string>
+    <string name="scene_lock_reason_scene_active">Ferma prima la scena in esecuzione</string>
+    <!-- Client-control action labels (shown in the pending/failure modal as "Couldn't {label}") -->
+    <string name="clientcontrol_action_set_temp_target">Avvia temp-target</string>
+    <string name="clientcontrol_action_cancel_temp_target">Cancella temp target</string>
+    <string name="clientcontrol_action_activate_scene">Attivare la scena %1$s</string>
+    <string name="clientcontrol_action_deactivate_scene">Fine Scena</string>
+    <string name="clientcontrol_action_activate_insulin">Attiva insulina %1$s</string>
+    <string name="clientcontrol_action_update_settings">Aggiorna le impostazioni</string>
+    <string name="clientcontrol_action_deliver_bolus">Eroga bolo</string>
+    <string name="clientcontrol_action_record_bolus">Registra bolo</string>
+    <!-- Client-control failure reasons (mapped from a FailureReason code on the showing device) -->
+    <string name="clientcontrol_fail_not_paired">Questo dispositivo non è abbinato a un master.</string>
+    <string name="clientcontrol_fail_not_reachable">Il master è offline.</string>
+    <string name="clientcontrol_pump_out_of_sync" comment="Shown when a follower relays a temp basal / extended bolus but its cached pump type no longer matches the master\'s pump">Configurazione del micro non sincronizzata con il master. Riprova.</string>
+    <string name="clientcontrol_fail_no_reply">Nessuna risposta dal master in tempo.</string>
+    <string name="clientcontrol_fail_expired">Il comando è scaduto prima che il master lo abbia applicato.</string>
+    <string name="clientcontrol_fail_busy">Un\'altra azione è già in corso.</string>
+    <string name="clientcontrol_fail_send_failed">Impossibile raggiungere Nightscout.</string>
+    <string name="clientcontrol_fail_no_active_profile">Il master non ha un profilo attivo per applicarlo.</string>
+    <string name="clientcontrol_fail_scene_not_found">La scena non esiste più.</string>
+    <string name="clientcontrol_fail_scene_disabled">La scena è disabilitata.</string>
+    <string name="clientcontrol_fail_partial">Alcune azioni non possono essere applicate.</string>
+    <string name="clientcontrol_fail_execution">Il master non può applicare questa richiesta.</string>
+    <string name="clientcontrol_fail_no_pending_bolus">Il bolo preparato è scaduto o è stato sostituito. Tocca nuovamente il pulsante.</string>
+    <string name="clientcontrol_fail_bolus_compute">Il master non è riuscito a calcolare il bolo (mancanza di glucosio / profilo, o pompa non pronta).</string>
+    <string name="clientcontrol_fail_internal">Qualcosa è andato storto.</string>
+    <string name="clientcontrol_fail_unknown">Comando fallito.</string>
+    <string name="clientcontrol_unconfirmed_wear">Stato sconosciuto — controllare il telefono/Nightscout prima di rifare il bolo.</string>
+    <string name="clientcontrol_bolus_progress_stalled_title">Connessione persa — stato di consegna sconosciuto</string>
+    <string name="clientcontrol_bolus_progress_stalled_body">Questo telefono ha smesso di ricevere aggiornamenti dal master. Il bolo potrebbe essere ancora in consegna o potrebbe essere finito. Chiudere questo lo nasconde solo qui — non ferma la pompa. Controlla il telefono principale per l\'importo effettivamente consegnato.</string>
     <string name="scene_revert_tt">Cancella basali temporanee</string>
     <string name="scene_revert_profile">Ripristina la modifica del profilo</string>
     <string name="scene_revert_smb_on">Riattiva SMB</string>
@@ -427,6 +476,7 @@
     <string name="activity">Attività</string>
     <string name="wear">Smartwatch</string>
     <string name="automation">Automazione</string>
+    <string name="automation_management_desc">Crea regole che eseguono le azioni automaticamente in base ai trigger</string>
     <string name="settingsexport">Esportazione Impostazioni</string>
     <string name="custom">Personalizzato</string>
     <string name="preset_settings">Impostazioni Preset</string>
@@ -472,26 +522,26 @@
     <string name="arrow_left">Sinistra</string>
     <string name="arrow_up_left">Alto a sinistra</string>
     <string name="arrow_center">Centro</string>
-
+    <!--    Command-->
     <string name="connectiontimedout">Time out connessione</string>
     <string name="command_replaced">Sostituito con un nuovo comando</string>
     <string name="pump_not_configured">Micro non configurato</string>
-
+    <!--    PumpEnactResult-->
     <string name="enacted">Emanato</string>
     <string name="comment">Commento</string>
     <string name="percent">Percento</string>
     <string name="absolute">Assoluto</string>
     <string name="waitingforpumpresult">In attesa del risultato</string>
     <string name="smb_shortname">SMB</string>
-
+    <!--    CarbsReq-->
     <string name="carbsreq">%1$d g di CHO aggiuntivi richiesti entro %2$d minuti</string>
     <string name="basalrate">Basale</string>
     <string name="bolus">Bolo</string>
     <string name="tdd_short">TDD</string>
     <string name="tdd">Dose totale giornaliera</string>
-
+    <!--    Ntp-->
     <string name="timedetection">Rilevamento tempo</string>
-
+    <!-- User Entry -->
     <string name="uel_bolus">BOLO</string>
     <string name="uel_bolus_calculator">CALCOLATORE BOLO</string>
     <string name="uel_bolus_advisor">CONSIGLIO BOLO</string>
@@ -597,7 +647,8 @@
     <string name="uel_running_mode_updarted">MODALITÀ RUNNING AGGIORNATA</string>
     <string name="uel_scene_activated">SCENA ATTIVATA</string>
     <string name="uel_scene_deactivated">SCENA DISATTIVATA</string>
-
+    <string name="uel_remote_config_changed">CONFIG REMOTA MODIFICATA</string>
+    <!-- HardLimits -->
     <string name="profile_low_target">Target basso (profilo)</string>
     <string name="profile_high_target">Target alto (profilo)</string>
     <string name="temp_target_low_target">Valore inferiore target temporaneo</string>
@@ -614,7 +665,7 @@
     <string name="valueoutofrange">»%1$s« è fuori dai limiti consentiti</string>
     <string name="value_out_of_hard_limits">»%1$s« %2$.2f è fuori dai limiti consentiti</string>
     <string name="basal_value">Valore basale</string>
-
+    <!-- Profile validation -->
     <string name="no_profile_selected">Nessun profilo selezionato</string>
     <string name="missing_profile_name">Nome profilo mancante</string>
     <string name="profile_not_saved_activate">Profilo non salvato. Si prega di salvare il profilo prima di attivarlo.</string>
@@ -629,7 +680,7 @@
     <string name="profile_name_contains_dot">Alcuni nomi profilo contengono punti.\nQuesto non è supportato da NS.\nI profili non verranno caricati su NS.</string>
     <string name="invalid_profile_not_accepted">Profilo %1$s non valido - non accettato da NS</string>
     <string name="errors">Errori</string>
-
+    <!-- Command Queue + readStatus reasons -->
     <string name="bolus_u_min">BOLO %1$.2f U</string>
     <string name="carbs_g">CHO %1$d g</string>
     <string name="extended_bolus_u_min">BOLO ESTESO %1$.2f U %2$d min</string>
@@ -662,14 +713,14 @@
     <string name="autosens_long">Valore Autosens: %.0f%%</string>
     <string name="autosens_short">%.0f%%</string>
     <string name="algorithm_long">Autosens nell\'algoritmo: %.0f%%</string>
-
+    <!-- Autotune -->
     <string name="autotune">Autotune</string>
     <string name="autotune_tune_days">Giorni regolazione :</string>
     <string name="autotune_select_profile">Seleziona il profilo da regolare</string>
-
+    <!-- Alerts -->
     <string name="urgent_alarm">Allarme urgente</string>
     <string name="info">INFO</string>
-
+    <!-- BolusWizard -->
     <string name="bolus_advisor">Consiglio bolo</string>
     <string name="bolus_advisor_message">Hai una glicemia alta. Invece di mangiare ora, si consiglia di attendere una glicemia migliore. Vuoi fare adesso un bolo di correzione ed ricevere un promemoria quando è il momento di mangiare? In questo caso non verranno registrati carboidrati e dovrai usare di nuovo il calcolatore quando ti verrà mostrato il promemoria.</string>
     <string name="cobvsiob">COB vs IOB</string>
@@ -699,6 +750,7 @@
     <string name="wizard_include_cob">Includi IOB</string>
     <string name="wizard_calculation">Calcolo</string>
     <string name="no_action_selected">Nessuna azione selezionata, non succederà nulla</string>
+    <string name="carbs_removal_cob_limit" comment="Shown under the carbs field when removing carbs (a negative value). %1$d = grams of carbs currently on board, the maximum removable. Example: Max removal: 30 g (carbs on board)">Rimozione massima: %1$d g (carboidrati a bordo)</string>
     <string name="carb_equal_zero_no_action">CHO = 0. Nessuna azione intrapresa!</string>
     <string name="bolus_equal_zero_no_action">Bolo = 0. Nessuna azione intrapresa!</string>
     <string name="wizard_no_insulin_required">Insulina non necessaria</string>
@@ -706,21 +758,12 @@
     <string name="wizard_no_active_profile">Nessun profilo attivo!</string>
     <string name="wizard_no_cob">Valore COB sconosciuto! Lettura BG mancante o recente riavvio dell\'app?</string>
     <string name="wizard_carbs_constraint">Violazione vincolo CHO!</string>
-    <string name="wizard_explain_calc">Calc (IC: %1$.1f, ISF: %2$.1f)</string>
-    <string name="wizard_explain_carbs">CHO: %1$.2fU</string>
-    <string name="wizard_explain_cob">COB: %1$.0fg %2$.2fU</string>
-    <string name="wizard_explain_bg">BG: %1$.2fU</string>
-    <string name="wizard_explain_iob">IOB: %1$.2fU</string>
-    <string name="wizard_explain_superbolus">Superbolo: %1$.2fU</string>
-    <string name="wizard_explain_trend">Trend di 15\': %1$.2fU</string>
     <string name="wizard_trend_detail">Tendenza 15min (%1$s %2$s)</string>
-    <string name="wizard_explain_percent">Percentuale: %1$.2fU x %2$d%% ≈ %3$.2fU</string>
     <string name="wizard_constraint_bolus_size">Violazione vincolo insulina!\nImpossibile erogare %1$.2fU</string>
-    <string name="wizard_explain_tt">TempT: %1$s</string>
-    <string name="wizard_explain_tt_to">%1$s a %2$s</string>
     <string name="wizard_pump_not_available">Nessun micro disponibile!</string>
+    <string name="quick_wizard_not_available">Il calcolo rapido selezionato non è più disponibile, aggiorna il riquadro</string>
     <string name="quickwizard_managemnt">Assistente Rapido</string>
-
+    <!--    Preferences-->
     <string name="child">Bambino</string>
     <string name="teenage">Adolescente</string>
     <string name="adult">Adulto</string>
@@ -730,9 +773,9 @@
     <string name="max_bolus_title">Max bolo consentito [U]</string>
     <string name="max_carbs_title">Max CHO consentiti [g]</string>
     <string name="patient_type">Tipo paziente</string>
-
+    <!--    Protection-->
     <string name="unlock_settings">Impostazioni sblocco</string>
-
+    <!--    Pumps -->
     <string name="battery_label">Batteria</string>
     <string name="reservoir_label">Serbatoio</string>
     <string name="last_connection_label">Ultima connessione</string>
@@ -766,13 +809,13 @@
     <string name="bolusspeed" comment="Speed at which bolus is delivered">Velocità bolo</string>
     <string name="history" comment="Tab/screen title for viewing past events">Storico</string>
     <string name="overview_reservoir_concentration_value_over">Oltre %1$s rimaste</string>
-
+    <!--    Constraints-->
     <string name="limitingbasalratio">Limitazione max velocità basale a %1$.2f U/h a causa di: %2$s</string>
     <string name="pumplimit">limite micro</string>
     <string name="limitingpercentrate">Limitazione max tasso percentuale a %1$d%% a causa di: %2$s</string>
     <string name="itmustbepositivevalue">deve essere un valore positivo</string>
     <string name="limitingbolus">Limitazione bolo a %1$.1f U a causa di: %2$s</string>
-
+    <!--    Dialogs-->
     <string name="confirmation">Conferma</string>
     <string name="message">Messaggio</string>
     <string name="ok">OK</string>
@@ -781,26 +824,26 @@
     <string name="yes">Sì</string>
     <string name="no">No</string>
     <string name="close">Chiudi</string>
-
-
+    <!-- TwoMessagesDialog -->
+    <!-- <unattended_export> -->
     <string name="export_ok">OK</string>
     <string name="export_warning">Avviso</string>
     <string name="export_expired">Scaduto</string>
     <string name="export_disabled">Disabilitato</string>
     <string name="export_failed">Fallito</string>
     <string name="export_alert">SEGNALAZIONE</string>
-
+    <!-- Export dialog strings -->
     <string name="master_password_missing">La password master non è impostata!\n\nImposta la tua password master in Preferenze e riprova.</string>
     <string name="export_to">Esporta impostazioni</string>
     <string name="password_preferences_encrypt_prompt">Ti verrà richiesta la password master, che verrà usata per crittografare le preferenze esportate.</string>
     <string name="preferences_export_canceled">Esportazione annullata! Le preferenze NON sono state esportate!</string>
-
+    <!-- <unattended_export result messages> -->
     <string name="export_result_message_exported">Impostazioni esportate</string>
     <string name="export_result_message_failed">Esportazione Impostazioni FALLITA!</string>
     <string name="export_result_message_about_to_expire">Impostazioni esportate: la password sta per scadere presto. Esporta manualmente e (re)inserisci la password.</string>
     <string name="export_result_message_expired">Esportazione impostazioni annullata: password scaduta. Esporta manualmente e (re)inserisci!</string>
     <string name="export_result_message_disabled">Attenzione (automazione): Esportazione impostazioni non abilitata!</string>
-
+    <!-- Cloud export -->
     <string name="export_cloud_success">Esportazione cloud riuscita</string>
     <string name="export_cloud_failed">Esportazione cloud FALLITA!</string>
     <string name="csv_exported">Voci utente esportate</string>
@@ -809,7 +852,7 @@
     <string name="logs_send_failed">Impossibile inviare i log</string>
     <string name="cloud_directory">Directory Cloud</string>
     <string name="cloud_token_expired_or_invalid">Autorizzazione all\'archiviazione cloud scaduta o non valida. Per favore ri-autorizza.</string>
-
+    <!-- Export destination chip labels -->
     <string name="chip_local">Locale</string>
     <string name="chip_cloud">Cloud</string>
     <string name="chip_email">Email</string>
@@ -818,7 +861,7 @@
     <string name="database_management">Gestione del database</string>
     <string name="data_choices">Scelta dei dati</string>
     <string name="unattended_settings_export">Esportazione Impostazioni Non presidiata</string>
-
+    <!-- Maintenance bottom sheet descriptions -->
     <string name="maintenance_log_settings_desc">Configura i livelli di verbosità log</string>
     <string name="maintenance_send_logs_desc">Condividi i file di log per la risoluzione dei problemi</string>
     <string name="maintenance_delete_logs_desc">Rimuovi i vecchi file di log</string>
@@ -841,26 +884,27 @@
     <string name="reauthorize">Ri-autenticazione</string>
     <string name="cloud_auth_success">Autenticazione archiviazione cloud riuscita</string>
     <string name="authorization_status">Stato Autorizzazione</string>
-    <string name="format_hour_minute">%1$dh %2$dm</string>
-
+    <string name="format_hour_minute" comment="%1$d=hours, %2$d=minutes. Example: 1 h 23 min">%1$d h %2$d min</string>
+    <string name="format_hours_only" comment="%1$d=hours, when minutes are zero. Example: 4 h">%1$d h</string>
+    <!-- datetime layout -->
     <string name="event_time_label">Ora evento</string>
-
+    <!-- BluetoothDevicePreference -->
     <string name="need_connect_permission">L\'applicazione richiede l\'autorizzazione bluetooth</string>
-
+    <!--    Combo-->
     <string name="user_request" comment="26 characters max for translation">Richiesta utente</string>
     <!--    Pump pair/unpair (shared) -->
     <string name="pump_pair">Accoppiamento</string>
     <string name="pump_unpair">Disaccoppia</string>
     <string name="pump_unpair_confirm_title">Disassocia micro?</string>
     <string name="pump_paired" comment="26 characters max for translation">Micro associato</string>
-
+    <!--    BlePreCheck-->
     <string name="ble_not_supported">Bluetooth Low Energy non supportato.</string>
     <string name="ble_not_supported_or_not_paired">Bluetooth Low Energy non supportato o dispositivo non associato.</string>
     <string name="ble_not_enabled">Bluetooth non abilitato.</string>
     <string name="ble_permissions_missing">Le autorizzazioni Bluetooth non sono concesse. Si prega di concederle nelle impostazioni dell\'app.</string>
-
+    <!--    Preferences -->
     <string name="nav_plugin_preferences">Preferenze plugin</string>
-
+    <!-- Navigation -->
     <string name="nav_about">Informazioni su</string>
     <string name="nav_about_desc">Visualizza la versione e le informazioni dell\'app</string>
     <string name="nav_exit">Esci</string>
@@ -880,9 +924,9 @@
     <string name="nav_profile_helper_desc">Costruisci il tuo profilo in base al peso o al TDD</string>
     <string name="quick_launch_configure">Configura Avvio Rapido</string>
     <string name="quick_launch_configure_desc">Personalizza i pulsanti di azione rapida nella panoramica</string>
-
+    <!-- Alerts -->
     <string name="localalertsettings_title">Avvisi locali</string>
-
+    <!-- Actions Screen -->
     <string name="add">Aggiungi</string>
     <string name="remove">Rimuovi</string>
     <string name="reorder">Riordina</string>
@@ -898,9 +942,9 @@
     <string name="pb_label">Batteria micro</string>
     <string name="cannula">Cannula</string>
     <string name="patch_pump">Micro a patch</string>
-
+    <!-- Site Rotation -->
     <string name="select_location">Clicca qui sotto per selezionare il sito</string>
-
+    <!-- About -->
     <string name="cta_dont_kill_my_app_info">Non terminare l\'app?</string>
     <string name="fabric_upload_disabled">Caricamento log dei crash disabilitato!</string>
     <string name="about_link_urls">\n\nDocumentazione:\nhttps://wiki.aaps.app\n\nFacebook:\nhttps://www.facebook.com/groups/AndroidAPSUsers\nhttps://www.facebook.com/groups/aapsitalia</string>
@@ -916,13 +960,13 @@
         <item quantity="one">%1$d minuto</item>
         <item quantity="other">%1$d minuti</item>
     </plurals>
-
+    <!--    Maintenance-->
     <string name="cleanup_db_confirm">Vuoi pulire il database?\nIl processo rimuoverà i cambiamenti tracciati e i dati dello storico più vecchi di 3 mesi.</string>
     <string name="cleanup_db_confirm_sync">Vuoi pulire il database?\nIl processo rimuoverà i cambiamenti tracciati e i dati dello storico più vecchi di 3 mesi.\nFarlo velocizzerà considerevolmente la sincronizzazione completa.</string>
     <string name="cleared_entries">Elementi cancellati</string>
     <string name="reset_db_confirm">Sei sicuro di voler resettare i risultati di APS?</string>
     <string name="reset_aps_results_confirm">Sei sicuro di voler resettare i risultati di APS?</string>
-
+    <!--    Weekday-->
     <string name="weekday_sunday_short">Dom</string>
     <string name="weekday_saturday_short">Sab</string>
     <string name="weekday_friday_short">Ven</string>
@@ -930,17 +974,17 @@
     <string name="weekday_wednesday_short">Mer</string>
     <string name="weekday_tuesday_short">Mar</string>
     <string name="weekday_monday_short">Lun</string>
-
+    <!--    DecimalFormatterImpl -->
     <string name="format_insulin_units1">%1$.1f U</string>
     <string name="format_insulin_units">%1$.2f U</string>
     <string name="format_insulin_units_signed">%1$+.2f U</string>
     <string name="percent_rate_duration">Velocità: %1$.2f%% (%2$.2f U/h) Durata: %3$d min</string>
     <string name="rate_percent_duration">Velocità: %1$.2f U/h (%2$.2f%%) Durata: %3$d min</string>
-    <string name="percent_rate_duration_formatted">&lt;b&gt;Velocità&lt;/b&gt;: %1$.2f%% (%2$.2f U/h)&lt;br&gt;&lt;b&gt;Durata&lt;/b&gt;: %3$d min&lt;br&gt;</string>
-    <string name="rate_percent_duration_formatted">&lt;b&gt;Velocità&lt;/b&gt;: %1$.2f U/h (%2$.2f%%) &lt;br&gt;&lt;b&gt;Durata&lt;/b&gt;: %3$d min&lt;br&gt;</string>
-
+    <string name="percent_rate_duration_formatted"><![CDATA[<b>Velocità</b>: %1$.2f%% (%2$.2f U/h)<br><b>Durata</b>: %3$d min<br>]]></string>
+    <string name="rate_percent_duration_formatted"><![CDATA[<b>Velocità</b>: %1$.2f U/h (%2$.2f%%) <br><b>Durata</b>: %3$d min<br>]]></string>
+    <!--    Playback-->
     <string name="audio_playback_attribution">"AAPS riproduce audio"</string>
-
+    <!-- ProfileEditor -->
     <string name="basal_short">BAS</string>
     <string name="target_short">TARG</string>
     <string name="profile_name">Nome profilo:</string>
@@ -955,7 +999,7 @@
     <string name="remove_entry">Rimuovi elemento</string>
     <string name="target_low_label">Basso</string>
     <string name="target_high_label">Alto</string>
-
+    <!--    Search-->
     <string name="search">Cerca</string>
     <string name="clear">Pulisci</string>
     <string name="search_category_categories">Categorie di preferenze</string>
@@ -966,7 +1010,7 @@
     <string name="wiki_search_offline">La ricerca della documentazione richiede connessione internet</string>
     <string name="no_search_results">Nessun risultato trovato</string>
     <string name="search_plugin_disabled">Plugin %1$s disabilitato</string>
-
+    <!--    Food Management -->
     <string name="food_management">Cibo</string>
     <string name="food_deleted">Cibo eliminato</string>
     <string name="edit_food">Modifica cibo</string>
@@ -983,10 +1027,10 @@
     <string name="label_fat_g">Grassi (g)</string>
     <string name="label_protein_g">Proteine (g)</string>
     <string name="label_energy_kj">Energia (kJ)</string>
-
+    <!--    Log Settings-->
     <string name="nav_logsettings">Impostazioni Log</string>
     <string name="resettodefaults">Ripristina valori predefiniti</string>
-
+    <!--    Maintenance-->
     <string name="maintenance">Manutenzione</string>
     <string name="description_maintenance">Fornisce numerose funzioni per la manutenzione (es. invio log, eliminazione log).</string>
     <string name="log_files">File di log</string>
@@ -994,7 +1038,7 @@
     <string name="logs_deleted">Log cancellati</string>
     <string name="aaps_directory">Directory AAPS</string>
     <string name="import_setting">Importa impostazioni</string>
-
+    <!-- Import settings screen -->
     <string name="import_decrypt_review">Decifra &amp; Review</string>
     <string name="import_decrypt">Decripta</string>
     <string name="import_master_password">Password Master</string>
@@ -1019,7 +1063,7 @@
     <string name="step_ble_scan">Trova Micro</string>
     <string name="ble_scan_select_pump">Seleziona il tuo micro dall\'elenco qui sotto</string>
     <string name="ble_scan_scanning">Ricerca dispositivi in corso...</string>
-
+    <!-- Graph configuration -->
     <string name="graph_add">Aggiungi grafico</string>
     <string name="graph_new">Nuovo grafico</string>
     <string name="graph_number">%1$d Grafico</string>
@@ -1027,7 +1071,7 @@
     <string name="graph_height">Altezza grafico [dp]</string>
     <string name="predictions_shortname" comment="Short label for Predictions graph series">PRED</string>
     <string name="basal_shortname" comment="Short label for Basal, used in graph labels">BAS</string>
-
+    <!-- Graph series short names (used as graph labels, keep very short) -->
     <string name="deviation_shortname" comment="Short label for Deviations graph series">DEV</string>
     <string name="activity_shortname" comment="Short label for Activity graph series">ACT</string>
     <string name="bgi_shortname" comment="Short label for Blood Glucose Impact graph series">-BGI</string>
