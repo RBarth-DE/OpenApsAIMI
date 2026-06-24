@@ -484,6 +484,9 @@
     <string name="pref_title_aimi_adaptive_basal_max_scaling">Max adaptive basal multiplier</string>
     <string name="pref_summary_aimi_adaptive_basal_max_scaling">Upper cap for the neural basal multiplier (1.0 = no effect, 2.0 = up to 2× profile basal). Lower if basal increases are too aggressive.</string>
 
+    <string name="pref_summary_aimi_t3c_cfrd_lgs_floor">Minimum glucose threshold (mg/dL) for low-glucose-suspend in CFRD. Impaired glucagon counter-regulation requires a higher safety floor (recommended 80–95) than standard T1D.</string>
+    <string name="pref_summary_aimi_t3c_cfrd_cob_delay">Delays COB absorption by this many minutes to account for CFRD-related gastric emptying delay and exocrine malabsorption. Higher values = carbs counted as active later.</string>
+
     <string name="aimi_tube_advanced_title">Straight-line tube (tuning)</string>
     <string name="aimi_tube_hypo_floor_title">Tube: minimum predicted BG floor (mg/dL)</string>
     <string name="aimi_tube_hypo_floor_summary">Robust hypo constraint: SMB cap scale is only allowed if min predicted BG minus estimated SMB effect stays at or above this value.</string>

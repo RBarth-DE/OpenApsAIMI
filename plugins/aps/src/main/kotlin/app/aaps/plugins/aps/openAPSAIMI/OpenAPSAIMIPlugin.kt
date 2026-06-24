@@ -1703,6 +1703,8 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
                 BooleanKey.OApsAIMIT3cBrittleMode,
                 DoubleKey.OApsAIMIT3cActivationThreshold,
                 DoubleKey.OApsAIMIT3cAggressiveness,  // Read by BasalNeuralLearner.kt::getT3cAdaptiveFactor
+                DoubleKey.OApsAIMIT3cCfrdLgsFloorMgdl,
+                DoubleKey.OApsAIMIT3cCfrdCobDelayMin,
                 DoubleKey.OApsAIMIT3cAnticipationStrength,
             ),
         )

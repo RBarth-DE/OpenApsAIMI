@@ -228,9 +228,13 @@ fun SecondaryGraphCompose(
                 // dsMin tagged separately via DEV_SLOPE_MIN marker (see below)
             }
             hrData?.heartRates?.takeIf { it.isNotEmpty() }?.let {
+                // Skip if HR is the secondary (right-axis) series — rendered via secondaryLineData
+                if (secondaryType != SeriesType.HEART_RATE)
                 add(SeriesType.HEART_RATE to processPoints(it, minTimestamp, minX, maxX))
             }
             stepsData?.steps?.takeIf { it.isNotEmpty() }?.let {
+                // Skip if Steps is the secondary (right-axis) series — rendered via secondaryLineData
+                if (secondaryType != SeriesType.STEPS)
                 add(SeriesType.STEPS to processPoints(it, minTimestamp, minX, maxX))
             }
             if (SeriesType.IOB_THRESHOLD in seriesTypes)

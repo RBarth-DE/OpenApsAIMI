@@ -720,19 +720,29 @@ open class OpenAPSAutoISFPlugin @Inject constructor(
 
             recentSteps5Minutes = valid5?.steps5min ?: fallbackRecord?.steps5min ?: 0
 
-            //  sum up steps5min since MTR StepsService only provides 5min steps.
-            recentSteps10Minutes = allStepsCounts
-                .filter { it.timestamp >= timeMillis10 }
-                .sumOf { it.steps5min }
-            recentSteps15Minutes = allStepsCounts
-                .filter { it.timestamp >= timeMillis15 }
-                .sumOf { it.steps5min }
-            recentSteps30Minutes = allStepsCounts
-                .filter { it.timestamp >= timeMillis30 }
-                .sumOf { it.steps5min }
-            recentSteps60Minutes = allStepsCounts
-                .filter { it.timestamp >= timeMillis60 }
-                .sumOf { it.steps5min }
+            // FIX: Health Connect sends updates every few seconds, each record containing
+            // steps5min = steps accumulated in the last 5 minutes at that moment.
+            // sumOf() across all records in a window multiplies the true count by the
+            // update frequency (~35x for a 10-min window at 17-sec intervals → >90k steps).
+            // Correct approach: bucket into 5-min slices, take the LAST record per bucket.
+            fun lastStepsInBucket(from: Long, to: Long): Int =
+                (allStepsCounts
+                    .filter { it.timestamp in from..to }
+                    .maxByOrNull { it.timestamp }
+                    ?.steps5min ?: 0)
+                    .coerceAtMost(1500)  // max 160 steps/min = schnelles Gehen
+
+            recentSteps10Minutes = lastStepsInBucket(timeMillis10, timeMillis5) +
+                lastStepsInBucket(timeMillis5,  now)
+            recentSteps15Minutes = lastStepsInBucket(timeMillis15, timeMillis10) +
+                lastStepsInBucket(timeMillis10, timeMillis5) +
+                lastStepsInBucket(timeMillis5,  now)
+            recentSteps30Minutes = (0 until 6).sumOf { i ->
+                lastStepsInBucket(now - (i + 1) * 5 * 60_000L, now - i * 5 * 60_000L)
+            }
+            recentSteps60Minutes = (0 until 12).sumOf { i ->
+                lastStepsInBucket(now - (i + 1) * 5 * 60_000L, now - i * 5 * 60_000L)
+            }
         } else {
             // stepsservice not really working on my deice. Only for fallback.
             recentSteps5Minutes = StepService.getRecentStepCount5Min()
