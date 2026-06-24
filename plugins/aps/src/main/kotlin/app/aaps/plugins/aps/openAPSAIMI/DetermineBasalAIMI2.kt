@@ -13770,6 +13770,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                 return
             }
             rT.units = units
+            rT.deliverAt = dateUtil.now()
             onAllowed(units)
         }
 
