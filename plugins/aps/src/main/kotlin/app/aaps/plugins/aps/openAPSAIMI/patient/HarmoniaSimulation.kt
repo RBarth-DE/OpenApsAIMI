@@ -158,7 +158,6 @@ internal object HarmoniaSimulationEngine {
             HarmoniaSimulationAction.PROTECTIVE_REDUCTION -> 0.70
             HarmoniaSimulationAction.STABILIZE -> 0.85
             HarmoniaSimulationAction.OBSERVE,
-            HarmoniaSimulationAction.STABILIZE,
             HarmoniaSimulationAction.BLOCKED,
             -> 1.0
         }

@@ -49,6 +49,8 @@
     <uses-permission android:name="android.permission.health.READ_HEART_RATE" />
     <uses-permission android:name="android.permission.health.READ_HEART_RATE_VARIABILITY" />
     <uses-permission android:name="android.permission.health.READ_RESTING_HEART_RATE" />
+    <uses-permission android:name="android.permission.health.READ_SKIN_TEMPERATURE" />
+    <uses-permission android:name="android.permission.health.READ_BASAL_BODY_TEMPERATURE" />
 
     <!-- Health Connect availability query -->
     <!-- Health Connect availability query (Android 14+ requirement) -->
@@ -213,15 +215,6 @@
             </intent-filter>
         </activity-alias>
 
-        <!-- WorkManager (Android 14+): SystemForegroundService must declare a type when targetSdk >= 34.
-             Without this merge, startForeground() can run as FGS type "none" and throw InvalidForegroundServiceTypeException. -->
-        <service
-            android:name="androidx.work.impl.foreground.SystemForegroundService"
-            android:directBootAware="false"
-            android:exported="false"
-            android:foregroundServiceType="dataSync"
-            tools:node="merge" />
-
         <!-- WorkManager on-demand initialization: remove the default initializer so MainApp's
              Configuration.Provider (with HiltWorkerFactory) is used instead. -->
         <provider
@@ -234,6 +227,15 @@
                 android:value="androidx.startup"
                 tools:node="remove" />
         </provider>
+
+        <!-- WorkManager (Android 14+): SystemForegroundService must declare a type when targetSdk >= 34.
+             Without this merge, startForeground() can run as FGS type "none" and throw InvalidForegroundServiceTypeException. -->
+        <service
+            android:name="androidx.work.impl.foreground.SystemForegroundService"
+            android:directBootAware="false"
+            android:exported="false"
+            android:foregroundServiceType="dataSync"
+            tools:node="merge" />
 
     </application>
 

@@ -184,7 +184,6 @@ class AuditorOrchestrator @Inject constructor(
             AuditorStatusTracker.updateStatus(AuditorStatusTracker.Status.SKIPPED_NO_TRIGGER)
             stateManager.transitionTo(AuditorUIState.Idle, "Conditions not met")
             onSyncDisposition(AuditorJsonlExport.TickDisposition.SKIPPED_NO_TRIGGER)
-            auditorStatusLiveData.notifyUpdate()
             callback?.invoke(null, createUnmodulatedDecision(smbProposed, tbrRate, tbrDuration, intervalMin, "No trigger"))
             return
         }
@@ -196,7 +195,6 @@ class AuditorOrchestrator @Inject constructor(
             AuditorStatusTracker.updateStatus(AuditorStatusTracker.Status.SKIPPED_NO_TRIGGER)
             stateManager.transitionTo(AuditorUIState.Error("Stale CGM Data"), "Security: Exceeded 15m threshold")
             onSyncDisposition(AuditorJsonlExport.TickDisposition.SKIPPED_STALE_DATA)
-            auditorStatusLiveData.notifyUpdate()
             callback?.invoke(null, createUnmodulatedDecision(smbProposed, tbrRate, tbrDuration, intervalMin, "Stale data"))
             return
         }
@@ -300,7 +298,6 @@ class AuditorOrchestrator @Inject constructor(
         if (triggerType == TriggerType.NONE) {
             aapsLogger.info(LTag.APS, "🌐 External: Skipped (No valid trigger)")
             AuditorStatusTracker.updateStatus(AuditorStatusTracker.Status.SKIPPED_NO_TRIGGER)
-            auditorStatusLiveData.notifyUpdate()
             onSyncDisposition(AuditorJsonlExport.TickDisposition.SKIPPED_NO_TRIGGER)
             callback?.invoke(null, createUnmodulatedDecision(smbProposed, tbrRate, tbrDuration, intervalMin, "No Trigger"))
             return
@@ -415,14 +412,6 @@ class AuditorOrchestrator @Inject constructor(
                     // Update global cache for RT instrumentation
                     AuditorVerdictCache.update(guardedVerdict, modulated, glucoseStatus?.date)
                     auditorStatusLiveData.notifyUpdate()
-
-                    // Update status tracker and notify UI (success path)
-                    val okStatus = when (verdict.verdict) {
-                        VerdictType.Soften -> AuditorStatusTracker.Status.OK_SOFTEN
-                        VerdictType.ShiftToTbr -> AuditorStatusTracker.Status.OK_PREFER_TBR
-                        else -> AuditorStatusTracker.Status.OK_CONFIRM
-                    }
-                    AuditorStatusTracker.updateStatus(okStatus)
 
                     callback?.invoke(guardedVerdict, modulated)
                 } else {

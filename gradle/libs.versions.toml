@@ -35,6 +35,7 @@ hilt = { id = "com.google.dagger.hilt.android", version.ref = "dagger" }
 ksp = { id = "com.google.devtools.ksp", version = "2.3.9" }
 android-test = { id = "com.android.test", version.ref = "gradlePlugin" }
 compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+dokka = { id = "org.jetbrains.dokka", version = "2.0.0" }
 
 [libraries]
 com-android-tools-build = { group = "com.android.tools.build", name = "gradle", version.ref = "gradlePlugin" }
@@ -130,6 +131,7 @@ com-squareup-leakcanary-android = { group = "com.squareup.leakcanary", name = "l
 com-squareup-okhttp3-okhttp = { group = "com.squareup.okhttp3", name = "okhttp", version.ref = "okhttp" }
 com-squareup-okhttp3-logging-interceptor = { group = "com.squareup.okhttp3", name = "logging-interceptor", version.ref = "okhttp" }
 com-squareup-retrofit2-retrofit = { group = "com.squareup.retrofit2", name = "retrofit", version.ref = "retrofit" }
+com-squareup-retrofit2-adapter-rxjava3 = { group = "com.squareup.retrofit2", name = "adapter-rxjava3", version.ref = "retrofit" }
 com-squareup-retrofit2-converter-gson = { group = "com.squareup.retrofit2", name = "converter-gson", version.ref = "retrofit" }
 
 org-apache-commons-lang3 = { group = "org.apache.commons", name = "commons-lang3", version = "3.20.0" }
@@ -179,6 +181,7 @@ androidx-ui-tooling = { group = "androidx.compose.ui", name = "ui-tooling" }
 androidx-ui-tooling-preview = { group = "androidx.compose.ui", name = "ui-tooling-preview" }
 androidx-compose-material3 = { group = "androidx.compose.material3", name = "material3" }
 androidx-compose-foundation = { group = "androidx.compose.foundation", name = "foundation" }
+androidx-compose-material = { group = "androidx.compose.material", name = "material" }
 androidx-compose-material-icons-extended = { group = "androidx.compose.material", name = "material-icons-extended" }
 androidx-compose-runtime = { group = "androidx.compose.runtime", name = "runtime" }
 androidx-compose-runtime-livedata = { group = "androidx.compose.runtime", name = "runtime-livedata" }

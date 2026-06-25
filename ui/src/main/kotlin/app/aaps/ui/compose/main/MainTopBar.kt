@@ -27,7 +27,7 @@ import app.aaps.ui.search.SearchUiState
 
 /**
  * Main top bar with M3-style search bar.
- * Layout: [Menu] [----Search Bar----] [Settings]
+ * Layout: [Menu] [----Search Bar----] [SimpleMode?] [Settings]
  *
  * @param searchUiState Current search UI state
  * @param onMenuClick Called when menu button is clicked

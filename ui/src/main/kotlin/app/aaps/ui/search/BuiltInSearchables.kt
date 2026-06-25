@@ -10,6 +10,7 @@ import app.aaps.core.interfaces.configuration.Config
 import app.aaps.core.interfaces.insulin.Insulin
 import app.aaps.core.interfaces.insulin.InsulinManager
 import app.aaps.core.interfaces.resources.ResourceHelper
+import app.aaps.core.interfaces.skin.SkinDescriptionProvider
 import app.aaps.core.keys.BooleanKey
 import app.aaps.core.keys.DoubleKey
 import app.aaps.core.keys.IntKey
@@ -47,6 +48,7 @@ class BuiltInSearchables @Inject constructor(
     private val rh: ResourceHelper,
     private val insulinManager: InsulinManager,
     private val insulin: Insulin,
+    private val skinDescriptionProvider: SkinDescriptionProvider,
     private val config: Config
 ) : SearchableProvider {
 
@@ -68,6 +70,7 @@ class BuiltInSearchables @Inject constructor(
                         rh.gs(app.aaps.core.ui.R.string.simple_mode_blocked_by_concentration)
                     else null
                 },
+                BooleanKey.GeneralLowEndStabilityMode,
                 BooleanKey.GeneralInsulinConcentration.withChangeGuard { newValue ->
                     if (!newValue && hasNonU100Insulin())
                         rh.gs(app.aaps.core.ui.R.string.concentration_disable_blocked)
@@ -83,7 +86,11 @@ class BuiltInSearchables @Inject constructor(
         key = "appearance",
         titleResId = app.aaps.core.ui.R.string.appearance,
         items = listOf(
-            StringKey.GeneralSkin,
+            StringKey.GeneralSkin.withEntries(
+                skinDescriptionProvider.skinDescriptions.associate { (className, labelResId) ->
+                    className to rh.gs(labelResId)
+                }
+            ),
 
             // Range settings subscreen
             PreferenceSubScreenDef(

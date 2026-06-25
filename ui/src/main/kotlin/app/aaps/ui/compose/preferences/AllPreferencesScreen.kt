@@ -25,6 +25,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import kotlinx.coroutines.launch
 import app.aaps.core.data.plugin.PluginType
 import app.aaps.core.interfaces.autotune.Autotune
 import app.aaps.core.interfaces.plugin.ActivePlugin
@@ -46,7 +47,6 @@ import app.aaps.core.ui.compose.preference.addPreferenceContent
 import app.aaps.core.ui.compose.preference.rememberPreferenceSectionState
 import app.aaps.core.ui.compose.preference.verticalScrollIndicators
 import app.aaps.ui.search.BuiltInSearchables
-import kotlinx.coroutines.launch
 
 /**
  * Screen for displaying all preferences from all plugins.
@@ -129,15 +129,15 @@ fun AllPreferencesScreen(
             getPreferenceContentIfEnabled(plugin)?.let { add(it) }
         }
 
-        // 11. Automation settings (standalone feature, from BuiltInSearchables; master-only — the
+        // 9. Automation settings (standalone feature, from BuiltInSearchables; master-only — the
         // location-provider setting only has effect where automation executes).
         if (config.APS) add(builtInSearchables.automation)
 
-        // 12. Autotune plugin (found via interface)
+        // 10. Autotune plugin (found via interface)
         getPreferenceContentIfEnabled(autotunePlugin)?.let { add(it) }
     }
 
-    val snackbarHostState = LocalSnackbarHostState.current
+    val snackbarHostState = remember { SnackbarHostState() }
     val snackbarScope = rememberCoroutineScope()
     val onShowMessage: (String) -> Unit = { message ->
         snackbarScope.launch { snackbarHostState.showSnackbar(message) }
@@ -201,7 +201,8 @@ fun AllPreferencesScreen(
                             }
                         }
                     )
-                }
+                },
+                snackbarHost = { SnackbarHost(snackbarHostState) }
             ) { paddingValues ->
                 LazyColumn(
                     modifier = Modifier

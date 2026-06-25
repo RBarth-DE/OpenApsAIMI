@@ -1,7 +1,6 @@
 package app.aaps.plugins.aps.openAPSAIMI.physio
 
 import app.aaps.plugins.aps.openAPSAIMI.release.HyperTrajectoryHypoCredibility
-import app.aaps.plugins.aps.openAPSAIMI.safety.InsulinStackingStance
 import kotlin.math.max
 import kotlin.math.min
 

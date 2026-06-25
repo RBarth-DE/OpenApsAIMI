@@ -200,7 +200,7 @@ class AppRepository @Inject internal constructor(
 
     fun clearApsResults() = database.apsResultDao.deleteAllEntries()
 
-    suspend fun cleanupDatabase(keepDays: Long, deleteTrackedChanges: Boolean): String {
+    suspend fun cleanupDatabase(keepDays: Long, deleteTrackedChanges: Boolean, runVacuum: Boolean = false): String {
         database.useWriterConnection { connection -> connection.usePrepared("PRAGMA optimize") { it.step() } }
         val than = System.currentTimeMillis() - TimeUnit.DAYS.toMillis(keepDays)
         val removed = mutableListOf<Pair<String, Int>>()
@@ -261,6 +261,16 @@ class AppRepository @Inject internal constructor(
         // VACUUM is intentionally NOT run inline here (SQLITE_NOMEM risk); use [vacuumDatabase] when
         // [runVacuum] is requested from maintenance UI. Startup uses [maintainDatabaseAtStartup] only.
         database.useWriterConnection { connection -> connection.usePrepared("PRAGMA wal_checkpoint(TRUNCATE)") { it.step() } }
+        if (runVacuum) {
+            DatabaseMaintenanceCoordinator.markCompactionStarted()
+            try {
+                vacuumDatabase()
+            } catch (e: Exception) {
+                ret.append("VACUUM failed: ${e.message}<br>")
+            } finally {
+                DatabaseMaintenanceCoordinator.markCompactionFinished()
+            }
+        }
         return ret.toString()
     }
 

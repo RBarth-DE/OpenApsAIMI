@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
@@ -19,6 +20,7 @@ import androidx.compose.ui.unit.dp
 import app.aaps.core.keys.DoubleKey
 import app.aaps.core.keys.UnitType
 import app.aaps.core.keys.interfaces.DoublePreferenceKey
+import app.aaps.core.keys.decimalPlaces
 import app.aaps.core.keys.decimalPlaces
 import app.aaps.core.keys.interfaces.VisibilityContext
 import app.aaps.core.keys.rangeResId
@@ -59,12 +61,15 @@ fun AdaptiveDoublePreferenceItem(
 
     val span = (doubleKey.max - doubleKey.min).let { if (abs(it) < 1e-12) 1e-9 else it }
     val unitType = doubleKey.unitType
-    val step = doubleKey.resolvedStep()
-    val decimalPlaces = when {
-        step >= 1.0   -> 0
-        step >= 0.1   -> 1
-        step >= 0.01  -> 2
-        else          -> 3
+    val (decimalPlaces, step) = if (unitType == UnitType.NONE) {
+        when {
+            span <= 0.15  -> 3 to 0.001
+            span <= 1.5   -> 2 to 0.01
+            span <= 25.0  -> 1 to 0.1
+            else          -> 0 to 1.0
+        }
+    } else {
+        unitType.decimalPlaces() to unitType.step()
     }
     val valueFormatResId = if (doubleKey.step != null) null else unitType.valueResId()
 
@@ -147,7 +152,12 @@ fun AdaptiveDoublePreferenceItem(
         }
         TextFieldPreference(
             state = state,
-            title = { PreferenceTitleWithSyncBadge(effectiveTitleResId, doubleKey) },
+            title = {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(titleText)
+                    SyncBadge(doubleKey, Modifier.padding(start = 6.dp))
+                }
+            },
             textToValue = { text ->
                 text.toDoubleOrNull()?.coerceIn(doubleKey.min, doubleKey.max)
             },

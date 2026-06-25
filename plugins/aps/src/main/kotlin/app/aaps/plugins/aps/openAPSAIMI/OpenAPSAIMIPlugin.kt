@@ -6,6 +6,8 @@ import android.os.Looper
 import android.util.LongSparseArray
 import androidx.annotation.ArrayRes
 import androidx.core.util.forEach
+import app.aaps.plugins.aps.openAPSAIMI.steps.UnifiedActivityProviderMTR
+import app.aaps.plugins.aps.afrezza.AfrezzaMaxBasalConstraints
 import app.aaps.core.data.aps.SMBDefaults
 import app.aaps.core.data.model.GlucoseUnit
 import app.aaps.core.data.model.TE
@@ -104,6 +106,7 @@ import app.aaps.plugins.aps.openAPSAIMI.pkpd.IsfFusionBounds
 import app.aaps.plugins.aps.openAPSAIMI.pkpd.ActivityStage
 import app.aaps.plugins.aps.openAPSAIMI.pkpd.InsulinActivityStage
 import app.aaps.plugins.aps.openAPSAIMI.pkpd.PkPdIntegration
+import app.aaps.plugins.aps.openAPSAIMI.pkpd.PkPdCsvLogger
 import app.aaps.plugins.aps.openAPSAIMI.pkpd.PkPdRuntime
 import app.aaps.plugins.aps.openAPSAIMI.pkpd.TapPeakGovernor
 import app.aaps.plugins.aps.openAPSAIMI.pkpd.TapSitePeakShift
@@ -124,8 +127,10 @@ import app.aaps.plugins.aps.openAPSAIMI.ml.AimiSmbTrainer
 import kotlinx.coroutines.withContext
 import app.aaps.plugins.aps.openAPSAIMI.learning.AimiMlTrainingScheduler
 import app.aaps.plugins.aps.openAPSAIMI.utils.AimiBackupManager
+import app.aaps.plugins.aps.openAPSAIMI.utils.AimiStorageHelper
+import app.aaps.core.objects.extensions.put
+import app.aaps.core.objects.extensions.store
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.JsonObject
 
 /*
@@ -185,6 +190,7 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
     private val contextManager: app.aaps.plugins.aps.openAPSAIMI.context.ContextManager, // 🎯 Context Manager
     private val aimiBackupManager: AimiBackupManager, // ☁️ Cloud Backup Manager (Force Init)
     private val aimiMlTrainingScheduler: AimiMlTrainingScheduler,
+    private val storageHelper: AimiStorageHelper,
     private val insulin: Insulin,
     private val ch: ConcentrationHelper,
     private val trajectoryHistoryProvider: TrajectoryHistoryProvider,
@@ -296,8 +302,11 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
 
         // 🧠 Pre-load ML model into memory for O(1) SMB inference on hot path
         try {
-            val externalDir = java.io.File(android.os.Environment.getExternalStorageDirectory().absolutePath + "/Documents/AAPS")
-            app.aaps.plugins.aps.openAPSAIMI.ml.AimiSmbTrainer.loadModel(externalDir)
+            val aimiDir = storageHelper.getAimiDirectory()
+            val (status, path, error) = storageHelper.getStorageStatus()
+            PkPdCsvLogger.configureStorageDirectory(aimiDir)
+            AimiSmbTrainer.loadModel(aimiDir)
+            aapsLogger.info(LTag.APS, "AIMI storage status=$status path=${path ?: "n/a"} error=${error ?: "none"}")
             aapsLogger.info(LTag.APS, "✅ AimiSmbTrainer: model load requested (async)")
         } catch (e: Exception) {
             aapsLogger.error(LTag.APS, "❌ AimiSmbTrainer: failed to request model load", e)
@@ -1389,6 +1398,14 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
                     rh.gs(R.string.max_daily_basal_multiplier)
                 ),
                 this
+            )
+
+            AfrezzaMaxBasalConstraints.apply(
+                absoluteRate = absoluteRate,
+                from = this,
+                iobCobCalculator = iobCobCalculator,
+                persistenceLayer = persistenceLayer,
+                aapsLogger = aapsLogger,
             )
         }
 

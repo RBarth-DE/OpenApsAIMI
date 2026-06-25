@@ -145,6 +145,8 @@ class WearPlugin @Inject constructor(
             dataHandlerMobile.resendData("PreferenceChange")
             checkCustomWatchfacePreferences()
         }
+        // Full wear resend (DB + treatments + getIsfMgdl / AIMI) is very heavy. Loop GUI can fire in bursts;
+        // throttleFirst on EventLoopUpdateGui / EventAutosensCalculationFinished limits IO starvation.
         disposable += rxBus
             .toObservable(EventAutosensCalculationFinished::class.java)
             .throttleFirst(10, TimeUnit.SECONDS)

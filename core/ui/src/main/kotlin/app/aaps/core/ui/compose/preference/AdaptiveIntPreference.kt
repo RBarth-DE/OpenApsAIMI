@@ -120,7 +120,12 @@ fun AdaptiveIntPreferenceItem(
         }
         TextFieldPreference(
             state = state,
-            title = { PreferenceTitleWithSyncBadge(effectiveTitleResId, intKey) },
+            title = {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(titleText)
+                    SyncBadge(intKey, Modifier.padding(start = 6.dp))
+                }
+            },
             textToValue = { text ->
                 text.toIntOrNull()?.coerceIn(intKey.min, intKey.max)
             },

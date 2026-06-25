@@ -13,7 +13,11 @@ import app.aaps.core.interfaces.sync.NsClient
 import app.aaps.core.interfaces.sync.XDripBroadcast
 import app.aaps.plugins.sync.garmin.LoopHub
 import app.aaps.plugins.sync.garmin.LoopHubImpl
+import app.aaps.plugins.sync.nsclientV3.LicenseKeyDialog
+import app.aaps.plugins.sync.nsclientV3.NSClientFragment
 import app.aaps.plugins.sync.nsclientV3.NSClientV3Plugin
+import app.aaps.plugins.sync.nsclientV3.RemoteAccessLoginDialog
+import app.aaps.plugins.sync.nsclientV3.RemoteControlFragment
 import app.aaps.plugins.sync.nsclientV3.StoreDataForDbImpl
 import app.aaps.plugins.sync.nsclientV3.clientcontrol.ClientControlRoundTrip
 import app.aaps.plugins.sync.nsclientV3.compose.NSClientRepositoryImpl
@@ -46,13 +50,18 @@ import dagger.hilt.components.SingletonComponent
 @Suppress("unused")
 abstract class SyncModule {
 
+    @ContributesAndroidInjector abstract fun contributesNSClientFragment(): NSClientFragment
+    @ContributesAndroidInjector abstract fun contributesRemoteControlFragment(): RemoteControlFragment
     @ContributesAndroidInjector abstract fun contributesNSClientV3Service(): NSClientV3Service
 
     // NSClient / NSClientV3 / Xdrip sync workers migrated to @HiltWorker (constructed by HiltWorkerFactory).
     @ContributesAndroidInjector abstract fun contributesAuthFlowInActivity(): AuthFlowIn
     @ContributesAndroidInjector abstract fun contributesWearDataReceiver(): WearDataReceiver
     @ContributesAndroidInjector abstract fun contributesWatchUpdaterService(): DataLayerListenerServiceMobile
-    @ContributesAndroidInjector abstract fun contributesCustomWatchfaceInfosActivity(): CwfInfosActivity
+
+    // Premium License Dialogs
+    @ContributesAndroidInjector abstract fun contributesLicenseKeyDialog(): LicenseKeyDialog
+    @ContributesAndroidInjector abstract fun contributesRemoteAccessLoginDialog(): RemoteAccessLoginDialog
 
     @Module
     @InstallIn(SingletonComponent::class)

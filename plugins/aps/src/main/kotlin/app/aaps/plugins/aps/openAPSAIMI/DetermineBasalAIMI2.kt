@@ -1808,6 +1808,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         } else {
             PhysioMultipliersMTR.NEUTRAL
         }
+
         lastBasePhysioMultipliers = physioMultipliers
 
         // Log physio modulation if active
@@ -5229,13 +5230,12 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             sensMgDlPerU = sens,
             pkpdRelativeActivity = cachedPkpdRuntime?.activity?.relativeActivity,
             pkpdStage = cachedPkpdRuntime?.activity?.stage,
+            minBgLookback75mMgdl = minBgInLastMinutes(AUTODRIVE_POST_HYPO_MIN_BG_LOOKBACK_MINUTES),
         )
         if (naiveEbgResolution.signGuardApplied) {
             consoleLog.add(
-                "🛡️ NAIVE_EBG_SIGN_GUARD: iob=${"%.2f".format(iobData.iob)} (negative) + " +
-                    "pkpdActivity=${"%.2f".format(cachedPkpdRuntime?.activity?.relativeActivity ?: 0.0)} " +
-                    "stage=${cachedPkpdRuntime?.activity?.stage} → collapse naive ebg to current bg " +
-                    "(rawNaive=${"%.0f".format(naiveEbgResolution.rawNaiveRoundedMgdl)})"
+                "🛡️ NAIVE_EBG_SIGN_GUARD: ${naiveEbgResolution.collapseReason} " +
+                    "→ collapse naive ebg ${naiveEbgResolution.rawNaiveRoundedMgdl.toInt()} → ${bg.toInt()}"
             )
         }
         val naiveEventualBg = naiveEbgResolution.naiveEventualBgMgdl
@@ -5861,18 +5861,22 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         return when {
             isMealAdvisorOneShot                                                                                                                                                              -> {
                 val safeMax = if (mealModesMaxBasal > 0.1) mealModesMaxBasal else profile.max_basal
-                val boostedRate = calculateRate(basal, safeMax, 1.3, "Meal Advisor Trigger (One-Shot)", ctx.currentTemp, rT, overrideSafety = true)
+                val rawRate = calculateRate(basal, safeMax, 1.3, "Meal Advisor Trigger (One-Shot)", ctx.currentTemp, rT, overrideSafety = true)
+                // REBOUND_GUARD cap: a recognized post-hypo context must never receive meal_modes_MaxBasal
+                // even when a meal/advisor flag is active simultaneously — same principle as V3/V2/Harmonia paths.
+                val boostedRate = capBasalRateForCorrectionAggression(rawRate, profileCurrentBasal, "MealAdvisorOneShot")
                 AimiMealHyperBasalBoostOutcome.CompleteWithTempBasal(setTempBasal(boostedRate, 30, profile, rT, ctx.currentTemp, overrideSafetyLimits = true, adaptiveMultiplier = 1.0))
             }
-
-            snackTime && snackrunTime in 0..30 && delta < 15                                                                                                                                  -> {
-                val boostedRate = calculateRate(basal, profileCurrentBasal, 4.0, "AI Force basal because Snack Time $snackrunTime.", ctx.currentTemp, rT, overrideSafety = true)
+            snackTime && snackrunTime in 0..30 && delta < 15 -> {
+                val rawRate = calculateRate(basal, profileCurrentBasal, 4.0, "AI Force basal because Snack Time $snackrunTime.", ctx.currentTemp, rT, overrideSafety = true)
+                val boostedRate = capBasalRateForCorrectionAggression(rawRate, profileCurrentBasal, "SnackTimeBoost")
                 AimiMealHyperBasalBoostOutcome.CompleteWithTempBasal(setTempBasal(boostedRate, 30, profile, rT, ctx.currentTemp, overrideSafetyLimits = true, adaptiveMultiplier = 1.0))
             }
 
             (mealTime || lunchTime || dinnerTime || highCarbTime || bfastTime) && (listOf(mealruntime, lunchruntime, dinnerruntime, highCarbrunTime, bfastruntime).maxOrNull() ?: 0) in 0..30 -> {
                 val safeMax = if (mealModesMaxBasal > 0.1) mealModesMaxBasal else profileCurrentBasal * 5.0
-                val boostedRate = calculateRate(basal, safeMax, 1.0, "Meal Boost 30min (Force MaxBasal)", ctx.currentTemp, rT, overrideSafety = true)
+                val rawRate = calculateRate(basal, safeMax, 1.0, "Meal Boost 30min (Force MaxBasal)", ctx.currentTemp, rT, overrideSafety = true)
+                val boostedRate = capBasalRateForCorrectionAggression(rawRate, profileCurrentBasal, "MealBoost30m")
                 AimiMealHyperBasalBoostOutcome.CompleteWithTempBasal(setTempBasal(boostedRate, 30, profile, rT, ctx.currentTemp, overrideSafetyLimits = true, adaptiveMultiplier = 1.0))
             }
 
@@ -6007,7 +6011,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                     consoleLog.add("🚀 HTR: Global Hyper Kicker skipped (trajectory SMB release active)")
                 }
                 allowHyper
-            }                                                                                                                                                                                 -> {
+            } -> {
                 val autodriveMaxBasal = preferences.get(DoubleKey.autodriveMaxBasal)
                 val safeMax = if (autodriveMaxBasal > 0.1) autodriveMaxBasal else profile.max_basal
                 val scaleCap = correctionAggressionDecision?.maxBasalScaleCap ?: 10.0
@@ -7585,6 +7589,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             targetBgMgdl = b.profile.target_bg.toDouble(),
             correctionFragilityScore = lastPatientState?.eventMemory?.correctionFragilityScore ?: 0.0,
             postHyperExhaustionScore = lastPatientState?.eventMemory?.postHyperExhaustionScore ?: 0.0,
+            minBgLookback75m = minBgInLastMinutes(AUTODRIVE_POST_HYPO_MIN_BG_LOOKBACK_MINUTES),
         )
         when (harmonizerOutcome?.posture) {
             HarmoniaHarmonizer.Posture.BLOCK -> {
@@ -8950,8 +8955,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
     private var consoleError = mutableListOf<String>()
     private var consoleLog = mutableListOf<String>()
     private var lastAutodriveActionTime: Long = 0L  // FCL 14.1 Cooldown State
-    private val externalDir = File(Environment.getExternalStorageDirectory().absolutePath + "/Documents/AAPS")
-
+    private val externalDir by lazy { storageHelper.getAimiDirectory() }
     //private val modelFile = File(externalDir, "ml/model.tflite")
     //private val modelFileUAM = File(externalDir, "ml/modelUAM.tflite")
     private val csvfile by lazy { storageHelper.getAimiFile("oapsaimiML2_records.csv") }
@@ -9113,7 +9117,6 @@ class DetermineBasalaimiSMB2 @Inject constructor(
     // private var insulinPeakTime = 0.0
     private var iobActivityNow: Double = 0.0
     private var lastBolusAgeMinutes: Double = Double.NaN
-
     /** One PKPD absorption-guard multiply per [determine_basal] tick (see [applyPkpdAbsorptionGuardOncePerTick]). */
     private var pkpdAbsorptionGuardAppliedThisTick: Boolean = false
     private var isConfirmedHighRiseThisTick: Boolean = false
@@ -10016,8 +10019,8 @@ class DetermineBasalaimiSMB2 @Inject constructor(
     private fun mapPostHypoToAggressionHint(state: PostHypoState): CorrectionAggressionGate.PostHypoHint =
         when (state) {
             is PostHypoState.ReboundSuspected -> CorrectionAggressionGate.PostHypoHint.REBOUND_SUSPECTED
-            is PostHypoState.MealConfirmed    -> CorrectionAggressionGate.PostHypoHint.MEAL_CONFIRMED
-            PostHypoState.None                -> CorrectionAggressionGate.PostHypoHint.NONE
+            is PostHypoState.MealConfirmed -> CorrectionAggressionGate.PostHypoHint.MEAL_CONFIRMED
+            PostHypoState.None -> CorrectionAggressionGate.PostHypoHint.NONE
         }
 
     /**
@@ -10331,7 +10334,6 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         allowPartialSafetyTbr: Boolean = false,
         mealContext: MealSafetyContext? = null,
     ): RT {
-        // 0) LGS kill-switch (sans récursion)
 
         val pumpDesc = activePlugin.activePump.pumpDescription
         val pumpCaps = PumpCaps(
@@ -11491,7 +11493,6 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                         )
                     }
                 }
-
                 PkpdGuardLogChannel.FINALIZE -> {
                     reason?.appendLine(
                         "🛡️ PKPD Guard (${guard.reason}): ${"%.2f".format(beforeGuard)} → ${"%.2f".format(smbOut)} U"
@@ -15268,7 +15269,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         val plateauHigh = delta >= -0.1 && bg > targetBg + 50
         val rocketStart = delta > 10.0 &&
             (bg > targetBg + 20.0 || maxScaleCap >= 8.0)
-
+    
         if (!rising && !plateauHigh && !rocketStart) return suggestedBasalUph
 
         val deviation = bg - targetBg

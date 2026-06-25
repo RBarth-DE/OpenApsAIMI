@@ -9,6 +9,7 @@ import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ProcessLifecycleOwner
 import app.aaps.ComposeMainActivity
+import app.aaps.compose.navigation.AppRoute
 import app.aaps.core.data.model.TE
 import app.aaps.core.data.ue.Action
 import app.aaps.core.data.ue.Sources
@@ -16,10 +17,10 @@ import app.aaps.core.data.ue.ValueWithUnit
 import app.aaps.core.interfaces.configuration.Config
 import app.aaps.core.interfaces.db.PersistenceLayer
 import app.aaps.core.interfaces.di.ApplicationScope
-import app.aaps.compose.navigation.AppRoute
 import app.aaps.core.interfaces.logging.AAPSLogger
 import app.aaps.core.interfaces.logging.LTag
 import app.aaps.core.interfaces.notifications.AlarmIntent
+import app.aaps.core.interfaces.notifications.AlarmSoundPlayer
 import app.aaps.core.interfaces.notifications.NotificationManager
 import app.aaps.core.interfaces.rx.bus.RxBus
 import app.aaps.core.interfaces.ui.UiInteraction
@@ -40,13 +41,14 @@ import javax.inject.Provider
 class UiInteractionImpl @Inject constructor(
     private val context: Context,
     rxBus: RxBus,
+    private val preferences: Preferences,
     private val alarmNotificationManager: AlarmNotificationManager,
+    private val alarmSoundPlayer: AlarmSoundPlayer,
     // Provider breaks a Dagger cycle: NotificationManagerImpl injects NotificationHolder, which
     // injects this UiInteraction. notificationManager is only needed lazily in stopAlarm().
     private val notificationManager: Provider<NotificationManager>,
     private val aapsLogger: AAPSLogger,
     private val persistenceLayer: PersistenceLayer,
-    private val preferences: Preferences,
     private val config: Config,
     @ApplicationScope private val appScope: CoroutineScope
 ) : UiInteraction {
@@ -86,11 +88,6 @@ class UiInteractionImpl @Inject constructor(
         }
 
         if (isAppInForeground()) {
-            // Foreground path — launch the activity directly. No notification needed:
-            //   • Avoids channel-sound vs activity-ramp conflict.
-            //   • Activity opens instantly, owns ramped audio from 0.
-            //   • Works because the caller's process is already foreground (Android's
-            //     background-activity-start restriction does not apply).
             aapsLogger.debug(LTag.CORE, "runAlarm (foreground direct): $title - $status (sound=$soundId)")
             val intent = Intent(context, errorHelperActivity).apply {
                 putExtra(AlarmIntent.EXTRA_SOUND_ID, soundId)
@@ -101,18 +98,30 @@ class UiInteractionImpl @Inject constructor(
             try {
                 context.startActivity(intent)
             } catch (ex: Exception) {
-                // Defensive: if the activity start is rejected for any reason, fall back to
-                // the FSI notification path so the alert is never silently lost.
                 aapsLogger.error(LTag.CORE, "runAlarm: direct startActivity failed, falling back to FSI", ex)
                 postFsiFallback(status, title, soundId)
             }
         } else {
-            // Background path — FSI notification. Android auto-launches the activity on
-            // lockscreen/idle, or shows a heads-up (with channel sound) when the user is
-            // active in another app.
             aapsLogger.debug(LTag.CORE, "runAlarm (background via FSI): $title - $status (sound=$soundId)")
             alarmNotificationManager.postFullScreenAlarm(status = status, title = title, soundId = soundId)
         }
+    }
+
+    override fun postNotificationSoundAlarm(notificationKey: Int, @RawRes soundId: Int, title: String, body: String, urgent: Boolean) {
+        alarmNotificationManager.postSilentAlarmNotification(
+            notificationKey = notificationKey,
+            title = title,
+            body = body,
+            urgent = urgent
+        )
+        if (soundId != 0) {
+            alarmSoundPlayer.play(soundId, AlarmSoundPlayer.OWNER_INTERNAL)
+        }
+    }
+
+    override fun cancelNotificationSoundAlarm(notificationKey: Int) {
+        alarmNotificationManager.cancelSoundAlarm(notificationKey)
+        alarmSoundPlayer.stop(AlarmSoundPlayer.OWNER_INTERNAL)
     }
 
     override fun stopAlarm(reason: String) {
@@ -122,23 +131,6 @@ class UiInteractionImpl @Inject constructor(
         // the ramping audio playing), stops the full-screen audio, and cancels the notifications.
         notificationManager.get().muteAllAlarms()
     }
-
-    override fun startAlarm(@RawRes sound: Int, reason: String) {
-        // Fork-only entry point used by NotificationStore for in-shade alarms.
-        // Mapped onto AlarmNotificationManager.postSilentAlarmNotification — `reason` is the
-        // body text; reason.hashCode() acts as the per-notification key (stopAlarm cancels
-        // every active alarm via cancelAlarm, matching the prior service behavior).
-        // Audio now flows through AlarmSoundPlayer (driven by NotificationManagerImpl), so this
-        // visual-only path no longer rings; `sound` is retained for the interface/log only.
-        aapsLogger.debug(LTag.CORE, "startAlarm sound=$sound reason=$reason")
-        alarmNotificationManager.postSilentAlarmNotification(
-            notificationKey = reason.hashCode(),
-            title = reason,
-            body = reason,
-            urgent = true
-        )
-    }
-
     override fun showOkDialog(context: Context, title: String, message: String, onFinish: (() -> Unit)?) {
         alertDialogs.showOkDialog(context, title, message, onFinish)
     }
@@ -226,7 +218,6 @@ class UiInteractionImpl @Inject constructor(
      */
     private fun postFsiFallback(status: String, title: String, @RawRes soundId: Int) {
         alarmNotificationManager.postFullScreenAlarm(status = status, title = title, soundId = soundId)
-        // Toast must be created on the main thread (we are — runAlarm guards above).
         runCatching {
             Toast.makeText(context, "ALARM: $title — $status", Toast.LENGTH_LONG).show()
         }.onFailure {
@@ -234,14 +225,6 @@ class UiInteractionImpl @Inject constructor(
         }
     }
 
-    /**
-     * True when the AAPS process has at least one STARTED activity — meaning Android's
-     * background-activity-start restriction does not apply and we can [Context.startActivity]
-     * without going through a notification PendingIntent.
-     *
-     * **Must only be called from the main thread.** `Lifecycle.currentState` is officially
-     * `@MainThread`; callers are guarded in [runAlarm].
-     */
     private fun isAppInForeground(): Boolean =
         ProcessLifecycleOwner.get().lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED)
 }

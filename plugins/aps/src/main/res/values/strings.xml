@@ -151,6 +151,34 @@
     <string name="openapsaimi">"AIMI 3.3"</string>
     <string name="openapsaimi_maxsmb_title">Max SMB LOW BG</string>
     <string name="description_openapsaimi">AIMI loop: adaptive PK/PD, Autodrive V3, physiological assistant (Health Connect + 28-pattern catalogue), optional Recursive Belief Tree (RBT/HTR), and unified hypo-risk alarms. Native Eversense E3/365 and standard CGM sources supported.</string>
+    <!-- ❌ TIME-BASED REACTIVITY TITLES/SUMMARIES REMOVED -->
+    <string name="DynISFAdjusthyper_summary"><![CDATA[Increasing this value will increase the speed to send SMB when BG > 120]]></string>
+    <string name="DynISFAdjusthyper_title"><![CDATA[DynISF Adjustment factor % BG > 120]]></string>
+    <string name="prebolus_meal_mode_summary">If you set a note on the action page with the word "meal", you will receive this value one time as a pre-bolus.</string>
+    <string name="prebolus_meal_mode_title">Prebolus</string>
+    <string name="prebolus_highcarb_mode_title">Prebolus 1/2</string>
+    <string name="prebolus2_highcarb_mode_title">Prebolus 2/2</string>
+    <string name="prebolus_highcarb_mode_summary">High Carb Mode Prebolus 1/2</string>
+    <string name="prebolus2_highcarb_mode_summary">High Carb Mode Prebolus 2/2</string>
+    <string name="number_day_ML_training_summary">Number of days to train the model</string>
+    <string name="nb_day_ML_training_title">ML Number of Training Days</string>
+    <string name="nb_minutes_ML_training_title">Number of minutes to train the data</string>
+    <string name="number_minutes_training_summary">Number of minutes to train the data for the ML engine</string>
+    <string name="number_epoch_training_summary">Number of epochs to train the data</string>
+    <string name="nb_epoch_ML_training_title">Number of epochs to train the data</string>
+    <string name="number_learningrate_training_summary">Learning rate to train the data</string>
+    <string name="nb_learningrate_ML_training_title">Learning rate to train the data</string>
+    <string name="number_iteration_training_summary">Number of times it will try before stopping the loop if it cannot get a satisfying result</string>
+    <string name="nb_iteration_ML_training_title">Number of iterations to stop the loop</string>
+    <string name="DynISF_Adjust_summary" formatted="false">Increase this value above 100 if you want to receive more SMB. The opposite is true if you receive too much SMB.</string>
+    <string name="DynISF_Adjust_title" formatted="false">DynISF factor to increase or decrease the number of SMB</string>
+    <string name="oaps_aimi_mealAdjFact_summary">DynISF adjustment factor for Meal Mode</string>
+    <string name="oaps_aimi_mealAdjFact_title">Meal Mode DynISF Factor</string>
+    <string name="Enable_basal_title">Enable Basal</string>
+    <string name="Enable_basal_summary">This option will enable basal from the profile when BG is greater than 80 and delta is not negative.</string>
+    <string name="oaps_aimi_enableDeleteLine_title">Enable the possibility to delete one day in ML Training</string>
+    <string name="countsteps_watch_title">Step counting watch (if disable, use phone)</string>
+    <string name="countsteps_watch_summary">This option enables step counting by receiving data from the watch instead of the phone.</string>
 
     <string name="pref_aimi_steps_source_title">Steps &amp; Heart Rate Data Source</string>
     <string name="pref_aimi_steps_source_wear">Prefer Wear OS (Direct)</string>
@@ -213,6 +241,8 @@
     <string name="aimi_pkpd_wizard_done">Done</string>
     <string name="aimi_pkpd_wizard_skip">Skip</string>
     <string name="aimi_pkpd_rerun_wizard">Run setup guide again</string>
+    <string name="aimi_pkpd_loop_summary_title">Currently used by the loop</string>
+    <string name="aimi_pkpd_loop_summary_format">Learned DIA %1$.1f h · peak %2$.0f min</string>
     <string name="aimi_pkpd_tap_g_detail">TAP-G branch: %1$s\nEffective peak %2$.1f min (insulin prior %3$.1f)\nPhysio offset %4$.1f min, site offset %5$.1f min, trajectory %6$.1f min</string>
     <string name="aimi_pkpd_preset_section_title">Insulin profile preset</string>
     <string name="aimi_pkpd_preset_ultra_fast">Ultra-fast (e.g. Fiasp / Lyumjev)</string>
@@ -228,8 +258,15 @@
     <string name="oaps_aimi_pkpd_dia_max_title">Maximum DIA (h)</string>
     <string name="oaps_aimi_pkpd_peak_min_title">Minimum peak time (min)</string>
     <string name="oaps_aimi_pkpd_peak_max_title">Maximum peak time (min)</string>
+    <string name="oaps_aimi_pkpd_peak_max_summary">Upper bound for the learned insulin peak time.</string>
+    <string name="oaps_aimi_pkpd_max_dia_delta_title">Max DIA change per day (h)</string>
+    <string name="oaps_aimi_pkpd_max_dia_delta_summary">Limits how quickly the learned DIA can change each day.</string>
+    <string name="oaps_aimi_pkpd_max_peak_delta_title">Max peak change per day (min)</string>
+    <string name="oaps_aimi_pkpd_max_peak_delta_summary">Limits how quickly the learned peak time can change each day.</string>
     <string name="oaps_aimi_pkpd_anchor_dia_title">Learning anchor DIA (h)</string>
+    <string name="oaps_aimi_pkpd_anchor_dia_summary">Soft target the online learner pulls DIA toward (regularization). Use ~4 h for ultra-fast insulin.</string>
     <string name="oaps_aimi_pkpd_anchor_peak_title">Learning anchor peak (min)</string>
+    <string name="oaps_aimi_pkpd_anchor_peak_summary">Soft target for learned peak time. Match your insulin (e.g. ~55 min for Lyumjev/Fiasp).</string>
     <string name="oaps_aimi_isf_fusion_min_title">ISF fusion minimum factor</string>
     <string name="oaps_aimi_isf_fusion_max_title">ISF fusion maximum factor</string>
     <string name="oaps_aimi_isf_fusion_slope_title">Max ISF change per tick</string>
@@ -241,6 +278,7 @@
     <string name="oaps_aimi_redcarpet_restore_title">Red Carpet restore threshold</string>
     <string name="oaps_aimi_priority_max_iob_factor_title">Priority MaxIOB factor</string>
     <string name="oaps_aimi_priority_max_iob_extra_title">Priority MaxIOB extra (U)</string>
+    <string name="oaps_aimi_priority_max_iob_extra_summary">Range 0.0-5.0U (default 2.0U). Increase when correction remains insufficient after raising factor; decrease if lows appear in the 1-3h post-correction window.</string>
     <string name="aimi_adv_rec_htr_enable_title">Enable hyper trajectory SMB release (HTR)</string>
     <string name="aimi_adv_rec_htr_enable_desc">Sustained hyper with Autodrive V3 active but weak SMB delivery. HTR lifts V3 micro-bolus when scenario projection confirms a rise (not a fixed 200 mg/dL rule).</string>
     <string name="aimi_adv_rec_rbt_shadow_title">Enable Recursive Belief Tree (shadow)</string>
@@ -700,6 +738,15 @@
     <string name="aimi_tuning_result_export_expired">Settings export skipped — export password expired. Re-enter it in Maintenance.</string>
     <string name="aimi_tuning_result_export_failed">Settings export failed — check Maintenance export settings.</string>
 
+    <string name="aimi_prefs_openai_key_title">OpenAI API Key</string>
+    <string name="aimi_prefs_openai_key_summary">Enter your OpenAI API Key (sk-...)</string>
+    <string name="aimi_prefs_gemini_key_title">Gemini API Key</string>
+    <string name="aimi_prefs_gemini_key_summary">Enter your Google Gemini API Key (AIza...)</string>
+    <string name="aimi_prefs_deepseek_key_title">DeepSeek API Key</string>
+    <string name="aimi_prefs_deepseek_key_summary">Enter your DeepSeek API Key</string>
+    <string name="aimi_prefs_claude_key_title">Claude API Key</string>
+    <string name="aimi_prefs_claude_key_summary">Enter your Anthropic Claude API Key</string>
+   <!-- AIMI ADVISOR STRINGS -->
     <string name="aimi_advisor_title">AIMI Advisor</string>
     <string name="aimi_adv_loading_details" comment="Shown under the main Advisor report while RBT/T3c history sections load">Loading detailed history…</string>
     <string name="aimi_adv_loading">Analyzing...</string>
@@ -795,6 +842,10 @@
     <string name="aimi_pkpd_hypo_damping">Risk of hypoglycemia: Increase damping to reduce SMBs at the end of the DIA.</string>
     <string name="aimi_pkpd_hypo_isf_reduce">Frequent lows with high ISF-fusion headroom: consider lowering max fusion from %1$sx to ~%2$sx with your clinician to cap aggressive corrections.</string>
     <string name="aimi_pkpd_hyper_damping_reduce">Persistent highs with strong SMB tail damping (floor %1$s): if hypos are rare, consider weakening the damping by raising the tail floor to ~%2$s to allow more late delivery.</string>
+    <string name="aimi_meal_advisor_title">AIMI Meal Advisor</string>
+
+
+    <!-- AI Decision Auditor -->
     <string name="aimi_auditor_enabled_title">Enable AI Decision Auditor</string>
     <string name="aimi_auditor_mode_title">Auditor Mode</string>
     <string name="aimi_auditor_max_per_hour_title">Max Audits Per Hour</string>
@@ -866,6 +917,8 @@
     <string name="aimi_physio_pattern_catalog_title">Physiological pattern catalogue</string>
     <string name="aimi_physio_pattern_catalog_summary">28 hysteresis-gated patterns (sleep, HRV, meals, stress, cycle). Tap for details.</string>
     <string name="aimi_physio_pattern_catalog_detail">When the assistant is enabled, each loop tick runs the pattern detector on physio + CGM context. Matches export as physiological_patterns in AIMI_Decisions.jsonl and can cap HTR or inform RBT belief leaves. Requires Health Connect permissions for sleep and HRV when those sources are enabled. See repo docs/AIMI_PHYSIOLOGICAL_PATTERN_CATALOG.md for the full list.</string>
+    <string name="aimi_physio_enable_summary">Adjusts insulin using Health Connect vitals and a 28-pattern physiological catalogue (dawn, meals, stress, recovery). Active patterns export to AIMI_Decisions.jsonl and feed RBT leaves and HTR caps.</string>
+    <string name="aimi_physio_data_sources_title">Data Sources</string>
     <string name="aimi_physio_sleep_enable_title">Sync Sleep Data</string>
     <string name="aimi_physio_hrv_enable_title">Sync HRV &amp; RHR</string>
     <string name="aimi_oura_pat_title">Oura temperature API token (optional)</string>

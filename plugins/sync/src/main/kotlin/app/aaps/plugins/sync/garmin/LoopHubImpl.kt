@@ -53,11 +53,11 @@ class LoopHubImpl @Inject constructor(
     private val profileFunction: ProfileFunction,
     private val profileUtil: ProfileUtil,
     private val persistenceLayer: PersistenceLayer,
+    private val userEntryLogger: UserEntryLogger,
     private val preferences: Preferences,
     private val processedTbrEbData: ProcessedTbrEbData,
     private val dateUtil: DateUtil,
     private val wizardBolusExecutor: WizardBolusExecutor,
-    private val userEntryLogger: UserEntryLogger,
     @ApplicationScope private val appScope: CoroutineScope
 ) : LoopHub {
 

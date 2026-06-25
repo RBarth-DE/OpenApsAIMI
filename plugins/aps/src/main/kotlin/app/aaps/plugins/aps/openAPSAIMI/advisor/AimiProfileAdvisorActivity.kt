@@ -126,7 +126,6 @@ class AimiProfileAdvisorActivity : TranslatedDaggerAppCompatActivity() {
         selectedTuningContext = TuningContextEngine.parseContext(
             preferences.get(StringKey.AimiTuningContextSelection),
         )
-        aiCachePrefs = getSharedPreferences("aimi_advisor_cache", MODE_PRIVATE)
         title = rh.gs(R.string.aimi_advisor_title)
 
         rootLayout = LinearLayout(this).apply {
@@ -1169,47 +1168,32 @@ class AimiProfileAdvisorActivity : TranslatedDaggerAppCompatActivity() {
             val placeholder = rh.gs(R.string.aimi_coach_placeholder) + " (${provider.name})"
             contentText.text = "$basicAnalysis\n\n⚙️ $placeholder"
         } else {
-            val remaining = AdvisorCooldown.remainingMs(aiCachePrefs)
-            val cachedText = aiCachePrefs.getString(CACHE_TEXT, null)
-            val cachedProvider = aiCachePrefs.getString(CACHE_PROVIDER, null) ?: provider.name
-            if (remaining > 0L && !cachedText.isNullOrBlank()) {
-                val footer = rh.gs(R.string.advisor_ai_cached_footer, cachedProvider, AdvisorCooldown.format(rh, remaining))
-                contentText.text = "$cachedText\n\n⏳ $footer"
-            } else {
-                lifecycleScope.launch {
-                    try {
-                        val history = withContext(Dispatchers.IO) {
-                            historyRepo.getRecentActions(7)
+            lifecycleScope.launch {
+                try {
+                    val history = withContext(Dispatchers.IO) {
+                        historyRepo.getRecentActions(7)
+                    }
+                    val richOref = preferences.get(BooleanKey.OApsAIMIAdvisorLlmRichOref)
+                    val advice = AiCoachingService().fetchAdvice(
+                        this@AimiProfileAdvisorActivity,
+                        context,
+                        report,
+                        activeKey,
+                        provider,
+                        history,
+                        includeRichOref = richOref,
+                        causalInsights = causalInsights,
+                    )
+                    if (!isFinishing) {
+                        contentText.text = advice
+                    }
+                } catch (t: Throwable) {
+                    if (!isFinishing) {
+                        val detail = when (t) {
+                            is OutOfMemoryError -> rh.gs(R.string.aimi_adv_error_oom)
+                            else -> t.localizedMessage ?: t.javaClass.simpleName
                         }
-                        val richOref = preferences.get(BooleanKey.OApsAIMIAdvisorLlmRichOref)
-                        val advice = AiCoachingService().fetchAdvice(
-                            this@AimiProfileAdvisorActivity,
-                            context,
-                            report,
-                            activeKey,
-                            provider,
-                            history,
-                            includeRichOref = richOref,
-                            causalInsights = causalInsights,
-                        )
-                        if (!isFinishing) {
-                            contentText.text = advice
-                            if (!AdvisorCooldown.isErrorResult(advice)) {
-                                aiCachePrefs.edit()
-                                    .putString(CACHE_TEXT, advice)
-                                    .putString(CACHE_PROVIDER, provider.name)
-                                    .apply()
-                                AdvisorCooldown.markNow(aiCachePrefs)
-                            }
-                        }
-                    } catch (t: Throwable) {
-                        if (!isFinishing) {
-                            val detail = when (t) {
-                                is OutOfMemoryError -> rh.gs(R.string.aimi_adv_error_oom)
-                                else -> t.localizedMessage ?: t.javaClass.simpleName
-                            }
-                            contentText.text = rh.gs(R.string.aimi_coach_error) + "\n" + detail
-                        }
+                        contentText.text = rh.gs(R.string.aimi_coach_error) + "\n" + detail
                     }
                 }
             }

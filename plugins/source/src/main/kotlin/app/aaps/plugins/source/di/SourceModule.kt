@@ -49,6 +49,7 @@ abstract class SourceModule {
     @ContributesAndroidInjector abstract fun contributesSinoAppWorker(): PatchedSinoAppPlugin.PatchedSinoAppWorker
 
     // All BG-source workers migrated to @HiltWorker (constructed by HiltWorkerFactory).
+
     @ContributesAndroidInjector abstract fun contributesRequestDexcomPermissionActivity(): RequestDexcomPermissionActivity
     @ContributesAndroidInjector abstract fun contributesEversensePlugin(): EversensePlugin
     @ContributesAndroidInjector abstract fun contributesRequestEversensePermissionActivity(): RequestEversensePermissionActivity

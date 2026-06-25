@@ -638,6 +638,16 @@ class NSClientV3Plugin @Inject constructor(
             executeLoop("START $reason")
     }
 
+    /** GUI-triggered client restart (replaces removed EventNSClientRestart). */
+    fun restartFromGui() {
+        scope.launch {
+            stopService()
+            nsAndroidClient = null
+            setClient()
+            nsClientRepository.updateUrl(preferences.get(StringKey.NsClientUrl))
+        }
+    }
+
     override fun pause(newState: Boolean) {
         // Cancel any in-flight WorkManager job so a stuck worker can't keep
         // workIsRunning() == true after unpause and silently block all uploads

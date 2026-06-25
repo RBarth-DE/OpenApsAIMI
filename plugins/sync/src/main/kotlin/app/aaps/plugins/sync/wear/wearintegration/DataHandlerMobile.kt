@@ -20,7 +20,9 @@ import app.aaps.core.data.model.TDD
 import app.aaps.core.data.model.TT
 import app.aaps.core.data.model.TrendArrow
 import app.aaps.core.data.time.T
+import app.aaps.core.data.ue.Action
 import app.aaps.core.data.ue.Sources
+import app.aaps.core.data.ue.ValueWithUnit
 import app.aaps.core.data.ui.ConfirmationLine
 import app.aaps.core.data.ui.ConfirmationRole
 import app.aaps.core.interfaces.aps.GlucoseStatus
@@ -44,6 +46,7 @@ import app.aaps.core.interfaces.iob.GlucoseStatusProvider
 import app.aaps.core.interfaces.iob.IobCobCalculator
 import app.aaps.core.interfaces.logging.AAPSLogger
 import app.aaps.core.interfaces.logging.LTag
+import app.aaps.core.interfaces.logging.UserEntryLogger
 import app.aaps.core.interfaces.maintenance.ImportExportPrefs
 import app.aaps.core.interfaces.nsclient.ProcessedDeviceStatusData
 import app.aaps.core.interfaces.plugin.ActivePlugin
@@ -159,6 +162,7 @@ class DataHandlerMobile @Inject constructor(
     // wizardBolusExecutor stays on the wear path for Fill ONLY (no relay command for Fill).
     private val batchExecutor: BatchExecutor,
     private val wizardExecutor: WizardExecutor,
+    private val uel: UserEntryLogger,
 ) {
 
     @Inject lateinit var automation: Automation
@@ -279,6 +283,8 @@ class DataHandlerMobile @Inject constructor(
                 }
             }
         }
+        onEvent<EventData.ActionAfrezzaPreCheck> { handleAfrezzaPreCheck(it) }
+        onEvent<EventData.ActionAfrezzaConfirmed> { doAfrezzaBolus(it.units) }
         onEvent<EventData.ActionECarbsPreCheck> { handleECarbsPreCheck(it) }
         onEvent<EventData.ActionECarbsConfirmed> {
             // Commit the parked eCarbs through the relay (MASTER → local deliverECarbs; CLIENT → master records them).
@@ -773,6 +779,62 @@ class DataHandlerMobile @Inject constructor(
             ),
             rh.gs(app.aaps.core.ui.R.string.overview_treatment_label)
         ) { EventData.ActionBolusConfirmed(it) }
+    }
+
+    private suspend fun handleAfrezzaPreCheck(command: EventData.ActionAfrezzaPreCheck) {
+        val units = command.units
+        if (units !in listOf(4, 8, 12)) {
+            sendError("Invalid Afrezza cartridge: ${units}U")
+            return
+        }
+        // Find the Afrezza ICfg from InsulinManager
+        val afrezzaPeak = InsulinType.OREF_INHALED_AFREZZA.insulinPeakTime
+        val afrezzaIcfg = insulinManager.insulins.firstOrNull { it.insulinPeakTime == afrezzaPeak }
+            ?: insulinManager.insulins.firstOrNull { InsulinType.fromPeak(it.insulinPeakTime).isInhaled }
+        if (afrezzaIcfg == null) {
+            sendError(rh.gs(app.aaps.core.ui.R.string.afrezza_not_configured))
+            return
+        }
+        val message = "Afrezza: ${units}U"
+        sendToWear(
+            EventData.ConfirmAction(
+                title = rh.gs(app.aaps.core.ui.R.string.confirm).uppercase(),
+                message = message,
+                returnCommand = EventData.ActionAfrezzaConfirmed(units),
+                deferConfirm = config.AAPSCLIENT
+            )
+        )
+    }
+
+    private suspend fun doAfrezzaBolus(units: Int) {
+        val afrezzaPeak = InsulinType.OREF_INHALED_AFREZZA.insulinPeakTime
+        val afrezzaIcfg = insulinManager.insulins.firstOrNull { it.insulinPeakTime == afrezzaPeak }
+            ?: insulinManager.insulins.firstOrNull { InsulinType.fromPeak(it.insulinPeakTime).isInhaled }
+        if (afrezzaIcfg == null) {
+            sendError(rh.gs(app.aaps.core.ui.R.string.afrezza_not_configured))
+            return
+        }
+        val now = dateUtil.now()
+        val bolus = BS(
+            timestamp = now,
+            amount = units.toDouble(),
+            type = BS.Type.NORMAL,
+            notes = "Afrezza inhaled",
+            iCfg = afrezzaIcfg,
+            ids = IDs(pumpId = now)
+        )
+        persistenceLayer.insertOrUpdateBolus(
+            bolus = bolus,
+            action = Action.BOLUS,
+            source = Sources.Wear,
+            note = "Afrezza inhaled"
+        )
+        uel.log(
+            action = Action.BOLUS, source = Sources.Wear,
+            "Afrezza inhaled",
+            ValueWithUnit.Insulin(units.toDouble())
+        )
+        aapsLogger.info(LTag.WEAR, "Afrezza ${units}U logged via Wear with ICfg: ${afrezzaIcfg.insulinLabel}")
     }
 
     internal suspend fun handleECarbsPreCheck(command: EventData.ActionECarbsPreCheck) {

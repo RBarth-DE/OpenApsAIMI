@@ -4,10 +4,10 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.GenericShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.Shape
@@ -519,5 +519,224 @@ class NowLine(
 fun rememberNowLine(minTimestamp: Long, nowTimestamp: Long, color: Color): NowLine {
     return remember(minTimestamp, nowTimestamp, color) {
         NowLine(nowX = timestampToX(nowTimestamp, minTimestamp), color = color)
+    }
+}
+
+/**
+ * TBR lane + bars (or vertical marker lines) in dashboard coordinates, using the same X mapping as [NowLine].
+ *
+ * When [bgAxisYMin] and [bgAxisYMax] are non-null, the lane is anchored to **glycémie = 0** in data space
+ * (same vertical scale as the BG layer). Otherwise falls back to [legacyBottomReservePx] above the layer bottom.
+ */
+class DashboardTbrLaneDecoration(
+    private val minTimestamp: Long,
+    private val segments: List<ChartTbrSegment>,
+    private val markerEpochMs: List<Long>,
+    private val bgAxisYMin: Double?,
+    private val bgAxisYMax: Double?,
+    private val legacyBottomReservePx: Float,
+    private val laneBackground: Color,
+    private val barFillSoft: Color,
+    private val barFillStrong: Color,
+    private val markerLineColor: Color,
+    /** Lower contrast bars, thinner markers — therapy strip stays readable without alarm-like weight. */
+    private val softStyle: Boolean = false,
+    /**
+     * When true (activity + SMB + TBR strip under the BG chart), the TBR lane uses a larger share of
+     * height so temp basal bars stay readable on a short chart.
+     */
+    private val therapyStrip: Boolean = false,
+) : Decoration {
+
+    override fun drawOverLayers(context: CartesianDrawingContext) {
+        if (segments.isEmpty() && markerEpochMs.isEmpty()) return
+        with(context) {
+            val xStep = ranges.xStep
+            if (xStep == 0.0) return@with
+
+            val plotLeft = layerBounds.left
+            val plotRight = layerBounds.right
+            val plotTop = layerBounds.top
+            val plotBottom = layerBounds.bottom
+
+            val minY = bgAxisYMin
+            val maxY = bgAxisYMax
+            val laneBottom = if (minY != null && maxY != null && maxY > minY) {
+                val span = maxY - minY
+                fun glucoseYToCanvas(y: Double): Float {
+                    val t = ((y - minY) / span).toFloat().coerceIn(0f, 1f)
+                    return plotBottom - t * layerBounds.height
+                }
+                kotlin.math.min(glucoseYToCanvas(0.0) - 1.5f, plotBottom - 4f)
+            } else {
+                val reserve = legacyBottomReservePx.coerceAtLeast(4f)
+                plotBottom - reserve - 1.5f
+            }
+
+            val contentTop = plotTop
+            val contentHeight = (laneBottom - contentTop).coerceAtLeast(1f)
+            // Taller lane + bars than the first Vico port — temp basals are easier to read without stealing BG space.
+            val laneH = if (therapyStrip) {
+                (contentHeight * 0.34f).coerceIn(52f, 96f)
+            } else {
+                (contentHeight * 0.14f).coerceIn(24f, 56f)
+            }
+            val laneTop = laneBottom - laneH
+
+            fun dataXToCanvasX(dataX: Double): Float =
+                plotLeft +
+                    layerDimensions.startPadding +
+                    layerDimensions.xSpacing * ((dataX - ranges.minX) / xStep).toFloat() -
+                    scroll
+
+            val laneBgAlpha = if (softStyle) 0.06f else 0.12f
+            val barHaloAlpha = if (softStyle) 0.12f else 0.28f
+            val barCoreAlpha = if (softStyle) 0.38f else 0.72f
+            val markOuterW = if (softStyle) 3f else 5f
+            val markInnerW = if (softStyle) 1.2f else 2.8f
+            val markOuterA = if (softStyle) 0.22f else 0.45f
+            val markInnerA = if (softStyle) 0.42f else 1f
+            val cornerLane = if (softStyle) CornerRadius(6f, 6f) else CornerRadius(4f, 4f)
+            val cornerBar = if (softStyle) CornerRadius(5f, 5f) else CornerRadius(3f, 3f)
+
+            with(mutableDrawScope) {
+                drawRoundRect(
+                    color = laneBackground.copy(alpha = laneBgAlpha),
+                    topLeft = Offset(plotLeft, laneTop),
+                    size = Size((plotRight - plotLeft).coerceAtLeast(1f), laneH),
+                    cornerRadius = cornerLane,
+                )
+
+                if (segments.isNotEmpty()) {
+                    for (seg in segments) {
+                        var x1 = dataXToCanvasX(timestampToX(seg.startEpochMs, minTimestamp))
+                        var x2 = dataXToCanvasX(timestampToX(seg.endEpochMs, minTimestamp))
+                        if (x2 < x1) {
+                            val tmp = x1
+                            x1 = x2
+                            x2 = tmp
+                        }
+                        x1 = x1.coerceIn(plotLeft, plotRight)
+                        x2 = x2.coerceIn(plotLeft, plotRight)
+                        val barW = (x2 - x1).coerceAtLeast(3f)
+                        val barHMax = (laneH - (if (therapyStrip) 5f else 3f)).coerceAtLeast(if (therapyStrip) 18f else 12f)
+                        val barH = (laneH * seg.intensity01).coerceIn(if (therapyStrip) 14f else 10f, barHMax)
+                        val barTop = laneBottom - barH
+                        drawRoundRect(
+                            color = barFillSoft.copy(alpha = barHaloAlpha),
+                            topLeft = Offset(x1 - 0.5f, barTop - 0.5f),
+                            size = Size(barW + 1f, barH + 1f),
+                            cornerRadius = cornerBar,
+                        )
+                        drawRoundRect(
+                            color = barFillStrong.copy(alpha = barCoreAlpha),
+                            topLeft = Offset(x1, barTop),
+                            size = Size(barW, barH),
+                            cornerRadius = cornerBar,
+                        )
+                    }
+                } else {
+                    for (t in markerEpochMs) {
+                        val x = dataXToCanvasX(timestampToX(t, minTimestamp))
+                        if (x < plotLeft || x > plotRight) continue
+                        val yTop = contentTop + contentHeight * (if (therapyStrip) 0.52f else 0.68f)
+                        drawLine(
+                            color = markerLineColor.copy(alpha = markOuterA),
+                            start = Offset(x, yTop),
+                            end = Offset(x, laneTop),
+                            strokeWidth = markOuterW,
+                        )
+                        drawLine(
+                            color = markerLineColor.copy(alpha = markInnerA),
+                            start = Offset(x, yTop),
+                            end = Offset(x, laneTop),
+                            strokeWidth = markInnerW,
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+    override fun equals(other: Any?): Boolean =
+        this === other ||
+            other is DashboardTbrLaneDecoration &&
+            minTimestamp == other.minTimestamp &&
+            segments == other.segments &&
+            markerEpochMs == other.markerEpochMs &&
+            bgAxisYMin == other.bgAxisYMin &&
+            bgAxisYMax == other.bgAxisYMax &&
+            legacyBottomReservePx == other.legacyBottomReservePx &&
+            laneBackground == other.laneBackground &&
+            barFillSoft == other.barFillSoft &&
+            barFillStrong == other.barFillStrong &&
+            markerLineColor == other.markerLineColor &&
+            softStyle == other.softStyle &&
+            therapyStrip == other.therapyStrip
+
+    override fun hashCode(): Int {
+        var result = minTimestamp.hashCode()
+        result = 31 * result + segments.hashCode()
+        result = 31 * result + markerEpochMs.hashCode()
+        result = 31 * result + (bgAxisYMin?.hashCode() ?: 0)
+        result = 31 * result + (bgAxisYMax?.hashCode() ?: 0)
+        result = 31 * result + legacyBottomReservePx.hashCode()
+        result = 31 * result + laneBackground.hashCode()
+        result = 31 * result + barFillSoft.hashCode()
+        result = 31 * result + barFillStrong.hashCode()
+        result = 31 * result + markerLineColor.hashCode()
+        result = 31 * result + softStyle.hashCode()
+        result = 31 * result + therapyStrip.hashCode()
+        return result
+    }
+}
+
+@Composable
+fun rememberDashboardTbrLaneDecoration(
+    minTimestamp: Long,
+    segments: List<ChartTbrSegment>,
+    markerEpochMs: List<Long>,
+    bgAxisYMin: Double?,
+    bgAxisYMax: Double?,
+    legacyBottomReservePx: Float,
+    laneBackground: Color,
+    barFillSoft: Color,
+    barFillStrong: Color,
+    markerLineColor: Color,
+    softStyle: Boolean = false,
+    therapyStrip: Boolean = false,
+): DashboardTbrLaneDecoration? {
+    return remember(
+        minTimestamp,
+        segments,
+        markerEpochMs,
+        bgAxisYMin,
+        bgAxisYMax,
+        legacyBottomReservePx,
+        laneBackground,
+        barFillSoft,
+        barFillStrong,
+        markerLineColor,
+        softStyle,
+        therapyStrip,
+    ) {
+        if (segments.isEmpty() && markerEpochMs.isEmpty()) {
+            null
+        } else {
+            DashboardTbrLaneDecoration(
+                minTimestamp = minTimestamp,
+                segments = segments,
+                markerEpochMs = markerEpochMs,
+                bgAxisYMin = bgAxisYMin,
+                bgAxisYMax = bgAxisYMax,
+                legacyBottomReservePx = legacyBottomReservePx,
+                laneBackground = laneBackground,
+                barFillSoft = barFillSoft,
+                barFillStrong = barFillStrong,
+                markerLineColor = markerLineColor,
+                softStyle = softStyle,
+                therapyStrip = therapyStrip,
+            )
+        }
     }
 }

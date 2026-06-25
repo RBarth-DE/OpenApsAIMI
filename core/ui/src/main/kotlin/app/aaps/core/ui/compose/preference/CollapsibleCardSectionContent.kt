@@ -17,9 +17,6 @@
 
 package app.aaps.core.ui.compose.preference
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.expandVertically
-import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -70,11 +67,7 @@ fun CollapsibleCardSectionContent(
                 collapsible = collapsible
             )
 
-            AnimatedVisibility(
-                visible = expanded || !collapsible,
-                enter = expandVertically(),
-                exit = shrinkVertically()
-            ) {
+            if (expanded || !collapsible) {
                 Column(modifier = Modifier.padding(bottom = theme.cardContentBottomPadding)) {
                     content()
                 }

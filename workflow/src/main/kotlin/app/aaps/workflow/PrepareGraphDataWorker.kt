@@ -129,7 +129,7 @@ class PrepareGraphDataWorker @AssistedInject constructor(
         // ===== Phase 1: Load BG into ads + smooth (was LoadBgDataWorker) =====
         if (data.bgDataReload) {
             data.iobCobCalculator.ads.loadBgData(data.end)
-            data.iobCobCalculator.ads.smoothData()
+            data.iobCobCalculator.ads.smoothData(data.iobCobCalculator)
             rxBus.send(EventBucketedDataCreated())
             data.iobCobCalculator.clearCache()
         }
@@ -174,12 +174,15 @@ class PrepareGraphDataWorker @AssistedInject constructor(
         }
     }
 
-    private suspend fun AutosensDataStore.smoothData() {
-        val workingCopy = synchronized(dataLock) {
+    private suspend fun AutosensDataStore.smoothData(iobCobCalculator: IobCobCalculator) {
+        val bolusIob = iobCobCalculator.calculateIobFromBolus().iob
+        val basalIob = iobCobCalculator.calculateIobFromTempBasalsIncludingConvertedExtended().iob
+        val smoothingContext = SmoothingContext(cachedTotalIobUnits = bolusIob + basalIob)
+        val workingCopy: MutableList<InMemoryGlucoseValue> = synchronized(dataLock) {
             bucketedData?.map { it.copy(smoothed = null, calibrated = null) }?.toMutableList()
         } ?: return
         val calibrated = activePlugin.activeCalibration.calibrate(workingCopy, CalibrationContext.NONE)
-        val smoothed = activePlugin.activeSmoothing.smooth(calibrated)
+        val smoothed = activePlugin.activeSmoothing.smooth(calibrated, smoothingContext)
         synchronized(dataLock) {
             bucketedData = smoothed
         }

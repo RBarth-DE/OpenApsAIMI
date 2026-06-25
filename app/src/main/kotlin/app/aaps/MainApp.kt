@@ -99,6 +99,7 @@ import app.aaps.plugins.aps.loop.runningMode.RunningModeReconciler
 import app.aaps.plugins.automation.AutomationRuntime
 import app.aaps.plugins.constraints.objectives.keys.ObjectivesLongComposedKey
 import app.aaps.plugins.aps.openAPSAIMI.StepService
+import app.aaps.plugins.aps.openAPSAIMI.utils.AimiStorageHelper
 import app.aaps.plugins.constraints.signatureVerifier.SignatureVerifierPlugin
 import app.aaps.ui.activityMonitor.ActivityMonitor
 import app.aaps.utils.configureLeakCanary
@@ -182,6 +183,7 @@ class MainApp : Application(), HasAndroidInjector, Configuration.Provider {
     @Inject lateinit var widgetUpdater: WidgetUpdater
     @Inject lateinit var runningModeReconciler: RunningModeReconciler
     @Inject lateinit var runningModeExpiryScheduler: RunningModeExpiryScheduler
+    @Inject lateinit var storageHelper: AimiStorageHelper
     @Inject lateinit var automationRuntime: AutomationRuntime
     @Inject @ApplicationScope lateinit var appScope: CoroutineScope
 

@@ -91,7 +91,7 @@ class RunningModeManagementViewModel @Inject constructor(
                 // Whether a profile is actually set. [Loop.allowedNextModes] returns an empty list both when no
                 // profile is set AND when the pump force-suspends (SUSPENDED_BY_PUMP); only the former should
                 // surface the "no profile set" card, so check the real condition instead of the empty list.
-                val profileSet = profileFunction.isProfileValid("RunningModeScreen")
+                val profileSet = withContext(Dispatchers.IO) { profileFunction.isProfileValid("RunningModeScreen") }
 
                 _uiState.update {
                     it.copy(
@@ -157,11 +157,15 @@ class RunningModeManagementViewModel @Inject constructor(
             when (val prepared = batchExecutor.prepare(listOf(BatchAction.RunningMode(targetMode, durationMinutes)), Sources.LoopDialog, label)) {
                 is ActionProgress.Prepared -> rxBus.send(
                     EventShowDialog.OkCancel(
-                        title = label, message = "", confirmationLines = prepared.lines, icon = targetMode.toIcon(),
+                        title = label,
+                        message = "",
+                        confirmationLines = prepared.lines,
+                        icon = targetMode.toIcon(),
                         onOk = {
                             appScope.launch {
-                                if (batchExecutor.commit(prepared.id, Sources.LoopDialog, label) is ActionProgress.Applied)
+                                if (batchExecutor.commit(prepared.id, Sources.LoopDialog, label) is ActionProgress.Applied) {
                                     trackObjectives(action, durationMinutes)
+                                }
                             }
                         }
                     )
@@ -169,11 +173,17 @@ class RunningModeManagementViewModel @Inject constructor(
 
                 // Master-local validation failure, or a client offline; a client round-trip failure already showed on the app modal.
                 is ActionProgress.Rejected -> {
-                    if (!config.AAPSCLIENT || prepared.reason == FailureReason.NotReachable)
-                        rxBus.send(EventShowSnackbar(prepared.detail ?: rh.gs(app.aaps.core.ui.R.string.running_mode_change_not_allowed), EventShowSnackbar.Type.Error))
+                    if (!config.AAPSCLIENT || prepared.reason == FailureReason.NotReachable) {
+                        rxBus.send(
+                            EventShowSnackbar(
+                                prepared.detail ?: rh.gs(R.string.running_mode_change_not_allowed),
+                                EventShowSnackbar.Type.Error
+                            )
+                        )
+                    }
                 }
 
-                else                       -> Unit // Unconfirmed → handled by the app-level pending modal
+                else -> Unit // Unconfirmed → handled by the app-level pending modal
             }
         }
     }

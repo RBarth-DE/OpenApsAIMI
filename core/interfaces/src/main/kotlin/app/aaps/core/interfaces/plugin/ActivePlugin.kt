@@ -75,8 +75,8 @@ interface ActivePlugin {
     val activeOverview: Overview
 
     /**
-     *  Calibration plugin (per-sensor override on top of factory-calibrated values).
-     *  Defaults to no-op when no override plugin is enabled.
+     * Calibration plugin (per-sensor override on top of factory-calibrated values).
+     * Defaults to no-op when no override plugin is enabled.
      */
     val activeCalibration: Calibration
 

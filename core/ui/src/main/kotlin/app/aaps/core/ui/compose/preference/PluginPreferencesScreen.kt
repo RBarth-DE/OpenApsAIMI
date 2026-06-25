@@ -32,7 +32,6 @@ import app.aaps.core.interfaces.plugin.PluginBase
 import app.aaps.core.keys.interfaces.VisibilityContext
 import app.aaps.core.ui.compose.AapsTopAppBar
 import app.aaps.core.ui.compose.ComposeScreenContent
-import app.aaps.core.ui.compose.LocalSnackbarHostState
 import app.aaps.core.ui.compose.MasterOfflineBanner
 import app.aaps.core.ui.compose.masterEditingEnabled
 import kotlinx.coroutines.launch
@@ -172,11 +171,21 @@ private fun SinglePluginPreferencesRenderer(
     onBackClick: () -> Unit,
     onOpenLegacyXmlPreferences: (() -> Unit)? = null
 ) {
-    val sectionState = rememberPreferenceSectionState()
-    val snackbarHostState = LocalSnackbarHostState.current
+    val sectionState = rememberSaveable(screen.key, saver = PreferenceSectionState.Saver) {
+        PreferenceSectionState()
+    }
+    val snackbarHostState = remember { SnackbarHostState() }
     val snackbarScope = rememberCoroutineScope()
     val onShowMessage: (String) -> Unit = { message ->
         snackbarScope.launch { snackbarHostState.showSnackbar(message) }
+    }
+
+    // Expand the plugin card once when opening (do not toggle — avoids collapsing restored state).
+    LaunchedEffect(screen.key) {
+        val mainKey = "${screen.key}_main"
+        if (!sectionState.isExpanded(mainKey)) {
+            sectionState.toggle(mainKey, SectionLevel.TOP_LEVEL)
+        }
     }
 
     Scaffold(

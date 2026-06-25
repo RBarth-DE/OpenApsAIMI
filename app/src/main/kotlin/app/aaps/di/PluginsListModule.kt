@@ -48,6 +48,7 @@ import app.aaps.plugins.source.XdripSourcePlugin
 import app.aaps.plugins.source.instara.InstaraPlugin
 import app.aaps.plugins.sync.garmin.GarminPlugin
 import app.aaps.plugins.sync.nsclientV3.NSClientV3Plugin
+import app.aaps.plugins.sync.nsclientV3.RemoteControlPlugin
 import app.aaps.plugins.sync.openhumans.OpenHumansUploaderPlugin
 import app.aaps.plugins.sync.smsCommunicator.SmsCommunicatorPlugin
 import app.aaps.plugins.sync.tidepool.TidepoolPlugin

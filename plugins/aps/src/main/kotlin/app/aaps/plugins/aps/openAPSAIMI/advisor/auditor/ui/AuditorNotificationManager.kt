@@ -35,7 +35,6 @@ class AuditorNotificationManager @Inject constructor(
   private val aapsLogger: AAPSLogger,
 ) {
 
-
   @Volatile
   private var lastNotifiedVerdictTimestampMs: Long = 0L
 

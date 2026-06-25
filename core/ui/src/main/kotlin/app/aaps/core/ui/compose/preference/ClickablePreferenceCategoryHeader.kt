@@ -92,8 +92,7 @@ internal fun ClickablePreferenceCategoryHeader(
             .fillMaxWidth()
             .padding(headerPadding)
             .background(backgroundColor)
-            .then(if (collapsible) Modifier.clickable(onClick = onToggle) else Modifier)
-            .padding(headerPadding),
+            .then(if (collapsible) Modifier.clickable(onClick = onToggle) else Modifier),
         verticalAlignment = Alignment.CenterVertically
     ) {
         CompositionLocalProvider(LocalContentColor provides theme.categoryColor) {

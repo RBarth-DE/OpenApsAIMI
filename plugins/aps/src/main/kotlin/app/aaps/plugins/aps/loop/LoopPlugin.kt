@@ -9,6 +9,8 @@ import android.content.Intent
 import android.os.Build
 import android.os.Handler
 import android.os.HandlerThread
+import android.os.Looper
+import android.os.SystemClock
 import androidx.annotation.VisibleForTesting
 import androidx.core.app.NotificationCompat
 import app.aaps.core.data.configuration.Constants
@@ -34,6 +36,8 @@ import app.aaps.core.interfaces.db.PersistenceLayer
 import app.aaps.core.interfaces.db.ProcessedTbrEbData
 import app.aaps.core.interfaces.di.ApplicationScope
 import app.aaps.core.interfaces.insulin.ConcentrationHelper
+import app.aaps.core.interfaces.iob.GlucoseStatusProvider
+import app.aaps.core.interfaces.iob.IobCobCalculator
 import app.aaps.core.interfaces.logging.AAPSLogger
 import app.aaps.core.interfaces.logging.LTag
 import app.aaps.core.interfaces.logging.UserEntryLogger
@@ -50,6 +54,7 @@ import app.aaps.core.interfaces.pump.PumpEnactResult
 import app.aaps.core.interfaces.pump.PumpStatusProvider
 import app.aaps.core.interfaces.pump.PumpSync
 import app.aaps.core.interfaces.pump.VirtualPump
+import app.aaps.core.interfaces.queue.Callback
 import app.aaps.core.interfaces.queue.CommandQueue
 import app.aaps.core.interfaces.receivers.ReceiverStatusStore
 import app.aaps.core.interfaces.resources.ResourceHelper
@@ -82,17 +87,18 @@ import app.aaps.plugins.aps.R
 import app.aaps.plugins.aps.loop.events.EventLoopSetLastRunGui
 import app.aaps.plugins.aps.loop.extensions.json
 import io.reactivex.rxjava3.disposables.CompositeDisposable
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.sync.withLock
 import org.json.JSONObject
+import java.util.concurrent.atomic.AtomicReference
 import javax.inject.Inject
 import javax.inject.Provider
 import javax.inject.Singleton
@@ -111,6 +117,8 @@ class LoopPlugin @Inject constructor(
     private val context: Context,
     private val commandQueue: CommandQueue,
     private val activePlugin: ActivePlugin,
+    private val iobCobCalculator: IobCobCalculator,
+    private val glucoseStatusProvider: GlucoseStatusProvider,
     private val processedTbrEbData: ProcessedTbrEbData,
     private val receiverStatusStore: ReceiverStatusStore,
     private val fabricPrivacy: FabricPrivacy,
@@ -148,27 +156,46 @@ class LoopPlugin @Inject constructor(
 ), Loop, PluginConstraints {
 
     private val disposable = CompositeDisposable()
+    private val runningModeSnapshot = AtomicReference<RM?>(null)
     override var lastBgTriggeredRun: Long = 0
     private var carbsSuggestionsSuspendedUntil: Long = 0
     private var prevCarbsreq = 0
     override var lastRun: LastRun? = null
     override var closedLoopEnabled: Constraint<Boolean>? = null
+    private val invokeMutex = Mutex()
+    private val invokeCoalescingLock = Any()
+    private var invokeDrainActive: Boolean = false
+    private var pendingInvokeRequest: LoopInvokeRequest? = null
+
+    private data class LoopInvokeRequest(
+        val initiator: String,
+        val allowNotification: Boolean,
+        val tempBasalFallback: Boolean,
+        val requestedAtElapsedMs: Long
+    )
 
     private var handler: Handler? = null
 
-    // Serializes loop runs. Master's invoke() was @Synchronized; the suspend migration dropped that
-    // (and @Synchronized cannot span suspension points). invoke() is reachable concurrently — the
-    // per-BG PostCalculationWorker, the Accept-temp button, loop pull-to-refresh, the temp-target
-    // change flow, and the deferred SMB fallback — so without this lock two runs can overlap and
-    // double-apply or mis-order TBR/SMB commands. Not reentrant: the SMB fallback re-invoke is
-    // deferred (postDelayed + appScope.launch) and runs after the current run releases the lock.
-    private val invokeMutex = Mutex()
+    /**
+     * Wall-clock time of last successful [invoke] from the glucose worker (`Calculation for … cause=EventNewBG` / History).
+     * Skips AIMI periodic autodrive when a glucose-driven loop already ran recently; periodic fallback still runs if BG stalls.
+     */
+    private var lastGlucoseWorkerLoopWallClock: Long = 0L
 
     @OptIn(FlowPreview::class)
     override suspend fun onStart() {
         createNotificationChannel()
         super.onStart()
         handler = Handler(HandlerThread(this::class.simpleName + "Handler").also { it.start() }.looper)
+        appScope.launch { refreshRunningModeSnapshotAfterPreCheck() }
+        persistenceLayer.observeChanges(RM::class.java)
+            .debounce(100L)
+            .onEach {
+                appScope.launch {
+                    runningModeSnapshot.set(persistenceLayer.getRunningModeActiveAt(dateUtil.now()))
+                }
+            }
+            .launchIn(appScope)
         // TempTarget changes
         persistenceLayer.observeChanges(TT::class.java)
             // Skip db change of ending previous TT
@@ -200,6 +227,45 @@ class LoopPlugin @Inject constructor(
             }
             .launchIn(appScope)
     }
+
+    private fun startPeriodicLoop() {
+        val periodicRunnable = object : Runnable {
+            override fun run() {
+                val freqMs = T.mins(preferences.get(IntKey.ApsMaxSmbFrequency).toLong()).msecs()
+                val autodrive = preferences.get(BooleanKey.OApsAIMIautoDrive)
+                if (autodrive) {
+                    val now = dateUtil.now()
+                    val sinceGlucoseMs =
+                        if (lastGlucoseWorkerLoopWallClock == 0L) Long.MAX_VALUE
+                        else (now - lastGlucoseWorkerLoopWallClock).coerceAtLeast(0L)
+                    if (sinceGlucoseMs < freqMs) {
+                        val bg = glucoseStatusProvider.glucoseStatusData?.glucose
+                        aapsLogger.debug(
+                            LTag.APS,
+                            "Periodic autodrive skipped (glucose-driven loop ${sinceGlucoseMs}ms ago < period ${freqMs}ms, BG=$bg)"
+                        )
+                    } else {
+                        val bg = glucoseStatusProvider.glucoseStatusData?.glucose
+                        aapsLogger.debug(
+                            LTag.APS,
+                            "Periodic autodrive fallback (last glucose-driven loop ${sinceGlucoseMs}ms ago, period ${freqMs}ms, BG=$bg)"
+                        )
+                        appScope.launch { invoke("PeriodicApsMaxSmbFrequency", true) }
+                    }
+                } else {
+                    aapsLogger.debug(LTag.APS, "Pas de loop périodique : autodrive=$autodrive.")
+                }
+                handler?.postDelayed(this, freqMs)
+            }
+        }
+        val initialFreqMs = T.mins(preferences.get(IntKey.ApsMaxSmbFrequency).toLong()).msecs()
+        handler?.postDelayed(periodicRunnable, initialFreqMs)
+    }
+
+    /** Matches InvokeLoopWorker initiator: `Calculation for … (cause=EventNewBG)` etc. */
+    private fun isGlucoseWorkerInitiator(initiator: String): Boolean =
+        initiator.startsWith("Calculation for ") &&
+            (initiator.contains("cause=EventNewBG") || initiator.contains("cause=EventNewHistoryData"))
 
     private fun createNotificationChannel() {
         val mNotificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as AndroidNotificationManager
@@ -239,6 +305,18 @@ class LoopPlugin @Inject constructor(
         }
 
     override suspend fun runningMode(): RM.Mode = runningModeRecord().mode
+
+    private fun isMainThread(): Boolean =
+        Looper.getMainLooper().thread == Thread.currentThread()
+
+    private suspend fun runningModePreCheckSuspend() {
+        runningModePreCheck()
+    }
+
+    private suspend fun refreshRunningModeSnapshotAfterPreCheck() {
+        runningModePreCheckSuspend()
+        runningModeSnapshot.set(persistenceLayer.getRunningModeActiveAt(dateUtil.now()))
+    }
 
     override suspend fun runningModeRecord(): RM {
         runningModePreCheck()
@@ -369,7 +447,7 @@ class LoopPlugin @Inject constructor(
             listValues = listValues
         )
         rxBus.send(EventRefreshOverview("handleRunningModeChange"))
-        runningModePreCheck()
+        runningModePreCheckSuspend()
         return result.inserted.isNotEmpty() || result.updated.isNotEmpty()
     }
 
@@ -424,7 +502,7 @@ class LoopPlugin @Inject constructor(
                         listValues = listOf(ValueWithUnit.SimpleString(rh.gs(app.aaps.core.ui.R.string.pump_running)))
                     )
                     // re-run to process other conditions
-                    runningModePreCheck()
+                    runningModePreCheckSuspend()
                     return
                 }
             }
@@ -512,7 +590,7 @@ class LoopPlugin @Inject constructor(
         return bool
     }
 
-    suspend fun isEmptyQueue(): Boolean {
+    private suspend fun isEmptyQueue(): Boolean {
         val maxMinutes = 2L
         val start = dateUtil.now()
         while (start + T.mins(maxMinutes).msecs() > dateUtil.now()) {
@@ -522,36 +600,127 @@ class LoopPlugin @Inject constructor(
         return false
     }
 
-    override suspend fun invoke(initiator: String, allowNotification: Boolean, tempBasalFallback: Boolean): Unit = withContext(Dispatchers.Default) {
-        // Restores master's @Synchronized contract: serialize loop runs so they cannot overlap.
-        invokeMutex.lock()
+    private fun mergeInvokeRequests(current: LoopInvokeRequest?, incoming: LoopInvokeRequest): LoopInvokeRequest {
+        if (current == null) return incoming
+        val mergedInitiator = buildString {
+            append(current.initiator)
+            if (!current.initiator.contains(incoming.initiator)) {
+                append(" + ")
+                append(incoming.initiator)
+            }
+        }
+        return LoopInvokeRequest(
+            initiator = mergedInitiator,
+            allowNotification = current.allowNotification || incoming.allowNotification,
+            tempBasalFallback = current.tempBasalFallback || incoming.tempBasalFallback,
+            requestedAtElapsedMs = minOf(current.requestedAtElapsedMs, incoming.requestedAtElapsedMs)
+        )
+    }
+
+    override suspend fun invoke(initiator: String, allowNotification: Boolean, tempBasalFallback: Boolean) {
+        val incoming = LoopInvokeRequest(
+            initiator = initiator,
+            allowNotification = allowNotification,
+            tempBasalFallback = tempBasalFallback,
+            requestedAtElapsedMs = SystemClock.elapsedRealtime()
+        )
+
+        val shouldDrain = synchronized(invokeCoalescingLock) {
+            pendingInvokeRequest = mergeInvokeRequests(pendingInvokeRequest, incoming)
+            if (invokeDrainActive) {
+                false
+            } else {
+                invokeDrainActive = true
+                true
+            }
+        }
+        if (!shouldDrain) {
+            aapsLogger.debug(LTag.APS, "invoke coalesced into pending queue for initiator=$initiator")
+            return
+        }
+
+        while (true) {
+            val next = synchronized(invokeCoalescingLock) {
+                val req = pendingInvokeRequest
+                if (req == null) {
+                    invokeDrainActive = false
+                    null
+                } else {
+                    pendingInvokeRequest = null
+                    req
+                }
+            } ?: return
+
+            val waitStartedAt = SystemClock.elapsedRealtime()
+            try {
+                invokeMutex.withLock {
+                    val waitedMs = SystemClock.elapsedRealtime() - waitStartedAt
+                    if (waitedMs >= 250L) {
+                        aapsLogger.warn(
+                            LTag.APS,
+                            "Loop invoke contention: waited ${waitedMs}ms for initiator=${next.initiator}"
+                        )
+                    }
+                    val queuedForMs = SystemClock.elapsedRealtime() - next.requestedAtElapsedMs
+                    if (queuedForMs >= 500L) {
+                        aapsLogger.warn(
+                            LTag.APS,
+                            "Loop invoke queued for ${queuedForMs}ms initiator=${next.initiator}"
+                        )
+                    }
+                    executeInvokeInternal(
+                        initiator = next.initiator,
+                        allowNotification = next.allowNotification,
+                        tempBasalFallback = next.tempBasalFallback
+                    )
+                }
+            } catch (e: CancellationException) {
+                synchronized(invokeCoalescingLock) {
+                    invokeDrainActive = false
+                }
+                throw e
+            } catch (e: Exception) {
+                aapsLogger.error(LTag.APS, "Loop invoke failed; resetting coalescing drain state", e)
+                synchronized(invokeCoalescingLock) {
+                    invokeDrainActive = false
+                }
+                throw e
+            }
+        }
+    }
+
+    private suspend fun executeInvokeInternal(
+        initiator: String,
+        allowNotification: Boolean,
+        tempBasalFallback: Boolean
+    ) {
         try {
             aapsLogger.debug(LTag.APS, "invoke from $initiator")
             if (runningMode() == RM.Mode.DISABLED_LOOP) {
                 val message = rh.gs(app.aaps.core.ui.R.string.loop_disabled_by_user)
                 aapsLogger.debug(LTag.APS, message)
                 rxBus.send(EventLoopSetLastRunGui(message))
-                return@withContext
+                return
             }
             val pump = activePlugin.activePump
             var apsResult: APSResult? = null
-            if (!isEnabled()) return@withContext
+            if (!isEnabled()) return
             val profile = profileFunction.getProfile()
             if (profile == null || !profileFunction.isProfileValid("Loop")) {
                 aapsLogger.debug(LTag.APS, rh.gs(app.aaps.core.ui.R.string.no_profile_set))
                 rxBus.send(EventLoopSetLastRunGui(rh.gs(app.aaps.core.ui.R.string.no_profile_set)))
-                return@withContext
+                return
             }
 
             if (!isEmptyQueue()) {
                 aapsLogger.debug(LTag.APS, rh.gs(app.aaps.core.ui.R.string.pump_busy))
                 rxBus.send(EventLoopSetLastRunGui(rh.gs(app.aaps.core.ui.R.string.pump_busy)))
-                return@withContext
+                return
             }
 
             // Check if pump info is loaded
-            if (ch.fromPump(pump.baseBasalRate) < 0.01) return@withContext
-            val usedAPS = activePlugin.activeAPS ?: return@withContext
+            if (ch.fromPump(pump.baseBasalRate) < 0.01) return
+            val usedAPS = activePlugin.activeAPS ?: return
             if (usedAPS.isEnabled()) {
                 usedAPS.invoke(initiator, tempBasalFallback)
                 apsResult = usedAPS.lastAPSResult
@@ -560,7 +729,11 @@ class LoopPlugin @Inject constructor(
             // Check if we have any result
             if (apsResult == null) {
                 rxBus.send(EventLoopSetLastRunGui(rh.gs(R.string.no_aps_selected)))
-                return@withContext
+                return
+            }
+
+            if (isGlucoseWorkerInitiator(initiator)) {
+                lastGlucoseWorkerLoopWallClock = dateUtil.now()
             }
 
             // Store calculations to DB
@@ -605,7 +778,7 @@ class LoopPlugin @Inject constructor(
                 if (runningMode().pausesLoopExecution()) {
                     aapsLogger.debug(LTag.APS, rh.gs(app.aaps.core.ui.R.string.loopsuspended))
                     rxBus.send(EventLoopSetLastRunGui(rh.gs(app.aaps.core.ui.R.string.loopsuspended)))
-                    return@withContext
+                    return
                 }
                 // Store reasons
                 closedLoopEnabled = constraintChecker.isClosedLoopAllowed()
@@ -705,6 +878,15 @@ class LoopPlugin @Inject constructor(
                             rxBus.send(EventLoopUpdateGui())
                             if (resultAfterConstraints.isBolusRequested) {
                                 val smbResult = applySMBRequest(resultAfterConstraints)
+                                aapsLogger.debug(
+                                    LTag.APS,
+                                    "SMB enact result: requested=%.2fU enacted=%s success=%s comment=%s".format(
+                                        resultAfterConstraints.smb,
+                                        smbResult.enacted,
+                                        smbResult.success,
+                                        smbResult.comment ?: ""
+                                    )
+                                )
                                 if (smbResult.enacted || smbResult.success) {
                                     lastRun.smbSetByPump = smbResult
                                     lastRun.lastSMBRequest = lastRun.lastAPSRun
@@ -745,7 +927,6 @@ class LoopPlugin @Inject constructor(
                 rxBus.send(EventLoopUpdateGui())
             }
         } finally {
-            invokeMutex.unlock()
             aapsLogger.debug(LTag.APS, "invoke end")
         }
     }
@@ -908,9 +1089,22 @@ class LoopPlugin @Inject constructor(
     private suspend fun applySMBRequest(request: APSResult): PumpEnactResult {
         val pump = activePlugin.activePump
         val lastBolusTime = persistenceLayer.getNewestBolus()?.timestamp ?: 0L
-        if (lastBolusTime != 0L && lastBolusTime + T.mins(preferences.get(IntKey.ApsMaxSmbFrequency).toLong()).msecs() > dateUtil.now()) {
-            aapsLogger.debug(LTag.APS, "SMB requested but still in ${preferences.get(IntKey.ApsMaxSmbFrequency)} min interval")
-            return pumpEnactResultProvider.get().comment(R.string.smb_frequency_exceeded).enacted(false).success(false)
+        val now = dateUtil.now()
+        val smbIntervalMin = preferences.get(IntKey.ApsMaxSmbFrequency)
+        val lastBolusAgeSec = if (lastBolusTime > 0L) ((now - lastBolusTime).coerceAtLeast(0L) / 1000.0) else Double.NaN
+        if (lastBolusTime != 0L && lastBolusTime + T.mins(smbIntervalMin.toLong()).msecs() > now) {
+            aapsLogger.debug(
+                LTag.APS,
+                "SMB blocked by interval: requested=%.2fU lastBolusAge=%.0fs interval=%dm deliverAt=%s".format(
+                    request.smb,
+                    lastBolusAgeSec,
+                    smbIntervalMin,
+                    request.deliverAt?.let { dateUtil.dateAndTimeAndSecondsString(it) } ?: "n/a"
+                )
+            )
+            return pumpEnactResultProvider.get()
+                .comment(R.string.smb_frequency_exceeded)
+                .enacted(false).success(false)
         }
         if (!pump.isInitialized()) {
             aapsLogger.debug(LTag.APS, "applySMBRequest: " + rh.gs(R.string.pump_not_initialized))
@@ -920,7 +1114,15 @@ class LoopPlugin @Inject constructor(
             aapsLogger.debug(LTag.APS, "applySMBRequest: " + rh.gs(app.aaps.core.ui.R.string.pumpsuspended))
             return pumpEnactResultProvider.get().comment(app.aaps.core.ui.R.string.pumpsuspended).enacted(false).success(false)
         }
-        aapsLogger.debug(LTag.APS, "applySMBRequest: $request")
+        aapsLogger.debug(
+            LTag.APS,
+            "applySMBRequest: requested=%.2fU deliverAt=%s lastBolusAge=%.0fs pumpStep=%.3fU".format(
+                request.smb,
+                request.deliverAt?.let { dateUtil.dateAndTimeAndSecondsString(it) } ?: "n/a",
+                lastBolusAgeSec,
+                pump.pumpDescription.bolusStep
+            )
+        )
 
         // deliver SMB
         val detailedBolusInfo = DetailedBolusInfo()
@@ -955,6 +1157,47 @@ class LoopPlugin @Inject constructor(
             note = null,
             listValues = listValues
         )
+        val pump = activePlugin.activePump
+        val profile = profileFunction.getProfile() ?: return
+        if (config.APS) {
+            val tbrResult = if (pump.pumpDescription.tempBasalStyle == PumpDescription.ABSOLUTE) {
+                commandQueue.tempBasalAbsolute(
+                    0.0,
+                    durationInMinutes,
+                    true,
+                    profile,
+                    PumpSync.TemporaryBasalType.EMULATED_PUMP_SUSPEND,
+                )
+            } else {
+                commandQueue.tempBasalPercent(
+                    0,
+                    durationInMinutes,
+                    true,
+                    profile,
+                    PumpSync.TemporaryBasalType.EMULATED_PUMP_SUSPEND,
+                )
+            }
+            if (!tbrResult.success) {
+                uiInteraction.runAlarm(
+                    tbrResult.comment,
+                    rh.gs(app.aaps.core.ui.R.string.temp_basal_delivery_error),
+                    app.aaps.core.ui.R.raw.boluserror,
+                )
+            }
+            if (pump.pumpDescription.isExtendedBolusCapable && persistenceLayer.getExtendedBolusActiveAt(dateUtil.now()) != null) {
+                val cancelEbResult = commandQueue.cancelExtended()
+                if (!cancelEbResult.success) {
+                    uiInteraction.runAlarm(
+                        cancelEbResult.comment,
+                        rh.gs(app.aaps.core.ui.R.string.extendedbolusdeliveryerror),
+                        app.aaps.core.ui.R.raw.boluserror,
+                    )
+                }
+            }
+        }
+        // DISCONNECTED_PUMP / SUPER_BOLUS: insertRunningMode alone does not notify overview/dashboard —
+        // without this, hybrid dashboard metrics can lag until the next BG/IOb event or minute tick.
+        rxBus.send(EventRefreshOverview("goToZeroTemp"))
     }
 
     /**
@@ -972,6 +1215,18 @@ class LoopPlugin @Inject constructor(
             note = note,
             listValues = listValues
         )
+        if (config.APS) {
+            val cancelResult = commandQueue.cancelTempBasal(enforceNew = false, autoForced = autoForced)
+            if (!cancelResult.success) {
+                uiInteraction.runAlarm(
+                    cancelResult.comment,
+                    rh.gs(app.aaps.core.ui.R.string.temp_basal_delivery_error),
+                    app.aaps.core.ui.R.raw.boluserror,
+                )
+            }
+        }
+        // SUSPENDED_BY_USER / SUSPENDED_BY_PUMP: refresh overview + hybrid dashboard immediately.
+        rxBus.send(EventRefreshOverview("suspendLoop"))
     }
 
     var task: Runnable? = null
@@ -980,8 +1235,13 @@ class LoopPlugin @Inject constructor(
         class UpdateRunnable : Runnable {
 
             override fun run() {
-                appScope.launch { buildAndStoreDeviceStatus(reason) }
-                task = null
+                appScope.launch {
+                    try {
+                        buildAndStoreDeviceStatus(reason)
+                    } finally {
+                        task = null
+                    }
+                }
             }
         }
         task?.let { handler?.removeCallbacks(it) }

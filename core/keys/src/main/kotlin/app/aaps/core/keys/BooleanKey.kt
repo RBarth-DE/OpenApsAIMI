@@ -29,6 +29,7 @@ enum class BooleanKey(
 ) : BooleanPreferenceKey {
 
     GeneralSimpleMode(key = "simple_mode", defaultValue = true, titleResId = R.string.pref_title_simple_mode, sync = SyncSpec(SyncChannel.Cold, SyncDirection.Bidirectional)),
+    GeneralLowEndStabilityMode("general_low_end_stability_mode", false, R.string.pref_title_low_end_stability_mode),
     GeneralInsulinConcentration(
         key = "insulin_concentration_enabled", defaultValue = false, titleResId = R.string.pref_title_insulin_concentration, summaryResId = R.string.pref_summary_insulin_concentration,
         defaultedBySM = true,
@@ -36,19 +37,12 @@ enum class BooleanKey(
         sync = SyncSpec(SyncChannel.Cold, SyncDirection.Bidirectional)
     ),
     OverviewKeepScreenOn(key = "keep_screen_on", defaultValue = false, titleResId = R.string.pref_title_keep_screen_on, summaryResId = R.string.pref_summary_keep_screen_on, calculatedDefaultValue = true),
-    OverviewShowTreatmentButton(key = "show_treatment_button", defaultValue = false, titleResId = R.string.pref_title_show_treatment_button, defaultedBySM = true),
+    OverviewShowTreatmentButton(key = "show_treatment_button", defaultValue = false, titleResId = R.string.pref_title_show_treatment_button, defaultedBySM = true, hideParentScreenIfHidden = true),
     OverviewShowWizardButton(key = "show_wizard_button", defaultValue = true, titleResId = R.string.pref_title_show_wizard_button, defaultedBySM = true),
     OverviewShowInsulinButton(key = "show_insulin_button", defaultValue = true, titleResId = R.string.pref_title_show_insulin_button, defaultedBySM = true),
     OverviewShowCarbsButton(key = "show_carbs_button", defaultValue = true, titleResId = R.string.pref_title_show_carbs_button, defaultedBySM = true),
     OverviewShowCgmButton(key = "show_cgm_button", defaultValue = false, titleResId = R.string.pref_title_show_cgm_button, summaryResId = R.string.pref_summary_show_cgm_button, defaultedBySM = true, showInNsClientMode = false),
-    OverviewShowCalibrationButton(
-        key = "show_calibration_button",
-        defaultValue = false,
-        titleResId = R.string.pref_title_show_calibration_button,
-        summaryResId = R.string.pref_summary_show_calibration_button,
-        defaultedBySM = true,
-        showInNsClientMode = false
-    ),
+    /** Must read stored value in simple mode so Home can switch AIMI dashboard vs legacy overview. */
     OverviewUseDashboardLayout(
         "overview_use_dashboard", true,
         R.string.pref_title_overview_use_dashboard_layout,
@@ -66,6 +60,14 @@ enum class BooleanKey(
         "overview_dashboard_extended_metrics", false,
         R.string.pref_title_overview_dashboard_extended_metrics,
         R.string.pref_summary_overview_dashboard_extended_metrics
+    ),
+    OverviewShowCalibrationButton(
+        key = "show_calibration_button",
+        defaultValue = false,
+        titleResId = R.string.pref_title_show_calibration_button,
+        summaryResId = R.string.pref_summary_show_calibration_button,
+        defaultedBySM = true,
+        showInNsClientMode = false
     ),
     OverviewShowNotesInDialogs("show_notes_entry_dialogs", false, R.string.pref_title_show_notes_in_dialogs, defaultedBySM = true),
     OverviewUseBolusAdvisor("use_bolus_advisor", true, R.string.pref_title_use_bolus_advisor, R.string.pref_summary_use_bolus_advisor, defaultedBySM = true),
@@ -452,6 +454,13 @@ enum class BooleanKey(
         R.string.pref_summary_aimi_tpo_notify_on_apply,
         dependency = OApsAIMITpoEnabled,
     ),
+    OApsAIMIEnableBasal("key_enable_basal", false),
+    OApsAIMIforcelimits("key_use_AimiForceLimits",false),
+    /**
+     * When trajectory tuning is enabled: log the would-be ISF multiplier but do not apply it.
+     * Default on for safe rollout; set false to apply the bounded adjustment.
+     */
+
 }
 
 

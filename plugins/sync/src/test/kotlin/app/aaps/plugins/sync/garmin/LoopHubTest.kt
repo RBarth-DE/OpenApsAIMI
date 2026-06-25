@@ -5,6 +5,7 @@ import app.aaps.core.data.model.EPS
 import app.aaps.core.data.model.GV
 import app.aaps.core.data.model.GlucoseUnit
 import app.aaps.core.data.model.HR
+import app.aaps.core.data.model.SC
 import app.aaps.core.data.model.ICfg
 import app.aaps.core.data.model.RM
 import app.aaps.core.data.model.SourceSensor
@@ -21,16 +22,19 @@ import app.aaps.core.interfaces.constraints.ConstraintsChecker
 import app.aaps.core.interfaces.db.PersistenceLayer
 import app.aaps.core.interfaces.db.ProcessedTbrEbData
 import app.aaps.core.interfaces.iob.IobCobCalculator
+import app.aaps.core.interfaces.logging.UserEntryLogger
 import app.aaps.core.interfaces.profile.EffectiveProfile
 import app.aaps.core.interfaces.profile.ProfileFunction
 import app.aaps.core.interfaces.profile.ProfileUtil
 import app.aaps.core.interfaces.queue.CommandQueue
+import app.aaps.core.interfaces.utils.DateUtil
+import app.aaps.core.keys.Preferences
 import app.aaps.core.keys.StringKey
 import app.aaps.core.keys.UnitDoubleKey
-import app.aaps.core.keys.interfaces.Preferences
 import app.aaps.shared.tests.TestBase
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.AfterEach
@@ -65,6 +69,8 @@ class LoopHubTest : TestBase() {
     @Mock lateinit var persistenceLayer: PersistenceLayer
     @Mock lateinit var preferences: Preferences
     @Mock lateinit var processedTbrEbData: ProcessedTbrEbData
+    @Mock lateinit var userEntryLogger: UserEntryLogger
+    @Mock lateinit var dateUtil: DateUtil
     @Mock lateinit var wizardBolusExecutor: WizardBolusExecutor
 
     private lateinit var loopHub: LoopHubImpl
@@ -80,8 +86,8 @@ class LoopHubTest : TestBase() {
         }
         loopHub = LoopHubImpl(
             aapsLogger, commandQueue, constraints, iobCobCalculator, loop,
-            profileFunction, profileUtil, persistenceLayer, preferences, processedTbrEbData,
-            wizardBolusExecutor, testScope
+            profileFunction, profileUtil, persistenceLayer, userEntryLogger, preferences, processedTbrEbData,
+            dateUtil, wizardBolusExecutor, testScope
         )
         loopHub.clock = clock
     }
@@ -314,5 +320,37 @@ class LoopHubTest : TestBase() {
         )
         kotlinx.coroutines.delay(100) // Give time for GlobalScope.launch to complete
         verify(persistenceLayer).insertOrUpdateHeartRates(listOf(hr))
+    }
+
+    @Test
+    fun testStoreStepsCount() = runTest {
+        val samplingStart = Instant.ofEpochMilli(1_001_000)
+        val samplingEnd = Instant.ofEpochMilli(1_301_000)
+        val sc = SC(
+            duration = samplingEnd.toEpochMilli() - samplingStart.toEpochMilli(),
+            timestamp = samplingEnd.toEpochMilli(),
+            steps5min = 12,
+            steps10min = 18,
+            steps15min = 24,
+            steps30min = 36,
+            steps60min = 48,
+            steps180min = 60,
+            device = "Test Device",
+            dateCreated = clock.millis(),
+        )
+        whenever(persistenceLayer.insertOrUpdateStepsCount(sc)).thenReturn(PersistenceLayer.TransactionResult())
+        loopHub.storeStepsCount(
+            samplingStart,
+            samplingEnd,
+            12,
+            18,
+            24,
+            36,
+            48,
+            60,
+            "Test Device",
+        )
+        delay(100)
+        verify(persistenceLayer).insertOrUpdateStepsCount(sc)
     }
 }

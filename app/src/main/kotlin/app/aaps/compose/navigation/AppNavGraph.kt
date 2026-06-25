@@ -322,6 +322,10 @@ fun NavGraphBuilder.appNavGraph(
     composable(route = AppRoute.AfrezzaDialog.route) {
         AfrezzaDialogScreen(
             onNavigateBack = { navController.safePopBackStack() },
+            onOpenWizard = {
+                navController.safePopBackStack()
+                navController.navigate(AppRoute.WizardDialog.route)
+            },
             onShowMessage = { message ->
                 // Toast or Snackbar handled by caller
             }
@@ -822,7 +826,10 @@ private fun PluginContentRoute(
             val navigationRequestLambda = remember(onNavigationRequest, navController) {
                 { request: NavigationRequest -> onNavigationRequest(request, navController) }
             }
-            CompositionLocalProvider(LocalPluginNavigationRequest provides navigationRequestLambda) {
+            CompositionLocalProvider(
+                LocalSnackbarHostState provides snackbarHostState,
+                LocalPluginNavigationRequest provides navigationRequestLambda
+            ) {
                 composeContent.Render(
                     setToolbarConfig = { config -> toolbarConfig = config },
                     onNavigateBack = { navController.safePopBackStack() },

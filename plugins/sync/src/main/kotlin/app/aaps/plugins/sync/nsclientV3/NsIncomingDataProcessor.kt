@@ -38,6 +38,8 @@ import app.aaps.core.nssdk.localmodel.treatment.NSTemporaryTarget
 import app.aaps.core.nssdk.localmodel.treatment.NSTherapyEvent
 import app.aaps.core.nssdk.localmodel.treatment.NSTreatment
 import app.aaps.core.ui.R
+import app.aaps.plugins.aps.openAPSAIMI.context.ContextIntentDeserializer
+import app.aaps.plugins.aps.openAPSAIMI.context.ContextManager
 import app.aaps.plugins.sync.nsclientV3.extensions.toBolus
 import app.aaps.plugins.sync.nsclientV3.extensions.toBolusCalculatorResult
 import app.aaps.plugins.sync.nsclientV3.extensions.toCAL
@@ -70,7 +72,7 @@ class NsIncomingDataProcessor @Inject constructor(
     private val profileStoreProvider: Provider<ProfileStore>,
     private val notificationManager: NotificationManager,
     private val nsClientRepository: NSClientRepository,
-    private val contextManager: app.aaps.plugins.aps.openAPSAIMI.context.ContextManager
+    private val contextManager: ContextManager
 ) {
 
     /**
@@ -208,8 +210,7 @@ class NsIncomingDataProcessor @Inject constructor(
                                         if (intentId != null && intentJson != null) {
                                             aapsLogger.debug(LTag.NSCLIENT, "[NS] Parsing AIMI context: $intentId")
 
-                                            val intent = app.aaps.plugins.aps.openAPSAIMI.context.ContextIntentDeserializer
-                                                .deserialize(intentJson, aapsLogger)
+                                            val intent = ContextIntentDeserializer.deserialize(intentJson, aapsLogger)
 
                                             if (intent != null) {
                                                 contextManager.injectContextFromNS(intentId, intent, receivedPin)
