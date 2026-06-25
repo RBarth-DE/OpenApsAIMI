@@ -21,7 +21,6 @@ import app.aaps.core.keys.DoubleKey
 import app.aaps.core.keys.UnitType
 import app.aaps.core.keys.interfaces.DoublePreferenceKey
 import app.aaps.core.keys.decimalPlaces
-import app.aaps.core.keys.decimalPlaces
 import app.aaps.core.keys.interfaces.VisibilityContext
 import app.aaps.core.keys.rangeResId
 import app.aaps.core.keys.step
