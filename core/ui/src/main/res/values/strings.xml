@@ -1071,7 +1071,7 @@
     <string name="actions">Actions</string>
     <string name="status">Status</string>
     <string name="pump_actions">Pump actions</string>
-    <string name="tempbasal_button">TempBasal</string>
+    <string name="tempbasal_button">Temp Basal</string>
     <string name="extended_bolus_button">Extended Bolus</string>
     <string name="tools">Tools</string>
     <string name="device_maintenance">Device Maintenance</string>
