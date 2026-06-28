@@ -1746,6 +1746,7 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
             items = listOf(
                 BooleanKey.OApsAIMIT3cAdaptiveBasalEnabled,
                 DoubleKey.OApsAIMIAdaptiveBasalMaxScaling,  // Read by BasalNeuralLearner.kt::getUniversalBasalMultiplier
+                DoubleKey.OApsAIMIMaxMultiplier,  // multiplicative ceiling for basal (× profile), clamped 1.0–2.5
                 DoubleKey.OApsAIMIGovernanceHypoRateEnter,
                 DoubleKey.OApsAIMIGovernanceHypoRateExit,
                 DoubleKey.OApsAIMIGovernanceHypoBgMgdl,
