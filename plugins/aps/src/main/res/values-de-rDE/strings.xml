@@ -45,13 +45,13 @@
     <string name="smb_disabled_in_preferences">SMB in Einstellungen deaktiviert</string>
     <string name="uam_disabled_in_preferences">UAM in Einstellungen deaktiviert</string>
     <string name="autosens_disabled_in_preferences">Autosens in den Einstellungen deaktiviert</string>
-    
+
     <string name="limiting_iob">Begrenze IOB auf %1$.1f IE wegen %2$s</string>
     <string name="maxvalueinpreferences">Max. Wert in den Einstellungen</string>
     <string name="hardlimit">festem Grenzwert</string>
-    
+
     <string name="insulin_peak">Peak</string>
-    
+
     <string name="smb_frequency_exceeded">Aufgrund eines Bolus in den letzten 3 Minuten wird kein SMB abgegeben</string>
     <string name="pump_not_initialized">Pumpe nicht initialisiert!</string>
     <string name="loop_shortname">LOOP</string>
@@ -75,7 +75,7 @@
     <string name="loop_smb_set_by_pump_label">SMB von Pumpe eingestellt</string>
     <string name="loop_open_mode_min_change_summary" formatted="false">Open Loop schlägt neue Änderungen nur dann vor, wenn die Änderung größer als dieser Wert ist. Der Standard-Wert ist 20%.</string>
     <string name="fallback_smb_no_tdd">Fallback auf SMB. Nicht genügend TDD Werte.</string>
-    
+
     <string name="autotune_description">Hilfe bei möglichen Anpassungen des Profils (ISF, Kohlenhydratverhältnis und Basalraten)</string>
     <string name="autotune_shortname">AT</string>
     <string name="autotune_default_tune_days_title">Anzahl der Tage an Daten</string>
@@ -556,7 +556,7 @@
     <string name="aimi_adv_oref_user_personal_training">Persönliches Modell: Für das Training werden in diesem Zeitfenster mehr beschriftete 4-Stunden-Ergebnisse benötigt.</string>
     <string name="aimi_adv_oref_user_personal_failed">Das persönliche Modell konnte nicht aktualisiert werden; technische Details finden Sie im folgenden Analyseabschnitt.</string>
 
-    
+
     <string name="aimi_auditor_verdict_disabled">Der AI-Auditor ist deaktiviert. Aktivieren Sie ihn in den AIMI-Einstellungen.</string>
     <string name="aimi_auditor_verdict_enabled">Auditor aktiviert – Warten auf ersten Zyklus.</string>
     <string name="aimi_auditor_verdict_offline_noapikey">Kein API-Schlüssel konfiguriert. Fügen Sie den Schlüssel Ihres KI-Anbieters in den AIMI-Einstellungen unter „Auditor“ hinzu.</string>

@@ -2,16 +2,16 @@ package app.aaps.ui.compose.overview.chips
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalMinimumInteractiveComponentSize
@@ -32,6 +32,7 @@ import androidx.compose.ui.unit.dp
 import app.aaps.core.data.model.RM
 import app.aaps.core.ui.compose.AapsSpacing
 import app.aaps.core.ui.compose.AapsTheme
+import app.aaps.core.ui.compose.ExcludeFromJacocoGeneratedReport
 import app.aaps.core.ui.compose.icons.IcLoopClosed
 import app.aaps.core.ui.compose.icons.IcLoopDisabled
 import app.aaps.core.ui.compose.icons.IcLoopDisconnected
@@ -167,6 +168,7 @@ internal fun RM.Mode.toIcon(): ImageVector = when (this) {
     RM.Mode.RESUME            -> IcLoopClosed
 }
 
+@ExcludeFromJacocoGeneratedReport
 @Preview(showBackground = true)
 @Composable
 private fun RunningModeChipClosedLoopPreview() {
@@ -179,6 +181,7 @@ private fun RunningModeChipClosedLoopPreview() {
     }
 }
 
+@ExcludeFromJacocoGeneratedReport
 @Preview(showBackground = true)
 @Composable
 private fun RunningModeChipSuspendedPreview() {
@@ -191,6 +194,7 @@ private fun RunningModeChipSuspendedPreview() {
     }
 }
 
+@ExcludeFromJacocoGeneratedReport
 @Preview(showBackground = true)
 @Composable
 private fun RunningModeChipClosedLoopSmbPreview() {
@@ -204,6 +208,7 @@ private fun RunningModeChipClosedLoopSmbPreview() {
     }
 }
 
+@ExcludeFromJacocoGeneratedReport
 @Preview(showBackground = true)
 @Composable
 private fun RunningModeChipOpenLoopSmbPreview() {

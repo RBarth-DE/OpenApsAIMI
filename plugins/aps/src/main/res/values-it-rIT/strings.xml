@@ -1,6 +1,6 @@
-<?xml version='1.0' encoding='utf-8'?>
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    
+    <!--Autotune-->
     <string name="dyn_isf_adjust_title" formatted="false">Fattore di regolazione per ISF Dinamico (%)</string>
     <string name="openapssmb">OpenAPS SMB</string>
     <string name="openaps_smb_dynamic_isf">ISF Dinamico</string>
@@ -35,13 +35,13 @@
     <string name="smb_disabled_in_preferences">SMB disabilitato nelle preferenze</string>
     <string name="uam_disabled_in_preferences">UAM disabilitato nelle preferenze</string>
     <string name="autosens_disabled_in_preferences">Autosens disabilitato nelle preferenze</string>
-    
+    <!--    Verify if needed in safety-->
     <string name="limiting_iob">Limitazione IOB a %1$.1f U a causa di: %2$s</string>
     <string name="maxvalueinpreferences">valore max nelle preferenze</string>
     <string name="hardlimit">limite fisso</string>
-    
-    <string name="insulin_peak">Picco</string>
-    
+    <!--    Autotune   -->
+    <string name="autotune_peak">Picco</string>
+    <!--    Loop -->
     <string name="smb_frequency_exceeded">Un bolo è stato erogato negli ultimi 3 minuti, SMB ignorato</string>
     <string name="pump_not_initialized">Micro non inizializzato!</string>
     <string name="loop_shortname">LOOP</string>
@@ -65,7 +65,7 @@
     <string name="loop_smb_set_by_pump_label">SMB impostato dal micro</string>
     <string name="fallback_smb_no_tdd">Ripiego a SMB. Dati TDD insufficienti.</string>
     <string name="fallback_to_isf_no_tdd">Torna alla sensibilità del profilo. Dati insufficienti. Motivo: %1$s</string>
-    
+    <!-- Autotune -->
     <string name="autotune_description">Aiuto per potenziali regolazioni del profilo (ISF, rapporto CHO e velocità basali)</string>
     <string name="autotune_shortname">AT</string>
     <string name="autotune_default_tune_days_title">Numero di giorni di dati</string>
@@ -95,36 +95,7 @@
     <string name="autotune_revert_local_profile_message">Ripristinare il profilo %1$s con il profilo di input?</string>
     <string name="autotune_profile_invalid">Profilo non valido</string>
     <string name="pump_disconnected">Micro disconnesso</string>
-    
+    <!--    autoISF -->
     <string name="autoISF_settings_title">Impostazioni AutoISF</string>
     <string name="smb_delivery_settings_title">Impostazioni di erogazione SMB</string>
-
-    <string name="aimi_auditor_verdict_disabled">L\'Auditor AI è disattivato. Attivalo nelle impostazioni di AIMI.</string>
-    <string name="aimi_auditor_verdict_enabled">Auditor abilitato — in attesa del primo ciclo.</string>
-    <string name="aimi_auditor_verdict_offline_noapikey">Nessuna chiave API configurata. Aggiungi la chiave del tuo provider AI in AIMI → Impostazioni Auditor.</string>
-    <string name="aimi_auditor_verdict_offline_no_network">Nessuna connessione di rete. Controlla la connettività del dispositivo.</string>
-    <string name="aimi_auditor_verdict_offline_no_endpoint">Endpoint API AI non disponibile.</string>
-    <string name="aimi_auditor_verdict_offline_dns_fail">Risoluzione DNS fallita. Controlla la rete.</string>
-    <string name="aimi_auditor_verdict_offline">Auditor offline: %1$s</string>
-    <string name="aimi_auditor_verdict_error_timeout">Timeout dell\'ultimo audit.\n Il server AI non ha risposto in tempo.</string>
-    <string name="aimi_auditor_verdict_error_parse">L\'ultimo audit non è andato a buon fine: impossibile analizzare la risposta dell\'IA.</string>
-    <string name="aimi_auditor_verdict_error_http">L\'ultimo audit non è andato a buon fine: errore HTTP dal server IA.</string>
-    <string name="aimi_auditor_verdict_error_exception">L\'ultimo controllo è fallito a causa di un errore imprevisto.</string>
-    <string name="aimi_auditor_verdict_error">Errore dell\'auditor: %1$s</string>
-    <string name="aimi_auditor_verdict_skipped">Monitoraggio Sentinel attivo – situazione normale, non è necessaria alcuna revisione da parte dell\'IA in questo ciclo.</string>
-    <string name="aimi_auditor_verdict_noreport">Nessun rapporto di audit ancora disponibile.\n Stato: %1$s</string>
-    <string name="aimi_auditor_verdict_timestamp">Segnalazione inviata da: %1$s (%2$d minuti fa)</string>
-    <string name="aimi_auditor_verdict_confirm">✅ CONFERMA</string>
-    <string name="aimi_auditor_verdict_soften">⚠️ ATTENUARE</string>
-    <string name="aimi_auditor_verdict_shifttotbr">🔄 PASSA A TBR</string>
-    <string name="aimi_auditor_verdict_confidence">Affidabilità: %1$d%% ⚠️ Modalità degradata</string>
-    <string name="aimi_auditor_verdict_confidence_empty">Affidabilità: nessuna</string>
-    <string name="aimi_adv_error_oom">Memoria insufficiente per completare l\'operazione. Chiudi le altre app e riprova.</string>
-    <string name="aimi_auditor_no_report_title">Nessuna relazione del revisore disponibile</string>
-    <string name="aimi_auditor_no_report_body">Non è stato ancora ricevuto alcun verdetto, né l\'ultima relazione è scaduta (&gt;5 min).</string>
-    <string name="aimi_auditor_empty_message">Messaggio vuoto</string>
-    <string name="aimi_auditor_section_adjustments">ADEGUAMENTI LIMITATI</string>
-    <string name="aimi_auditor_section_risk">SEGNALI DI RISCHIO</string>
-    <string name="aimi_auditor_section_evidence">PROVE</string>
-    <string name="aimi_auditor_section_debug">CONTROLLI DI DEBUG</string>
 </resources>

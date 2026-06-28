@@ -33,6 +33,7 @@ import androidx.compose.ui.window.DialogProperties
 import androidx.core.net.toUri
 import app.aaps.core.interfaces.configuration.ExternalOptions
 import app.aaps.core.ui.R
+import app.aaps.core.ui.compose.ExcludeFromJacocoGeneratedReport
 import app.aaps.core.ui.compose.AppBrandIcon
 
 data class AboutDialogData(
@@ -119,6 +120,7 @@ fun AboutAlertDialog(
     )
 }
 
+@ExcludeFromJacocoGeneratedReport
 @Preview(showBackground = true)
 @Composable
 private fun AboutAlertDialogPreview() {
