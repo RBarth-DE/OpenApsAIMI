@@ -146,7 +146,6 @@ enum class BooleanKey(
     ApsAutoIsfLowTtLowersSens("low_temptarget_lowers_sensitivity", false, R.string.pref_title_aps_low_tt_lowers_sensitivity, R.string.pref_summary_aps_low_tt_lowers_sensitivity, defaultedBySM = true),
     ApsUseAutoIsfWeights("openapsama_enable_autoISF", true, R.string.pref_title_aps_use_autoisf_weights, R.string.pref_summary_aps_use_autoisf_weights, defaultedBySM = true),
     ApsAutoIsfSmbOnEvenTarget("Enable alternative activation of SMB always", false, R.string.pref_title_aps_smb_on_even_target, R.string.pref_summary_aps_smb_on_even_target, defaultedBySM = true),
-    ApsActivityDetection("activity_detection", false, defaultedBySM = true),
     FslCalibrationTrigger("calibration_stops_SMB", false, defaultedBySM = true),
     FslCalibrationEnd("calibration_end", false, defaultedBySM = true),
 

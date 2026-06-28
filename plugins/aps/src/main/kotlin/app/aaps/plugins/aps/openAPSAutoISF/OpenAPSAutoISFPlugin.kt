@@ -74,6 +74,10 @@ import app.aaps.plugins.aps.events.EventOpenAPSUpdateGui
 import app.aaps.plugins.aps.events.EventResetOpenAPSGui
 import app.aaps.plugins.aps.openAPSAutoISF.PhoneMovementDetector
 import app.aaps.plugins.aps.openAPSAIMI.StepService
+import app.aaps.plugins.aps.openAPSAIMI.physio.AIMIInsulinDecisionAdapterMTR
+import app.aaps.plugins.aps.openAPSAIMI.steps.UnifiedActivityProviderMTR
+import app.aaps.plugins.aps.openAPSAIMI.steps.AIMIStepsManagerMTR
+import app.aaps.plugins.aps.openAPSAIMI.keys.AimiStringKey
 import app.aaps.plugins.aps.keys.ApsIntentKey
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
@@ -124,6 +128,9 @@ open class OpenAPSAutoISFPlugin @Inject constructor(
     private val apsResultProvider: Provider<APSResult>,
     private val ch: ConcentrationHelper,
     private val automationStateService: AutomationStateInterface,
+    private val unifiedActivityProvider: UnifiedActivityProviderMTR, // 🏃 MTR Activity Provider
+    private val physioAdapter: AIMIInsulinDecisionAdapterMTR, // 🏥 MTR Physio Adapter
+    private val stepsManager: AIMIStepsManagerMTR, // 🏃 MTR Steps Manager
     private val loopProvider: Provider<Loop>,
 ) : PluginBaseWithPreferences(
     PluginDescription()
@@ -167,7 +174,7 @@ open class OpenAPSAutoISFPlugin @Inject constructor(
     private val smb_delivery_ratio_min; get() = preferences.get(DoubleKey.ApsAutoIsfSmbDeliveryRatioMin)
     private val smb_delivery_ratio_max; get() = preferences.get(DoubleKey.ApsAutoIsfSmbDeliveryRatioMax)
     private val smb_delivery_ratio_bg_range
-        get() = if (preferences.get(DoubleKey.ApsAutoIsfSmbDeliveryRatioBgRange) < 10.0) preferences.get(DoubleKey.ApsAutoIsfSmbDeliveryRatioBgRange) * GlucoseUnit.MMOLL_TO_MGDL else preferences.get(DoubleKey.ApsAutoIsfSmbDeliveryRatioBgRange)
+        get() = if (preferences.get(DoubleKey.ApsAutoIsfSmbDeliveryRatioBgRange) < 10.0) preferences.get(DoubleKey.ApsAutoIsfSmbDeliveryRatioBgRange) * Constants.MMOLL_TO_MGDL else preferences.get(DoubleKey.ApsAutoIsfSmbDeliveryRatioBgRange)
     val smbMaxRangeExtension; get() = preferences.get(DoubleKey.ApsAutoIsfSmbMaxRangeExtension)
     private val enableSMB_EvenOn_OddOff_always; get() = preferences.get(BooleanKey.ApsAutoIsfSmbOnEvenTarget) // for profile target
     val iobThresholdPercent; get() = preferences.get(IntKey.ApsAutoIsfIobThPercent)
@@ -222,6 +229,25 @@ open class OpenAPSAutoISFPlugin @Inject constructor(
             count++
         }
         aapsLogger.debug(LTag.APS, "Loaded $count variable sensitivity values from database")
+
+        // 🏃 Start MTR Steps Manager (shared with AIMI — ref-counted)
+        try {
+            stepsManager.ensureStarted()
+            aapsLogger.info(LTag.APS, "✅ AutoISF: MTR Steps Manager active")
+        } catch (e: Exception) {
+            aapsLogger.error(LTag.APS, "❌ AutoISF: Failed to start MTR Steps Manager", e)
+        }
+    }
+
+    override suspend fun onStop() {
+        // 🏃 Release MTR Steps Manager reference
+        try {
+            stepsManager.ensureStopped()
+            aapsLogger.info(LTag.APS, "🛑 AutoISF: MTR Steps Manager ref released")
+        } catch (e: Exception) {
+            aapsLogger.error(LTag.APS, "Error releasing MTR Steps Manager", e)
+        }
+        super.onStop()
     }
 
     override fun supportsDynamicIsf() = true //: Boolean = preferences.get(BooleanKey.ApsUseAutoIsf)
@@ -448,7 +474,7 @@ open class OpenAPSAutoISFPlugin @Inject constructor(
             exercise_mode = SMBDefaults.exercise_mode,
             half_basal_exercise_target = preferences.get(IntKey.ApsAutoIsfHalfBasalExerciseTarget),
             // mod activity mode
-            activity_detection = preferences.get(BooleanKey.ApsActivityDetection),
+            activity_detection = preferences.get(BooleanKey.ActivityMonitorDetection),
             recent_steps_5_minutes  = recentSteps5Minutes,
             recent_steps_10_minutes = recentSteps10Minutes,
             recent_steps_15_minutes = recentSteps15Minutes,
@@ -701,13 +727,31 @@ open class OpenAPSAutoISFPlugin @Inject constructor(
         val timeMillis60 = now - 61 * 60 * 1000
 
         if (preferences.get(BooleanKey.ActivityMonitorUseSteps)) {
-            val allStepsCounts = stepsCountsCached(now)
+            val rawStepsCounts = stepsCountsCached(now)
+
+            // 🏃 MTR source-mode filtering (shared with AIMI's ActivitySourceMode setting)
+            val sourceMode = preferences.get(AimiStringKey.ActivitySourceMode)
+            val allStepsCounts = when (sourceMode) {
+                UnifiedActivityProviderMTR.MODE_PREFER_WEAR ->
+                    rawStepsCounts.filter { UnifiedActivityProviderMTR.isWearDevice(it.device) }
+                        .ifEmpty { rawStepsCounts.filter { it.device == "Garmin-Watchface" || it.device == "Garmin" } }
+                UnifiedActivityProviderMTR.MODE_HEALTH_CONNECT_ONLY ->
+                    rawStepsCounts.filter { it.device == "HealthConnect" }
+                UnifiedActivityProviderMTR.MODE_DISABLED ->
+                    emptyList()
+                else -> // MODE_AUTO_FALLBACK (default): Garmin > Wear > HC/Phone
+                    rawStepsCounts.filter { it.device == "Garmin-Watchface" || it.device == "Garmin" }
+                        .ifEmpty {
+                            rawStepsCounts.filter { UnifiedActivityProviderMTR.isWearDevice(it.device) }
+                                .ifEmpty { rawStepsCounts.filter { it.device == "HealthConnect" || it.device == "PhoneSensor" } }
+                        }
+            }
 
             if (allStepsCounts.isNotEmpty()) {
                 val lastSteps = allStepsCounts.maxByOrNull { it.timestamp }
-                aapsLogger.debug(LTag.APS, "Activity Monitor: Found ${allStepsCounts.size} records. Last: ${lastSteps?.steps5min} steps @ ${java.util.Date(lastSteps?.timestamp ?: 0)}")
+                aapsLogger.debug(LTag.APS, "Activity Monitor: Found ${allStepsCounts.size} records (mode=$sourceMode). Last: ${lastSteps?.steps5min} steps @ ${java.util.Date(lastSteps?.timestamp ?: 0)}")
             } else {
-                aapsLogger.debug(LTag.APS, "Activity Monitor: No records found in last 210 mins")
+                aapsLogger.debug(LTag.APS, "Activity Monitor: No records found in last 210 mins (mode=$sourceMode)")
             }
 
             val valid5 = allStepsCounts.filter { it.timestamp >= timeMillis5 }.maxByOrNull { it.timestamp }
@@ -780,9 +824,9 @@ open class OpenAPSAutoISFPlugin @Inject constructor(
         val lastAppStart = preferences.get(LongKey.AppStart)
         val time_since_start = (dateUtil.now() - lastAppStart).milliseconds.inWholeMinutes
 
-        // ApsActivityDetection — Enable Activity Monitor
+        // ActivityMonitorDetection — Enable Activity Monitor
         // Master switch. Off → activityRatio = 1.0 at all times, no effect on ISF/Basal.
-        val activityDetection = preferences.get(BooleanKey.ApsActivityDetection)
+        val activityDetection = preferences.get(BooleanKey.ActivityMonitorDetection)
         // ActivityScaleFactor — Activity Scaling
         // Amplifies the sensitivity boost when movement is detected.
         // + → greater ISF increase during activity (activityRatio decreases more sharply, more insulin)
@@ -937,6 +981,23 @@ open class OpenAPSAutoISFPlugin @Inject constructor(
                 }
             } else autosensResult.sensResult = "autosens disabled"
             sensitivityRatio = autosensResult.ratio
+        }
+        // 🏥 AIMI Physio modulation: sleep/HRV/inflammation-based ISF adjustments
+        // (shared MTR pipeline — benefits both AIMI and AutoISF)
+        try {
+            val physioMults = physioAdapter.getMultipliers(
+                currentBG = glucose_status?.glucose ?: 100.0,
+                currentDelta = glucose_status?.delta ?: 0.0,
+                iob = 0.0,
+                cob = 0.0,
+            )
+            if (!physioMults.isNeutral()) {
+                val before = sensitivityRatio
+                sensitivityRatio *= physioMults.isfFactor
+                aapsLogger.debug(LTag.APS, "🏥 AutoISF Physio: sensitivityRatio ${String.format("%.2f", before)} → ${String.format("%.2f", sensitivityRatio)} (isfFactor=${physioMults.isfFactor})")
+            }
+        } catch (e: Exception) {
+            aapsLogger.error(LTag.APS, "AutoISF physio modulation failed", e)
         }
         var skipWeights = false
         val calibrationMinutes = calibrationDuration - (dateUtil.now() - preferences.get(LongKey.FslCalibrationStart)) / 60000
@@ -1421,7 +1482,8 @@ open class OpenAPSAutoISFPlugin @Inject constructor(
                     BooleanKey.ActivityMonitorOvernight,
                     IntKey.ActivityMonitorIdleStart,
                     IntKey.ActivityMonitorIdleEnd,
-                    BooleanKey.ActivityMonitorUseSteps
+                    BooleanKey.ActivityMonitorUseSteps,
+                    AimiStringKey.ActivitySourceMode
                 )
             ),
             PreferenceSubScreenDef(
