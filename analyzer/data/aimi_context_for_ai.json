@@ -1,6 +1,6 @@
 {
   "version": "2.2",
-  "generated_at": "2026-06-24T21:22:48.641654+00:00",
+  "generated_at": "2026-06-28T17:20:02.271223+00:00",
   "algorithm_overview": {
     "name": "AIMI (AI-powered Modular Insulin)",
     "base": "OpenAPS oref1 with extensive extensions",
@@ -431,7 +431,7 @@
       "workaround": "None — parameters are ineffective."
     }
   ],
-  "source_commit": "6f8b4fe4768b9ffb224bdad304c0c0e4fcc28c0d",
+  "source_commit": "55e596713b624b57d5968c2e4992d61052dfd402",
   "parameter_knowledge": [
     {
       "key": "AIMI_UAM_CONFIDENCE",
@@ -489,9 +489,9 @@
       "effect_low": "Lower value — less insulin/reduced effect",
       "feature_group": "adaptive_basal",
       "impact": "medium",
-      "settings_path": "AIMI → Preferences user → Adaptive Basal",
+      "settings_path": "AIMI → Preferences user → Universal Adaptive Basal",
       "usage_type": "",
-      "function": "bootstrapPhysiologyAfterEarlyTick"
+      "function": "aimiComposeAdaptiveBasalSubScreen"
     },
     {
       "key": "OApsAIMI_Enable_night",
@@ -1965,7 +1965,7 @@
       "impact": "high",
       "settings_path": "AIMI → Preferences user → T3C Brittle Mode Settings",
       "usage_type": "",
-      "function": "applyBasalConstraints"
+      "function": "invoke"
     },
     {
       "key": "key_aimi_t3c_cfrd_cob_delay_min",
@@ -2242,6 +2242,18 @@
       "settings_path": "AIMI → Preferences user → 🤖 Assistant AI",
       "usage_type": "",
       "function": "aimiComposeUserPreferenceItems"
+    },
+    {
+      "key": "key_enable_basal",
+      "name": "OApsAIMIEnableBasal",
+      "logic_summary": "Enables/disables key_enable_basal. Gate flag for feature control.",
+      "effect_high": "Feature is active — associated functionality runs",
+      "effect_low": "Feature is inactive — associated functionality is disabled",
+      "feature_group": "core",
+      "impact": "medium",
+      "settings_path": "AIMI → Preferences user → Core",
+      "usage_type": "",
+      "function": "aimiComposeCoreSmbSubScreen"
     },
     {
       "key": "key_mindeviation_autodrive_mode",
@@ -2828,6 +2840,16 @@
       "settings_path": "AIMI → Preferences user → Core parameters",
       "usage_type": "",
       "function": "computeEffectiveTDD"
+    },
+    {
+      "key": "key_use_AimiForceLimits",
+      "name": "OApsAIMIforcelimits",
+      "logic_summary": "Boolean switch for key_use_ForceLimits.",
+      "effect_high": "Feature is active — associated functionality runs",
+      "effect_low": "Feature is inactive — associated functionality is disabled",
+      "feature_group": "core",
+      "impact": "medium",
+      "settings_path": "AIMI → Preferences user → Core parameters"
     },
     {
       "key": "key_use_AimiPregnancy",

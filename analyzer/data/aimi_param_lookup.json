@@ -200,6 +200,10 @@
     "effect_low": "Lower value — less insulin/reduced effect",
     "used_in": [
       {
+        "file": "OpenAPSAIMIPlugin.kt",
+        "function": "aimiComposeAdaptiveBasalSubScreen"
+      },
+      {
         "file": "DetermineBasalAIMI2.kt",
         "function": "bootstrapPhysiologyAfterEarlyTick"
       }
@@ -3792,7 +3796,7 @@
     "used_in": [
       {
         "file": "OpenAPSAIMIPlugin.kt",
-        "function": "applyBasalConstraints"
+        "function": "invoke"
       },
       {
         "file": "DetermineBasalAIMI2.kt",
@@ -4405,6 +4409,29 @@
       {
         "file": "SmbInstructionExecutor.kt",
         "function": "execute"
+      }
+    ]
+  },
+  "key_enable_basal": {
+    "key": "key_enable_basal",
+    "name": "OApsAIMIEnableBasal",
+    "type": "Boolean",
+    "feature_group": "core",
+    "summary": "Enables/disables key_enable_basal. Gate flag for feature control.",
+    "orphaned": false,
+    "is_gate": false,
+    "negative_gate_key": null,
+    "impact": "medium",
+    "effect_high": "Feature is active — associated functionality runs",
+    "effect_low": "Feature is inactive — associated functionality is disabled",
+    "used_in": [
+      {
+        "file": "OpenAPSAIMIPlugin.kt",
+        "function": "aimiComposeCoreSmbSubScreen"
+      },
+      {
+        "file": "DetermineBasalAIMI2.kt",
+        "function": "runTickClockMaxSmbTirCarbAndGlucoseCopy"
       }
     ]
   },
@@ -5716,6 +5743,19 @@
         "function": "runEarlyDetermineBasalStages"
       }
     ]
+  },
+  "key_use_AimiForceLimits": {
+    "key": "key_use_AimiForceLimits",
+    "name": "OApsAIMIforcelimits",
+    "type": "Boolean",
+    "feature_group": "core",
+    "summary": "Boolean switch for key_use_ForceLimits.",
+    "orphaned": false,
+    "is_gate": true,
+    "negative_gate_key": null,
+    "impact": "medium",
+    "effect_high": "Feature is active — associated functionality runs",
+    "effect_low": "Feature is inactive — associated functionality is disabled"
   },
   "key_use_AimiPregnancy": {
     "key": "key_use_AimiPregnancy",

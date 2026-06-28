@@ -686,8 +686,22 @@ async function init(){
   applySavedConfig();
   // Restore export age from last import (survives page reload / NUC restart)
   const storedTs=localStorage.getItem('aimi_export_timestamp');
-  if(storedTs){
+  if(storedTs && parseFloat(storedTs) > 0){
     importExportAgeHours=(Date.now()-parseFloat(storedTs))/(3600*1000);
+  } else {
+    // Fallback: derive from most recent snapshot label (format: "DD.MM.YYYY HH:MM")
+    try {
+      const snaps=JSON.parse(localStorage.getItem('aimi_snapshots')||'[]');
+      if(snaps.length>0){
+        // Snapshot timestamp is stored as Date.now() at import time
+        const snapTs=snaps[0].timestamp; // most recent
+        if(snapTs && snapTs>0){
+          importExportAgeHours=(Date.now()-snapTs)/(3600*1000);
+          // Save it properly so future reloads work
+          localStorage.setItem('aimi_export_timestamp', String(snapTs));
+        }
+      }
+    } catch(e){ /* ignore */ }
   }
   try{
     const d=await apiFetch('/api/parameters');

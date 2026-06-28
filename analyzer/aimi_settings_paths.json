@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-06-24T21:22:42.825614+00:00",
-  "source_commit": "6f8b4fe4768b9ffb224bdad304c0c0e4fcc28c0d",
+  "generated_at": "2026-06-28T17:19:38.515637+00:00",
+  "source_commit": "55e596713b624b57d5968c2e4992d61052dfd402",
   "paths": {
     "openapsma_max_basal": {
       "path": "AIMI → Advanced Settings",
@@ -1194,6 +1194,15 @@
       "gate_key": null
     },
     "key_aimi_adaptive_basal_max_scaling": {
+      "path": "AIMI → Preferences user → Universal Adaptive Basal",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "Universal Adaptive Basal"
+      ],
+      "gate_key": null
+    },
+    "OApsAIMIMaxMultiplier": {
       "path": "AIMI → Preferences user → Universal Adaptive Basal",
       "screen_titles": [
         "AIMI",

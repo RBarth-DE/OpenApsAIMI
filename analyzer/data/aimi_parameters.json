@@ -1,13 +1,13 @@
 {
   "version": "3.0",
-  "source_commit": "6f8b4fe4768b9ffb224bdad304c0c0e4fcc28c0d",
-  "generated_at": "2026-06-24T21:22:48.543591+00:00",
-  "total": 273,
-  "active": 227,
+  "source_commit": "55e596713b624b57d5968c2e4992d61052dfd402",
+  "generated_at": "2026-06-28T17:20:02.218831+00:00",
+  "total": 275,
+  "active": 229,
   "orphaned": 46,
-  "with_used_in": 212,
+  "with_used_in": 213,
   "with_negative_gate": 9,
-  "with_settings_path": 217,
+  "with_settings_path": 219,
   "parameters": [
     {
       "key": "AIMI_UAM_CONFIDENCE",
@@ -232,6 +232,10 @@
       "min": 1.0,
       "used_in": [
         {
+          "file": "OpenAPSAIMIPlugin.kt",
+          "function": "aimiComposeAdaptiveBasalSubScreen"
+        },
+        {
           "file": "DetermineBasalAIMI2.kt",
           "function": "bootstrapPhysiologyAfterEarlyTick"
         }
@@ -245,7 +249,7 @@
       "impact": "medium",
       "feature_group": "adaptive_basal",
       "is_gate": false,
-      "settings_path": "AIMI → Preferences user → Adaptive Basal",
+      "settings_path": "AIMI → Preferences user → Universal Adaptive Basal",
       "settings_gate": null
     },
     {
@@ -4617,7 +4621,7 @@
       "used_in": [
         {
           "file": "OpenAPSAIMIPlugin.kt",
-          "function": "applyBasalConstraints"
+          "function": "invoke"
         },
         {
           "file": "DetermineBasalAIMI2.kt",
@@ -5335,6 +5339,32 @@
       "feature_group": "core",
       "is_gate": false,
       "settings_path": "AIMI → Preferences user → 🤖 Assistant AI",
+      "settings_gate": null
+    },
+    {
+      "key": "key_enable_basal",
+      "name": "OApsAIMIEnableBasal",
+      "type": "Boolean",
+      "used_in": [
+        {
+          "file": "OpenAPSAIMIPlugin.kt",
+          "function": "aimiComposeCoreSmbSubScreen"
+        },
+        {
+          "file": "DetermineBasalAIMI2.kt",
+          "function": "runTickClockMaxSmbTirCarbAndGlucoseCopy"
+        }
+      ],
+      "orphaned": false,
+      "negative_gate_key": null,
+      "negative_gate_note": null,
+      "logic_summary": "Enables/disables key_enable_basal. Gate flag for feature control.",
+      "effect_high": "Feature is active — associated functionality runs",
+      "effect_low": "Feature is inactive — associated functionality is disabled",
+      "impact": "medium",
+      "feature_group": "core",
+      "is_gate": false,
+      "settings_path": "AIMI → Preferences user → Core",
       "settings_gate": null
     },
     {
@@ -6891,6 +6921,22 @@
       "impact": "medium",
       "feature_group": "core",
       "is_gate": false,
+      "settings_path": "AIMI → Preferences user → Core parameters",
+      "settings_gate": null
+    },
+    {
+      "key": "key_use_AimiForceLimits",
+      "name": "OApsAIMIforcelimits",
+      "type": "Boolean",
+      "orphaned": false,
+      "negative_gate_key": null,
+      "negative_gate_note": null,
+      "logic_summary": "Boolean switch for key_use_ForceLimits.",
+      "effect_high": "Feature is active — associated functionality runs",
+      "effect_low": "Feature is inactive — associated functionality is disabled",
+      "impact": "medium",
+      "feature_group": "core",
+      "is_gate": true,
       "settings_path": "AIMI → Preferences user → Core parameters",
       "settings_gate": null
     },
