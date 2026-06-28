@@ -570,8 +570,8 @@
     <string name="aimi_summary_aimi_uam_confidence">Confidence threshold for UAM meal detection.</string>
     <string name="aimi_summary_aps_dyn_isf_adjustment_factor">Controls aps dyn isf adjustment factor.</string>
     <string name="aimi_summary_o_aps_a_i_m_i_high_bg">High-BG threshold for severity classification and trajectory release.</string>
-    <string name="aimi_summary_o_aps_a_i_m_inight">Controls .</string>
-    <string name="aimi_summary_aimi_auditor_enabled">Controls auditor enabled.</string>
+    <string name="aimi_summary_o_aps_a_i_m_inight">Night-time SMB reactivity boost at 23:00 when BG is flat and IOB is low">Shortens the SMB interval at 23:00 when BG is stable (delta &lt; 10) and IOB is low, allowing slightly more overnight correction.</string>
+    <string name="aimi_summary_aimi_auditor_enabled">Master switch for the AI Auditor that reviews every loop decision">Master switch for the AI Auditor — when enabled, every loop decision (ISF, basal, SMB) is independently reviewed and scored for safety.</string>
     <string name="aimi_summary_aimi_auditor_max_per_hour">Controls auditor max per hour.</string>
     <string name="aimi_summary_aimi_auditor_min_confidence">Controls auditor min confidence.</string>
     <string name="aimi_summary_aimi_auditor_timeout_seconds">Controls auditor timeout seconds.</string>
