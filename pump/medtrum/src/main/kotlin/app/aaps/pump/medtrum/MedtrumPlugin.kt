@@ -297,7 +297,7 @@ class MedtrumPlugin @Inject constructor(
 
         aapsLogger.debug(LTag.PUMP, "deliverTreatment: " + detailedBolusInfo.insulin + "U")
         if (!isInitialized()) return pumpEnactResultProvider.get().success(false).enacted(false)
-        detailedBolusInfo.insulin = constraintChecker.applyBolusConstraints(ConstraintObject(detailedBolusInfo.insulin, aapsLogger)).value()
+        // Already constrained in IU (queue) and in cU (PumpWithConcentration boundary); no re-apply here.
         aapsLogger.debug(LTag.PUMP, "deliverTreatment: Delivering bolus: " + detailedBolusInfo.insulin + "U")
         val connectionOK = medtrumService?.setBolus(detailedBolusInfo) == true
         val result = pumpEnactResultProvider.get()

@@ -934,14 +934,6 @@ class ComboV2Plugin @Inject constructor(
         require(detailedBolusInfo.carbs == 0.0) { detailedBolusInfo.toString() }
         require(detailedBolusInfo.insulin > 0) { detailedBolusInfo.toString() }
 
-        val oldInsulinAmount = detailedBolusInfo.insulin
-        detailedBolusInfo.insulin = constraintChecker
-            .applyBolusConstraints(ConstraintObject(detailedBolusInfo.insulin, aapsLogger))
-            .value()
-        aapsLogger.debug(
-            LTag.PUMP,
-            "Applied bolus constraints:  old insulin amount: $oldInsulinAmount  new: ${detailedBolusInfo.insulin}"
-        )
 
         val acquiredPump = getAcquiredPump()
 
