@@ -234,7 +234,7 @@ class DanaRSServiceIntegrationTest : TestBase() {
         }
         danaRSService.danaRSPacketBolusGetCIRCFArray = Provider { DanaRSPacketBolusGetCIRCFArray(aapsLogger, danaPump) }
         danaRSService.danaRSPacketOptionGetUserOption = Provider { DanaRSPacketOptionGetUserOption(aapsLogger, danaPump) }
-        danaRSService.danaRSPacketGeneralInitialScreenInformation = Provider { DanaRSPacketGeneralInitialScreenInformation(aapsLogger, danaPump) }
+        danaRSService.danaRSPacketGeneralInitialScreenInformation = Provider { DanaRSPacketGeneralInitialScreenInformation(aapsLogger, danaPump, notificationManager) }
         danaRSService.danaRSPacketBolusGetStepBolusInformation = Provider { DanaRSPacketBolusGetStepBolusInformation(aapsLogger, dateUtil, danaPump) }
         danaRSService.danaRSPacketOptionGetPumpTime = Provider { DanaRSPacketOptionGetPumpTime(aapsLogger, dateUtil, danaPump) }
         danaRSService.danaRSPacketOptionGetPumpUTCAndTimeZone = Provider {

@@ -191,7 +191,7 @@ class BLECommIntegrationTest : TestBase() {
         state.currentBasal = 0.85
         state.iob = 2.5
 
-        val packet = DanaRSPacketGeneralInitialScreenInformation(aapsLogger, danaPump)
+        val packet = DanaRSPacketGeneralInitialScreenInformation(aapsLogger, danaPump, notificationManager)
         bleComm.sendMessage(packet)
 
         assertThat(packet.isReceived).isTrue()
@@ -364,7 +364,7 @@ class BLECommIntegrationTest : TestBase() {
         bleComm.sendMessage(setPacket)
 
         // Verify via screen info
-        val screenPacket = DanaRSPacketGeneralInitialScreenInformation(aapsLogger, danaPump)
+        val screenPacket = DanaRSPacketGeneralInitialScreenInformation(aapsLogger, danaPump, notificationManager)
         bleComm.sendMessage(screenPacket)
 
         assertThat(screenPacket.isReceived).isTrue()
@@ -448,7 +448,7 @@ class BLECommIntegrationTest : TestBase() {
             .with(extendedAmount = 1.0, extendedBolusDurationInHalfHours = 2)
         bleComm.sendMessage(setPacket)
 
-        val screenPacket = DanaRSPacketGeneralInitialScreenInformation(aapsLogger, danaPump)
+        val screenPacket = DanaRSPacketGeneralInitialScreenInformation(aapsLogger, danaPump, notificationManager)
         bleComm.sendMessage(screenPacket)
 
         assertThat(screenPacket.isReceived).isTrue()
@@ -554,7 +554,7 @@ class BLECommIntegrationTest : TestBase() {
         assertThat(emulatorTransport.pumpState.isTempBasalRunning).isTrue()
 
         // Get initial screen (should reflect temp basal)
-        val screenPacket = DanaRSPacketGeneralInitialScreenInformation(aapsLogger, danaPump)
+        val screenPacket = DanaRSPacketGeneralInitialScreenInformation(aapsLogger, danaPump, notificationManager)
         bleComm.sendMessage(screenPacket)
         assertThat(screenPacket.isReceived).isTrue()
         assertThat(screenPacket.isTempBasalInProgress).isTrue()
@@ -585,7 +585,7 @@ class BLECommIntegrationTest : TestBase() {
         state.bolusStep = 0.05
 
         // 1. Initial screen info
-        val screen = DanaRSPacketGeneralInitialScreenInformation(aapsLogger, danaPump)
+        val screen = DanaRSPacketGeneralInitialScreenInformation(aapsLogger, danaPump, notificationManager)
         bleComm.sendMessage(screen)
         assertThat(screen.isReceived).isTrue()
         assertThat(danaPump.reservoirRemainingUnits).isWithin(0.01).of(100.0)
