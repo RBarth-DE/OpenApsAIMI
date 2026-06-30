@@ -436,8 +436,24 @@ enum class DoubleKey(
     OApsAIMIsleepFactor("key_oaps_aimi_sleep_factor", 60.0, 1.0, 150.0),
 
     OApsAIMIMealPrebolus("key_prebolus_meal_mode", 2.0, 0.1, 20.0),
-    OApsAIMIautodrivePrebolus("key_prebolus_autodrive_mode", 1.0, 0.1, 20.0),
-    OApsAIMIautodrivesmallPrebolus("key_prebolussmall_autodrive_mode", 0.1, 0.05, 20.0),
+    OApsAIMIautodrivePrebolus(
+        key = "key_prebolus_autodrive_mode",
+        defaultValue = 1.0,
+        min = 0.1,
+        max = 20.0,
+        titleResId = R.string.pref_title_aimi_autodrive_prebolus,
+        summaryResId = R.string.aimi_summary_o_aps_a_i_m_iautodrive_prebolus,
+        dependency = BooleanKey.OApsAIMIautoDriveActive,
+    ),
+    OApsAIMIautodrivesmallPrebolus(
+        key = "key_prebolussmall_autodrive_mode",
+        defaultValue = 0.1,
+        min = 0.05,
+        max = 20.0,
+        titleResId = R.string.pref_title_aimi_autodrive_small_prebolus,
+        summaryResId = R.string.aimi_summary_o_aps_a_i_m_iautodrivesmall_prebolus,
+        dependency = BooleanKey.OApsAIMIautoDriveActive,
+    ),
 
     OApsAIMIcombinedDelta("key_combinedDelta_autodrive_mode", 1.0, 0.1, 20.0),
     OApsAIMIAutodriveDeviation("key_mindeviation_autodrive_mode", 1.0, 0.1, 5.0),

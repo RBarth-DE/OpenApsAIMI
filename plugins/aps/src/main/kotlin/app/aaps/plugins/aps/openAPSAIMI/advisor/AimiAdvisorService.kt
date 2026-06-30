@@ -158,7 +158,7 @@ class AimiAdvisorService {
             summary = formatSummary(context.metrics),
             advisorContext = context,
             orefAnalysis = orefInsight,
-            harmoniaSimulation = context.harmoniaSimulation,
+            harmoniaDecision = context.harmoniaDecision,
         )
     }
 
@@ -198,7 +198,7 @@ class AimiAdvisorService {
             lunchFactor = preferences.get(DoubleKey.OApsAIMILunchFactor),
             unifiedReactivityFactor = unifiedReactivityLearner?.globalFactor ?: 1.0,
             autodriveMaxBasal = preferences.get(DoubleKey.autodriveMaxBasal),
-            autodriveEnabled = preferences.get(BooleanKey.OApsAIMIautoDrive),
+            autodriveEnabled = preferences.get(BooleanKey.OApsAIMIautoDriveActive),
             mpcInsulinUPerKgPerStep = preferences.get(DoubleKey.OApsAIMIMpcInsulinUPerKgPerStep),
         )
         
@@ -230,7 +230,7 @@ class AimiAdvisorService {
             profile = profileSnapshot,
             prefs = prefsSnapshot,
             pkpdPrefs = pkpdSnapshot,
-            harmoniaSimulation = PatientStateRuntimeRepository.getLatest()?.harmoniaSimulation,
+            harmoniaDecision = PatientStateRuntimeRepository.getLatest()?.harmoniaDecision,
         )
     }
 
@@ -460,7 +460,7 @@ class AimiAdvisorService {
             profile = AimiProfileSnapshot(0.0,0.0,0.0,0.0, 5.0, 12.0),
             prefs = AimiPrefsSnapshot(0.0, 0.0, 0.0, 0.0, false, 0.065),
             pkpdPrefs = PkpdPrefsSnapshot(false,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0),
-            harmoniaSimulation = PatientStateRuntimeRepository.getLatest()?.harmoniaSimulation,
+            harmoniaDecision = PatientStateRuntimeRepository.getLatest()?.harmoniaDecision,
         )
     }
 
@@ -840,7 +840,7 @@ class AimiAdvisorService {
             )
         }
 
-        if (prefs.get(BooleanKey.OApsAIMIautoDrive)) {
+        if (prefs.get(BooleanKey.OApsAIMIautoDriveActive)) {
             if (hypoFocus && ctx.metrics.timeBelow70 >= 0.055) {
                 recs.add(
                     AimiRecommendation(

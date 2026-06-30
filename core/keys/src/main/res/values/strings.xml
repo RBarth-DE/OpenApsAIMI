@@ -465,6 +465,10 @@
     <string name="pref_summary_xdripOM">Enable support for XDrip one minute BG values</string>
     <string name="pref_title_aimi_autodrive_v3_authoritative">Autodrive V3 authoritative SMB</string>
     <string name="pref_summary_aimi_autodrive_v3_authoritative">When Autodrive V3 is active and issues a safe SMB/TBR, do not recompute SMB with the legacy MPC/PI blender (prevents post-hypo overshoot). Disable only for debugging.</string>
+    <string name="pref_title_aimi_autodrive_aggressive_smb_floor">Aggressive-rise SMB floor</string>
+    <string name="pref_summary_aimi_autodrive_aggressive_smb_floor">On a confirmed aggressive rise, guarantee at least the user-defined Autodrive prebolus amount, delivered as a floor on top of the model SMB. Always re-bounded by Autodrive V3 safety (post-hypo, max SMB, IOB headroom, correction aggression).</string>
+    <string name="pref_title_aimi_autodrive_prebolus">Meal pre-bolus</string>
+    <string name="pref_title_aimi_autodrive_small_prebolus">Light snack pre-bolus</string>
     <string name="pref_title_aimi_hyper_trajectory_release">Hyper trajectory SMB release (HTR)</string>
     <string name="pref_summary_aimi_hyper_trajectory_release">When Autodrive V3 is on, lift V3 micro-bolus using scenario projection and trajectory on credible hyper rise. Trigger is not a fixed 200 mg/dL threshold.</string>
     <string name="pref_title_aimi_hyper_trajectory_release_aggressive">HTR aggressive floors</string>
@@ -714,14 +718,14 @@
     <string name="aimi_summary_o_aps_a_i_m_i_dinner_prebolus2">Prebolus window for dinner mode P2 (minutes).</string>
     <string name="aimi_summary_o_aps_a_i_m_i_lunch_prebolus2">Prebolus window for lunch mode P2 (minutes).</string>
     <string name="aimi_summary_o_aps_a_i_m_i_b_f_prebolus">Prebolus window for breakfast mode P1 (minutes).</string>
-    <string name="aimi_summary_o_aps_a_i_m_iautodrive_prebolus">Controls prebolus.</string>
+    <string name="aimi_summary_o_aps_a_i_m_iautodrive_prebolus" comment="Prebolus amount (U) for aggressive SMB floor when autodrive detects a strong meal-like rise">Prebolus units injected as an aggressive SMB floor when autodrive detects a strong rise (riseSignal ≥ 5 and shortAvgDelta ≥ 3 mg/dL/5min), e.g. a meal.</string>
     <string name="aimi_summary_o_aps_a_i_m_i_dinner_prebolus">Prebolus window for dinner mode P1 (minutes).</string>
     <string name="aimi_summary_o_aps_a_i_m_i_high_carb_prebolus">Prebolus window for high-carb mode (minutes).</string>
     <string name="aimi_summary_o_aps_a_i_m_i_high_carb_prebolus2">Prebolus window for high-carb mode P2 (minutes).</string>
     <string name="aimi_summary_o_aps_a_i_m_i_lunch_prebolus">Prebolus window for lunch mode P1 (minutes).</string>
     <string name="aimi_summary_o_aps_a_i_m_i_meal_prebolus">Prebolus window for general meal mode (minutes).</string>
     <string name="aimi_summary_o_aps_a_i_m_i_snack_prebolus">Prebolus window for snack mode (minutes).</string>
-    <string name="aimi_summary_o_aps_a_i_m_iautodrivesmall_prebolus">Controls prebolus.</string>
+    <string name="aimi_summary_o_aps_a_i_m_iautodrivesmall_prebolus" comment="Prebolus amount (U) for aggressive SMB floor when autodrive detects a moderate snack-like rise">Prebolus units injected as an aggressive SMB floor when autodrive detects a moderate rise (riseSignal ≥ 2 mg/dL/5min), e.g. a snack.</string>
     <string name="aimi_summary_o_aps_a_i_m_i_t_d_d7">7-day total daily insulin. Central to hyper classification.</string>
     <string name="aimi_summary_o_aps_a_i_m_ipregnancy">Controls .</string>
     <string name="aimi_summary_o_aps_a_i_m_iauto_drive">Controls drive.</string>
