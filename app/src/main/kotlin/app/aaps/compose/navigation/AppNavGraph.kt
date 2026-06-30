@@ -49,8 +49,8 @@ import app.aaps.core.keys.BooleanKey
 import app.aaps.core.keys.BooleanNonKey
 import app.aaps.core.keys.IntKey
 import app.aaps.core.keys.StringKey
-import app.aaps.core.keys.interfaces.VisibilityContext
 import app.aaps.core.keys.interfaces.Preferences
+import app.aaps.core.keys.interfaces.VisibilityContext
 import app.aaps.core.ui.compose.AapsTopAppBar
 import app.aaps.core.ui.compose.ComposablePluginContent
 import app.aaps.core.ui.compose.LocalSnackbarHostState
@@ -101,7 +101,6 @@ import app.aaps.ui.compose.runningMode.RunningModeScreen
 import app.aaps.ui.compose.scenes.SceneListScreen
 import app.aaps.ui.compose.scenes.wizard.SceneWizardScreen
 import app.aaps.ui.compose.siteRotationDialog.SiteRotationManagementScreen
-import app.aaps.ui.compose.siteRotationDialog.SiteRotationSettingsScreen
 import app.aaps.ui.compose.siteRotationDialog.viewModels.SiteRotationManagementViewModel
 import app.aaps.ui.compose.stats.StatsScreen
 import app.aaps.ui.compose.stats.viewmodels.StatsViewModel
@@ -719,16 +718,7 @@ fun NavGraphBuilder.appNavGraph(
         SiteRotationManagementScreen(
             viewModel = siteRotationManagementViewModel,
             onClose = { navController.safePopBackStack() },
-            onPreferenceClick = {
-                navController.navigate(AppRoute.SiteRotationSettings.route)
-            }
-        )
-    }
-
-    composable(AppRoute.SiteRotationSettings.route) {
-        SiteRotationSettingsScreen(
-            viewModel = siteRotationManagementViewModel,
-            onNavigateBack = { navController.safePopBackStack() }
+            siteRotationDef = builtInSearchables.siteRotation
         )
     }
 

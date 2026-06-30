@@ -17,7 +17,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -61,7 +60,6 @@ fun OverviewScreenSplit(
     runningModeSceneManaged: Boolean = false,
     smbEnabled: Boolean,
     isSimpleMode: Boolean,
-    calcProgress: Int,
     graphViewModel: GraphViewModel,
     chipsViewModel: ChipsViewModel,
     manageViewModel: ManageViewModel,
@@ -93,14 +91,6 @@ fun OverviewScreenSplit(
             .fillMaxSize()
             .padding(paddingValues)
     ) {
-        if (calcProgress < 100) {
-            LinearProgressIndicator(
-                progress = { calcProgress / 100f },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(4.dp),
-            )
-        }
         ActiveSceneBanner(
             activeState = activeSceneState,
             expired = sceneExpired,

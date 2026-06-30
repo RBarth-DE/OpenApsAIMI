@@ -253,6 +253,10 @@
     <string name="pref_title_urgent_alarm_stale_data">Urgent stale data alarm threshold</string>
 
     <string name="pref_title_site_rotation_profile">User profile for site rotation</string>
+    <!-- Body-type choices for the site-rotation user profile (man / woman / child body silhouette) -->
+    <string name="site_rotation_profile_man">Man</string>
+    <string name="site_rotation_profile_woman">Woman</string>
+    <string name="site_rotation_profile_child">Child</string>
 
     <string name="pref_title_units">Units</string>
     <string name="units_mgdl">mg/dL</string>

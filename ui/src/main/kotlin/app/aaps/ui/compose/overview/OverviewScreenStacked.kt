@@ -82,7 +82,6 @@ fun OverviewScreenStacked(
     runningModeSceneManaged: Boolean = false,
     smbEnabled: Boolean,
     isSimpleMode: Boolean,
-    calcProgress: Int,
     graphViewModel: GraphViewModel,
     chipsViewModel: ChipsViewModel,
     manageViewModel: ManageViewModel,
@@ -115,14 +114,6 @@ fun OverviewScreenStacked(
             .padding(paddingValues)
             .verticalScroll(rememberScrollState())
     ) {
-        if (calcProgress < 100) {
-            LinearProgressIndicator(
-                progress = { calcProgress / 100f },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(4.dp),
-            )
-        }
         ActiveSceneBanner(
             activeState = activeSceneState,
             expired = sceneExpired,
