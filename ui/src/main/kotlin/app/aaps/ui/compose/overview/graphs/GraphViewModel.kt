@@ -66,6 +66,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import app.aaps.core.utils.MidnightUtils
 import kotlinx.coroutines.flow.map
 import app.aaps.core.interfaces.insulin.ConcentrationHelper
+import app.aaps.core.data.model.SC
 import app.aaps.core.interfaces.pump.PumpRate
 import javax.inject.Inject
 
@@ -704,15 +705,19 @@ class GraphViewModel @AssistedInject constructor(
             ?: todayRecords.map { it.device }.firstOrNull { it == "HealthConnect" }
             ?: todayRecords.firstOrNull()?.device
 
-        val stepsToday = todayRecords
-            .filter { it.device == bestSource }
-            .sumOf { it.steps5min }
+        // Bucket into 5-min slices and take max per bucket so frequent HC writes don't overcount.
+        // Same dedup strategy as OpenAPSAutoISFPlugin.activityMonitor().
+        fun maxPer5MinBucket(records: List<SC>): Int = records
+            .groupBy { it.timestamp / (5 * 60_000L) }
+            .values
+            .sumOf { bucket -> bucket.maxOfOrNull { sc -> sc.steps5min.coerceAtLeast(0) } ?: 0 }
 
-        val recentRecords = todayRecords.filter { it.timestamp >= System.currentTimeMillis() - 15 * 60 * 1000L }
+        val sourceRecords = todayRecords.filter { it.device == bestSource }
+        val stepsToday = maxPer5MinBucket(sourceRecords)
+
+        val recentRecords = sourceRecords.filter { it.timestamp >= System.currentTimeMillis() - 15 * 60 * 1000L }
         val fiveMinAgo = System.currentTimeMillis() - 5 * 60 * 1000L
-        val stepsDelta = recentRecords
-            .filter { it.device == bestSource && it.timestamp >= fiveMinAgo }
-            .sumOf { it.steps5min }
+        val stepsDelta = maxPer5MinBucket(recentRecords.filter { it.timestamp >= fiveMinAgo })
 
         val stepsText = if (stepsToday > 0) "$stepsToday / +$stepsDelta" else "--"
 
