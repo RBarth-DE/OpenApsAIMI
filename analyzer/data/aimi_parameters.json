@@ -1,13 +1,13 @@
 {
   "version": "3.0",
-  "source_commit": "55e596713b624b57d5968c2e4992d61052dfd402",
-  "generated_at": "2026-06-28T17:20:02.218831+00:00",
-  "total": 275,
-  "active": 229,
+  "source_commit": "42435c17778cfe078a7de0475088204ac2ef58a1",
+  "generated_at": "2026-07-01T04:15:44.971318+00:00",
+  "total": 276,
+  "active": 230,
   "orphaned": 46,
-  "with_used_in": 213,
+  "with_used_in": 214,
   "with_negative_gate": 9,
-  "with_settings_path": 219,
+  "with_settings_path": 220,
   "parameters": [
     {
       "key": "AIMI_UAM_CONFIDENCE",
@@ -3280,6 +3280,42 @@
       "settings_gate": null
     },
     {
+      "key": "key_aimi_autodrive_aggressive_smb_floor",
+      "name": "OApsAIMIautodriveAggressiveSmbFloor",
+      "type": "Boolean",
+      "default": false,
+      "dependency": "OApsAIMIautoDriveActive",
+      "used_in": [
+        {
+          "file": "OpenAPSAIMIPlugin.kt",
+          "function": "aimiComposeAutodriveSubScreen"
+        },
+        {
+          "file": "DetermineBasalAIMI2.kt",
+          "function": "aggressiveRiseSmbFloorU"
+        },
+        {
+          "file": "AimiBehaviorFamilyRegistry.kt",
+          "function": "unknown"
+        },
+        {
+          "file": "AimiControlCenterSnapshot.kt",
+          "function": "buildAutonomyFamily"
+        }
+      ],
+      "orphaned": false,
+      "negative_gate_key": null,
+      "negative_gate_note": null,
+      "logic_summary": "Boolean switch for autodrive_aggressive_smb_floor.",
+      "effect_high": "Feature is active — associated functionality runs",
+      "effect_low": "Feature is inactive — associated functionality is disabled",
+      "impact": "high",
+      "feature_group": "autodrive_v3",
+      "is_gate": false,
+      "settings_path": "AIMI → Preferences user → Autodrive",
+      "settings_gate": null
+    },
+    {
       "key": "key_aimi_autodrive_v3_authoritative",
       "name": "OApsAIMIautoDriveAuthoritative",
       "type": "Boolean",
@@ -3393,6 +3429,33 @@
       "feature_group": "context_llm",
       "is_gate": true,
       "settings_path": "AIMI → Preferences user → Context Llm",
+      "settings_gate": null
+    },
+    {
+      "key": "key_aimi_effort_activity_protection",
+      "name": "OApsAIMIEffortActivityProtection",
+      "type": "Boolean",
+      "default": false,
+      "used_in": [
+        {
+          "file": "OpenAPSAIMIPlugin.kt",
+          "function": "aimiComposeAutodriveSubScreen"
+        },
+        {
+          "file": "DetermineBasalAIMI2.kt",
+          "function": "refreshEffortActivityBelief"
+        }
+      ],
+      "orphaned": false,
+      "negative_gate_key": null,
+      "negative_gate_note": null,
+      "logic_summary": "Boolean switch for effort_activity_protection.",
+      "effect_high": "Feature is active — associated functionality runs",
+      "effect_low": "Feature is inactive — associated functionality is disabled",
+      "impact": "medium",
+      "feature_group": "core",
+      "is_gate": false,
+      "settings_path": "AIMI → Preferences user → Autodrive",
       "settings_gate": null
     },
     {
@@ -4052,7 +4115,7 @@
         },
         {
           "file": "AimiControlCenterSupport.kt",
-          "function": "buildMealCapturePlan"
+          "function": "readAutonomyMode"
         },
         {
           "file": "AimiBehaviorFamilyRegistry.kt",
@@ -4409,16 +4472,16 @@
           "function": "from"
         },
         {
-          "file": "AimiControlCenterSupport.kt",
-          "function": "readAutonomyMode"
-        },
-        {
           "file": "AimiBehaviorFamilyRegistry.kt",
           "function": "unknown"
         },
         {
-          "file": "AimiControlCenterSnapshot.kt",
-          "function": "buildAutonomyFamily"
+          "file": "AimiProfileAdvisorActivity.kt",
+          "function": "createRecursiveBeliefUnfoldCard"
+        },
+        {
+          "file": "AimiAdvisorService.kt",
+          "function": "generateRecommendations"
         }
       ],
       "orphaned": false,
@@ -5291,10 +5354,6 @@
           "function": "aimiComposeAutodriveSubScreen"
         },
         {
-          "file": "DetermineBasalAIMI2.kt",
-          "function": "isAutodriveModeCondition"
-        },
-        {
           "file": "GlucoseStatusCalculatorAimi.kt",
           "function": "compute"
         }
@@ -5377,10 +5436,6 @@
         {
           "file": "OpenAPSAIMIPlugin.kt",
           "function": "aimiComposeAutodriveSubScreen"
-        },
-        {
-          "file": "DetermineBasalAIMI2.kt",
-          "function": "isAutodriveModeCondition"
         }
       ],
       "orphaned": false,
@@ -5564,10 +5619,6 @@
         {
           "file": "OpenAPSAIMIPlugin.kt",
           "function": "aimiComposeAutodriveSubScreen"
-        },
-        {
-          "file": "DetermineBasalAIMI2.kt",
-          "function": "isAutodriveModeCondition"
         }
       ],
       "orphaned": false,
@@ -6614,6 +6665,8 @@
       "type": "Double",
       "default": 1.0,
       "min": 0.1,
+      "max": 20.0,
+      "dependency": "OApsAIMIautoDriveActive",
       "used_in": [
         {
           "file": "OpenAPSAIMIPlugin.kt",
@@ -6621,7 +6674,7 @@
         },
         {
           "file": "DetermineBasalAIMI2.kt",
-          "function": "runSignalPreparationPkpdRuntimePhase"
+          "function": "aggressiveRiseSmbFloorU"
         },
         {
           "file": "AimiControlCenterSupport.kt",
@@ -6645,8 +6698,8 @@
       "impact": "high",
       "feature_group": "autodrive_v3",
       "is_gate": false,
-      "settings_path": "AIMI → Preferences user → Autodrive V3",
-      "settings_gate": null
+      "settings_path": "AIMI → Preferences user → Autodrive",
+      "settings_gate": "Requires: Autodrive Active = ON"
     },
     {
       "key": "key_prebolus_dinner_mode",
@@ -6854,6 +6907,8 @@
       "type": "Double",
       "default": 0.1,
       "min": 0.05,
+      "max": 20.0,
+      "dependency": "OApsAIMIautoDriveActive",
       "used_in": [
         {
           "file": "OpenAPSAIMIPlugin.kt",
@@ -6861,7 +6916,7 @@
         },
         {
           "file": "DetermineBasalAIMI2.kt",
-          "function": "runSignalPreparationPkpdRuntimePhase"
+          "function": "aggressiveRiseSmbFloorU"
         },
         {
           "file": "AimiControlCenterSupport.kt",
@@ -6885,8 +6940,8 @@
       "impact": "high",
       "feature_group": "autodrive_v3",
       "is_gate": false,
-      "settings_path": "AIMI → Preferences user → Autodrive V3",
-      "settings_gate": null
+      "settings_path": "AIMI → Preferences user → Autodrive",
+      "settings_gate": "Requires: Autodrive Active = ON"
     },
     {
       "key": "key_tdd7",
@@ -6968,45 +7023,6 @@
       "feature_group": "core",
       "is_gate": true,
       "settings_path": "AIMI → Preferences user → Patient context and body declarations → wcycle_preferences",
-      "settings_gate": null
-    },
-    {
-      "key": "key_use_Aimi_autoDrive",
-      "name": "OApsAIMIautoDrive",
-      "type": "Boolean",
-      "default": true,
-      "used_in": [
-        {
-          "file": "OpenAPSAIMIPlugin.kt",
-          "function": "applyBasalConstraints"
-        },
-        {
-          "file": "DetermineBasalAIMI2.kt",
-          "function": "buildPreTherapyAutodriveByodaBootstrap"
-        },
-        {
-          "file": "AimiControlCenterSupport.kt",
-          "function": "readAutonomyMode"
-        },
-        {
-          "file": "AimiBehaviorFamilyRegistry.kt",
-          "function": "unknown"
-        },
-        {
-          "file": "AimiControlCenterSnapshot.kt",
-          "function": "buildAutonomyFamily"
-        }
-      ],
-      "orphaned": false,
-      "negative_gate_key": null,
-      "negative_gate_note": null,
-      "logic_summary": "Boolean switch for autoDrive.",
-      "effect_high": "Feature is active — associated functionality runs",
-      "effect_low": "Feature is inactive — associated functionality is disabled",
-      "impact": "high",
-      "feature_group": "autodrive_v3",
-      "is_gate": true,
-      "settings_path": "AIMI → Preferences user → Autodrive",
       "settings_gate": null
     },
     {
@@ -7147,7 +7163,7 @@
       "used_in": [
         {
           "file": "OpenAPSAIMIPlugin.kt",
-          "function": "applyBasalConstraints"
+          "function": "migrateClassicAutodriveToV3"
         },
         {
           "file": "DetermineBasalAIMI2.kt",

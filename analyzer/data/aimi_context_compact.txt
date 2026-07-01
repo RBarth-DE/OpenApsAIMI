@@ -1,4 +1,4 @@
-# AIMI Algorithm Context (commit: 55e59671)
+# AIMI Algorithm Context (commit: 42435c17)
 
 ## Overview
 The AIMI algorithm runs a 46-stage decision pipeline per 5-minute tick.
@@ -38,7 +38,7 @@ STAGES 40-46 (BASAL ENGINE + LEARNERS + EXPORT):
 ### autodrive_v3 (14 params)
 Gate: key_use_aimi_autodrive_active
   MPC-like controller activated by the AutoDriveGater when BG>120 and rising or meal context. Gater checks: HR<140, step count, COB, UAM confidence. Engages in 5 states (DISENGAGED, ENGAGED, POST_HYPO_RECOVERY, SAFETY_HOLD, LEARNING). If engaged: builds AutoDriveState with physiological phase, HTR cla
-  Key params: aimi_mpc_insulin_u_per_kg_per_5min, key_Acceleration_autodrive_mode, key_aimi_autodrive_v3_authoritative, key_aimi_hyper_trajectory_release, key_aimi_recursive_belief_authority, key_combinedDelta_autodrive_mode, key_mindeviation_autodrive_mode, key_oaps_aimi_autodriveBG, key_oaps_aimi_autodriveTarget, key_prebolus_autodrive_mode
+  Key params: aimi_mpc_insulin_u_per_kg_per_5min, key_Acceleration_autodrive_mode, key_aimi_autodrive_aggressive_smb_floor, key_aimi_autodrive_v3_authoritative, key_aimi_hyper_trajectory_release, key_aimi_recursive_belief_authority, key_combinedDelta_autodrive_mode, key_mindeviation_autodrive_mode, key_oaps_aimi_autodriveBG, key_oaps_aimi_autodriveTarget
   ... and 4 more
 
 ### legacy_meal_modes (14 params)
@@ -213,6 +213,7 @@ Gate: key_use_Aimi_wcycle
 ### autodrive_v3 (12 params)
   - aimi_mpc_insulin_u_per_kg_per_5min [default: 0.065]
   - key_Acceleration_autodrive_mode [default: 1.0]
+  - key_aimi_autodrive_aggressive_smb_floor [default: False]
   - key_aimi_autodrive_v3_authoritative [default: True]
   - key_combinedDelta_autodrive_mode [default: 1.0]
   - key_mindeviation_autodrive_mode [default: 1.0]
@@ -220,7 +221,6 @@ Gate: key_use_Aimi_wcycle
   - key_oaps_aimi_autodriveTarget [default: 70]
   - key_prebolus_autodrive_mode [default: 1.0]
   - key_prebolussmall_autodrive_mode [default: 0.1]
-  - key_use_Aimi_autoDrive [default: True]
   - key_use_aimi_autodrive_active [default: True]
   - key_use_aimi_autodrive_v3_enhanced_gater
 
@@ -236,7 +236,7 @@ Gate: key_use_Aimi_wcycle
   - key_aimi_context_enabled
   - key_aimi_context_llm_enabled
 
-### core (83 params)
+### core (84 params)
   - OApsAIMIDeltaPosRelease [default: 1.0]
   - OApsAIMIHighBg [default: 180.0]
   - OApsAIMI_Enable_night
@@ -257,7 +257,7 @@ Gate: key_use_Aimi_wcycle
   - autosens_adjust_targets
   - autosens_max [default: 1.2]
   - autosens_min [default: 0.7]
-  ... and 63 more
+  ... and 64 more
 
 ### cosine_gate (6 params)
   - aimi_cosine_gate_alpha [default: 2.0]

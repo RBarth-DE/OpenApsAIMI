@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-06-28T17:19:38.515637+00:00",
-  "source_commit": "55e596713b624b57d5968c2e4992d61052dfd402",
+  "generated_at": "2026-07-01T04:14:25.854445+00:00",
+  "source_commit": "42435c17778cfe078a7de0475088204ac2ef58a1",
   "paths": {
     "openapsma_max_basal": {
       "path": "AIMI → Advanced Settings",
@@ -1099,6 +1099,42 @@
         "Autodrive"
       ],
       "gate_key": null
+    },
+    "key_aimi_autodrive_aggressive_smb_floor": {
+      "path": "AIMI → Preferences user → Autodrive",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "Autodrive"
+      ],
+      "gate_key": null
+    },
+    "key_aimi_effort_activity_protection": {
+      "path": "AIMI → Preferences user → Autodrive",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "Autodrive"
+      ],
+      "gate_key": null
+    },
+    "key_prebolussmall_autodrive_mode": {
+      "path": "AIMI → Preferences user → Autodrive",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "Autodrive"
+      ],
+      "gate_key": "key_use_aimi_autodrive_active"
+    },
+    "key_prebolus_autodrive_mode": {
+      "path": "AIMI → Preferences user → Autodrive",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "Autodrive"
+      ],
+      "gate_key": "key_use_aimi_autodrive_active"
     },
     "key_oaps_aimi_autodriveBG": {
       "path": "AIMI → Preferences user → Autodrive → Prebolus limits and conditions",

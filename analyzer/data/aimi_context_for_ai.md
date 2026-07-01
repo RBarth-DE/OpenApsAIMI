@@ -1,7 +1,7 @@
 # AIMI Algorithm Context
 Version: 2.2
-Source commit: 55e596713b624b57d5968c2e4992d61052dfd402
-Generated: 2026-06-28T17:20:02.271223+00:00
+Source commit: 42435c17778cfe078a7de0475088204ac2ef58a1
+Generated: 2026-07-01T04:15:45.059228+00:00
 
 ## Algorithm Overview
 AIMI (AI-powered Modular Insulin)
@@ -70,6 +70,7 @@ MPC-like controller activated by the AutoDriveGater when BG>120 and rising or me
 Key parameters (14):
 - aimi_mpc_insulin_u_per_kg_per_5min
 - key_Acceleration_autodrive_mode
+- key_aimi_autodrive_aggressive_smb_floor
 - key_aimi_autodrive_v3_authoritative
 - key_aimi_hyper_trajectory_release
 - key_aimi_recursive_belief_authority
@@ -79,7 +80,6 @@ Key parameters (14):
 - key_oaps_aimi_autodriveTarget
 - key_prebolus_autodrive_mode
 - key_prebolussmall_autodrive_mode
-- key_use_Aimi_autoDrive
 - key_use_aimi_autodrive_active
 - key_use_aimi_autodrive_v3_enhanced_gater
 
@@ -488,6 +488,7 @@ Key parameters (11):
 ### autodrive_v3 (12 params)
 - `aimi_mpc_insulin_u_per_kg_per_5min` [default: 0.065]
 - `key_Acceleration_autodrive_mode` [default: 1.0]
+- `key_aimi_autodrive_aggressive_smb_floor` [default: False]
 - `key_aimi_autodrive_v3_authoritative` [default: True]
 - `key_combinedDelta_autodrive_mode` [default: 1.0]
 - `key_mindeviation_autodrive_mode` [default: 1.0]
@@ -495,7 +496,6 @@ Key parameters (11):
 - `key_oaps_aimi_autodriveTarget` [default: 70]
 - `key_prebolus_autodrive_mode` [default: 1.0]
 - `key_prebolussmall_autodrive_mode` [default: 0.1]
-- `key_use_Aimi_autoDrive` [default: True]
 
 ### context_llm (10 params)
 - `aimi_context_llm_claude_key`
@@ -509,7 +509,7 @@ Key parameters (11):
 - `key_aimi_context_enabled`
 - `key_aimi_context_llm_enabled`
 
-### core (83 params)
+### core (84 params)
 - `OApsAIMIDeltaPosRelease` [default: 1.0]
 - `OApsAIMIHighBg` [default: 180.0]
 - `OApsAIMI_Enable_night`
