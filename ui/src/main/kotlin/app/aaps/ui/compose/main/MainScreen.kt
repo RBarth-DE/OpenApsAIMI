@@ -94,6 +94,11 @@ fun MainScreen(
     onSearchClear: () -> Unit,
     onSearchActiveChange: (Boolean) -> Unit,
     onSearchResultClick: (SearchIndexEntry) -> Unit,
+    onSearchPluginToggle: (PluginBase) -> Unit,
+    onConfirmSearchPluginSwitch: () -> Unit,
+    onDismissSearchPluginSwitch: () -> Unit,
+    onConfirmSearchHardwarePump: () -> Unit,
+    onDismissSearchHardwarePump: () -> Unit,
     // Menu/navigation
     onMenuClick: () -> Unit,
     onUserManualClick: () -> Unit = {},
@@ -283,22 +288,46 @@ fun MainScreen(
                             isSearching = searchUiState.isSearching,
                             isSearchingWiki = searchUiState.isSearchingWiki,
                             wikiOffline = searchUiState.wikiOffline,
+                            revision = searchUiState.revision,
                             onResultClick = onSearchResultClick,
+                            onPluginToggle = onSearchPluginToggle,
                             modifier = Modifier
                                 .fillMaxSize()
                                 .padding(contentPadding)
                         )
                     }
 
-                        // Status bar protection scrim — keeps system icons legible
-                        // against the floating search bar / graph content
-                        Box(
-                            modifier = Modifier
-                                .align(Alignment.TopCenter)
-                                .fillMaxWidth()
-                                .windowInsetsTopHeight(WindowInsets.statusBars)
-                                .background(MaterialTheme.colorScheme.surface)
+                    // Plugin enable/disable confirmations raised from search results (same dialogs as Config Builder)
+                    searchUiState.pluginSwitchConfirmation?.let { confirmation ->
+                        OkCancelDialog(
+                            title = stringResource(R.string.configbuilder_switch_confirmation_title),
+                            message = stringResource(
+                                R.string.configbuilder_switch_confirmation,
+                                confirmation.fromName,
+                                confirmation.toName
+                            ),
+                            onConfirm = onConfirmSearchPluginSwitch,
+                            onDismiss = onDismissSearchPluginSwitch
                         )
+                    }
+                    searchUiState.hardwarePumpConfirmation?.let { confirmation ->
+                        OkCancelDialog(
+                            title = stringResource(R.string.confirmation),
+                            message = confirmation.message,
+                            onConfirm = onConfirmSearchHardwarePump,
+                            onDismiss = onDismissSearchHardwarePump
+                        )
+                    }
+
+                    // Status bar protection scrim — keeps system icons legible
+                    // against the floating search bar / graph content
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.TopCenter)
+                            .fillMaxWidth()
+                            .windowInsetsTopHeight(WindowInsets.statusBars)
+                            .background(MaterialTheme.colorScheme.surface)
+                    )
 
                         // Navigation bar protection scrim
                         Box(
