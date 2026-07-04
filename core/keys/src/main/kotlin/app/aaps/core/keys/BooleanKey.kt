@@ -236,7 +236,7 @@ enum class BooleanKey(
     VirtualPumpStatusUpload("virtualpump_uploadstatus", false, R.string.pref_title_virtual_pump_status_upload, showInNsClientMode = false),
     NsClientUploadData("ns_upload", true, R.string.pref_title_ns_upload_data, R.string.pref_summary_ns_upload_data, showInNsClientMode = false, hideParentScreenIfHidden = true),
     NsClientAcceptCgmData("ns_receive_cgm", false, R.string.pref_title_ns_receive_cgm, R.string.pref_summary_ns_receive_cgm, showInNsClientMode = false, hideParentScreenIfHidden = true),
-    NsClientAcceptProfileStore("ns_receive_profile_store", true, R.string.pref_title_ns_receive_profile_store, R.string.pref_summary_ns_receive_profile_store, showInNsClientMode = false, hideParentScreenIfHidden = true),
+    NsClientAcceptProfileStore("ns_receive_profile_store", false, R.string.pref_title_ns_receive_profile_store, R.string.pref_summary_ns_receive_profile_store, showInNsClientMode = false, hideParentScreenIfHidden = true),
     NsClientAcceptTempTarget("ns_receive_temp_target", false, R.string.pref_title_ns_receive_temp_target, R.string.pref_summary_ns_receive_temp_target, showInNsClientMode = false, hideParentScreenIfHidden = true),
     NsClientAcceptProfileSwitch("ns_receive_profile_switch", false, R.string.pref_title_ns_receive_profile_switch, R.string.pref_summary_ns_receive_profile_switch, showInNsClientMode = false, hideParentScreenIfHidden = true),
     NsClientAcceptInsulin("ns_receive_insulin", false, R.string.pref_title_ns_receive_insulin, R.string.pref_summary_ns_receive_insulin, showInNsClientMode = false, hideParentScreenIfHidden = true),
@@ -286,13 +286,10 @@ enum class BooleanKey(
     WearNotifyOnSmb(key = "wear_notifySMB", defaultValue = true, titleResId = R.string.pref_title_wear_notify_on_smb, summaryResId = R.string.pref_summary_wear_notify_on_smb),
     WearBroadcastData(key = "wear_broadcast_data", defaultValue = false, titleResId = R.string.pref_title_wear_broadcast_data, summaryResId = R.string.pref_summary_wear_broadcast_data, showInApsMode = false, showInPumpControlMode = false),
 
-    SiteRotationManagePump("site_rotation_manage_pump", defaultValue = false, titleResId = R.string.pref_title_site_rotation_manage_pump, sync = SyncSpec(SyncChannel.Cold, SyncDirection.Bidirectional)),
-    SiteRotationManageCgm("site_rotation_manage_cgm", defaultValue = false, titleResId = R.string.pref_title_site_rotation_manage_cgm, sync = SyncSpec(SyncChannel.Cold, SyncDirection.Bidirectional)),
     EversenseCloudUploadEnabled("eversense_cloud_upload_enabled", true, R.string.eversense_cloud_upload_enabled),
     EversenseCloudUploadToast("eversense_notif_cloud_upload_toast", true, R.string.eversense_cloud_upload_toast),
-    @Deprecated("remove after migration")
-    WizardCalculationVisible("wizard_calculation_visible", defaultValue = false, titleResId = R.string.pref_title_wizard_calculation_visible),
-    WizardCorrectionPercent("wizard_correction_percent", defaultValue = false, titleResId = R.string.pref_title_wizard_correction_percent),
+    SiteRotationManagePump("site_rotation_manage_pump", defaultValue = false, titleResId = R.string.pref_title_site_rotation_manage_pump, sync = SyncSpec(SyncChannel.Cold, SyncDirection.Bidirectional)),
+    SiteRotationManageCgm("site_rotation_manage_cgm", defaultValue = false, titleResId = R.string.pref_title_site_rotation_manage_cgm, sync = SyncSpec(SyncChannel.Cold, SyncDirection.Bidirectional)),
 
     OApsAIMIMLtraining("key_enable_ML_training", false),
     // OApsAIMIEnableBasal("key_enable_basal", false), // ORPHANED — not read by DetermineBasalAIMI2.kt
