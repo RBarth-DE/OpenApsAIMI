@@ -1,44 +1,35 @@
 package app.aaps.ui.compose.overview.graphs
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.key
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
-import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.platform.LocalViewConfiguration
-import androidx.compose.ui.input.pointer.PointerEventPass
-import androidx.compose.foundation.gestures.awaitEachGesture
-import androidx.compose.foundation.gestures.awaitFirstDown
-import androidx.compose.foundation.gestures.waitForUpOrCancellation
-import androidx.compose.foundation.layout.Box
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.layout.padding
+import android.util.Log
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Surface
 import androidx.compose.ui.window.Popup
 import androidx.compose.ui.window.PopupProperties
-
 import kotlinx.coroutines.delay
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.aaps.core.data.configuration.Constants
@@ -49,6 +40,7 @@ import app.aaps.core.interfaces.overview.graph.BgDataPoint
 import app.aaps.core.interfaces.overview.graph.BgRange
 import app.aaps.core.interfaces.overview.graph.BgType
 import app.aaps.core.interfaces.overview.graph.BolusGraphPoint
+import app.aaps.core.interfaces.overview.graph.BolusType
 import app.aaps.core.interfaces.overview.graph.ChartSmbMarker
 import app.aaps.core.interfaces.overview.graph.ChartTbrSegment
 import app.aaps.core.interfaces.overview.graph.EpsGraphPoint
@@ -64,16 +56,16 @@ import com.patrykandpatrick.vico.compose.cartesian.axis.Axis
 import com.patrykandpatrick.vico.compose.cartesian.axis.HorizontalAxis
 import com.patrykandpatrick.vico.compose.cartesian.axis.VerticalAxis
 import com.patrykandpatrick.vico.compose.cartesian.data.CartesianChartModelProducer
-import com.patrykandpatrick.vico.compose.cartesian.data.CartesianValueFormatter
 import com.patrykandpatrick.vico.compose.cartesian.data.CartesianLayerRangeProvider
 import com.patrykandpatrick.vico.compose.cartesian.data.lineModel
-import com.patrykandpatrick.vico.compose.cartesian.decoration.HorizontalBox
 import com.patrykandpatrick.vico.compose.cartesian.data.lineSeries
 import com.patrykandpatrick.vico.compose.cartesian.layer.LineCartesianLayer
 import com.patrykandpatrick.vico.compose.cartesian.layer.rememberLineCartesianLayer
 import com.patrykandpatrick.vico.compose.cartesian.rememberCartesianChart
 import com.patrykandpatrick.vico.compose.cartesian.marker.CartesianMarker
 import com.patrykandpatrick.vico.compose.cartesian.marker.CartesianMarkerController
+import com.patrykandpatrick.vico.compose.cartesian.marker.DefaultCartesianMarker
+import com.patrykandpatrick.vico.compose.cartesian.marker.rememberDefaultCartesianMarker
 import com.patrykandpatrick.vico.compose.cartesian.marker.Interaction
 import com.patrykandpatrick.vico.compose.cartesian.marker.LineCartesianLayerMarkerTarget
 import com.patrykandpatrick.vico.compose.common.Fill
@@ -159,7 +151,7 @@ fun BgGraphCompose(
      * Dashboard-only: called when the user taps an SMB triangle on this chart.
      * Uses Vico marker hit-testing (scroll/zoom aware). Overview leaves this null.
      */
-    onDashboardSmbMarkerTap: ((ChartSmbMarker) -> Unit)? = null,
+    onDashboardSmbMarkerTap: @Composable ((ChartSmbMarker) -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
     // Collect flows independently - each triggers recomposition only when it changes
@@ -250,15 +242,6 @@ fun BgGraphCompose(
     // SMB tap detection state
     // =========================================================================
     var selectedSmb by remember { mutableStateOf<BolusGraphPoint?>(null) }
-    var chartWidthPx by remember { mutableFloatStateOf(0f) }
-    val density = LocalDensity.current
-
-    // Precompute visible SMB list for hit testing (same filter as rebuildChart)
-    val visibleSmbs = remember(treatmentData, showBolus, minTimestamp) {
-        if (!showBolus) emptyList()
-        else treatmentData.boluses.filter { it.isValid }
-
-    }
 
     suspend fun rebuildChart(
         currentBasalData: BasalGraphData,
@@ -412,7 +395,7 @@ fun BgGraphCompose(
             lineSeries {
                 val smbX = if (showBolusMarkers) {
                     currentTreatmentData.boluses
-                        .filter { it.isValid }
+                        .filter { it.isValid && it.bolusType == BolusType.SMB }
                         .map { timestampToX(it.timestamp, minTimestamp) }
                         .filter { it in 0.0..maxX }
                 } else emptyList()
@@ -515,9 +498,6 @@ fun BgGraphCompose(
     // Time formatter and axis configuration
     val timeFormatter = rememberTimeFormatter(minTimestamp)
     val bottomAxisItemPlacer = rememberBottomAxisItemPlacer(minTimestamp)
-    val bgStartAxisValueFormatter = remember {
-        CartesianValueFormatter { _, y, _ -> viewModel.formatBgChartAxisTick(y) }
-    }
 
     // =========================================================================
     // BG layer lines (layer 0)
@@ -867,17 +847,7 @@ fun BgGraphCompose(
         terminalMarkerColor = scenarioBestColor,
         terminalGlowColor = scenarioBestColor,
     )
-    val axisLabelColor = if (dashboardSoftTherapyVisuals) scheme.onSurfaceVariant.copy(alpha = 0.72f) else scheme.onSurface
-    val gridGuideAlpha = if (dashboardSoftTherapyVisuals) 0.22f else 0.5f
-    // Dashboard soft BG axis: same tick spacing as Overview (48 mg/dL ≈ 2.67 mmol/L) — fewer labels, shorter chart feel.
-    val yAxisStep =
-        remember(generalUnits, dashboardSoftTherapyVisuals, lockStartAxisYFromZero) {
-        if (dashboardSoftTherapyVisuals && lockStartAxisYFromZero) {
-                viewModel.chartBgSoftAxisStep()
-        } else {
-            1.0
-            }
-        }
+
     val decorations = remember(comfortCorridorDecoration, scenarioDecorations, tbrDecoration, nowLine) {
         buildList {
             comfortCorridorDecoration?.let { add(it) }
@@ -890,20 +860,36 @@ fun BgGraphCompose(
     val defaultMarkerController = CartesianMarkerController.rememberShowOnPress()
     val dashboardSmbTapController =
         remember(
-            onDashboardSmbMarkerTap,
+            treatmentData,
             dashboardSmbMarkers,
             minTimestamp,
             dashboardSplitActivityToStrip,
         ) {
-            val cb = onDashboardSmbMarkerTap ?: return@remember null
-            if (dashboardSplitActivityToStrip || dashboardSmbMarkers.isEmpty()) return@remember null
+            if (dashboardSplitActivityToStrip) return@remember null
+            val treatmentSmbBoluses = treatmentData.boluses.filter { it.isValid && it.bolusType == BolusType.SMB }
+            if (dashboardSmbMarkers.isEmpty() && treatmentSmbBoluses.isEmpty()) return@remember null
             DashboardSmbTapMarkerController(
                 smbs = dashboardSmbMarkers,
+                smbBoluses = treatmentSmbBoluses,
                 minTimestamp = minTimestamp,
-                onSmbTap = cb,
+                onSmbTap = { smb ->
+                    //Log.d("SMB_TAP", "Vico marker matched: ${smb.amountLabel}")
+                    selectedSmb = treatmentData.boluses.firstOrNull {
+                        it.timestamp == smb.timestampEpochMs && it.bolusType == BolusType.SMB && it.isValid
+                    }
+                },
             )
         }
-    val dashboardSmbTapMarker = remember { object : CartesianMarker {} }
+    val valueFormatter = remember {
+        DefaultCartesianMarker.ValueFormatter { _, _ -> "" }
+    }
+    val dashboardSmbTapMarker = rememberDefaultCartesianMarker(
+        label = rememberTextComponent(),
+        valueFormatter = valueFormatter,
+        labelPosition = DefaultCartesianMarker.LabelPosition.AroundPoint,
+        indicator = null,
+        guideline = null,
+    )
 
     // =========================================================================
     // Range providers — hoisted out of rememberCartesianChart so keys are re-evaluated on recomposition
@@ -921,10 +907,7 @@ fun BgGraphCompose(
     }
 
     // =========================================================================
-    // SMB tap hit-test modifier
-    // Left axis occupies ~36dp; remaining width is chart content.
-    // chartX = (tapX - leftAxisPx + scrollPx) / (contentPx * zoom / maxX)
-    // Tolerance: ±15dp in screen space → converted to chart units.
+    // SMB tap detection via Vico marker pipeline
     // =========================================================================
 
     CartesianChartHost(
@@ -982,6 +965,8 @@ fun BgGraphCompose(
                 guideline = LineComponent(fill = Fill(MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)))
             ),
             decorations = decorations,
+            marker = if (dashboardSmbTapController != null) dashboardSmbTapMarker else null,
+            markerController = dashboardSmbTapController ?: defaultMarkerController,
             getXStep = { _, _, _ -> 1.0 }
         ),
         modelProducer = modelProducer,
@@ -989,6 +974,48 @@ fun BgGraphCompose(
         scrollState = scrollState,
         zoomState = zoomState
     )
+
+    // SMB tap popup — anchored at top-center when selectedSmb is non-null
+    selectedSmb?.let { smb ->
+        val timeStr = remember(smb.timestamp) {
+            SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date(smb.timestamp))
+        }
+        Popup(
+            alignment = Alignment.TopCenter,
+            offset = IntOffset(0, 8),
+            onDismissRequest = { selectedSmb = null },
+            properties = PopupProperties(focusable = true),
+        ) {
+            Surface(
+                shape = RoundedCornerShape(12.dp),
+                color = MaterialTheme.colorScheme.surface,
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
+                tonalElevation = 6.dp,
+                shadowElevation = 8.dp,
+                modifier = Modifier.widthIn(max = 200.dp),
+            ) {
+                Column(
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+                ) {
+                    Text(
+                        text = smb.label,
+                        style = MaterialTheme.typography.titleMedium,
+                        color = AapsTheme.elementColors.insulin,
+                    )
+                    Text(
+                        text = timeStr,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(top = 4.dp),
+                    )
+                }
+            }
+            LaunchedEffect(smb) {
+                delay(3000L)
+                selectedSmb = null
+            }
+        }
+    }
 }
 
 private fun interpolateBgForDashboardMarker(
@@ -1017,6 +1044,7 @@ private fun interpolateBgForDashboardMarker(
  */
 private class DashboardSmbTapMarkerController(
     private val smbs: List<ChartSmbMarker>,
+    private val smbBoluses: List<BolusGraphPoint>,
     private val minTimestamp: Long,
     private val onSmbTap: (ChartSmbMarker) -> Unit,
 ) : CartesianMarkerController {
@@ -1035,11 +1063,28 @@ private class DashboardSmbTapMarkerController(
             if (t !is LineCartesianLayerMarkerTarget) continue
             val smb = smbs.firstOrNull { smb ->
                 abs(timestampToX(smb.timestampEpochMs, minTimestamp) - t.x) < MODEL_X_MATCH_EPS
-            } ?: continue
-            val d = abs(t.canvasX - tapX)
-            if (d <= SMB_TAP_MAX_CANVAS_X_DIST_PX && d < bestDist) {
-                bestDist = d
-                bestSmb = smb
+            }
+            if (smb != null) {
+                val d = abs(t.canvasX - tapX)
+                if (d <= SMB_TAP_MAX_CANVAS_X_DIST_PX && d < bestDist) {
+                    bestDist = d
+                    bestSmb = smb
+                }
+                continue
+            }
+            // Also match against treatment SMB boluses (the actual data source for Layer 5 triangles)
+            val bolus = smbBoluses.firstOrNull { b ->
+                abs(timestampToX(b.timestamp, minTimestamp) - t.x) < MODEL_X_MATCH_EPS
+            }
+            if (bolus != null) {
+                val d = abs(t.canvasX - tapX)
+                if (d <= SMB_TAP_MAX_CANVAS_X_DIST_PX && d < bestDist) {
+                    bestDist = d
+                    bestSmb = ChartSmbMarker(
+                        timestampEpochMs = bolus.timestamp,
+                        amountLabel = bolus.label,
+                    )
+                }
             }
         }
         if (bestSmb != null) {

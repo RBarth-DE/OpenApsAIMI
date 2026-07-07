@@ -370,7 +370,7 @@ internal fun DashboardGraphComposeCard(
                     }
                     val chartTimeRange = vmDerived ?: effectiveShellRange
                     val smbTapModifier =
-                        if (!attachLegacyGraphBackend && !useVicoGraph && renderInput.smbMarkers.isNotEmpty()) {
+                        if (!attachLegacyGraphBackend && renderInput.smbMarkers.isNotEmpty()) {
                             Modifier.pointerInput(
                                 renderInput.smbMarkers,
                                 renderInput.fromTimeEpochMs,
@@ -480,7 +480,8 @@ internal fun DashboardGraphComposeCard(
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .offset(y = (-16).dp)
-                                        .height(bgHeight),
+                                        .height(bgHeight)
+                                        .then(smbTapModifier),
                                 ) {
                                     DashboardBgGraphVico(
                                         graphViewModel = graphViewModel,
