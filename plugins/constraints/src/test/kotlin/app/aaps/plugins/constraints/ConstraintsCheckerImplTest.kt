@@ -63,6 +63,7 @@ import org.junit.jupiter.api.Test
 import org.mockito.Mock
 import org.mockito.kotlin.any
 import org.mockito.kotlin.whenever
+import javax.inject.Provider
 
 /**
  * Created by mike on 18.03.2018.
@@ -92,6 +93,7 @@ class ConstraintsCheckerImplTest : TestBaseWithProfile() {
     @Mock lateinit var bolusProgressData: BolusProgressData
     @Mock lateinit var autosensDataStore: AutosensDataStore
 
+    private lateinit var loopProvider: Provider<Loop>
     private lateinit var danaPump: DanaPump
     private lateinit var insightDbHelper: InsightDbHelper
     private lateinit var constraintChecker: ConstraintsCheckerImpl
@@ -182,13 +184,13 @@ class ConstraintsCheckerImplTest : TestBaseWithProfile() {
                 aapsLogger, rxBus, constraintChecker, rh, profileFunction, profileUtil, config, activePlugin, insulin, iobCobCalculator,
                 hardLimits, preferences, dateUtil, processedTbrEbData, persistenceLayer, smbGlucoseStatusProvider, tddCalculator, bgQualityCheck,
                 notificationManager, determineBasalSMB, profiler, GlucoseStatusCalculatorSMB(aapsLogger, iobCobCalculator, dateUtil, decimalFormatter, deltaCalculator), apsResultProvider, ch,
-                fabricPrivacy
+                fabricPrivacy, loopProvider
             )
         openAPSAMAPlugin =
             OpenAPSAMAPlugin(
                 aapsLogger, rxBus, constraintChecker, rh, config, profileFunction, activePlugin, iobCobCalculator, processedTbrEbData,
                 hardLimits, dateUtil, persistenceLayer, smbGlucoseStatusProvider, preferences, determineBasalAMA,
-                GlucoseStatusCalculatorSMB(aapsLogger, iobCobCalculator, dateUtil, decimalFormatter, deltaCalculator), apsResultProvider, ch
+                GlucoseStatusCalculatorSMB(aapsLogger, iobCobCalculator, dateUtil, decimalFormatter, deltaCalculator), apsResultProvider, ch, loopProvider
             )
         safetyPlugin =
             SafetyPlugin(

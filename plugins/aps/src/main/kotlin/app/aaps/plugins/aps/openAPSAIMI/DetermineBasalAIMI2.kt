@@ -9128,6 +9128,40 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             val activationWindowMs = runtimeMin.coerceAtLeast(0) * 60_000L + 90_000L
             return (nowMs - firedAtMs) < activationWindowMs
         }
+
+        // only to cover tests
+        /**
+         * Délai minimal (ms) après un tir prébolus avant de pouvoir conclure « non délivré » :
+         * un tick de boucle complet + marge. Couvre le retard du cache asynchrone [latestSmbCached]
+         * (voir commentaire dans [runTickClockMaxSmbTirCarbAndGlucoseCopy]) — conclure plus tôt
+         * produirait des faux négatifs (bolus délivré mais pas encore visible en cache).
+         */
+        internal const val LEGACY_PREBOLUS_CONFIRM_DELAY_MS = 390_000L // 6,5 min
+
+        /**
+         * Détection pure « prébolus demandé mais jamais confirmé par la pompe » (Option A — information
+         * seule, aucune re-délivrance : le verrou one-shot [legacyPrebolusLatchBlocks] reste intact).
+         * Renvoie true si le tag a tiré pour l'activation COURANTE ([firedAtMs] dans la fenêtre
+         * d'activation, même règle que le latch), que [LEGACY_PREBOLUS_CONFIRM_DELAY_MS] s'est écoulé
+         * depuis le tir, et qu'aucun bolus SMB confirmé pompe ([lastSmbConfirmedMs], timestamp du
+         * dernier BS.Type.SMB en base) n'existe depuis le tir.
+         */
+        internal fun legacyPrebolusMissedDelivery(
+            firedAtMs: Long?,
+            lastSmbConfirmedMs: Long?,
+            nowMs: Long,
+            runtimeMin: Long,
+        ): Boolean {
+            if (firedAtMs == null) return false
+            // Tir d'une activation précédente → hors sujet pour ce tick.
+            if (!legacyPrebolusLatchBlocks(firedAtMs, nowMs, runtimeMin)) return false
+            // Trop tôt pour conclure : le cache SMB asynchrone peut avoir un tick de retard.
+            if (nowMs - firedAtMs < LEGACY_PREBOLUS_CONFIRM_DELAY_MS) return false
+            return lastSmbConfirmedMs == null || lastSmbConfirmedMs < firedAtMs
+        }
+
+        // end: only to cover tests
+
         /** Glycémie (mg/dL) au-dessus de laquelle la basale peut corriger malgré sport / contexte activité (SMB toujours off). */
         const val EXERCISE_BASAL_RESUME_BG_MGDL: Double = 220.0
 
