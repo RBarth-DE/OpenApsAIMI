@@ -2595,6 +2595,27 @@
       }
     ]
   },
+  "key_aimi_activity_basal_cap_factor": {
+    "key": "key_aimi_activity_basal_cap_factor",
+    "name": "OApsAIMIActivityBasalCapFactor",
+    "type": "Double",
+    "feature_group": "core",
+    "summary": "Used in AIMI internal calculations for activity_basal_cap_factor.",
+    "default": 1.3,
+    "min": 0.5,
+    "orphaned": false,
+    "is_gate": false,
+    "negative_gate_key": null,
+    "impact": "medium",
+    "effect_high": "Higher value — more insulin/greater effect",
+    "effect_low": "Lower value — less insulin/reduced effect",
+    "used_in": [
+      {
+        "file": "DetermineBasalAIMI2.kt",
+        "function": "capBasalRateForCorrectionAggression"
+      }
+    ]
+  },
   "key_aimi_adaptive_basal_max_scaling": {
     "key": "key_aimi_adaptive_basal_max_scaling",
     "name": "OApsAIMIAdaptiveBasalMaxScaling",
@@ -3902,7 +3923,7 @@
     "used_in": [
       {
         "file": "DetermineBasalAIMI2.kt",
-        "function": "executeT3cBrittleMode"
+        "function": "estimateUndeclaredVirtualCob"
       }
     ]
   },
@@ -4348,6 +4369,56 @@
       {
         "file": "AimiBehaviorFamilyRegistry.kt",
         "function": "unknown"
+      }
+    ]
+  },
+  "key_aimi_undeclared_cob_enabled": {
+    "key": "key_aimi_undeclared_cob_enabled",
+    "name": "OApsAIMIUndeclaredCobEnabled",
+    "type": "Boolean",
+    "feature_group": "core",
+    "summary": "Enables/disables undeclared_cob_enabled. Gate flag for feature control.",
+    "orphaned": false,
+    "is_gate": false,
+    "negative_gate_key": null,
+    "impact": "medium",
+    "effect_high": "Feature is active — associated functionality runs",
+    "effect_low": "Feature is inactive — associated functionality is disabled",
+    "used_in": [
+      {
+        "file": "OpenAPSAIMIPlugin.kt",
+        "function": "aimiComposeT3cSubScreen"
+      },
+      {
+        "file": "DetermineBasalAIMI2.kt",
+        "function": "applyContextModule"
+      }
+    ]
+  },
+  "key_aimi_undeclared_cob_max_g": {
+    "key": "key_aimi_undeclared_cob_max_g",
+    "name": "OApsAIMIUndeclaredCobMaxG",
+    "type": "Double",
+    "feature_group": "core",
+    "summary": "Used in AIMI internal calculations for undeclared_cob_max_g.",
+    "default": 25.0,
+    "min": 5.0,
+    "max": 80.0,
+    "dependency": "OApsAIMIUndeclaredCobEnabled",
+    "orphaned": false,
+    "is_gate": false,
+    "negative_gate_key": null,
+    "impact": "medium",
+    "effect_high": "Higher value — more insulin/greater effect",
+    "effect_low": "Lower value — less insulin/reduced effect",
+    "used_in": [
+      {
+        "file": "OpenAPSAIMIPlugin.kt",
+        "function": "aimiComposeT3cSubScreen"
+      },
+      {
+        "file": "DetermineBasalAIMI2.kt",
+        "function": "estimateUndeclaredVirtualCob"
       }
     ]
   },

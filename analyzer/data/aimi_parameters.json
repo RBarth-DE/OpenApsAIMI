@@ -1,13 +1,13 @@
 {
   "version": "3.0",
-  "source_commit": "42435c17778cfe078a7de0475088204ac2ef58a1",
-  "generated_at": "2026-07-01T04:15:44.971318+00:00",
-  "total": 276,
-  "active": 230,
+  "source_commit": "c1fe3bc442662e195f8faf6cfdd38545c7693998",
+  "generated_at": "2026-07-07T09:43:24.620433+00:00",
+  "total": 279,
+  "active": 233,
   "orphaned": 46,
-  "with_used_in": 214,
+  "with_used_in": 217,
   "with_negative_gate": 9,
-  "with_settings_path": 220,
+  "with_settings_path": 223,
   "parameters": [
     {
       "key": "AIMI_UAM_CONFIDENCE",
@@ -3195,6 +3195,30 @@
       "settings_gate": null
     },
     {
+      "key": "key_aimi_activity_basal_cap_factor",
+      "name": "OApsAIMIActivityBasalCapFactor",
+      "type": "Double",
+      "default": 1.3,
+      "min": 0.5,
+      "used_in": [
+        {
+          "file": "DetermineBasalAIMI2.kt",
+          "function": "capBasalRateForCorrectionAggression"
+        }
+      ],
+      "orphaned": false,
+      "negative_gate_key": null,
+      "negative_gate_note": null,
+      "logic_summary": "Used in AIMI internal calculations for activity_basal_cap_factor.",
+      "effect_high": "Higher value — more insulin/greater effect",
+      "effect_low": "Lower value — less insulin/reduced effect",
+      "impact": "medium",
+      "feature_group": "core",
+      "is_gate": false,
+      "settings_path": "AIMI → Preferences user → Core",
+      "settings_gate": null
+    },
+    {
       "key": "key_aimi_adaptive_basal_max_scaling",
       "name": "OApsAIMIAdaptiveBasalMaxScaling",
       "type": "Double",
@@ -4751,7 +4775,7 @@
       "used_in": [
         {
           "file": "DetermineBasalAIMI2.kt",
-          "function": "executeT3cBrittleMode"
+          "function": "estimateUndeclaredVirtualCob"
         }
       ],
       "orphaned": false,
@@ -5277,6 +5301,62 @@
       "is_gate": false,
       "settings_path": "AIMI → Preferences user → Trajectory Guard → Straight-line tube (tuning)",
       "settings_gate": "Requires: Straight Line Tube Enabled = ON"
+    },
+    {
+      "key": "key_aimi_undeclared_cob_enabled",
+      "name": "OApsAIMIUndeclaredCobEnabled",
+      "type": "Boolean",
+      "used_in": [
+        {
+          "file": "OpenAPSAIMIPlugin.kt",
+          "function": "aimiComposeT3cSubScreen"
+        },
+        {
+          "file": "DetermineBasalAIMI2.kt",
+          "function": "applyContextModule"
+        }
+      ],
+      "orphaned": false,
+      "negative_gate_key": null,
+      "negative_gate_note": null,
+      "logic_summary": "Enables/disables undeclared_cob_enabled. Gate flag for feature control.",
+      "effect_high": "Feature is active — associated functionality runs",
+      "effect_low": "Feature is inactive — associated functionality is disabled",
+      "impact": "medium",
+      "feature_group": "core",
+      "is_gate": false,
+      "settings_path": "AIMI → Preferences user → Core",
+      "settings_gate": null
+    },
+    {
+      "key": "key_aimi_undeclared_cob_max_g",
+      "name": "OApsAIMIUndeclaredCobMaxG",
+      "type": "Double",
+      "default": 25.0,
+      "min": 5.0,
+      "max": 80.0,
+      "dependency": "OApsAIMIUndeclaredCobEnabled",
+      "used_in": [
+        {
+          "file": "OpenAPSAIMIPlugin.kt",
+          "function": "aimiComposeT3cSubScreen"
+        },
+        {
+          "file": "DetermineBasalAIMI2.kt",
+          "function": "estimateUndeclaredVirtualCob"
+        }
+      ],
+      "orphaned": false,
+      "negative_gate_key": null,
+      "negative_gate_note": null,
+      "logic_summary": "Used in AIMI internal calculations for undeclared_cob_max_g.",
+      "effect_high": "Higher value — more insulin/greater effect",
+      "effect_low": "Lower value — less insulin/reduced effect",
+      "impact": "medium",
+      "feature_group": "core",
+      "is_gate": false,
+      "settings_path": "AIMI → Preferences user → Core",
+      "settings_gate": null
     },
     {
       "key": "key_aimiweight",

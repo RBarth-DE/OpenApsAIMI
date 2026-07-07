@@ -1,6 +1,6 @@
 {
   "version": "2.2",
-  "generated_at": "2026-07-01T04:15:45.059228+00:00",
+  "generated_at": "2026-07-07T09:43:24.725234+00:00",
   "algorithm_overview": {
     "name": "AIMI (AI-powered Modular Insulin)",
     "base": "OpenAPS oref1 with extensive extensions",
@@ -431,7 +431,7 @@
       "workaround": "None — parameters are ineffective."
     }
   ],
-  "source_commit": "42435c17778cfe078a7de0475088204ac2ef58a1",
+  "source_commit": "c1fe3bc442662e195f8faf6cfdd38545c7693998",
   "parameter_knowledge": [
     {
       "key": "AIMI_UAM_CONFIDENCE",
@@ -1452,6 +1452,18 @@
       "function": "compute"
     },
     {
+      "key": "key_aimi_activity_basal_cap_factor",
+      "name": "OApsAIMIActivityBasalCapFactor",
+      "logic_summary": "Used in AIMI internal calculations for activity_basal_cap_factor.",
+      "effect_high": "Higher value — more insulin/greater effect",
+      "effect_low": "Lower value — less insulin/reduced effect",
+      "feature_group": "core",
+      "impact": "medium",
+      "settings_path": "AIMI → Preferences user → Core",
+      "usage_type": "",
+      "function": "capBasalRateForCorrectionAggression"
+    },
+    {
       "key": "key_aimi_adaptive_basal_max_scaling",
       "name": "OApsAIMIAdaptiveBasalMaxScaling",
       "logic_summary": "Maximum scaling of adaptive basal rate.",
@@ -2013,7 +2025,7 @@
       "impact": "high",
       "settings_path": "AIMI → Preferences user → T3C Adaptive Basal",
       "usage_type": "",
-      "function": "executeT3cBrittleMode"
+      "function": "estimateUndeclaredVirtualCob"
     },
     {
       "key": "key_aimi_t3c_cfrd_lgs_floor",
@@ -2218,6 +2230,30 @@
       "settings_path": "AIMI → Preferences user → Trajectory Guard → Straight-line tube (tuning)",
       "usage_type": "",
       "function": "aimiComposeTrajectorySubScreen"
+    },
+    {
+      "key": "key_aimi_undeclared_cob_enabled",
+      "name": "OApsAIMIUndeclaredCobEnabled",
+      "logic_summary": "Enables/disables undeclared_cob_enabled. Gate flag for feature control.",
+      "effect_high": "Feature is active — associated functionality runs",
+      "effect_low": "Feature is inactive — associated functionality is disabled",
+      "feature_group": "core",
+      "impact": "medium",
+      "settings_path": "AIMI → Preferences user → Core",
+      "usage_type": "",
+      "function": "aimiComposeT3cSubScreen"
+    },
+    {
+      "key": "key_aimi_undeclared_cob_max_g",
+      "name": "OApsAIMIUndeclaredCobMaxG",
+      "logic_summary": "Used in AIMI internal calculations for undeclared_cob_max_g.",
+      "effect_high": "Higher value — more insulin/greater effect",
+      "effect_low": "Lower value — less insulin/reduced effect",
+      "feature_group": "core",
+      "impact": "medium",
+      "settings_path": "AIMI → Preferences user → Core",
+      "usage_type": "",
+      "function": "aimiComposeT3cSubScreen"
     },
     {
       "key": "key_aimiweight",

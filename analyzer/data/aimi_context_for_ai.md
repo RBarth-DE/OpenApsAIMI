@@ -1,7 +1,7 @@
 # AIMI Algorithm Context
 Version: 2.2
-Source commit: 42435c17778cfe078a7de0475088204ac2ef58a1
-Generated: 2026-07-01T04:15:45.059228+00:00
+Source commit: c1fe3bc442662e195f8faf6cfdd38545c7693998
+Generated: 2026-07-07T09:43:24.725234+00:00
 
 ## Algorithm Overview
 AIMI (AI-powered Modular Insulin)
@@ -509,7 +509,7 @@ Key parameters (11):
 - `key_aimi_context_enabled`
 - `key_aimi_context_llm_enabled`
 
-### core (84 params)
+### core (87 params)
 - `OApsAIMIDeltaPosRelease` [default: 1.0]
 - `OApsAIMIHighBg` [default: 180.0]
 - `OApsAIMI_Enable_night`

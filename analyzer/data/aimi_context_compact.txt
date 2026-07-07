@@ -1,4 +1,4 @@
-# AIMI Algorithm Context (commit: 42435c17)
+# AIMI Algorithm Context (commit: c1fe3bc4)
 
 ## Overview
 The AIMI algorithm runs a 46-stage decision pipeline per 5-minute tick.
@@ -236,7 +236,7 @@ Gate: key_use_Aimi_wcycle
   - key_aimi_context_enabled
   - key_aimi_context_llm_enabled
 
-### core (84 params)
+### core (87 params)
   - OApsAIMIDeltaPosRelease [default: 1.0]
   - OApsAIMIHighBg [default: 180.0]
   - OApsAIMI_Enable_night
@@ -257,7 +257,7 @@ Gate: key_use_Aimi_wcycle
   - autosens_adjust_targets
   - autosens_max [default: 1.2]
   - autosens_min [default: 0.7]
-  ... and 64 more
+  ... and 67 more
 
 ### cosine_gate (6 params)
   - aimi_cosine_gate_alpha [default: 2.0]
