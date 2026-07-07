@@ -1383,8 +1383,28 @@ function formatAI(text){
     }
   });
 
+  // HTML escape first, then render markdown on escaped text
   let html=text
-    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+  // Render Markdown tables (on already-escaped text)
+  html=html.replace(/(\|[^\n]+\|\n)((?:\|[-: ]+\|\n))((?:\|[^\n]+\|\n?)*)/g,(match,header,sep,body)=>{
+    const parseRow=r=>r.trim().replace(/^\||\|$/g,'').split('|').map(c=>c.trim());
+    const headers=parseRow(header);
+    if(headers.every(h=>!h||/^[-: ]+$/.test(h))) return '';
+    const rows=body.trim().split('\n').filter(r=>r.includes('|')).map(parseRow);
+    let t=`<table style="width:100%;border-collapse:collapse;margin:8px 0;font-size:.82rem"><thead><tr>`;
+    headers.forEach(h=>{if(h) t+=`<th style="padding:6px 10px;text-align:left;border-bottom:1px solid var(--border);color:var(--text2);font-weight:600">${h}</th>`;});
+    t+=`</tr></thead><tbody>`;
+    rows.forEach(row=>{
+      t+=`<tr>`;
+      row.forEach(cell=>{ t+=`<td style="padding:5px 10px;border-bottom:1px solid var(--border);vertical-align:top">${cell}</td>`; });
+      t+=`</tr>`;
+    });
+    return t+`</tbody></table>`;
+  });
+
+  html=html
     .replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')
     .replace(/`([^`\n]+)`/g,(m,k)=>{
       const info=paramIdx[k];

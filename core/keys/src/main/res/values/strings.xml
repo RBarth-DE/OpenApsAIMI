@@ -707,7 +707,7 @@
     <string name="aimi_summary_o_aps_a_i_m_i_lunch_factor">Lunch multiplier for adaptive basal.</string>
     <string name="aimi_summary_o_aps_a_i_m_i_lunchinterval">Controls lunchinterval.</string>
     <string name="aimi_summary_o_aps_a_i_m_i_meal_factor">General meal multiplier for adaptive basal.</string>
-    <string name="aimi_summary_o_aps_a_i_m_imealinterval">Controls .</string>
+    <string name="aimi_summary_o_aps_a_i_m_i_meal_interval">SMB interval in minutes when a general meal pattern is detected.</string>
     <string name="aimi_summary_o_aps_a_i_m_i_night_growth_age_years">Controls night growth age years.</string>
     <string name="aimi_summary_o_aps_a_i_m_i_night_growth_basal_multiplier">Basal multiplier during nocturnal growth resistance.</string>
     <string name="aimi_summary_o_aps_a_i_m_i_night_growth_decay_minutes">Controls night growth decay minutes.</string>
@@ -737,10 +737,10 @@
     <string name="aimi_summary_o_aps_a_i_m_i_snack_prebolus">Prebolus window for snack mode (minutes).</string>
     <string name="aimi_summary_o_aps_a_i_m_iautodrivesmall_prebolus" comment="Prebolus amount (U) for aggressive SMB floor when autodrive detects a moderate snack-like rise">Prebolus units injected as an aggressive SMB floor when autodrive detects a moderate rise (riseSignal ≥ 2 mg/dL/5min), e.g. a snack.</string>
     <string name="aimi_summary_o_aps_a_i_m_i_t_d_d7">7-day total daily insulin. Central to hyper classification.</string>
-    <string name="aimi_summary_o_aps_a_i_m_ipregnancy">Controls .</string>
-    <string name="aimi_summary_o_aps_a_i_m_iauto_drive">Controls drive.</string>
-    <string name="aimi_summary_o_aps_a_i_m_ihoneymoon">Controls .</string>
-    <string name="aimi_summary_o_aps_a_i_m_iwcycle">Controls .</string>
+    <string name="aimi_summary_o_aps_a_i_m_i_pregnancy">Enable gestational autopilot. Adjusts basal, ISF, and carb ratio based on pregnancy due date and trimester.</string>
+    <string name="aimi_summary_o_aps_a_i_m_i_auto_drive">Legacy AutoDrive mode. Superseded by AutoDrive V3; automatically migrated to V3 on plugin start.</string>
+    <string name="aimi_summary_o_aps_a_i_m_i_honeymoon">Enable honeymoon mode for residual beta-cell function. Activates additional SMB during falling BG.</string>
+    <string name="aimi_summary_o_aps_a_i_m_i_w_cycle">Enable menstrual cycle awareness for hormonal insulin sensitivity adjustments.</string>
     <string name="aimi_summary_o_aps_a_i_m_i_w_cycle_require_confirm">Controls w cycle require confirm.</string>
     <string name="aimi_summary_o_aps_a_i_m_i_w_cycle_shadow">Controls w cycle shadow.</string>
     <string name="aimi_summary_o_aps_a_i_m_iauto_drive_active">Controls drive active.</string>
@@ -749,7 +749,7 @@
     <string name="aimi_summary_o_aps_a_i_m_i_w_cycle_avg_length">Controls w cycle avg length.</string>
     <string name="aimi_summary_o_aps_a_i_m_i_w_cycle_clamp_max">Controls w cycle clamp max.</string>
     <string name="aimi_summary_o_aps_a_i_m_i_w_cycle_clamp_min">Controls w cycle clamp min.</string>
-    <string name="aimi_summary_o_aps_a_i_m_iwcycledateday">Controls .</string>
+    <string name="aimi_summary_o_aps_a_i_m_i_w_cycle_date_day">Day of the month when the menstrual cycle starts (1–31).</string>
     <string name="aimi_summary_aps_lgs_threshold">Controls aps lgs threshold.</string>
     <string name="aimi_summary_aps_max_current_basal_multiplier">Controls aps max current basal multiplier.</string>
     <string name="aimi_summary_aps_max_daily_multiplier">Controls aps max daily multiplier.</string>

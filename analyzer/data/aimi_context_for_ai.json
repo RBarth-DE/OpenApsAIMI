@@ -1,6 +1,6 @@
 {
   "version": "2.2",
-  "generated_at": "2026-07-07T09:43:24.725234+00:00",
+  "generated_at": "2026-07-07T09:49:43.042473+00:00",
   "algorithm_overview": {
     "name": "AIMI (AI-powered Modular Insulin)",
     "base": "OpenAPS oref1 with extensive extensions",
@@ -431,7 +431,7 @@
       "workaround": "None — parameters are ineffective."
     }
   ],
-  "source_commit": "c1fe3bc442662e195f8faf6cfdd38545c7693998",
+  "source_commit": "02109d5ef326795c50bc4a0bab34fe2d45a86868",
   "parameter_knowledge": [
     {
       "key": "AIMI_UAM_CONFIDENCE",
@@ -2239,7 +2239,7 @@
       "effect_low": "Feature is inactive — associated functionality is disabled",
       "feature_group": "core",
       "impact": "medium",
-      "settings_path": "AIMI → Preferences user → Core",
+      "settings_path": "AIMI → Preferences user → T3C Brittle Mode Settings",
       "usage_type": "",
       "function": "aimiComposeT3cSubScreen"
     },
@@ -2251,7 +2251,7 @@
       "effect_low": "Lower value — less insulin/reduced effect",
       "feature_group": "core",
       "impact": "medium",
-      "settings_path": "AIMI → Preferences user → Core",
+      "settings_path": "AIMI → Preferences user → T3C Brittle Mode Settings",
       "usage_type": "",
       "function": "aimiComposeT3cSubScreen"
     },

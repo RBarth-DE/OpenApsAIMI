@@ -1067,7 +1067,7 @@ if req.profile_data and not req.profile_data.get('error') else '(not available)'
 1. Evaluate metrics (3–4 sentences, specific)
 2. 3–8 optimizations — only for ACTIVE features:
    - Exact key (in backticks, e.g. `key_openapsaimi_max_smb`)
-   - Settings path: where to find it in AAPS (e.g. AIMI → Preferences user → Core parameters)
+   - Settings path: use ONLY the 📍 path already shown next to the parameter above — do NOT invent or guess a path. If no path is shown, omit it.
    - Current → Recommendation (with value)
    - Reason
    - Risk: low/medium/high

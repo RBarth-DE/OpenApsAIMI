@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-07-01T04:14:25.854445+00:00",
-  "source_commit": "42435c17778cfe078a7de0475088204ac2ef58a1",
+  "generated_at": "2026-07-07T09:49:39.452027+00:00",
+  "source_commit": "02109d5ef326795c50bc4a0bab34fe2d45a86868",
   "paths": {
     "openapsma_max_basal": {
       "path": "AIMI → Advanced Settings",
@@ -1219,6 +1219,24 @@
         "T3C Brittle Mode Settings"
       ],
       "gate_key": null
+    },
+    "key_aimi_undeclared_cob_enabled": {
+      "path": "AIMI → Preferences user → T3C Brittle Mode Settings",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "T3C Brittle Mode Settings"
+      ],
+      "gate_key": null
+    },
+    "key_aimi_undeclared_cob_max_g": {
+      "path": "AIMI → Preferences user → T3C Brittle Mode Settings",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "T3C Brittle Mode Settings"
+      ],
+      "gate_key": "key_aimi_undeclared_cob_enabled"
     },
     "key_use_aimi_t3c_adaptive_basal": {
       "path": "AIMI → Preferences user → Universal Adaptive Basal",

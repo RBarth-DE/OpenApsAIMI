@@ -1,7 +1,7 @@
 {
   "version": "3.0",
-  "source_commit": "c1fe3bc442662e195f8faf6cfdd38545c7693998",
-  "generated_at": "2026-07-07T09:43:24.620433+00:00",
+  "source_commit": "02109d5ef326795c50bc4a0bab34fe2d45a86868",
+  "generated_at": "2026-07-07T09:49:42.999988+00:00",
   "total": 279,
   "active": 233,
   "orphaned": 46,
@@ -5325,7 +5325,7 @@
       "impact": "medium",
       "feature_group": "core",
       "is_gate": false,
-      "settings_path": "AIMI → Preferences user → Core",
+      "settings_path": "AIMI → Preferences user → T3C Brittle Mode Settings",
       "settings_gate": null
     },
     {
@@ -5355,8 +5355,8 @@
       "impact": "medium",
       "feature_group": "core",
       "is_gate": false,
-      "settings_path": "AIMI → Preferences user → Core",
-      "settings_gate": null
+      "settings_path": "AIMI → Preferences user → T3C Brittle Mode Settings",
+      "settings_gate": "Requires: Undeclared Cob Enabled = ON"
     },
     {
       "key": "key_aimiweight",

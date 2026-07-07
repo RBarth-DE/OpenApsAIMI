@@ -9152,6 +9152,15 @@ class DetermineBasalaimiSMB2 @Inject constructor(
 
         private var lastLegacyPrebolusTimestampMem: Long = 0L
 
+        /** Cooldown timer for the priority carry-forward retry, kept separate from
+         *  [internalLastLegacyPrebolusMillis]. That field is read by isLunch2ModeCondition()
+         *  (and the other *2ModeCondition() P2 gates) to enforce a 10-min gap after the
+         *  ORIGINAL P1 fire; if the carry-forward retry reset it on every re-fire, a delayed
+         *  confirmation could push that 10-min window past the end of the P2 firing window
+         *  (LEGACY_MEAL_PRE2_MIN..MAX), permanently starving P2. This timer only throttles how
+         *  often the carry block itself may retry — it must never feed into the P2 gate. */
+        private var lastCarryRetryFireMillis: Long = 0L
+
         // Pending delivery state for legacy meal prebolus.
         // Set by markLegacyMealDecision() instead of lastBolusSMBUnit, so a Medtrum
         // BLE disconnect at the P1 tick does not permanently consume the one-shot
@@ -13735,45 +13744,33 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             val anyMealActive = lunchTime || dinnerTime || bfastTime || mealTime || highCarbTime || snackTime
             if (anyMealActive) {
                 manualMealModeTbr(lunchruntime, "MAINT_PB1_PRIORITY", overrideSafetyLimits = false)
-                // NEW: Do not re-fire if we have just delivered (wait for detection)
-                val timeSinceLastPrebolus = dateUtil.now() - internalLastLegacyPrebolusMillis
-                val waitingForConfirmation = internalLastLegacyPrebolusMillis > 0L
-                    && timeSinceLastPrebolus < 6 * 60_000L
+                // Do not re-fire on every tick — throttle retries with a DEDICATED timer.
+                // Must NOT reuse/reset internalLastLegacyPrebolusMillis: that timestamp is the
+                // P1-fire reference that isLunch2ModeCondition() (and the other *2ModeCondition()
+                // P2 gates) use for their own 10-min "prebolusAlreadyFiredInP2Window" guard. Resetting
+                // it here on every carry retry pushes that guard's window forward each time, and can
+                // walk it right past the end of the P2 firing window (LEGACY_MEAL_PRE2_MIN..MAX),
+                // permanently starving P2 even after the carried P1 amount is confirmed delivered.
+                val timeSinceLastCarryRetry = dateUtil.now() - lastCarryRetryFireMillis
+                val carryOnCooldown = lastCarryRetryFireMillis > 0L
+                    && timeSinceLastCarryRetry < 6 * 60_000L
 
-                if (!waitingForConfirmation) {
+                // 🛡️ Same MaxIOB guard as setLegacyPrebolusUnits(): this path sets rT.units directly
+                // and previously bypassed it entirely, so a slow-to-confirm delivery could re-request
+                // the full carried amount tick after tick regardless of how high IOB had climbed since.
+                if (iob > this.maxIob) {
+                    consoleLog.add("🛡️ LEGACY_PB1_PRIORITY_CARRY tag=MAINT_PB1_PRIORITY: IOB ${"%.2f".format(Locale.US, iob)}U > MaxIOB — TBR seul")
+                    rT.units = 0.0
+                    return rT
+                }
+
+                if (!carryOnCooldown) {
                     rT.units = pendingLegacyPrebolusUnit.toDouble()
                     rT.deliverAt = dateUtil.now()
-                    internalLastLegacyPrebolusMillis = dateUtil.now()  // verhindert Re-Fire
+                    lastCarryRetryFireMillis = dateUtil.now()  // throttles carry retries only
                     consoleLog.add("🍱 LEGACY_PB1_PRIORITY_CARRY: ${pendingLegacyPrebolusUnit}U (vor P2)")
                 } else {
-                    consoleLog.add("⏳ CARRY: waiting for confirmation (${timeSinceLastPrebolus/1000}s ago)")
-                }
-                return rT
-            }
-        }
-
-        if (pendingLegacyPrebolusUnit > 0.0f && dateUtil.now() < pendingLegacyPrebolusExpiry) {
-            val anyMealActive = lunchTime || dinnerTime || bfastTime || mealTime || highCarbTime || snackTime
-            val anyRuntime = when {
-                lunchTime   -> lunchruntime
-                dinnerTime  -> dinnerruntime
-                bfastTime   -> bfastruntime
-                mealTime    -> mealruntime
-                highCarbTime -> highCarbrunTime
-                snackTime   -> snackrunTime
-                else        -> 0L
-            }
-            if (anyMealActive && anyRuntime in 0..29) {
-                manualMealModeTbr(anyRuntime, "MAINT_PB1_PRIORITY", overrideSafetyLimits = false)
-                val timeSinceLastPrebolus = dateUtil.now() - internalLastLegacyPrebolusMillis
-                val waitingForConfirmation = internalLastLegacyPrebolusMillis > 0L
-                    && timeSinceLastPrebolus < 6 * 60_000L
-
-                if (!waitingForConfirmation) {
-                    rT.units = pendingLegacyPrebolusUnit.toDouble()
-                    consoleLog.add("🍱 LEGACY_PB1_PRIORITY_CARRY: ${pendingLegacyPrebolusUnit}U (before P2)")
-                } else {
-                    consoleLog.add("⏳ CARRY: waiting for confirmation (${timeSinceLastPrebolus / 1000}s ago)")
+                    consoleLog.add("⏳ CARRY: cooldown (${timeSinceLastCarryRetry/1000}s ago)")
                 }
                 return rT
             }
