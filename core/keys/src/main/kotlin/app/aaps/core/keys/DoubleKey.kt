@@ -602,6 +602,14 @@ enum class DoubleKey(
         max = 90.0,
         summaryResId = R.string.pref_summary_aimi_t3c_cfrd_cob_delay,
     ),
+    /** Undeclared-meal COB estimation: hard upper bound (grams) the estimator may inject into the
+     *  prediction path. Conservative by default. Only active when [BooleanKey.OApsAIMIUndeclaredCobEnabled] is on. */
+    OApsAIMIUndeclaredCobMaxG(
+        "key_aimi_undeclared_cob_max_g", 25.0, 5.0, 80.0,
+        titleResId = R.string.pref_title_aimi_undeclared_cob_max_g,
+        summaryResId = R.string.pref_summary_aimi_undeclared_cob_max_g,
+        dependency = BooleanKey.OApsAIMIUndeclaredCobEnabled,
+    ),
     OApsAIMIAdaptiveBasalMaxScaling(
         key = "key_aimi_adaptive_basal_max_scaling",
         defaultValue = 1.0,

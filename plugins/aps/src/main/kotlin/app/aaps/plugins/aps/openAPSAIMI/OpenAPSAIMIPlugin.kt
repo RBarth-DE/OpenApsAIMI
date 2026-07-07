@@ -1751,6 +1751,8 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
                 DoubleKey.OApsAIMIT3cCfrdLgsFloorMgdl,
                 DoubleKey.OApsAIMIT3cCfrdCobDelayMin,
                 DoubleKey.OApsAIMIT3cAnticipationStrength,
+                BooleanKey.OApsAIMIUndeclaredCobEnabled,
+                DoubleKey.OApsAIMIUndeclaredCobMaxG,
             ),
         )
 
