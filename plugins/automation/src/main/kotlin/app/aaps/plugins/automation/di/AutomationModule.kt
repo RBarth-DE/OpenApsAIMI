@@ -27,6 +27,7 @@ import app.aaps.plugins.automation.actions.ActionSettingsExport
 import app.aaps.plugins.automation.actions.ActionStartTempTarget
 import app.aaps.plugins.automation.actions.ActionStopProcessing
 import app.aaps.plugins.automation.actions.ActionStopTempTarget
+import app.aaps.plugins.automation.TimerReminderReceiver
 import app.aaps.plugins.automation.services.LocationService
 import app.aaps.plugins.automation.triggers.Trigger
 import app.aaps.plugins.automation.triggers.TriggerAutosensValue
@@ -132,6 +133,7 @@ abstract class AutomationModule {
     @ContributesAndroidInjector abstract fun actionDisableSceneInjector(): ActionDisableScene
     @ContributesAndroidInjector abstract fun actionDummyInjector(): ActionDummy
     @ContributesAndroidInjector abstract fun contributesLocationService(): LocationService
+    @ContributesAndroidInjector abstract fun contributesTimerReminderReceiver(): TimerReminderReceiver
 
     @Module
     @InstallIn(SingletonComponent::class)
