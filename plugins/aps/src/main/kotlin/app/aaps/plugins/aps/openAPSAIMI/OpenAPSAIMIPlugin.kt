@@ -1737,8 +1737,30 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
                 add(aimiComposeInflammatorySubScreen())
                 add(aimiComposeThyroidModuleSubScreen())
                 add(aimiComposeEndometriosisSubScreen())
+                add(aimiComposeNightGrowthSubScreen())
             },
         )
+
+    private fun aimiComposeLabSubScreen(): PreferenceSubScreenDef =
+        PreferenceSubScreenDef(
+            key = "aimi_compose_lab",
+            titleResId = R.string.aimi_lab_title,
+            items = buildList {
+                add(BooleanKey.OApsAIMIMLtraining)
+                add(DoubleKey.OApsAIMIMaxSMB)
+                add(DoubleKey.OApsAIMIHighBGMaxSMB)
+                add(aimiComposePkpdSubScreen())
+                add(aimiComposeAdaptiveBasalSubScreen())
+                add(aimiComposeT3cSubScreen())
+                add(aimiComposeTrajectorySubScreen())
+                add(aimiComposeManualModesSubScreen())
+                add(aimiComposeAutodriveSubScreen())
+                add(BooleanKey.OApsxdriponeminute)
+                add(BooleanKey.OApsAIMIUnifiedReactivityEnabled)
+                add(aimiComposeAiAuditorSubScreen())
+            },
+        )
+
 
     private fun aimiComposeT3cSubScreen(): PreferenceSubScreenDef =
         PreferenceSubScreenDef(
@@ -1746,6 +1768,7 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
             titleResId = R.string.aimi_t3c_settings_title,
             items = listOf(
                 BooleanKey.OApsAIMIT3cBrittleMode,
+                BooleanKey.OApsAIMIBiometricActivityLockout,
                 DoubleKey.OApsAIMIT3cActivationThreshold,
                 DoubleKey.OApsAIMIT3cAggressiveness,  // Read by BasalNeuralLearner.kt::getT3cAdaptiveFactor
                 DoubleKey.OApsAIMIT3cCfrdLgsFloorMgdl,
@@ -2072,6 +2095,7 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
             items = buildList {
                 add(aimiComposePkpdSetupItem())
                 add(BooleanKey.OApsAIMIPkpdEnabled)
+                add(BooleanKey.OApsAIMIPkpdEndogenousReversion)
                 add(BooleanKey.OApsAIMIPeakGovernorEnabled)
                 add(DoubleKey.OApsAIMIPeakGovernorLearnedWeight)
                 add(DoubleKey.OApsAIMIPkpdInitialDiaH)

@@ -990,9 +990,13 @@ class ComposeMainActivity : AppCompatActivity() {
             if (isDestroyed) return@postDelayed
             if (storedSkinPrefersDashboardHome(preferences.get(StringKey.GeneralSkin))) {
                 rxBus.send(EventRefreshOverview("ComposeMainActivity.afterChildFragmentsResume", now = true))
-                activePlugin.activeOverview.overviewBus.send(
-                    EventUpdateOverviewIobCob("ComposeMainActivity.afterChildFragmentsResume"),
-                )
+                try {
+                    activePlugin.activeOverview.overviewBus.send(
+                        EventUpdateOverviewIobCob("ComposeMainActivity.afterChildFragmentsResume"),
+                    )
+                } catch (_: IllegalStateException) {
+                    aapsLogger.warn(LTag.UI, "Overview plugin not yet available, skipping IOB/COB update")
+                }
             }
         }, deferMs)
     }

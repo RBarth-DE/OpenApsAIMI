@@ -3,6 +3,7 @@ package app.aaps.plugins.main.di
 import app.aaps.core.interfaces.di.AllConfigs
 import app.aaps.core.interfaces.plugin.PluginBase
 import app.aaps.plugins.main.general.persistentNotification.PersistentNotificationPlugin
+import app.aaps.plugins.main.general.overview.OverviewPlugin
 import app.aaps.plugins.main.iob.iobCobCalculator.IobCobCalculatorPlugin
 import dagger.Binds
 import dagger.Module
@@ -27,6 +28,12 @@ abstract class MainPluginsListModule {
     @IntoMap
     @IntKey(0)
     abstract fun bindPersistentNotificationPlugin(plugin: PersistentNotificationPlugin): PluginBase
+
+    @Binds
+    @AllConfigs
+    @IntoMap
+    @IntKey(5)
+    abstract fun bindOverviewPlugin(plugin: OverviewPlugin): PluginBase
 
     @Binds
     @AllConfigs

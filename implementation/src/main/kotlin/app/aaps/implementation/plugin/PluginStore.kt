@@ -280,7 +280,8 @@ class PluginStore @Inject constructor(
             ?: checkNotNull(activeSmoothingStore) { "No smoothing selected" }
 
     override val activeOverview: Overview
-        get() = getSpecificPluginsListByInterface(Overview::class.java).first() as Overview
+        get() = getSpecificPluginsListByInterface(Overview::class.java).firstOrNull() as Overview?
+            ?: throw IllegalStateException("No Overview plugin registered")
 
     override val activeCalibration: Calibration
         get() = activeCalibrationStore ?: checkNotNull(activeCalibrationStore) { "No calibration selected" }
