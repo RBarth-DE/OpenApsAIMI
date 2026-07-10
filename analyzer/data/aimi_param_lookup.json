@@ -725,7 +725,7 @@
     "used_in": [
       {
         "file": "DetermineBasalAIMI2.kt",
-        "function": "unknown"
+        "function": "applyContextModule"
       },
       {
         "file": "ContextInfluenceEngine.kt",
@@ -2750,6 +2750,48 @@
       }
     ]
   },
+  "key_aimi_basal_slew_limit": {
+    "key": "key_aimi_basal_slew_limit",
+    "name": "OApsAIMIBasalSlewLimitEnabled",
+    "type": "Boolean",
+    "feature_group": "core",
+    "summary": "Boolean switch for basal_slew_limit.",
+    "orphaned": false,
+    "is_gate": false,
+    "negative_gate_key": null,
+    "impact": "medium",
+    "effect_high": "Feature is active — associated functionality runs",
+    "effect_low": "Feature is inactive — associated functionality is disabled",
+    "used_in": [
+      {
+        "file": "DetermineBasalAIMI2.kt",
+        "function": "runPostBasalEngineLearnersRtInstrumentationAndAuditorStage"
+      }
+    ]
+  },
+  "key_aimi_biometric_activity_lockout": {
+    "key": "key_aimi_biometric_activity_lockout",
+    "name": "OApsAIMIBiometricActivityLockout",
+    "type": "Boolean",
+    "feature_group": "core",
+    "summary": "Boolean switch for biometric_activity_lockout.",
+    "orphaned": false,
+    "is_gate": false,
+    "negative_gate_key": null,
+    "impact": "medium",
+    "effect_high": "Feature is active — associated functionality runs",
+    "effect_low": "Feature is inactive — associated functionality is disabled",
+    "used_in": [
+      {
+        "file": "OpenAPSAIMIPlugin.kt",
+        "function": "aimiComposeT3cSubScreen"
+      },
+      {
+        "file": "DetermineBasalAIMI2.kt",
+        "function": "refreshAimiContextActivityFlag"
+      }
+    ]
+  },
   "key_aimi_context_enabled": {
     "key": "key_aimi_context_enabled",
     "name": "OApsAIMIContextEnabled",
@@ -3593,6 +3635,29 @@
       {
         "file": "PkpdSettingsSupport.kt",
         "function": "pkpdPrefsSnapshotFrom"
+      }
+    ]
+  },
+  "key_aimi_pkpd_endo_reversion": {
+    "key": "key_aimi_pkpd_endo_reversion",
+    "name": "OApsAIMIPkpdEndogenousReversion",
+    "type": "Boolean",
+    "feature_group": "pkpd",
+    "summary": "Boolean switch for pkpd_endo_reversion.",
+    "orphaned": false,
+    "is_gate": false,
+    "negative_gate_key": null,
+    "impact": "high",
+    "effect_high": "Feature is active — associated functionality runs",
+    "effect_low": "Feature is inactive — associated functionality is disabled",
+    "used_in": [
+      {
+        "file": "OpenAPSAIMIPlugin.kt",
+        "function": "aimiComposePkpdSubScreen"
+      },
+      {
+        "file": "DetermineBasalAIMI2.kt",
+        "function": "runAdvancedPredictionsAndPredPipePrep"
       }
     ]
   },
@@ -5440,7 +5505,7 @@
     "used_in": [
       {
         "file": "OpenAPSAIMIPlugin.kt",
-        "function": "aimiComposeCoreSmbSubScreen"
+        "function": "aimiComposeLabSubScreen"
       },
       {
         "file": "DetermineBasalAIMI2.kt",
@@ -5471,7 +5536,7 @@
     "used_in": [
       {
         "file": "OpenAPSAIMIPlugin.kt",
-        "function": "aimiComposeCoreSmbSubScreen"
+        "function": "aimiComposeLabSubScreen"
       },
       {
         "file": "DetermineBasalAIMI2.kt",
@@ -5504,7 +5569,7 @@
       },
       {
         "file": "DetermineBasalAIMI2.kt",
-        "function": "isbfast2ModeCondition"
+        "function": "checkLegacyPrebolusDeliveryAndAlert"
       },
       {
         "file": "AimiModeSettingsActivity.kt",
@@ -5533,7 +5598,7 @@
       },
       {
         "file": "DetermineBasalAIMI2.kt",
-        "function": "isDinner2ModeCondition"
+        "function": "checkLegacyPrebolusDeliveryAndAlert"
       },
       {
         "file": "AimiModeSettingsActivity.kt",
@@ -5562,7 +5627,7 @@
       },
       {
         "file": "DetermineBasalAIMI2.kt",
-        "function": "isLunch2ModeCondition"
+        "function": "checkLegacyPrebolusDeliveryAndAlert"
       },
       {
         "file": "AimiModeSettingsActivity.kt",
@@ -5591,7 +5656,7 @@
       },
       {
         "file": "DetermineBasalAIMI2.kt",
-        "function": "isbfastModeCondition"
+        "function": "checkLegacyPrebolusDeliveryAndAlert"
       },
       {
         "file": "AimiBehaviorFamilyRegistry.kt",
@@ -5651,7 +5716,7 @@
       },
       {
         "file": "DetermineBasalAIMI2.kt",
-        "function": "isDinnerModeCondition"
+        "function": "checkLegacyPrebolusDeliveryAndAlert"
       },
       {
         "file": "AimiBehaviorFamilyRegistry.kt",
@@ -5680,7 +5745,7 @@
       },
       {
         "file": "DetermineBasalAIMI2.kt",
-        "function": "isHighCarbModeCondition"
+        "function": "checkLegacyPrebolusDeliveryAndAlert"
       },
       {
         "file": "AimiBehaviorFamilyRegistry.kt",
@@ -5709,7 +5774,7 @@
       },
       {
         "file": "DetermineBasalAIMI2.kt",
-        "function": "isHighCarb2ModeCondition"
+        "function": "checkLegacyPrebolusDeliveryAndAlert"
       },
       {
         "file": "AimiModeSettingsActivity.kt",
@@ -5738,7 +5803,7 @@
       },
       {
         "file": "DetermineBasalAIMI2.kt",
-        "function": "isLunchModeCondition"
+        "function": "checkLegacyPrebolusDeliveryAndAlert"
       },
       {
         "file": "AimiBehaviorFamilyRegistry.kt",
@@ -5767,7 +5832,7 @@
       },
       {
         "file": "DetermineBasalAIMI2.kt",
-        "function": "isMealModeCondition"
+        "function": "checkLegacyPrebolusDeliveryAndAlert"
       },
       {
         "file": "AimiBehaviorFamilyRegistry.kt",
@@ -5796,7 +5861,7 @@
       },
       {
         "file": "DetermineBasalAIMI2.kt",
-        "function": "issnackModeCondition"
+        "function": "checkLegacyPrebolusDeliveryAndAlert"
       }
     ]
   },
@@ -6013,7 +6078,13 @@
     "negative_gate_key": null,
     "impact": "medium",
     "effect_high": "Feature is active — associated functionality runs",
-    "effect_low": "Feature is inactive — associated functionality is disabled"
+    "effect_low": "Feature is inactive — associated functionality is disabled",
+    "used_in": [
+      {
+        "file": "OpenAPSAIMIPlugin.kt",
+        "function": "aimiComposeLabSubScreen"
+      }
+    ]
   },
   "key_use_aimi_autodrive_active": {
     "key": "key_use_aimi_autodrive_active",

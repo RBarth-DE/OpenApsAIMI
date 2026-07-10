@@ -610,7 +610,7 @@ const IMPACT_EMOJI={critical:'🔴',high:'🟠',medium:'🟡',low:'🟢'};
 const IORD={critical:0,high:1,medium:2,low:3};
 let allParams=[],featureGroups=[],analysisResult=null,importedParams=[];
 let activeGates={},currentDiff=[],profileData={};
-let importExportAgeHours=null;
+
 let config=JSON.parse(localStorage.getItem('aimi_config')||'{}');
 let overrides=JSON.parse(localStorage.getItem('aimi_overrides')||'{}');
 
@@ -684,25 +684,6 @@ async function apiFetch(path,opts={}){
 // ── INIT ──
 async function init(){
   applySavedConfig();
-  // Restore export age from last import (survives page reload / NUC restart)
-  const storedTs=localStorage.getItem('aimi_export_timestamp');
-  if(storedTs && parseFloat(storedTs) > 0){
-    importExportAgeHours=(Date.now()-parseFloat(storedTs))/(3600*1000);
-  } else {
-    // Fallback: derive from most recent snapshot label (format: "DD.MM.YYYY HH:MM")
-    try {
-      const snaps=JSON.parse(localStorage.getItem('aimi_snapshots')||'[]');
-      if(snaps.length>0){
-        // Snapshot timestamp is stored as Date.now() at import time
-        const snapTs=snaps[0].timestamp; // most recent
-        if(snapTs && snapTs>0){
-          importExportAgeHours=(Date.now()-snapTs)/(3600*1000);
-          // Save it properly so future reloads work
-          localStorage.setItem('aimi_export_timestamp', String(snapTs));
-        }
-      }
-    } catch(e){ /* ignore */ }
-  }
   try{
     const d=await apiFetch('/api/parameters');
     allParams=d.parameters||[];
@@ -1077,12 +1058,6 @@ async function decryptImport(){
     const data=await r.json();
     Object.assign(activeGates,data.active_gates||{});
     importedParams=data.aimi_parameters.map(p=>({...p,gate_active:p.gate_key?(activeGates[p.gate_key]??false):true}));
-    // Store the original AAPS export timestamp for age calculation after reload
-    if(data.export_age_hours!=null){
-      const exportTs=Date.now()-(data.export_age_hours*3600*1000);
-      localStorage.setItem('aimi_export_timestamp', String(exportTs));
-      importExportAgeHours=data.export_age_hours;
-    }
     document.getElementById('import-cta').style.display='none';
     document.getElementById('import-dot').classList.add('show');
     renderImportResults(data);
@@ -1100,33 +1075,6 @@ function renderImportResults(data){
   const hasKnowledge=allParams.length>0;
   const nonDefault=params.filter(p=>p.is_default===false&&!p.orphaned);
   const gateOff=params.filter(p=>p.gate_key&&!gateActive(p.gate_key));
-
-  // Export age
-  const ageH=data.export_age_hours;
-  importExportAgeHours=ageH;
-  const ageStr=ageH==null?null
-    :ageH<48?`${Math.round(ageH)}h old`
-    :ageH<48*7?`${Math.floor(ageH/24)}d ${Math.round(ageH%24)}h old`
-    :`${Math.floor(ageH/24)}d old`;
-  const ageColor=ageH==null?'var(--text2)':ageH<48?'var(--yellow)':ageH<168?'var(--green)':'var(--text2)';
-  const agePart=ageStr?` · <span style="color:${ageColor}">⏱ ${ageStr}</span>`:'';
-
-  document.getElementById('imp-summary').innerHTML=hasKnowledge
-    ? `✅ Loaded ${params.length} parameters · ${nonDefault.length} non-default · ${gateOff.length} gate-inactive${agePart}`
-    : `✅ Loaded ${params.length} parameters · <span style="color:var(--yellow)">⚠️ No parameter knowledge base — run deploy.sh on laptop for full analysis</span>${agePart}`;
-
-  // Age warning block
-  const existingWarn=document.getElementById('imp-age-warn');
-  if(existingWarn) existingWarn.remove();
-  if(ageH!=null&&ageH<48){
-    const warn=document.createElement('div');
-    warn.id='imp-age-warn';
-    warn.className='alert warn';
-    warn.style.marginTop='8px';
-    const rem=Math.round(48-ageH);
-    warn.innerHTML=`⏱ Export is only <b>${ageStr}</b> — wait at least <b>48h</b> after a settings change before AI analysis for meaningful results. <b>${rem}h remaining.</b>`;
-    document.getElementById('imp-summary').insertAdjacentElement('afterend', warn);
-  }
   // Feature group select
   const sel=document.getElementById('imp-filter-fg');
   if(sel){
@@ -1307,14 +1255,9 @@ function updateAiDataCheck(){
   if(!el) return;
   const hasCGM=!!analysisResult?.cgm?.tir_pct;
   const hasImport=importedParams.length>0;
-  const ageH=importExportAgeHours;
-  const ageOk=ageH==null||ageH>=48;
-  const ageLine=ageH==null?''
-    :ageH<48?`<div style="margin-bottom:3px;color:var(--yellow)">⏱ Export ${Math.round(ageH)}h old — ${Math.round(48-ageH)}h until 48h minimum</div>`
-    :`<div style="margin-bottom:3px;color:var(--green)">⏱ Export ${Math.floor(ageH/24)}d old — sufficient data age</div>`;
   let statusHtml='';
-  if(hasCGM&&hasImport) statusHtml=`<div class="alert ${ageOk?'success':'warn'}">${ageLine}✅ CGM data + settings loaded${ageOk?'':' — consider waiting for more data'}</div>`;
-  else if(hasCGM) statusHtml=`<div class="alert warn">${ageLine}⚠️ No settings import. <a href="#" onclick="showTab('import')" style="color:var(--yellow)">Import now →</a></div>`;
+  if(hasCGM&&hasImport) statusHtml=`<div class="alert success">✅ CGM data + settings loaded — ready for analysis</div>`;
+  else if(hasCGM) statusHtml=`<div class="alert warn">⚠️ No settings import. <a href="#" onclick="showTab('import')" style="color:var(--yellow)">Import now →</a></div>`;
   else if(hasImport) statusHtml=`<div class="alert warn">⚠️ No CGM data — run Dashboard analysis first.</div>`;
   else statusHtml=`<div class="alert info">ℹ️ Run the Dashboard analysis and import your AAPS settings for best results.</div>`;
   el.innerHTML=statusHtml;
@@ -1324,17 +1267,6 @@ async function runAI(){
   const apiKey=document.getElementById('ai-key').value.trim();
   const model=document.getElementById('ai-model')?.value||'';
   if(!apiKey){alert('Please enter your API key');return;}
-
-  // Age check — warn but allow override
-  if(importExportAgeHours!=null && importExportAgeHours<48){
-    const rem=Math.round(48-importExportAgeHours);
-    const proceed=confirm(
-      `⏱ Your export is only ${Math.round(importExportAgeHours)}h old.\n\n`+
-      `For meaningful AI analysis, wait at least 48h after a settings change (${rem}h remaining).\n\n`+
-      `Run analysis anyway?`
-    );
-    if(!proceed) return;
-  }
   const userInput=(document.getElementById('ai-user-input')?.value||'').trim();
   config[provider+'_model']=model;
   localStorage.setItem('aimi_config',JSON.stringify(config));

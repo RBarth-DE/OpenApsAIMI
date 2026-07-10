@@ -1,13 +1,13 @@
 {
   "version": "3.0",
-  "source_commit": "02109d5ef326795c50bc4a0bab34fe2d45a86868",
-  "generated_at": "2026-07-07T09:49:42.999988+00:00",
-  "total": 279,
-  "active": 233,
+  "source_commit": "659041e1c7755dba18c0354ce8ba38b608c16ed0",
+  "generated_at": "2026-07-09T23:16:36.024708+00:00",
+  "total": 282,
+  "active": 236,
   "orphaned": 46,
-  "with_used_in": 217,
+  "with_used_in": 221,
   "with_negative_gate": 9,
-  "with_settings_path": 223,
+  "with_settings_path": 226,
   "parameters": [
     {
       "key": "AIMI_UAM_CONFIDENCE",
@@ -883,7 +883,7 @@
       "used_in": [
         {
           "file": "DetermineBasalAIMI2.kt",
-          "function": "unknown"
+          "function": "applyContextModule"
         },
         {
           "file": "ContextInfluenceEngine.kt",
@@ -3380,6 +3380,54 @@
       "settings_gate": null
     },
     {
+      "key": "key_aimi_basal_slew_limit",
+      "name": "OApsAIMIBasalSlewLimitEnabled",
+      "type": "Boolean",
+      "used_in": [
+        {
+          "file": "DetermineBasalAIMI2.kt",
+          "function": "runPostBasalEngineLearnersRtInstrumentationAndAuditorStage"
+        }
+      ],
+      "orphaned": false,
+      "negative_gate_key": null,
+      "negative_gate_note": null,
+      "logic_summary": "Boolean switch for basal_slew_limit.",
+      "effect_high": "Feature is active — associated functionality runs",
+      "effect_low": "Feature is inactive — associated functionality is disabled",
+      "impact": "medium",
+      "feature_group": "core",
+      "is_gate": false,
+      "settings_path": "AIMI → Preferences user → Core",
+      "settings_gate": null
+    },
+    {
+      "key": "key_aimi_biometric_activity_lockout",
+      "name": "OApsAIMIBiometricActivityLockout",
+      "type": "Boolean",
+      "used_in": [
+        {
+          "file": "OpenAPSAIMIPlugin.kt",
+          "function": "aimiComposeT3cSubScreen"
+        },
+        {
+          "file": "DetermineBasalAIMI2.kt",
+          "function": "refreshAimiContextActivityFlag"
+        }
+      ],
+      "orphaned": false,
+      "negative_gate_key": null,
+      "negative_gate_note": null,
+      "logic_summary": "Boolean switch for biometric_activity_lockout.",
+      "effect_high": "Feature is active — associated functionality runs",
+      "effect_low": "Feature is inactive — associated functionality is disabled",
+      "impact": "medium",
+      "feature_group": "core",
+      "is_gate": false,
+      "settings_path": "AIMI → Preferences user → T3C Brittle Mode Settings",
+      "settings_gate": null
+    },
+    {
       "key": "key_aimi_context_enabled",
       "name": "OApsAIMIContextEnabled",
       "type": "Boolean",
@@ -4373,6 +4421,32 @@
       "impact": "high",
       "feature_group": "pkpd",
       "is_gate": true,
+      "settings_path": "AIMI → Preferences user → Adaptive PK/PD",
+      "settings_gate": null
+    },
+    {
+      "key": "key_aimi_pkpd_endo_reversion",
+      "name": "OApsAIMIPkpdEndogenousReversion",
+      "type": "Boolean",
+      "used_in": [
+        {
+          "file": "OpenAPSAIMIPlugin.kt",
+          "function": "aimiComposePkpdSubScreen"
+        },
+        {
+          "file": "DetermineBasalAIMI2.kt",
+          "function": "runAdvancedPredictionsAndPredPipePrep"
+        }
+      ],
+      "orphaned": false,
+      "negative_gate_key": null,
+      "negative_gate_note": null,
+      "logic_summary": "Boolean switch for pkpd_endo_reversion.",
+      "effect_high": "Feature is active — associated functionality runs",
+      "effect_low": "Feature is inactive — associated functionality is disabled",
+      "impact": "high",
+      "feature_group": "pkpd",
+      "is_gate": false,
       "settings_path": "AIMI → Preferences user → Adaptive PK/PD",
       "settings_gate": null
     },
@@ -6534,7 +6608,7 @@
       "used_in": [
         {
           "file": "OpenAPSAIMIPlugin.kt",
-          "function": "aimiComposeCoreSmbSubScreen"
+          "function": "aimiComposeLabSubScreen"
         },
         {
           "file": "DetermineBasalAIMI2.kt",
@@ -6576,7 +6650,7 @@
       "used_in": [
         {
           "file": "OpenAPSAIMIPlugin.kt",
-          "function": "aimiComposeCoreSmbSubScreen"
+          "function": "aimiComposeLabSubScreen"
         },
         {
           "file": "DetermineBasalAIMI2.kt",
@@ -6620,7 +6694,7 @@
         },
         {
           "file": "DetermineBasalAIMI2.kt",
-          "function": "isbfast2ModeCondition"
+          "function": "checkLegacyPrebolusDeliveryAndAlert"
         },
         {
           "file": "AimiModeSettingsActivity.kt",
@@ -6652,7 +6726,7 @@
         },
         {
           "file": "DetermineBasalAIMI2.kt",
-          "function": "isDinner2ModeCondition"
+          "function": "checkLegacyPrebolusDeliveryAndAlert"
         },
         {
           "file": "AimiModeSettingsActivity.kt",
@@ -6684,7 +6758,7 @@
         },
         {
           "file": "DetermineBasalAIMI2.kt",
-          "function": "isLunch2ModeCondition"
+          "function": "checkLegacyPrebolusDeliveryAndAlert"
         },
         {
           "file": "AimiModeSettingsActivity.kt",
@@ -6716,7 +6790,7 @@
         },
         {
           "file": "DetermineBasalAIMI2.kt",
-          "function": "isbfastModeCondition"
+          "function": "checkLegacyPrebolusDeliveryAndAlert"
         },
         {
           "file": "AimiBehaviorFamilyRegistry.kt",
@@ -6794,7 +6868,7 @@
         },
         {
           "file": "DetermineBasalAIMI2.kt",
-          "function": "isDinnerModeCondition"
+          "function": "checkLegacyPrebolusDeliveryAndAlert"
         },
         {
           "file": "AimiBehaviorFamilyRegistry.kt",
@@ -6830,7 +6904,7 @@
         },
         {
           "file": "DetermineBasalAIMI2.kt",
-          "function": "isHighCarbModeCondition"
+          "function": "checkLegacyPrebolusDeliveryAndAlert"
         },
         {
           "file": "AimiBehaviorFamilyRegistry.kt",
@@ -6866,7 +6940,7 @@
         },
         {
           "file": "DetermineBasalAIMI2.kt",
-          "function": "isHighCarb2ModeCondition"
+          "function": "checkLegacyPrebolusDeliveryAndAlert"
         },
         {
           "file": "AimiModeSettingsActivity.kt",
@@ -6898,7 +6972,7 @@
         },
         {
           "file": "DetermineBasalAIMI2.kt",
-          "function": "isLunchModeCondition"
+          "function": "checkLegacyPrebolusDeliveryAndAlert"
         },
         {
           "file": "AimiBehaviorFamilyRegistry.kt",
@@ -6934,7 +7008,7 @@
         },
         {
           "file": "DetermineBasalAIMI2.kt",
-          "function": "isMealModeCondition"
+          "function": "checkLegacyPrebolusDeliveryAndAlert"
         },
         {
           "file": "AimiBehaviorFamilyRegistry.kt",
@@ -6966,7 +7040,7 @@
         },
         {
           "file": "DetermineBasalAIMI2.kt",
-          "function": "issnackModeCondition"
+          "function": "checkLegacyPrebolusDeliveryAndAlert"
         }
       ],
       "orphaned": false,
@@ -7223,6 +7297,12 @@
       "name": "OApsxdriponeminute",
       "type": "Boolean",
       "default": false,
+      "used_in": [
+        {
+          "file": "OpenAPSAIMIPlugin.kt",
+          "function": "aimiComposeLabSubScreen"
+        }
+      ],
       "orphaned": false,
       "negative_gate_key": null,
       "negative_gate_note": null,

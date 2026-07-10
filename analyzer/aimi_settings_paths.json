@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-07-07T09:49:39.452027+00:00",
-  "source_commit": "02109d5ef326795c50bc4a0bab34fe2d45a86868",
+  "generated_at": "2026-07-09T23:16:29.606524+00:00",
+  "source_commit": "659041e1c7755dba18c0354ce8ba38b608c16ed0",
   "paths": {
     "openapsma_max_basal": {
       "path": "AIMI → Advanced Settings",
@@ -767,6 +767,15 @@
       ],
       "gate_key": null
     },
+    "key_aimi_pkpd_endo_reversion": {
+      "path": "AIMI → Preferences user → Adaptive PK/PD",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "Adaptive PK/PD"
+      ],
+      "gate_key": null
+    },
     "key_aimi_peak_governor_enabled": {
       "path": "AIMI → Preferences user → Adaptive PK/PD",
       "screen_titles": [
@@ -1167,6 +1176,15 @@
       "gate_key": null
     },
     "key_aimi_t3c_brittle_mode": {
+      "path": "AIMI → Preferences user → T3C Brittle Mode Settings",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "T3C Brittle Mode Settings"
+      ],
+      "gate_key": null
+    },
+    "key_aimi_biometric_activity_lockout": {
       "path": "AIMI → Preferences user → T3C Brittle Mode Settings",
       "screen_titles": [
         "AIMI",

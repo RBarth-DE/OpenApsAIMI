@@ -1,4 +1,4 @@
-# AIMI Algorithm Context (commit: 02109d5e)
+# AIMI Algorithm Context (commit: 659041e1)
 
 ## Overview
 The AIMI algorithm runs a 46-stage decision pipeline per 5-minute tick.
@@ -58,11 +58,11 @@ Gate: key_oaps_aimi_ngr_enabled
   Key params: key_oaps_aimi_ngr_age_years, key_oaps_aimi_ngr_basal_multiplier, key_oaps_aimi_ngr_decay_minutes, key_oaps_aimi_ngr_enabled, key_oaps_aimi_ngr_max_iob_extra, key_oaps_aimi_ngr_max_smb_clamp, key_oaps_aimi_ngr_min_duration, key_oaps_aimi_ngr_min_eventual_over_target, key_oaps_aimi_ngr_min_rise_slope, key_oaps_aimi_ngr_night_end
   ... and 2 more
 
-### pkpd (21 params)
+### pkpd (22 params)
 Gate: key_aimi_pkpd_enabled
   Real-time PKPD model with Weibull-based insulin action curves, adaptive estimator and InsulinActionProfiler. Computes fusedIsf from profile ISF, dynamic ISF and learned values. PkpdAbsorptionGuard dampens SMB during limited absorption. IOB consensus reconciles AAPS IOB with PKPD IOB.
   Key params: aimi_pkpd_anchor_dia_h, aimi_pkpd_anchor_peak_min, aimi_pkpd_bounds_dia_max_h, aimi_pkpd_bounds_dia_min_h, aimi_pkpd_bounds_peak_min_max, aimi_pkpd_bounds_peak_min_min, aimi_pkpd_initial_dia_h, aimi_pkpd_initial_peak_min, aimi_pkpd_max_dia_change_per_day_h, aimi_pkpd_max_peak_change_per_day_min
-  ... and 11 more
+  ... and 12 more
 
 ### unified_reactivity (0 params)
 Gate: key_use_Aimi_UnifiedReactivityLearner
@@ -236,7 +236,7 @@ Gate: key_use_Aimi_wcycle
   - key_aimi_context_enabled
   - key_aimi_context_llm_enabled
 
-### core (87 params)
+### core (89 params)
   - OApsAIMIDeltaPosRelease [default: 1.0]
   - OApsAIMIHighBg [default: 180.0]
   - OApsAIMI_Enable_night
@@ -257,7 +257,7 @@ Gate: key_use_Aimi_wcycle
   - autosens_adjust_targets
   - autosens_max [default: 1.2]
   - autosens_min [default: 0.7]
-  ... and 67 more
+  ... and 69 more
 
 ### cosine_gate (6 params)
   - aimi_cosine_gate_alpha [default: 2.0]
@@ -367,7 +367,7 @@ Gate: key_use_Aimi_wcycle
   - aimi_physio_llm_enable
   - aimi_physio_llm_provider
 
-### pkpd (19 params)
+### pkpd (20 params)
   - aimi_pkpd_bounds_dia_max_h [default: 24.0]
   - aimi_pkpd_bounds_dia_min_h [default: 4.0]
   - aimi_pkpd_bounds_peak_min_max [default: 240.0]
@@ -385,6 +385,7 @@ Gate: key_use_Aimi_wcycle
   - aimi_pkpd_state_site_peak [default: 0.0]
   - aimi_pkpd_state_traj_peak [default: 0.0]
   - key_aimi_pkpd_enabled
+  - key_aimi_pkpd_endo_reversion
   - key_aimi_pkpd_pragmatic_relief_enabled
   - key_aimi_pkpd_setup_wizard_completed
 

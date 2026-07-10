@@ -1,7 +1,7 @@
 # AIMI Algorithm Context
 Version: 2.2
-Source commit: 02109d5ef326795c50bc4a0bab34fe2d45a86868
-Generated: 2026-07-07T09:49:43.042473+00:00
+Source commit: 659041e1c7755dba18c0354ce8ba38b608c16ed0
+Generated: 2026-07-09T23:16:36.144432+00:00
 
 ## Algorithm Overview
 AIMI (AI-powered Modular Insulin)
@@ -143,7 +143,7 @@ Gate: key_aimi_pkpd_enabled
 
 Real-time PKPD model with Weibull-based insulin action curves, adaptive estimator and InsulinActionProfiler. Computes fusedIsf from profile ISF, dynamic ISF and learned values. PkpdAbsorptionGuard dampens SMB during limited absorption. IOB consensus reconciles AAPS IOB with PKPD IOB.
 
-Key parameters (21):
+Key parameters (22):
 - aimi_pkpd_anchor_dia_h
 - aimi_pkpd_anchor_peak_min
 - aimi_pkpd_bounds_dia_max_h
@@ -159,7 +159,7 @@ Key parameters (21):
 - aimi_pkpd_state_effective_peak
 - aimi_pkpd_state_peak_min
 - aimi_pkpd_state_physio_peak
-- ... and 6 more
+- ... and 7 more
 
 ### unified_reactivity
 Gate: key_use_Aimi_UnifiedReactivityLearner
@@ -509,7 +509,7 @@ Key parameters (11):
 - `key_aimi_context_enabled`
 - `key_aimi_context_llm_enabled`
 
-### core (87 params)
+### core (89 params)
 - `OApsAIMIDeltaPosRelease` [default: 1.0]
 - `OApsAIMIHighBg` [default: 180.0]
 - `OApsAIMI_Enable_night`
@@ -610,7 +610,7 @@ Key parameters (11):
 - `aimi_physio_llm_enable`
 - `aimi_physio_llm_provider`
 
-### pkpd (19 params)
+### pkpd (20 params)
 - `aimi_pkpd_bounds_dia_max_h` [default: 24.0]
 - `aimi_pkpd_bounds_dia_min_h` [default: 4.0]
 - `aimi_pkpd_bounds_peak_min_max` [default: 240.0]
