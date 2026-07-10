@@ -834,6 +834,14 @@
     <string name="aimi_adv_rec_priority_maxiob_reduce_desc">Priority MaxIOB factor is %1$s with significant hypo exposure. Consider ~%2$s under supervision rather than further increases.</string>
     <string name="aimi_adv_rec_priority_maxiob_extra_reduce_title">Trim priority MaxIOB extra (hypo context)</string>
     <string name="aimi_adv_rec_priority_maxiob_extra_reduce_desc">Priority MaxIOB extra is %1$sU while lows are elevated. A step toward ~%2$sU may be safer than pushing headroom higher.</string>
+    <string name="aimi_adv_rec_isf_low_title">Profile ISF too aggressive vs TDD</string>
+    <string name="aimi_adv_rec_isf_low_desc">Profile ISF %1$.0f mg/dL/U is %2$s%% lower than the 1700/TDD rule (~%3$.0f mg/dL/U for TDD %4$.0f U/day). This may cause overcorrection and hypos. Ask your clinician about raising ISF (gentler corrections).</string>
+    <string name="aimi_adv_rec_isf_high_title">Profile ISF too conservative vs TDD</string>
+    <string name="aimi_adv_rec_isf_high_desc">Profile ISF %1$.0f mg/dL/U is %2$s%% higher than the 1700/TDD rule (~%3$.0f mg/dL/U for TDD %4$.0f U/day). This limits correction power and may prolong highs. Discuss a modestly lower ISF with your care team.</string>
+    <string name="aimi_adv_rec_basal_low_title">Basal ratio below target range</string>
+    <string name="aimi_adv_rec_basal_low_desc">Basal is %1$s%% of TDD (%2$.1f U of %3$.0f U/day) — below the 40–50%% target. Low basal forces AIMI to rely heavily on SMBs for coverage, increasing stacking risk. Review basal segments with your clinician.</string>
+    <string name="aimi_adv_rec_basal_high_title">Basal ratio above target range</string>
+    <string name="aimi_adv_rec_basal_high_desc">Basal is %1$s%% of TDD (%2$.1f U of %3$.0f U/day) — above the 40–50%% target. High baseline basal increases nocturnal hypo risk. Review overnight and daytime segments with your team.</string>
 
     <string name="aimi_pkpd_title_enable">Activation PK/PD</string>
     <string name="aimi_pkpd_title_dia">Duration of action (DIA)</string>
@@ -1200,4 +1208,50 @@
     <string name="advisor_cooldown_dh">%1$dd %2$dh</string>
     <string name="advisor_cooldown_hm">%1$dh %2$dm</string>
     <string name="advisor_cooldown_m">%1$dm</string>
-    </resources>
+
+    <string name="oaps_aimi_adaptive_basal_summary">Automatically scale standard basal rates based on neural insights (for all users).</string>
+    <string name="oaps_aimi_adaptive_basal_max_scaling_title">Max Adaptive Scaling</string>
+    <string name="oaps_aimi_adaptive_basal_max_scaling_summary">Maximum multiplier allowed for adaptive basal scaling (e.g. 1.5x).</string>
+    <!-- Hormonitor study data viewer -->
+    <string name="aimi_hormonitor_viewer_title">Hormonitor — study data</string>
+    <string name="aimi_hormonitor_viewer_summary">Browse the exported study data day by day: time-in-range, decisions, and how the tree/Harmonia, physio and hormonal context were deployed.</string>
+    <string name="aimi_hormonitor_viewer_empty">No Hormonitor study files found yet.</string>
+    <string name="aimi_hormonitor_viewer_no_events">No detailed events recorded for this day.</string>
+    <string name="aimi_hormonitor_tir">TIR (low / in-range / high)</string>
+    <string name="aimi_hormonitor_tdd">Total daily dose</string>
+    <string name="aimi_hormonitor_decisions">Decisions</string>
+    <string name="aimi_hormonitor_reliability">Source reliability</string>
+    <string name="aimi_hormonitor_integrity">Data integrity</string>
+    <string name="aimi_hormonitor_records">Records</string>
+    <string name="aimi_hormonitor_schema">Schema</string>
+    <string name="aimi_hormonitor_span">Time span</string>
+    <string name="aimi_hormonitor_patient_story">Patient-story coverage</string>
+    <string name="aimi_hormonitor_physio_snapshot">Physio-snapshot coverage</string>
+    <string name="aimi_hormonitor_malformed">Malformed lines</string>
+    <string name="aimi_hormonitor_tree_harmonia">Tree / Harmonia</string>
+    <string name="aimi_hormonitor_patient_modes">Patient modes</string>
+    <string name="aimi_hormonitor_strategy_hints">Strategy hints</string>
+    <string name="aimi_hormonitor_reason_codes">Reason codes</string>
+    <string name="aimi_hormonitor_final_decisions">Final decisions</string>
+    <string name="aimi_hormonitor_mode_confidence">Mean mode confidence</string>
+    <string name="aimi_hormonitor_vetoes">Physio vetoes</string>
+    <string name="aimi_hormonitor_narratives">Narratives</string>
+    <string name="aimi_hormonitor_physio">Physio</string>
+    <string name="aimi_hormonitor_physio_states">Physio states</string>
+    <string name="aimi_hormonitor_activity_states">Activity states</string>
+    <string name="aimi_hormonitor_confidence">Mean confidence</string>
+    <string name="aimi_hormonitor_data_quality">Mean data quality</string>
+    <string name="aimi_hormonitor_steps15">Steps (15 min)</string>
+    <string name="aimi_hormonitor_hr">Heart rate</string>
+    <string name="aimi_hormonitor_hormonal">Hormonal</string>
+    <string name="aimi_hormonitor_cycle_phase">Cycle phase</string>
+    <string name="aimi_hormonitor_thyroid">Thyroid</string>
+    <string name="aimi_hormonitor_inflammation">Inflammation</string>
+    <string name="aimi_hormonitor_cycle_day">Cycle day</string>
+    <string name="aimi_hormonitor_safety">Safety</string>
+    <string name="aimi_hormonitor_safety_gates">Safety gates</string>
+    <string name="aimi_hormonitor_safety_phases">Safety phases</string>
+    <string name="aimi_hormonitor_hypo_suppressed">Predictive hypo suppressed</string>
+    <string name="aimi_hormonitor_composite_min">Composite min</string>
+    <string name="aimi_hormonitor_mean">mean</string>
+</resources>

@@ -127,6 +127,7 @@ import app.aaps.plugins.aps.openAPSAIMI.tpo.TpoOrchestrator
 import app.aaps.plugins.aps.openAPSAIMI.ml.AimiSmbTrainer
 import kotlinx.coroutines.withContext
 import app.aaps.plugins.aps.openAPSAIMI.learning.AimiMlTrainingScheduler
+import app.aaps.plugins.aps.openAPSAIMI.hormonitor.viewer.HormonitorViewerScreen
 import app.aaps.plugins.aps.openAPSAIMI.utils.AimiBackupManager
 import app.aaps.plugins.aps.openAPSAIMI.utils.AimiStorageHelper
 import app.aaps.core.objects.extensions.put
@@ -1707,7 +1708,16 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
 
         // ── 6. Patient & Body ──
         add(aimiComposePatientContextSubScreen())
+
+        add(aimiComposeLabSubScreen())
     }
+
+    private fun aimiComposeHormonitorViewerItem(): PreferenceItem =
+        ApsIntentKey.HormonitorViewer.withCompose(
+            ComposeScreenContent { onBack ->
+                HormonitorViewerScreen(onBack = onBack)
+            }
+        )
 
     private fun aimiComposeTpoSubScreen(): PreferenceSubScreenDef =
         PreferenceSubScreenDef(
@@ -1746,18 +1756,19 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
             key = "aimi_compose_lab",
             titleResId = R.string.aimi_lab_title,
             items = buildList {
-                add(BooleanKey.OApsAIMIMLtraining)
-                add(DoubleKey.OApsAIMIMaxSMB)
-                add(DoubleKey.OApsAIMIHighBGMaxSMB)
-                add(aimiComposePkpdSubScreen())
-                add(aimiComposeAdaptiveBasalSubScreen())
-                add(aimiComposeT3cSubScreen())
-                add(aimiComposeTrajectorySubScreen())
-                add(aimiComposeManualModesSubScreen())
-                add(aimiComposeAutodriveSubScreen())
+                // add(BooleanKey.OApsAIMIMLtraining)
+                add(aimiComposeHormonitorViewerItem())
+                // add(DoubleKey.OApsAIMIMaxSMB)
+                // add(DoubleKey.OApsAIMIHighBGMaxSMB)
+                // add(aimiComposePkpdSubScreen())
+                // add(aimiComposeAdaptiveBasalSubScreen())
+                // add(aimiComposeT3cSubScreen())
+                // add(aimiComposeTrajectorySubScreen())
+                // add(aimiComposeManualModesSubScreen())
+                // add(aimiComposeAutodriveSubScreen())
                 add(BooleanKey.OApsxdriponeminute)
-                add(BooleanKey.OApsAIMIUnifiedReactivityEnabled)
-                add(aimiComposeAiAuditorSubScreen())
+                // add(BooleanKey.OApsAIMIUnifiedReactivityEnabled)
+                // add(aimiComposeAiAuditorSubScreen())
             },
         )
 
