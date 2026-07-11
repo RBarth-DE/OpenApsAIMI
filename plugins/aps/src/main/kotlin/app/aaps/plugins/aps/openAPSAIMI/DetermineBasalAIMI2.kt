@@ -13784,9 +13784,11 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                 pendingLegacyPrebolusUnit = units.toFloat()
                 pendingLegacyPrebolusExpiry = dateUtil.now() + LEGACY_PREBOLUS_DELIVERY_TTL_MS
                 internalLastLegacyPrebolusMillis = dateUtil.now()
-                // Seeds the cooldown: the first carry retry waits ≥6 min after the original fire
-                // (full DB sync window), not right on the next tick just because the DB is slow.
-                lastCarryRetryFireMillis = dateUtil.now()
+                // Don't seed the retry cooldown here — only actual carry-forward retries
+                // (see LEGACY_PB1_PRIORITY_CARRY below) set their own cooldown. Seeding on
+                // the initial fire would block the next LoopPlugin cycle when this invoke
+                // was non-enacted (e.g. pull-to-refresh), losing the prebolus entirely.
+                lastCarryRetryFireMillis = 0L
             }
         }
 
