@@ -232,7 +232,8 @@ dependencies {
     //  - :pump:combov2:comboctl is a support lib pulled in transitively by :pump:combov2
     // buildFile.exists() skips the phantom :pump:omnipod container Gradle auto-creates from the
     // nested :pump:omnipod:* includes (it has no build script / no consumable variant).
-    val pumpExclusions = setOf(":pump:virtual", ":pump:combov2:comboctl")
+    //  - :pump:apex is fork WIP (in settings.gradle but was never wired into app dependencies)
+    val pumpExclusions = setOf(":pump:virtual", ":pump:combov2:comboctl", ":pump:apex")
     rootProject.subprojects
         .filter { it.path.startsWith(":pump:") && it.path !in pumpExclusions && it.buildFile.exists() }
         .forEach {

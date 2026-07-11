@@ -2,6 +2,7 @@ package app.aaps.plugins.smoothing.di
 
 import app.aaps.core.interfaces.di.AllConfigs
 import app.aaps.core.interfaces.plugin.PluginBase
+import app.aaps.plugins.smoothing.AdaptiveSmoothingPlugin
 import app.aaps.plugins.smoothing.AvgSmoothingPlugin
 import app.aaps.plugins.smoothing.ExponentialSmoothingPlugin
 import app.aaps.plugins.smoothing.NoSmoothingPlugin
@@ -34,6 +35,12 @@ abstract class SmoothingPluginsListModule {
     @IntoMap
     @IntKey(610)
     abstract fun bindExponentialSmoothingPlugin(plugin: ExponentialSmoothingPlugin): PluginBase
+
+    @Binds
+    @AllConfigs
+    @IntoMap
+    @IntKey(615)
+    abstract fun bindAdaptiveSmoothingPlugin(plugin: AdaptiveSmoothingPlugin): PluginBase
 
     @Binds
     @AllConfigs

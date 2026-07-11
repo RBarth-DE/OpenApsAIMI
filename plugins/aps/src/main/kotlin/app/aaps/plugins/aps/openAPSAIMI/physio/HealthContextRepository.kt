@@ -19,13 +19,6 @@ import kotlinx.coroutines.launch
 import java.time.Instant
 import java.time.ZoneId
 
-// 🏃 Seuils de bascule ACTIVE (biométrie). L'ancien `steps15 > 1000` ratait les sports de raquette
-// (bursts ~800 pas/15 min à FC ≈ 2× repos) et ignorait totalement la FC. On détecte désormais sur les
-// pas soutenus OU sur les pas modérés confirmés par une FC élevée.
-private const val ACTIVE_STEPS_STRONG = 400       // pas/15 min suffisant seul pour ACTIVE
-private const val ACTIVE_STEPS_HR_ASSIST = 150    // pas/15 min minimal si confirmé par la FC
-private const val ACTIVE_HR_DELTA_BPM = 25        // FC ≥ repos + ce delta = effort
-
 /**
  * 🏥 Health Context Repository
  * 
@@ -175,12 +168,12 @@ class HealthContextRepository @Inject constructor(
                 clockIsNight = clockIsNight,
             ),
         )
-        val activeBySteps = steps15 >= ACTIVE_STEPS_STRONG
-        val activeByHr = steps15 >= ACTIVE_STEPS_HR_ASSIST &&
-            currentHR > 0 && rhr > 0 && currentHR >= rhr + ACTIVE_HR_DELTA_BPM
+        // Efficient movement detection: >200 steps in the last 5 min already means "on the move" (a burst that
+        // the old 1000/15m threshold missed), or a sustained ~25 steps/min over 15 min. Aligned with
+        // EffortActivityBelief's ACTIVE reference so the displayed state matches the effort branch that protects.
         val activityState = when {
             sleepLive.isAsleep -> "SLEEPING"
-            activeBySteps || activeByHr -> "ACTIVE"
+            steps5 >= 200 || steps15 >= 375 -> "ACTIVE"
             else -> "IDLE"
         }
 

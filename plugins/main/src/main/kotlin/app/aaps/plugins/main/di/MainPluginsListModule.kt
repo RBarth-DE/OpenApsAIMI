@@ -2,8 +2,8 @@ package app.aaps.plugins.main.di
 
 import app.aaps.core.interfaces.di.AllConfigs
 import app.aaps.core.interfaces.plugin.PluginBase
-import app.aaps.plugins.main.general.persistentNotification.PersistentNotificationPlugin
 import app.aaps.plugins.main.general.overview.OverviewPlugin
+import app.aaps.plugins.main.general.persistentNotification.PersistentNotificationPlugin
 import app.aaps.plugins.main.iob.iobCobCalculator.IobCobCalculatorPlugin
 import dagger.Binds
 import dagger.Module
@@ -32,12 +32,13 @@ abstract class MainPluginsListModule {
     @Binds
     @AllConfigs
     @IntoMap
-    @IntKey(5)
-    abstract fun bindOverviewPlugin(plugin: OverviewPlugin): PluginBase
+    @IntKey(10)
+    abstract fun bindIobCobCalculatorPlugin(plugin: IobCobCalculatorPlugin): PluginBase
 
+    // Fork-only legacy overview skin (dashboard ↔ original overview switch in MainScreen).
     @Binds
     @AllConfigs
     @IntoMap
-    @IntKey(10)
-    abstract fun bindIobCobCalculatorPlugin(plugin: IobCobCalculatorPlugin): PluginBase
+    @IntKey(20)
+    abstract fun bindOverviewPlugin(plugin: OverviewPlugin): PluginBase
 }

@@ -4,12 +4,14 @@ import app.aaps.core.interfaces.di.AllConfigs
 import app.aaps.core.interfaces.plugin.PluginBase
 import app.aaps.plugins.source.AidexPlugin
 import app.aaps.plugins.source.DexcomPlugin
+import app.aaps.plugins.source.EversensePlugin
 import app.aaps.plugins.source.GlimpPlugin
 import app.aaps.plugins.source.GlunovoPlugin
 import app.aaps.plugins.source.IntelligoPlugin
 import app.aaps.plugins.source.MM640gPlugin
 import app.aaps.plugins.source.NSClientSourcePlugin
 import app.aaps.plugins.source.NotificationReaderPlugin
+import app.aaps.plugins.source.OttaiPlugin
 import app.aaps.plugins.source.PatchedSiAppPlugin
 import app.aaps.plugins.source.PatchedSinoAppPlugin
 import app.aaps.plugins.source.PoctechPlugin
@@ -68,6 +70,12 @@ abstract class SourcePluginsListModule {
     @Binds
     @AllConfigs
     @IntoMap
+    @IntKey(445)
+    abstract fun bindEversensePlugin(plugin: EversensePlugin): PluginBase
+
+    @Binds
+    @AllConfigs
+    @IntoMap
     @IntKey(450)
     abstract fun bindAidexPlugin(plugin: AidexPlugin): PluginBase
 
@@ -82,6 +90,12 @@ abstract class SourcePluginsListModule {
     @IntoMap
     @IntKey(470)
     abstract fun bindTomatoPlugin(plugin: TomatoPlugin): PluginBase
+
+    @Binds
+    @AllConfigs
+    @IntoMap
+    @IntKey(475)
+    abstract fun bindOttaiPlugin(plugin: OttaiPlugin): PluginBase
 
     @Binds
     @AllConfigs

@@ -5,6 +5,7 @@ import app.aaps.core.interfaces.di.NotNSClient
 import app.aaps.core.interfaces.plugin.PluginBase
 import app.aaps.plugins.sync.garmin.GarminPlugin
 import app.aaps.plugins.sync.nsclientV3.NSClientV3Plugin
+import app.aaps.plugins.sync.nsclientV3.RemoteControlPlugin
 import app.aaps.plugins.sync.openhumans.OpenHumansUploaderPlugin
 import app.aaps.plugins.sync.smsCommunicator.SmsCommunicatorPlugin
 import app.aaps.plugins.sync.tidepool.TidepoolPlugin
@@ -40,6 +41,12 @@ abstract class SyncPluginsListModule {
     @IntoMap
     @IntKey(310)
     abstract fun bindNSClientV3Plugin(plugin: NSClientV3Plugin): PluginBase
+
+    @Binds
+    @AllConfigs
+    @IntoMap
+    @IntKey(315)
+    abstract fun bindRemoteControlPlugin(plugin: RemoteControlPlugin): PluginBase
 
     @Binds
     @NotNSClient
