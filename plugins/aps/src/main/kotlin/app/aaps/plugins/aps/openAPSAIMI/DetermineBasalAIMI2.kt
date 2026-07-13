@@ -9261,7 +9261,18 @@ class DetermineBasalaimiSMB2 @Inject constructor(
          */
         private const val LEGACY_PREBOLUS_DELIVERY_TTL_MS = 30 * 60 * 1000L
 
-        /** Memory timestamp of the last requested legacy prebolus (see [internalLastLegacyPrebolusMillis]). */
+        /**
+         * Carry-forward retry cooldown. Its only job is to bridge the delivery→DB-write latency (a real SMB is
+         * recorded in the treatments DB within seconds), so we don't re-propose a prebolus that was just delivered
+         * but not yet confirmed (the pending is cleared on that confirmation — see the pending-clear path). It must
+         * stay SHORT so that when the first fire is NOT delivered (e.g. the bundled TBR command didn't succeed at the
+         * LoopPlugin gate, or a bolus was already queued) the carry-forward re-proposes it on the very next loop tick
+         * instead of waiting minutes. 90 s < the ~5-min loop cadence → next-tick retry on normal cadence, while still
+         * blocking a rapid re-invoke (pull-to-refresh) within the delivery/DB window → no double-send.
+         */
+        private const val CARRY_RETRY_COOLDOWN_MS = 90 * 1000L
+
+        /** Timestamp mémoire du dernier prébolus legacy demandé (voir [internalLastLegacyPrebolusMillis]). */
         private var lastLegacyPrebolusTimestampMem: Long = 0L
 
         /* Carry-forward retry cooldown, deliberately separate from [internalLastLegacyPrebolusMillis]:
@@ -13845,7 +13856,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                 // Throttle retries with a DEDICATED timer: don't reuse internalLastLegacyPrebolusMillis
                 // (reference of the original P1 fire), or the P2 windows would shift on every retry.
                 val timeSinceLastCarryRetry = dateUtil.now() - lastCarryRetryFireMillis
-                val carryOnCooldown = lastCarryRetryFireMillis > 0L && timeSinceLastCarryRetry < 6 * 60_000L
+                val carryOnCooldown = lastCarryRetryFireMillis > 0L && timeSinceLastCarryRetry < CARRY_RETRY_COOLDOWN_MS
                 if (!carryOnCooldown) {
                     rT.units = pendingLegacyPrebolusUnit.toDouble()
                     rT.deliverAt = dateUtil.now()
