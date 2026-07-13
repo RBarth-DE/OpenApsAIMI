@@ -68,6 +68,15 @@ import app.aaps.plugins.aps.openAPSAIMI.pkpd.PkPdLogRow
 import app.aaps.plugins.aps.openAPSAIMI.pkpd.IsfTddProvider
 import app.aaps.plugins.aps.openAPSAIMI.pkpd.PkPdRuntime
 import app.aaps.plugins.aps.openAPSAIMI.pkpd.PredictionPhysioModulationResolver
+import app.aaps.plugins.aps.openAPSAIMI.pkpd.CausalKineticsModulator
+import app.aaps.plugins.aps.openAPSAIMI.pkpd.DiaGovernor
+import app.aaps.plugins.aps.openAPSAIMI.pkpd.InsulinKineticsAuthority
+import app.aaps.plugins.aps.openAPSAIMI.pkpd.PkpdLearningDiagnostics
+import app.aaps.plugins.aps.openAPSAIMI.orchestration.AimiIntelligenceSnapshot
+import app.aaps.plugins.aps.openAPSAIMI.orchestration.AimiIntelligenceSnapshotBuilder
+import app.aaps.plugins.aps.openAPSAIMI.orchestration.IntelligenceSnapshotJson
+import app.aaps.plugins.aps.openAPSAIMI.orchestration.PredictionAuthorityApplier
+import app.aaps.plugins.aps.openAPSAIMI.orchestration.PredictionAuthorityApplyResult
 import app.aaps.plugins.aps.openAPSAIMI.ports.PkpdPort
 import app.aaps.plugins.aps.openAPSAIMI.prediction.NaiveEventualBgSignGuard
 import app.aaps.plugins.aps.openAPSAIMI.prediction.PredictionSanityResult
@@ -99,6 +108,7 @@ import app.aaps.plugins.aps.openAPSAIMI.prediction.PredictionDivergenceAuditor
 import app.aaps.plugins.aps.openAPSAIMI.prediction.sanitizePredictionValues
 import app.aaps.plugins.aps.openAPSAIMI.risk.AimiRiskEnvelope
 import app.aaps.plugins.aps.openAPSAIMI.risk.AimiRiskEnvelopeBuilder
+import app.aaps.plugins.aps.openAPSAIMI.risk.DecisionPredictionAuthority
 import app.aaps.plugins.aps.openAPSAIMI.risk.DecisionPredictionAuthorityResolver
 import app.aaps.plugins.aps.openAPSAIMI.risk.IobConsensus
 import app.aaps.plugins.aps.openAPSAIMI.risk.IobDecisionSource
@@ -294,6 +304,8 @@ internal data class AimiDecisionContext(
         var harmonia_simulation: org.json.JSONObject? = null,
         /** AIMI Harmonia production owner state; basal-first only and safety-gated. */
         var harmonia_production: org.json.JSONObject? = null,
+        /** Unified intelligence snapshot (kinetics, causal, ISF, predictions) — intelligence_snapshot_v1. */
+        var intelligence_snapshot: org.json.JSONObject? = null,
         /** Runtime ownership of T3C for this tick: native RBT, legacy fallback, or safety terminal. */
         var t3c_runtime_ownership: T3cRuntimeOwnershipExport? = null,
         /** Loop vs auditor binding for this tick (sync disposition; follow-up may arrive async). */
@@ -610,6 +622,9 @@ internal data class AimiDecisionContext(
             }
             adjustments.harmonia_production?.let { production ->
                 adj.put("harmonia_production", production)
+            }
+            adjustments.intelligence_snapshot?.let { snapshot ->
+                adj.put("intelligence_snapshot_v1", snapshot)
             }
             adjustments.t3c_runtime_ownership?.let { ownership ->
                 val ownershipJson = org.json.JSONObject()
@@ -929,6 +944,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
     @Inject lateinit var basalLearner: app.aaps.plugins.aps.openAPSAIMI.learning.BasalLearner
     @Inject lateinit var unifiedReactivityLearner: app.aaps.plugins.aps.openAPSAIMI.learning.UnifiedReactivityLearner
     @Inject lateinit var basalNeuralLearner: app.aaps.plugins.aps.openAPSAIMI.learning.BasalNeuralLearner
+    @Inject lateinit var basalMlTrainingCoordinator: app.aaps.plugins.aps.openAPSAIMI.learning.BasalMlTrainingCoordinator
     @Inject lateinit var storageHelper: AimiStorageHelper  // 🛡️ Restored StorageHelper
     
     // Helper to safely access learner (handles potential early access before injection)
@@ -1433,7 +1449,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         consoleLog = mutableListOf()
         if (::aapsLogger.isInitialized) {
             try {
-                hormonitorStudyExporter.recordLoopPulse(ctx.currentTime, AimiLoopTelemetry.activeTickId)
+                hormonitorStudyExporter?.recordLoopPulse(ctx.currentTime, AimiLoopTelemetry.activeTickId)
             } catch (_: Throwable) {
                 // Never break determine_basal on telemetry.
             }
@@ -1448,12 +1464,17 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         lastSafetyRiskExport = null
         lastScenarioProjection = null
         lastPredDivergenceExport = null
+        lastDecisionPredictionAuthority = null
+        lastIntelligenceSnapshot = null
+        lastPredictionAuthorityApplyResult = null
         isConfirmedHighRiseThisTick = false
         correctionAggressionDecision = null
         mealAdvisorOneShotThisTick = false
         lastTubeAdvisorSmbCapScale = null
         lastInflammationResult = null
         tickInsulinActionState = null
+        tickEffectiveDiaHours = ctx.effectiveDiaHours
+        tickEffectivePeakMinutes = ctx.effectivePeakMinutes
         lastLoopCgmNoise = ctx.glucoseStatus.noise
 
         if (ctx.extraDebug.isNotEmpty()) {
@@ -1507,7 +1528,8 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                 accel = accel,
                 duraMin = ctx.glucoseStatus.duraISFminutes,
                 duraAvg = ctx.glucoseStatus.duraISFaverage,
-                iob = iobObj.iob
+                iob = iobObj.iob,
+                physioFeatures = currentBasalPhysioFeatures()
             )
         } else 1.0
         adaptiveMult = BasalAdaptiveMultiplier.combine(hMult, nMult)
@@ -1642,7 +1664,12 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             hormonal_cycle_phase = wCycleInfoForRun?.let { "${it.phase.name}_Day${it.dayInCycle}" } ?: "Unknown",
             physical_activity_mode = if (snsDominance > 0.6) "Stress/Activity" else "Resting"
         )
-        val iobActionProfile = InsulinActionProfiler.calculate(ctx.iobDataArray, ctx.profile, snsDominance)
+        val iobArrayForProfiler = if (preferences.get(BooleanKey.OApsAIMIIntelligenceKineticsProfiler)) {
+            ctx.pkpdIobDataArray ?: ctx.iobDataArray
+        } else {
+            ctx.iobDataArray
+        }
+        val iobActionProfile = InsulinActionProfiler.calculate(iobArrayForProfiler, ctx.profile, snsDominance)
         val iobTotal = iobActionProfile.iobTotal
         val iobPeakMinutes = iobActionProfile.peakMinutes
         iobActivityNow = iobActionProfile.activityNow
@@ -1652,14 +1679,17 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                 "Activity Now=${"%.0f".format(iobActivityNow * 100)}%, " +
                 "in 30m=${"%.0f".format(iobActivityIn30Min * 100)}%"
         )
+        val observerDiaHours = ctx.effectiveDiaHours?.takeIf { it.isFinite() && it > 0.0 } ?: ctx.profile.dia
+        val observerPeakMinutes = ctx.effectivePeakMinutes?.takeIf { it.isFinite() && it > 0.0 }?.toInt()
+            ?: iobPeakMinutes.toInt()
         val insulinActionState = insulinObserver.update(
             currentBg = bg,
             bgDelta = delta.toDouble(),
             iobTotal = iobTotal,
             iobActivityNow = iobActivityNow,
             iobActivityIn30 = iobActivityIn30Min,
-            peakMinutesAbs = iobPeakMinutes.toInt(),
-            diaHours = ctx.profile.dia,
+            peakMinutesAbs = observerPeakMinutes,
+            diaHours = observerDiaHours,
             carbsActiveG = cob.toDouble(),
             now = dateUtil.now()
         )
@@ -1810,6 +1840,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             predictedBgMgdl = glucoseStatus.glucose,
             targetBgMgdl = ctx.profile.target_bg,
         )
+        val singleLearnPath = preferences.get(BooleanKey.OApsAIMIIntelligenceSingleLearnPath)
         this.cachedPkpdRuntime = try {
             pkpdIntegration.setRecentBolusSamples(
                 buildRecentPkpdBolusSamples(
@@ -1836,6 +1867,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                 estimatedRaMgdlPerMin = continuousStateEstimator.getLastRa().takeIf { it.isFinite() && it > 0.0 },
                 causalStatePosterior = lastPatientState?.causalPosterior,
                 patientEventMemory = lastPatientState?.eventMemory,
+                allowLearning = !singleLearnPath,
             )
         } catch (e: Exception) {
             consoleError.add("❌ Early PKPD Runtime init failed: ${e.message}")
@@ -1882,8 +1914,21 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         }
 
         val pumpAgeDays: Float = pumpAgeDaysCached()
-        val effectiveDiaH = pkpdRuntime?.params?.diaHrs
-            ?: profile.dia
+        val causalMod = CausalKineticsModulator.modulate(lastPatientState?.causalPosterior)
+        val effectiveDiaH = if (preferences.get(BooleanKey.OApsAIMIDiaGovernorEnabled)) {
+            DiaGovernor.resolve(
+                profileDiaHours = profile.dia,
+                contextualDiaShiftHours = causalMod.diaShiftHours,
+                pkpdLearnedDiaHours = pkpdRuntime?.params?.diaHrs,
+                pkpdEnabled = preferences.get(BooleanKey.OApsAIMIPkpdEnabled),
+                governorEnabled = true,
+                diaMinBound = preferences.get(DoubleKey.OApsAIMIPkpdBoundsDiaMinH),
+                diaMaxBound = preferences.get(DoubleKey.OApsAIMIPkpdBoundsDiaMaxH),
+                learnedBlendWeight = preferences.get(DoubleKey.OApsAIMIDiaGovernorLearnedWeight),
+            ).effectiveDiaHours
+        } else {
+            pkpdRuntime?.params?.diaHrs ?: profile.dia
+        }
 
         // TAP-G peak governor: echo last log line once per distinct string (clipped).
         val peakGovLine = preferences.get(app.aaps.plugins.aps.openAPSAIMI.keys.AimiStringKey.OApsAIMIPkpdLastPeakGovLogLine)
@@ -3115,6 +3160,8 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                     correctionFragilityScore = eventMemory.correctionFragilityScore,
                     postHyperExhaustionScore = eventMemory.postHyperExhaustionScore,
                     chaoticEpisodeLoad = lastRbtChaosEvaluation?.score ?: 0.0,
+                    effectiveDiaHours = tickEffectiveDiaHours,
+                    effectivePeakMinutes = tickEffectivePeakMinutes,
                 )
             },
             timestampMs = nowMs,
@@ -3340,6 +3387,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                 duraMin = duraISFminutes,
                 duraAvg = duraISFaverage,
                 iob = iob.toDouble(),
+                physioFeatures = currentBasalPhysioFeatures(),
             )
             val adaptiveBoost = if (adaptiveMult > 1.0) {
                 (adaptiveMult - 1.0).coerceAtMost(0.40)
@@ -5130,7 +5178,33 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             uamConfidence = AimiUamHandler.confidenceOrZero(),
             postHypoDelivery = lastPostHypoDeliveryAuthority,
         )
+        lastDecisionPredictionAuthority = decisionPrediction
         consoleLog.add(DecisionPredictionAuthorityResolver.formatLogLine(decisionPrediction))
+
+        val authorityEnabled = predictionAuthorityEnabled()
+        val authorityShadow = preferences.get(BooleanKey.OApsAIMIPredictionAuthorityShadow)
+        val pkpdPredTerminalBefore = minPredictedAcrossCurves(rT.predBGs) ?: pkpdPredictions.eventual
+        val applyResult = PredictionAuthorityApplier.apply(
+            rT = rT,
+            authority = decisionPrediction,
+            scenarioProjection = lastScenarioProjection,
+            enabled = authorityEnabled,
+            shadowOnly = authorityShadow && !authorityEnabled,
+            pkpdEventualBeforeApply = pkpdPredictions.eventual,
+            pkpdPredTerminalBeforeApply = pkpdPredTerminalBefore,
+        )
+        lastPredictionAuthorityApplyResult = applyResult
+        PredictionAuthorityApplier.formatShadowLogLine(applyResult)?.let { line -> consoleLog.add(line) }
+        if (applyResult.applied) {
+            this.eventualBG = applyResult.eventualMgdl
+            this.predictedBg = applyResult.eventualMgdl.toFloat()
+            rT.eventualBG = applyResult.eventualMgdl
+            consoleLog.add(
+                "PRED_AUTHORITY_C1: eventual=${applyResult.eventualMgdl.toInt()} " +
+                    "predT=${applyResult.predTerminalMgdl.toInt()} " +
+                    "curves=${applyResult.predBGsRemapped} src=${applyResult.source}",
+            )
+        }
 
         val projectionInput = correctionAggressionProjectionInput(
             targetBgValue = targetBg,
@@ -5620,8 +5694,10 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             targetBg = targetBg,
             iob = iob.toDouble(),
             maxIob = this.maxIob,
-            eventualBg = eventualBG.takeIf { it > 1.0 && it.isFinite() },
-            minPredBg = minPredictedBgForRbtWiring(minPredictedAcrossCurves(rT.predBGs)),
+            eventualBg = authoritativeEventualBg(eventualBG).takeIf { it > 1.0 && it.isFinite() },
+            minPredBg = minPredictedBgForRbtWiring(
+                authoritativeMinPredBg(rT, minPredictedAcrossCurves(rT.predBGs)),
+            ),
             trajectoryEnergy = rT.trajectoryEnergy,
             isExplicitUserAction = isExplicitAction,
             enabled = preferences.get(BooleanKey.OApsAIMIIobSurveillanceGuard),
@@ -7779,7 +7855,52 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             }
         }
 
+        // Main-path basal neural CSV + ML training (same hook as logDecisionFinal early exits).
+        applyBasalNeuralLearningAndTraining(
+            rT = finalResult,
+            tbrUph = (finalResult.rate ?: 0.0).coerceAtLeast(0.0),
+            govTag = "MAIN",
+        )
+
         return finalResult
+    }
+
+    /**
+     * Builds the unified intelligence snapshot for JSONL export and downstream consumers.
+     */
+    private fun buildIntelligenceSnapshot(
+        ctx: AimiTickContext,
+        profile: OapsProfileAimi,
+        pkpdRuntime: PkPdRuntime?,
+    ): AimiIntelligenceSnapshot? {
+        val effectiveProfile = effectiveProfileCached(ctx.currentTime) ?: return null
+        val physioMults = lastFusedPhysioMultipliers ?: lastBasePhysioMultipliers
+        val learningDiagnostics = PkpdLearningDiagnostics.from(
+            causalStatePosterior = lastPatientState?.causalPosterior,
+            allowLearning = preferences.get(BooleanKey.OApsAIMIIntelligenceSingleLearnPath),
+            exerciseFlag = sportTime,
+            iobU = ctx.iobDataArray.firstOrNull()?.iob ?: 0.0,
+            carbsActiveG = ctx.mealData.mealCOB,
+            bg = ctx.glucoseStatus.glucose,
+            deltaMgDlPer5 = ctx.glucoseStatus.delta,
+        )
+        return AimiIntelligenceSnapshotBuilder.build(
+            AimiIntelligenceSnapshotBuilder.BuildInput(
+                timestampMs = ctx.currentTime,
+                accountingIobArray = ctx.iobDataArray,
+                profile = profile,
+                effectiveProfile = effectiveProfile,
+                pkpdRuntime = pkpdRuntime,
+                peakGovernor = null,
+                causalPosterior = lastPatientState?.causalPosterior,
+                physioPeakShiftMinutes = physioMults.peakShiftMinutes,
+                preferences = preferences,
+                iobCobCalculator = iobCobCalculator,
+                pkpdPredictionIobArray = ctx.pkpdIobDataArray,
+                learningDiagnostics = learningDiagnostics,
+                predictionAuthority = lastDecisionPredictionAuthority,
+            ),
+        )
     }
 
     /**
@@ -7864,7 +7985,37 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         decisionCtx.adjustments.uam_hypotheses = lastUamHypothesisState?.toJsonObject()
         decisionCtx.adjustments.patient_state = lastPatientState?.toJsonObject()
         decisionCtx.adjustments.patient_mode = lastPatientModeDecision?.toJsonObject()
-        decisionCtx.adjustments.physiological_tree = lastPhysiologicalTreeSnapshot?.toJsonObject()
+
+        if (preferences.get(BooleanKey.OApsAIMIIntelligenceSnapshotExport)) {
+            lastIntelligenceSnapshot = buildIntelligenceSnapshot(ctx, profile, pkpdRuntime)
+            decisionCtx.adjustments.intelligence_snapshot =
+                lastIntelligenceSnapshot?.let { snap ->
+                    IntelligenceSnapshotJson.toJsonObject(snap).apply {
+                        lastPredictionAuthorityApplyResult?.let { ar ->
+                            optJSONObject("predictions")?.apply {
+                                put("authority_applied", ar.applied)
+                                put("shadow_only", ar.shadowOnly)
+                                ar.shadowDeltaEventualMgdl?.let { put("shadow_delta_eventual", it) }
+                                ar.shadowDeltaPredTerminalMgdl?.let { put("shadow_delta_pred_terminal", it) }
+                            }
+                        }
+                    }
+                }
+        }
+
+        decisionCtx.adjustments.physiological_tree = lastPhysiologicalTreeSnapshot?.toJsonObject()?.apply {
+            lastIntelligenceSnapshot?.let { snap ->
+                put("insulin_authority", "context_modulation_lot2")
+                put("insulin_kinetics_context", org.json.JSONObject().apply {
+                    put("effective_dia_h", snap.kinetics.effective.diaHours)
+                    put("effective_peak_min", snap.kinetics.effective.peakMinutes)
+                    put("structural_dia_h", snap.kinetics.structural.diaHrs)
+                    put("structural_peak_min", snap.kinetics.structural.peakMin)
+                    put("learning_gate_pass", snap.kinetics.learning.learningGatePass)
+                    put("causal_modulation", snap.causal.causalModulationReason)
+                })
+            }
+        }
         decisionCtx.adjustments.harmonia_simulation = lastHarmoniaDecision?.toJsonObject()
         decisionCtx.adjustments.harmonia_production = lastHarmoniaProductionDecision?.toJsonObject()
         decisionCtx.adjustments.t3c_runtime_ownership = lastT3cRuntimeOwnership
@@ -7970,9 +8121,9 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                 patientThermalBelief = patientRuntimeSnapshot?.thermalBelief
                     ?: enrichThermalSnapshot(latestSnapshot).thermalBelief,
             )
-            hormonitorStudyExporter.export(event)
-            hormonitorStudyExporter.exportShadowContributions(event)
-            hormonitorStudyExporter.exportDailyOutcomes(
+            hormonitorStudyExporter?.export(event)
+            hormonitorStudyExporter?.exportShadowContributions(event)
+            hormonitorStudyExporter?.exportDailyOutcomes(
                 event = event,
                 tirLowPct = currentTIRLow,
                 tirInRangePct = currentTIRRange,
@@ -8404,6 +8555,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                 estimatedRaMgdlPerMin = continuousStateEstimator.getLastRa().takeIf { it.isFinite() && it > 0.0 },
                 causalStatePosterior = lastPatientState?.causalPosterior,
                 patientEventMemory = lastPatientState?.eventMemory,
+                allowLearning = true,
             )
         } catch (e: Exception) {
             consoleError.add("❌ PKPD runtime failed: ${e.message}")
@@ -8414,6 +8566,9 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         var pkpdRuntime = pkpdRuntimeIn
         if (pkpdRuntimeTemp != null) {
             pkpdRuntime = pkpdRuntimeTemp
+            if (preferences.get(BooleanKey.OApsAIMIIntelligenceSingleLearnPath)) {
+                this.cachedPkpdRuntime = pkpdRuntimeTemp
+            }
 
             consoleLog.add("📊 PKPD_LEARNER:")
             consoleLog.add("  │ DIA (learned): ${"%.2f".format(Locale.US, pkpdRuntime.params.diaHrs)}h")
@@ -8900,7 +9055,14 @@ class DetermineBasalaimiSMB2 @Inject constructor(
     private val appExternalFallbackDir by lazy {
         File(context.getExternalFilesDir(null) ?: storageHelper.getAimiDirectory(), "AAPS")
     }
-    private val hormonitorStudyExporter by lazy { AimiHormonitorStudyExporterMTR(context, aapsLogger, preferences) }
+    // Telemetry must never crash the loop: if the study exporter can't initialize (storage / permissions / context),
+    // degrade to no telemetry rather than letting its construction abort the tick into a safe-hold. Null → all
+    // telemetry calls below are no-ops (`?.`); AimiLoopTelemetry.enterPhase already accepts a null exporter.
+    private val hormonitorStudyExporter: AimiHormonitorStudyExporterMTR? by lazy {
+        runCatching { AimiHormonitorStudyExporterMTR(context, aapsLogger, preferences) }
+            .onFailure { aapsLogger.error(LTag.APS, "Hormonitor exporter init failed — telemetry disabled this session", it) }
+            .getOrNull()
+    }
     private var csvPrimaryStorageDeniedLogged = false
     private val pkpdIntegration = PkPdIntegration(preferences)
     //private val tempFile = File(externalDir, "temp.csv")
@@ -8930,6 +9092,30 @@ class DetermineBasalaimiSMB2 @Inject constructor(
 
     /** PKPD vs scenario divergence audit of the current tick (PredictionDivergenceAuditor). */
     private var lastPredDivergenceExport: org.json.JSONObject? = null
+    private var lastDecisionPredictionAuthority: DecisionPredictionAuthority? = null
+    private var lastIntelligenceSnapshot: AimiIntelligenceSnapshot? = null
+    private var lastPredictionAuthorityApplyResult: PredictionAuthorityApplyResult? = null
+
+    private fun predictionAuthorityEnabled(): Boolean =
+        preferences.get(BooleanKey.OApsAIMIPredictionAuthorityEnabled)
+
+    private fun authoritativeEventualBg(fallback: Double = this.eventualBG): Double =
+        if (predictionAuthorityEnabled()) {
+            lastDecisionPredictionAuthority?.eventualTerminalMgdl
+                ?: cachedRiskEnvelopeDecision?.eventualTerminalMgdl
+                ?: fallback
+        } else {
+            fallback
+        }
+
+    private fun authoritativeMinPredBg(rT: RT, rawMinPred: Double?): Double? =
+        if (predictionAuthorityEnabled()) {
+            lastDecisionPredictionAuthority?.predTerminalMgdl
+                ?: cachedRiskEnvelopeDecision?.predTerminalMgdl
+                ?: rawMinPred
+        } else {
+            rawMinPred
+        }
     private var lastAdvancedPredictionCurves: AdvancedPredictionCurves? = null
     private var lastSafetyTerminalsForRbt: SafetyPredictionTerminals? = null
     private var lastHyperTrajectoryRelease: HyperTrajectoryReleaseResult? = null
@@ -9066,6 +9252,8 @@ class DetermineBasalaimiSMB2 @Inject constructor(
     private var lastTubeAdvisorSmbCapScale: Double? = null
     private var lastInflammationResult: app.aaps.plugins.aps.openAPSAIMI.inflammatory.InflammationAdjuster.InflammationResult? = null
     private var tickInsulinActionState: InsulinActionState? = null
+    private var tickEffectiveDiaHours: Double? = null
+    private var tickEffectivePeakMinutes: Double? = null
     private var lastDecisionSource: String = "AIMI"
     private var lastSafetySource: String = "NONE"
     private var lastPredictionAvailable: Boolean = false
@@ -9089,6 +9277,16 @@ class DetermineBasalaimiSMB2 @Inject constructor(
     private var lastPatientState: PatientStateSnapshot? = null
     private var lastPatientModeDecision: PatientModeOrchestrator.Decision? = null
     private var lastPhysiologicalTreeSnapshot: PhysiologicalTreeSnapshot? = null
+
+    /**
+     * Physiological-context feature vector for the basal NN (record + inference), mirroring the SMB feature schema so
+     * the basal model shares the tree's physiological view (latent physio + patient-mode + causal) instead of being
+     * context-blind. Same order as [BasalNeuralLearner.modelInput] and the CSV physio columns: 4 latent + 3 mode + 3 causal.
+     */
+    private fun currentBasalPhysioFeatures(): FloatArray =
+        SmbRefinementFeatureSchema.latentFeatureValues(lastPhysioLatentState) +
+            SmbRefinementFeatureSchema.modeFeatureValues(lastPatientModeDecision) +
+            SmbRefinementFeatureSchema.causalFeatureValues(lastPatientState?.causalPosterior)
     private var lastHarmoniaDecision: HarmoniaDecision? = null
     private var lastHarmoniaProductionDecision: HarmoniaProductionDecision? = null
     private var lastPatientSourceSensor: SourceSensor? = null
@@ -11026,12 +11224,12 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             )
         }
         val eventualForStacking = when {
-            this.eventualBG > 1.0                          -> this.eventualBG
+            this.eventualBG > 1.0 -> this.eventualBG
             rT.eventualBG != null && rT.eventualBG!! > 1.0 -> rT.eventualBG!!
             else                                           -> null
         }
         val rawMinPred = minPredictedAcrossCurves(rT.predBGs)
-        val minPredForStacking = minPredictedBgForRbtWiring(rawMinPred)
+        val minPredForStacking = minPredictedBgForRbtWiring(authoritativeMinPredBg(rT, rawMinPred))
         val endogenousCounterRegulatory =
             lastPhysiologicalPhaseOutput?.phase == PhysiologicalPhase.ENDOGENOUS_COUNTER_REGULATORY
         val stackingEval = InsulinStackingStance.evaluate(
@@ -11071,9 +11269,13 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         } catch (e: Exception) { null }
         
         val pkpdEventualForSmb =
-            cachedRiskEnvelopeDecision?.eventualTerminalMgdl?.takeIf { it.isFinite() } ?: this.eventualBG
-        // 🩹 Relâche le clamp zone-2 uniquement sur faux plancher pkpd confirmé par le scénario borné.
-        val decisionEventualBgForSmb = reconcileSmbEventualWithScenario(pkpdEventualForSmb, targetBg.toDouble())
+            cachedRiskEnvelopeDecision?.eventualTerminalMgdl?.takeIf { it.isFinite() }
+                ?: authoritativeEventualBg(this.eventualBG)
+        val decisionEventualBgForSmb = if (predictionAuthorityEnabled()) {
+            pkpdEventualForSmb
+        } else {
+            reconcileSmbEventualWithScenario(pkpdEventualForSmb, targetBg.toDouble())
+        }
         val baseLimit = app.aaps.plugins.aps.openAPSAIMI.safety.SafetyNet.calculateSafeSmbLimit(
             bg = this.bg,
             targetBg = targetBg.toDouble(),
@@ -11192,14 +11394,20 @@ class DetermineBasalaimiSMB2 @Inject constructor(
          
          // 🚀 NOUVEAUTÉ: Real-Time Insulin Observer Throttle
          if (!isExplicitUserAction) {
-             val actionState = insulinObserver.update(
+             val throttleDiaHours = tickEffectiveDiaHours?.takeIf { it.isFinite() && it > 0.0 }
+                 ?: lastProfile?.dia
+                 ?: 6.0
+             val throttlePeakMinutes = tickEffectivePeakMinutes?.takeIf { it.isFinite() && it > 0.0 }?.toInt()
+                 ?: tickInsulinActionState?.timeToPeakMin?.takeIf { it > 0 }
+                 ?: 0
+             val actionState = tickInsulinActionState ?: insulinObserver.update(
                  currentBg = this.bg,
                  bgDelta = this.delta.toDouble(),
                  iobTotal = this.iob.toDouble(),
                  iobActivityNow = this.iobActivityNow,
-                 iobActivityIn30 = 0.0,  // Not critical for throttle
-                 peakMinutesAbs = 0,     // Not critical for throttle
-                 diaHours = 4.0,         // Approximation
+                 iobActivityIn30 = 0.0,
+                 peakMinutesAbs = throttlePeakMinutes,
+                 diaHours = throttleDiaHours,
                  carbsActiveG = this.cob.toDouble(),
                  now = dateUtil.now()
              )
@@ -15245,14 +15453,18 @@ class DetermineBasalaimiSMB2 @Inject constructor(
     @SuppressLint("NewApi", "DefaultLocale") fun determine_basal(
         glucose_status: GlucoseStatusAIMI, currenttemp: CurrentTemp, iob_data_array: Array<IobTotal>, profile: OapsProfileAimi, autosens_data: AutosensResult, mealData: MealData,
         microBolusAllowed: Boolean, currentTime: Long, flatBGsDetected: Boolean, dynIsfMode: Boolean, uiInteraction: UiInteraction,
-        pkpd_iob_data_array: Array<IobTotal>? = null, // learned-kinetics activity array for prediction curves (null → static profile fallback)
-        extraDebug: String = "" // 🌀 Extensible Debug Channel (e.g. Cosine Gate)
+        pkpd_iob_data_array: Array<IobTotal>? = null,
+        effective_dia_hours: Double? = null,
+        effective_peak_minutes: Double? = null,
+        extraDebug: String = ""
     ): RT {
         val ctx = AimiTickContext(
             glucoseStatus = glucose_status,
             currentTemp = currenttemp,
             iobDataArray = iob_data_array,
             pkpdIobDataArray = pkpd_iob_data_array,
+            effectiveDiaHours = effective_dia_hours,
+            effectivePeakMinutes = effective_peak_minutes,
             profile = profile,
             autosensData = autosens_data,
             mealData = mealData,
@@ -15272,7 +15484,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             },
             onTickEnd = { tickId, startedWallMs, endedWallMs ->
                 try {
-                    hormonitorStudyExporter.recordLoopTickEnd(
+                    hormonitorStudyExporter?.recordLoopTickEnd(
                         tickId = tickId,
                         startedWallMs = startedWallMs,
                         endedWallMs = endedWallMs,
@@ -15285,7 +15497,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             onTickAbort = { tickId, startedWallMs, endedWallMs, error ->
                 determineBasalInvocationCaches.abandonInvocationAfterUnhandledError()
                 try {
-                    hormonitorStudyExporter.recordLoopTickAborted(
+                    hormonitorStudyExporter?.recordLoopTickAborted(
                         tickId = tickId,
                         startedWallMs = startedWallMs,
                         endedWallMs = endedWallMs,
@@ -15533,29 +15745,33 @@ class DetermineBasalaimiSMB2 @Inject constructor(
     }
 
     /**
-     * TDD-derived activity threshold + basal neural [updateLearning] + BASAL_GOV console line.
-     * Order preserved vs legacy single function (threshold before learning; gov before TICK).
+     * Records one basal-neural CSV row, triggers async ML training, and logs BASAL_GOV.
+     * Shared by the main post-engine path and [logDecisionFinal] early exits.
      */
-    private fun runDecisionFinalBasalNeuralStep(rT: RT, diag: DecisionFinalDiagSnapshot): Double {
+    private fun applyBasalNeuralLearningAndTraining(
+        rT: RT,
+        tbrUph: Double,
+        govTag: String,
+    ) {
         val eventual = (rT.eventualBG ?: lastEventualBgSnapshot)
-        val tdd24h = resolveTdd24hForLoop(30.0)
-        val activityThreshold = (tdd24h / 24.0) * 0.15
         basalNeuralLearner.updateLearning(
-            bgBefore = diag.bgValue,
+            bgBefore = bg,
             bgAfter = eventual,
-            basalDelivered = diag.tbrUph,
+            basalDelivered = tbrUph,
             targetBg = targetBg.toDouble(),
             accel = bgacc,
             duraISFminutes = duraISFminutes,
             duraISFaverage = duraISFaverage,
             iob = iobNet,
-            loopDeltaMgDl5m = diag.deltaValue,
-            sensorNoise = diag.cgmNoise,
+            loopDeltaMgDl5m = delta.toDouble(),
+            sensorNoise = lastLoopCgmNoise,
             shortMinPredBg = minPredictedAcrossCurves(rT.predBGs),
+            physioFeatures = currentBasalPhysioFeatures(),
         )
+        triggerBasalMlTrainingIfNeeded()
         val gov = basalNeuralLearner.getGovernanceSnapshot()
         consoleLog.add(
-            "🧭 BASAL_GOV: action=${gov.action} conf=${"%.2f".format(Locale.US, gov.confidence)} " +
+            "🧭 BASAL_GOV[$govTag]: action=${gov.action} conf=${"%.2f".format(Locale.US, gov.confidence)} " +
                 "n=${gov.sampleCount} hypo=${"%.2f".format(Locale.US, gov.hypoRate)} hypoG=${"%.2f".format(Locale.US, gov.hypoRateGovernance)} " +
                 "hypoAdj=${"%.2f".format(Locale.US, gov.hypoGovernanceAdjusted)} ant=${"%.2f".format(Locale.US, gov.anticipationRelief)} " +
                 "wMean=${"%.2f".format(Locale.US, gov.meanGovernanceWeight)} high=${"%.2f".format(Locale.US, gov.highRate)} " +
@@ -15564,6 +15780,19 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                 "floorA=${gov.activeAggressivenessFloor?.let { "%.2f".format(Locale.US, it) } ?: "-"} " +
                 "reason=${gov.reason}"
         )
+    }
+
+    private fun triggerBasalMlTrainingIfNeeded() {
+        if (::basalMlTrainingCoordinator.isInitialized) {
+            aapsLogger.debug(LTag.APS, "BasalMlTraining: maybeTrainAsync triggered")
+            basalMlTrainingCoordinator.maybeTrainAsync()
+        }
+    }
+
+    private fun runDecisionFinalBasalNeuralStep(rT: RT, diag: DecisionFinalDiagSnapshot): Double {
+        val tdd24h = resolveTdd24hForLoop(30.0)
+        val activityThreshold = (tdd24h / 24.0) * 0.15
+        applyBasalNeuralLearningAndTraining(rT, diag.tbrUph, "FINAL")
         return activityThreshold
     }
 
@@ -15919,7 +16148,8 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             accel = accel,
             duraMin = duraISFminutes,
             duraAvg = duraISFaverage,
-            iob = iob.iob
+            iob = iob.iob,
+            physioFeatures = currentBasalPhysioFeatures()
         )
         // Clamp the blend so adaptiveMult never turns T3C hyper-aggressive:
         //  - Resistance (adaptiveMult > 1.0): amplify up to 40% extra
@@ -16021,31 +16251,11 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         )
 
         // 🧬 Adaptive Learning Update
-        basalNeuralLearner.updateLearning(
-            bgBefore = bg,
-            bgAfter = eventualBg,
-            basalDelivered = t3cFinalRate,
-            targetBg = targetBg,
-            accel = accel,
-            duraISFminutes = duraISFminutes,
-            duraISFaverage = duraISFaverage,
-            iob = iob.iob,
-            loopDeltaMgDl5m = delta.toDouble(),
-            sensorNoise = cgmNoise,
-            shortMinPredBg = minPredictedAcrossCurves(rT.predBGs),
+        applyBasalNeuralLearningAndTraining(
+            rT = rT,
+            tbrUph = t3cFinalRate,
+            govTag = "T3C",
         )
-        val gov = basalNeuralLearner.getGovernanceSnapshot()
-        consoleLog.add(
-            "🧭 BASAL_GOV[T3C]: action=${gov.action} conf=${"%.2f".format(Locale.US, gov.confidence)} " +
-                "n=${gov.sampleCount} hypo=${"%.2f".format(Locale.US, gov.hypoRate)} hypoG=${"%.2f".format(Locale.US, gov.hypoRateGovernance)} " +
-                "hypoAdj=${"%.2f".format(Locale.US, gov.hypoGovernanceAdjusted)} ant=${"%.2f".format(Locale.US, gov.anticipationRelief)} " +
-                "wMean=${"%.2f".format(Locale.US, gov.meanGovernanceWeight)} high=${"%.2f".format(Locale.US, gov.highRate)} " +
-                "mae=${"%.1f".format(Locale.US, gov.meanAbsTargetError)} latch=${gov.hypoHoldLatched} " +
-                "floorB=${gov.activeBasalFloor?.let { "%.2f".format(Locale.US, it) } ?: "-"} " +
-                "floorA=${gov.activeAggressivenessFloor?.let { "%.2f".format(Locale.US, it) } ?: "-"} " +
-                "reason=${gov.reason}"
-        )
-
         consoleLog.add(rT.reason.toString())
         markFinalLoopDecisionFromRT(rT, currenttemp)
         return rT

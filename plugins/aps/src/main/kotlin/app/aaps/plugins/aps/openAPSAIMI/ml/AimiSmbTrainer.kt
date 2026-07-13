@@ -11,7 +11,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import java.io.File
-import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicLong
 import java.util.concurrent.atomic.AtomicReference
 import kotlin.math.abs
@@ -36,10 +35,6 @@ object AimiSmbTrainer {
     // 3 causal-context features + 1 trendIndicator
     const val INPUT_SIZE = SmbRefinementFeatureSchema.INPUT_SIZE
 
-    // Circuit breaker settings
-    private const val CB_MAX_FAILURES = 3
-    private const val CB_COOLDOWN_MS  = 6 * 60 * 60 * 1000L  // 6h
-
     // Training rate limit
     private const val TRAIN_INTERVAL_MS  = 6 * 60 * 60 * 1000L  // 6h
     private const val MIN_NEW_ROWS_TO_RETRAIN = 200
@@ -49,9 +44,8 @@ object AimiSmbTrainer {
     private val trainMutex = Mutex()
     private val scope      = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
-    // Circuit breaker
-    private val cbFailures       = AtomicInteger(0)
-    private val cbCoolingUntilMs = AtomicLong(0L)
+    // Circuit breaker (shared component)
+    private val circuitBreaker = TrainingCircuitBreaker()
 
     // Training rate limit
     private val lastTrainMs   = AtomicLong(0L)
@@ -188,38 +182,21 @@ object AimiSmbTrainer {
 
         Log.i(TAG, "Training on ${inputs.size} samples…")
 
-        // Simple single-pass training (K-fold is too slow here)
-        val net = AimiNeuralNetwork(
-            inputSize = INPUT_SIZE,
-            hiddenSize = 8,
-            outputSize = 1,
+        // Single-pass train → probe-validate → atomic publish via the shared pipeline (probe-finite only: SMB does
+        // not compare against an incumbent, so any finite candidate publishes — same as before).
+        val net = NeuralModelTrainer.trainAndPublish(
+            weightsFile = AimiSmbModelStore.modelFile(dir),
+            split = NeuralModelTrainer.split80_20(inputs, targets),
             config = TrainingConfig(learningRate = 0.001, epochs = 300),
-            regularizationLambda = 0.01
+            inputSize = INPUT_SIZE,
+            regularizationLambda = 0.01,
+            log = { Log.i(TAG, it) },
         )
-        // Split 80/20 for train/val
-        val splitIdx = (inputs.size * 0.8).toInt().coerceAtLeast(1)
-        val trainInputs  = inputs.subList(0, splitIdx)
-        val trainTargets = targets.subList(0, splitIdx)
-        val valInputs    = inputs.subList(splitIdx, inputs.size).takeIf { it.isNotEmpty() } ?: trainInputs
-        val valTargets   = targets.subList(splitIdx, targets.size).takeIf { it.isNotEmpty() } ?: trainTargets
-        net.trainWithValidation(trainInputs, trainTargets, valInputs, valTargets)
-
-        // Validate before committing
-        val probe = FloatArray(INPUT_SIZE) { 0f }
-        val testOut = net.predict(probe)
-        if (!testOut.all { it.isFinite() }) {
-            Log.w(TAG, "Trained model produced NaN/Inf — discarding")
-            recordFailure()
-            return
-        }
-
-        // Commit
-        val saved = AimiSmbModelStore.save(dir, net)
-        if (saved) {
+        if (net != null) {
             modelRef.set(net)
             lastTrainMs.set(System.currentTimeMillis())
             rowsAtLastTrain.set(totalRows)
-            cbFailures.set(0)   // reset circuit breaker on success
+            circuitBreaker.reset()   // reset circuit breaker on success
             Log.i(TAG, "Model trained and saved successfully (${inputs.size} rows)")
         } else {
             recordFailure()
@@ -253,16 +230,11 @@ object AimiSmbTrainer {
     }
 
 
-    private fun isCircuitOpen(now: Long): Boolean {
-        return cbFailures.get() >= CB_MAX_FAILURES && now < cbCoolingUntilMs.get()
-    }
+    private fun isCircuitOpen(now: Long): Boolean = circuitBreaker.isOpen(now)
 
     private fun recordFailure() {
-        val failures = cbFailures.incrementAndGet()
-        if (failures >= CB_MAX_FAILURES) {
-            val until = System.currentTimeMillis() + CB_COOLDOWN_MS
-            cbCoolingUntilMs.set(until)
-            Log.w(TAG, "Circuit breaker OPEN — ML disabled for 6h after $failures consecutive failures")
+        if (circuitBreaker.recordFailure()) {
+            Log.w(TAG, "Circuit breaker OPEN — ML disabled for 6h after ${TrainingCircuitBreaker.DEFAULT_MAX_FAILURES} consecutive failures")
         }
     }
 }

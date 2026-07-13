@@ -4,6 +4,7 @@ import android.content.Context
 import app.aaps.core.interfaces.logging.AAPSLogger
 import app.aaps.core.keys.BooleanKey
 import app.aaps.core.keys.interfaces.Preferences
+import app.aaps.plugins.aps.openAPSAIMI.ml.AimiNeuralModelStore
 import app.aaps.plugins.aps.openAPSAIMI.utils.AimiStorageHelper
 import com.google.common.truth.Truth.assertThat
 import io.mockk.every
@@ -72,24 +73,56 @@ class BasalMlTrainingCoordinatorTest {
     }
 
     @Test
+    fun `parser appends physio context features and backfills neutral for legacy rows`() {
+        // Legacy CSV (no physio columns) must still yield full-width inputs: 6 glucose-dynamics base + 10 physio
+        // (mirror of the SMB schema), the physio slots filled with neutral values (schema versioning + backfill).
+        val dataset = BasalMlDatasetParser.parse(csvFile)!!
+        val input = dataset.inputs.first()
+
+        assertThat(input.size).isEqualTo(BasalMlTrainingCoordinator.INPUT_SIZE)
+        assertThat(input.size).isEqualTo(16)
+        // Physio block starts at BASE_FEATURE_COUNT: mealProb neutral = 0.0, circadianSiFactor neutral = 1.0.
+        assertThat(input[BasalMlTrainingCoordinator.BASE_FEATURE_COUNT]).isEqualTo(0.0f)
+        assertThat(input[BasalMlTrainingCoordinator.BASE_FEATURE_COUNT + 2]).isEqualTo(1.0f)
+    }
+
+    @Test
     fun `training is reached even when both feature prefs are off (decoupled from usage)`() = runBlocking {
         // Old behavior returned SKIPPED before any training when the feature prefs were off. New contract: training
         // depends only on data availability; the prefs gate only runtime usage (BasalNeuralLearner). We assert the
         // training path is REACHED — deterministically, via the model-store read that trainAndMaybePublish performs
         // before training — rather than the stochastic publish result (the net is unseeded).
-        mockkObject(BasalMlModelStore)
+        mockkObject(AimiNeuralModelStore)
         try {
-            every { BasalMlModelStore.loadValid(any(), any()) } returns null
+            every { AimiNeuralModelStore.load(any(), any()) } returns null
+            every { AimiNeuralModelStore.save(any(), any()) } returns true
             every { preferences.get(BooleanKey.OApsAIMIT3cAdaptiveBasalEnabled) } returns false
             every { preferences.get(BooleanKey.OApsAIMIT3cBrittleMode) } returns false
 
             coordinator.runScheduledTraining()
 
-            // Reached only if the pref-gate is gone (both heads read their incumbent before training).
-            verify(atLeast = 1) { BasalMlModelStore.loadValid(any(), any()) }
+            // Reached only if the pref-gate is gone: NeuralModelTrainer reads the incumbent before training each head.
+            verify(atLeast = 1) { AimiNeuralModelStore.load(any(), any()) }
         } finally {
-            unmockkObject(BasalMlModelStore)
+            unmockkObject(AimiNeuralModelStore)
         }
+    }
+
+    @Test
+    fun `representativeProbeInput averages training features`() {
+        val inputs = listOf(
+            floatArrayOf(100f, 1f, 0f, 30f, 45f, 0.5f) + FloatArray(10) { 0f },
+            floatArrayOf(200f, 2f, 0f, 60f, 90f, 1.0f) + FloatArray(10) { 1f },
+        )
+        val probe = BasalMlDatasetParser.representativeProbeInput(inputs)
+        assertThat(probe.size).isEqualTo(BasalMlTrainingCoordinator.INPUT_SIZE)
+        assertThat(probe[0]).isWithin(0.01f).of(150f)
+        assertThat(probe[1]).isWithin(0.01f).of(1.5f)
+    }
+
+    @Test
+    fun `maybeTrainAsync is fire and forget`() {
+        coordinator.maybeTrainAsync()
     }
 
     @Test

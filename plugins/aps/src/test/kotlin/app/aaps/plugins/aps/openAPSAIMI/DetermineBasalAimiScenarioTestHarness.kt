@@ -12,6 +12,7 @@ import app.aaps.core.keys.interfaces.Preferences
 import app.aaps.plugins.aps.openAPSAIMI.autodrive.AutodriveEngine
 import app.aaps.plugins.aps.openAPSAIMI.autodrive.safety.AutoDriveGater
 import app.aaps.plugins.aps.openAPSAIMI.basal.DynamicBasalController
+import app.aaps.plugins.aps.openAPSAIMI.learning.BasalMlTrainingCoordinator
 import app.aaps.plugins.aps.openAPSAIMI.learning.BasalNeuralLearner
 import app.aaps.plugins.aps.openAPSAIMI.physio.AIMIInsulinDecisionAdapterMTR
 import app.aaps.plugins.aps.openAPSAIMI.physio.HealthContextSnapshot
@@ -46,6 +47,9 @@ internal class DetermineBasalAimiScenarioTestHarness(
         every { Environment.getExternalStorageDirectory() } returns mockFile
         every { Environment.getExternalStoragePublicDirectory(any()) } returns mockFile
         every { mockFile.absolutePath } returns "/tmp"
+        // Real temp dir so the engine's file-path lazies (appExternalFallbackDir, exporter dirs) don't NPE on a mock
+        // File with a null path — the tick must reach its decision branches, not abort into a safe-hold.
+        val realTmpDir = File(System.getProperty("java.io.tmpdir"))
 
         coEvery { persistenceLayer.getUserEntryDataFromTime(any()) } returns emptyList()
         coEvery { persistenceLayer.getBolusesFromTime(any(), any()) } returns emptyList()
@@ -87,7 +91,9 @@ internal class DetermineBasalAimiScenarioTestHarness(
             pumpCapabilityValidator = mockk(relaxed = true),
             dynamicBasalController = mockk<DynamicBasalController>(relaxed = true),
             autodriveEngine = autodriveEngine,
-            context = mockk(relaxed = true)
+            context = mockk(relaxed = true) {
+                every { getExternalFilesDir(any()) } returns realTmpDir
+            }
         ).apply {
             this.persistenceLayer = this@DetermineBasalAimiScenarioTestHarness.persistenceLayer
             this.tddCalculator = tddCalculator
@@ -107,6 +113,7 @@ internal class DetermineBasalAimiScenarioTestHarness(
             basalLearner = mockk(relaxed = true)
             unifiedReactivityLearner = mockk(relaxed = true)
             basalNeuralLearner = this@DetermineBasalAimiScenarioTestHarness.basalNeuralLearner
+            basalMlTrainingCoordinator = mockk(relaxed = true)
             storageHelper = mockk(relaxed = true)
             aapsLogger = mockk(relaxed = true)
             trajectoryGuard = this@DetermineBasalAimiScenarioTestHarness.trajectoryGuard

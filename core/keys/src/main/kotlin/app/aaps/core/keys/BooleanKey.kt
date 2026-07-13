@@ -350,6 +350,22 @@ enum class BooleanKey(
         titleResId = R.string.pref_title_aimi_peak_governor_enabled,
         summaryResId = R.string.pref_summary_aimi_peak_governor_enabled,
     ),
+    /** Intelligence snapshot export in AIMI_Decisions.jsonl (intelligence_snapshot_v1). */
+    OApsAIMIIntelligenceSnapshotExport("key_aimi_intelligence_snapshot_export", true),
+    /** Single PKPD learning path per tick (signal-prep only; plugin/early are read-only). */
+    OApsAIMIIntelligenceSingleLearnPath("key_aimi_intelligence_single_learn_path", true),
+    /** TAP-D: blend profile DIA with learned structural DIA for effective runtime kinetics. */
+    OApsAIMIDiaGovernorEnabled("key_aimi_dia_governor_enabled", true),
+    /** InsulinActionProfiler uses prediction IOB array from kinetics authority. */
+    OApsAIMIIntelligenceKineticsProfiler("key_aimi_intelligence_kinetics_profiler", true),
+    /** C1 shadow: log authority vs PKPD deltas without applying to dose path. */
+    OApsAIMIPredictionAuthorityShadow("key_aimi_prediction_authority_shadow", true),
+    /** C1 prod: apply DecisionPredictionAuthority to eventualBG, predBGs, stacking, SafetyNet. */
+    OApsAIMIPredictionAuthorityEnabled(
+        key = "key_aimi_prediction_authority_enabled",
+        defaultValue = false,
+        dependency = OApsAIMIIntelligenceSnapshotExport,
+    ),
     OApsAIMIPkpdPragmaticReliefEnabled("key_aimi_pkpd_pragmatic_relief_enabled", true),
     /** When false, AIMI stops writing loop_blackbox_v1.jsonl only; hormonitor event/daily streams unchanged. */
     OApsAIMILoopBlackboxFileEnabled("key_aimi_loop_blackbox_file_enabled", true),

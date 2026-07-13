@@ -2,14 +2,19 @@ package app.aaps.plugins.aps.openAPSAIMI.learning
 
 import app.aaps.core.interfaces.logging.AAPSLogger
 import app.aaps.core.interfaces.logging.LTag
-import app.aaps.plugins.aps.openAPSAIMI.AimiNeuralNetwork
 import app.aaps.plugins.aps.openAPSAIMI.TrainingConfig
+import app.aaps.plugins.aps.openAPSAIMI.ml.NeuralModelTrainer
+import app.aaps.plugins.aps.openAPSAIMI.ml.SmbRefinementFeatureSchema
+import app.aaps.plugins.aps.openAPSAIMI.ml.TrainingCircuitBreaker
 import app.aaps.plugins.aps.openAPSAIMI.utils.AimiStorageHelper
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import org.json.JSONObject
 import java.io.File
-import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicLong
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -29,13 +34,14 @@ class BasalMlTrainingCoordinator @Inject constructor(
     companion object {
         private const val TAG = "BasalMlTraining"
 
-        const val INPUT_SIZE = 6
-        private const val TRAIN_INTERVAL_MS = 6L * 60 * 60 * 1000
+        // 6 glucose-dynamics base features + 10 physiological-context features (mirror of the SMB schema:
+        // 4 latent + 3 patient-mode + 3 causal). Keep in sync with BasalNeuralLearner.modelInput / the parser.
+        const val BASE_FEATURE_COUNT = 6
+        const val INPUT_SIZE = 16
+        private const val TRAIN_INTERVAL_MS = 1L * 60 * 60 * 1000 // 1h — matches the 1h worker cadence; the MIN_NEW_ROWS gate still prevents retraining without new data
         private const val MIN_NEW_ROWS = 80L
         private const val BASAL_MIN_ROWS = 100
         private const val T3C_MIN_ROWS = 50
-        private const val CB_MAX_FAILURES = 3
-        private const val CB_COOLDOWN_MS = 6L * 60 * 60 * 1000
         private const val VAL_LOSS_TOLERANCE = 1.05
         private const val STATE_FILE = "basal_ml_training_state.json"
         private const val CSV_FILE = "basal_adaptive_records.csv"
@@ -54,23 +60,41 @@ class BasalMlTrainingCoordinator @Inject constructor(
     }
 
     private val trainMutex = Mutex()
+    private val trainScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
     private val lastTrainMs = AtomicLong(0L)
     private val rowsAtLastTrain = AtomicLong(0L)
-    private val cbFailures = AtomicInteger(0)
-    private val cbCoolingUntilMs = AtomicLong(0L)
+    private val circuitBreaker = TrainingCircuitBreaker()
 
     init {
         instance = this
         loadPersistedState()
     }
 
+    /**
+     * Fire-and-forget training trigger (SMB-style): called from the loop hot path after each basal record.
+     * Never blocks the caller; [runScheduledTraining] enforces rate limit, min new rows, and mutex.
+     */
+    fun maybeTrainAsync() {
+        trainScope.launch {
+            if (trainMutex.isLocked) return@launch
+            try {
+                runScheduledTraining()
+            } catch (e: Exception) {
+                log.error(LTag.APS, "$TAG: maybeTrainAsync failed", e)
+            }
+        }
+    }
+
     suspend fun runScheduledTraining(): TrainingOutcome = trainMutex.withLock {
         val now = System.currentTimeMillis()
+        // First-ever model creation bypasses the rate limit: if no basal weights exist yet, train now (bootstrap) so
+        // the model is created ASAP from the already-accumulated CSV, instead of waiting for the next 6h window.
+        val bootstrapNeeded = !storageHelper.getAimiFile(BASAL_WEIGHTS).exists()
         if (isCircuitOpen(now)) {
             log.debug(LTag.APS, "$TAG: circuit breaker open — skip")
             return TrainingOutcome.SKIPPED
         }
-        if (now - lastTrainMs.get() < TRAIN_INTERVAL_MS) {
+        if (!bootstrapNeeded && now - lastTrainMs.get() < TRAIN_INTERVAL_MS) {
             log.debug(LTag.APS, "$TAG: rate limit — skip")
             return TrainingOutcome.SKIPPED
         }
@@ -127,7 +151,7 @@ class BasalMlTrainingCoordinator @Inject constructor(
                 published -> {
                     lastTrainMs.set(now)
                     rowsAtLastTrain.set(totalRows)
-                    cbFailures.set(0)
+                    circuitBreaker.reset()
                     persistState()
                     basalNeuralLearner.reloadModels()
                     log.info(LTag.APS, "$TAG: training complete — models reloaded ($totalRows CSV rows)")
@@ -182,6 +206,8 @@ class BasalMlTrainingCoordinator @Inject constructor(
         }
     }
 
+    // Basal/T3C publish strictly: the candidate must beat the incumbent within [VAL_LOSS_TOLERANCE] and probe inside
+    // [outputRange]. Shared training/validation/publish mechanics live in [NeuralModelTrainer].
     private fun trainAndMaybePublish(
         weightsFile: File,
         trainInputs: List<FloatArray>,
@@ -191,58 +217,26 @@ class BasalMlTrainingCoordinator @Inject constructor(
         config: TrainingConfig,
         outputRange: ClosedFloatingPointRange<Double>,
     ): Boolean {
-        if (trainInputs.isEmpty() || valInputs.isEmpty()) return false
-
-        val incumbent = BasalMlModelStore.loadValid(weightsFile, INPUT_SIZE)
-        val incumbentLoss = incumbent?.validate(valInputs, valTargets) ?: Double.MAX_VALUE
-
-        val candidate = AimiNeuralNetwork(
-            inputSize = INPUT_SIZE,
-            hiddenSize = 8,
-            outputSize = 1,
+        val hasIncumbent = weightsFile.exists()
+        return NeuralModelTrainer.trainAndPublish(
+            weightsFile = weightsFile,
+            split = NeuralModelTrainer.Split(trainInputs, trainTargets, valInputs, valTargets),
             config = config,
-        )
-        candidate.trainWithValidation(trainInputs, trainTargets, valInputs, valTargets)
-
-        val probeOut = candidate.predict(FloatArray(INPUT_SIZE) { 0f })
-        if (!probeOut.all { it.isFinite() }) {
-            log.warn(LTag.APS, "$TAG: candidate probe NaN/Inf — discard")
-            return false
-        }
-        val probeVal = probeOut.first().toDouble()
-        if (probeVal !in outputRange) {
-            log.warn(LTag.APS, "$TAG: candidate probe $probeVal outside $outputRange — discard")
-            return false
-        }
-
-        val candidateLoss = candidate.lastBestValidationLoss()
-        if (!candidateLoss.isFinite()) return false
-
-        val maxAllowed = incumbentLoss * VAL_LOSS_TOLERANCE + 1e-6
-        if (incumbent != null && candidateLoss > maxAllowed) {
-            log.info(
-                LTag.APS,
-                "$TAG: reject ${weightsFile.name} val=$candidateLoss > incumbent=$incumbentLoss (tol=$VAL_LOSS_TOLERANCE)",
-            )
-            return false
-        }
-
-        if (!BasalMlModelStore.saveAtomic(weightsFile, candidate)) {
-            log.warn(LTag.APS, "$TAG: atomic save failed for ${weightsFile.name}")
-            return false
-        }
-        log.info(LTag.APS, "$TAG: published ${weightsFile.name} (val loss=$candidateLoss)")
-        return true
+            inputSize = INPUT_SIZE,
+            probeInput = BasalMlDatasetParser.representativeProbeInput(trainInputs),
+            // Bootstrap: publish any finite candidate (SMB-style). Retrain: probe + range + beat incumbent.
+            outputRange = if (hasIncumbent) outputRange else null,
+            requireIncumbentBeat = hasIncumbent,
+            valLossTolerance = VAL_LOSS_TOLERANCE,
+            log = { log.info(LTag.APS, "$TAG: $it") },
+        ) != null
     }
 
-    private fun isCircuitOpen(now: Long): Boolean =
-        cbFailures.get() >= CB_MAX_FAILURES && now < cbCoolingUntilMs.get()
+    private fun isCircuitOpen(now: Long): Boolean = circuitBreaker.isOpen(now)
 
     private fun recordFailure() {
-        val failures = cbFailures.incrementAndGet()
-        if (failures >= CB_MAX_FAILURES) {
-            cbCoolingUntilMs.set(System.currentTimeMillis() + CB_COOLDOWN_MS)
-            log.warn(LTag.APS, "$TAG: circuit breaker OPEN for 6h after $failures failures")
+        if (circuitBreaker.recordFailure()) {
+            log.warn(LTag.APS, "$TAG: circuit breaker OPEN for 6h after ${TrainingCircuitBreaker.DEFAULT_MAX_FAILURES} failures")
         }
     }
 
@@ -304,6 +298,32 @@ internal data class BasalMlDataset(
 
 internal object BasalMlDatasetParser {
 
+    /** Feature centroid for publish-time probe (replaces all-zero vector that never appears in training data). */
+    fun representativeProbeInput(trainInputs: List<FloatArray>): FloatArray {
+        if (trainInputs.isEmpty()) return neutralProbeInput()
+        val size = trainInputs.first().size
+        val acc = FloatArray(size)
+        var used = 0
+        for (row in trainInputs) {
+            if (row.size != size) continue
+            for (i in row.indices) acc[i] += row[i]
+            used++
+        }
+        if (used == 0) return neutralProbeInput()
+        val n = used.toFloat()
+        for (i in acc.indices) acc[i] /= n
+        return acc
+    }
+
+    /** Fallback probe when the train set is empty (should not happen in normal publish flow). */
+    fun neutralProbeInput(): FloatArray {
+        val base = floatArrayOf(100f, 1f, 0f, 30f, 45f, 0.5f)
+        val physio = SmbRefinementFeatureSchema.latentFeatureValues(null) +
+            SmbRefinementFeatureSchema.modeFeatureValues(null) +
+            SmbRefinementFeatureSchema.causalFeatureValues(null)
+        return base + physio
+    }
+
     // 🩸 Alignement temporel du label. La cible d'apprentissage doit être le résultat RÉELLEMENT observé, donc
     // le BG mesuré ~30 min après le tick (colonne `bg` d'une ligne future), et NON la colonne `eventualBg` —
     // qui est une prédiction pkpd plancherée à 39 mg/dL (≈24 % des lignes) et produisait des labels fictifs
@@ -342,12 +362,24 @@ internal object BasalMlDatasetParser {
 
         val required = listOf(iTs, iBg, iBasal, iTarget, iAccel, iDuraMin, iDuraAvg, iIob, iBasalScale, iT3cAgg)
         if (required.any { it < 0 }) return null
+        val requiredMaxIdx = required.max()
+
+        // Physio-context columns (mirror of the SMB schema). Read by name; absent column OR short (legacy) row →
+        // neutral value → schema versioning + neutral backfill so the pre-physio history keeps training.
+        val physioNames = SmbRefinementFeatureSchema.latentFeatureNames +
+            SmbRefinementFeatureSchema.modeFeatureNames +
+            SmbRefinementFeatureSchema.causalFeatureNames
+        val neutralPhysio = SmbRefinementFeatureSchema.latentFeatureValues(null) +
+            SmbRefinementFeatureSchema.modeFeatureValues(null) +
+            SmbRefinementFeatureSchema.causalFeatureValues(null)
+        val physioIdx = physioNames.map { header.indexOf(it) }
 
         // 1) Parse + filtre de validité (BG plausible), puis tri chronologique pour la jointure du label.
         val raw = ArrayList<RawRow>(allLines.size)
         for (line in allLines.drop(1)) {
             val cols = line.split(",")
-            if (cols.size < header.size) continue
+            // Require only the base columns (physio columns are optional → neutral backfill for legacy rows).
+            if (cols.size <= requiredMaxIdx) continue
             val ts = cols[iTs].toLongOrNull() ?: continue
             val bg = cols[iBg].toDoubleOrNull() ?: continue
             if (!bg.isFinite() || bg < MIN_VALID_BG || bg > MAX_VALID_BG) continue
@@ -359,6 +391,10 @@ internal object BasalMlDatasetParser {
             val target = cols[iTarget].toDoubleOrNull() ?: continue
             val currentScale = cols[iBasalScale].toDoubleOrNull() ?: continue
             val currentAgg = cols[iT3cAgg].toDoubleOrNull() ?: continue
+            val physio = FloatArray(physioNames.size) { j ->
+                val idx = physioIdx[j]
+                if (idx >= 0) cols.getOrNull(idx)?.toFloatOrNull() ?: neutralPhysio[j] else neutralPhysio[j]
+            }
             raw.add(
                 RawRow(
                     ts = ts,
@@ -366,7 +402,7 @@ internal object BasalMlDatasetParser {
                     target = target,
                     currentScale = currentScale,
                     currentAgg = currentAgg,
-                    features = floatArrayOf(bg.toFloat(), basal, accel, duraMin, duraAvg, iob),
+                    features = floatArrayOf(bg.toFloat(), basal, accel, duraMin, duraAvg, iob) + physio,
                 )
             )
         }
