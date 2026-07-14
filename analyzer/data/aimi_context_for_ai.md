@@ -1,7 +1,7 @@
 # AIMI Algorithm Context
 Version: 2.2
-Source commit: 659041e1c7755dba18c0354ce8ba38b608c16ed0
-Generated: 2026-07-09T23:16:36.144432+00:00
+Source commit: b19c2d68c175dced84308e6a9e47cb9904aa50d6
+Generated: 2026-07-14T10:28:19.194078+00:00
 
 ## Algorithm Overview
 AIMI (AI-powered Modular Insulin)
@@ -143,7 +143,7 @@ Gate: key_aimi_pkpd_enabled
 
 Real-time PKPD model with Weibull-based insulin action curves, adaptive estimator and InsulinActionProfiler. Computes fusedIsf from profile ISF, dynamic ISF and learned values. PkpdAbsorptionGuard dampens SMB during limited absorption. IOB consensus reconciles AAPS IOB with PKPD IOB.
 
-Key parameters (22):
+Key parameters (23):
 - aimi_pkpd_anchor_dia_h
 - aimi_pkpd_anchor_peak_min
 - aimi_pkpd_bounds_dia_max_h
@@ -159,7 +159,7 @@ Key parameters (22):
 - aimi_pkpd_state_effective_peak
 - aimi_pkpd_state_peak_min
 - aimi_pkpd_state_physio_peak
-- ... and 7 more
+- ... and 8 more
 
 ### unified_reactivity
 Gate: key_use_Aimi_UnifiedReactivityLearner
@@ -234,7 +234,8 @@ Gate: key_use_aimi_t3c_adaptive_basal
 
 Adaptive basal governance system for T3c and universal adaptive basal. Manages hypo detection (enter/exit rates, BG thresholds), hold states (basal/agg floor rates and decay rates for standard and severe hypo), and anticipation logic with lookback windows and margin parameters.
 
-Key parameters (18):
+Key parameters (19):
+- key_aimi_dia_governor_enabled
 - key_aimi_gov_anticipation_decay_blend_max
 - key_aimi_gov_anticipation_hypo_damp
 - key_aimi_gov_anticipation_lookback_samples
@@ -249,8 +250,7 @@ Key parameters (18):
 - key_aimi_gov_hold_basal_floor_severe
 - key_aimi_gov_hypo_bg_mgdl
 - key_aimi_gov_hypo_rate_enter
-- key_aimi_gov_hypo_rate_exit
-- ... and 3 more
+- ... and 4 more
 
 ### tube_advisor
 Gate: key_aimi_straight_line_tube_enabled
@@ -509,7 +509,7 @@ Key parameters (11):
 - `key_aimi_context_enabled`
 - `key_aimi_context_llm_enabled`
 
-### core (89 params)
+### core (95 params)
 - `OApsAIMIDeltaPosRelease` [default: 1.0]
 - `OApsAIMIHighBg` [default: 180.0]
 - `OApsAIMI_Enable_night`
@@ -542,7 +542,8 @@ Key parameters (11):
 - `aimi_endo_smb_dampen` [default: 0.7]
 - `aimi_endo_suppression`
 
-### governance (17 params)
+### governance (18 params)
+- `key_aimi_dia_governor_enabled`
 - `key_aimi_gov_anticipation_decay_blend_max` [default: 0.5]
 - `key_aimi_gov_anticipation_hypo_damp` [default: 0.55]
 - `key_aimi_gov_anticipation_lookback_samples` [default: 18.0]
@@ -552,7 +553,6 @@ Key parameters (11):
 - `key_aimi_gov_hold_agg_floor_rate` [default: 0.7]
 - `key_aimi_gov_hold_agg_floor_severe` [default: 0.72]
 - `key_aimi_gov_hold_basal_decay_rate` [default: 0.98]
-- `key_aimi_gov_hold_basal_decay_severe` [default: 0.975]
 
 ### hyper_trajectory (4 params)
 - `key_aimi_hyper_deep_dev_mgdl` [default: 0.0]
@@ -610,7 +610,7 @@ Key parameters (11):
 - `aimi_physio_llm_enable`
 - `aimi_physio_llm_provider`
 
-### pkpd (20 params)
+### pkpd (21 params)
 - `aimi_pkpd_bounds_dia_max_h` [default: 24.0]
 - `aimi_pkpd_bounds_dia_min_h` [default: 4.0]
 - `aimi_pkpd_bounds_peak_min_max` [default: 240.0]

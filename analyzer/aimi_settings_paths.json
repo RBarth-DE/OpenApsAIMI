@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-07-09T23:16:29.606524+00:00",
-  "source_commit": "659041e1c7755dba18c0354ce8ba38b608c16ed0",
+  "generated_at": "2026-07-14T08:30:55.752790+00:00",
+  "source_commit": "b19c2d68c175dced84308e6a9e47cb9904aa50d6",
   "paths": {
     "openapsma_max_basal": {
       "path": "AIMI → Advanced Settings",
@@ -1184,15 +1184,6 @@
       ],
       "gate_key": null
     },
-    "key_aimi_biometric_activity_lockout": {
-      "path": "AIMI → Preferences user → T3C Brittle Mode Settings",
-      "screen_titles": [
-        "AIMI",
-        "Preferences user",
-        "T3C Brittle Mode Settings"
-      ],
-      "gate_key": null
-    },
     "key_aimi_t3c_activation_threshold": {
       "path": "AIMI → Preferences user → T3C Brittle Mode Settings",
       "screen_titles": [
@@ -1849,6 +1840,15 @@
         "Preferences user",
         "Patient context and body declarations",
         "Night growth resistance"
+      ],
+      "gate_key": null
+    },
+    "key_use_Aimi_xdripOM": {
+      "path": "AIMI → Preferences user → AIMI Lab",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "AIMI Lab"
       ],
       "gate_key": null
     }

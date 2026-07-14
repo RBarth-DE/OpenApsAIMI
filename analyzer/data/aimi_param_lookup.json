@@ -879,6 +879,32 @@
       }
     ]
   },
+  "aimi_dia_governor_learned_weight": {
+    "key": "aimi_dia_governor_learned_weight",
+    "name": "OApsAIMIDiaGovernorLearnedWeight",
+    "type": "Double",
+    "feature_group": "core",
+    "summary": "Body weight in kg. Used for weight-based insulin calculations (TDD, MPC). Must match actual weight.",
+    "default": 0.45,
+    "min": 0.0,
+    "max": 1.0,
+    "orphaned": false,
+    "is_gate": false,
+    "negative_gate_key": null,
+    "impact": "medium",
+    "effect_high": "Lower calculated basal proportion (TDD/weight drops)",
+    "effect_low": "Higher calculated basal proportion",
+    "used_in": [
+      {
+        "file": "DetermineBasalAIMI2.kt",
+        "function": "runT9PhysioEarlyPkpdAndTubeBootstrap"
+      },
+      {
+        "file": "InsulinKineticsAuthority.kt",
+        "function": "resolve"
+      }
+    ]
+  },
   "aimi_dyn_isf_trajectory_max_fraction": {
     "key": "aimi_dyn_isf_trajectory_max_fraction",
     "name": "OApsAIMIDynIsfTrajectoryMaxFraction",
@@ -1407,6 +1433,10 @@
       {
         "file": "PkpdSettingsUi.kt",
         "function": "PkpdExpertSettingsContent"
+      },
+      {
+        "file": "InsulinKineticsAuthority.kt",
+        "function": "resolve"
       }
     ]
   },
@@ -1638,12 +1668,12 @@
         "function": "aimiComposePkpdSubScreen"
       },
       {
-        "file": "PkpdSettingsUi.kt",
-        "function": "PkpdAdvancedSettingsContent"
+        "file": "DetermineBasalAIMI2.kt",
+        "function": "runT9PhysioEarlyPkpdAndTubeBootstrap"
       },
       {
-        "file": "PkpdSettingsSupport.kt",
-        "function": "pkpdPrefsSnapshotFrom"
+        "file": "PkpdSettingsUi.kt",
+        "function": "PkpdAdvancedSettingsContent"
       }
     ]
   },
@@ -1667,12 +1697,12 @@
         "function": "aimiComposePkpdSubScreen"
       },
       {
-        "file": "PkpdSettingsUi.kt",
-        "function": "PkpdAdvancedSettingsContent"
+        "file": "DetermineBasalAIMI2.kt",
+        "function": "runT9PhysioEarlyPkpdAndTubeBootstrap"
       },
       {
-        "file": "PkpdSettingsSupport.kt",
-        "function": "pkpdPrefsSnapshotFrom"
+        "file": "PkpdSettingsUi.kt",
+        "function": "PkpdAdvancedSettingsContent"
       }
     ]
   },
@@ -2769,29 +2799,6 @@
       }
     ]
   },
-  "key_aimi_biometric_activity_lockout": {
-    "key": "key_aimi_biometric_activity_lockout",
-    "name": "OApsAIMIBiometricActivityLockout",
-    "type": "Boolean",
-    "feature_group": "core",
-    "summary": "Boolean switch for biometric_activity_lockout.",
-    "orphaned": false,
-    "is_gate": false,
-    "negative_gate_key": null,
-    "impact": "medium",
-    "effect_high": "Feature is active — associated functionality runs",
-    "effect_low": "Feature is inactive — associated functionality is disabled",
-    "used_in": [
-      {
-        "file": "OpenAPSAIMIPlugin.kt",
-        "function": "aimiComposeT3cSubScreen"
-      },
-      {
-        "file": "DetermineBasalAIMI2.kt",
-        "function": "refreshAimiContextActivityFlag"
-      }
-    ]
-  },
   "key_aimi_context_enabled": {
     "key": "key_aimi_context_enabled",
     "name": "OApsAIMIContextEnabled",
@@ -2846,13 +2853,55 @@
       }
     ]
   },
+  "key_aimi_dia_governor_enabled": {
+    "key": "key_aimi_dia_governor_enabled",
+    "name": "OApsAIMIDiaGovernorEnabled",
+    "type": "Boolean",
+    "feature_group": "governance",
+    "summary": "Enables/disables dia_governor_enabled. Gate flag for feature control.",
+    "orphaned": false,
+    "is_gate": false,
+    "negative_gate_key": null,
+    "impact": "medium",
+    "effect_high": "Feature is active — associated functionality runs",
+    "effect_low": "Feature is inactive — associated functionality is disabled",
+    "used_in": [
+      {
+        "file": "DetermineBasalAIMI2.kt",
+        "function": "runT9PhysioEarlyPkpdAndTubeBootstrap"
+      },
+      {
+        "file": "InsulinKineticsAuthority.kt",
+        "function": "resolve"
+      }
+    ]
+  },
+  "key_aimi_effective_iob_release_enabled": {
+    "key": "key_aimi_effective_iob_release_enabled",
+    "name": "OApsAIMIEffectiveIobReleaseEnabled",
+    "type": "Boolean",
+    "feature_group": "core",
+    "summary": "Enables/disables effective_iob_release_enabled. Gate flag for feature control.",
+    "orphaned": false,
+    "is_gate": false,
+    "negative_gate_key": null,
+    "impact": "medium",
+    "effect_high": "Feature is active — associated functionality runs",
+    "effect_low": "Feature is inactive — associated functionality is disabled",
+    "used_in": [
+      {
+        "file": "DetermineBasalAIMI2.kt",
+        "function": "resolveIobForGate"
+      }
+    ]
+  },
   "key_aimi_effort_activity_protection": {
     "key": "key_aimi_effort_activity_protection",
     "name": "OApsAIMIEffortActivityProtection",
     "type": "Boolean",
     "feature_group": "core",
     "summary": "Boolean switch for effort_activity_protection.",
-    "default": false,
+    "default": true,
     "orphaned": false,
     "is_gate": false,
     "negative_gate_key": null,
@@ -3502,6 +3551,67 @@
       }
     ]
   },
+  "key_aimi_intelligence_kinetics_profiler": {
+    "key": "key_aimi_intelligence_kinetics_profiler",
+    "name": "OApsAIMIIntelligenceKineticsProfiler",
+    "type": "Boolean",
+    "feature_group": "core",
+    "summary": "Boolean switch for intelligence_kinetics_profiler.",
+    "orphaned": false,
+    "is_gate": false,
+    "negative_gate_key": null,
+    "impact": "medium",
+    "effect_high": "Feature is active — associated functionality runs",
+    "effect_low": "Feature is inactive — associated functionality is disabled",
+    "used_in": [
+      {
+        "file": "DetermineBasalAIMI2.kt",
+        "function": "runRealtimePhysioIobProfilerAndInsulinObserver"
+      }
+    ]
+  },
+  "key_aimi_intelligence_single_learn_path": {
+    "key": "key_aimi_intelligence_single_learn_path",
+    "name": "OApsAIMIIntelligenceSingleLearnPath",
+    "type": "Boolean",
+    "feature_group": "core",
+    "summary": "Boolean switch for intelligence_single_learn_path.",
+    "orphaned": false,
+    "is_gate": false,
+    "negative_gate_key": null,
+    "impact": "medium",
+    "effect_high": "Feature is active — associated functionality runs",
+    "effect_low": "Feature is inactive — associated functionality is disabled",
+    "used_in": [
+      {
+        "file": "OpenAPSAIMIPlugin.kt",
+        "function": "invoke"
+      },
+      {
+        "file": "DetermineBasalAIMI2.kt",
+        "function": "runT9PhysioEarlyPkpdAndTubeBootstrap"
+      }
+    ]
+  },
+  "key_aimi_intelligence_snapshot_export": {
+    "key": "key_aimi_intelligence_snapshot_export",
+    "name": "OApsAIMIIntelligenceSnapshotExport",
+    "type": "Boolean",
+    "feature_group": "core",
+    "summary": "Boolean switch for intelligence_snapshot_export.",
+    "orphaned": false,
+    "is_gate": false,
+    "negative_gate_key": null,
+    "impact": "medium",
+    "effect_high": "Feature is active — associated functionality runs",
+    "effect_low": "Feature is inactive — associated functionality is disabled",
+    "used_in": [
+      {
+        "file": "DetermineBasalAIMI2.kt",
+        "function": "runAimiSnapshotMedicalJsonAndHormonitorExportStage"
+      }
+    ]
+  },
   "key_aimi_intratick_stall_seconds": {
     "key": "key_aimi_intratick_stall_seconds",
     "name": "OApsAIMIIntratickStallSeconds",
@@ -3608,6 +3718,10 @@
       {
         "file": "PkpdSettingsUi.kt",
         "function": "PkpdExpertSettingsContent"
+      },
+      {
+        "file": "InsulinKineticsAuthority.kt",
+        "function": "resolve"
       }
     ]
   },
@@ -3629,12 +3743,12 @@
         "function": "invoke"
       },
       {
-        "file": "PkpdSettingsUi.kt",
-        "function": "PkpdSetupWizardDialog"
+        "file": "DetermineBasalAIMI2.kt",
+        "function": "runT9PhysioEarlyPkpdAndTubeBootstrap"
       },
       {
-        "file": "PkpdSettingsSupport.kt",
-        "function": "pkpdPrefsSnapshotFrom"
+        "file": "PkpdSettingsUi.kt",
+        "function": "PkpdSetupWizardDialog"
       }
     ]
   },
@@ -3688,6 +3802,29 @@
       }
     ]
   },
+  "key_aimi_pkpd_prediction_kinetics": {
+    "key": "key_aimi_pkpd_prediction_kinetics",
+    "name": "OApsAIMIPkpdPredictionKinetics",
+    "type": "Boolean",
+    "feature_group": "pkpd",
+    "summary": "Boolean switch for pkpd_prediction_kinetics.",
+    "orphaned": false,
+    "is_gate": false,
+    "negative_gate_key": null,
+    "impact": "high",
+    "effect_high": "Feature is active — associated functionality runs",
+    "effect_low": "Feature is inactive — associated functionality is disabled",
+    "used_in": [
+      {
+        "file": "OpenAPSAIMIPlugin.kt",
+        "function": "buildLearnedKineticsIobArray"
+      },
+      {
+        "file": "AimiTickContext.kt",
+        "function": "unknown"
+      }
+    ]
+  },
   "key_aimi_pkpd_setup_wizard_completed": {
     "key": "key_aimi_pkpd_setup_wizard_completed",
     "name": "OApsAIMIPkpdSetupWizardCompleted",
@@ -3708,6 +3845,46 @@
       {
         "file": "PkpdSettingsUi.kt",
         "function": "PkpdSetupWizardDialog"
+      }
+    ]
+  },
+  "key_aimi_prediction_authority_enabled": {
+    "key": "key_aimi_prediction_authority_enabled",
+    "name": "OApsAIMIPredictionAuthorityEnabled",
+    "type": "Boolean",
+    "feature_group": "core",
+    "summary": "Enables/disables prediction_authority_enabled. Gate flag for feature control.",
+    "default": true,
+    "dependency": "OApsAIMIIntelligenceSnapshotExport",
+    "orphaned": false,
+    "is_gate": false,
+    "negative_gate_key": null,
+    "impact": "medium",
+    "effect_high": "Feature is active — associated functionality runs",
+    "effect_low": "Feature is inactive — associated functionality is disabled",
+    "used_in": [
+      {
+        "file": "DetermineBasalAIMI2.kt",
+        "function": "predictionAuthorityEnabled"
+      }
+    ]
+  },
+  "key_aimi_prediction_authority_shadow": {
+    "key": "key_aimi_prediction_authority_shadow",
+    "name": "OApsAIMIPredictionAuthorityShadow",
+    "type": "Boolean",
+    "feature_group": "core",
+    "summary": "Boolean switch for prediction_authority_shadow.",
+    "orphaned": false,
+    "is_gate": false,
+    "negative_gate_key": null,
+    "impact": "medium",
+    "effect_high": "Feature is active — associated functionality runs",
+    "effect_low": "Feature is inactive — associated functionality is disabled",
+    "used_in": [
+      {
+        "file": "DetermineBasalAIMI2.kt",
+        "function": "runPkpdPredictionsBgiDeviationAndNoisyTargetsStage"
       }
     ]
   },
