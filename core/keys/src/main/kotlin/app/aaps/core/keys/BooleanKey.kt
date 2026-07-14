@@ -360,10 +360,12 @@ enum class BooleanKey(
     OApsAIMIIntelligenceKineticsProfiler("key_aimi_intelligence_kinetics_profiler", true),
     /** C1 shadow: log authority vs PKPD deltas without applying to dose path. */
     OApsAIMIPredictionAuthorityShadow("key_aimi_prediction_authority_shadow", true),
-    /** C1 prod: apply DecisionPredictionAuthority to eventualBG, predBGs, stacking, SafetyNet. */
+    /** C1 prod: apply DecisionPredictionAuthority to eventualBG, predBGs, stacking, SafetyNet. Default ON (harmonized
+     *  in production 2026-07-12): one authoritative, physio-enriched prediction feeds the tree/Harmonia/SMB/UI/safety.
+     *  Fail-safe in PredictionAuthorityApplier falls back to raw PKPD if the authority terminal is invalid. */
     OApsAIMIPredictionAuthorityEnabled(
         key = "key_aimi_prediction_authority_enabled",
-        defaultValue = false,
+        defaultValue = true,
         dependency = OApsAIMIIntelligenceSnapshotExport,
     ),
     OApsAIMIPkpdPragmaticReliefEnabled("key_aimi_pkpd_pragmatic_relief_enabled", true),
@@ -381,6 +383,10 @@ enum class BooleanKey(
     OApsAIMIAimiSmbComparatorEnabled("key_aimi_smb_comparator_enabled", false),
     /** Plateau + meaningful IOB + falling prediction → throttle SMB, bias TBR, no Red Carpet restore. */
     OApsAIMIIobSurveillanceGuard("key_aimi_iob_surveillance_guard", true),
+    /** AIMI-local effective-IOB release: lets the maxIOB production gate compare against a hypo-governed partial
+     *  release of the ledger→effective IOB gap (fast insulin → gate stops over-blocking corrections). Release-only,
+     *  θ ≤ 0.5, retracts fully to the ledger on any hypo signal. See EffectiveIobReleaseAuthority. */
+    OApsAIMIEffectiveIobReleaseEnabled("key_aimi_effective_iob_release_enabled", true),
     /**
      * When true, scenario projection + trajectory can lift Autodrive V3 SMB on credible hyper rise
      * (see docs/AIMI_HYPER_TRAJECTORY_RELEASE.md).
