@@ -7,6 +7,7 @@ import app.aaps.core.data.model.TE
 import app.aaps.core.data.model.TrendArrow
 import app.aaps.core.data.plugin.PluginType
 import app.aaps.core.interfaces.db.PersistenceLayer
+import app.aaps.core.interfaces.iob.IobCobCalculator
 import app.aaps.core.interfaces.logging.AAPSLogger
 import app.aaps.core.interfaces.logging.LTag
 import app.aaps.core.interfaces.plugin.PluginBaseWithPreferences
@@ -18,6 +19,7 @@ import app.aaps.core.keys.interfaces.Preferences
 import app.aaps.plugins.smoothing.keys.UkfDoubleNonKey
 import app.aaps.plugins.smoothing.keys.UkfIntNonKey
 import app.aaps.plugins.smoothing.keys.UkfLongNonKey
+import dagger.Lazy
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -64,7 +66,8 @@ class UnscentedKalmanFilterPlugin @Inject constructor(
     aapsLogger: AAPSLogger,
     rh: ResourceHelper,
     preferences: Preferences,
-    private val persistenceLayer: PersistenceLayer
+    private val persistenceLayer: PersistenceLayer,
+    private val iobCobCalculator: Lazy<IobCobCalculator>
 ) : PluginBaseWithPreferences(
     pluginDescription = PluginDescription()
         .mainType(PluginType.SMOOTHING)
@@ -118,6 +121,22 @@ class UnscentedKalmanFilterPlugin @Inject constructor(
     // Chi-squared based outlier detection (99.99% confidence, 1 DOF).
     private val chiSquaredThreshold = 15.13  // Statistically rigorous.
     private val outlierAbsolute = 65.0        // Absolute safety limit (mg/dL).
+
+    // --- IOB-gated compression-low damping (grafted from the tsunami compression guard) ---
+    // A glucose-only filter cannot tell a compression low (lying on the sensor) from a real fast
+    // hypo; both are sustained fast drops. IOB is the discriminator: a genuine fast low needs
+    // insulin behind it. When a LOW reading falls well below the filter's own prediction with
+    // little IOB on board, we treat it as a probable compression artefact and DOWN-WEIGHT it
+    // (heavy R, no zero-lag Q) instead of tracking it to the floor. It is soft and bounded:
+    // a sustained real low is still followed within a cycle, the hold is capped so it can never
+    // mask a persistent low, highs/rises are never touched, and it fails safe (disabled) when
+    // IOB is unavailable.
+    private val compressionBgCeiling = 75.0      // only ever act on readings below this
+    private val compressionIobMaxU = 2.0         // ...and only when IOB is under this
+    private val compressionDropMgdl = 30.0       // ...and only if fallen >this from the recent baseline
+    private val compressionWindow = 5            // baseline = max raw over the last ~5 readings (~25 min)
+    private val compressionR = 900.0             // effective measurement variance for a suspect
+    private val maxConsecutiveCompression = 3    // ≤15 min: after this, follow even if still matching
 
     // Covariance limits (tighter for faster recovery).
     private val maxGlucoseVariance = 400.0  // Max 20 mg/dL std dev.
@@ -335,6 +354,7 @@ class UnscentedKalmanFilterPlugin @Inject constructor(
         try {
             val therapyEvents = persistenceLayer.getTherapyEventDataFromTime(
                 System.currentTimeMillis() - 30L * 24 * 60 * 60 * 1000,
+                TE.Type.SENSOR_CHANGE,
                 false
             )
             val latestSensorChange = therapyEvents
@@ -380,7 +400,7 @@ class UnscentedKalmanFilterPlugin @Inject constructor(
     private fun checkForSensorChange() {
         scope?.launch {
             try {
-                val therapyEvents = persistenceLayer.getTherapyEventDataFromTime(lastSensorChangeTimestamp, false)
+                val therapyEvents = persistenceLayer.getTherapyEventDataFromTime(lastSensorChangeTimestamp, TE.Type.SENSOR_CHANGE, false)
                 val newSensorChanges = therapyEvents.filter {
                     it.type == TE.Type.SENSOR_CHANGE &&
                         it.timestamp > lastSensorChangeTimestamp
@@ -512,12 +532,16 @@ class UnscentedKalmanFilterPlugin @Inject constructor(
 
     override suspend fun smooth(
         data: MutableList<InMemoryGlucoseValue>,
-        @Suppress("UNUSED_PARAMETER") context: SmoothingContext
+        context: SmoothingContext
     ): MutableList<InMemoryGlucoseValue> {
         if (data.isEmpty()) return data
 
+        // Poll for a sensor change each cycle (replaces the upstream reactive TE subscription,
+        // unavailable in this 3.4 codebase). Async; the reset is consumed on the next reading.
+        checkForSensorChange()
+
         try {
-            return smoothInternal(data)
+            return smoothInternal(data, context)
         } catch (e: Exception) {
             aapsLogger.error(
                 LTag.GLUCOSE,
@@ -563,10 +587,35 @@ class UnscentedKalmanFilterPlugin @Inject constructor(
         return segments
     }
 
-    private fun smoothInternal(data: MutableList<InMemoryGlucoseValue>): MutableList<InMemoryGlucoseValue> {
+    /**
+     * Total IOB (units) for the compression-damping gate. FAILS SAFE: on any error returns a high
+     * value so the gate is disabled and a genuine drop is never masked.
+     */
+    private suspend fun currentIobTotalU(): Double =
+        try {
+            val calc = iobCobCalculator.get()
+            // Bolus IOB plus only POSITIVE basal IOB. Negative temp-basal IOB — the loop zero-/low-
+            // temping during a genuine descent — must NOT shrink the total, or the gate is most-armed
+            // exactly when the loop is already fighting a real insulin-driven low, damping the very
+            // drop it should follow. Positive basal IOB still counts (it can drive a low). (2026-07-16)
+            calc.calculateIobFromBolus().iob +
+                max(0.0, calc.calculateIobFromTempBasalsIncludingConvertedExtended().iob)
+        } catch (e: Exception) {
+            aapsLogger.debug(LTag.GLUCOSE, "UKF: IOB unavailable, compression gate disabled")
+            99.0
+        }
+
+    private suspend fun smoothInternal(
+        data: MutableList<InMemoryGlucoseValue>,
+        context: SmoothingContext
+    ): MutableList<InMemoryGlucoseValue> {
         if (shouldResetLearning(data[0].timestamp)) {
             resetLearning()
         }
+
+        // Current IOB for the compression-damping gate (same value for the window, as the
+        // tsunami guard did; correct for the newest reading that feeds dosing).
+        val iobTotal = context.cachedTotalIobUnits ?: currentIobTotalU()
 
         val segments = findDataSegments(data)
 
@@ -590,13 +639,13 @@ class UnscentedKalmanFilterPlugin @Inject constructor(
                     "(idx ${segment.startIdx} to ${segment.endIdx})"
             )
 
-            processSegment(data, segment.startIdx, segment.endIdx, previousTimestamp)
+            processSegment(data, segment.startIdx, segment.endIdx, previousTimestamp, iobTotal)
         }
 
         // Fill any unprocessed points with calibration-corrected raw values.
         for (i in data.indices) {
             if (data[i].smoothed == 0.0) {  // Not yet processed.
-                data[i].smoothed = max(data[i].calibratedOrValue, 39.0)
+                data[i].smoothed = max(data[i].value, 39.0)
                 data[i].trendArrow = TrendArrow.NONE
             }
         }
@@ -652,23 +701,24 @@ class UnscentedKalmanFilterPlugin @Inject constructor(
         data: MutableList<InMemoryGlucoseValue>,
         startIdx: Int,           // Newest point in segment.
         endIdx: Int,             // Oldest point in segment.
-        previousTimestamp: Long  // For tracking new measurements.
+        previousTimestamp: Long, // For tracking new measurements.
+        iobTotal: Double         // Current IOB, for the compression-damping gate.
     ) {
         val segmentSize = endIdx - startIdx + 1
         if (segmentSize < 2) {
-            data[startIdx].smoothed = max(data[startIdx].calibratedOrValue, 39.0)
+            data[startIdx].smoothed = max(data[startIdx].value, 39.0)
             data[startIdx].trendArrow = TrendArrow.NONE
             return
         }
 
         // Initialize state from the oldest point in the segment.
-        val initialGlucose = data[endIdx].calibratedOrValue
+        val initialGlucose = data[endIdx].value
         var initialRate = 0.0
 
         if (endIdx > 0) {
             val dt = (data[endIdx - 1].timestamp - data[endIdx].timestamp) / millisPerMinute
             if (dt in 3.0..7.0) {
-                initialRate = (data[endIdx - 1].calibratedOrValue - data[endIdx].calibratedOrValue) / dt
+                initialRate = (data[endIdx - 1].value - data[endIdx].value) / dt
                 initialRate = initialRate.coerceIn(-4.0, 4.0)
             }
         }
@@ -686,6 +736,12 @@ class UnscentedKalmanFilterPlugin @Inject constructor(
 
         // Local 2-of-3 same-sign gate for trend persistence (>2σ).
         val recentSigns = ArrayDeque<Int>(3)
+
+        // Consecutive compression-suspect readings (bounds the damping hold; see below).
+        var consecutiveCompression = 0
+        // Recent RAW values (newest first) — baseline for the compression drop test. Uses raw,
+        // not the filter level, so the filter's own rate-tracking can't hide a gradual drop.
+        val recentRaw = ArrayDeque<Double>(compressionWindow + 1)
 
         // === FORWARD PASS (within segment only) ===
         for (i in (endIdx - 1) downTo startIdx) {
@@ -711,9 +767,9 @@ class UnscentedKalmanFilterPlugin @Inject constructor(
             val (xPredBase, pPredBase) = predict(x, p, q, dtUsed)
 
             // Sentinel check (xDrip error code 38.0) must use raw .value, not calibrated;
-            // the Kalman measurement itself uses .calibratedOrValue.
+            // the Kalman measurement itself uses .value.
             val rawValue = data[i].value
-            val z = data[i].calibratedOrValue
+            val z = data[i].value
 
             // Skip only error code values (e.g., 38 mg/dL).
             if (rawValue <= 38.0) {
@@ -760,15 +816,54 @@ class UnscentedKalmanFilterPlugin @Inject constructor(
 
             val absn = abs(normRaw)
 
+            // --- IOB-gated compression-low suspicion ---
+            // A LOW reading that has fallen well below its own recent RAW baseline, with little IOB
+            // to explain a real crash → probable sensor compression. Raw-baseline (not prediction)
+            // so the filter's rate-tracking can't hide a gradual dip; capped at
+            // maxConsecutiveCompression so a persistent low is never masked for more than ~15 min.
+            val recentMaxRaw = if (recentRaw.isEmpty()) z else recentRaw.max()
+            // Pattern match is separate from the consecutive cap so we can distinguish "pattern
+            // resolved" from "cap reached". compressionSuspect (which drives damping) additionally
+            // requires being under the cap.
+            val compressionPattern = z < compressionBgCeiling &&
+                iobTotal < compressionIobMaxU &&
+                (recentMaxRaw - z) > compressionDropMgdl
+            val compressionSuspect = compressionPattern &&
+                consecutiveCompression < maxConsecutiveCompression
+            if (compressionSuspect) {
+                consecutiveCompression++
+                aapsLogger.debug(
+                    LTag.GLUCOSE,
+                    "UKF: Compression-suspect low z=${z.toInt()} " +
+                        "(fell ${(recentMaxRaw - z).toInt()} from ${recentMaxRaw.toInt()}, " +
+                        "IOB=${String.format(Locale.US, "%.1f", iobTotal)}) — damping"
+                )
+            } else if (!compressionPattern) {
+                // Reset ONLY when the compression pattern has genuinely resolved (BG back above the
+                // ceiling, drop closed, or IOB risen) — NOT merely because the consecutive cap tripped.
+                // Resetting on a cap-trip let an ongoing low re-arm for another 3-reading burst every
+                // cycle, defeating the ~15-min bound. Latching the counter while the pattern persists
+                // means a sustained low is followed (undamped) after the cap and not re-damped until it
+                // truly recovers. (2026-07-16 review)
+                consecutiveCompression = 0
+            }
+            // else: pattern still present but cap reached → keep the counter latched (no damp, no reset).
+            recentRaw.addFirst(z)
+            if (recentRaw.size > compressionWindow) recentRaw.removeLast()
+
             // --- Measurement noise inflation (R_eff) ---
-            // Huber-like per-sample R inflation with soft caps.
+            // Huber-like per-sample R inflation with soft caps; a compression suspect is
+            // down-weighted heavily instead (soft, not a hard mask — a sustained low is still
+            // followed within a cycle, and the consecutive cap releases it after ~15 min).
             val rScale = 1.0 + max(0.0, absn - 2.0) // Grows linearly beyond 2σ.
-            val rEff = min(r * rScale, min(r + 100.0, rEffMax)) // Gentle ceiling.
+            val rEff = if (compressionSuspect) compressionR
+            else min(r * rScale, min(r + 100.0, rEffMax)) // Gentle ceiling.
 
             // --- Process noise inflation (Q) for real trends ---
-            // Temporary Q inflation: prioritize rate agility, keep glucose bounded.
+            // Temporary Q inflation: prioritize rate agility, keep glucose bounded. Suppressed for
+            // a compression suspect so the filter does NOT turn agile and chase the artefact down.
             val zScore = absn.coerceAtLeast(1.0)
-            val qScale = if (qInflateAllowed) zScore.coerceIn(1.0, 3.0) else 1.0
+            val qScale = if (qInflateAllowed && !compressionSuspect) zScore.coerceIn(1.0, 3.0) else 1.0
             val tempQ = if (qScale > 1.0) {
                 q.copyOf().apply {
                     this[0] = q[0] * min(qScale, 2.0) // Modest glucose variance.
@@ -1302,7 +1397,7 @@ class UnscentedKalmanFilterPlugin @Inject constructor(
      */
     private fun copyRawToSmoothed(data: MutableList<InMemoryGlucoseValue>) {
         for (reading in data) {
-            reading.smoothed = max(reading.calibratedOrValue, 39.0)
+            reading.smoothed = max(reading.value, 39.0)
             reading.trendArrow = TrendArrow.NONE
         }
     }

@@ -4,6 +4,7 @@ import app.aaps.core.data.iob.InMemoryGlucoseValue
 import app.aaps.core.interfaces.db.PersistenceLayer
 import app.aaps.core.interfaces.logging.AAPSLogger
 import app.aaps.core.interfaces.resources.ResourceHelper
+import app.aaps.core.interfaces.smoothing.SmoothingContext
 import app.aaps.core.keys.interfaces.Preferences
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.runBlocking
@@ -28,7 +29,7 @@ internal class UnscentedKalmanFilterPluginTest {
     private fun plugin() = UnscentedKalmanFilterPlugin(aapsLogger, rh, preferences, persistenceLayer)
 
     // Fork: Smoothing.smooth is a suspend function (SmoothingContext param) — bridge like AdaptiveSmoothingPluginTest.
-    private fun smoothed(data: MutableList<InMemoryGlucoseValue>) = runBlocking { plugin().smooth(data) }
+    private fun smoothed(data: MutableList<InMemoryGlucoseValue>) = runBlocking { plugin().smooth(data, SmoothingContext.NONE) }
 
     /** Newest-first series (data[0] = most recent) at [stepMin]-minute spacing, timestamps descending. */
     private fun series(vararg values: Double, stepMin: Long = 5): MutableList<InMemoryGlucoseValue> {
@@ -92,5 +93,38 @@ internal class UnscentedKalmanFilterPluginTest {
         val a = smoothed(series(120.0, 118.0, 122.0, 119.0, 121.0, 120.0, 118.0))
         val b = smoothed(series(120.0, 118.0, 122.0, 119.0, 121.0, 120.0, 118.0))
         a.indices.forEach { assertThat(b[it].smoothed!!).isWithin(1e-9).of(a[it].smoothed!!) }
+    }
+
+    private fun iobLazy(totalU: Double) = Lazy<IobCobCalculator> {
+        mock {
+            on { calculateIobFromBolus() } doReturn IobTotal(0L, iob = totalU)
+            on { calculateIobFromTempBasalsIncludingConvertedExtended() } doReturn IobTotal(0L, iob = 0.0)
+        }
+    }
+
+    @Test fun `a compression low with near-zero IOB is damped, not tracked to the floor`() {
+        // newest-first: steady ~100 then a steep fall toward 40 (a compression dip).
+        val vals = doubleArrayOf(40.0, 44.0, 60.0, 82.0, 100.0, 100.0, 100.0, 100.0)
+        val damped = runBlocking { plugin(iobLazy(0.1)).smooth(series(*vals), SmoothingContext.NONE) }[0].smoothed!!
+        // With real insulin on board (guard disabled) the same fall IS followed down.
+        val followed = runBlocking { plugin(iobLazy(3.0)).smooth(series(*vals), SmoothingContext.NONE) }[0].smoothed!!
+        assertThat(damped).isGreaterThan(52.0)            // held well above the 40 floor
+        assertThat(damped).isGreaterThan(followed + 5.0)  // and clearly higher than the un-gated case
+    }
+
+    @Test fun `negative basal IOB does not arm the compression gate`() {
+        // Bolus IOB 3.0U (real insulin on board) but basal IOB -5.0U (loop zero-temping a descent).
+        // Summed naively that is -2.0U (< 2 → the gate would DAMP a genuine insulin-driven low). The
+        // fix counts only POSITIVE basal, so total = 3.0U and the fall is FOLLOWED, not masked.
+        val iob = Lazy<IobCobCalculator> {
+            mock {
+                on { calculateIobFromBolus() } doReturn IobTotal(0L, iob = 3.0)
+                on { calculateIobFromTempBasalsIncludingConvertedExtended() } doReturn IobTotal(0L, iob = -5.0)
+            }
+        }
+        val vals = doubleArrayOf(40.0, 44.0, 60.0, 82.0, 100.0, 100.0, 100.0, 100.0)
+        val followed = runBlocking { plugin(iob).smooth(series(*vals), SmoothingContext.NONE) }[0].smoothed!!
+        val damped = runBlocking { plugin(iobLazy(0.1)).smooth(series(*vals), SmoothingContext.NONE) }[0].smoothed!!
+        assertThat(followed).isLessThan(damped - 5.0)     // followed down, NOT held up by the gate
     }
 }
