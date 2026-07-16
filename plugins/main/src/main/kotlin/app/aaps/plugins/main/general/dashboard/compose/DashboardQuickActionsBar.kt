@@ -3,7 +3,6 @@ package app.aaps.plugins.main.general.dashboard.compose
 import android.content.Context
 import android.view.HapticFeedbackConstants
 import android.view.accessibility.AccessibilityManager
-import androidx.annotation.StringRes
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -48,16 +47,16 @@ fun DashboardQuickActionsBar(
     val accessibilityManager = remember(context) {
         context.getSystemService(Context.ACCESSIBILITY_SERVICE) as? AccessibilityManager
     }
-    fun announceIfAccessibilityEnabled(@StringRes messageRes: Int) {
+    fun announceIfAccessibilityEnabled(message: String) {
         val manager = accessibilityManager
         if (manager != null && manager.isEnabled && manager.isTouchExplorationEnabled) {
-            view.announceForAccessibility(context.getString(messageRes))
+            view.announceForAccessibility(message)
         }
     }
-    fun wrapped(action: () -> Unit, @StringRes announceRes: Int): () -> Unit = {
+    fun wrapped(action: () -> Unit, announceMessage: String): () -> Unit = {
         view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
         action()
-        announceIfAccessibilityEnabled(announceRes)
+        announceIfAccessibilityEnabled(announceMessage)
     }
 
     Row(
@@ -74,7 +73,7 @@ fun DashboardQuickActionsBar(
             elementType = ElementType.PROFILE_HELPER,
             label = stringResource(R.string.advisor_button),
             contentDescription = stringResource(R.string.dashboard_cd_chip_aimi_advisor),
-            onClick = wrapped(onAdvisor, R.string.dashboard_chip_announced_advisor_opened),
+            onClick = wrapped(onAdvisor, stringResource(R.string.dashboard_chip_announced_advisor_opened)),
             compact = compact,
             modifier = Modifier.weight(1f),
         )
@@ -82,7 +81,7 @@ fun DashboardQuickActionsBar(
             elementType = ElementType.SETTINGS,
             label = stringResource(R.string.adjust_button),
             contentDescription = stringResource(R.string.dashboard_cd_chip_adjust),
-            onClick = wrapped(onAdjust, R.string.dashboard_chip_announced_adjust_opened),
+            onClick = wrapped(onAdjust, stringResource(R.string.dashboard_chip_announced_adjust_opened)),
             compact = compact,
             modifier = Modifier.weight(1f),
         )
@@ -90,7 +89,7 @@ fun DashboardQuickActionsBar(
             elementType = ElementType.QUICK_WIZARD_MANAGEMENT,
             label = stringResource(R.string.dashboard_mode_meal),
             contentDescription = stringResource(R.string.dashboard_cd_chip_meal_mode),
-            onClick = wrapped(onMeal, R.string.dashboard_chip_announced_meal_mode_opened),
+            onClick = wrapped(onMeal, stringResource(R.string.dashboard_chip_announced_meal_mode_opened)),
             compact = compact,
             modifier = Modifier.weight(1f),
         )
@@ -98,7 +97,7 @@ fun DashboardQuickActionsBar(
             elementType = ElementType.STATISTICS,
             label = stringResource(R.string.aimi_context),
             contentDescription = stringResource(R.string.dashboard_cd_chip_aimi_context),
-            onClick = wrapped(onContext, R.string.dashboard_chip_announced_context_opened),
+            onClick = wrapped(onContext, stringResource(R.string.dashboard_chip_announced_context_opened)),
             compact = compact,
             modifier = Modifier.weight(1f),
         )

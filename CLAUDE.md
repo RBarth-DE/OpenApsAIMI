@@ -212,7 +212,7 @@
        ```
     2. **Parameter passing** (for child composables that need to snack):
        ```kotlin
-       fun MyScreen(onShowMessage: (String) -> Unit) { ... }
+       /** Example: @Composable fun MyScreen(onShowMessage: (String) -> Unit) { ... } */
        ```
   Existing `LocalSnackbarHostState.current` usages can stay as-is until touched for other reasons —
   no forced migration. Only when refactoring a file anyway, move toward the preferred patterns.

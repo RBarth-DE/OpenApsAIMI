@@ -59,7 +59,11 @@ dependencies {
     api("androidx.security:security-crypto:1.1.0-alpha06")
 
     // NSClient, Tidepool
-    api(libs.io.socket.client)
+    api(libs.io.socket.client) {
+        // socket.io-client → engine.io-client → org.json:json:20090211, which
+        // conflicts with the org.json classes built into the Android SDK.
+        exclude(group = "org.json", module = "json")
+    }
     api(libs.com.squareup.okhttp3.logging.interceptor)
     api(libs.com.squareup.retrofit2.adapter.rxjava3)
     api(libs.com.squareup.retrofit2.converter.gson)
