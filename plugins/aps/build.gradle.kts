@@ -25,9 +25,10 @@ dependencies {
 
     implementation(libs.androidx.compose.ui.tooling.preview)
     debugImplementation(libs.androidx.compose.ui.tooling)
-    // Align core + GPU on the same version so AndroidManifest namespace is not duplicated (2.3 GPU + 2.4 core).
     implementation("org.tensorflow:tensorflow-lite:2.4.0")
-    implementation("org.tensorflow:tensorflow-lite-gpu:2.4.0")
+    // GPU delegate not currently used (AimiModelHandler uses only the base Interpreter API).
+    // Keeping the support + metadata stubs — they are referenced nowhere but were part of the
+    // original TFLite set; upgrade them together if the core runtime is ever bumped.
     implementation("org.tensorflow:tensorflow-lite-support:0.1.0")
     implementation("org.tensorflow:tensorflow-lite-metadata:0.1.0")
     implementation("androidx.core:core-i18n:1.0.0-alpha01")

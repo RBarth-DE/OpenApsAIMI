@@ -19,6 +19,7 @@ import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.unit.dp
 import app.aaps.core.interfaces.automation.AutomationIconData
+import app.aaps.core.ui.compose.navigation.color
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 import kotlin.math.roundToInt
@@ -52,7 +53,7 @@ suspend fun rasterizeAutomationIconForViews(
                             imageVector = data.icon,
                             contentDescription = null,
                             modifier = Modifier.size(iconSizeDp.dp),
-                            tint = data.tint ?: Color.Unspecified,
+                            tint = data.elementType?.color() ?: Color.Unspecified,
                         )
                     }
                 }
