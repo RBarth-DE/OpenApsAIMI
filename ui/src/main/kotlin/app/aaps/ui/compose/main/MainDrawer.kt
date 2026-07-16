@@ -25,6 +25,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import app.aaps.core.ui.compose.AppBrandIcon
 import app.aaps.core.interfaces.navigation.ElementType
+import app.aaps.core.ui.compose.AppBrandIcon
 import app.aaps.core.ui.compose.navigation.NavigationRequest
 import app.aaps.core.ui.compose.navigation.descriptionResId
 import app.aaps.core.ui.compose.navigation.icon

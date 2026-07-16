@@ -14,7 +14,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.snapshots.Snapshot
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.unit.dp
@@ -53,7 +52,8 @@ suspend fun rasterizeAutomationIconForViews(
                             imageVector = data.icon,
                             contentDescription = null,
                             modifier = Modifier.size(iconSizeDp.dp),
-                            tint = data.elementType?.color() ?: Color.Unspecified,
+                            // Upstream removed AutomationIconData.tint in favour of ElementType theme colors.
+                            tint = data.elementType?.color() ?: MaterialTheme.colorScheme.onSurface,
                         )
                     }
                 }

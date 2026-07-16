@@ -592,6 +592,7 @@ class GarminPlugin @Inject constructor(
                     .toEpochMilli()
                 val todayCount = runBlocking {
                     persistenceLayer.getStepsCountFromTimeToTime(midnight, now)
+                        // Device label may vary ("Garmin", "Garmin Connect", …); match family.
                         .count { it.device.startsWith("Garmin") }
                 }
                 if (todayCount == 0) {
@@ -785,18 +786,16 @@ class GarminPlugin @Inject constructor(
                     GlucoseUnit.MMOL -> jo.addProperty("units_hint", "mmol")
                 }
                 jo.addProperty("iob", loopHub.insulinOnboard + loopHub.insulinBasalOnboard)
-                // TBR as "value/%"
-                val profile = loopHub.currentProfile
-                val basal = profile?.getBasal() ?: 0.0
-                loopHub.temporaryBasal.also {
-                    if (!it.isNaN()) {
-                        val safeTbrFactor = if (it.isFinite()) it else 0.0
-
-                        val curBasalAsValue = basal * safeTbrFactor
-                        val tbrPercent = (safeTbrFactor * 100.0).toInt()   // or roundToInt()
-
-                        if (curBasalAsValue != 0.0 || tbrPercent != 0) {
-                            jo.addProperty("tbr", String.format(Locale.US, "%.1f/%d", curBasalAsValue, tbrPercent))
+                // Nightscout-style watch payload: "U/h/%" so the face can show absolute rate + percent.
+                // temporaryBasal is a factor (1.0 = 100%); NaN → omit property (watch keeps last value).
+                loopHub.temporaryBasal.also { tbrFactor ->
+                    if (!tbrFactor.isNaN()) {
+                        val safeFactor = if (tbrFactor.isFinite()) tbrFactor else 0.0
+                        val profileBasal = loopHub.currentProfile?.getBasal() ?: 0.0
+                        val rateUph = profileBasal * safeFactor
+                        val percent = (safeFactor * 100.0).toInt()
+                        if (rateUph != 0.0 || percent != 0) {
+                            jo.addProperty("tbr", String.format(Locale.US, "%.1f/%d", rateUph, percent))
                         } else {
                             jo.addProperty("tbr", "0")
                         }

@@ -113,6 +113,11 @@ class AuditorOrchestrator @Inject constructor(
      * @param effectiveProfile When non-null, trajectory history for the auditor uses time-correct IOB samples.
      * @param callback Optional callback with verdict and modulated decision
      */
+    /** Last Tier-1 Sentinel advice — coherence-agreement "gendarme" score, exposed for JSONL telemetry. */
+    @Volatile
+    var lastSentinelAdvice: LocalSentinel.SentinelAdvice? = null
+        private set
+
     fun auditDecision(
         bg: Double,
         delta: Double,
@@ -150,6 +155,9 @@ class AuditorOrchestrator @Inject constructor(
         callback: ((AuditorVerdict?, DecisionResult) -> Unit)? = null
     ) {
         val now = System.currentTimeMillis()
+        // Reset each tick; set again below only if the Sentinel actually runs, so early-exit dispositions
+        // (DISABLED / SKIPPED_*) don't carry a stale agreement/factor into the JSONL telemetry.
+        lastSentinelAdvice = null
         AuditorVerdictCache.noteCurrentBg(glucoseStatus?.date)
         auditorStatusLiveData.notifyUpdate()
 
@@ -222,6 +230,7 @@ class AuditorOrchestrator @Inject constructor(
             eventualBg = eventualBg,    // Fixed: Replaced null // TODO Phase 3
             predBgsAvailable = predictionAvailable,
             iobTotal = iob.iob,
+            maxIob = maxIOB,
             iobActivity = iob.activity,
             pkpdStage = pkpdRuntime?.activity?.stage?.name,
             lastBolusAgeMin = lastBolusAge,
@@ -235,8 +244,9 @@ class AuditorOrchestrator @Inject constructor(
             modeActive = modeType != null,
             bgHistory = bgHistory
         )
-        
-        aapsLogger.info(LTag.APS, "🔍 Sentinel: tier=${sentinelAdvice.tier} score=${sentinelAdvice.score} reason=${sentinelAdvice.reason}")
+        lastSentinelAdvice = sentinelAdvice
+
+        aapsLogger.info(LTag.APS, "🔍 Sentinel: tier=${sentinelAdvice.tier} agreement=${"%.2f".format(sentinelAdvice.agreement)} reason=${sentinelAdvice.reason}")
         sentinelAdvice.details.take(3).forEach { aapsLogger.debug(LTag.APS, "  └─ $it") }
         
         // ================================================================
@@ -267,23 +277,11 @@ class AuditorOrchestrator @Inject constructor(
             onSyncDisposition(AuditorJsonlExport.TickDisposition.SENTINEL_ONLY)
 
             val combined = DualBrainHelpers.combineAdvice(sentinelAdvice, null)
-            val modulated = combined.toDecisionResult(smbProposed, tbrRate, tbrDuration, intervalMin)
-
-            // Map Sentinel recommendation to the correct tracker status
-            val trackerStatus = when (sentinelAdvice.recommendation) {
-                LocalSentinel.Recommendation.CONFIRM          -> AuditorStatusTracker.Status.SKIPPED_NO_TRIGGER
-                LocalSentinel.Recommendation.REDUCE_SMB       -> AuditorStatusTracker.Status.OK_REDUCE
-                LocalSentinel.Recommendation.HOLD_SOFT        -> AuditorStatusTracker.Status.OK_SOFTEN
-                LocalSentinel.Recommendation.INCREASE_INTERVAL -> AuditorStatusTracker.Status.OK_INCREASE_INTERVAL
-                LocalSentinel.Recommendation.PREFER_BASAL     -> AuditorStatusTracker.Status.OK_PREFER_TBR
-            }
-            AuditorStatusTracker.updateStatus(trackerStatus)
-
-            // Cache actionable Sentinel verdicts so AuditorVerdictActivity can display them
-            if (sentinelAdvice.recommendation != LocalSentinel.Recommendation.CONFIRM) {
-                AuditorVerdictCache.update(buildSentinelVerdict(sentinelAdvice), modulated)
-            }
-
+            // D1: Tier-1 Sentinel is a coherence GENDARME, not a silent modulator — respect the audit mode.
+            // AUDIT_ONLY → observe/log only, deliver the loop's UNMODULATED decision.
+            val modulated = if (getModulationMode() == DecisionModulator.ModulationMode.AUDIT_ONLY)
+                createUnmodulatedDecision(smbProposed, tbrRate, tbrDuration, intervalMin, "Sentinel audit-only (agreement=${"%.2f".format(sentinelAdvice.agreement)})")
+            else combined.toDecisionResult(smbProposed, tbrRate, tbrDuration, intervalMin)
             aapsLogger.info(LTag.APS, "✅ ${combined.toLogString()}")
             
             callback?.invoke(null, modulated)
@@ -308,7 +306,11 @@ class AuditorOrchestrator @Inject constructor(
             AuditorStatusTracker.updateStatus(AuditorStatusTracker.Status.SKIPPED_RATE_LIMITED)
             onSyncDisposition(AuditorJsonlExport.TickDisposition.SENTINEL_RATE_LIMITED)
             val combined = DualBrainHelpers.combineAdvice(sentinelAdvice, null)
-            val modulated = combined.toDecisionResult(smbProposed, tbrRate, tbrDuration, intervalMin)
+            // D1: Tier-1 Sentinel is a coherence GENDARME, not a silent modulator — respect the audit mode.
+            // AUDIT_ONLY → observe/log only, deliver the loop's UNMODULATED decision.
+            val modulated = if (getModulationMode() == DecisionModulator.ModulationMode.AUDIT_ONLY)
+                createUnmodulatedDecision(smbProposed, tbrRate, tbrDuration, intervalMin, "Sentinel audit-only (agreement=${"%.2f".format(sentinelAdvice.agreement)})")
+            else combined.toDecisionResult(smbProposed, tbrRate, tbrDuration, intervalMin)
             aapsLogger.info(LTag.APS, "✅ ${combined.toLogString()}")
             auditorStatusLiveData.notifyUpdate()
             callback?.invoke(null, modulated)
@@ -390,7 +392,7 @@ class AuditorOrchestrator @Inject constructor(
                     stateManager.transitionTo(AuditorUIState.Ready(guardedVerdict.verdict.name), "Verdict received")
                     
                     // Apply modulation
-                    val modulated = DecisionModulator.applyModulation(
+                    var modulated = DecisionModulator.applyModulation(
                         originalSmb = smbProposed,
                         originalTbrRate = tbrRate,
                         originalTbrMin = tbrDuration,
@@ -400,6 +402,16 @@ class AuditorOrchestrator @Inject constructor(
                         mode = getModulationMode()
                     )
                     
+                    // Finding 2: if the external couldn't act (low-confidence → Rejected) in an acting mode, the
+                    // Tier-1 Sentinel is the net — apply its coherence regression rather than the raw dose.
+                    if (modulated is DecisionResult.Rejected &&
+                        getModulationMode() != DecisionModulator.ModulationMode.AUDIT_ONLY) {
+                        modulated = sentinelFallbackDecision(
+                            sentinelAdvice, smbProposed, tbrRate, tbrDuration, intervalMin,
+                            "External low-confidence → Sentinel floor (agreement=${"%.2f".format(sentinelAdvice.agreement)})",
+                        )
+                    }
+
                     // Clinical Validation for dose changes
                     validateClinicalDoses(modulated)
                     
@@ -417,13 +429,13 @@ class AuditorOrchestrator @Inject constructor(
                 } else {
                     aapsLogger.warn(LTag.APS, "AI Auditor: No verdict received (timeout or error)")
                     stateManager.transitionTo(AuditorUIState.Error("Timeout: No verdict received"), "External timeout")
-                    callback?.invoke(null, createUnmodulatedDecision(smbProposed, tbrRate, tbrDuration, intervalMin, "No verdict"))
+                    callback?.invoke(null, sentinelFallbackDecision(sentinelAdvice, smbProposed, tbrRate, tbrDuration, intervalMin, "No verdict → Sentinel floor (agreement=${"%.2f".format(sentinelAdvice.agreement)})"))
                 }
                 
             } catch (e: Exception) {
                 aapsLogger.error(LTag.APS, "AI Auditor: Exception", e)
                 AuditorStatusTracker.updateStatus(AuditorStatusTracker.Status.ERROR_EXCEPTION)
-                callback?.invoke(null, createUnmodulatedDecision(smbProposed, tbrRate, tbrDuration, intervalMin, "Exception: ${e.message}"))
+                callback?.invoke(null, sentinelFallbackDecision(sentinelAdvice, smbProposed, tbrRate, tbrDuration, intervalMin, "Exception → Sentinel floor: ${e.message}"))
             }
         }
     }
@@ -452,6 +464,25 @@ class AuditorOrchestrator @Inject constructor(
     /**
      * Get modulation mode from preferences
      */
+    /**
+     * Finding 2 — offline net: when the external LLM yields no actionable verdict on a tier-HIGH tick (timeout,
+     * exception, or low-confidence Rejected), fall back to the Tier-1 Sentinel's mode-gated coherence decision
+     * instead of passing the loop's RAW dose through. AUDIT_ONLY still observes only (unmodulated).
+     */
+    private fun sentinelFallbackDecision(
+        sentinelAdvice: LocalSentinel.SentinelAdvice,
+        smbProposed: Double,
+        tbrRate: Double?,
+        tbrDuration: Int?,
+        intervalMin: Double,
+        note: String,
+    ): DecisionResult =
+        if (getModulationMode() == DecisionModulator.ModulationMode.AUDIT_ONLY)
+            createUnmodulatedDecision(smbProposed, tbrRate, tbrDuration, intervalMin, "$note (audit-only)")
+        else
+            DualBrainHelpers.combineAdvice(sentinelAdvice, null)
+                .toDecisionResult(smbProposed, tbrRate, tbrDuration, intervalMin)
+
     private fun getModulationMode(): DecisionModulator.ModulationMode {
         val modeStr = preferences.get(StringKey.AimiAuditorMode)
         return when (modeStr) {

@@ -375,24 +375,24 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
     override fun supportsDynamicIsf(): Boolean = preferences.get(BooleanKey.ApsUseDynamicSensitivity)
     private val pkpdIntegration = PkPdIntegration(preferences)
     private var lastPkpdScale: Double = 1.0
-    // Dans votre classe principale (ou plugin), vous pouvez declarer :
+    // Dans votre classe principale (ou plugin), vous pouvez d?clarer :
     private val kalmanISFCalculator = KalmanISFCalculator(tddCalculator, preferences, aapsLogger)
     // Fusion lente (TDD/profile) + rate-limit de blend
     private val isfBlender = IsfBlender()
-    // top-level (� c�t� de isfBlender / pkpdIntegration)
+    // top-level (? c?t? de isfBlender / pkpdIntegration)
     private val isfAdjEngine = IsfAdjustmentEngine()
 
-    /** R�agit au switch Physio sans red�marrer l�app (planifie / annule WorkManager). */
+    /** R?agit au switch Physio sans red?marrer l?app (planifie / annule WorkManager). */
     private var physioPreferenceDisposable: Disposable? = null
 
-    // �tat EMA persistant (cl� Prefs � cr�er si tu veux le garder entre runs)
+    // ?tat EMA persistant (cl? Prefs ? cr?er si tu veux le garder entre runs)
     private var tddEma: Double? = null
     private val TDD_EMA_ALPHA = 0.2 // ou pref
     @Volatile private var cachedCannulaSiteAgeDays: Float = 0f
     private val cannulaSiteRefreshInFlight = AtomicBoolean(false)
 
 
-    // Recr�e les bornes de la fusion ISF depuis les pr�f�rences (m�mes cl�s que PkPdIntegration)
+    // Recr?e les bornes de la fusion ISF depuis les pr?f?rences (m?mes cl?s que PkPdIntegration)
     private fun isfFusion(): IsfFusion {
         val bounds = IsfFusionBounds(
             minFactor = preferences.get(DoubleKey.OApsAIMIIsfFusionMinFactor),
@@ -435,7 +435,7 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
      * Rebuild the forward insulin-activity array using the LEARNED PK/PD kinetics (adaptive DIA/peak) instead
      * of the fixed insulin profile, so the AIMI prediction curves (eventual / minPred / pkpd graph) reflect how
      * this patient's insulin actually acts. Reuses the production [IobCobCalculator.calculateIobArrayInDia] with
-     * a profile whose [ICfg] carries the learned kinetics � no parallel IOB math, same treatment iteration.
+     * a profile whose [ICfg] carries the learned kinetics ? no parallel IOB math, same treatment iteration.
      *
      * Fail-safe: returns null (? caller falls back to the static-profile array) when the pref is off, the learner
      * exposes no valid DIA/peak, the exponential model would be numerically invalid (peak must stay < DIA/2), or
@@ -621,10 +621,10 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
     private val dynIsfCache = LongSparseArray<Double>()
     private val dynIsfCacheLock = Any()
 
-    // Exemple de fonction pour pr�dire le delta futur � partir d'un historique r�cent
+    // Exemple de fonction pour pr?dire le delta futur ? partir d'un historique r?cent
     private fun predictedDelta(deltaHistory: List<Double>): Double {
         if (deltaHistory.isEmpty()) return 0.0
-        // Par exemple, on peut utiliser une moyenne pond�r�e avec des poids croissants pour donner plus d'importance aux valeurs r�centes
+        // Par exemple, on peut utiliser une moyenne pond?r?e avec des poids croissants pour donner plus d'importance aux valeurs r?centes
         val weights = (1..deltaHistory.size).map { it.toDouble() }
         val weightedSum = deltaHistory.zip(weights).sumOf { it.first * it.second }
         return weightedSum / weights.sum()
@@ -635,7 +635,7 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
         return (d / 10.0).coerceIn(0.1, 0.9)
     }
 
-    // ISF bas� TDD (ancre 1800/TDD 24h) avec garde-fous
+    // ISF bas? TDD (ancre 1800/TDD 24h) avec garde-fous
     private suspend fun tddIsf24hOr(profileIsf: Double): Double {
         val tdd24 = tddCalculator
             .averageTDD(tddCalculator.calculate(1, allowMissingDays = false))
@@ -648,18 +648,18 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
         if (delta == null || predicted == null || bg == null) return 1.0
         val combinedDelta = (delta + predicted) / 2.0
         return when {
-            // En cas d'hypoglyc�mie (delta n�gatif), on augmente progressivement l'ISF
+            // En cas d'hypoglyc?mie (delta n?gatif), on augmente progressivement l'ISF
             combinedDelta < 0 -> {
                 val factor = exp(0.15 * abs(combinedDelta))
                 factor.coerceAtMost(1.4)
             }
-            // En hyperglyc�mie : si BG est > 130, on applique une r�duction progressive
+            // En hyperglyc?mie : si BG est > 130, on applique une r?duction progressive
             bg > 110.0        -> {
-                // On r�duit d�un certain pourcentage (ici jusqu�� 30%) en fonction de BG
+                // On r?duit d?un certain pourcentage (ici jusqu?? 30%) en fonction de BG
                 val bgReduction = 1.0 - ((bg - 110.0) / (200.0 - 110.0)) * 0.5
-                // On combine ce facteur avec la r�ponse exponentielle bas�e sur combinedDelta si n�cessaire
+                // On combine ce facteur avec la r?ponse exponentielle bas?e sur combinedDelta si n?cessaire
                 if (combinedDelta > 10) {
-                    // Si le delta est important, on accentue la r�duction avec une r�ponse exponentielle
+                    // Si le delta est important, on accentue la r?duction avec une r?ponse exponentielle
                     val expFactor = exp(-0.3 * (combinedDelta - 10))
                     minOf(expFactor, bgReduction)
                 } else {
@@ -721,21 +721,21 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
         val kalmanFastIsf = kalmanISFCalculator.calculateISF(glucose, currentDelta, predictedDelta)
         aapsLogger.debug(LTag.APS, "Adaptive ISF via Kalman: $kalmanFastIsf for BG: $glucose")
 
-        // 4) ISF lent (socle) : profil/TDD fusionn� + pkpdScale (inchang�)
+        // 4) ISF lent (socle) : profil/TDD fusionn? + pkpdScale (inchang?)
         val profileIsf = profileFunction.getProfile()?.getProfileIsfMgdl() ?: 20.0
         val tddIsf = tddIsf24hOr(profileIsf)
         val fusedSlowIsf = fusedSlowIsfOverride?.takeIf { it.isFinite() && it > 0.0 }
             ?: isfFusion().fused(profileIsf, tddIsf, pkpdScaleForTick)
         aapsLogger.debug(LTag.APS, "Fused slow ISF: $fusedSlowIsf (profile=$profileIsf, tddIsf=$tddIsf, pkpdScale=$pkpdScaleForTick)")
 
-        // 5) EMA TDD (stabilise l�ajustement AF)
+        // 5) EMA TDD (stabilise l?ajustement AF)
         val tdd24 = tddCalculator.calculateDaily(-24, 0)?.totalAmount ?: tddIsf /* fallback */
         tddEma = when (val prev = tddEma) {
             null -> tdd24
             else -> prev + TDD_EMA_ALPHA * (tdd24 - prev)
         }
 
-        // 6) proxys de confiance (si variance non expos�e ici)
+        // 6) proxys de confiance (si variance non expos?e ici)
         val kalmanTrustProxy = estimateKalmanTrustFromDelta(currentDelta)             // 0..1
         val kalmanVarProxy = (1.0 - kalmanTrustProxy).coerceIn(0.0, 1.0)             // 1-trust
         val sippConfidence = AimiUamHandler.confidenceOrZero().coerceIn(0.0, 1.0)
@@ -751,7 +751,7 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
         )
         aapsLogger.debug(LTag.APS, "Adaptive ISF via IsfAdjustmentEngine: $isfAdj (tddEma=$tddEma, sipp=$sippConfidence, var=$kalmanVarProxy)")
 
-        // 8) Combine les deux rapides par m�diane robuste (r�sistant aux outliers)
+        // 8) Combine les deux rapides par m?diane robuste (r?sistant aux outliers)
         val fastMedian = listOf(kalmanFastIsf, isfAdj).sorted()[1]
 
         // 9) Blend final (socle lent vs rapide), avec rate-limit temporel de IsfBlender
@@ -765,7 +765,7 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
         // 10) facteur dynamique + bornes globales
         blended *= dynamicFactor
 
-        // 10b) ajustement trajectoire (g�om�trie CGM type AutoISF), born� � avant physio pour limiter le cumul
+        // 10b) ajustement trajectoire (g?om?trie CGM type AutoISF), born? ? avant physio pour limiter le cumul
         val profileForPhysio = profileFunction.getProfile()
         val physioIsfFactor: Double
         val physioMultsNullable: PhysioMultipliersMTR?
@@ -793,7 +793,7 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
         )
         blended = trajectoryTuning.isfMgdlPerU
 
-        // ?? PHYSIO MODULATION (ISF) � apr�s trajectoire
+        // ?? PHYSIO MODULATION (ISF) ? apr?s trajectoire
         if (physioMultsNullable != null && physioMultsNullable.isfFactor != 1.0) {
             blended *= physioMultsNullable.isfFactor
             aapsLogger.debug(LTag.APS, "?? DynISF modulated by Physio: x${physioMultsNullable.isfFactor} -> $blended")
@@ -912,10 +912,10 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
         if (true) { // FIX: Always run, DetermineBasalAIMI2 handles dynIsfMode internally
             val tdd7P: Double = preferences.get(DoubleKey.OApsAIMITDD7)
 //
-// // Plancher pour �viter des TDD trop faibles au d�marrage
+// // Plancher pour ?viter des TDD trop faibles au d?marrage
             val minTDD = 10.0
 //
-// R�cup�ration et ajustement du TDD sur 7 jours
+// R?cup?ration et ajustement du TDD sur 7 jours
             val tdd7D = tddCalculator.averageTDD(tddCalculator.calculate(7, allowMissingDays = false))
             if (tdd7D != null && tdd7D.data.totalAmount > tdd7P && tdd7D.data.totalAmount > 1.3 * tdd7P) {
                 tdd7D.data.totalAmount = 1.2 * tdd7P
@@ -933,7 +933,7 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
             val tdd2DaysPerHour = tdd2Days / 24
             val tddLast4H = tdd2DaysPerHour * 4
 //
-// Calcul du TDD sur 1 jour avec une limite minimale pour �viter des instabilit�s
+// Calcul du TDD sur 1 jour avec une limite minimale pour ?viter des instabilit?s
             var tddDaily = tddCalculator.averageTDD(tddCalculator.calculate(1, allowMissingDays = false))?.data?.totalAmount ?: 0.0
             if (tddDaily == 0.0 || tddDaily < tdd7P / 2) tddDaily = maxOf(tdd7P, minTDD)
 
@@ -946,22 +946,22 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
             if (tdd24Hrs == 0.0) tdd24Hrs = tdd7P
             val tdd24HrsPerHour = tdd24Hrs / 24
             val tddLast8to4H = tdd24HrsPerHour * 4
-// // Calcul pond�r� du TDD r�cent pour �viter les fluctuations extr�mes
+// // Calcul pond?r? du TDD r?cent pour ?viter les fluctuations extr?mes
             val tddWeightedFromLast8H = ((1.2 * tdd2DaysPerHour) + (0.3 * tddLast4H) + (0.5 * tddLast8to4H)) * 3
             val tdd = (tddWeightedFromLast8H * 0.20) + (tdd2Days * 0.50) + (tddDaily * 0.30)
 
-            // On r�cup�re la glyc�mie et le delta actuel
+            // On r?cup?re la glyc?mie et le delta actuel
             val gsData = glucoseStatusProvider.glucoseStatusData
             val currentBG = gsData?.glucose
             if (currentBG == null) {
-                aapsLogger.error(LTag.APS, "Donn�es de glyc�mie indisponibles, impossibilit� de calculer l'ISF adaptatif.")
+                aapsLogger.error(LTag.APS, "Donn?es de glyc?mie indisponibles, impossibilit? de calculer l'ISF adaptatif.")
                 return@withContext
             }
             val currentDelta = gsData?.delta
             val recentDeltas = getRecentDeltas()
             val predictedDelta = predictedDelta(recentDeltas)
 
-            // Calcul adaptatif de l'ISF via la fonction centralis�e encapsulant le tout (incluant l'alimentation du cache)
+            // Calcul adaptatif de l'ISF via la fonction centralis?e encapsulant le tout (incluant l'alimentation du cache)
             val mealCobForEarlyPkpd = mealDataForPhysio.carbs.takeIf { it.isFinite() && it >= 0.0 } ?: 0.0
             val pkpdRuntimeForActivity = pkpdIntegration.computeRuntime(
                 epochMillis = now,
@@ -1002,7 +1002,7 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
             
             aapsLogger.debug(LTag.APS, "Final adaptive ISF after clamping: $variableSensitivity")
 
-// ?? Cr�ation du r�sultat final (Convention: Ratio < 1 = R�sistant)
+// ?? Cr?ation du r?sultat final (Convention: Ratio < 1 = R?sistant)
             autosensResult = AutosensResult(
                 ratio = tdd2Days / tdd24Hrs,
                 ratioFromTdd = tdd2Days / tdd24Hrs,
@@ -1014,11 +1014,11 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
             //
             // ? Skipped in T3C brittle mode: T3C has its own aggressiveness pipeline
             // (rawAggressiveness / adaptiveMult / CFRD boost). Applying Brain Boost on top would
-            // create a redundant, conflicting autosens manipulation � and could amplify the
+            // create a redundant, conflicting autosens manipulation ? and could amplify the
             // pre-bolus preserved from applyLegacyMealModes, violating T3C's TBR-only design intent.
             val t3cBrittleActive = preferences.get(BooleanKey.OApsAIMIT3cBrittleMode)
             if (t3cBrittleActive) {
-                aapsLogger.debug(LTag.APS, "?? Brain Boost: skipped (T3C brittle mode active � TBR-only path)")
+                aapsLogger.debug(LTag.APS, "?? Brain Boost: skipped (T3C brittle mode active ? TBR-only path)")
             }
             if (!t3cBrittleActive) try {
                 // ?? TRIPLE-SIGNAL CONFIRMATION for Confirmed Rise
@@ -1116,7 +1116,7 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
                 90
             }
             val mealCobForPkpd = mealData.mealCOB.takeIf { it.isFinite() && it >= 0.0 } ?: 0.0
-            // R�utilise le runtime PKPD calcul� avant DynISF (m�me tick, pkpdScale/fusedIsf align�s snapshot)
+            // R?utilise le runtime PKPD calcul? avant DynISF (m?me tick, pkpdScale/fusedIsf align?s snapshot)
             aapsLogger.debug(
                 LTag.APS,
                 "PK/PD: pkpdScale=$lastPkpdScale (bg=$bgNowForPkpd, delta=$deltaNowForPkpd, iob=$iobNowForPkpd, tdd24=$tdd24Hrs, isfRaw=$profileIsfRawForPkpd)",
@@ -1220,7 +1220,7 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
                 val iob = iobCobCalculator.calculateFromTreatmentsAndTemps(System.currentTimeMillis() + TimeUnit.MINUTES.toMillis(activityHistoric - i), profile)
                 historicActivity += iob.activity
             }
-// R�cup�re GS standard + features AIMI
+// R?cup?re GS standard + features AIMI
             val pack = glucoseStatusCalculatorAimi.compute(allowOldData = true)
             val gs = pack.gs ?: run {
                 rxBus.send(EventResetOpenAPSGui(rh.gs(R.string.openapsma_no_glucose_data)))
@@ -1229,7 +1229,7 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
             }
             val f = pack.features
 
-// Construit l�objet attendu par determine_basal
+// Construit l?objet attendu par determine_basal
             val glucoseStatusAimi = GlucoseStatusAIMI(
                 glucose         = gs.glucose,
                 noise           = gs.noise,
@@ -1245,7 +1245,7 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
                 bgAcceleration  = f?.accel ?: 0.0,
                 corrSqu         = f?.corrR2 ?: 0.0,
 
-                // Champs non expos�s par AimiBgFeatures => valeurs neutres
+                // Champs non expos?s par AimiBgFeatures => valeurs neutres
                 duraISFaverage  = 0.0,
                 parabolaMinutes = 0.0,
                 a0              = 0.0,
@@ -1429,7 +1429,7 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
         profile: Profile
     ): Constraint<Double> {
         // ????????????????????????????????????????????????????
-        // 1?? On d�tecte si l�on est en mode �meal� ou �early autodrive�
+        // 1?? On d?tecte si l?on est en mode ?meal? ou ?early autodrive?
         val therapy = Therapy(persistenceLayer).also { it.updateStatesBasedOnTherapyEvents() }
         
         // ?? Context Integration (Remote/AI)
@@ -1484,13 +1484,13 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
                 this
             )
 
-            // ???> **Si on est dans un mode sp�cial, on s�arr�te l� :**
+            // ???> **Si on est dans un mode sp?cial, on s?arr?te l? :**
             if (isSpecialMode) {
                 return absoluteRate
             }
 
             // ????????????????????????????????????????????????????
-            // 5?? Sinon, on applique en plus le multiplicateur �current basal�
+            // 5?? Sinon, on applique en plus le multiplicateur ?current basal?
             val maxBasalMultiplier = preferences.get(DoubleKey.ApsMaxCurrentBasalMultiplier)
             val maxFromBasalMultiplier = floor(maxBasalMultiplier * profile.getBasal() * 100) / 100
             absoluteRate.setIfSmaller(
@@ -1503,7 +1503,7 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
                 this
             )
 
-            // 6?? Et le multiplicateur �daily basal�
+            // 6?? Et le multiplicateur ?daily basal?
             val maxDailyMultiplier = preferences.get(DoubleKey.ApsMaxDailyMultiplier)
             val maxFromDaily = floor(profile.getMaxDailyBasal() * maxDailyMultiplier * 100) / 100
             absoluteRate.setIfSmaller(
@@ -1866,6 +1866,7 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
             titleResId = R.string.aimi_t3c_settings_title,
             items = listOf(
                 BooleanKey.OApsAIMIT3cBrittleMode,
+                BooleanKey.OApsAIMIT3cAutodriveBasalAuthority,
                 DoubleKey.OApsAIMIT3cActivationThreshold,
                 DoubleKey.OApsAIMIT3cAggressiveness,  // Read by BasalNeuralLearner.kt::getT3cAdaptiveFactor
                 DoubleKey.OApsAIMIT3cCfrdLgsFloorMgdl,
