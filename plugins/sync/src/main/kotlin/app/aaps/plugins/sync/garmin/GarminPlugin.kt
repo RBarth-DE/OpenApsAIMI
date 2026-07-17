@@ -304,8 +304,10 @@ class GarminPlugin @Inject constructor(
         val glucoseValues = getGlucoseValues(Duration.ofSeconds(waitSec))
         val jo = JsonObject()
         jo.addProperty("encodedGlucose", encodedGlucose(glucoseValues))
-        jo.addProperty("remainingInsulin", loopHub.insulinOnboard)
-        jo.addProperty("remainingBasalInsulin", loopHub.insulinBasalOnboard)
+        val remainingInsulin = loopHub.insulinOnboard
+        val remainingBasalInsulin = loopHub.insulinBasalOnboard
+        jo.addProperty("remainingInsulin", remainingInsulin)
+        jo.addProperty("remainingBasalInsulin", remainingBasalInsulin)
         loopHub.lowGlucoseMark.takeIf { it > 0.0 }?.let {
             jo.addProperty("lowGlucoseMark", it.roundToInt())
         }
@@ -785,17 +787,24 @@ class GarminPlugin @Inject constructor(
                     GlucoseUnit.MGDL -> jo.addProperty("units_hint", "mgdl")
                     GlucoseUnit.MMOL -> jo.addProperty("units_hint", "mmol")
                 }
-                jo.addProperty("iob", loopHub.insulinOnboard + loopHub.insulinBasalOnboard)
-                // Nightscout-style watch payload: "U/h/%" so the face can show absolute rate + percent.
-                // temporaryBasal is a factor (1.0 = 100%); NaN → omit property (watch keeps last value).
-                loopHub.temporaryBasal.also { tbrFactor ->
-                    if (!tbrFactor.isNaN()) {
-                        val safeFactor = if (tbrFactor.isFinite()) tbrFactor else 0.0
-                        val profileBasal = loopHub.currentProfile?.getBasal() ?: 0.0
-                        val rateUph = profileBasal * safeFactor
-                        val percent = (safeFactor * 100.0).toInt()
-                        if (rateUph != 0.0 || percent != 0) {
-                            jo.addProperty("tbr", String.format(Locale.US, "%.1f/%d", rateUph, percent))
+                // let wf do the default for 0 / non existing
+                val remainingInsulin = loopHub.insulinOnboard
+                val remainingBasalInsulin = loopHub.insulinBasalOnboard
+                if (remainingInsulin > 0.0 || remainingBasalInsulin > 0.0) {
+                    jo.addProperty("iob", remainingInsulin + remainingBasalInsulin)
+                }
+                // TBR as "value/%"
+                val profile = loopHub.currentProfile
+                val basal = profile?.getBasal() ?: 0.0
+                loopHub.temporaryBasal.also {
+                    if (!it.isNaN()) {
+                        val safeTbrFactor = if (it.isFinite()) it else 0.0
+
+                        val curBasalAsValue = basal * safeTbrFactor
+                        val tbrPercent = (safeTbrFactor * 100.0).toInt()   // or roundToInt()
+
+                        if (curBasalAsValue != 0.0 || tbrPercent != 0) {
+                            jo.addProperty("tbr", String.format(Locale.US, "%.1f/%d", curBasalAsValue, tbrPercent))
                         } else {
                             jo.addProperty("tbr", "0")
                         }
@@ -803,7 +812,10 @@ class GarminPlugin @Inject constructor(
                     // we did not get valid values (happens sometimes that loopHub.temporaryBasal. delivers NaN instead of real value)
                     // => Keep current values on watch.
                 }
-                jo.addProperty("cob", loopHub.carbsOnboard)
+                // let wf do the default for 0 / non existing
+                if ((loopHub.carbsOnboard ?: 0.0) > 0.0) {
+                    jo.addProperty("cob", loopHub.carbsOnboard)
+                }
             }
             joa.add(jo)
         }
