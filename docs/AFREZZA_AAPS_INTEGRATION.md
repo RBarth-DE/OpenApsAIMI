@@ -127,7 +127,7 @@ Conséquence sur OpenApsAIMI actuel :
 
 ```kotlin
 // ui/.../InsulinManagementViewModel.kt — validation actuelle
-if (editedICfg.dia < hardLimits.minDia() || editedICfg.dia > hardLimits.maxDia())
+if (editedICfg.dia < hardLimits.minDia() || editedICfg.dia > hardLimits.maxDia()) { /* reject */ }
 ```
 
 `minDia()` = **5,0 h** → impossible d’enregistrer le template Afrezza (DIA 2,5 h) **sans correctif additionnel** :
