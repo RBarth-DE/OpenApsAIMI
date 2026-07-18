@@ -1,13 +1,13 @@
 {
   "version": "3.0",
-  "source_commit": "b19c2d68c175dced84308e6a9e47cb9904aa50d6",
-  "generated_at": "2026-07-14T10:28:19.148990+00:00",
-  "total": 290,
-  "active": 244,
+  "source_commit": "a998f805593d46d31760d9c760cdb5f218136fdf",
+  "generated_at": "2026-07-16T08:42:17.578240+00:00",
+  "total": 291,
+  "active": 245,
   "orphaned": 46,
-  "with_used_in": 229,
+  "with_used_in": 230,
   "with_negative_gate": 9,
-  "with_settings_path": 234,
+  "with_settings_path": 235,
   "parameters": [
     {
       "key": "AIMI_UAM_CONFIDENCE",
@@ -4932,6 +4932,10 @@
           "function": "aimiComposeT3cSubScreen"
         },
         {
+          "file": "DetermineBasalAIMI2.kt",
+          "function": "executeT3cBrittleMode"
+        },
+        {
           "file": "BasalNeuralLearner.kt",
           "function": "getT3cAdaptiveFactor"
         }
@@ -5108,6 +5112,28 @@
       "negative_gate_key": null,
       "negative_gate_note": null,
       "logic_summary": "Boolean switch for t3c_cfrd_mode.",
+      "effect_high": "Feature is active — associated functionality runs",
+      "effect_low": "Feature is inactive — associated functionality is disabled",
+      "impact": "high",
+      "feature_group": "t3c_adaptive_basal",
+      "is_gate": false,
+      "settings_path": "AIMI → Preferences user → T3C Adaptive Basal",
+      "settings_gate": null
+    },
+    {
+      "key": "key_aimi_t3c_physio_informed",
+      "name": "OApsAIMIT3cPhysioInformedEnabled",
+      "type": "Boolean",
+      "used_in": [
+        {
+          "file": "DetermineBasalAIMI2.kt",
+          "function": "executeT3cBrittleMode"
+        }
+      ],
+      "orphaned": false,
+      "negative_gate_key": null,
+      "negative_gate_note": null,
+      "logic_summary": "Boolean switch for t3c_physio_informed.",
       "effect_high": "Feature is active — associated functionality runs",
       "effect_low": "Feature is inactive — associated functionality is disabled",
       "impact": "high",

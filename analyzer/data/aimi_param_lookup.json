@@ -4067,6 +4067,10 @@
         "function": "aimiComposeT3cSubScreen"
       },
       {
+        "file": "DetermineBasalAIMI2.kt",
+        "function": "executeT3cBrittleMode"
+      },
+      {
         "file": "BasalNeuralLearner.kt",
         "function": "getT3cAdaptiveFactor"
       }
@@ -4211,6 +4215,25 @@
       {
         "file": "DetermineBasalAIMI2.kt",
         "function": "runT3cBrittleBypassOrReturn"
+      }
+    ]
+  },
+  "key_aimi_t3c_physio_informed": {
+    "key": "key_aimi_t3c_physio_informed",
+    "name": "OApsAIMIT3cPhysioInformedEnabled",
+    "type": "Boolean",
+    "feature_group": "t3c_adaptive_basal",
+    "summary": "Boolean switch for t3c_physio_informed.",
+    "orphaned": false,
+    "is_gate": false,
+    "negative_gate_key": null,
+    "impact": "high",
+    "effect_high": "Feature is active — associated functionality runs",
+    "effect_low": "Feature is inactive — associated functionality is disabled",
+    "used_in": [
+      {
+        "file": "DetermineBasalAIMI2.kt",
+        "function": "executeT3cBrittleMode"
       }
     ]
   },

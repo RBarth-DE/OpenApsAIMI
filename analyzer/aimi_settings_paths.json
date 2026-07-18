@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-07-14T08:30:55.752790+00:00",
-  "source_commit": "b19c2d68c175dced84308e6a9e47cb9904aa50d6",
+  "generated_at": "2026-07-15T20:08:24.666627+00:00",
+  "source_commit": "a998f805593d46d31760d9c760cdb5f218136fdf",
   "paths": {
     "openapsma_max_basal": {
       "path": "AIMI → Advanced Settings",

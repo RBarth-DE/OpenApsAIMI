@@ -1,4 +1,4 @@
-# AIMI Algorithm Context (commit: b19c2d68)
+# AIMI Algorithm Context (commit: a998f805)
 
 ## Overview
 The AIMI algorithm runs a 46-stage decision pipeline per 5-minute tick.
@@ -410,7 +410,7 @@ Gate: key_use_Aimi_wcycle
   - aimi_emergency_sos_stale_threshold [default: 30]
   - aimi_emergency_sos_threshold [default: 55]
 
-### t3c_adaptive_basal (9 params)
+### t3c_adaptive_basal (10 params)
   - key_aimi_t3c_activation_threshold [default: 130.0]
   - key_aimi_t3c_aggressiveness [default: 1.0]
   - key_aimi_t3c_anticipation_strength [default: 0.0]
@@ -419,6 +419,7 @@ Gate: key_use_Aimi_wcycle
   - key_aimi_t3c_cfrd_exacerbation
   - key_aimi_t3c_cfrd_lgs_floor [default: 80.0]
   - key_aimi_t3c_cfrd_mode
+  - key_aimi_t3c_physio_informed
   - key_use_aimi_t3c_adaptive_basal
 
 ### thyroid (6 params)

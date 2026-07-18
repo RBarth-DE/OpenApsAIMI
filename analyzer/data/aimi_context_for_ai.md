@@ -1,7 +1,7 @@
 # AIMI Algorithm Context
 Version: 2.2
-Source commit: b19c2d68c175dced84308e6a9e47cb9904aa50d6
-Generated: 2026-07-14T10:28:19.194078+00:00
+Source commit: a998f805593d46d31760d9c760cdb5f218136fdf
+Generated: 2026-07-16T08:42:17.624823+00:00
 
 ## Algorithm Overview
 AIMI (AI-powered Modular Insulin)
@@ -641,7 +641,7 @@ Key parameters (11):
 - `aimi_emergency_sos_stale_threshold` [default: 30]
 - `aimi_emergency_sos_threshold` [default: 55]
 
-### t3c_adaptive_basal (9 params)
+### t3c_adaptive_basal (10 params)
 - `key_aimi_t3c_activation_threshold` [default: 130.0]
 - `key_aimi_t3c_aggressiveness` [default: 1.0]
 - `key_aimi_t3c_anticipation_strength` [default: 0.0]
@@ -650,6 +650,7 @@ Key parameters (11):
 - `key_aimi_t3c_cfrd_exacerbation`
 - `key_aimi_t3c_cfrd_lgs_floor` [default: 80.0]
 - `key_aimi_t3c_cfrd_mode`
+- `key_aimi_t3c_physio_informed`
 - `key_use_aimi_t3c_adaptive_basal`
 
 ### thyroid (6 params)

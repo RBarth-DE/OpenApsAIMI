@@ -1,6 +1,6 @@
 {
   "version": "2.2",
-  "generated_at": "2026-07-14T10:28:19.194078+00:00",
+  "generated_at": "2026-07-16T08:42:17.624823+00:00",
   "algorithm_overview": {
     "name": "AIMI (AI-powered Modular Insulin)",
     "base": "OpenAPS oref1 with extensive extensions",
@@ -434,7 +434,7 @@
       "workaround": "None — parameters are ineffective."
     }
   ],
-  "source_commit": "b19c2d68c175dced84308e6a9e47cb9904aa50d6",
+  "source_commit": "a998f805593d46d31760d9c760cdb5f218136fdf",
   "parameter_knowledge": [
     {
       "key": "AIMI_UAM_CONFIDENCE",
@@ -2185,6 +2185,18 @@
       "settings_path": "AIMI → Preferences user → T3C Adaptive Basal",
       "usage_type": "",
       "function": "runT3cBrittleBypassOrReturn"
+    },
+    {
+      "key": "key_aimi_t3c_physio_informed",
+      "name": "OApsAIMIT3cPhysioInformedEnabled",
+      "logic_summary": "Boolean switch for t3c_physio_informed.",
+      "effect_high": "Feature is active — associated functionality runs",
+      "effect_low": "Feature is inactive — associated functionality is disabled",
+      "feature_group": "t3c_adaptive_basal",
+      "impact": "high",
+      "settings_path": "AIMI → Preferences user → T3C Adaptive Basal",
+      "usage_type": "",
+      "function": "executeT3cBrittleMode"
     },
     {
       "key": "key_aimi_thyroid_debug",

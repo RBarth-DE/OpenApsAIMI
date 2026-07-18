@@ -795,32 +795,35 @@ function renderProfileCard(profile){
   card.style.display='';
 
   const isf=profile.avg_isf, recIsf=profile.recommended_isf, delta=profile.isf_delta_pct;
-  const isfColor=delta==null?'var(--text)':Math.abs(delta)<10?'var(--green)':Math.abs(delta)<20?'var(--yellow)':'var(--red)';
+  // AIMI scales ISF via ISF Fusion — profile ISF is anchor only, not directly comparable to 1700/TDD
+  const isfColor=delta==null?'var(--text)':Math.abs(delta)<40?'var(--green)':Math.abs(delta)<50?'var(--yellow)':'var(--red)';
   const isfNote=delta==null?''
-    :delta<-15?`⚠️ ${Math.abs(delta)}% too aggressive (overcorrection risk)`
-    :delta>20?`⚠️ ${delta}% too conservative (undercorrection risk)`
-    :`✅ within ±10% of 1700/TDD rule`;
+    :delta<-40?`⚠️ Anchor ISF ${Math.abs(Math.round(delta))}% below 1700/TDD ref — may affect initial corrections`
+    :delta>50?`ℹ️ Anchor ISF ${Math.round(delta)}% above 1700/TDD ref (AIMI compensates via ISF Fusion)`
+    :`✅ ISF anchor within normal range for AIMI`;
 
+  // AIMI: 55-75% basal of TDD is normal — meal mode scales basal dynamically
   const bpct=profile.basal_pct_tdd;
-  const basalColor=bpct==null?'var(--text)':bpct>=38&&bpct<=55?'var(--green)':bpct>=30?'var(--yellow)':'var(--red)';
+  const basalColor=bpct==null?'var(--text)':bpct>=35&&bpct<=80?'var(--green)':bpct>=30?'var(--yellow)':'var(--red)';
   const basalNote=bpct==null?''
-    :bpct<35?`⚠️ Low (${bpct}% of TDD, target 40-50%)`
-    :bpct>58?`⚠️ High (${bpct}% of TDD, target 40-50%)`
-    :`✅ ${bpct}% of TDD`;
+    :bpct<30?`⚠️ ${bpct}% of TDD — very low, limits AIMI meal mode basal scaling`
+    :bpct<=80?`✅ ${bpct}% of TDD — normal for AIMI (55-75% typical with meal mode scaling)`
+    :`⚠️ ${bpct}% of TDD — unusually high even for AIMI`;
 
   content.innerHTML=`
     <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;margin-bottom:10px">
-      <div class="metric"><div class="metric-val" style="color:${isfColor}">${isf}</div><div class="metric-lbl">ISF mg/dL/U</div></div>
-      <div class="metric"><div class="metric-val" style="color:var(--text2)">${recIsf||'—'}</div><div class="metric-lbl">Recommended ISF</div></div>
+      <div class="metric"><div class="metric-val" style="color:${isfColor}">${isf}</div><div class="metric-lbl">ISF anchor mg/dL/U</div></div>
       <div class="metric"><div class="metric-val" style="color:${basalColor}">${profile.daily_basal||'—'}</div><div class="metric-lbl">Basal U/day</div></div>
       <div class="metric"><div class="metric-val" style="color:var(--text2)">${profile.avg_ic||'—'}</div><div class="metric-lbl">IC g/U</div></div>
       <div class="metric"><div class="metric-val" style="color:var(--text2)">${profile.target||'—'}</div><div class="metric-lbl">Target mg/dL</div></div>
       <div class="metric"><div class="metric-val" style="color:var(--text2)">${profile.tdd_used||'—'}</div><div class="metric-lbl">Avg TDD U</div></div>
+      <div class="metric"><div class="metric-val" style="color:var(--text2)">${profile.dia||'—'}h</div><div class="metric-lbl">DIA</div></div>
     </div>
     <div style="display:flex;flex-direction:column;gap:4px;font-size:.8rem">
-      ${isfNote?`<div style="color:${isfColor}">${isfNote} · Profile ISF ${isf} vs recommended ${recIsf} mg/dL/U (1700 ÷ ${profile.tdd_used}U TDD)</div>`:''}
+      <div style="color:var(--text3);font-size:.75rem">⚡ AIMI adapts ISF via ISF Fusion and scales basal in meal modes — standard 1700/TDD and 40-50% basal rules do not apply</div>
+      ${isfNote?`<div style="color:${isfColor}">${isfNote}</div>`:''}
       ${basalNote?`<div style="color:${basalColor}">${basalNote} · ${profile.daily_basal}U/day (${profile.avg_basal_per_hour}U/h)</div>`:''}
-      <div style="color:var(--text3)">Profile: ${profile.profile_name||'?'} · DIA: ${profile.dia||'?'}h</div>
+      <div style="color:var(--text3)">Profile: ${profile.profile_name||'?'}</div>
     </div>`;
 }
 

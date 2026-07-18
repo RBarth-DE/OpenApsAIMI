@@ -512,90 +512,83 @@ def analyze_profile(ns_profile, trt={}):
 
 
 def generate_profile_recommendations(profile, cgm, trt):
-    """Generate profile-level recommendations (ISF, basal, target)."""
+    """Generate profile-level recommendations — AIMI-aware.
+
+    NOTE: Standard 1700/TDD ISF rule and 40-50% basal rule do NOT apply to AIMI:
+    - AIMI dynamically multiplies basal in meal modes and high-BG situations,
+      so basal% of TDD is naturally 55-75% — not a sign of miscalibration.
+    - AIMI scales ISF internally via ISF Fusion and DynISF Trajectory.
+      The profile ISF is only an anchor; the algorithm adapts it per tick.
+
+    We still show profile values as context but only flag genuine outliers.
+    """
     recs = []
     if not profile or profile.get("error"): return recs
 
-    avg_isf  = profile.get("avg_isf")
-    rec_isf  = profile.get("recommended_isf")
-    delta    = profile.get("isf_delta_pct")
-    tdd      = profile.get("tdd_used", 0) or 0
-    daily_b  = profile.get("daily_basal")
-    rec_b    = profile.get("recommended_basal_daily")
+    avg_isf   = profile.get("avg_isf")
+    rec_isf   = profile.get("recommended_isf")
+    delta     = profile.get("isf_delta_pct")
+    tdd       = profile.get("tdd_used", 0) or 0
+    daily_b   = profile.get("daily_basal")
     basal_pct = profile.get("basal_pct_tdd")
-    hypo     = cgm.get("hypo_l1_pct", 0)
-    tir      = cgm.get("tir_pct", 0)
+    hypo      = cgm.get("hypo_l1_pct", 0)
+    tir       = cgm.get("tir_pct", 0)
 
-    # ISF recommendation
+    # ISF: only flag extreme outliers (>40% off), with AIMI context
     if avg_isf and rec_isf and delta is not None:
-        if delta < -15:  # ISF too aggressive (low number = more insulin per unit)
-            recs.append({
-                "type": "profile", "impact": "high",
-                "name": "Profile ISF too aggressive",
-                "key": "Profile → Insulin Sensitivity Factor",
-                "current": f"{avg_isf} mg/dL/U",
-                "suggested": f"{rec_isf} mg/dL/U",
-                "direction": "increase",
-                "reason": f"Profile ISF {avg_isf} mg/dL/U is {abs(int(delta))}% lower than the 1700/TDD rule "
-                          f"({rec_isf} mg/dL/U for TDD {tdd:.0f}U). "
-                          f"Too-aggressive ISF causes overcorrection → hypos. "
-                          f"AIMI scales dynamically but uses this as anchor.",
-                "settings_path": "AAPS → Profile → ISF",
-                "category": "Profile",
-                "feature_name": "Profile",
-                "gate_key": None, "gate_active": True,
-            })
-        elif delta > 20:  # ISF too conservative
+        if delta < -40:
             recs.append({
                 "type": "profile", "impact": "medium",
-                "name": "Profile ISF too conservative",
+                "name": "Profile ISF very aggressive (anchor value)",
                 "key": "Profile → Insulin Sensitivity Factor",
                 "current": f"{avg_isf} mg/dL/U",
-                "suggested": f"{rec_isf} mg/dL/U",
-                "direction": "decrease",
-                "reason": f"Profile ISF {avg_isf} mg/dL/U is {int(delta)}% higher than the 1700/TDD rule "
+                "suggested": f"{rec_isf} mg/dL/U (1700/TDD reference)",
+                "direction": "increase",
+                "reason": f"Profile ISF {avg_isf} mg/dL/U is {abs(int(delta))}% below the 1700/TDD reference "
                           f"({rec_isf} mg/dL/U for TDD {tdd:.0f}U). "
-                          f"Conservative ISF limits AIMI's correction ability → persistent highs.",
+                          f"Note: AIMI scales ISF dynamically via ISF Fusion — the profile value is only the "
+                          f"anchor. A very low anchor may cause overcorrection before AIMI adapts. "
+                          f"Consider raising gradually if post-correction hypos are frequent.",
                 "settings_path": "AAPS → Profile → ISF",
-                "category": "Profile",
-                "feature_name": "Profile",
+                "category": "Profile", "feature_name": "Profile",
+                "gate_key": None, "gate_active": True,
+            })
+        elif delta > 50:
+            recs.append({
+                "type": "profile", "impact": "low",
+                "name": "Profile ISF very conservative (anchor value)",
+                "key": "Profile → Insulin Sensitivity Factor",
+                "current": f"{avg_isf} mg/dL/U",
+                "suggested": f"{rec_isf} mg/dL/U (1700/TDD reference)",
+                "direction": "decrease",
+                "reason": f"Profile ISF {avg_isf} mg/dL/U is {int(delta)}% above the 1700/TDD reference. "
+                          f"AIMI will adapt via ISF Fusion, but a very high anchor may slow initial corrections. "
+                          f"Low priority since AIMI compensates dynamically.",
+                "settings_path": "AAPS → Profile → ISF",
+                "category": "Profile", "feature_name": "Profile",
                 "gate_key": None, "gate_active": True,
             })
 
-    # Basal recommendation
-    if daily_b and rec_b and basal_pct is not None:
-        if basal_pct < 35:
+    # Basal: AIMI uses basal as a meal-coverage tool — 55-75% is normal.
+    # Only flag if basal is extremely low (algorithm can't cover meals via basal scaling)
+    if daily_b and basal_pct is not None:
+        if basal_pct < 30:
             recs.append({
                 "type": "profile", "impact": "medium",
-                "name": "Profile basal too low",
+                "name": "Profile basal very low for AIMI",
                 "key": "Profile → Basal Rate",
                 "current": f"{daily_b}U/day ({basal_pct:.0f}% of TDD)",
-                "suggested": f"{rec_b}U/day (~45% of TDD)",
+                "suggested": f"≥35% of TDD ({round(tdd*0.35,1)}U/day minimum)",
                 "direction": "increase",
-                "reason": f"Basal is only {basal_pct:.0f}% of TDD. "
-                          f"Recommended 40-50% ({rec_b}U/day). "
-                          f"Low basal forces AIMI to rely heavily on SMBs for coverage, "
-                          f"increasing stacking risk.",
+                "reason": f"Basal is only {basal_pct:.0f}% of TDD. AIMI uses basal scaling in meal modes "
+                          f"and high-BG situations — a very low profile basal limits the algorithm's "
+                          f"ability to cover meals without relying entirely on SMBs. "
+                          f"Note: 55-70% basal-of-TDD is normal with AIMI (unlike standard APS).",
                 "settings_path": "AAPS → Profile → Basal Rate",
-                "category": "Profile",
-                "feature_name": "Profile",
+                "category": "Profile", "feature_name": "Profile",
                 "gate_key": None, "gate_active": True,
             })
-        elif basal_pct > 60:
-            recs.append({
-                "type": "profile", "impact": "medium",
-                "name": "Profile basal high",
-                "key": "Profile → Basal Rate",
-                "current": f"{daily_b}U/day ({basal_pct:.0f}% of TDD)",
-                "suggested": f"{rec_b}U/day (~45% of TDD)",
-                "direction": "decrease",
-                "reason": f"Basal is {basal_pct:.0f}% of TDD — above the 40-50% target. "
-                          f"High baseline basal increases nocturnal hypo risk.",
-                "settings_path": "AAPS → Profile → Basal Rate",
-                "category": "Profile",
-                "feature_name": "Profile",
-                "gate_key": None, "gate_active": True,
-            })
+        # Do NOT flag high basal% — 60-75% is expected with AIMI meal mode scaling
 
     return recs
 
@@ -1047,14 +1040,20 @@ async def ai_analysis(req: AIAnalysisRequest):
 - TDD avg: {trt.get('tdd_avg','?')} U/day
 
 ## Profile
-{f"""- Profile ISF: {req.profile_data.get('avg_isf','?')} mg/dL/U  (1700/TDD rule → recommended: {req.profile_data.get('recommended_isf','?')} mg/dL/U, delta: {req.profile_data.get('isf_delta_pct','?')}%)
-- Basal: {req.profile_data.get('avg_basal_per_hour','?')} U/h = {req.profile_data.get('daily_basal','?')} U/day ({req.profile_data.get('basal_pct_tdd','?')}% of TDD, target 40-50%)
+{f"""- Profile ISF: {req.profile_data.get('avg_isf','?')} mg/dL/U  (1700/TDD reference: {req.profile_data.get('recommended_isf','?')} mg/dL/U, delta: {req.profile_data.get('isf_delta_pct','?')}%)
+- Basal: {req.profile_data.get('avg_basal_per_hour','?')} U/h = {req.profile_data.get('daily_basal','?')} U/day ({req.profile_data.get('basal_pct_tdd','?')}% of TDD)
 - IC ratio: {req.profile_data.get('avg_ic','?')} g/U
 - BG target: {req.profile_data.get('target','?')} mg/dL
 - DIA: {req.profile_data.get('dia','?')} h
 - Profile: {req.profile_data.get('profile_name','?')}
-IMPORTANT: If ISF delta is negative (ISF too low/aggressive), this is a primary driver of hypoglycemia.
-If basal % of TDD is outside 40-50%, flag this as a profile calibration issue."""
+IMPORTANT AIMI-SPECIFIC CONTEXT:
+- Basal% of TDD: AIMI dynamically multiplies basal in meal modes and high-BG situations.
+  55-75% basal-of-TDD is NORMAL with AIMI — do NOT flag this as too high.
+  Only flag if basal < 30% of TDD (algorithm cannot scale sufficiently).
+- ISF: AIMI scales ISF internally via ISF Fusion and DynISF Trajectory per tick.
+  The profile ISF is only an anchor point. Do NOT apply the 1700/TDD rule directly.
+  Only flag extreme outliers (>40% off) as potentially affecting the anchor point.
+- Do NOT recommend ISF or basal changes based on standard APS rules."""
 if req.profile_data and not req.profile_data.get('error') else '(not available)'}
 
 ## {l['params_header']}
