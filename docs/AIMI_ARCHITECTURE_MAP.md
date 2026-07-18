@@ -46,12 +46,14 @@ Harmonia is **not** one block. Separate what *observes*, what *decides*, and wha
    - `low_or_falling_bg` — `bg < 80 && delta <= 0`
    - `max_iob_pressure` — `iob >= maxIob * 0.92`
    - `critical_risk` — trunk risk `CRITICAL`
-2. **`chooseAction`** → one of `HarmoniaAction`:
-   - `BASAL_FIRST` — hormonalResistance / stress / insulinEffectiveness confidence ≥ 0.55
-   - `MEAL_SUPPORT` — declared/undeclared meal-rise conditions
-   - `PROTECTIVE_REDUCTION` — activity ≥ 0.55 or postActivity ≥ 0.45
+2. **`chooseAction`** → one of `HarmoniaAction` (priority order matters):
    - `STABILIZE` — fragility ≥ 0.55 or exhaustion ≥ 0.65 or chaos ≥ 0.50
+   - `MEAL_SUPPORT` — **H4 bridge** first: trunk `DIGESTION_ACTIVE` + `meal_rise_confirmed` +
+     BG > target+30 + Δ≥0.8 (beats activity protective; no flip on falling BG); else declared/undeclared meal-rise
+   - `PROTECTIVE_REDUCTION` — activity ≥ 0.55 or postActivity ≥ 0.45
+   - `BASAL_FIRST` — hormonalResistance / stress / insulinEffectiveness confidence ≥ 0.55
    - `OBSERVE` — nothing salient (→ no production action)
+   - Env carries `targetBgMgdl` for the H4 band check.
 3. **Factor → bounded target** against a virtual pump model (caps, steps, IOB headroom):
 
    | Action | basal factor | smb factor |
@@ -87,14 +89,19 @@ an SMB release authority:
 ```
 T3C eligible                              → T3C_BASAL_FIRST            (T3C wins, absolute priority)
 else Harmonia eligible & authority==NONE  → HARMONIA_PRODUCTION_BASAL_FIRST
+else Harmonia eligible & SOFT + MEAL_SUPPORT + DIGESTION_ACTIVE
+                                          → HARMONIA_PRODUCTION_BASAL_FIRST  (soft-meal exception)
 else                                      → NONE
 ```
 
 - **`authority == NONE`** (no SMB this tick) → Harmonia can own the **basal** (basal-first).
-- **`authority != NONE`** (SMB in flight) → basal-first blocked (`smb_authority_active`), but Harmonia
-  can **modulate the SMB** (`resolveHarmoniaSmb`).
+- **`authority == SOFT` + Digestion `MEAL_SUPPORT`** → Harmonia may still own **basal** (closes
+  `rbt_no_harmonia_channel` when SMB caps crush delivery during meal rise). Production also bypasses
+  `smb_authority_active` in that case.
+- **Other `authority != NONE`** → basal-first blocked; Harmonia can **modulate the SMB** (`resolveHarmoniaSmb`).
 
-So Harmonia is *either* a basal owner *or* an SMB modulator on a given tick, never both.
+So Harmonia is *either* a basal owner *or* an SMB modulator on a given tick, never both
+(soft-meal basal exception prefers basal over SMB modulation).
 
 ---
 

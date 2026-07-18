@@ -16,6 +16,7 @@ import app.aaps.plugins.aps.openAPSAIMI.advisor.data.T3cRuntimeHistoryReader
 import app.aaps.plugins.aps.openAPSAIMI.advisor.data.T3cRuntimeTickRecord
 import app.aaps.plugins.aps.openAPSAIMI.advisor.data.T3cRuntimeTickStatus
 import app.aaps.plugins.aps.openAPSAIMI.keys.AimiStringKey
+import app.aaps.plugins.aps.openAPSAIMI.pkpd.PkpdSmbTailDamping
 import java.util.Locale
 import kotlin.math.abs
 
@@ -212,7 +213,9 @@ private fun buildStabilityFamily(
     val dynIsfEnabled = preferences.get(BooleanKey.OApsAIMIDynIsfTrajectoryTuningEnabled)
     val adaptiveBasalEnabled = preferences.get(BooleanKey.OApsAIMIT3cAdaptiveBasalEnabled)
     val scores = listOf(
-        normalize(preferences.get(DoubleKey.OApsAIMISmbTailDamping), DoubleKey.OApsAIMISmbTailDamping),
+        // Tail floor: score on PKPD band (not 0–1 pref span). Higher floor = less damping = more reactive.
+        // Also applies effectiveStoredValue so legacy ≤0.55 reads as neutral, not "ultra-smooth".
+        PkpdSmbTailDamping.stabilityFamilyScore(preferences.get(DoubleKey.OApsAIMISmbTailDamping)),
         normalize(preferences.get(DoubleKey.OApsAIMISmbExerciseDamping), DoubleKey.OApsAIMISmbExerciseDamping),
         normalize(preferences.get(DoubleKey.OApsAIMISmbLateFatDamping), DoubleKey.OApsAIMISmbLateFatDamping),
         boolScore(adaptiveBasalEnabled, whenFalse = 0.35f, whenTrue = 0.66f),
@@ -233,7 +236,12 @@ private fun buildStabilityFamily(
         expertPreferenceCount = AimiBehaviorFamilyRegistry.expertCount(AimiBehaviorFamilyId.Stability),
         status = projection.status,
         details = listOf(
-            detail(R.string.oaps_aimi_smb_tail_damping_title, preferences.get(DoubleKey.OApsAIMISmbTailDamping), null),
+            // Show the value the loop actually uses (legacy ≤0.55 → neutral), so the row matches the slider.
+            detail(
+                R.string.oaps_aimi_smb_tail_damping_title,
+                PkpdSmbTailDamping.effectiveStoredValue(preferences.get(DoubleKey.OApsAIMISmbTailDamping)),
+                null,
+            ),
             detail(R.string.oaps_aimi_smb_exercise_damping_title, preferences.get(DoubleKey.OApsAIMISmbExerciseDamping), null),
             detail(R.string.oaps_aimi_smb_late_fat_damping_title, preferences.get(DoubleKey.OApsAIMISmbLateFatDamping), null),
             boolDetail(R.string.oaps_aimi_adaptive_basal_title, adaptiveBasalEnabled),
