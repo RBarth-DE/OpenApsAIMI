@@ -82,6 +82,10 @@ class UnifiedReactivityLearner @Inject constructor(
     var lastAnalysis: AnalysisSnapshot? = null
         private set
 
+    /** Hours elapsed since first [processIfNeeded] call (or 0 if not yet started). */
+    val elapsedLearningHours: Float
+        get() = if (initializedAt > 0L) (System.currentTimeMillis() - initializedAt).toFloat() / 3_600_000f else 0f
+
     // 📁 Utilise AimiStorageHelper pour stockage robuste
     private val fileName = "aimi_unified_reactivity.json"
     private val csvFileName = "aimi_reactivity_analysis.csv"
@@ -118,6 +122,7 @@ class UnifiedReactivityLearner @Inject constructor(
     
     private var lastAnalysisTime = 0L
     private var lastShortAnalysisTime = 0L
+    private var initializedAt = 0L
     // D3: latch a confirmed rise between 30-min analyses so a mid-interval meal rise isn't lost before consumption.
     private var pendingConfirmedRise = false
     
@@ -466,6 +471,7 @@ class UnifiedReactivityLearner @Inject constructor(
      */
     fun processIfNeeded(isConfirmedRise: Boolean = false) {
         val now = dateUtil.now()
+        if (initializedAt == 0L) initializedAt = now
 
         // D3: latch the confirmed rise. The 24h analysis (the ONLY consumer of the flag) runs every 30 min; without
         // latching, a meal rise seen between two analyses never reaches computeAdjustment, so the floor-release and
@@ -679,6 +685,7 @@ class UnifiedReactivityLearner @Inject constructor(
                 shortTermFactor = json.optDouble("shortTermFactor", 1.0).coerceIn(0.5, 1.5)
                 lastAnalysisTime = json.optLong("lastAnalysisTime", 0L)
                 lastShortAnalysisTime = json.optLong("lastShortAnalysisTime", 0L)
+                initializedAt = json.optLong("initializedAt", 0L)
                 val segmentJson = json.optJSONObject("segmentFactors")
                 ReactivityDaypart.entries.forEach { daypart ->
                     segmentFactors[daypart] = segmentJson
@@ -695,6 +702,7 @@ class UnifiedReactivityLearner @Inject constructor(
                 shortTermFactor = 1.0
                 lastAnalysisTime = 0L
                 lastShortAnalysisTime = 0L
+                initializedAt = 0L
                 ReactivityDaypart.entries.forEach { daypart ->
                     segmentFactors[daypart] = 1.0
                 }
@@ -712,6 +720,7 @@ class UnifiedReactivityLearner @Inject constructor(
         json.put("shortTermFactor", shortTermFactor)
         json.put("lastAnalysisTime", lastAnalysisTime)
         json.put("lastShortAnalysisTime", lastShortAnalysisTime)
+        json.put("initializedAt", initializedAt)
         val segmentJson = JSONObject()
         ReactivityDaypart.entries.forEach { daypart ->
             segmentJson.put(daypart.jsonKey(), segmentFactors[daypart] ?: globalFactor)

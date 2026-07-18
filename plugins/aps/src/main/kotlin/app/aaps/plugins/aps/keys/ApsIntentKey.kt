@@ -53,6 +53,13 @@ enum class ApsIntentKey(
         preferenceType = PreferenceType.ACTIVITY,
     ),
 
+    AimiLearnerOverview(
+        key = "aimi_learner_overview_compose",
+        titleResId = R.string.aimi_learner_overview_title,
+        summaryResId = R.string.aimi_learner_overview_summary,
+        preferenceType = PreferenceType.ACTIVITY,
+    ),
+
     AimiSosPermissions(
         key = "aimi_sos_permissions_compose",
         titleResId = R.string.aimi_sos_permissions_title,

@@ -108,7 +108,8 @@ class BasalNeuralLearner @Inject constructor(
         meanGovernanceWeight = 1.0,
     )
     private var lastGovernanceLogAt = 0L
-    
+    private var initializedAt = 0L   // always resets on restart (governance window is in-memory only)
+
     init {
         loadModels()
     }
@@ -130,6 +131,10 @@ class BasalNeuralLearner @Inject constructor(
             "BasalNeuralLearner: models reloaded (t3c=${neuralT3cNet != null}, basal=${neuralBasalNet != null})",
         )
     }
+
+    /** Hours elapsed since first sample entered the governance window (or 0 if not yet started). */
+    val elapsedLearningHours: Float
+        get() = if (initializedAt > 0L) (System.currentTimeMillis() - initializedAt).toFloat() / 3_600_000f else 0f
 
     /** Neutral physiological context (backfill / when no live state is available): 4 latent + 3 mode + 3 causal = 10,
      *  reusing the SMB feature schema so the two models share one physio vocabulary. */
@@ -319,6 +324,7 @@ class BasalNeuralLearner @Inject constructor(
         shortMinPredBg: Double?,
     ) {
         if (!bgBefore.isFinite() || !bgAfter.isFinite() || !targetBg.isFinite()) return
+        if (initializedAt == 0L) initializedAt = System.currentTimeMillis()
         val noise = if (sensorNoise.isFinite()) sensorNoise else 0.0
         val iob = if (iobUnits.isFinite()) iobUnits else 0.0
         val d = if (deltaMgDl.isFinite()) deltaMgDl else (bgAfter - bgBefore)

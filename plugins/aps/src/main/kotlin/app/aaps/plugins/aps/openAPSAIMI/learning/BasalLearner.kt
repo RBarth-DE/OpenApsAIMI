@@ -43,6 +43,7 @@ class BasalLearner @Inject constructor(
     private var lastShortUpdate = 0L
     private var lastMediumUpdate = 0L
     private var lastLongUpdate = 0L
+    private var initializedAt = 0L
 
     // === Accumulators for each scale ===
     private val shortTermBuffer = mutableListOf<TimestampedBg>()
@@ -101,6 +102,7 @@ class BasalLearner @Inject constructor(
         isFastingTime: Boolean
     ) {
         val now = System.currentTimeMillis()
+        if (initializedAt == 0L) initializedAt = now
         val observation = TimestampedBg(now, currentBg, currentDelta)
 
         // Add to buffers
@@ -309,6 +311,7 @@ class BasalLearner @Inject constructor(
                 lastShortUpdate = json.optLong("lastShortUpdate", 0L)
                 lastMediumUpdate = json.optLong("lastMediumUpdate", 0L)
                 lastLongUpdate = json.optLong("lastLongUpdate", 0L)
+                initializedAt = json.optLong("initializedAt", 0L)
                 log.info(LTag.APS, "BasalLearner: ✅ Loaded multipliers S=${"%.3f".format(shortTermMultiplier)} " +
                     "M=${"%.3f".format(mediumTermMultiplier)} L=${"%.3f".format(longTermMultiplier)}")
             },
@@ -326,8 +329,13 @@ class BasalLearner @Inject constructor(
         json.put("lastShortUpdate", lastShortUpdate)
         json.put("lastMediumUpdate", lastMediumUpdate)
         json.put("lastLongUpdate", lastLongUpdate)
+        json.put("initializedAt", initializedAt)
         storageHelper.saveFileSafe(file, json.toString())
     }
+
+    /** Hours elapsed since first [process] call (or 0 if not yet started). */
+    val elapsedLearningHours: Float
+        get() = if (initializedAt > 0L) (System.currentTimeMillis() - initializedAt).toFloat() / 3_600_000f else 0f
 
     // === Legacy API compatibility ===
     @Deprecated("Use getMultiplier() instead", ReplaceWith("getMultiplier()"))

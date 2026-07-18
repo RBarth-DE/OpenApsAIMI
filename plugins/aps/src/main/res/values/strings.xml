@@ -956,6 +956,33 @@
     <string name="aimi_pkpd_guided_title">PKPD assistant</string>
     <string name="aimi_patient_context_title">Patient context and body declarations</string>
     <string name="aimi_lab_title">AIMI Lab</string>
+    <string name="aimi_learner_overview_title">Learner Status Overview</string>
+    <string name="aimi_learner_overview_summary">View runtime, progress, and live status of all AIMI learning algorithms</string>
+    <string name="aimi_learner_time_to_full_label">Time to 100%:</string>
+    <string name="aimi_learner_time_to_full">Time to full effectiveness: ~%1$s hours</string>
+
+    <!-- Learner descriptions -->
+    <string name="aimi_learner_governance_name">Basal Neural Governance</string>
+    <string name="aimi_learner_governance_desc">Monitors hypo/hyper rates to decide whether to keep, hold conservative, or allow gentle basal/aggressiveness increases. Uses noise-weighted sample window (288 samples = 24h) with confidence scoring. Starts in WARMUP state until 36 samples (~3h) collected.</string>
+    <string name="aimi_learner_reactivity_name">Unified Reactivity Learner</string>
+    <string name="aimi_learner_reactivity_desc">ML-powered ISF reactivity factor (0.5–1.5×). Combines 24h global analysis (60% weight) with 2h short-term analysis (40% weight). Reacts to TIR, CV%, hypo count, and oscillations. Short-term analysis available after ~30 min of CGM data.</string>
+    <string name="aimi_learner_basal3scale_name">Multi-Scale Basal Learner</string>
+    <string name="aimi_learner_basal3scale_desc">3-tier basal adaptation: Short-term (30 min, 2h window, reacts to acute changes), Medium-term (6h, 24h window, intra-day patterns), Long-term (24h, fasting-based, structural TDD adjustments). Uses exponential weighting with configurable half-lives.</string>
+    <string name="aimi_learner_pkpd_name">Adaptive PKPD Estimator</string>
+    <string name="aimi_learner_pkpd_desc">Learns personalized insulin DIA and peak timing via online gradient descent on post-bolus CGM data. Only learns on qualifying events (IOB &gt; 0.3 U, BG &gt; 75, no exercise, COB &lt; 15 g, delta between -3 and +5). Uses anchor regularization to prevent drift. Needs multiple qualifying bolus events over days.</string>
+    <string name="aimi_learner_pkpd_status">Learning only on qualifying post-bolus events (IOB &gt; 0.3 U, no exercise, moderate delta). Check PKPD settings for current learned DIA and peak values.</string>
+    <string name="aimi_learner_online_name">Online Gradient Descent (Autodrive)</string>
+    <string name="aimi_learner_online_desc">Continuous 5-min gradient descent on sensitivity factor for Autodrive V3. Records 30-min-ahead BG predictions, then compares actual vs. predicted to adjust learnedSensitivityFactor (0.5–1.5). Very slow learning rate (0.005) for safety. First feedback at ~30 min.</string>
+    <string name="aimi_learner_online_status">Continuously running at each 5-min tick. Converges over hours-to-days. Check Autodrive control center for current sensitivity factor.</string>
+    <string name="aimi_learner_ngr_name">Night Growth Resistance (NGR)</string>
+    <string name="aimi_learner_ngr_desc">Detects nocturnal growth hormone-induced insulin resistance in pediatric patients. Uses existing loop signals (autosens, DIA, CGM noise) to derive NGR parameters — no independent warmup period. Readiness depends on autosens and ISF stability (typically hours).</string>
+    <string name="aimi_learner_ngr_status">Derives from autosens ratio and existing loop signals. Ready as soon as autosens has stabilized (typically within hours of loop start).</string>
+    <string name="aimi_learner_wcycle_name">Women\'s Cycle Learner</string>
+    <string name="aimi_learner_wcycle_desc">Learns per-phase basal and SMB multipliers across menstrual cycle phases (follicular, ovulatory, luteal). Uses EMA learning (alpha=0.10) per phase observation, clamped 0.70–1.30×. Persisted to disk. Needs 2–3 full cycles to converge.</string>
+    <string name="aimi_learner_wcycle_status">Learns per-cycle-phase multipliers from CGM patterns. Needs multiple cycle observations. Current values visible in WCycle preferences.</string>
+    <string name="aimi_learner_governors_name">Peak &amp; DIA Governors</string>
+    <string name="aimi_learner_governors_desc">Peak Governor learns insulin peak timing from observed CGM response to boluses. DIA Governor monitors observed vs. expected insulin duration. Both blend learned values with prior estimates using configurable learnedWeight. Learn from post-bolus events with strict quality gates.</string>
+    <string name="aimi_learner_governors_status">Learn from qualifying post-bolus events alongside the PKPD estimator. Bias toward anchor values during early learning. Check PKPD advanced settings for current governor state.</string>
     <string name="aimi_control_center_title">AIMI Control Center</string>
     <string name="aimi_control_center_intro_title">Current AIMI behavior, grouped by intention</string>
     <string name="aimi_control_center_intro">This screen reads your current AIMI settings and translates them into behavior families. It is a migration view only: no value is changed here.</string>

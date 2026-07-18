@@ -66,6 +66,7 @@ import app.aaps.core.keys.interfaces.Preferences
 import app.aaps.core.keys.UnitDoubleKey
 import app.aaps.core.keys.StringKey
 import app.aaps.core.keys.interfaces.withCompose
+import app.aaps.plugins.aps.openAPSAIMI.compose.AimiLearnerOverviewScreen
 import app.aaps.plugins.aps.openAPSAIMI.context.ui.AimiPreferenceInfoScreen
 import app.aaps.core.keys.interfaces.withEntries
 import app.aaps.core.ui.compose.ComposeScreenContent
@@ -205,6 +206,8 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
     private val loopProvider: Provider<Loop>,
     private val dynIsfTrajectoryTuning: DynIsfTrajectoryTuning,
     private val tpoOrchestrator: TpoOrchestrator,
+    private val basalNeuralLearner: app.aaps.plugins.aps.openAPSAIMI.learning.BasalNeuralLearner,
+    private val basalLearner: app.aaps.plugins.aps.openAPSAIMI.learning.BasalLearner,
 ) : PluginBaseWithPreferences(
     PluginDescription()
         .mainType(PluginType.APS)
@@ -1853,6 +1856,18 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
                 // add(aimiComposeTrajectorySubScreen())
                 // add(aimiComposeManualModesSubScreen())
                 // add(aimiComposeAutodriveSubScreen())
+                add(
+                    ApsIntentKey.AimiLearnerOverview.withCompose(
+                        ComposeScreenContent { onBack ->
+                            AimiLearnerOverviewScreen(
+                                basalNeuralLearner = basalNeuralLearner,
+                                unifiedReactivityLearner = unifiedReactivityLearner,
+                                basalLearner = basalLearner,
+                                onBack = onBack,
+                            )
+                        },
+                    ),
+                )
                 add(BooleanKey.OApsxdriponeminute)
                 // add(BooleanKey.OApsAIMIUnifiedReactivityEnabled)
                 // add(aimiComposeAiAuditorSubScreen())
