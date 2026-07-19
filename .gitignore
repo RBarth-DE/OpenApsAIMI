@@ -42,3 +42,7 @@ tmpclaude-*
 eversense_upstream_patches/
 core/keys/bin/
 .claude
+# Local ONE+/xDrip pin scratch artifacts (never commit)
+/build-libkeks-gradle.txt
+/build-xdrip-tree.json
+/build-xdrip-pin/

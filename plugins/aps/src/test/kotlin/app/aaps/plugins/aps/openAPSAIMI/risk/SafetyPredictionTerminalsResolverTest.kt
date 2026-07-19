@@ -1,7 +1,11 @@
 package app.aaps.plugins.aps.openAPSAIMI.risk
 
+import app.aaps.plugins.aps.openAPSAIMI.patient.MealCertainty
+import app.aaps.plugins.aps.openAPSAIMI.patient.MealCertaintyLevel
+import app.aaps.plugins.aps.openAPSAIMI.patient.MealCertaintyTreeState
+import app.aaps.plugins.aps.openAPSAIMI.patient.MealRiseGeometry
+import app.aaps.plugins.aps.openAPSAIMI.patient.MealTerminalsAgree
 import app.aaps.plugins.aps.openAPSAIMI.physio.MealAbsorptionPhase
-import app.aaps.plugins.aps.openAPSAIMI.risk.SafetyPredictionTerminalsResolver
 import app.aaps.plugins.aps.openAPSAIMI.scenario.ScenarioProjectionCurve
 import app.aaps.plugins.aps.openAPSAIMI.scenario.ScenarioProjectionKind
 import app.aaps.plugins.aps.openAPSAIMI.scenario.ScenarioProjectionPair
@@ -62,6 +66,74 @@ class SafetyPredictionTerminalsResolverTest {
                 bg = 137.0,
                 delta = 5.0f,
                 mealContext = MealSafetyContext(),
+            ),
+        )
+    }
+
+    @Test
+    fun activePhaseWhileFalling_doesNotConfirmMealRise_desticky() {
+        assertFalse(
+            SafetyPredictionTerminalsResolver.isMealRiseConfirmed(
+                bg = 220.0,
+                delta = -3.0f,
+                mealContext = MealSafetyContext(),
+                mealAbsorptionPhase = MealAbsorptionPhase.FIRST_WAVE,
+                cobG = 0.0,
+            ),
+        )
+    }
+
+    @Test
+    fun mealCertaintyMed_overridesLegacyGeometry() {
+        val med = MealCertainty(
+            level = MealCertaintyLevel.MED,
+            treeState = MealCertaintyTreeState.MEAL_PROBABLE,
+            absorptionPhase = MealAbsorptionPhase.NONE,
+            riseGeometry = MealRiseGeometry.WEAK,
+            terminalsAgree = MealTerminalsAgree.OK,
+            effortVeto = false,
+            softCorroboration = false,
+        )
+        assertTrue(
+            SafetyPredictionTerminalsResolver.isMealRiseConfirmed(
+                bg = 100.0,
+                delta = -1.0f,
+                mealContext = MealSafetyContext(),
+                mealCertainty = med,
+            ),
+        )
+    }
+
+    @Test
+    fun mealCertaintyNone_fallsThroughToDeclaredMealIntent() {
+        val none = MealCertainty.NONE
+        assertTrue(
+            SafetyPredictionTerminalsResolver.isMealRiseConfirmed(
+                bg = 140.0,
+                delta = 2.0f,
+                mealContext = MealSafetyContext(mealModeActive = true),
+                mealCertainty = none,
+            ),
+        )
+    }
+
+    @Test
+    fun mealCertaintyLow_doesNotShortCircuitFalseOnDeclaredMeal() {
+        val low = MealCertainty(
+            level = MealCertaintyLevel.LOW,
+            treeState = MealCertaintyTreeState.NONE,
+            absorptionPhase = MealAbsorptionPhase.NONE,
+            riseGeometry = MealRiseGeometry.WEAK,
+            terminalsAgree = MealTerminalsAgree.UNKNOWN,
+            effortVeto = false,
+            softCorroboration = false,
+        )
+        assertTrue(
+            SafetyPredictionTerminalsResolver.isMealRiseConfirmed(
+                bg = 150.0,
+                delta = 1.0f,
+                mealContext = MealSafetyContext(mealModeActive = true),
+                mealCertainty = low,
             ),
         )
     }

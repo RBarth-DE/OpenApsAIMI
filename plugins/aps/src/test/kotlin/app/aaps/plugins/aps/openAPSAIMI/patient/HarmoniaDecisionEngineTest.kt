@@ -188,7 +188,21 @@ class HarmoniaDecisionEngineTest {
         assertThat(tree?.trunk?.globalState).isEqualTo(GlobalPhysiologicalState.DIGESTION_ACTIVE)
         assertThat(tree?.branches?.activity?.confidence).isAtLeast(0.55)
 
+        // Below meal band → not HIGH; activity branch wins protective.
         val protective = HarmoniaDecisionEngine.evaluate(
+            tree = tree,
+            environment = safeEnvironment().copy(
+                cobG = 0.0,
+                mealRiseConfirmed = false,
+                targetBgMgdl = 100.0,
+                currentBgMgdl = 120.0,
+                deltaMgdl5m = 4.0,
+            ),
+        )
+        assertThat(protective?.action).isEqualTo(HarmoniaAction.PROTECTIVE_REDUCTION)
+
+        // Digestion + rise above band → MealCertainty HIGH beats activity (sticky meal_rise not required).
+        val bridged = HarmoniaDecisionEngine.evaluate(
             tree = tree,
             environment = safeEnvironment().copy(
                 cobG = 0.0,
@@ -198,20 +212,11 @@ class HarmoniaDecisionEngineTest {
                 deltaMgdl5m = 4.0,
             ),
         )
-        assertThat(protective?.action).isEqualTo(HarmoniaAction.PROTECTIVE_REDUCTION)
-
-        val bridged = HarmoniaDecisionEngine.evaluate(
-            tree = tree,
-            environment = safeEnvironment().copy(
-                cobG = 0.0,
-                mealRiseConfirmed = true,
-                targetBgMgdl = 100.0,
-                currentBgMgdl = 190.0,
-                deltaMgdl5m = 4.0,
-            ),
-        )
         assertThat(bridged?.action).isEqualTo(HarmoniaAction.MEAL_SUPPORT)
         assertThat(bridged?.rationale).contains("h4_meal_rise_bridge")
+        assertThat(bridged?.rationale).contains("meal_certainty_high")
+        assertThat(bridged?.mealCertainty?.level).isEqualTo(MealCertaintyLevel.HIGH)
+        assertThat(bridged?.decisionBasis?.primaryReason).isEqualTo("meal_certainty_high")
         assertThat(bridged?.smbFactor).isGreaterThan(0.0)
     }
 
@@ -230,6 +235,75 @@ class HarmoniaDecisionEngineTest {
         )
         assertThat(decision?.action).isEqualTo(HarmoniaAction.PROTECTIVE_REDUCTION)
         assertThat(decision?.rationale).doesNotContain("h4_meal_rise_bridge")
+    }
+
+    @Test
+    fun evaluate_exportsDecisionBasisAlignedWithTrunkBranch() {
+        val state = stableState().copy(
+            phase = PhysiologicalPhase.DAWN_CORTISOL,
+            endogenousGlucoseDrive = 0.82,
+            transientResistanceProb = 0.70,
+            causalPosterior = CausalStatePosterior(
+                dawnEndogenousProb = 0.84,
+                stressResistanceProb = 0.62,
+                dominant = CausalStateId.DAWN_ENDOGENOUS,
+                dominantConfidence = 0.84,
+                learningQuality = 0.80,
+            ),
+        )
+        val decision = HarmoniaDecisionEngine.evaluate(
+            tree = buildTree(state),
+            environment = safeEnvironment(),
+        )
+        assertThat(decision).isNotNull()
+        assertThat(decision!!.branch).isEqualTo(decision.decisionBasis.trunkState.name)
+        assertThat(decision.decisionBasis.primaryReason).isEqualTo("resistance_or_stress")
+        assertThat(decision.decisionBasis.actionCoherentWithTrunk).isTrue()
+        assertThat(decision.toJsonObject().getJSONObject("decision_basis").getString("trunk_state"))
+            .isEqualTo(decision.branch)
+        assertThat(decision.version).isEqualTo(2)
+    }
+
+    @Test
+    fun evaluate_h4BridgeSetsPrimaryReasonAndContributingDigestion() {
+        val tree = digestionTreeWithEffort(effortActiveConfidence = 0.70)
+        val decision = HarmoniaDecisionEngine.evaluate(
+            tree = tree,
+            environment = safeEnvironment().copy(
+                cobG = 0.0,
+                mealRiseConfirmed = true,
+                targetBgMgdl = 100.0,
+                currentBgMgdl = 190.0,
+                deltaMgdl5m = 4.0,
+            ),
+        )
+        assertThat(decision?.action).isEqualTo(HarmoniaAction.MEAL_SUPPORT)
+        assertThat(decision?.decisionBasis?.primaryReason).isEqualTo("meal_certainty_high")
+        assertThat(decision?.decisionBasis?.trunkState).isEqualTo(GlobalPhysiologicalState.DIGESTION_ACTIVE)
+        assertThat(decision?.mealCertainty?.level).isEqualTo(MealCertaintyLevel.HIGH)
+        assertThat(decision?.decisionBasis?.contributingBranches?.any { it.name == "digestion" }).isTrue()
+    }
+
+    @Test
+    fun trunkActionMatrix_flagsHypoMealAsIncoherent() {
+        assertThat(
+            HarmoniaDecisionEngine.isActionCoherentWithTrunk(
+                GlobalPhysiologicalState.HYPO_RISK,
+                HarmoniaAction.MEAL_SUPPORT,
+            ),
+        ).isFalse()
+        assertThat(
+            HarmoniaDecisionEngine.isActionCoherentWithTrunk(
+                GlobalPhysiologicalState.DIGESTION_ACTIVE,
+                HarmoniaAction.MEAL_SUPPORT,
+            ),
+        ).isTrue()
+        assertThat(
+            HarmoniaDecisionEngine.isActionCoherentWithTrunk(
+                GlobalPhysiologicalState.SENSOR_UNCERTAIN,
+                HarmoniaAction.BASAL_FIRST,
+            ),
+        ).isFalse()
     }
 
     @Test

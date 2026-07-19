@@ -77,9 +77,12 @@ import app.aaps.plugins.aps.openAPSAIMI.pkpd.PkpdLearningDiagnostics
 import app.aaps.plugins.aps.openAPSAIMI.orchestration.AimiIntelligenceSnapshot
 import app.aaps.plugins.aps.openAPSAIMI.orchestration.AimiIntelligenceSnapshotBuilder
 import app.aaps.plugins.aps.openAPSAIMI.orchestration.IntelligenceSnapshotJson
+import app.aaps.plugins.aps.openAPSAIMI.orchestration.DoseTerminalSnapshot
+import app.aaps.plugins.aps.openAPSAIMI.orchestration.DoseTerminalSnapshotBuilder
 import app.aaps.plugins.aps.openAPSAIMI.orchestration.PredictionAuthorityApplier
 import app.aaps.plugins.aps.openAPSAIMI.orchestration.PredictionAuthorityApplyResult
 import app.aaps.plugins.aps.openAPSAIMI.ports.PkpdPort
+import app.aaps.plugins.aps.openAPSAIMI.prediction.ClampPkpdScenarioReconcile
 import app.aaps.plugins.aps.openAPSAIMI.prediction.NaiveEventualBgSignGuard
 import app.aaps.plugins.aps.openAPSAIMI.prediction.PredictionSanityResult
 import app.aaps.plugins.aps.openAPSAIMI.prediction.minPredictedAcrossCurves
@@ -207,7 +210,10 @@ import app.aaps.plugins.aps.openAPSAIMI.patient.HarmoniaSensorTelemetry
 import app.aaps.plugins.aps.openAPSAIMI.patient.HarmoniaDecision
 import app.aaps.plugins.aps.openAPSAIMI.patient.HarmoniaDecisionEngine
 import app.aaps.plugins.aps.openAPSAIMI.patient.HarmoniaDecisionEnvironment
+import app.aaps.plugins.aps.openAPSAIMI.patient.MealCertainty
+import app.aaps.plugins.aps.openAPSAIMI.patient.MealCertaintyBuilder
 import app.aaps.plugins.aps.openAPSAIMI.patient.HarmoniaAction
+import app.aaps.plugins.aps.openAPSAIMI.patient.GlobalPhysiologicalState
 import app.aaps.plugins.aps.openAPSAIMI.patient.PhysiologicalRiskLevel
 import app.aaps.plugins.aps.openAPSAIMI.patient.PhysiologicalTreeBuilder
 import app.aaps.plugins.aps.openAPSAIMI.patient.PhysiologicalTreeSnapshot
@@ -306,6 +312,10 @@ internal data class AimiDecisionContext(
         var patient_mode: org.json.JSONObject? = null,
         /** AIMI Harmonia physiological tree, context-only in Lot 1 with no insulin authority. */
         var physiological_tree: org.json.JSONObject? = null,
+        /** Cascade meal language (Tree→Harmonia→Auditor) — meal_certainty_v1. */
+        var meal_certainty: org.json.JSONObject? = null,
+        /** Cascade D4 / C1 — single dose-facing eventual + minPred for the tick. */
+        var dose_terminal_snapshot: org.json.JSONObject? = null,
         /** AIMI Harmonia simulated production branch; virtual only, never applied to the real pump. */
         var harmonia_simulation: org.json.JSONObject? = null,
         /** AIMI Harmonia production owner state; basal-first only and safety-gated. */
@@ -649,6 +659,12 @@ internal data class AimiDecisionContext(
             }
             adjustments.physiological_tree?.let { tree ->
                 adj.put("physiological_tree", tree)
+            }
+            adjustments.meal_certainty?.let { mealCertainty ->
+                adj.put("meal_certainty", mealCertainty)
+            }
+            adjustments.dose_terminal_snapshot?.let { doseTerminal ->
+                adj.put("dose_terminal_snapshot", doseTerminal)
             }
             adjustments.harmonia_simulation?.let { simulation ->
                 adj.put("harmonia_simulation", simulation)
@@ -1500,6 +1516,9 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         lastDecisionPredictionAuthority = null
         lastIntelligenceSnapshot = null
         lastPredictionAuthorityApplyResult = null
+        lastDoseTerminalSnapshot = null
+        tubeDoseBaseline = null
+        tubeAppliedFromDoseSnapshotThisTick = false
         isConfirmedHighRiseThisTick = false
         correctionAggressionDecision = null
         mealAdvisorOneShotThisTick = false
@@ -1611,6 +1630,8 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         lastPatientModeDecision = null
         lastPhysiologicalTreeSnapshot = null
         lastHarmoniaDecision = null
+        lastMealCertainty = null
+        lastHarmonizerOutcome = null
         lastHarmoniaProductionDecision = null
         lastAuditorTickDisposition = null
         lastAuditorLoopSnapshot = null
@@ -1990,49 +2011,8 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             }
         }
 
-        if (preferences.get(BooleanKey.OApsAIMIStraightLineTubeAdvisorEnabled)) {
-            try {
-                val minPredVal = minPredictedAcrossCurves(rT.predBGs)
-                val evVal = this.eventualBG ?: glucoseStatus.glucose
-                val tubeOut = straightLineTubeAdvisor.advise(
-                    StraightLineTubeAdvisor.Input(
-                        bgMgdl = glucoseStatus.glucose,
-                        deltaMgdlPer5m = glucoseStatus.delta,
-                        iobU = iobTotal,
-                        cobG = ctx.mealData.mealCOB,
-                        isfMgdlPerU = earlySens,
-                        diaHours = effectiveDiaH,
-                        targetMgdl = ctx.profile.target_bg,
-                        maxSmbU = this.maxSMB,
-                        minPredictedBg = minPredVal,
-                        eventualBgMgdl = evVal,
-                    )
-                )
-                if (!tubeOut.feasible) {
-                    this.maxSMB = 0.05
-                    this.maxSMBHB = 0.05
-                    consoleLog.add("📐 TUBE-LINE: ${tubeOut.reason}")
-                } else if (tubeOut.smbCapScale < 0.999) {
-                    lastTubeAdvisorSmbCapScale = tubeOut.smbCapScale
-                    val prevMs = this.maxSMB
-                    val prevHb = this.maxSMBHB
-                    this.maxSMB = (this.maxSMB * tubeOut.smbCapScale).coerceAtLeast(0.05)
-                    this.maxSMBHB = (this.maxSMBHB * tubeOut.smbCapScale).coerceAtLeast(0.05)
-                    consoleLog.add(
-                        "📐 TUBE-LINE: maxSMB ${"%.2f".format(prevMs)}→${"%.2f".format(this.maxSMB)} " +
-                            "maxSMBHB ${"%.2f".format(prevHb)}→${"%.2f".format(this.maxSMBHB)} | ${tubeOut.reason}"
-                    )
-                }
-                if (tubeOut.basalCapScale < 0.999) {
-                    val b = tubeOut.basalCapScale
-                    profile.current_basal = profile.current_basal * b
-                    profile.max_daily_basal = profile.max_daily_basal * b
-                    consoleLog.add("📐 TUBE-LINE: basal ×${"%.3f".format(b)} (current & max_daily)")
-                }
-            } catch (e: Exception) {
-                consoleError.add("📐 TUBE-LINE: ${e.message}")
-            }
-        }
+        // Tube is intentionally NOT applied on early PKPD floors (T9). It runs once from
+        // publishDoseTerminalAuthorityAndSnapshot after gated dose terminals exist.
         return AimiT9PhysioPkpdTubeBootstrap(pumpAgeDays, physioMultipliers)
     }
 
@@ -3118,8 +3098,10 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         val patientModeDecision = PatientModeOrchestrator.evaluate(patientState)
         lastPatientModeDecision = patientModeDecision
         val physioLive = PhysioLiveDigest.from(enrichedSnap, nowMs)
+        // Cascade native (R1): tree always deploys on the dose path. AimiPhysioAssistantEnable only
+        // gates vitals multipliers / assistant extras — never the spine Tree→Harmonia.
         val physiologicalTree = PhysiologicalTreeBuilder.build(
-            enabled = preferences.get(BooleanKey.AimiPhysioAssistantEnable),
+            enabled = true,
             patientState = patientState,
             patientModeDecision = patientModeDecision,
             physioLive = physioLive,
@@ -3140,50 +3122,93 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             sensorInsertionMs = resolveSensorInsertionMsCached(nowMs),
             nowMs = nowMs,
         )
-        val harmoniaMealContext = MealSafetyContext(
-            mealModeActive = mealTime || lunchTime || dinnerTime || snackTime || highCarbTime || bfastTime,
-            inferredMealSignal = inferredMealSafetyIntent(),
-        )
-        val harmoniaMealRiseConfirmed = SafetyPredictionTerminalsResolver.isMealRiseConfirmed(
-            bg = bg,
-            delta = delta,
-            mealContext = harmoniaMealContext,
-            mealAbsorptionPhase = lastMealAbsorptionOutput?.phase ?: MealAbsorptionPhase.NONE,
-            cobG = cob.toDouble(),
-        )
+        val scenarioBestForMeal = lastScenarioProjection?.scenarioBest
+        val pkpdForMeal =
+            cachedRiskEnvelopeDecision?.eventualTerminalMgdl?.takeIf { it.isFinite() }
+                ?: authoritativeEventualBg(this.eventualBG).takeIf { it.isFinite() && it > 1.0 }
+        // Cascade D3: MealCertainty first — meal_rise_confirmed derives from it (not sticky phase).
+        val mealCertainty = physiologicalTree?.let { tree ->
+            MealCertaintyBuilder.evaluate(
+                MealCertaintyBuilder.Input(
+                    trunkState = tree.trunk.globalState,
+                    mealBranchConfidence = tree.branches.meal.confidence,
+                    digestionDetected = tree.branches.digestion.detected,
+                    absorptionPhase = lastMealAbsorptionOutput?.phase ?: MealAbsorptionPhase.NONE,
+                    bgMgdl = bg,
+                    deltaMgdl5m = delta.toDouble(),
+                    targetBgMgdl = targetBg.toDouble(),
+                    cobG = cob.toDouble(),
+                    mealRiseConfirmedLegacy = false,
+                    effortVeto = effortSuppressesUndeclaredMeal(),
+                    softCorroboration = MealCertaintyBuilder.softCorroborationFromPhysio(physioLive),
+                    pkpdEventualMgdl = pkpdForMeal,
+                    scenarioTerminalMgdl = scenarioBestForMeal?.terminalMgdl,
+                    scenarioPathMinMgdl = scenarioBestForMeal?.pathMinMgdl,
+                    scenarioPathMinHitFloor = scenarioBestForMeal?.pathMinHitFloor == true,
+                ),
+            )
+        }
+        lastMealCertainty = mealCertainty
+        val harmoniaMealRiseConfirmed = mealCertainty?.supportsMealSupport == true
+        val harmoniaEnvironment = physiologicalTree?.let {
+            val currentBasalForSimulation = basalaimi.toDouble().takeIf { basal -> basal.isFinite() && basal > 0.0 } ?: 1.0
+            val maxBasalForSimulation = preferences.get(DoubleKey.autodriveMaxBasal)
+                .takeIf { maxBasal -> maxBasal.isFinite() && maxBasal > 0.1 }
+                ?: maxOf(currentBasalForSimulation * 3.0, currentBasalForSimulation + 2.0, 3.0)
+            HarmoniaDecisionEnvironment(
+                currentBgMgdl = bg,
+                deltaMgdl5m = delta.toDouble(),
+                iobU = iob.toDouble(),
+                cobG = cob.toDouble(),
+                currentBasalUph = currentBasalForSimulation,
+                maxBasalUph = maxBasalForSimulation,
+                maxSmbU = maxOf(maxSMB, maxSMBHB),
+                maxIobU = maxIob,
+                sensorAgeMin = sensorTelemetry.sensorAgeMin,
+                sensorNoise = sensorTelemetry.sensorNoise,
+                mealRiseConfirmed = harmoniaMealRiseConfirmed,
+                targetBgMgdl = targetBg.toDouble(),
+                correctionFragilityScore = eventMemory.correctionFragilityScore,
+                postHyperExhaustionScore = eventMemory.postHyperExhaustionScore,
+                chaoticEpisodeLoad = lastRbtChaosEvaluation?.score ?: 0.0,
+                effectiveDiaHours = tickEffectiveDiaHours,
+                effectivePeakMinutes = tickEffectivePeakMinutes,
+            )
+        }
         val harmoniaDecision = HarmoniaDecisionEngine.evaluate(
             tree = physiologicalTree,
-            environment = physiologicalTree?.let {
-                val currentBasalForSimulation = basalaimi.toDouble().takeIf { basal -> basal.isFinite() && basal > 0.0 } ?: 1.0
-                val maxBasalForSimulation = preferences.get(DoubleKey.autodriveMaxBasal)
-                    .takeIf { maxBasal -> maxBasal.isFinite() && maxBasal > 0.1 }
-                    ?: maxOf(currentBasalForSimulation * 3.0, currentBasalForSimulation + 2.0, 3.0)
-                HarmoniaDecisionEnvironment(
-                    currentBgMgdl = bg,
-                    deltaMgdl5m = delta.toDouble(),
-                    iobU = iob.toDouble(),
-                    cobG = cob.toDouble(),
-                    currentBasalUph = currentBasalForSimulation,
-                    maxBasalUph = maxBasalForSimulation,
-                    maxSmbU = maxOf(maxSMB, maxSMBHB),
-                    maxIobU = maxIob,
-                    sensorAgeMin = sensorTelemetry.sensorAgeMin,
-                    sensorNoise = sensorTelemetry.sensorNoise,
-                    mealRiseConfirmed = harmoniaMealRiseConfirmed,
-                    targetBgMgdl = targetBg.toDouble(),
-                    correctionFragilityScore = eventMemory.correctionFragilityScore,
-                    postHyperExhaustionScore = eventMemory.postHyperExhaustionScore,
-                    chaoticEpisodeLoad = lastRbtChaosEvaluation?.score ?: 0.0,
-                    effectiveDiaHours = tickEffectiveDiaHours,
-                    effectivePeakMinutes = tickEffectivePeakMinutes,
-                )
-            },
+            environment = harmoniaEnvironment,
             timestampMs = nowMs,
+            mealCertainty = mealCertainty,
         )
         lastHarmoniaDecision = harmoniaDecision
         if (refreshSource == PatientRefreshSource.LOOP_TICK) {
-            physiologicalTree?.compactSummary?.let { consoleLog.add(it) }
-            harmoniaDecision?.compactSummary?.let { consoleLog.add(it) }
+            physiologicalTree?.let { tree ->
+                consoleLog.add(
+                    "TREE_DEPLOYED trunk=${tree.trunk.globalState.name} " +
+                        "conf=${"%.2f".format(tree.trunk.confidence)} " +
+                        "risk=${tree.trunk.riskLevel.name}",
+                )
+                consoleLog.add(tree.compactSummary)
+            }
+            mealCertainty?.let { mc ->
+                consoleLog.add(
+                    "MEAL_CERTAINTY level=${mc.level.name} tree=${mc.treeState.name} " +
+                        "rise=${mc.riseGeometry.name} terminals=${mc.terminalsAgree.name} " +
+                        "effortVeto=${mc.effortVeto}",
+                )
+            }
+            harmoniaDecision?.let { decision ->
+                consoleLog.add(decision.compactSummary)
+                if (!decision.decisionBasis.actionCoherentWithTrunk) {
+                    consoleLog.add(
+                        "HARMONIA_BRANCH_MISMATCH action=${decision.action.name} " +
+                            "trunk=${decision.decisionBasis.trunkState.name} " +
+                            "reason=${decision.decisionBasis.mismatchReason} " +
+                            "primary=${decision.decisionBasis.primaryReason}",
+                    )
+                }
+            }
         }
         val loopCache = PatientStateLoopCache(
             phaseOutput = lastPhysiologicalPhaseOutput,
@@ -3684,11 +3709,13 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         }
         val rawMinPred = minPredictedAcrossCurves(rT.predBGs)
         val hypoIgnored = htr.hypoMinPredIgnored
-        val minPredForStacking = if (hypoIgnored && rawMinPred != null) {
+        // Dose snapshot / Authority terminals (published pre_rbt or pre_v3_rbt before this resolve).
+        val previewMinPred = authoritativeMinPredBg(rT, rawMinPred)
+        val minPredForStacking = if (hypoIgnored && previewMinPred != null) {
             val dev = bg - targetBg
-            max(rawMinPred, bg - HyperTrajectoryHypoCredibility.hypoCredibilityDropMgdl(dev))
+            max(previewMinPred, bg - HyperTrajectoryHypoCredibility.hypoCredibilityDropMgdl(dev))
         } else {
-            rawMinPred
+            previewMinPred
         }
         val endogenousCounterRegulatory =
             lastPhysiologicalPhaseOutput?.phase == PhysiologicalPhase.ENDOGENOUS_COUNTER_REGULATORY
@@ -3699,7 +3726,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             targetBg = targetBg.toDouble(),
             iob = iob.toDouble(),
             maxIob = maxIob,
-            eventualBg = eventualBG.takeIf { it.isFinite() },
+            eventualBg = authoritativeEventualBg(eventualBG).takeIf { it.isFinite() },
             minPredBg = minPredForStacking,
             trajectoryEnergy = rT.trajectoryEnergy,
             isExplicitUserAction = false,
@@ -4466,6 +4493,28 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                 )
             }
             val cbfShieldDeltaU = adCommand?.scheduledMicroBolus?.takeIf { !v3CommandSafe && it > 0.01 }
+            // V3 refreshed meal/physio after the tick-level pre_rbt publish — rebuild MealCertainty
+            // and re-publish gated terminals so RBT stacking + deliver see post-refresh evidence.
+            refreshPatientStateRuntime(
+                nowMs = dateUtil.now(),
+                healthSnapshot = snapshot,
+                sourceSensor = ctx.glucoseStatus.sourceSensor,
+                refreshSource = PatientRefreshSource.PHYSIO_SIGNAL,
+            )
+            val preV3Eventual =
+                this.eventualBG.takeIf { it.isFinite() && it > 1.0 }
+                    ?: rT.eventualBG?.takeIf { it.isFinite() && it > 1.0 }
+                    ?: bg
+            val preV3MinPred = minPredictedAcrossCurves(rT.predBGs) ?: preV3Eventual
+            publishDoseTerminalAuthorityAndSnapshot(
+                rT = rT,
+                profile = profile,
+                mealData = ctx.mealData,
+                pkpdEventualMgdl = preV3Eventual,
+                pkpdPredTerminalMgdl = preV3MinPred,
+                targetBgMgdl = targetBg.toDouble(),
+                stageTag = "pre_v3_rbt",
+            )
             val rbtCommit = resolveAndWireRbtLiveTick(
                 ctx = ctx,
                 profile = profile,
@@ -5212,45 +5261,20 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         }
         val naiveEventualBg = naiveEbgResolution.naiveEventualBgMgdl
         val legacyEventual = naiveEventualBg + deviation
-        val decisionPrediction = DecisionPredictionAuthorityResolver.resolve(
-            bgMgdl = bg,
-            pkpdEventualMgdl = pkpdPredictions.eventual,
-            scenarioProjection = lastScenarioProjection,
-            mealAbsorptionOutput = lastMealAbsorptionOutput,
-            hypothesisState = lastUamHypothesisState,
-            latentState = lastPhysioLatentState,
-            causalStatePosterior = lastPatientState?.causalPosterior,
-            trajectoryAnalysis = trajectoryGuard.getLastAnalysis(),
-            physioPolicy = lastPhysiologicalPhaseOutput?.policy,
-            uamConfidence = AimiUamHandler.confidenceOrZero(),
-            postHypoDelivery = lastPostHypoDeliveryAuthority,
-        )
-        lastDecisionPredictionAuthority = decisionPrediction
-        consoleLog.add(DecisionPredictionAuthorityResolver.formatLogLine(decisionPrediction))
-
-        val authorityEnabled = predictionAuthorityEnabled()
-        val authorityShadow = preferences.get(BooleanKey.OApsAIMIPredictionAuthorityShadow)
+        // Late PKPD refine of the dose snapshot (early publish already ran before RBT/V3).
         val pkpdPredTerminalBefore = minPredictedAcrossCurves(rT.predBGs) ?: pkpdPredictions.eventual
-        val applyResult = PredictionAuthorityApplier.apply(
+        publishDoseTerminalAuthorityAndSnapshot(
             rT = rT,
-            authority = decisionPrediction,
-            scenarioProjection = lastScenarioProjection,
-            enabled = authorityEnabled,
-            shadowOnly = authorityShadow && !authorityEnabled,
-            pkpdEventualBeforeApply = pkpdPredictions.eventual,
-            pkpdPredTerminalBeforeApply = pkpdPredTerminalBefore,
+            profile = profile,
+            mealData = ctx.mealData,
+            pkpdEventualMgdl = pkpdPredictions.eventual,
+            pkpdPredTerminalMgdl = pkpdPredTerminalBefore,
+            targetBgMgdl = targetBg.toDouble(),
+            stageTag = "late_pkpd",
         )
-        lastPredictionAuthorityApplyResult = applyResult
-        PredictionAuthorityApplier.formatShadowLogLine(applyResult)?.let { line -> consoleLog.add(line) }
-        if (applyResult.applied) {
-            this.eventualBG = applyResult.eventualMgdl
-            this.predictedBg = applyResult.eventualMgdl.toFloat()
-            rT.eventualBG = applyResult.eventualMgdl
-            consoleLog.add(
-                "PRED_AUTHORITY_C1: eventual=${applyResult.eventualMgdl.toInt()} " +
-                    "predT=${applyResult.predTerminalMgdl.toInt()} " +
-                    "curves=${applyResult.predBGsRemapped} src=${applyResult.source}",
-            )
+        refineRbtMergeAfterDoseSnapshot(rT)
+        val decisionPrediction = checkNotNull(lastDecisionPredictionAuthority) {
+            "Dose terminal snapshot publish must set lastDecisionPredictionAuthority"
         }
 
         val projectionInput = correctionAggressionProjectionInput(
@@ -5258,11 +5282,12 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             cobValue = cob.toDouble(),
             combinedDeltaValue = glucoseStatus.combinedDelta.toFloat(),
         )
+        val snapForEnvelope = lastDoseTerminalSnapshot
         cachedRiskEnvelopeDecision = AimiRiskEnvelopeBuilder.buildDecision(
             bg = bg,
             delta = delta,
-            predTerminal = pkpdPredictions.eventual,
-            eventualTerminal = pkpdPredictions.eventual,
+            predTerminal = snapForEnvelope?.minPredMgdl ?: pkpdPredictions.eventual,
+            eventualTerminal = snapForEnvelope?.eventualMgdl ?: pkpdPredictions.eventual,
             pathBounds = pkpdPredictions.pathBounds,
             aapsIobUnits = iobData.iob,
             iobConsensus = iobConsensus,
@@ -5274,6 +5299,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             targetBgMgdl = projectionInput.targetBg,
             minBgLookback75m = projectionInput.minBgLookback75m,
             hasIndependentMealEvidence = CorrectionAggressionGate.hasIndependentMealEvidence(projectionInput),
+            mealCertainty = lastMealCertainty,
         )
         consoleLog.add(AimiRiskEnvelopeBuilder.formatLogLine(cachedRiskEnvelopeDecision!!))
         reconcileSafetyRiskWithDecisionEnvelope()
@@ -7630,7 +7656,9 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             correctionFragilityScore = lastPatientState?.eventMemory?.correctionFragilityScore ?: 0.0,
             postHyperExhaustionScore = lastPatientState?.eventMemory?.postHyperExhaustionScore ?: 0.0,
             minBgLookback75m = minBgInLastMinutes(AUTODRIVE_POST_HYPO_MIN_BG_LOOKBACK_MINUTES),
+            mealCertainty = lastMealCertainty,
         )
+        lastHarmonizerOutcome = harmonizerOutcome
         when (harmonizerOutcome?.posture) {
             HarmoniaHarmonizer.Posture.BLOCK -> {
                 finalProposedRate = b.profile.current_basal.coerceAtLeast(0.0)
@@ -7868,6 +7896,9 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                     eventualBg = b.rT.eventualBG,
                     inPrebolusWindow = inPrebolusWindow,
                     effectiveProfile = auditorEffectiveProfile,
+                    mealCertainty = lastMealCertainty,
+                    harmoniaProduction = lastHarmoniaProductionDecision,
+                    harmonizerOutcome = lastHarmonizerOutcome,
                     onSyncDisposition = { disposition ->
                         recordAuditorSyncDisposition(
                             disposition = disposition,
@@ -8073,6 +8104,8 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                 })
             }
         }
+        decisionCtx.adjustments.meal_certainty = lastMealCertainty?.toJsonObject()
+        decisionCtx.adjustments.dose_terminal_snapshot = lastDoseTerminalSnapshot?.toJsonObject()
         decisionCtx.adjustments.harmonia_simulation = lastHarmoniaDecision?.toJsonObject()
         decisionCtx.adjustments.harmonia_production = lastHarmoniaProductionDecision?.toJsonObject()
         decisionCtx.adjustments.t3c_runtime_ownership = lastT3cRuntimeOwnership
@@ -8942,6 +8975,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             minBgLookback75m = projectionInput.minBgLookback75m,
             hasIndependentMealEvidence = CorrectionAggressionGate.hasIndependentMealEvidence(projectionInput),
             cobG = cob.toDouble(),
+            mealCertainty = lastMealCertainty,
         )
         lastSafetyTerminalsForRbt = safetyTerminals
         val lgsTh = HypoThresholdMath.computeHypoThreshold(
@@ -9155,27 +9189,301 @@ class DetermineBasalaimiSMB2 @Inject constructor(
     private var lastDecisionPredictionAuthority: DecisionPredictionAuthority? = null
     private var lastIntelligenceSnapshot: AimiIntelligenceSnapshot? = null
     private var lastPredictionAuthorityApplyResult: PredictionAuthorityApplyResult? = null
+    /** Cascade D4 / C1 — single dose terminal pair for the tick (post-Authority + thin Clamp). */
+    private var lastDoseTerminalSnapshot: DoseTerminalSnapshot? = null
 
     private fun predictionAuthorityEnabled(): Boolean =
         preferences.get(BooleanKey.OApsAIMIPredictionAuthorityEnabled)
 
-    private fun authoritativeEventualBg(fallback: Double = this.eventualBG): Double =
+    /**
+     * Dose-facing eventual: only [DoseTerminalSnapshot] / Authority / envelope — never an ungated
+     * scenario preview (that bypassed Clamp sport/post-hypo/pathMin gates).
+     */
+    private fun authoritativeEventualBg(fallback: Double = this.eventualBG): Double {
+        lastDoseTerminalSnapshot?.eventualMgdl?.takeIf { it.isFinite() }?.let { return it }
         if (predictionAuthorityEnabled()) {
-            lastDecisionPredictionAuthority?.eventualTerminalMgdl
-                ?: cachedRiskEnvelopeDecision?.eventualTerminalMgdl
-                ?: fallback
-        } else {
-            fallback
+            lastDecisionPredictionAuthority?.eventualTerminalMgdl?.takeIf { it.isFinite() }?.let { return it }
+            cachedRiskEnvelopeDecision?.eventualTerminalMgdl?.takeIf { it.isFinite() }?.let { return it }
         }
+        return fallback
+    }
 
-    private fun authoritativeMinPredBg(rT: RT, rawMinPred: Double?): Double? =
+    private fun authoritativeMinPredBg(rT: RT, rawMinPred: Double?): Double? {
+        lastDoseTerminalSnapshot?.minPredMgdl?.takeIf { it.isFinite() }?.let { return it }
         if (predictionAuthorityEnabled()) {
-            lastDecisionPredictionAuthority?.predTerminalMgdl
-                ?: cachedRiskEnvelopeDecision?.predTerminalMgdl
-                ?: rawMinPred
-        } else {
-            rawMinPred
+            lastDecisionPredictionAuthority?.predTerminalMgdl?.takeIf { it.isFinite() }?.let { return it }
+            cachedRiskEnvelopeDecision?.predTerminalMgdl?.takeIf { it.isFinite() }?.let { return it }
         }
+        return rawMinPred
+    }
+
+    /** Clamp digestion arm: tree / absorption / meal-priority only — not MealCertainty alone. */
+    private fun digestionOrMealActiveForDose(
+        mealPriorityContext: Boolean = false,
+    ): Boolean {
+        val mealAbsorptionActive = when (lastMealAbsorptionOutput?.phase) {
+            MealAbsorptionPhase.FIRST_WAVE,
+            MealAbsorptionPhase.SECOND_WAVE,
+            MealAbsorptionPhase.INTER_WAVE,
+            MealAbsorptionPhase.PEAK_CORRECTION,
+            -> true
+            else -> false
+        }
+        val treeDigestionOrMeal =
+            when (lastPhysiologicalTreeSnapshot?.trunk?.globalState) {
+                GlobalPhysiologicalState.DIGESTION_ACTIVE,
+                GlobalPhysiologicalState.MEAL_PROBABLE,
+                -> true
+                else -> false
+            }
+        return treeDigestionOrMeal || mealAbsorptionActive || mealPriorityContext
+    }
+
+    private fun buildDoseTerminalSnapshot(
+        authority: DecisionPredictionAuthority?,
+        applyResult: PredictionAuthorityApplyResult?,
+        authorityEnabled: Boolean,
+        fallbackEventualMgdl: Double,
+        fallbackMinPredMgdl: Double,
+        targetBgMgdl: Double,
+        mealPriorityContext: Boolean,
+    ): DoseTerminalSnapshot {
+        val scenarioBest = lastScenarioProjection?.scenarioBest
+        return DoseTerminalSnapshotBuilder.build(
+            authority = authority,
+            applyResult = applyResult,
+            authorityEnabled = authorityEnabled,
+            fallbackEventualMgdl = fallbackEventualMgdl,
+            fallbackMinPredMgdl = fallbackMinPredMgdl,
+            clampInput = ClampPkpdScenarioReconcile.Input(
+                bgMgdl = bg,
+                targetBgMgdl = targetBgMgdl,
+                deltaMgdl5m = delta.toDouble(),
+                pkpdEventualMgdl = fallbackEventualMgdl,
+                scenarioTerminalMgdl = scenarioBest?.terminalMgdl,
+                scenarioPathMinMgdl = scenarioBest?.pathMinMgdl,
+                scenarioPathMinHitFloor = scenarioBest?.pathMinHitFloor == true,
+                digestionOrMealActive = digestionOrMealActiveForDose(mealPriorityContext),
+                sportTime = sportTime,
+                postHypoDeliveryActive = lastPostHypoDeliveryAuthority.active,
+            ),
+        )
+    }
+
+    private data class TubeDoseBaseline(
+        val maxSmb: Double,
+        val maxSmbHb: Double,
+        val currentBasal: Double,
+        val maxDailyBasal: Double,
+    )
+
+    private var tubeDoseBaseline: TubeDoseBaseline? = null
+    /** True after Tube has been applied from a pre-delivery snapshot this tick. */
+    private var tubeAppliedFromDoseSnapshotThisTick: Boolean = false
+
+    /**
+     * Tube advise driven by [lastDoseTerminalSnapshot].
+     * - Applied on pre-delivery publishes (`pre_rbt`, `pre_v3_rbt`) from a frozen baseline.
+     * - Skipped on `late_pkpd` so mid-tick SMB/basal caps are not wiped after V3/RBT delivery.
+     */
+    private fun applyTubeAdvisorFromDoseSnapshot(
+        profile: OapsProfileAimi,
+        mealData: MealData,
+        targetBgMgdl: Double,
+        stageTag: String,
+    ) {
+        val snap = lastDoseTerminalSnapshot ?: return
+        if (!preferences.get(BooleanKey.OApsAIMIStraightLineTubeAdvisorEnabled)) return
+        if (stageTag == "late_pkpd") {
+            consoleLog.add("📐 TUBE-LINE-D4[$stageTag]: skip (caps frozen after pre-delivery publish)")
+            return
+        }
+        val dia = tickEffectiveDiaHours?.takeIf { it.isFinite() && it > 0.0 } ?: return
+        val isf = variableSensitivity.toDouble().takeIf { it.isFinite() && it > 1.0 } ?: return
+        if (tubeDoseBaseline == null) {
+            tubeDoseBaseline = TubeDoseBaseline(
+                maxSmb = this.maxSMB,
+                maxSmbHb = this.maxSMBHB,
+                currentBasal = profile.current_basal,
+                maxDailyBasal = profile.max_daily_basal,
+            )
+        }
+        val baseline = tubeDoseBaseline!!
+        this.maxSMB = baseline.maxSmb
+        this.maxSMBHB = baseline.maxSmbHb
+        profile.current_basal = baseline.currentBasal
+        profile.max_daily_basal = baseline.maxDailyBasal
+        lastTubeAdvisorSmbCapScale = null
+        try {
+            val tubeOut = straightLineTubeAdvisor.advise(
+                StraightLineTubeAdvisor.Input(
+                    bgMgdl = bg,
+                    deltaMgdlPer5m = delta.toDouble(),
+                    iobU = iob.toDouble(),
+                    cobG = mealData.mealCOB.toDouble(),
+                    isfMgdlPerU = isf,
+                    diaHours = dia,
+                    targetMgdl = targetBgMgdl,
+                    maxSmbU = this.maxSMB,
+                    minPredictedBg = snap.minPredMgdl,
+                    eventualBgMgdl = snap.eventualMgdl,
+                ),
+            )
+            if (!tubeOut.feasible) {
+                this.maxSMB = 0.05
+                this.maxSMBHB = 0.05
+                lastTubeAdvisorSmbCapScale = 0.0
+                if (tubeOut.basalCapScale < 0.999) {
+                    profile.current_basal = baseline.currentBasal * tubeOut.basalCapScale
+                    profile.max_daily_basal = baseline.maxDailyBasal * tubeOut.basalCapScale
+                }
+                consoleLog.add("📐 TUBE-LINE-D4[$stageTag]: infeasible ${tubeOut.reason}")
+            } else {
+                if (tubeOut.smbCapScale < 0.999) {
+                    lastTubeAdvisorSmbCapScale = tubeOut.smbCapScale
+                    this.maxSMB = (baseline.maxSmb * tubeOut.smbCapScale).coerceAtLeast(0.05)
+                    this.maxSMBHB = (baseline.maxSmbHb * tubeOut.smbCapScale).coerceAtLeast(0.05)
+                }
+                if (tubeOut.basalCapScale < 0.999) {
+                    profile.current_basal = baseline.currentBasal * tubeOut.basalCapScale
+                    profile.max_daily_basal = baseline.maxDailyBasal * tubeOut.basalCapScale
+                }
+                consoleLog.add(
+                    "📐 TUBE-LINE-D4[$stageTag]: maxSMB=${"%.2f".format(this.maxSMB)} " +
+                        "basal×${"%.3f".format(tubeOut.basalCapScale)} | ${tubeOut.reason}",
+                )
+            }
+            tubeAppliedFromDoseSnapshotThisTick = true
+        } catch (e: Exception) {
+            consoleError.add("📐 TUBE-LINE-D4[$stageTag]: ${e.message}")
+        }
+    }
+
+    /**
+     * Resolve Authority + Applicator + DoseTerminalSnapshot (+ optional Tube).
+     * Must run **before** RBT/V3 so stacking/HTR see gated terminals, then again after full PKPD.
+     */
+    private fun publishDoseTerminalAuthorityAndSnapshot(
+        rT: RT,
+        profile: OapsProfileAimi,
+        mealData: MealData,
+        pkpdEventualMgdl: Double,
+        pkpdPredTerminalMgdl: Double,
+        targetBgMgdl: Double,
+        stageTag: String,
+    ) {
+        val authorityEnabled = predictionAuthorityEnabled()
+        val authorityShadow = preferences.get(BooleanKey.OApsAIMIPredictionAuthorityShadow)
+        val decisionPrediction = DecisionPredictionAuthorityResolver.resolve(
+            bgMgdl = bg,
+            pkpdEventualMgdl = pkpdEventualMgdl,
+            scenarioProjection = lastScenarioProjection,
+            mealAbsorptionOutput = lastMealAbsorptionOutput,
+            hypothesisState = lastUamHypothesisState,
+            latentState = lastPhysioLatentState,
+            causalStatePosterior = lastPatientState?.causalPosterior,
+            trajectoryAnalysis = trajectoryGuard.getLastAnalysis(),
+            physioPolicy = lastPhysiologicalPhaseOutput?.policy,
+            uamConfidence = AimiUamHandler.confidenceOrZero(),
+            postHypoDelivery = lastPostHypoDeliveryAuthority,
+            mealCertainty = lastMealCertainty,
+            trunkGlobalState = lastPhysiologicalTreeSnapshot?.trunk?.globalState,
+        )
+        lastDecisionPredictionAuthority = decisionPrediction
+        consoleLog.add(
+            DecisionPredictionAuthorityResolver.formatLogLine(decisionPrediction) + " [$stageTag]",
+        )
+        val applyResult = PredictionAuthorityApplier.apply(
+            rT = rT,
+            authority = decisionPrediction,
+            scenarioProjection = lastScenarioProjection,
+            enabled = authorityEnabled,
+            shadowOnly = authorityShadow && !authorityEnabled,
+            pkpdEventualBeforeApply = pkpdEventualMgdl,
+            pkpdPredTerminalBeforeApply = pkpdPredTerminalMgdl,
+        )
+        lastPredictionAuthorityApplyResult = applyResult
+        PredictionAuthorityApplier.formatShadowLogLine(applyResult)?.let { line -> consoleLog.add(line) }
+        if (applyResult.applied) {
+            this.eventualBG = applyResult.eventualMgdl
+            this.predictedBg = applyResult.eventualMgdl.toFloat()
+            rT.eventualBG = applyResult.eventualMgdl
+            consoleLog.add(
+                "PRED_AUTHORITY_C1[$stageTag]: eventual=${applyResult.eventualMgdl.toInt()} " +
+                    "predT=${applyResult.predTerminalMgdl.toInt()} " +
+                    "curves=${applyResult.predBGsRemapped} src=${applyResult.source}",
+            )
+        }
+        val mealPriorityContext = lastMealAbsorptionOutput?.mealDeliveryPriority == true
+        val doseSnapshot = buildDoseTerminalSnapshot(
+            authority = decisionPrediction,
+            applyResult = applyResult,
+            authorityEnabled = authorityEnabled,
+            fallbackEventualMgdl = pkpdEventualMgdl,
+            fallbackMinPredMgdl = pkpdPredTerminalMgdl,
+            targetBgMgdl = targetBgMgdl,
+            mealPriorityContext = mealPriorityContext,
+        )
+        lastDoseTerminalSnapshot = doseSnapshot
+        this.eventualBG = doseSnapshot.eventualMgdl
+        this.predictedBg = doseSnapshot.eventualMgdl.toFloat()
+        rT.eventualBG = doseSnapshot.eventualMgdl
+        consoleLog.add(DoseTerminalSnapshot.formatLogLine(doseSnapshot) + " [$stageTag]")
+        if (doseSnapshot.clampReconciled) {
+            consoleLog.add(
+                "🩹 CLAMP_RECONCILE (in snapshot)[$stageTag] reason=${doseSnapshot.clampReason} " +
+                    "ev=${doseSnapshot.eventualMgdl.toInt()}",
+            )
+        }
+        applyTubeAdvisorFromDoseSnapshot(profile, mealData, targetBgMgdl, stageTag)
+    }
+
+    /**
+     * Re-merge RBT HTR after late PKPD snapshot for finalize/SafetyNet consumers.
+     * Does not re-deliver V3 SMB (pump path already used pre_v3_rbt / pre_rbt terminals).
+     */
+    private fun refineRbtMergeAfterDoseSnapshot(rT: RT) {
+        if (!rbtResolvedThisTick) return
+        val prev = lastRbtLiveCommitResult ?: return
+        val gate = lastRecursiveAuthorityGateDecision ?: return
+        val snap = lastDoseTerminalSnapshot ?: return
+        val endogenousCounterRegulatory =
+            lastPhysiologicalPhaseOutput?.phase == PhysiologicalPhase.ENDOGENOUS_COUNTER_REGULATORY
+        val stackingEval = InsulinStackingStance.evaluate(
+            bg = bg,
+            delta = delta.toDouble(),
+            shortAvgDelta = shortAvgDelta.toDouble(),
+            targetBg = targetBg.toDouble(),
+            iob = iob.toDouble(),
+            maxIob = maxIob,
+            eventualBg = snap.eventualMgdl.takeIf { it.isFinite() },
+            minPredBg = minPredictedBgForRbtWiring(snap.minPredMgdl),
+            trajectoryEnergy = rT.trajectoryEnergy,
+            isExplicitUserAction = false,
+            enabled = preferences.get(BooleanKey.OApsAIMIIobSurveillanceGuard),
+            mealPriorityContext =
+                lastMealAbsorptionOutput?.mealDeliveryPriority == true &&
+                    lastUamHypothesisState?.suppressMealInterpretation != true,
+            endogenousCounterRegulatory = endogenousCounterRegulatory,
+            mealAbsorptionPhase = lastMealAbsorptionOutput?.phase ?: MealAbsorptionPhase.NONE,
+        )
+        lastInsulinStackingEvaluation = stackingEval
+        val refreshed = mergeRbtHyperTrajectoryRelease(
+            htr = prev.baselineHtr,
+            rbtSnapshot = lastRecursiveBeliefSnapshot,
+            authorityGate = gate,
+            rT = rT,
+        )
+        if (abs(refreshed.effectiveHtr.v3SmbAfterU - prev.effectiveHtr.v3SmbAfterU) > 0.02) {
+            consoleLog.add(
+                "RBT_REFINE_AFTER_DOSE_SNAPSHOT: " +
+                    "${"%.2f".format(prev.effectiveHtr.v3SmbAfterU)}→" +
+                    "${"%.2f".format(refreshed.effectiveHtr.v3SmbAfterU)}U " +
+                    "ev=${snap.eventualMgdl.toInt()} minPred=${snap.minPredMgdl.toInt()}",
+            )
+        }
+        lastRbtLiveCommitResult = refreshed
+    }
     private var lastAdvancedPredictionCurves: AdvancedPredictionCurves? = null
     private var lastSafetyTerminalsForRbt: SafetyPredictionTerminals? = null
     private var lastHyperTrajectoryRelease: HyperTrajectoryReleaseResult? = null
@@ -9352,6 +9660,8 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             SmbRefinementFeatureSchema.modeFeatureValues(lastPatientModeDecision) +
             SmbRefinementFeatureSchema.causalFeatureValues(lastPatientState?.causalPosterior)
     private var lastHarmoniaDecision: HarmoniaDecision? = null
+    private var lastMealCertainty: MealCertainty? = null
+    private var lastHarmonizerOutcome: HarmoniaHarmonizer.Outcome? = null
     private var lastHarmoniaProductionDecision: HarmoniaProductionDecision? = null
     private var lastPatientSourceSensor: SourceSensor? = null
     /** Latest IOB surveillance snapshot for JSONL (updated each [finalizeAndCapSMB]). */
@@ -9376,45 +9686,8 @@ class DetermineBasalaimiSMB2 @Inject constructor(
 
     // 🛡️ PERSISTENT PREBOLUS LOCKOUT (MTR Safety Patch)
     // Survives instance re-creations and app restarts by combining Memory + SharedPreferences.
-    /**
-     * Réconciliation gatée du plancher pkpd au gate SMB. Le clamp zone-2 de [app.aaps.plugins.aps.openAPSAIMI.safety.SafetyNet]
-     * rabat la limite SMB dès que l'eventual pkpd repasse sous zone-1, ce qui fige la délivrance même quand le
-     * scénario borné projette une trajectoire sûre. On relâche l'eventual (vers le terminal scénario, borné à la
-     * rampe zone-2) UNIQUEMENT si toutes les conditions de sûreté sont réunies ; sinon on rend l'eventual pkpd inchangé.
-     * Seuils validés sur données terrain : sur les faux planchers ainsi relâchés, min BG réalisé ≥ 70, 0 hypo.
-     * @return l'eventual (mg/dL) à passer au gate SMB.
-     */
-    private fun reconcileSmbEventualWithScenario(pkpdEventualMgdl: Double, targetBgMgdl: Double): Double {
-        val scenarioBest = lastScenarioProjection?.scenarioBest ?: return pkpdEventualMgdl
-        val zone1Upper = maxOf(SAFETYNET_ZONE1_FLOOR_MGDL, targetBgMgdl + SAFETYNET_ZONE1_OFFSET_MGDL)
-        val zone2Upper = maxOf(SAFETYNET_ZONE2_FLOOR_MGDL, targetBgMgdl + SAFETYNET_ZONE2_OFFSET_MGDL)
-        val pkpdWouldClamp = bg >= zone1Upper && bg < zone2Upper && pkpdEventualMgdl < zone1Upper
-        val scenarioSafe = scenarioBest.pathMinMgdl >= CLAMP_RECONCILE_SCN_PATHMIN_MGDL && !scenarioBest.pathMinHitFloor
-        val divergenceReal = scenarioBest.terminalMgdl - pkpdEventualMgdl >= CLAMP_RECONCILE_MIN_DIVERGENCE_MGDL
-        val notFalling = delta.toDouble() > CLAMP_RECONCILE_MAX_NEG_DELTA_MGDL
-        val notProtected = !sportTime && !lastPostHypoDeliveryAuthority.active
-        if (!(pkpdWouldClamp && scenarioSafe && divergenceReal && notFalling && notProtected)) return pkpdEventualMgdl
-        val reconciled = minOf(scenarioBest.terminalMgdl, zone2Upper - 1.0)
-        consoleLog.add(
-            "🩹 CLAMP_RECONCILE pkpdEv=${pkpdEventualMgdl.toInt()}→${reconciled.toInt()} " +
-                "(scnMin=${scenarioBest.pathMinMgdl.toInt()} scnBest=${scenarioBest.terminalMgdl.toInt()} Δ=${(scenarioBest.terminalMgdl - pkpdEventualMgdl).toInt()})"
-        )
-        return reconciled
-    }
-
-    companion object {
+        companion object {
         private var lastSmbTimestampMem: Long = 0L
-
-        // 🩹 Réconciliation clamp-pkpd ↔ scénario au gate SMB (voir [reconcileSmbEventualWithScenario]).
-        // Seuils validés sur données terrain (docs/AIMI_PREDICTION_DIVERGENCE.md) : faux planchers → min BG ≥ 70, 0 hypo.
-        private const val CLAMP_RECONCILE_SCN_PATHMIN_MGDL = 80.0    // le scénario doit rester ≥ ce plancher sur toute la trajectoire
-        private const val CLAMP_RECONCILE_MIN_DIVERGENCE_MGDL = 25.0 // écart mini terminal-scénario − eventual-pkpd
-        private const val CLAMP_RECONCILE_MAX_NEG_DELTA_MGDL = -3.0  // pas de relâche si le BG chute (delta ≤ ce seuil)
-        // Miroir des seuils de zone de SafetyNet — garder alignés sur SafetyNet.ZONE*_FLOOR/OFFSET.
-        private const val SAFETYNET_ZONE1_FLOOR_MGDL = 115.0
-        private const val SAFETYNET_ZONE1_OFFSET_MGDL = 20.0
-        private const val SAFETYNET_ZONE2_FLOOR_MGDL = 160.0
-        private const val SAFETYNET_ZONE2_OFFSET_MGDL = 70.0
 
         // 🩸 Limiteur de pente MONTANTE de la basale (anti-whiplash). Voir [slewLimitBasalUp].
         private const val BASAL_SLEW_UP_ABS_MIN_UPH = 1.5    // hausse mini autorisée par tick (permet de repartir de 0)
@@ -11305,11 +11578,15 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                     "floor=${"%.2f".format(hyperReleaseFloorU)}U IOB=${"%.2f".format(this.iob)}/${"%.2f".format(this.maxIob)})",
             )
         }
-        val eventualForStacking = when {
-            this.eventualBG > 1.0 -> this.eventualBG
-            rT.eventualBG != null && rT.eventualBG!! > 1.0 -> rT.eventualBG!!
-            else                                           -> null
-        }
+        // Cascade D4: SafetyNet + stacking drink the single dose terminal snapshot.
+        // Tube already applied from publishDoseTerminalAuthorityAndSnapshot (pre_rbt / late_pkpd).
+        val decisionEventualBgForSmb = authoritativeEventualBg(this.eventualBG)
+        val eventualForStacking = decisionEventualBgForSmb.takeIf { it.isFinite() && it > 1.0 }
+            ?: when {
+                this.eventualBG > 1.0 -> this.eventualBG
+                rT.eventualBG != null && rT.eventualBG!! > 1.0 -> rT.eventualBG!!
+                else -> null
+            }
         val rawMinPred = minPredictedAcrossCurves(rT.predBGs)
         val minPredForStacking = minPredictedBgForRbtWiring(authoritativeMinPredBg(rT, rawMinPred))
         val endogenousCounterRegulatory =
@@ -11343,21 +11620,22 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         // 🛡️ SAFETY NET: Dynamic SMB Limit (Zones & Trajectory)
         // Replaces simple "React Over 120" with a smart, amplified range logic.
         // Handles: Strict Lows (<120), Buffer/Transition (120-160), and Full Reactor (>160).
-        // 🧠 AI Auditor Confidence (if available)
-        // If the Auditor was queried recently, use its confidence
-        // Otherwise, pass null to apply the default boost
-        val auditorLastConfidence: Double? = try {
-            app.aaps.plugins.aps.openAPSAIMI.advisor.auditor.AuditorVerdictCache.get(300_000)?.verdict?.confidence
-        } catch (e: Exception) { null }
-        
-        val pkpdEventualForSmb =
-            cachedRiskEnvelopeDecision?.eventualTerminalMgdl?.takeIf { it.isFinite() }
-                ?: authoritativeEventualBg(this.eventualBG)
-        val decisionEventualBgForSmb = if (predictionAuthorityEnabled()) {
-            pkpdEventualForSmb
+        // 🧠 AI Auditor Confidence (si disponible)
+        // Si l'Auditor a été interrogé récemment, utiliser sa confiance
+        // Sinon, passer null pour appliquer le boost par défaut
+        val allowAuditorSoftLanding =
+            !HarmoniaHarmonizer.blocksAuditorSoftLanding(lastHarmonizerOutcome) &&
+                lastHarmoniaDecision?.action != HarmoniaAction.BLOCKED
+        val auditorLastConfidence: Double? = if (!allowAuditorSoftLanding) {
+            null
         } else {
-            reconcileSmbEventualWithScenario(pkpdEventualForSmb, targetBg.toDouble())
+            try {
+                app.aaps.plugins.aps.openAPSAIMI.advisor.auditor.AuditorVerdictCache.get(300_000)?.verdict?.confidence
+            } catch (e: Exception) {
+                null
+            }
         }
+
         val baseLimit = app.aaps.plugins.aps.openAPSAIMI.safety.SafetyNet.calculateSafeSmbLimit(
             bg = this.bg,
             targetBg = targetBg.toDouble(),
@@ -11368,7 +11646,8 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             maxSmbHigh = this.maxSMBHB,
             isExplicitUserAction = isExplicitUserAction,
             auditorConfidence = auditorLastConfidence,
-            mealPriorityContext = smbDeliveryPriorityContext
+            mealPriorityContext = smbDeliveryPriorityContext,
+            allowAuditorSoftLanding = allowAuditorSoftLanding,
         )
         chainBaseLimit = baseLimit
 
@@ -15057,6 +15336,23 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             shortAvgDeltaAdj = shortAvgDeltaAdj,
             slopeFromMinDeviation = ctx.mealData.slopeFromMinDeviation,
             reason = reason,
+        )
+
+        // Cascade D4: publish gated dose terminals BEFORE RBT/V3 so stacking/HTR/Tube see
+        // Authority+Clamp truth (not raw PKPD floor). Late PKPD stage re-publishes to refine.
+        val earlyPkpdEventual =
+            this.eventualBG.takeIf { it.isFinite() && it > 1.0 }
+                ?: rT.eventualBG?.takeIf { it.isFinite() && it > 1.0 }
+                ?: bg
+        val earlyPkpdMinPred = minPredictedAcrossCurves(rT.predBGs) ?: earlyPkpdEventual
+        publishDoseTerminalAuthorityAndSnapshot(
+            rT = rT,
+            profile = profile,
+            mealData = ctx.mealData,
+            pkpdEventualMgdl = earlyPkpdEventual,
+            pkpdPredTerminalMgdl = earlyPkpdMinPred,
+            targetBgMgdl = targetBg.toDouble(),
+            stageTag = "pre_rbt",
         )
 
         val tdd24hForRbt = resolveTdd24hForExport()
