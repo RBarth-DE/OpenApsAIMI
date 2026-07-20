@@ -170,6 +170,7 @@ import app.aaps.plugins.aps.openAPSAIMI.safety.InsulinLoadGovernor
 import app.aaps.plugins.aps.openAPSAIMI.safety.MealSafetyContext
 import app.aaps.plugins.aps.openAPSAIMI.safety.PredictiveHypoEvaluator
 import app.aaps.plugins.aps.openAPSAIMI.safety.PredictiveHypoInput
+import app.aaps.plugins.aps.openAPSAIMI.scenario.InsulinSlopePreserveHysteresis
 import app.aaps.plugins.aps.openAPSAIMI.scenario.ScenarioProjectionApplicator
 import app.aaps.plugins.aps.openAPSAIMI.scenario.ScenarioProjectionContext
 import app.aaps.plugins.aps.openAPSAIMI.scenario.ScenarioProjectionEngine
@@ -1639,6 +1640,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         lastAuditorAuditStartedAtMs = 0L
         lastPostHypoDeliveryAuthority = PostHypoDeliveryAuthority.INACTIVE
         EndogenousPhaseHysteresis.reset()
+        InsulinSlopePreserveHysteresis.reset()
         pendingTrajSpiralBasal = null
         val decisionCtx = AimiDecisionContext(
             event_id = "evt_${ctx.currentTime}".also { currentTickDecisionEventId = it },
