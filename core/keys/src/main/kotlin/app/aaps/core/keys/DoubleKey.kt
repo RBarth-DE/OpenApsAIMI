@@ -844,6 +844,7 @@ enum class DoubleKey(
     ApsBoostV5Aggression("boost_v5_aggression", 1.0, 0.7, 1.6, unitType = UnitType.DOUBLE, summaryResId = R.string.pref_summary_boost_v5_aggression),
     ApsBoostV5ConfirmedCapU("boost_v5_confirmed_cap_u", 2.5, 0.0, 7.5, unitType = UnitType.INSULIN, summaryResId = R.string.pref_summary_boost_v5_confirmed_cap),
     ApsBoostV5CommittedCapU("boost_v5_committed_cap_u", 0.5, 0.0, 2.5, unitType = UnitType.INSULIN, summaryResId = R.string.pref_summary_boost_v5_committed_cap),
+    ApsBoostV5PrimerCapU("boost_v5_primer_cap_u", 0.0, 0.0, 1.0, defaultedBySM = true,unitType = UnitType.DOUBLE,),
     ApsBoostV5HypoCaution("boost_v5_hypo_caution", 1.0, 1.0, 2.0, unitType = UnitType.DOUBLE, summaryResId = R.string.pref_summary_boost_v5_hypo_caution),
     ApsBoostV5Sensitivity("boost_v5_sensitivity", 1.0, 0.8, 1.2, unitType = UnitType.DOUBLE, summaryResId = R.string.pref_summary_boost_v5_sensitivity),
     ApsBoostV6PreMealTargetMgdl("boost_v6_pre_meal_target_mgdl", 72.0, 65.0, 90.0, unitType = UnitType.MGDL, summaryResId = R.string.pref_summary_boost_v6_pre_meal_target),

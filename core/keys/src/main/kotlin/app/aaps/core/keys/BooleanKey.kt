@@ -660,6 +660,8 @@ enum class BooleanKey(
     ApsBoostV5AggressiveEarlyConfirm("boost_v5_aggressive_early_confirm", false, summaryResId = R.string.pref_summary_boost_v5_early_confirm, defaultedBySM = true),
     ApsBoostV5ComposedFloorActive("boost_v5_composed_floor_active", false, summaryResId = R.string.pref_summary_boost_v5_floor_active, defaultedBySM = true),
     ApsBoostV5VelocityBudgetActive("boost_v5_velocity_budget_active", false, summaryResId = R.string.pref_summary_boost_v5_velocity_budget, defaultedBySM = true),
+    ApsBoostV5PrimerTbrFallback("boost_v5_primer_tbr_fallback", false, defaultedBySM = true),
+    ApsBoostV5PrimerBolusMode("boost_v5_primer_bolus_mode", false, defaultedBySM = true),
     ApsBoostV5AutoConfigDone("boost_v5_autoconfig_done", false, defaultedBySM = true),
     ApsBoostPostExerciseRecoveryEnabled("boost_post_exercise_recovery_enabled", false, summaryResId = R.string.pref_summary_boost_post_exercise_recovery, defaultedBySM = true),
     ApsBoostActivityShadowEnabled("boost_activity_shadow_enabled", true, summaryResId = R.string.pref_summary_boost_activity_shadow, defaultedBySM = true),

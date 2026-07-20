@@ -233,12 +233,14 @@ open class OpenAPSBoostV5Plugin @Inject constructor(
         BooleanKey.ApsBoostV5FastCarbConfirm,
         BooleanKey.ApsBoostV5AggressiveEarlyConfirm,
         BooleanKey.ApsBoostV5VelocityBudgetActive,
+        BooleanKey.ApsBoostV5PrimerTbrFallback,   // 2026-07-20 primer routing (NOT the user override, which is unmanaged)
     )
 
     private fun suggestionBoolean(s: BoostV5AutoConfig.V5Suggestion, key: BooleanKey): Boolean = when (key) {
         BooleanKey.ApsBoostV5FastCarbConfirm         -> s.fastCarbConfirm
         BooleanKey.ApsBoostV5AggressiveEarlyConfirm  -> s.aggressiveEarlyConfirm
         BooleanKey.ApsBoostV5VelocityBudgetActive    -> s.velocityBudgetFloor
+        BooleanKey.ApsBoostV5PrimerTbrFallback       -> s.primerTbrFallback
         else                                         -> key.defaultValue
     }
 
@@ -672,6 +674,11 @@ open class OpenAPSBoostV5Plugin @Inject constructor(
             sensitivityUserKnob = sensitivityKnob,
             confirmedCapU = preferences.getBoostDosing(DoubleKey.ApsBoostV5ConfirmedCapU),
             committedCapU = preferences.getBoostDosing(DoubleKey.ApsBoostV5CommittedCapU),
+            // 2026-07-20 V1-acceleration primer (LIVE). Mode = auto-config's temp-basal routing UNLESS
+            // the user override (ApsBoostV5PrimerBolusMode) forces the bolus. Only active while V6 doses.
+            primerCapU = if (activeMode) preferences.getBoostDosing(DoubleKey.ApsBoostV5PrimerCapU) else 0.0,
+            primerUseTempBasal = preferences.getBoostDosing(BooleanKey.ApsBoostV5PrimerTbrFallback) &&
+                !preferences.getBoostDosing(BooleanKey.ApsBoostV5PrimerBolusMode),
         )
     }
 

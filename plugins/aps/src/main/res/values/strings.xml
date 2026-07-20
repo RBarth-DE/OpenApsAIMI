@@ -17,7 +17,130 @@
     <string name="description_ama">State of the algorithm in 2017</string>
     <string name="description_smb">Most recent algorithm for advanced users</string>
     <string name="description_smb_dynamic_isf">Most recent algorithm for advanced users with dynamic/automatic ISF</string>
-    <string name="description_auto_isf">Experimental algorithm for advanced users with AutoISF extensions</string>
+    <string name="description_auto_isf">Most recent algorithm for advanced users with AutoISF extensions</string>
+    <!-- Boost Plugin -->
+    <string name="openaps_boost">Boost</string>
+    <string name="boost_shortname">BOOST</string>
+    <string name="description_boost">Boost based accelerated bolusing with dynamic ISF</string>
+    <string name="openaps_boost_v2">Boost V2</string>
+    <string name="boost_v2_shortname">BOOST2</string>
+    <string name="description_boost_v2">Boost V2 with Chris Wilson DynISF V2 formula (2300/ln·TDD²·0.02)</string>
+    <string name="openaps_boost_v3">Boost V3</string>
+    <string name="description_boost_v3">Boost V3 with DynISF V3 — uses 7-day TDD only (no short-term blend), no BG velocity dampening</string>
+    <string name="openaps_boost_v3ml">Boost v4.4</string>
+    <string name="boost_v3ml_shortname">v4.4</string>
+    <string name="description_boost_v3ml">Boost v4.4 — adds post-SMB risk gate + meal-likelihood model (observability) on top of v4.2 baseline</string>
+    <string name="openaps_boost_v3mlg3">Boost v4.4.2 (G3)</string>
+    <string name="boost_v3mlg3_shortname">v4.4.2</string>
+    <string name="description_boost_v3mlg3">Boost v4.4.2 (G3) — adds T4 velocity fallback (delta &gt; 8) for sustained climbs + fast-carb override eBG escape (eBG &gt; target+100), on top of v4.4.1 G3 release fixes</string>
+    <string name="openaps_boost_v5">Boost V6</string>
+    <string name="boost_v5_shortname">V6</string>
+    <string name="description_boost_v5">Boost V6 — Observe-Confirm-Commit dosing. Runs the Boost engine with V6\'s meal-aware SMB override. Select this as your APS to use V6; select plain \"Boost\" to run the base engine with the override in shadow.</string>
+    <string name="boost_v5_v6_settings">Boost V6 controls</string>
+    <string name="boost_v1_smb_sizing_title">Boost base-engine SMB sizing</string>
+    <string name="boost_v5_fast_carb_confirm_title">V6 fast-carb fast-path</string>
+    <string name="boost_v5_fast_carb_confirm_summary">When a rise is sharp AND accelerating AND the meal score corroborates (and you\'re awake, not exercising), V6 confirms the meal in one cycle instead of waiting — so fast carbs get covered ~15 min earlier. Replay-validated to avoid firing on sleep/compression. Toggle off to revert to the standard observe-confirm timing.</string>
+    <string name="boost_v5_aggressive_early_confirm_title">Aggressive early confirm</string>
+    <string name="boost_v5_aggressive_early_confirm_summary">Confirms a meal one cycle sooner still when its signal is confirm-strength on two consecutive cycles — the same shot, delivered a touch earlier. Because it occasionally commits to a rise that would have faded, it adds a little insulin, so it is set automatically only for users whose recent low-glucose exposure is well within target. Default OFF; auto-config turns it on where it is safe. Leave off (or turn off) to keep the standard confirm timing.</string>
+    <string name="boost_v5_composed_floor_title">Phase-3 composed brake floor</string>
+    <string name="boost_v5_composed_floor_summary">Enforces a 25% floor on the composed soft-brake multiplier during active meal sessions above 160 mg/dL with eventualBG above target — fixes the soft-brake stack compounding to sub-pump-step zero doses mid-meal (July 2026). All hard gates and dose caps still apply. Default OFF. ENFORCED hypo-gate: the floor engages ONLY while BOTH your trailing 14-day time below 63 mg/dL (3.5 mmol/L) is under 2.0% AND your time below 70 mg/dL is under 3.5% — it is insulin-adding, so it stays suppressed (even when this is ON) if either low-exposure figure is higher, and auto-re-engages when both drop back under their limits.</string>
+    <string name="boost_v5_velocity_budget_title">Velocity-budget floor (high tail)</string>
+    <string name="boost_v5_velocity_budget_summary">When you are above 180 mg/dL but oref calculates no extra insulin is needed (it predicts you will come down on the insulin already on board), this delivers a small hold — up to 0.5 U, capped at your committed-cap and your IOB headroom — to bring highs down a little faster. It deliberately doses a touch more than the base algorithm on that high tail, so it is for users who prefer a firmer response to sustained highs. Excludes decelerating highs, sleep, and the post-rescue window; all hard hypo gates still apply. Default OFF. Uses the SAME ENFORCED hypo-gate as the brake floor: engages ONLY while your trailing 14-day time below 63 mg/dL is under 2.0% AND time below 70 mg/dL is under 3.5%, and auto-suspends if either rises.</string>
+
+    <string name="boost_v5_aggression_title">Aggression</string>
+    <string name="boost_v5_aggression_summary">Scales the catch-up dose at meal CONFIRMED. 1.0 = calibrated default; lower = gentler commit dose, higher = more aggressive. Range 0.7-1.3.</string>
+    <string name="boost_v5_hypo_caution_title">Hypo Caution</string>
+    <string name="boost_v5_hypo_caution_summary">Multiplier on the ML hypo-risk damper floor. 1.0 = default; raise toward 2.0 for hypo unawareness or after a recent severe hypo. Range 1.0-2.0.</string>
+    <string name="boost_v5_sensitivity_title">Meal-detection Sensitivity</string>
+    <string name="boost_v5_sensitivity_summary">Scales the per-cycle insulin (aggression) budget. 1.0 = default; below 1.0 for sensitive users, above for resistant. Range 0.8–1.2.</string>
+    <string name="boost_dynisf_v2_title">Dynamic ISF V2 (TDD²-based)</string>
+    <string name="boost_use_tdd_v2_summary">Calculate ISF using Chris Wilson V2 formula: 2300/(ln(BG/insulinDivisor+1)·TDD²·0.02). TDD is required for V2 — falls back to profile ISF if data is incomplete</string>
+    <string name="boost_insulin_req_title">Boost Insulin Required %%</string>
+    <string name="boost_insulin_req_summary">Percentage of algorithm-determined insulin to deliver as SMB. Default: 50</string>
+    <string name="boost_bolus_title">Boost Bolus Cap</string>
+    <string name="boost_bolus_summary">Maximum individual bolus from Boost. Default: 2.5 U</string>
+    <string name="boost_percent_scale_title">Percent Scale Factor</string>
+    <string name="boost_percent_scale_summary">Maximum scale factor for percent-based Boost sizing between 108-180 mg/dL. Default: 200</string>
+    <string name="boost_scale_title">Boost Scale Value</string>
+    <string name="boost_scale_summary">Multiplier for calculated Boost insulin. Values &gt;=3 disable Boost. Default: 1.0</string>
+    <string name="boost_max_iob_title">Boost Max IOB</string>
+    <string name="boost_max_iob_summary">Maximum IOB for accelerated bolusing. Above this, regular oref1 used. Default: 1.0 U</string>
+    <string name="boost_cumulative_smb_cap_title">Cumulative SMB cap (60 min)</string>
+    <string name="boost_cumulative_smb_cap_summary">Total SMB insulin (U) that may be delivered in any rolling 60-minute window. Caps insulin stacking during sustained climbs. Set to 0 to disable. Factory default: 10 U (non-binding); auto-configuration tightens it to your own history (Confirmed cap + 2× Committed cap).</string>
+    <string name="boost_v5_active_dosing_title">V6 active dosing (ALPHA)</string>
+    <string name="boost_v5_active_dosing_summary">EXPERIMENTAL — when ON, the V6 observe-confirm-commit engine replaces the SMB dose on cycles SMBs are permitted. The base engine still controls basal and all safety gates. WARNING: this delivers insulin from an alpha algorithm; review closely and turn OFF to revert instantly.</string>
+    <string name="boost_v5_confirmed_cap_title">V6 CONFIRMED dose cap (U)</string>
+    <string name="boost_v5_confirmed_cap_summary">Hard upper limit on V6\'s CONFIRMED commit-shot SMB. Lower this to tighten V6 during alpha. Default: 2.5 U</string>
+    <string name="boost_v5_committed_cap_title">V6 COMMITTED dose cap (U)</string>
+    <string name="boost_v5_committed_cap_summary">Hard upper limit on V6\'s per-cycle COMMITTED holding SMB. Default: 0.5 U</string>
+    <string name="boost_v5_primer_cap_title">V6 acceleration primer (U)</string>
+    <string name="boost_v5_primer_cap_summary">Fizzle-safe early primer delivered on an accelerating rise during OBSERVING — reclaims V1\'s ~15-min-earlier meal response. Additive up to this base; any velocity-scaled excess is netted off the CONFIRMED commit-shot (move, not add). 0 = OFF. Auto-config derives a per-user value.</string>
+    <string name="boost_v5_primer_bolus_mode_title">Force bolus primer</string>
+    <string name="boost_v5_primer_bolus_mode_summary">Override: deliver the acceleration primer as a bolus even if auto-config routed you to the retractable temp-basal fallback (for hypo-prone users). Floors and the commit-shot net-off are unaffected. Default OFF (respect auto-config routing).</string>
+    <string name="boost_v6_pre_meal_target_title">V6 anticipatory pre-meal target</string>
+    <string name="boost_v6_pre_meal_target_summary">EXPERIMENTAL — learns your habitual meal times (from V6 meal commits) and applies a low target shortly before a learned meal so insulin is working when carbs land. Exercise and post-exercise recovery override it. When OFF it runs in SHADOW (logs \"V6 pre-meal WOULD apply\" without changing dosing) so you can verify the learned times first.</string>
+    <string name="boost_v6_pre_meal_target_mgdl_title">V6 pre-meal target (mg/dL)</string>
+    <string name="boost_v6_pre_meal_target_mgdl_summary">The low target applied during the pre-meal window. Lower = more pre-emptive insulin. Default: 72 mg/dL (4.0 mmol).</string>
+    <string name="boost_v6_pre_meal_lead_min_title">V6 pre-meal lead time (min)</string>
+    <string name="boost_v6_pre_meal_lead_min_summary">How many minutes before a learned meal the low target window OPENS. It closes 45 min before the meal. Default: 60 min.</string>
+    <string name="boost_start_title">Boost Start Time</string>
+    <string name="boost_start_summary">Start of the Boost active window (24h format HH:mm). Default: 07:00</string>
+    <string name="boost_end_title">Boost End Time</string>
+    <string name="boost_end_summary">End of the Boost active window (24h format HH:mm). Default: 07:00</string>
+    <string name="boost_enable_percent_scale_title">Enable Boost Percentage Scaling</string>
+    <string name="boost_enable_percent_scale_summary">Scales SMB when glucose 108-180 mg/dL with increasing delta</string>
+    <string name="boost_enable_circadian_isf_title">Enable Circadian ISF</string>
+    <string name="boost_enable_circadian_isf_summary">Applies time-of-day ISF adjustment based on circadian rhythm model</string>
+    <string name="boost_allow_high_tt_title">Allow Boost with High Temp Targets</string>
+    <string name="boost_allow_high_tt_summary">Allow Boost when high temp target is active (exercise)</string>
+    <string name="boost_stepcount_settings_title">Step Count Settings</string>
+    <string name="boost_stepcount_settings_summary">Configure step-based activity and inactivity detection</string>
+    <string name="boost_inactivity_steps_title">Inactivity Step Count</string>
+    <string name="boost_inactivity_steps_summary">Steps/hour below which user is inactive. Default: 500</string>
+    <string name="boost_inactivity_pct_title">Inactivity Profile Percent</string>
+    <string name="boost_inactivity_pct_summary">Profile percentage when inactive. Default: 130</string>
+    <string name="boost_sleep_in_hrs_title">Sleep-in Hours</string>
+    <string name="boost_sleep_in_hrs_summary">Hours after Boost start to allow sleep-in. Default: 2</string>
+    <string name="boost_sleep_in_steps_title">Sleep-in Steps</string>
+    <string name="boost_sleep_in_steps_summary">Steps/hour below which user is considered still sleeping. Default: 250</string>
+    <string name="boost_activity_steps_5_title">5-Minute Activity Steps</string>
+    <string name="boost_activity_steps_5_summary">Steps in 5 min above which user is active. Default: 420</string>
+    <string name="boost_activity_steps_15_title">15-Minute Activity Steps</string>
+    <string name="boost_activity_steps_15_summary">Steps in 15 min above which user is active. Default: 800</string>
+    <string name="boost_activity_steps_30_title">30-Minute Activity Steps</string>
+    <string name="boost_activity_steps_30_summary">Steps in 30 min above which user is active. Default: 1200</string>
+    <string name="boost_activity_steps_60_title">60-Minute Activity Steps</string>
+    <string name="boost_activity_steps_60_summary">Steps in 60 min above which user is active. Default: 1800</string>
+    <string name="boost_activity_pct_title">Activity Profile Percent</string>
+    <string name="boost_activity_pct_summary">Profile percentage when active. Default: 80</string>
+
+    <!-- Boost Dynamic ISF -->
+    <string name="boost_dynisf_title">Dynamic ISF (TDD-based)</string>
+    <string name="boost_use_tdd_title">Enable TDD-based ISF</string>
+    <string name="boost_use_tdd_summary">Calculate ISF from Total Daily Dose using the logarithmic formula. When disabled, uses profile ISF directly</string>
+    <string name="boost_adjust_sensitivity_title">Enable TDD sensitivity adjustment</string>
+    <string name="boost_adjust_sensitivity_summary">Adjust sensitivity ratio using 24h TDD / 7D TDD, similar to Autosens. Recommended to start with this off</string>
+    <string name="boost_autosens_when_no_tdd_title">Use traditional Autosens when TDD is off</string>
+    <string name="boost_autosens_when_no_tdd_summary">When TDD-DynISF is OFF, let traditional Autosens drive basal/target/CR sensitivity (instead of the DynISF curve ratio). Requires Autosens enabled. No effect when TDD is on — TDD owns sensitivity then. The Autosens-vs-curve comparison is logged either way; start OFF and validate before enabling.</string>
+    <string name="openapsama_autosens_max">Max autosens ratio</string>
+    <string name="openapsama_autosens_max_summary">Default value: 1.2\nThis is a multiplier cap for autosens (and deviation sensitivity) to set how high the sensitivity ratio can go, which determines how far ISF can be lowered during resistant periods.</string>
+    <string name="openapsama_autosens_min">Min autosens ratio</string>
+    <string name="openapsama_autosens_min_summary">Default value: 0.7\nThis is a floor for autosens (and deviation sensitivity) to set how low the sensitivity ratio can go, which determines how far ISF can be raised during sensitive periods.</string>
+    <string name="boost_dynisf_normal_target_title">DynISF normal target</string>
+    <string name="boost_dynisf_normal_target_summary">Reference BG target for ISF calculation. Default: 99</string>
+    <string name="boost_dynisf_velocity_title">BG impact on ISF (%)</string>
+    <string name="boost_dynisf_velocity_summary">Controls how much your current blood glucose level affects ISF. At 100%%, ISF is fully adjusted by BG (higher BG = stronger ISF). At 50%%, only half the BG-driven adjustment is applied. At 0%%, BG has no effect and ISF stays at the target-level value regardless of current BG. Default: 100</string>
+    <string name="boost_dynisf_bg_cap_title">DynISF BG cap</string>
+    <string name="boost_dynisf_bg_cap_summary">BG above this value is softened to reduce ISF aggressiveness at very high BG. Default: 210</string>
+    <string name="boost_dynisf_adjust_factor_title">TDD adjustment factor (%)</string>
+    <string name="boost_dynisf_adjust_factor_summary">Scale the calculated TDD by this percentage. Default: 100</string>
+
+    <!-- Boost Preference Screen Sections -->
+    <string name="boost_settings_default_aaps">Default AAPS Settings</string>
+    <string name="boost_settings_boost_controls">Boost Controls</string>
+    <string name="boost_settings_exercise">Exercise Settings</string>
+    <string name="boost_settings_safety">Safety Settings</string>
+    <string name="boost_settings_summary">AAPS defaults, Boost controls, Dynamic ISF, Exercise, Night Mode, Safety, Advanced</string>
 
     <string name="openapsma_last_run_label">Last run</string>
     <string name="openapsma_input_parameters_label">Input parameters</string>
@@ -1401,9 +1524,6 @@
     <string name="boost_decision_title">BOOST Decision</string>
 
     <!-- BOOST algorithm -->
-    <string name="openaps_boost">OpenAPS BOOST</string>
-    <string name="boost_shortname">BOOST</string>
-    <string name="description_boost">BOOST algorithm with DynISF, activity detection, and multi-tier SMB dosing</string>
     <string name="openaps_boost_v6">OpenAPS BOOST V6</string>
     <string name="boost_v6_shortname">BOOST V6</string>
     <string name="description_boost_v6">BOOST V6 Observe-Confirm-Commit dosing pipeline with meal hypothesis state machine</string>
