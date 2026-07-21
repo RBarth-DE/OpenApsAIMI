@@ -133,7 +133,6 @@ import app.aaps.plugins.aps.openAPSAIMI.physio.HealthContextSnapshot
 import app.aaps.plugins.aps.openAPSAIMI.physio.PhysioPhaseFusion
 import app.aaps.plugins.aps.openAPSAIMI.physio.PhysiologicalPhase
 import app.aaps.plugins.aps.openAPSAIMI.physio.EndogenousBasalBridgePolicy
-import app.aaps.plugins.aps.openAPSAIMI.physio.EndogenousPhaseHysteresis
 import app.aaps.plugins.aps.openAPSAIMI.physio.MealAbsorptionMemory
 import app.aaps.plugins.aps.openAPSAIMI.physio.MealAbsorptionPhase
 import app.aaps.plugins.aps.openAPSAIMI.physio.MealAbsorptionPhaseEngine
@@ -170,7 +169,6 @@ import app.aaps.plugins.aps.openAPSAIMI.safety.InsulinLoadGovernor
 import app.aaps.plugins.aps.openAPSAIMI.safety.MealSafetyContext
 import app.aaps.plugins.aps.openAPSAIMI.safety.PredictiveHypoEvaluator
 import app.aaps.plugins.aps.openAPSAIMI.safety.PredictiveHypoInput
-import app.aaps.plugins.aps.openAPSAIMI.scenario.InsulinSlopePreserveHysteresis
 import app.aaps.plugins.aps.openAPSAIMI.scenario.ScenarioProjectionApplicator
 import app.aaps.plugins.aps.openAPSAIMI.scenario.ScenarioProjectionContext
 import app.aaps.plugins.aps.openAPSAIMI.scenario.ScenarioProjectionEngine
@@ -223,6 +221,13 @@ import app.aaps.plugins.aps.openAPSAIMI.wcycle.WCycleInfo
 import app.aaps.plugins.aps.openAPSAIMI.wcycle.WCycleLearner
 import app.aaps.plugins.aps.openAPSAIMI.wcycle.WCyclePreferences
 import app.aaps.plugins.aps.openAPSAIMI.wcycle.CycleTrackingMode
+import app.aaps.plugins.aps.openAPSAIMI.wcycle.EndocrineAmplitudeGovernor
+import app.aaps.plugins.aps.openAPSAIMI.wcycle.EndocrineAmpAxis
+import app.aaps.plugins.aps.openAPSAIMI.wcycle.EndocrineApplicationMode
+import app.aaps.plugins.aps.openAPSAIMI.wcycle.EndocrineDosePathOwner
+import app.aaps.plugins.aps.openAPSAIMI.wcycle.WCycleBelief
+import app.aaps.plugins.aps.openAPSAIMI.advisor.tuning.AimiTuningContext
+import app.aaps.plugins.aps.openAPSAIMI.advisor.tuning.TuningContextEngine
 import app.aaps.plugins.aps.openAPSAIMI.pkpd.AdvancedPredictionEngine
 import app.aaps.plugins.aps.openAPSAIMI.pkpd.AdvancedPredictionCurves
 import app.aaps.plugins.aps.openAPSAIMI.pkpd.InsulinActionProfiler
@@ -313,6 +318,8 @@ internal data class AimiDecisionContext(
         var patient_mode: org.json.JSONObject? = null,
         /** AIMI Harmonia physiological tree, context-only in Lot 1 with no insulin authority. */
         var physiological_tree: org.json.JSONObject? = null,
+        /** Lot A endocrine belief (WCycle + hypo dampen) — context for tree/Harmonia/forensics. */
+        var endocrine_belief: org.json.JSONObject? = null,
         /** Cascade meal language (Tree→Harmonia→Auditor) — meal_certainty_v1. */
         var meal_certainty: org.json.JSONObject? = null,
         /** Cascade D4 / C1 — single dose-facing eventual + minPred for the tick. */
@@ -399,6 +406,9 @@ internal data class AimiDecisionContext(
         val floor_path_min_mgdl: Double,
         val best_terminal_mgdl: Double,
         val best_path_min_mgdl: Double,
+        /** Pre meal-absorption-lift path-min used by Clamp / DoseTerminal gates. */
+        val best_gate_path_min_mgdl: Double,
+        val best_gate_path_min_hit_floor: Boolean,
         val terminal_gap_mgdl: Double,
         val trajectory_type: String?,
         val contributors: List<String>,
@@ -582,6 +592,8 @@ internal data class AimiDecisionContext(
                 sJson.put("floor_path_min_mgdl", s.floor_path_min_mgdl)
                 sJson.put("best_terminal_mgdl", s.best_terminal_mgdl)
                 sJson.put("best_path_min_mgdl", s.best_path_min_mgdl)
+                sJson.put("best_gate_path_min_mgdl", s.best_gate_path_min_mgdl)
+                sJson.put("best_gate_path_min_hit_floor", s.best_gate_path_min_hit_floor)
                 sJson.put("terminal_gap_mgdl", s.terminal_gap_mgdl)
                 sJson.put("trajectory_type", s.trajectory_type ?: org.json.JSONObject.NULL)
                 sJson.put("contributors", org.json.JSONArray(s.contributors))
@@ -657,6 +669,9 @@ internal data class AimiDecisionContext(
             }
             adjustments.patient_mode?.let { patientMode ->
                 adj.put("patient_mode", patientMode)
+            }
+            adjustments.endocrine_belief?.let { endocrine ->
+                adj.put("endocrine_belief", endocrine)
             }
             adjustments.physiological_tree?.let { tree ->
                 adj.put("physiological_tree", tree)
@@ -1639,8 +1654,9 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         currentTickDecisionEventId = null
         lastAuditorAuditStartedAtMs = 0L
         lastPostHypoDeliveryAuthority = PostHypoDeliveryAuthority.INACTIVE
-        EndogenousPhaseHysteresis.reset()
-        InsulinSlopePreserveHysteresis.reset()
+        // Cross-tick hysteresis (InsulinSlope / Endogenous) must NOT reset here — that zeroed
+        // holdTicks every loop and made 15–20 min holds dead on arrival. reset() belongs in
+        // tests / plugin restart only.
         pendingTrajSpiralBasal = null
         val decisionCtx = AimiDecisionContext(
             event_id = "evt_${ctx.currentTime}".also { currentTickDecisionEventId = it },
@@ -1699,6 +1715,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         logLearnersHealth(rT)
         wCycleInfoForRun = null
         wCycleReasonLogged = false
+        lastWCycleBelief = null
         lastProfile = ctx.profile
         val flatBGsDetected = if (ctx.flatBGsDetected && abs(ctx.glucoseStatus.delta) > 3.0) {
             consoleLog.add("⚠️ FLAT OVERRIDE: Delta=${ctx.glucoseStatus.delta} > 3.0 -> Sensor ALIVE.")
@@ -3100,6 +3117,17 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         val patientModeDecision = PatientModeOrchestrator.evaluate(patientState)
         lastPatientModeDecision = patientModeDecision
         val physioLive = PhysioLiveDigest.from(enrichedSnap, nowMs)
+        ensureWCycleInfo()
+        val hypoGuardActive =
+            TuningContextEngine.parseContext(preferences.get(StringKey.AimiTuningContextSelection)) ==
+                AimiTuningContext.HYPO_GUARD
+        lastWCycleBelief = EndocrineAmplitudeGovernor.from(
+            info = wCycleInfoForRun,
+            prefs = wCyclePreferences,
+            hypoLoad = eventMemory.recentHypoLoad,
+            hypoGuardActive = hypoGuardActive,
+            hourOfDay = hourOfDay,
+        )
         // Cascade native (R1): tree always deploys on the dose path. AimiPhysioAssistantEnable only
         // gates vitals multipliers / assistant extras — never the spine Tree→Harmonia.
         val physiologicalTree = PhysiologicalTreeBuilder.build(
@@ -3117,6 +3145,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                 ?.takeIf { it.state == EffortActivityBelief.State.ACTIVE }?.confidence ?: 0.0,
             effortRecentConfidence = lastEffortAssessment
                 ?.takeIf { it.state == EffortActivityBelief.State.RECENT_EFFORT }?.confidence ?: 0.0,
+            wCycleBelief = lastWCycleBelief,
         )
         lastPhysiologicalTreeSnapshot = physiologicalTree
         val sensorTelemetry = HarmoniaSensorTelemetry.resolve(
@@ -3145,8 +3174,8 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                     softCorroboration = MealCertaintyBuilder.softCorroborationFromPhysio(physioLive),
                     pkpdEventualMgdl = pkpdForMeal,
                     scenarioTerminalMgdl = scenarioBestForMeal?.terminalMgdl,
-                    scenarioPathMinMgdl = scenarioBestForMeal?.pathMinMgdl,
-                    scenarioPathMinHitFloor = scenarioBestForMeal?.pathMinHitFloor == true,
+                    scenarioPathMinMgdl = scenarioBestForMeal?.gatePathMinMgdl,
+                    scenarioPathMinHitFloor = scenarioBestForMeal?.gatePathMinHitFloor == true,
                 ),
             )
         }
@@ -3175,6 +3204,11 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                 chaoticEpisodeLoad = lastRbtChaosEvaluation?.score ?: 0.0,
                 effectiveDiaHours = tickEffectiveDiaHours,
                 effectivePeakMinutes = tickEffectivePeakMinutes,
+                endocrineBasalAmp = lastWCycleBelief
+                    ?.takeIf {
+                        it.enabled && it.applicationMode == EndocrineApplicationMode.APPLIED
+                    }
+                    ?.effectiveBasalAmp,
             )
         }
         val harmoniaDecision = HarmoniaDecisionEngine.evaluate(
@@ -3741,7 +3775,6 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         )
         lastInsulinStackingEvaluation = stackingEval
         ensureWCycleInfo()
-        val wCycle = wCycleInfoForRun
         val extended = buildRbtExtendedSignals(
             rT = rT,
             profile = profile,
@@ -3868,8 +3901,11 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             tier1Hypo = bg < (profile.lgsThreshold ?: 70),
             bgHistoryMgdl = bgHistory,
             physioMultipliers = lastFusedPhysioMultipliers,
-            wCycleBasalMult = wCycle?.basalMultiplier?.takeIf { wCycle.applied },
-            wCycleSmbMult = wCycle?.smbMultiplier?.takeIf { wCycle.applied },
+            wCycleBasalMult = EndocrineAmplitudeGovernor.productionAmp(lastWCycleBelief, EndocrineAmpAxis.BASAL)
+                .takeIf { it != 1.0 },
+            wCycleSmbMult = EndocrineAmplitudeGovernor.productionAmp(lastWCycleBelief, EndocrineAmpAxis.SMB)
+                .takeIf { it != 1.0 },
+            wCycleHypoLoad = lastWCycleBelief?.hypoLoad,
             bgDerivShort = bgDerivShort,
             insulinActivityStageOrdinal = extended.insulinActivityStageOrdinal,
             autodriveV3GateOpen = autodriveGateOpen,
@@ -4776,10 +4812,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             consoleLog.add(context.getString(R.string.autosens_ratio_log, sensitivityRatioLocal))
         }
         basal = profile.current_basal / sensitivityRatioLocal
-        val wCycle = wCycleInfoForRun
-        if (wCycle != null && wCycle.applied) {
-            basal *= wCycle.basalMultiplier
-        }
+        // Endocrine amp applied once in setTempBasal / Harmonia production — not here (avoids double scale).
         basal = roundBasal(basal)
         if (basal != profileCurrentBasal) {
             consoleLog.add(context.getString(R.string.console_adjust_basal, profileCurrentBasal, basal))
@@ -6220,7 +6253,10 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         bgi: Double,
         sensitivityRatio: Double,
     ): AimiWCycleCsfCarbImpactStage {
-        val icMult = wCycleFacade.getIcMultiplier()
+        val icMult = EndocrineAmplitudeGovernor.productionAmp(
+            lastWCycleBelief,
+            EndocrineAmpAxis.IC,
+        )
         val adjustedCR = profile.carb_ratio / icMult
 
         val csf = sens / adjustedCR
@@ -8075,6 +8111,15 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         decisionCtx.adjustments.uam_hypotheses = lastUamHypothesisState?.toJsonObject()
         decisionCtx.adjustments.patient_state = lastPatientState?.toJsonObject()
         decisionCtx.adjustments.patient_mode = lastPatientModeDecision?.toJsonObject()
+        decisionCtx.adjustments.endocrine_belief = lastWCycleBelief?.toJsonObject()
+        // Refresh cycle phase after WCycle resolve (early physio_context often ran with null wCycle).
+        val existingPhysio = decisionCtx.adjustments.physiological_context
+        decisionCtx.adjustments.physiological_context = AimiDecisionContext.PhysioContext(
+            hormonal_cycle_phase = lastWCycleBelief?.takeIf { it.enabled }?.let {
+                "${it.phase.name}_Day${it.dayInCycle}"
+            } ?: wCycleInfoForRun?.let { "${it.phase.name}_Day${it.dayInCycle}" } ?: "Unknown",
+            physical_activity_mode = existingPhysio?.physical_activity_mode ?: "Resting",
+        )
 
         if (preferences.get(BooleanKey.OApsAIMIIntelligenceSnapshotExport)) {
             lastIntelligenceSnapshot = buildIntelligenceSnapshot(ctx, profile, pkpdRuntime)
@@ -8802,7 +8847,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         else if (isFreshAdvisor) advisorCarbs else 0.0
         val curves = AdvancedPredictionEngine.predictCurves(
             currentBG = bg,
-            iobArray = ctx.iobDataArray,
+            iobArray = ctx.pkpdIobDataArray ?: ctx.iobDataArray,
             finalSensitivity = sens,
             cobG = effectiveCob,
             profile = profile,
@@ -9077,6 +9122,8 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             floor_path_min_mgdl = clinicalFloor.pathMinMgdl,
             best_terminal_mgdl = scenarioBest.terminalMgdl,
             best_path_min_mgdl = scenarioBest.pathMinMgdl,
+            best_gate_path_min_mgdl = scenarioBest.gatePathMinMgdl,
+            best_gate_path_min_hit_floor = scenarioBest.gatePathMinHitFloor,
             terminal_gap_mgdl = scenarioBest.terminalMgdl - clinicalFloor.terminalMgdl,
             trajectory_type = trajectoryType,
             contributors = contributors.map { "${it.id.name}:${it.summary}" },
@@ -9263,8 +9310,8 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                 deltaMgdl5m = delta.toDouble(),
                 pkpdEventualMgdl = fallbackEventualMgdl,
                 scenarioTerminalMgdl = scenarioBest?.terminalMgdl,
-                scenarioPathMinMgdl = scenarioBest?.pathMinMgdl,
-                scenarioPathMinHitFloor = scenarioBest?.pathMinHitFloor == true,
+                scenarioPathMinMgdl = scenarioBest?.gatePathMinMgdl,
+                scenarioPathMinHitFloor = scenarioBest?.gatePathMinHitFloor == true,
                 digestionOrMealActive = digestionOrMealActiveForDose(mealPriorityContext),
                 sportTime = sportTime,
                 postHypoDeliveryActive = lastPostHypoDeliveryAuthority.active,
@@ -9528,6 +9575,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
     private var currentTIRLow: Double = 0.0
     private var lastProfile: OapsProfileAimi? = null
     private var wCycleInfoForRun: WCycleInfo? = null
+    private var lastWCycleBelief: WCycleBelief? = null
     private var wCycleReasonLogged: Boolean = false
     private var currentTIRRange: Double = 0.0
     private var currentTIRAbove: Double = 0.0
@@ -11243,17 +11291,21 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         if (wCycleInfo != null) {
             appendWCycleReason(rT.reason, wCycleInfo)
         }
-        if (bgNow > hypoGuard) {
-            if (wCycleInfo != null && wCycleInfo.applied) {
+        val harmoniaOwnedBasal = lastHarmoniaProductionDecision?.selectedForProduction == true
+        if (bgNow > hypoGuard && !harmoniaOwnedBasal) {
+            val endocrineBasalAmp = EndocrineAmplitudeGovernor.productionAmp(
+                lastWCycleBelief,
+                EndocrineAmpAxis.BASAL,
+            )
+            if (endocrineBasalAmp != 1.0) {
                 val pre = rate
-                val scaled = rate * wCycleInfo.basalMultiplier
+                val scaled = rate * endocrineBasalAmp
                 val limit = if (bypassSafety) profile.max_basal else maxSafe
                 rate = scaled.coerceIn(0.0, limit)
                 val need = if (pre > 0.0) rate / pre else null
                 updateWCycleLearner(need, null)
-                // 🔁 "post-application" log with the actually applied deviation measure
-                val profile = lastProfile
-                if (profile != null) {
+                val profileForLog = lastProfile
+                if (profileForLog != null) {
                     wCycleFacade.infoAndLog(
                         mapOf(
                             "trackingMode" to wCyclePreferences.trackingMode().name,
@@ -11264,14 +11316,19 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                             "delta5" to delta.toDouble(),
                             "iob" to iob.toDouble(),
                             "tdd24h" to (tdd24HrsPerHour * 24f).toDouble(),
-                            "isfProfile" to profile.sens,
+                            "isfProfile" to profileForLog.sens,
                             "dynIsf" to variableSensitivity.toDouble(),
-                            "needBasalScale" to need
+                            "needBasalScale" to need,
+                            "endocrineBasalAmp" to endocrineBasalAmp,
                         )
                     )
                 }
             }
             rate = if (bypassSafety) rate.coerceAtMost(profile.max_basal) else rate.coerceAtMost(maxSafe)
+        } else if (harmoniaOwnedBasal && lastWCycleBelief != null) {
+            lastWCycleBelief = lastWCycleBelief?.copy(
+                dosePathOwner = EndocrineDosePathOwner.HARMONIA_PRODUCTION_BASAL_FIRST,
+            )
         }
 
         rT.reason.append(context.getString(R.string.temp_basal_pose, "%.2f".format(rate), duration))
@@ -12309,13 +12366,16 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         }
         val wCycleInfo = ensureWCycleInfo()
         if (wCycleInfo != null) {
-            if (wCycleInfo.applied) {
+            val endocrineSmbAmp = EndocrineAmplitudeGovernor.productionAmp(
+                lastWCycleBelief,
+                EndocrineAmpAxis.SMB,
+            )
+            if (endocrineSmbAmp != 1.0) {
                 val pre = smbToGive
-                smbToGive = (smbToGive * wCycleInfo.smbMultiplier.toFloat()).coerceAtLeast(0f)
+                smbToGive = (smbToGive * endocrineSmbAmp.toFloat()).coerceAtLeast(0f)
                 val need = if (pre > 0f) (smbToGive / pre).toDouble() else null
                 updateWCycleLearner(null, need)
 
-                // 🔁 "post-application" log with the actually applied deviation measure
                 val profile = lastProfile
                 if (profile != null) {
                     wCycleFacade.infoAndLog(
@@ -12330,7 +12390,8 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                             "tdd24h" to (tdd24HrsPerHour * 24f).toDouble(),
                             "isfProfile" to profile.sens,
                             "dynIsf" to variableSensitivity.toDouble(),
-                            "needSmbScale" to need
+                            "needSmbScale" to need,
+                            "endocrineSmbAmp" to endocrineSmbAmp,
                         )
                     )
                 }
