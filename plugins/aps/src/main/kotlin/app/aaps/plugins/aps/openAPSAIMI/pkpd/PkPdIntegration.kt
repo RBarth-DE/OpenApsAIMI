@@ -56,6 +56,14 @@ class PkPdIntegration(private val preferences: Preferences) {
     private var damping: SmbDamping? = null
     private var lastTailPolicy: TailAwareSmbPolicy? = null
     private var lastPersisted: PkPdParams? = null
+    private var pkpdInitializedAtEpochMs: Long = 0L
+
+    /** Hours elapsed since PKPD learner was first initialized (or 0 if not yet started). */
+    val elapsedLearningHours: Float
+        get() = if (pkpdInitializedAtEpochMs > 0L) {
+            (System.currentTimeMillis() - pkpdInitializedAtEpochMs).toFloat() / 3_600_000f
+        } else 0f
+
     private var recentBolusSamples: List<PkpdBolusSample> = emptyList()
 
     @Synchronized
@@ -112,6 +120,9 @@ class PkPdIntegration(private val preferences: Preferences) {
         if (lastPersisted == null) {
             lastPersisted = readLearnedSeed(structural.bounds)
         }
+        if (pkpdInitializedAtEpochMs <= 0L) {
+            pkpdInitializedAtEpochMs = preferences.get(DoubleKey.OApsAIMIPkpdStateInitializedAtEpochMs).toLong()
+        }
 
         val learningCfg = buildLearningConfig(structural)
         val estimator = ensureEstimator(structural.bounds, learningCfg)
@@ -156,6 +167,10 @@ class PkPdIntegration(private val preferences: Preferences) {
             consoleLog?.add("PKPD_LEARN skip: causal_modulator_learningAllowed=false")
         }
         val params = estimator.params()
+        if (pkpdInitializedAtEpochMs <= 0L) {
+            pkpdInitializedAtEpochMs = epochMillis
+            preferences.put(DoubleKey.OApsAIMIPkpdStateInitializedAtEpochMs, epochMillis.toDouble())
+        }
         persistStateIfNeeded(params, structural.bounds)
         val tailFraction = estimator.iobResidualAt(windowMin.toDouble()).coerceIn(0.0, 1.0)
         val baselineActivityState = estimator.activityStateAt(windowMin.toDouble())
@@ -250,6 +265,9 @@ class PkPdIntegration(private val preferences: Preferences) {
         )
 
         val fusedIsf = fusion.fused(profileIsf, tddIsf, pkpdScale, isRising, aggressionMultiplier)
+        val elapsedHrs = if (pkpdInitializedAtEpochMs > 0L) {
+            (epochMillis - pkpdInitializedAtEpochMs).toFloat() / 3_600_000f
+        } else 0f
         return PkPdRuntime(
             params = params,
             tailFraction = tailFraction,
@@ -261,7 +279,8 @@ class PkPdIntegration(private val preferences: Preferences) {
             physioAbsorptionFactor = physioAbsorptionFactor,
             physioSiFactor = physioSiFactor,
             damping = damping,
-            activity = activityState
+            activity = activityState,
+            elapsedLearningHours = elapsedHrs,
         )
     }
 
@@ -584,7 +603,9 @@ class PkPdRuntime(
     val physioAbsorptionFactor: Double,
     val physioSiFactor: Double,
     private val damping: SmbDamping,
-    val activity: InsulinActivityState
+    val activity: InsulinActivityState,
+    /** Hours elapsed since PKPD learner was first initialized (or 0 if not yet started). */
+    val elapsedLearningHours: Float = 0f,
 ) {
 
     fun dampSmbWithAudit(

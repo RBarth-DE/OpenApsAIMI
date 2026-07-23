@@ -1,9 +1,13 @@
 package app.aaps.plugins.aps.openAPSAIMI.utils
 
 import android.content.Context
+import android.net.Uri
 import android.os.Environment
+import androidx.documentfile.provider.DocumentFile
 import app.aaps.core.interfaces.logging.AAPSLogger
 import app.aaps.core.interfaces.logging.LTag
+import app.aaps.core.keys.StringKey
+import app.aaps.core.keys.interfaces.Preferences
 import java.io.File
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -28,7 +32,8 @@ import javax.inject.Singleton
 @Singleton
 class AimiStorageHelper @Inject constructor(
     private val context: Context,
-    private val log: AAPSLogger
+    private val log: AAPSLogger,
+    private val preferences: Preferences
 ) {
 
     /**
@@ -133,12 +138,15 @@ class AimiStorageHelper @Inject constructor(
     /**
      * Resets cached directory so it is re-evaluated on next access.
      * Call after MANAGE_EXTERNAL_STORAGE is granted at runtime.
+     * Also clears the SAF bridge cache so it re-reads [StringKey.AapsDirectoryUri].
      */
     @Synchronized
     fun resetDirectory() {
         currentDirectory = null
         currentStatus = StorageStatus.ERROR
         lastError = null
+        safRootCache = null
+        safRootInitAttempted = false
         log.info(LTag.APS, "AimiStorageHelper: Directory cache reset (will re-evaluate on next access)")
     }
     
@@ -227,6 +235,95 @@ class AimiStorageHelper @Inject constructor(
      * @param onError Callback appelé en cas d'erreur (optionnel)
      * @return true si chargé avec succès
      */
+    // ── SAF bridge for Documents/AAPS without MANAGE_EXTERNAL_STORAGE ──────────
+    // The SAF tree URI is stored in SharedPreferences and survives reinstall via
+    // SPBackupAgent, so learner state in Documents/AAPS remains reachable even
+    // when MANAGE_EXTERNAL_STORAGE hasn't been re-granted after flash.
+    private var safRootCache: DocumentFile? = null
+    private var safRootInitAttempted = false
+
+    private fun getSafRoot(): DocumentFile? {
+        if (safRootInitAttempted) return safRootCache
+        safRootInitAttempted = true
+        val uriStr = preferences.getIfExists(StringKey.AapsDirectoryUri) ?: return null
+        if (uriStr.isEmpty()) return null
+        return try {
+            val treeUri = Uri.parse(uriStr)
+            val root = DocumentFile.fromTreeUri(context, treeUri)
+            if (root != null && root.canRead() && root.canWrite()) {
+                safRootCache = root
+                log.debug(LTag.APS, "AimiStorageHelper: SAF bridge to Documents/AAPS ready")
+                root
+            } else {
+                log.debug(LTag.APS, "AimiStorageHelper: SAF tree exists but is not read/write ready")
+                null
+            }
+        } catch (e: Exception) {
+            log.debug(LTag.APS, "AimiStorageHelper: SAF bridge init failed: ${e.message}")
+            null
+        }
+    }
+
+    /**
+     * Try to load file content from Documents/AAPS via SAF.
+     * Used as a transparent fallback when the local app-private copy doesn't exist yet
+     * (e.g. after a reinstall that wiped app-private storage).
+     */
+    private fun tryLoadFromSaf(file: File): String? {
+        val root = getSafRoot() ?: return null
+        val name = file.name
+        return try {
+            val doc = root.findFile(name) ?: return null
+            if (doc.length() <= 0L && doc.lastModified() <= 0L) return null // doesn't really exist
+            context.contentResolver.openInputStream(doc.uri)?.use { stream ->
+                String(stream.readBytes()).takeIf { it.isNotEmpty() }
+            }
+        } catch (e: Exception) {
+            log.debug(LTag.APS, "AimiStorageHelper: SAF load failed for $name: ${e.message}")
+            null
+        }
+    }
+
+    /**
+     * Mirror a save to Documents/AAPS via SAF so learner state persists
+     * across reinstalls even when the current storage is app-private.
+     * Always returns true (best-effort — failures are logged but not propagated).
+     */
+    private fun trySaveToSaf(file: File, content: String): Boolean {
+        val root = getSafRoot() ?: return true // SAF not configured, not an error
+        val name = file.name
+        return try {
+            // Delete existing file (SAF doesn't auto-overwrite)
+            root.findFile(name)?.delete()
+            // Infer MIME type
+            val mime = when {
+                name.endsWith(".json") -> "application/json"
+                name.endsWith(".csv") -> "text/csv"
+                name.endsWith(".jsonl") -> "application/x-jsonlines"
+                else -> "application/octet-stream"
+            }
+            val doc = root.createFile(mime, name) ?: run {
+                log.debug(LTag.APS, "AimiStorageHelper: SAF createFile returned null for $name")
+                return true
+            }
+            context.contentResolver.openOutputStream(doc.uri, "wt")?.use { stream ->
+                stream.write(content.toByteArray())
+            }
+            log.debug(LTag.APS, "AimiStorageHelper: ✅ SAF mirrored ${name} (${content.length} bytes)")
+            true
+        } catch (e: Exception) {
+            log.debug(LTag.APS, "AimiStorageHelper: SAF mirror failed for $name: ${e.message}")
+            true // don't propagate — local save already succeeded
+        }
+    }
+
+    /**
+     * Tells whether the current storage is a fallback (not Documents/AAPS),
+     * i.e. whether SAF mirroring would be beneficial for persistence.
+     */
+    private fun isUsingFallbackStorage(): Boolean =
+        currentStatus != StorageStatus.DOCUMENTS_AAPS
+
     fun loadFileSafe(
         file: File,
         onSuccess: (String) -> Unit,
@@ -234,6 +331,15 @@ class AimiStorageHelper @Inject constructor(
     ): Boolean {
         return runCatching {
             if (!file.exists()) {
+                // ── SAF fallback: try loading from Documents/AAPS via SAF ──
+                if (isUsingFallbackStorage()) {
+                    val safContent = tryLoadFromSaf(file)
+                    if (safContent != null) {
+                        onSuccess(safContent)
+                        log.info(LTag.APS, "AimiStorageHelper: ✅ Loaded ${file.name} via SAF bridge (${safContent.length} bytes)")
+                        return true
+                    }
+                }
                 log.debug(LTag.APS, "AimiStorageHelper: File ${file.name} does not exist (first run)")
                 return false
             }
@@ -271,11 +377,19 @@ class AimiStorageHelper @Inject constructor(
         return runCatching {
             file.writeText(content)
             log.debug(LTag.APS, "AimiStorageHelper: ✅ Saved ${file.name} (${content.length} bytes)")
+            // ── SAF mirror: persist to Documents/AAPS so state survives reinstall ──
+            if (isUsingFallbackStorage()) {
+                trySaveToSaf(file, content)
+            }
             true
         }.getOrElse { e ->
             log.warn(LTag.APS, "AimiStorageHelper: ⚠️ Failed to save ${file.name}: ${e.message}")
             log.debug(LTag.APS, "  → Path: ${file.absolutePath}")
             log.debug(LTag.APS, "  → Data will be lost on restart but app continues normally")
+            // Even if local save failed, try SAF in case the file system is broken but SAF works
+            if (isUsingFallbackStorage()) {
+                trySaveToSaf(file, content)
+            }
             false
         }
     }

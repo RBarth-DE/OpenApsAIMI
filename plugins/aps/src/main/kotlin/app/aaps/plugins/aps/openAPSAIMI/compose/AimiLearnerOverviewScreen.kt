@@ -42,6 +42,7 @@ fun AimiLearnerOverviewScreen(
     basalNeuralLearner: BasalNeuralLearner?,
     unifiedReactivityLearner: UnifiedReactivityLearner?,
     basalLearner: BasalLearner?,
+    pkpdElapsedHours: Float? = null,
     onBack: () -> Unit,
 ) {
     Scaffold(
@@ -136,6 +137,7 @@ fun AimiLearnerOverviewScreen(
                 description = stringResource(R.string.aimi_learner_pkpd_desc),
                 warmupHours = 0.3, // 20 min minimum window
                 fullHours = 72.0,  // multiple days of qualifying events
+                elapsedHours = pkpdElapsedHours,
                 liveStatus = stringResource(R.string.aimi_learner_pkpd_status),
             )
 

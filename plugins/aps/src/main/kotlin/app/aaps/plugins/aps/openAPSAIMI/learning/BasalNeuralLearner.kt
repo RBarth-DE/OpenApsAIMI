@@ -21,6 +21,7 @@ import kotlin.math.min
 import kotlin.math.roundToInt
 import java.io.File
 import java.util.Locale
+import org.json.JSONObject
 
 /**
  * BasalNeuralLearner identifies user-specific glycemic response patterns
@@ -108,10 +109,13 @@ class BasalNeuralLearner @Inject constructor(
         meanGovernanceWeight = 1.0,
     )
     private var lastGovernanceLogAt = 0L
-    private var initializedAt = 0L   // always resets on restart (governance window is in-memory only)
+    private var initializedAt = 0L
+
+    private val stateFile by lazy { storageHelper.getAimiFile("basal_neural_state.json") }
 
     init {
         loadModels()
+        loadState()
     }
 
     private fun loadModels() {
@@ -130,6 +134,26 @@ class BasalNeuralLearner @Inject constructor(
             LTag.APS,
             "BasalNeuralLearner: models reloaded (t3c=${neuralT3cNet != null}, basal=${neuralBasalNet != null})",
         )
+    }
+
+    private fun loadState() {
+        storageHelper.loadFileSafe(stateFile,
+            onSuccess = { content ->
+                try {
+                    val json = JSONObject(content)
+                    initializedAt = json.optLong("initializedAt", 0L)
+                    log.info(LTag.APS, "BasalNeuralLearner: Loaded state (initializedAt=$initializedAt)")
+                } catch (e: Exception) {
+                    log.warn(LTag.APS, "BasalNeuralLearner: Failed to parse state JSON, using defaults")
+                }
+            },
+        )
+    }
+
+    private fun saveState() {
+        val json = JSONObject()
+        json.put("initializedAt", initializedAt)
+        storageHelper.saveFileSafe(stateFile, json.toString())
     }
 
     /** Hours elapsed since first sample entered the governance window (or 0 if not yet started). */
@@ -324,7 +348,10 @@ class BasalNeuralLearner @Inject constructor(
         shortMinPredBg: Double?,
     ) {
         if (!bgBefore.isFinite() || !bgAfter.isFinite() || !targetBg.isFinite()) return
-        if (initializedAt == 0L) initializedAt = System.currentTimeMillis()
+        if (initializedAt == 0L) {
+            initializedAt = System.currentTimeMillis()
+            saveState()
+        }
         val noise = if (sensorNoise.isFinite()) sensorNoise else 0.0
         val iob = if (iobUnits.isFinite()) iobUnits else 0.0
         val d = if (deltaMgDl.isFinite()) deltaMgDl else (bgAfter - bgBefore)
@@ -628,6 +655,7 @@ class BasalNeuralLearner @Inject constructor(
 
         lastGovernanceLogAt = now
         lastLoggedAction = snapshot.action
+        saveState()
 
         log.info(
             LTag.APS,

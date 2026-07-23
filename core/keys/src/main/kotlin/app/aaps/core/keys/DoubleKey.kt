@@ -381,6 +381,7 @@ enum class DoubleKey(
     OApsAIMIPkpdMaxPeakChangePerDayMin("aimi_pkpd_max_peak_change_per_day_min", 20.0, 1.0, 60.0),
     OApsAIMIPkpdStateDiaH("aimi_pkpd_state_dia_h", 6.0, 4.0, 24.0),
     OApsAIMIPkpdStatePeakMin("aimi_pkpd_state_peak_min", 75.0, 40.0, 300.0),
+    OApsAIMIPkpdStateInitializedAtEpochMs("aimi_pkpd_state_initialized_at_ms", 0.0, 0.0, 4000000000000.0),
     OApsAIMIPkpdStatePriorPeak("aimi_pkpd_state_prior_peak", 75.0, 0.0, 300.0),
     OApsAIMIPkpdStatePhysioPeak("aimi_pkpd_state_physio_peak", 0.0, -100.0, 100.0),
     OApsAIMIPkpdStateSitePeak("aimi_pkpd_state_site_peak", 0.0, -100.0, 100.0),
