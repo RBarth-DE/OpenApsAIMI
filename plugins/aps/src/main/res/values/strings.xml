@@ -960,6 +960,7 @@
     <string name="aimi_learner_overview_summary">View runtime, progress, and live status of all AIMI learning algorithms</string>
     <string name="aimi_learner_time_to_full_label">Time to 100%:</string>
     <string name="aimi_learner_time_to_full">Time to full effectiveness: ~%1$s hours</string>
+    <string name="aimi_learner_disabled_badge">(disabled)</string>
 
     <!-- Learner descriptions -->
     <string name="aimi_learner_governance_name">Basal Neural Governance</string>

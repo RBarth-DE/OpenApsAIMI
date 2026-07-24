@@ -66,6 +66,7 @@ import app.aaps.core.keys.interfaces.Preferences
 import app.aaps.core.keys.UnitDoubleKey
 import app.aaps.core.keys.StringKey
 import app.aaps.core.keys.interfaces.withCompose
+import app.aaps.plugins.aps.openAPSAIMI.autodrive.learning.OnlineLearner
 import app.aaps.plugins.aps.openAPSAIMI.compose.AimiLearnerOverviewScreen
 import app.aaps.plugins.aps.openAPSAIMI.context.ui.AimiPreferenceInfoScreen
 import app.aaps.core.keys.interfaces.withEntries
@@ -212,6 +213,7 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
     private val tpoOrchestrator: TpoOrchestrator,
     private val basalNeuralLearner: app.aaps.plugins.aps.openAPSAIMI.learning.BasalNeuralLearner,
     private val basalLearner: app.aaps.plugins.aps.openAPSAIMI.learning.BasalLearner,
+    private val onlineLearner: OnlineLearner,
 ) : PluginBaseWithPreferences(
     PluginDescription()
         .mainType(PluginType.APS)

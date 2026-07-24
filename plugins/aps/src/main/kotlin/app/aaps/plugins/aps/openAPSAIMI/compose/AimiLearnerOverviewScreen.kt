@@ -1,5 +1,6 @@
 package app.aaps.plugins.aps.openAPSAIMI.compose
 
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -21,14 +22,19 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import app.aaps.core.keys.BooleanKey
+import app.aaps.core.keys.interfaces.Preferences
 import app.aaps.core.ui.compose.AapsSpacing
 import app.aaps.core.ui.compose.AapsTopAppBar
 import app.aaps.plugins.aps.R
+import app.aaps.plugins.aps.openAPSAIMI.autodrive.learning.OnlineLearner
 import app.aaps.plugins.aps.openAPSAIMI.learning.BasalLearner
 import app.aaps.plugins.aps.openAPSAIMI.learning.BasalNeuralLearner
 import app.aaps.plugins.aps.openAPSAIMI.learning.UnifiedReactivityLearner
@@ -36,13 +42,18 @@ import app.aaps.plugins.aps.openAPSAIMI.learning.UnifiedReactivityLearner
 /**
  * Overview page showing all AIMI learner algorithms with their warm-up progress,
  * current runtime, time to 100% effectiveness, and live status data.
+ *
+ * Cards gated behind a feature toggle are dimmed when the feature is off so
+ * they don't confuse users who never enabled the corresponding subsystem.
  */
 @Composable
 fun AimiLearnerOverviewScreen(
     basalNeuralLearner: BasalNeuralLearner?,
     unifiedReactivityLearner: UnifiedReactivityLearner?,
     basalLearner: BasalLearner?,
+    onlineLearner: OnlineLearner? = null,
     pkpdElapsedHours: Float? = null,
+    preferences: Preferences? = null,
     onBack: () -> Unit,
 ) {
     Scaffold(
@@ -74,6 +85,9 @@ fun AimiLearnerOverviewScreen(
                 warmupHours = 3.0,
                 fullHours = 24.0,
                 elapsedHours = basalNeuralLearner?.elapsedLearningHours,
+                // Governance is always active when T3c Brittle or T3c Adaptive Basal is on
+                enabled = preferences?.get(BooleanKey.OApsAIMIT3cBrittleMode) == true
+                    || preferences?.get(BooleanKey.OApsAIMIT3cAdaptiveBasalEnabled) == true,
                 liveStatus = buildString {
                     val gov = basalNeuralLearner?.getGovernanceSnapshot()
                     if (gov != null) {
@@ -95,6 +109,8 @@ fun AimiLearnerOverviewScreen(
                 description = stringResource(R.string.aimi_learner_reactivity_desc),
                 warmupHours = 2.0,
                 fullHours = 24.0,
+                // Reactivity always runs (core of AIMI)
+                enabled = true,
                 elapsedHours = unifiedReactivityLearner?.elapsedLearningHours,
                 liveStatus = buildString {
                     val analysis = unifiedReactivityLearner?.lastAnalysis
@@ -116,7 +132,9 @@ fun AimiLearnerOverviewScreen(
                 title = stringResource(R.string.aimi_learner_basal3scale_name),
                 description = stringResource(R.string.aimi_learner_basal3scale_desc),
                 warmupHours = 2.0,
-                fullHours = 72.0, // long-term needs 3-7 days
+                fullHours = 72.0,
+                // BasalLearner always runs when AIMI is the active algorithm
+                enabled = true,
                 elapsedHours = basalLearner?.elapsedLearningHours,
                 liveStatus = buildString {
                     if (basalLearner != null) {
@@ -135,8 +153,9 @@ fun AimiLearnerOverviewScreen(
             LearnerCard(
                 title = stringResource(R.string.aimi_learner_pkpd_name),
                 description = stringResource(R.string.aimi_learner_pkpd_desc),
-                warmupHours = 0.3, // 20 min minimum window
-                fullHours = 72.0,  // multiple days of qualifying events
+                warmupHours = 0.3,
+                fullHours = 72.0,
+                enabled = preferences?.get(BooleanKey.OApsAIMIPkpdEnabled) == true,
                 elapsedHours = pkpdElapsedHours,
                 liveStatus = stringResource(R.string.aimi_learner_pkpd_status),
             )
@@ -149,6 +168,8 @@ fun AimiLearnerOverviewScreen(
                 description = stringResource(R.string.aimi_learner_online_desc),
                 warmupHours = 0.5,
                 fullHours = 48.0,
+                enabled = preferences?.get(BooleanKey.OApsAIMIautoDriveActive) == true,
+                elapsedHours = onlineLearner?.elapsedLearningHours,
                 liveStatus = stringResource(R.string.aimi_learner_online_status),
             )
 
@@ -158,8 +179,9 @@ fun AimiLearnerOverviewScreen(
             LearnerCard(
                 title = stringResource(R.string.aimi_learner_ngr_name),
                 description = stringResource(R.string.aimi_learner_ngr_desc),
-                warmupHours = 0.0, // inherits from autosens
+                warmupHours = 0.0,
                 fullHours = 12.0,
+                enabled = preferences?.get(BooleanKey.OApsAIMINightGrowthEnabled) == true,
                 liveStatus = stringResource(R.string.aimi_learner_ngr_status),
             )
 
@@ -169,8 +191,9 @@ fun AimiLearnerOverviewScreen(
             LearnerCard(
                 title = stringResource(R.string.aimi_learner_wcycle_name),
                 description = stringResource(R.string.aimi_learner_wcycle_desc),
-                warmupHours = 720.0, // 1 cycle ~30 days
-                fullHours = 2160.0,  // 2-3 cycles ~90 days
+                warmupHours = 720.0,
+                fullHours = 2160.0,
+                enabled = preferences?.get(BooleanKey.OApsAIMIwcycle) == true,
                 liveStatus = stringResource(R.string.aimi_learner_wcycle_status),
             )
 
@@ -182,6 +205,9 @@ fun AimiLearnerOverviewScreen(
                 description = stringResource(R.string.aimi_learner_governors_desc),
                 warmupHours = 6.0,
                 fullHours = 72.0,
+                enabled = preferences?.get(BooleanKey.OApsAIMIPeakGovernorEnabled) == true
+                    || preferences?.get(BooleanKey.OApsAIMIDiaGovernorEnabled) == true,
+                elapsedHours = pkpdElapsedHours,
                 liveStatus = stringResource(R.string.aimi_learner_governors_status),
             )
 
@@ -198,11 +224,10 @@ private fun LearnerCard(
     fullHours: Double,
     liveStatus: String,
     elapsedHours: Float? = null,
+    enabled: Boolean = true,
 ) {
-    // Actual elapsed time, or fall back to warmup as minimum display
     val effectiveElapsed = elapsedHours?.toDouble()?.coerceAtLeast(warmupHours) ?: warmupHours
 
-    // Warmup hours label (fractional for quick learners, rounded for longer ones)
     val progressLabel = when {
         effectiveElapsed < 1.0 -> "${"%.0f".format(effectiveElapsed * 60)} min"
         effectiveElapsed < 24.0 -> "${"%.1f".format(effectiveElapsed)}h"
@@ -210,16 +235,24 @@ private fun LearnerCard(
         else -> "${"%.0f".format(effectiveElapsed / 720)} months"
     }
 
-    // Progress: elapsed / full, clamped to 5%-100% range.
-    // Uses actual elapsed when available; falls back to static warmup/full ratio.
     val progress: Float = if (fullHours > 0) {
         (effectiveElapsed / fullHours).toFloat().coerceIn(0.05f, 1.0f)
     } else {
         0.5f
     }
 
+    // Dim disabled cards to 40% opacity so they recede visually
+    val cardAlpha = if (enabled) 1f else 0.4f
+    val titleColor = if (enabled) {
+        MaterialTheme.colorScheme.onSurface
+    } else {
+        MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+    }
+
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .alpha(cardAlpha),
         elevation = CardDefaults.cardElevation(),
     ) {
         Column(
@@ -230,7 +263,16 @@ private fun LearnerCard(
                     text = title,
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
+                    color = titleColor,
                 )
+                if (!enabled) {
+                    Spacer(modifier = Modifier.width(AapsSpacing.small))
+                    Text(
+                        text = stringResource(R.string.aimi_learner_disabled_badge),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.error,
+                    )
+                }
                 Spacer(modifier = Modifier.width(AapsSpacing.medium))
                 Text(
                     text = "learning $progressLabel / ${"%.0f".format(fullHours)}h",

@@ -32,10 +32,17 @@ class OnlineLearner @Inject constructor(
 
     private val learningRate = 0.005 // Descente de Gradient très lente (sécurité)
 
+    private var initializedAt: Long = 0L
+
+    /** Hours elapsed since the first gradient descent step (or 0 if not yet started). */
+    val elapsedLearningHours: Float
+        get() = if (initializedAt > 0L) (System.currentTimeMillis() - initializedAt).toFloat() / 3_600_000f else 0f
+
     /**
      * Appelé à chaque Tique (5 min).
      */
     fun learnAndUpdate(currentState: AutoDriveState, currentEpochMs: Long) {
+        if (initializedAt == 0L) initializedAt = System.currentTimeMillis()
         
         // Si la glycémie monte agressivement (> 4 mg/dL/5min soit > 0.8 mg/dL/min) 
         // alors qu'on est en mode "sensible" (learnedFactor > 1.0), l'effet exercice est probablement fini.
