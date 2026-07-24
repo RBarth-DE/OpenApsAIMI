@@ -2664,11 +2664,13 @@ class PersistenceLayerImpl @Inject constructor(
             val result = repository.runTransactionForResultSuspend(InsertOrUpdateApsResultTransaction(apsResult.toDb()))
             val transactionResult = PersistenceLayer.TransactionResult<APSResult>()
             result.inserted.forEach {
-                aapsLogger.debug(LTag.DATABASE, "Inserted APSResult $it")
+                // only fills up log with useless info
+                //aapsLogger.debug(LTag.DATABASE, "Inserted APSResult $it")
                 transactionResult.inserted.add(it.fromDb(apsResultProvider))
             }
             result.updated.forEach {
-                aapsLogger.debug(LTag.DATABASE, "Updated APSResult $it")
+                // only fills up log with useless info
+                //aapsLogger.debug(LTag.DATABASE, "Updated APSResult $it")
                 transactionResult.updated.add(it.fromDb(apsResultProvider))
             }
             transactionResult
