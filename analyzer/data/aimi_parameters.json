@@ -1,13 +1,13 @@
 {
   "version": "3.0",
-  "source_commit": "a998f805593d46d31760d9c760cdb5f218136fdf",
-  "generated_at": "2026-07-16T08:42:17.578240+00:00",
-  "total": 291,
-  "active": 245,
+  "source_commit": "0320615cfe7e2268d48bf37ae3c9fb39881b9d0f",
+  "generated_at": "2026-07-22T16:58:31.787324+00:00",
+  "total": 293,
+  "active": 247,
   "orphaned": 46,
-  "with_used_in": 230,
+  "with_used_in": 232,
   "with_negative_gate": 9,
-  "with_settings_path": 235,
+  "with_settings_path": 237,
   "parameters": [
     {
       "key": "AIMI_UAM_CONFIDENCE",
@@ -177,7 +177,7 @@
       "used_in": [
         {
           "file": "DetermineBasalAIMI2.kt",
-          "function": "runT3cBrittleBypassOrReturn"
+          "function": "observeIfFresh"
         },
         {
           "file": "MealAdvisorActivity.kt",
@@ -205,7 +205,7 @@
       "used_in": [
         {
           "file": "DetermineBasalAIMI2.kt",
-          "function": "runT3cBrittleBypassOrReturn"
+          "function": "observeIfFresh"
         },
         {
           "file": "MealAdvisorActivity.kt",
@@ -1220,6 +1220,7 @@
       "key": "aimi_emergency_sos_enable",
       "name": "AimiEmergencySosEnable",
       "type": "Boolean",
+      "default": false,
       "used_in": [
         {
           "file": "OpenAPSAIMIPlugin.kt",
@@ -1246,7 +1247,11 @@
       "key": "aimi_emergency_sos_immediate_threshold",
       "name": "AimiEmergencySosImmediateThreshold",
       "type": "Int",
-      "default": 50,
+      "default": 55,
+      "min": 40,
+      "max": 200,
+      "unit_type": "MGDL",
+      "dependency": "AimiEmergencySosEnable",
       "used_in": [
         {
           "file": "OpenAPSAIMIPlugin.kt",
@@ -1273,6 +1278,7 @@
       "key": "aimi_emergency_sos_phone",
       "name": "AimiEmergencySosPhone",
       "type": "String",
+      "dependency": "AimiEmergencySosEnable",
       "used_in": [
         {
           "file": "OpenAPSAIMIPlugin.kt",
@@ -1299,6 +1305,7 @@
       "key": "aimi_emergency_sos_phone2",
       "name": "AimiEmergencySosPhone2",
       "type": "String",
+      "dependency": "AimiEmergencySosEnable",
       "used_in": [
         {
           "file": "OpenAPSAIMIPlugin.kt",
@@ -1326,6 +1333,10 @@
       "name": "AimiEmergencySosStaleThreshold",
       "type": "Int",
       "default": 30,
+      "min": 15,
+      "max": 120,
+      "unit_type": "MIN",
+      "dependency": "AimiEmergencySosEnable",
       "used_in": [
         {
           "file": "OpenAPSAIMIPlugin.kt",
@@ -1352,7 +1363,11 @@
       "key": "aimi_emergency_sos_threshold",
       "name": "AimiEmergencySosThreshold",
       "type": "Int",
-      "default": 55,
+      "default": 70,
+      "min": 55,
+      "max": 200,
+      "unit_type": "MGDL",
+      "dependency": "AimiEmergencySosEnable",
       "used_in": [
         {
           "file": "OpenAPSAIMIPlugin.kt",
@@ -2369,7 +2384,7 @@
         },
         {
           "file": "PkpdPresetProfiles.kt",
-          "function": "applyPkpdInsulinPreset"
+          "function": "reclampPkpdLearnedStateToBounds"
         },
         {
           "file": "PkPdIntegration.kt",
@@ -2417,6 +2432,30 @@
       "settings_gate": null
     },
     {
+      "key": "aimi_pkpd_state_initialized_at_ms",
+      "name": "OApsAIMIPkpdStateInitializedAtEpochMs",
+      "type": "Double",
+      "default": 0.0,
+      "min": 0.0,
+      "used_in": [
+        {
+          "file": "PkPdIntegration.kt",
+          "function": "computeRuntime"
+        }
+      ],
+      "orphaned": false,
+      "negative_gate_key": null,
+      "negative_gate_note": null,
+      "logic_summary": "Stored PKPD state — read and written by the learning algorithm.",
+      "effect_high": "Higher value — more insulin/greater effect",
+      "effect_low": "Lower value — less insulin/reduced effect",
+      "impact": "high",
+      "feature_group": "pkpd",
+      "is_gate": false,
+      "settings_path": "AIMI → Preferences user → Pkpd",
+      "settings_gate": null
+    },
+    {
       "key": "aimi_pkpd_state_peak_min",
       "name": "OApsAIMIPkpdStatePeakMin",
       "type": "Double",
@@ -2429,7 +2468,7 @@
         },
         {
           "file": "PkpdPresetProfiles.kt",
-          "function": "applyPkpdInsulinPreset"
+          "function": "reclampPkpdLearnedStateToBounds"
         },
         {
           "file": "PkPdIntegration.kt",
@@ -2769,7 +2808,7 @@
       "used_in": [
         {
           "file": "OpenAPSAIMIPlugin.kt",
-          "function": "aimiComposePkpdSubScreen"
+          "function": "onStart"
         },
         {
           "file": "DetermineBasalAIMI2.kt",
@@ -2847,7 +2886,7 @@
       "used_in": [
         {
           "file": "DetermineBasalAIMI2.kt",
-          "function": "buildRbtExtendedSignals"
+          "function": "refreshPatientStateRuntime"
         },
         {
           "file": "AimiProfileAdvisorActivity.kt",
@@ -4700,7 +4739,7 @@
       "used_in": [
         {
           "file": "DetermineBasalAIMI2.kt",
-          "function": "runPkpdPredictionsBgiDeviationAndNoisyTargetsStage"
+          "function": "publishDoseTerminalAuthorityAndSnapshot"
         }
       ],
       "orphaned": false,
@@ -4865,7 +4904,7 @@
         },
         {
           "file": "DetermineBasalAIMI2.kt",
-          "function": "runT9PhysioEarlyPkpdAndTubeBootstrap"
+          "function": "applyTubeAdvisorFromDoseSnapshot"
         },
         {
           "file": "AimiBehaviorFamilyRegistry.kt",
@@ -4978,6 +5017,34 @@
       "feature_group": "t3c_adaptive_basal",
       "is_gate": false,
       "settings_path": "AIMI → Preferences user → T3C Brittle Mode Settings",
+      "settings_gate": null
+    },
+    {
+      "key": "key_aimi_t3c_autodrive_basal_authority",
+      "name": "OApsAIMIT3cAutodriveBasalAuthority",
+      "type": "Boolean",
+      "default": true,
+      "dependency": "OApsAIMIT3cBrittleMode",
+      "used_in": [
+        {
+          "file": "OpenAPSAIMIPlugin.kt",
+          "function": "aimiComposeT3cSubScreen"
+        },
+        {
+          "file": "DetermineBasalAIMI2.kt",
+          "function": "runT3cBrittleBypassOrReturn"
+        }
+      ],
+      "orphaned": false,
+      "negative_gate_key": null,
+      "negative_gate_note": null,
+      "logic_summary": "Boolean switch for t3c_autodrive_basal_authority.",
+      "effect_high": "Feature is active — associated functionality runs",
+      "effect_low": "Feature is inactive — associated functionality is disabled",
+      "impact": "high",
+      "feature_group": "t3c_adaptive_basal",
+      "is_gate": false,
+      "settings_path": "AIMI → Preferences user → T3C Adaptive Basal",
       "settings_gate": null
     },
     {

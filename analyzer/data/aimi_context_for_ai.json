@@ -1,6 +1,6 @@
 {
   "version": "2.2",
-  "generated_at": "2026-07-16T08:42:17.624823+00:00",
+  "generated_at": "2026-07-22T16:58:31.834360+00:00",
   "algorithm_overview": {
     "name": "AIMI (AI-powered Modular Insulin)",
     "base": "OpenAPS oref1 with extensive extensions",
@@ -119,6 +119,7 @@
         "aimi_pkpd_pragmatic_relief_min_factor",
         "aimi_pkpd_state_dia_h",
         "aimi_pkpd_state_effective_peak",
+        "aimi_pkpd_state_initialized_at_ms",
         "aimi_pkpd_state_peak_min",
         "aimi_pkpd_state_physio_peak",
         "aimi_pkpd_state_prior_peak",
@@ -434,7 +435,7 @@
       "workaround": "None — parameters are ineffective."
     }
   ],
-  "source_commit": "a998f805593d46d31760d9c760cdb5f218136fdf",
+  "source_commit": "0320615cfe7e2268d48bf37ae3c9fb39881b9d0f",
   "parameter_knowledge": [
     {
       "key": "AIMI_UAM_CONFIDENCE",
@@ -470,7 +471,7 @@
       "impact": "medium",
       "settings_path": null,
       "usage_type": "",
-      "function": "runT3cBrittleBypassOrReturn"
+      "function": "observeIfFresh"
     },
     {
       "key": "OApsAIMILastEstimatedCarbs",
@@ -482,7 +483,7 @@
       "impact": "medium",
       "settings_path": null,
       "usage_type": "",
-      "function": "runT3cBrittleBypassOrReturn"
+      "function": "observeIfFresh"
     },
     {
       "key": "OApsAIMIMaxMultiplier",
@@ -1215,6 +1216,18 @@
       "function": "invoke"
     },
     {
+      "key": "aimi_pkpd_state_initialized_at_ms",
+      "name": "OApsAIMIPkpdStateInitializedAtEpochMs",
+      "logic_summary": "Stored PKPD state — read and written by the learning algorithm.",
+      "effect_high": "Higher value — more insulin/greater effect",
+      "effect_low": "Lower value — less insulin/reduced effect",
+      "feature_group": "pkpd",
+      "impact": "high",
+      "settings_path": "AIMI → Preferences user → Pkpd",
+      "usage_type": "",
+      "function": "computeRuntime"
+    },
+    {
       "key": "aimi_pkpd_state_peak_min",
       "name": "OApsAIMIPkpdStatePeakMin",
       "logic_summary": "Stored PKPD state — read and written by the learning algorithm.",
@@ -1344,7 +1357,7 @@
       "impact": "critical",
       "settings_path": "AIMI → Preferences user → Adaptive PK/PD",
       "usage_type": "",
-      "function": "aimiComposePkpdSubScreen"
+      "function": "onStart"
     },
     {
       "key": "aimi_smb_tail_threshold",
@@ -1368,7 +1381,7 @@
       "impact": "medium",
       "settings_path": "AIMI → Preferences user → Assistant AI",
       "usage_type": "",
-      "function": "buildRbtExtendedSignals"
+      "function": "refreshPatientStateRuntime"
     },
     {
       "key": "autoISF_max",
@@ -2028,7 +2041,7 @@
       "impact": "medium",
       "settings_path": "AIMI → Preferences user → Core",
       "usage_type": "",
-      "function": "runPkpdPredictionsBgiDeviationAndNoisyTargetsStage"
+      "function": "publishDoseTerminalAuthorityAndSnapshot"
     },
     {
       "key": "key_aimi_recursive_belief_authority",
@@ -2123,6 +2136,18 @@
       "feature_group": "t3c_adaptive_basal",
       "impact": "high",
       "settings_path": "AIMI → Preferences user → T3C Brittle Mode Settings",
+      "usage_type": "",
+      "function": "aimiComposeT3cSubScreen"
+    },
+    {
+      "key": "key_aimi_t3c_autodrive_basal_authority",
+      "name": "OApsAIMIT3cAutodriveBasalAuthority",
+      "logic_summary": "Boolean switch for t3c_autodrive_basal_authority.",
+      "effect_high": "Feature is active — associated functionality runs",
+      "effect_low": "Feature is inactive — associated functionality is disabled",
+      "feature_group": "t3c_adaptive_basal",
+      "impact": "high",
+      "settings_path": "AIMI → Preferences user → T3C Adaptive Basal",
       "usage_type": "",
       "function": "aimiComposeT3cSubScreen"
     },

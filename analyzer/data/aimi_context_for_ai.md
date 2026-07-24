@@ -1,7 +1,7 @@
 # AIMI Algorithm Context
 Version: 2.2
-Source commit: a998f805593d46d31760d9c760cdb5f218136fdf
-Generated: 2026-07-16T08:42:17.624823+00:00
+Source commit: 0320615cfe7e2268d48bf37ae3c9fb39881b9d0f
+Generated: 2026-07-22T16:58:31.834360+00:00
 
 ## Algorithm Overview
 AIMI (AI-powered Modular Insulin)
@@ -143,7 +143,7 @@ Gate: key_aimi_pkpd_enabled
 
 Real-time PKPD model with Weibull-based insulin action curves, adaptive estimator and InsulinActionProfiler. Computes fusedIsf from profile ISF, dynamic ISF and learned values. PkpdAbsorptionGuard dampens SMB during limited absorption. IOB consensus reconciles AAPS IOB with PKPD IOB.
 
-Key parameters (23):
+Key parameters (24):
 - aimi_pkpd_anchor_dia_h
 - aimi_pkpd_anchor_peak_min
 - aimi_pkpd_bounds_dia_max_h
@@ -157,9 +157,9 @@ Key parameters (23):
 - aimi_pkpd_pragmatic_relief_min_factor
 - aimi_pkpd_state_dia_h
 - aimi_pkpd_state_effective_peak
+- aimi_pkpd_state_initialized_at_ms
 - aimi_pkpd_state_peak_min
-- aimi_pkpd_state_physio_peak
-- ... and 8 more
+- ... and 9 more
 
 ### unified_reactivity
 Gate: key_use_Aimi_UnifiedReactivityLearner
@@ -610,7 +610,7 @@ Key parameters (11):
 - `aimi_physio_llm_enable`
 - `aimi_physio_llm_provider`
 
-### pkpd (21 params)
+### pkpd (22 params)
 - `aimi_pkpd_bounds_dia_max_h` [default: 24.0]
 - `aimi_pkpd_bounds_dia_min_h` [default: 4.0]
 - `aimi_pkpd_bounds_peak_min_max` [default: 240.0]
@@ -634,24 +634,24 @@ Key parameters (11):
 - `aimi_smb_tail_threshold` [default: 0.25]
 
 ### sos_emergency (6 params)
-- `aimi_emergency_sos_enable`
-- `aimi_emergency_sos_immediate_threshold` [default: 50]
+- `aimi_emergency_sos_enable` [default: False]
+- `aimi_emergency_sos_immediate_threshold` [default: 55]
 - `aimi_emergency_sos_phone`
 - `aimi_emergency_sos_phone2`
 - `aimi_emergency_sos_stale_threshold` [default: 30]
-- `aimi_emergency_sos_threshold` [default: 55]
+- `aimi_emergency_sos_threshold` [default: 70]
 
-### t3c_adaptive_basal (10 params)
+### t3c_adaptive_basal (11 params)
 - `key_aimi_t3c_activation_threshold` [default: 130.0]
 - `key_aimi_t3c_aggressiveness` [default: 1.0]
 - `key_aimi_t3c_anticipation_strength` [default: 0.0]
+- `key_aimi_t3c_autodrive_basal_authority` [default: True]
 - `key_aimi_t3c_brittle_mode`
 - `key_aimi_t3c_cfrd_cob_delay_min` [default: 0.0]
 - `key_aimi_t3c_cfrd_exacerbation`
 - `key_aimi_t3c_cfrd_lgs_floor` [default: 80.0]
 - `key_aimi_t3c_cfrd_mode`
 - `key_aimi_t3c_physio_informed`
-- `key_use_aimi_t3c_adaptive_basal`
 
 ### thyroid (6 params)
 - `key_aimi_thyroid_debug`

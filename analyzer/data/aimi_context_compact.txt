@@ -1,4 +1,4 @@
-# AIMI Algorithm Context (commit: a998f805)
+# AIMI Algorithm Context (commit: 0320615c)
 
 ## Overview
 The AIMI algorithm runs a 46-stage decision pipeline per 5-minute tick.
@@ -58,11 +58,11 @@ Gate: key_oaps_aimi_ngr_enabled
   Key params: key_oaps_aimi_ngr_age_years, key_oaps_aimi_ngr_basal_multiplier, key_oaps_aimi_ngr_decay_minutes, key_oaps_aimi_ngr_enabled, key_oaps_aimi_ngr_max_iob_extra, key_oaps_aimi_ngr_max_smb_clamp, key_oaps_aimi_ngr_min_duration, key_oaps_aimi_ngr_min_eventual_over_target, key_oaps_aimi_ngr_min_rise_slope, key_oaps_aimi_ngr_night_end
   ... and 2 more
 
-### pkpd (23 params)
+### pkpd (24 params)
 Gate: key_aimi_pkpd_enabled
   Real-time PKPD model with Weibull-based insulin action curves, adaptive estimator and InsulinActionProfiler. Computes fusedIsf from profile ISF, dynamic ISF and learned values. PkpdAbsorptionGuard dampens SMB during limited absorption. IOB consensus reconciles AAPS IOB with PKPD IOB.
   Key params: aimi_pkpd_anchor_dia_h, aimi_pkpd_anchor_peak_min, aimi_pkpd_bounds_dia_max_h, aimi_pkpd_bounds_dia_min_h, aimi_pkpd_bounds_peak_min_max, aimi_pkpd_bounds_peak_min_min, aimi_pkpd_initial_dia_h, aimi_pkpd_initial_peak_min, aimi_pkpd_max_dia_change_per_day_h, aimi_pkpd_max_peak_change_per_day_min
-  ... and 13 more
+  ... and 14 more
 
 ### unified_reactivity (0 params)
 Gate: key_use_Aimi_UnifiedReactivityLearner
@@ -368,7 +368,7 @@ Gate: key_use_Aimi_wcycle
   - aimi_physio_llm_enable
   - aimi_physio_llm_provider
 
-### pkpd (21 params)
+### pkpd (22 params)
   - aimi_pkpd_bounds_dia_max_h [default: 24.0]
   - aimi_pkpd_bounds_dia_min_h [default: 4.0]
   - aimi_pkpd_bounds_peak_min_max [default: 240.0]
@@ -380,6 +380,7 @@ Gate: key_use_Aimi_wcycle
   - aimi_pkpd_pragmatic_relief_min_factor [default: 0.75]
   - aimi_pkpd_state_dia_h [default: 6.0]
   - aimi_pkpd_state_effective_peak [default: 75.0]
+  - aimi_pkpd_state_initialized_at_ms [default: 0.0]
   - aimi_pkpd_state_peak_min [default: 75.0]
   - aimi_pkpd_state_physio_peak [default: 0.0]
   - aimi_pkpd_state_prior_peak [default: 75.0]
@@ -388,8 +389,7 @@ Gate: key_use_Aimi_wcycle
   - key_aimi_pkpd_enabled
   - key_aimi_pkpd_endo_reversion
   - key_aimi_pkpd_pragmatic_relief_enabled
-  - key_aimi_pkpd_prediction_kinetics
-  ... and 1 more
+  ... and 2 more
 
 ### recursive_belief (3 params)
   - key_aimi_recursive_belief_authority [default: True]
@@ -403,17 +403,18 @@ Gate: key_use_Aimi_wcycle
   - aimi_smb_tail_threshold [default: 0.25]
 
 ### sos_emergency (6 params)
-  - aimi_emergency_sos_enable
-  - aimi_emergency_sos_immediate_threshold [default: 50]
+  - aimi_emergency_sos_enable [default: False]
+  - aimi_emergency_sos_immediate_threshold [default: 55]
   - aimi_emergency_sos_phone
   - aimi_emergency_sos_phone2
   - aimi_emergency_sos_stale_threshold [default: 30]
-  - aimi_emergency_sos_threshold [default: 55]
+  - aimi_emergency_sos_threshold [default: 70]
 
-### t3c_adaptive_basal (10 params)
+### t3c_adaptive_basal (11 params)
   - key_aimi_t3c_activation_threshold [default: 130.0]
   - key_aimi_t3c_aggressiveness [default: 1.0]
   - key_aimi_t3c_anticipation_strength [default: 0.0]
+  - key_aimi_t3c_autodrive_basal_authority [default: True]
   - key_aimi_t3c_brittle_mode
   - key_aimi_t3c_cfrd_cob_delay_min [default: 0.0]
   - key_aimi_t3c_cfrd_exacerbation

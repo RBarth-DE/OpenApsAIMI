@@ -1066,7 +1066,7 @@ if req.profile_data and not req.profile_data.get('error') else '(not available)'
 1. Evaluate metrics (3–4 sentences, specific)
 2. 3–8 optimizations — only for ACTIVE features:
    - Exact key (in backticks, e.g. `key_openapsaimi_max_smb`)
-   - Settings path: use ONLY the 📍 path already shown next to the parameter above — do NOT invent or guess a path. If no path is shown, omit it.
+   - Settings path: EVERY recommendation MUST include the 📍 path exactly as shown next to the parameter above. Copy it verbatim — do NOT invent, shorten, or translate. This is mandatory for all sections (critical, secondary, feature recommendations).
    - Current → Recommendation (with value)
    - Reason
    - Risk: low/medium/high

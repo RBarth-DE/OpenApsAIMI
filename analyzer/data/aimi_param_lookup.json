@@ -151,7 +151,7 @@
     "used_in": [
       {
         "file": "DetermineBasalAIMI2.kt",
-        "function": "runT3cBrittleBypassOrReturn"
+        "function": "observeIfFresh"
       },
       {
         "file": "MealAdvisorActivity.kt",
@@ -176,7 +176,7 @@
     "used_in": [
       {
         "file": "DetermineBasalAIMI2.kt",
-        "function": "runT3cBrittleBypassOrReturn"
+        "function": "observeIfFresh"
       },
       {
         "file": "MealAdvisorActivity.kt",
@@ -1000,6 +1000,7 @@
     "type": "Boolean",
     "feature_group": "sos_emergency",
     "summary": "Enables Emergency SOS detection for critical BG conditions.",
+    "default": false,
     "orphaned": false,
     "is_gate": true,
     "negative_gate_key": null,
@@ -1023,7 +1024,11 @@
     "type": "Int",
     "feature_group": "sos_emergency",
     "summary": "Threshold for immediate SOS alarm (minutes without valid BG data).",
-    "default": 50,
+    "default": 55,
+    "min": 40,
+    "max": 200,
+    "unit_type": "MGDL",
+    "dependency": "AimiEmergencySosEnable",
     "orphaned": false,
     "is_gate": false,
     "negative_gate_key": null,
@@ -1047,6 +1052,7 @@
     "type": "String",
     "feature_group": "sos_emergency",
     "summary": "Parameter for emergency_sos_phone.",
+    "dependency": "AimiEmergencySosEnable",
     "orphaned": false,
     "is_gate": false,
     "negative_gate_key": null,
@@ -1070,6 +1076,7 @@
     "type": "String",
     "feature_group": "sos_emergency",
     "summary": "Parameter for emergency_sos_phone2.",
+    "dependency": "AimiEmergencySosEnable",
     "orphaned": false,
     "is_gate": false,
     "negative_gate_key": null,
@@ -1094,6 +1101,10 @@
     "feature_group": "sos_emergency",
     "summary": "Threshold for stale data warning (minutes).",
     "default": 30,
+    "min": 15,
+    "max": 120,
+    "unit_type": "MIN",
+    "dependency": "AimiEmergencySosEnable",
     "orphaned": false,
     "is_gate": false,
     "negative_gate_key": null,
@@ -1117,7 +1128,11 @@
     "type": "Int",
     "feature_group": "sos_emergency",
     "summary": "Standard SOS threshold (minutes without valid data).",
-    "default": 55,
+    "default": 70,
+    "min": 55,
+    "max": 200,
+    "unit_type": "MGDL",
+    "dependency": "AimiEmergencySosEnable",
     "orphaned": false,
     "is_gate": false,
     "negative_gate_key": null,
@@ -1934,7 +1949,7 @@
       },
       {
         "file": "PkpdPresetProfiles.kt",
-        "function": "applyPkpdInsulinPreset"
+        "function": "reclampPkpdLearnedStateToBounds"
       }
     ]
   },
@@ -1963,6 +1978,27 @@
       }
     ]
   },
+  "aimi_pkpd_state_initialized_at_ms": {
+    "key": "aimi_pkpd_state_initialized_at_ms",
+    "name": "OApsAIMIPkpdStateInitializedAtEpochMs",
+    "type": "Double",
+    "feature_group": "pkpd",
+    "summary": "Stored PKPD state — read and written by the learning algorithm.",
+    "default": 0.0,
+    "min": 0.0,
+    "orphaned": false,
+    "is_gate": false,
+    "negative_gate_key": null,
+    "impact": "high",
+    "effect_high": "Higher value — more insulin/greater effect",
+    "effect_low": "Lower value — less insulin/reduced effect",
+    "used_in": [
+      {
+        "file": "PkPdIntegration.kt",
+        "function": "computeRuntime"
+      }
+    ]
+  },
   "aimi_pkpd_state_peak_min": {
     "key": "aimi_pkpd_state_peak_min",
     "name": "OApsAIMIPkpdStatePeakMin",
@@ -1984,7 +2020,7 @@
       },
       {
         "file": "PkpdPresetProfiles.kt",
-        "function": "applyPkpdInsulinPreset"
+        "function": "reclampPkpdLearnedStateToBounds"
       },
       {
         "file": "PkPdIntegration.kt",
@@ -2254,7 +2290,7 @@
     "used_in": [
       {
         "file": "OpenAPSAIMIPlugin.kt",
-        "function": "aimiComposePkpdSubScreen"
+        "function": "onStart"
       },
       {
         "file": "DetermineBasalAIMI2.kt",
@@ -2310,7 +2346,7 @@
     "used_in": [
       {
         "file": "DetermineBasalAIMI2.kt",
-        "function": "buildRbtExtendedSignals"
+        "function": "refreshPatientStateRuntime"
       },
       {
         "file": "AimiProfileAdvisorActivity.kt",
@@ -3884,7 +3920,7 @@
     "used_in": [
       {
         "file": "DetermineBasalAIMI2.kt",
-        "function": "runPkpdPredictionsBgiDeviationAndNoisyTargetsStage"
+        "function": "publishDoseTerminalAuthorityAndSnapshot"
       }
     ]
   },
@@ -4014,7 +4050,7 @@
       },
       {
         "file": "DetermineBasalAIMI2.kt",
-        "function": "runT9PhysioEarlyPkpdAndTubeBootstrap"
+        "function": "applyTubeAdvisorFromDoseSnapshot"
       },
       {
         "file": "AimiBehaviorFamilyRegistry.kt",
@@ -4098,6 +4134,31 @@
       {
         "file": "DetermineBasalAIMI2.kt",
         "function": "buildRbtExtendedSignals"
+      }
+    ]
+  },
+  "key_aimi_t3c_autodrive_basal_authority": {
+    "key": "key_aimi_t3c_autodrive_basal_authority",
+    "name": "OApsAIMIT3cAutodriveBasalAuthority",
+    "type": "Boolean",
+    "feature_group": "t3c_adaptive_basal",
+    "summary": "Boolean switch for t3c_autodrive_basal_authority.",
+    "default": true,
+    "dependency": "OApsAIMIT3cBrittleMode",
+    "orphaned": false,
+    "is_gate": false,
+    "negative_gate_key": null,
+    "impact": "high",
+    "effect_high": "Feature is active — associated functionality runs",
+    "effect_low": "Feature is inactive — associated functionality is disabled",
+    "used_in": [
+      {
+        "file": "OpenAPSAIMIPlugin.kt",
+        "function": "aimiComposeT3cSubScreen"
+      },
+      {
+        "file": "DetermineBasalAIMI2.kt",
+        "function": "runT3cBrittleBypassOrReturn"
       }
     ]
   },
