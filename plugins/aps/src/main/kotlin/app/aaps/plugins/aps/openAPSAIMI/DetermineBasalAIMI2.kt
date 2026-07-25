@@ -14579,6 +14579,11 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                     rT.deliverAt = dateUtil.now()
                     lastCarryRetryFireMillis = dateUtil.now()
                     consoleLog.add("🍱 LEGACY_PB1_PRIORITY_CARRY: re-proposing ${pendingLegacyPrebolusUnit}U (not yet confirmed in DB)")
+                    // Consume the pending request after a single carry-forward proposal.
+                    // Without this, a slow DB confirmation would re-propose the same amount every
+                    // cooldown window, causing a multi-delivery (e.g. P2 delivered 2-3 times).
+                    pendingLegacyPrebolusUnit = 0.0f
+                    pendingLegacyPrebolusExpiry = 0L
                 } else {
                     consoleLog.add("⏳ LEGACY_PB1_PRIORITY_CARRY: cooldown (retry il y a ${timeSinceLastCarryRetry / 1000}s)")
                 }
