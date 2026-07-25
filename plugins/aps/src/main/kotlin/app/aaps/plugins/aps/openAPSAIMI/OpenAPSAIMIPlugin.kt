@@ -1769,17 +1769,6 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
                     add(IntKey.AimiEmergencySosImmediateThreshold)
                     add(IntKey.AimiEmergencySosStaleThreshold)
                     add(ApsIntentKey.AimiSosPermissions)
-                    add(
-                        ApsIntentKey.AimiHypoRiskAlarmInfo.withCompose(
-                            ComposeScreenContent { onBack ->
-                                AimiPreferenceInfoScreen(
-                                    titleResId = R.string.hypo_risk_notification_title,
-                                    messageResId = R.string.aimi_hypo_risk_alarm_summary,
-                                    onBack = onBack,
-                                )
-                            },
-                        ),
-                    )
                 },
             )
         )
@@ -1900,6 +1889,9 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
                                 basalNeuralLearner = basalNeuralLearner,
                                 unifiedReactivityLearner = unifiedReactivityLearner,
                                 basalLearner = basalLearner,
+                                onlineLearner = onlineLearner,
+                                pkpdElapsedHours = pkpdIntegration.elapsedLearningHours,
+                                preferences = preferences,
                                 onBack = onBack,
                             )
                         },
@@ -2242,8 +2234,37 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
         PreferenceSubScreenDef(
             key = "aimi_compose_pkpd",
             titleResId = R.string.oaps_aimi_pkpd_section_title,
-            // Wave1 G1: product surface is the guided Compose screen only — raw key dump removed.
-            items = listOf(aimiComposePkpdSetupItem()),
+            items = buildList {
+                add(aimiComposePkpdSetupItem())
+                add(BooleanKey.OApsAIMIPkpdEnabled)
+                add(BooleanKey.OApsAIMIPkpdEndogenousReversion)
+                add(BooleanKey.OApsAIMIPeakGovernorEnabled)
+                add(DoubleKey.OApsAIMIPeakGovernorLearnedWeight)
+                add(DoubleKey.OApsAIMIPkpdInitialDiaH)
+                add(DoubleKey.OApsAIMIPkpdInitialPeakMin)
+                add(DoubleKey.OApsAIMIPkpdBoundsDiaMinH)
+                add(DoubleKey.OApsAIMIPkpdBoundsDiaMaxH)
+                add(DoubleKey.OApsAIMIPkpdBoundsPeakMinMin)
+                add(DoubleKey.OApsAIMIPkpdBoundsPeakMinMax)
+                add(DoubleKey.OApsAIMIPkpdMaxDiaChangePerDayH)
+                add(DoubleKey.OApsAIMIPkpdMaxPeakChangePerDayMin)
+                add(DoubleKey.OApsAIMIIsfFusionMinFactor)
+                add(DoubleKey.OApsAIMIIsfFusionMaxFactor)
+                add(DoubleKey.OApsAIMIIsfFusionMaxChangePerTick)
+                add(BooleanKey.OApsAIMIDynIsfTrajectoryTuningEnabled)
+                add(BooleanKey.OApsAIMIDynIsfTrajectoryShadowOnly)
+                add(DoubleKey.OApsAIMIDynIsfTrajectoryMaxFraction)
+                add(DoubleKey.OApsAIMISmbTailThreshold)
+                add(DoubleKey.OApsAIMISmbTailDamping)
+                add(BooleanKey.OApsAIMIPkpdPragmaticReliefEnabled)
+                add(DoubleKey.OApsAIMIPkpdPragmaticReliefMinFactor)
+                add(DoubleKey.OApsAIMIRedCarpetRestoreThreshold)
+                add(BooleanKey.OApsAIMIIobSurveillanceGuard)
+                add(DoubleKey.OApsAIMIPriorityMaxIobFactor)
+                add(DoubleKey.OApsAIMIPriorityMaxIobExtraU)
+                add(DoubleKey.OApsAIMISmbExerciseDamping)
+                add(DoubleKey.OApsAIMISmbLateFatDamping)
+            },
         )
 
     private fun aimiComposePkpdSetupItem(): PreferenceItem =

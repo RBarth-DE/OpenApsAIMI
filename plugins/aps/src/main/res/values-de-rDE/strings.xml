@@ -216,8 +216,10 @@
     <string name="OApsAIMI_RemoteControlPin_title">Fernsteuerungs-PIN</string>
     <string name="OApsAIMI_RemoteControlPin_summary">PIN für AIMI-Fernsteuerungsfunktionen.</string>
     <string name="aimi_sos_title">🚨 Notfall-SOS (Hypo)</string>
+    <string name="aimi_sos_threshold_summary">Blutzuckerwert, unterhalb dessen der SOS-Alarm ausgelöst wird (mg/dL).</string>
     <string name="aimi_sos_permissions_title">📍 SMS-, Anruf- und Standortberechtigungen erteilen</string>
     <string name="aimi_sos_permissions_summary">Tippen, um AAPS zu autorisieren, SMS zu senden, Anrufe zu tätigen und im Hintergrund auf den Standort für Notfälle zuzugreifen.</string>
+    <string name="sos_sms_footer_low">" WARTEN AUF ERHOHLUNG ODER BENUTZERAKTION"</string>
     <string name="aimi_physio_hc_permissions_title">Health Connect Berechtigungen</string>
     <string name="aimi_physio_hc_permissions_summary">Öffnen Sie den Bildschirm, um Schlaf-, HRV- und Herzfrequenzzugriff über Health Connect zu gewähren.</string>
     <string name="aimi_inflammatory_diseases_title">Entzündliche / Autoimmunerkrankungen</string>
@@ -662,4 +664,12 @@
     <string name="aimi_pkpd_learning_pace_title">Lerngeschwindigkeit</string>
     <string name="aimi_pkpd_pace_slow">Langsam</string>
     <string name="aimi_pkpd_level_simple">Anfänger</string>
+    <string name="sos_sms_footer_stale">" SENSOR PRÜFEN."</string>
+    <string name="sos_sms_footer_critical">" HANDELN SIE JETZT!"</string>
+    <string name="sos_sms_footer_recovery">" DER BLUTZUCKER STEIGT? WARTEN SIE AUF DIE BESTÄTIGUNG"</string>
+    <string name="aimi_sos_enable_title">„Notfall-SOS“ aktivieren</string>
+    <string name="aimi_sos_enable_summary">Bei Auftreten einer schweren Unterzuckerung wird automatisch eine SMS mit Ihrem Standort und Ihrem Blutzuckerwert versendet.</string>
+    <string name="aimi_sos_phone_title">Notfall-Telefonnummer</string>
+    <string name="aimi_sos_phone_summary">Telefonnummer, an die die SMS gesendet werden soll (bitte Ländervorwahl angeben, z. B. +49...).</string>
+    <string name="aimi_sos_threshold_title">Kritische Hypo-Schwelle</string>
 </resources>

@@ -198,6 +198,9 @@ enum class BooleanKey(
         defaultedBySM = true,
         sync = SyncSpec(SyncChannel.Cold, SyncDirection.Bidirectional)
     ),
+
+    MaintenanceEnableFabric("enable_fabric2", true, R.string.pref_title_maintenance_enable_fabric, defaultedBySM = true, hideParentScreenIfHidden = true),
+
     FslCalibrationTrigger("calibration_stops_SMB", false, defaultedBySM = true),
     FslCalibrationEnd("calibration_end", false, defaultedBySM = true),
 
@@ -214,10 +217,8 @@ enum class BooleanKey(
     ActivityMonitorUseSteps(
         key= "act_mon_use_steps",
         titleResId = R.string.pref_activ_mon_title_act_mon_use_steps,
-        //summaryResId = empty
         defaultValue = true, defaultedBySM = true),
 
-    MaintenanceEnableFabric("enable_fabric2", true, R.string.pref_title_maintenance_enable_fabric, defaultedBySM = true, hideParentScreenIfHidden = true),
 
     // Master-only (not a follower client): unattended settings export backs up the local config, which on a
     // client is derived from the master. showInNsClientMode=false hides it in apsMode + pumpControlMode only;
@@ -292,10 +293,10 @@ enum class BooleanKey(
     SiteRotationManageCgm("site_rotation_manage_cgm", defaultValue = false, titleResId = R.string.pref_title_site_rotation_manage_cgm, sync = SyncSpec(SyncChannel.Cold, SyncDirection.Bidirectional)),
 
     OApsAIMIMLtraining("key_enable_ML_training", false),
-    // OApsAIMIEnableBasal("key_enable_basal", false), // ORPHANED — not read by DetermineBasalAIMI2.kt
+    OApsAIMIEnableBasal("key_enable_basal", false),
     OApsAIMIEnableStepsFromWatch("count_steps_watch", false),
     OApsAIMIpregnancy("key_use_AimiPregnancy",false),
-    // OApsAIMIforcelimits("key_use_AimiForceLimits",false),  // ORPHANED — not read by DetermineBasalAIMI2.kt
+    OApsAIMIforcelimits("key_use_AimiForceLimits",false),
     OApsAIMInight("OApsAIMI_Enable_night",false),
     OApsAIMIhoneymoon("key_use_Aimi_honeymoon",false),
     OApsxdriponeminute(key = "key_use_Aimi_xdripOM",defaultValue = false),
@@ -525,8 +526,7 @@ enum class BooleanKey(
     OApsAIMIThyroidEnabled("key_aimi_thyroid_enabled", false),
     OApsAIMIThyroidLogVerbosity("key_aimi_thyroid_debug", false),
 
-    // 🏥 AIMI Physiological Assistant (MTR) — vitals multipliers / assistant extras only.
-    // Does NOT gate PhysiologicalTree / Harmonia (cascade native always-on since 2026-07-18).
+    // 🏥 AIMI Physiological Assistant (MTR)
     AimiPhysioAssistantEnable("aimi_physio_assistant_enable", false),
     AimiPhysioSleepDataEnable("aimi_physio_sleep_enable", true),
     AimiPhysioHRVDataEnable("aimi_physio_hrv_enable", true),
@@ -602,14 +602,7 @@ enum class BooleanKey(
         R.string.pref_title_aimi_tpo_notify_on_apply,
         R.string.pref_summary_aimi_tpo_notify_on_apply,
         dependency = OApsAIMITpoEnabled,
-    ),
-    OApsAIMIEnableBasal("key_enable_basal", false),
-    OApsAIMIforcelimits("key_use_AimiForceLimits",false),
-    /**
-     * When trajectory tuning is enabled: log the would-be ISF multiplier but do not apply it.
-     * Default on for safe rollout; set false to apply the bounded adjustment.
-     */
-
+    )
 }
 
 

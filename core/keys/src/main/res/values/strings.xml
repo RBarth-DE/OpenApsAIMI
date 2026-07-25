@@ -456,7 +456,6 @@
     <string name="pref_title_aimi_straight_line_tube">Straight-line tube advisor (SMB caps)</string>
     <string name="pref_summary_aimi_straight_line_tube">Discrete short-horizon control on max SMB: keeps predicted minimum BG above a floor using the PKPD min curve, favors larger caps when eventual BG is high, penalizes zig-zag SMB sizing. Does not replace PKPD or safety nets. Off by default.</string>
     <string name="pref_title_aimi_t3c_autodrive_basal_authority">T3C: Autodrive basal authority</string>
-    <string name="pref_summary_aimi_t3c_autodrive_basal_authority">Under T3C brittle mode, fuse Autodrive’s temporary basal demand with the T3C PI controller. SMB from Autodrive is never delivered (basal-only). The physiological tree can unlock a higher basal ceiling and faster ramp on a confirmed rise. Off disables fusion (PI-only + shadow Autodrive).</string>
     <string name="pref_title_aimi_sos_enable">Enable Emergency SOS</string>
     <string name="pref_summary_aimi_sos_enable">Send SMS with BG, trend, IOB and location when a severe hypo or missing CGM data is detected. SMS only (no automatic calls).</string>
     <string name="pref_title_aimi_sos_phone">Emergency contact #1</string>
@@ -469,6 +468,7 @@
     <string name="pref_summary_aimi_sos_immediate_threshold">BG (mg/dL) that triggers an immediate SOS SMS (also triggered when delta ≤ −10 mg/dL).</string>
     <string name="pref_title_aimi_sos_stale_threshold">Missing sensor alert (minutes)</string>
     <string name="pref_summary_aimi_sos_stale_threshold">If no valid CGM reading is seen for this many minutes, send a missing-data SOS SMS.</string>
+    <string name="pref_summary_aimi_t3c_autodrive_basal_authority">Under T3C brittle mode, fuse Autodrive’s temporary basal demand with the T3C PI controller. SMB from Autodrive is never delivered (basal-only). The physiological tree can unlock a higher basal ceiling and faster ramp on a confirmed rise. Off disables fusion (PI-only + shadow Autodrive).</string>
     <string name="pref_title_aimi_undeclared_cob">Undeclared-meal COB estimation</string>
     <string name="pref_summary_aimi_undeclared_cob">Estimates virtual carbs from the glucose appearance rate (Ra), BG dynamics, patient weight/TDD and rest/activity context, then feeds them into the prediction curves so basal (TBR) anticipates an undeclared meal. Never delivers autonomous SMB. Automatically muted during exercise, hypo/post-hypo, pulmonary exacerbation and any stress/dawn false-meal suppression. Off by default.</string>
     <string name="pref_title_aimi_undeclared_cob_max_g" comment="%1$s is not used; plain title. Max grams the estimator may inject.">Undeclared COB: maximum grams</string>
@@ -607,9 +607,9 @@
     <string name="aimi_summary_o_aps_a_i_m_i_dyn_isf_trajectory_shadow_only">Controls dyn isf trajectory shadow only.</string>
     <string name="aimi_summary_o_aps_a_i_m_i_dyn_isf_trajectory_tuning_enabled">Controls dyn isf trajectory tuning enabled.</string>
     <string name="aimi_summary_aimi_emergency_sos_enable">Controls emergency sos enable.</string>
-    <string name="aimi_summary_aimi_emergency_sos_immediate_threshold">Controls emergency sos immediate threshold.</string>
-    <string name="aimi_summary_aimi_emergency_sos_stale_threshold">Controls emergency sos stale threshold.</string>
-    <string name="aimi_summary_aimi_emergency_sos_threshold">Controls emergency sos threshold.</string>
+    <string name="aimi_summary_aimi_emergency_sos_immediate_threshold">Must be ≤ SosThreshold — triggers instant SMS without waiting for observation window</string>
+    <string name="aimi_summary_aimi_emergency_sos_stale_threshold">Time, no BG — independent of BG thresholds; fires when CGM data is missing this long</string>
+    <string name="aimi_summary_aimi_emergency_sos_threshold">Should be highest of the BG thresholds — starts the 30‑minute observation window</string>
     <string name="aimi_summary_aimi_endometriosis_basal_mult">Basal multiplier during endometriosis flare.</string>
     <string name="aimi_summary_aimi_endometriosis_enable">Controls endometriosis enable.</string>
     <string name="aimi_summary_aimi_endometriosis_pain_flare">Controls endometriosis pain flare.</string>
