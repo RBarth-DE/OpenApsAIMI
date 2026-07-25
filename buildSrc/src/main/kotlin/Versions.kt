@@ -5,12 +5,12 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 object Versions {
 
     // On change edit aaps-ci.yml (fork builds use AIMI suffix; base tracks upstream dev-a)
-    const val appVersion = "4.0.0.0-dev.RB.200726"
+    const val appVersion = "4.0.0.0-dev.RB.250726"
     const val versionCode = 1500
 
     const val compileSdk = 37
     const val minSdk = 31
-    const val targetSdk = 34 // Health Connect / Android 14 compatibility
+    const val targetSdk = 35
     const val wearMinSdk = 30
     const val wearTargetSdk = 30
 
