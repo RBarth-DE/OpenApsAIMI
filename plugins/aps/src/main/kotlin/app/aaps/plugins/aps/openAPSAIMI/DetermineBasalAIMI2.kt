@@ -8378,7 +8378,15 @@ class DetermineBasalaimiSMB2 @Inject constructor(
     ): Boolean {
         if (isExplicitUserAction) return false
         val uam = AimiUamHandler.confidenceOrZero()
-        if (!(mealClockActiveForSpiralRelax || mealData.mealCOB >= 6.0 || uam >= 0.45)) return false
+        // Feedforward front-load (field data 2026-07-23): on a strong, *sustained* unannounced rise the
+        // UAM model already asks for 2+ U, but the tight-spiral anti-stacking cap withholds it (freezes
+        // maxSMBHB ~1.3) because COB=0 and UAM confidence hasn't yet crossed 0.45 — so the dose only
+        // catches up once BG is already high. Treat such a rise as meal-priority so the cap relaxes and
+        // the SMB is released early. shortAvgDelta ≥ 5 requires the trend to hold across several readings
+        // (not a single spike); the safety floors below (bg ≥ 145, iob < maxIob×0.75) still bind, and all
+        // downstream hypo guards (SafetyNet zones, LGS, minPred, PKPD Guard A/B) are unchanged.
+        val strongConfirmedRise = deltaValue >= 8.0f && shortAvgDeltaValue >= 5.0f
+        if (!(mealClockActiveForSpiralRelax || mealData.mealCOB >= 6.0 || uam >= 0.45 || strongConfirmedRise)) return false
         if (bgValue < 145.0) return false
         if (deltaValue < 1.8f && shortAvgDeltaValue < 1.5f) return false
         if (!maxIobValue.isFinite() || maxIobValue <= 0.0) return false
@@ -10910,7 +10918,11 @@ class DetermineBasalaimiSMB2 @Inject constructor(
 
     private fun Double.withoutZeros(): String = DecimalFormat("0.##").format(this)
     fun round(value: Double): Int {
-        if (value.isNaN()) return 0
+        if (value.isNaN()) {
+            // Keep the fallback observable by PersistenceLayerImpl's non-finite APS-result diagnostic.
+            consoleError.add("round(): non-finite value substituted with 0 (roundNaN=NaN)")
+            return 0
+        }
         val scale = 10.0.pow(2.0)
         return (Math.round(value * scale) / scale).toInt()
     }
