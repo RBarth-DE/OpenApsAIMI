@@ -35,7 +35,7 @@ import app.aaps.plugins.aps.openAPSAIMI.physio.AIMIPhysioDataRepositoryMTR
 import app.aaps.plugins.aps.openAPSAIMI.trajectory.TrajectoryGuard
 import app.aaps.plugins.main.general.dashboard.AdjustmentDetailsActivity
 import app.aaps.plugins.main.general.dashboard.DashboardFragment
-import app.aaps.plugins.main.general.dashboard.DashboardModesActivity
+
 import app.aaps.plugins.main.general.dashboard.DashboardShellDeps
 import app.aaps.plugins.main.general.dashboard.viewmodel.OverviewViewModel
 import app.aaps.plugins.main.general.overview.OverviewDataImpl
@@ -69,7 +69,7 @@ abstract class OverviewModule {
     @ContributesAndroidInjector abstract fun contributesOverviewEntryFragment(): OverviewEntryFragment
     @ContributesAndroidInjector abstract fun contributesOverviewFragment(): OverviewFragment
     @ContributesAndroidInjector abstract fun contributesDashboardFragment(): DashboardFragment
-    @ContributesAndroidInjector abstract fun contributesDashboardModesActivity(): DashboardModesActivity
+
     @ContributesAndroidInjector abstract fun contributesAdjustmentDetailsActivity(): AdjustmentDetailsActivity
     @ContributesAndroidInjector abstract fun graphDataInjector(): GraphData
 

@@ -187,7 +187,6 @@ internal class DashboardShellController(
                     R.id.dashboard_nav_home -> true
                     R.id.dashboard_nav_history -> openHistory()
                     R.id.dashboard_nav_bolus -> openBolus()
-                    R.id.dashboard_nav_adjustments -> openModes()
                     R.id.dashboard_nav_settings -> openSensorApp()
                     else -> true
                 }
@@ -773,11 +772,6 @@ internal class DashboardShellController(
         return true
     }
 
-    private fun openModes(): Boolean {
-        host.context.startActivity(Intent(host.context, DashboardModesActivity::class.java))
-        return true
-    }
-
     private fun openLoopDialog() {
         host.activity?.let { activity ->
             protectionCheck.requestProtection(ProtectionCheck.Protection.BOLUS) { result ->
@@ -792,7 +786,7 @@ internal class DashboardShellController(
         if (dexcomBoyda.isEnabled()) {
             dexcomBoyda.dexcomPackages().forEach { if (openCgmApp(it)) return true }
         }
-        return openModes()
+        return false
     }
 
     @RequiresApi(Build.VERSION_CODES.CUPCAKE)
@@ -1124,17 +1118,21 @@ internal class DashboardShellController(
             val label = decimalFormatter.toPumpSupportedBolusWithUnits(b.amount, bolusStep)
             smbOnly.add(ChartSmbMarker(timestampEpochMs = t, amountLabel = label))
         }
-        if (smbOnly.isNotEmpty()) return@runCatching smbOnly
-        // Some pumps/sync paths may persist SMB without explicit SMB type; keep visibility instead of blank strip.
-        val fallback = ArrayList<ChartSmbMarker>()
+        // Some pumps/sync paths persist SMB without explicit SMB type (e.g. Medtrum, T3c mode).
+        // Merge SMB-typed + any valid non-SMB bolus so users always see their deliveries on the graph.
+        val merged = ArrayList<ChartSmbMarker>(smbOnly)
+        val seenTimestamps = HashSet<Long>()
+        smbOnly.forEach { seenTimestamps.add(it.timestampEpochMs) }
         for (b in boluses) {
             val t = b.timestamp
             if (t < fromMs || t > toMs) continue
             if (!b.isValid || b.amount <= 0.0) continue
+            if (t in seenTimestamps) continue  // already covered by SMB-typed entry
             val label = decimalFormatter.toPumpSupportedBolusWithUnits(b.amount, bolusStep)
-            fallback.add(ChartSmbMarker(timestampEpochMs = t, amountLabel = label))
+            merged.add(ChartSmbMarker(timestampEpochMs = t, amountLabel = label))
         }
-        fallback
+        if (merged.isEmpty()) return@runCatching emptyList()
+        merged
     }.getOrElse { emptyList() }
 
     private fun basalActualStepPointsUpTo(toMs: Long): List<GraphDataPoint> {

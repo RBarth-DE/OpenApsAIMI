@@ -27,6 +27,7 @@ import app.aaps.core.interfaces.db.PersistenceLayer
 import app.aaps.core.interfaces.di.ApplicationScope
 import app.aaps.core.interfaces.iob.IobCobCalculator
 import app.aaps.core.interfaces.logging.AAPSLogger
+import app.aaps.core.interfaces.logging.LTag
 import app.aaps.core.interfaces.logging.UserEntryLogger
 import app.aaps.core.interfaces.overview.graph.OverviewDataCache
 import app.aaps.core.interfaces.overview.graph.ProfileDisplayData
@@ -818,7 +819,12 @@ class MainViewModel @Inject constructor(
         when (action) {
             is ConfirmableAction.ExecuteAutomation       -> {
                 val event = automation.findEventById(action.automationId) ?: return@launch
-                viewModelScope.launch { automation.processEvent(event) }
+                viewModelScope.launch {
+                    automation.processEvent(event)
+                    aapsLogger.debug(LTag.APS, "[DashboardModes Compose] processEvent returned, invoking loop...")
+                    loop.invoke("DashboardModes", true)
+                    aapsLogger.debug(LTag.APS, "[DashboardModes Compose] loop.invoke returned")
+                }
             }
 
             is ConfirmableAction.DeactivateScene         ->

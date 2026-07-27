@@ -565,6 +565,9 @@ class GraphViewModel @AssistedInject constructor(
         viewModelScope.launch(Dispatchers.IO) {
             val event = automation.events.value.firstOrNull { it.id == eventId } ?: return@launch
             automation.processEvent(event)
+            aapsLogger.debug(LTag.APS, "[DashboardModes Graph] processEvent returned, invoking loop...")
+            loop.invoke("DashboardModes", true)
+            aapsLogger.debug(LTag.APS, "[DashboardModes Graph] loop.invoke returned")
         }
     }
 
