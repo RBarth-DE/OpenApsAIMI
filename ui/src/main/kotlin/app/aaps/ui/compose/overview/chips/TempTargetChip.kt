@@ -3,14 +3,11 @@ package app.aaps.ui.compose.overview.chips
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
@@ -23,14 +20,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.sp
 import app.aaps.core.data.model.TT
 import app.aaps.core.ui.compose.AapsSpacing
 import app.aaps.core.ui.compose.AapsTheme
-import app.aaps.core.ui.compose.ExcludeFromJacocoGeneratedReport
 import app.aaps.core.ui.compose.icons.IcTtActivity
 import app.aaps.core.ui.compose.icons.IcTtEatingSoon
 import app.aaps.core.ui.compose.icons.IcTtHypo
@@ -39,6 +32,10 @@ import app.aaps.core.ui.compose.ttReasonColor
 import app.aaps.ui.compose.main.TempTargetChipState
 import androidx.compose.foundation.layout.fillMaxHeight
 
+/**
+ * @see TempTargetChipActivePreview
+ * @see TempTargetChipNonePreview
+ */
 @Composable
 fun TempTargetChip(
     targetText: String,
@@ -128,34 +125,4 @@ private fun TT.Reason?.toIcon(): ImageVector = when (this) {
     TT.Reason.ACTIVITY     -> IcTtActivity
     TT.Reason.HYPOGLYCEMIA -> IcTtHypo
     else                   -> IcTtManual // Custom, Automation, Wear, null
-}
-
-@ExcludeFromJacocoGeneratedReport
-@Preview(showBackground = true)
-@Composable
-private fun TempTargetChipActivePreview() {
-    MaterialTheme {
-        TempTargetChip(
-            targetText = "5.5 - 5.5 (30 min)",
-            state = TempTargetChipState.Active,
-            progress = 0.5f,
-            reason = TT.Reason.EATING_SOON,
-            onClick = {}
-        )
-    }
-}
-
-@ExcludeFromJacocoGeneratedReport
-@Preview(showBackground = true)
-@Composable
-private fun TempTargetChipNonePreview() {
-    MaterialTheme {
-        TempTargetChip(
-            targetText = "5.0 - 7.0",
-            state = TempTargetChipState.None,
-            progress = 0f,
-            reason = null,
-            onClick = {}
-        )
-    }
 }

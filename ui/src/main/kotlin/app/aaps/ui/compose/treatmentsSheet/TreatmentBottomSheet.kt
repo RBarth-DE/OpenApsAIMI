@@ -29,17 +29,15 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import app.aaps.core.interfaces.navigation.ElementType
 import app.aaps.core.keys.interfaces.ElementVisibility
-import app.aaps.core.ui.compose.ExcludeFromJacocoGeneratedReport
 import app.aaps.core.ui.compose.MasterOfflineBanner
 import app.aaps.core.ui.compose.TonalIcon
 import app.aaps.core.ui.compose.consumeOverscroll
-import app.aaps.core.ui.compose.masterEditingEnabled
 import app.aaps.core.ui.compose.icons.IcBolus
 import app.aaps.core.ui.compose.icons.IcCarbs
+import app.aaps.core.ui.compose.masterEditingEnabled
 import app.aaps.core.ui.compose.navigation.NavigationRequest
 import app.aaps.core.ui.compose.navigation.color
 import app.aaps.core.ui.compose.navigation.descriptionResId
@@ -104,8 +102,11 @@ fun TreatmentBottomSheet(
     }
 }
 
+/**
+ * @see TreatmentBottomSheetPreview
+ */
 @Composable
-private fun TreatmentSelectionContent(
+internal fun TreatmentSelectionContent(
     onDismiss: () -> Unit,
     onNavigate: (NavigationRequest) -> Unit,
     quickWizardItems: List<QuickWizardItem>,
@@ -298,7 +299,7 @@ private fun TreatmentSelectionContent(
 }
 
 @Composable
-private fun TreatmentSettingsContent(
+internal fun TreatmentSettingsContent(
     settingsDef: PreferenceSubScreenDef,
     onBack: () -> Unit
 ) {
@@ -372,8 +373,6 @@ private fun TreatmentItem(
     )
 }
 
-@ExcludeFromJacocoGeneratedReport
-@Preview(showBackground = true)
 @Composable
 private fun TreatmentBottomSheetPreview() {
     MaterialTheme {
