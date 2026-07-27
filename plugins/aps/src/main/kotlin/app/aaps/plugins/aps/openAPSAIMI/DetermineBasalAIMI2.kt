@@ -9822,7 +9822,11 @@ class DetermineBasalaimiSMB2 @Inject constructor(
          */
         internal fun legacyPrebolusLatchBlocks(firedAtMs: Long?, nowMs: Long, runtimeMin: Long): Boolean {
             if (firedAtMs == null) return false
-            val activationWindowMs = runtimeMin.coerceAtLeast(0) * 60_000L + 90_000L
+            // Cover the full 30‑minute meal‑mode window regardless of when the tag fired.
+            // Previously the window was runtimeMin×60+90s, which collapsed mid‑window
+            // for early‑firing tags (e.g. P2 at runtimeMin=15 gave only 16.5 min of lock,
+            // less than the 9‑min P2 eligibility window → double fire).
+            val activationWindowMs = 30 * 60_000L + 90_000L
             return (nowMs - firedAtMs) < activationWindowMs
         }
 

@@ -190,11 +190,16 @@ class GetRecordPacket(injector: HasAndroidInjector, private val recordIndex: Int
                         detailedBolusInfoStorage.add(detailedBolusInfo)
                     }
                 } else {
+                    // Preserve the original bolus type from AAPS (e.g. SMB),
+                    // even when the in-memory detailedBolusInfo has expired.
+                    // Falls back to NORMAL when no AAPS-initiated type is available
+                    // (e.g. bolus was triggered directly from the pump hardware).
+                    val fallbackType = medtrumPump.bolusOriginalType
                     newRecord = runBlocking {
                         pumpSync.syncBolusWithPumpId(
                             timestamp = bolusStartTime,
                             amount = PumpInsulin(bolusNormalDelivered),
-                            type = null,
+                            type = fallbackType,
                             pumpId = bolusStartTime,
                             pumpType = medtrumPump.pumpType(),
                             pumpSerial = medtrumPump.pumpSN.toString(radix = 16)

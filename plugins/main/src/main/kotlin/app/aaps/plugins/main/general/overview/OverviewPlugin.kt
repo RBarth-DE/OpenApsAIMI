@@ -114,7 +114,7 @@ class OverviewPlugin @Inject constructor(
     @SuppressLint("SetTextI18n")
     override fun setVersionView(view: TextView) {
         if (config.APS || config.PUMPCONTROL) {
-            view.text = "${config.VERSION_NAME} (${config.HEAD.substring(0, 4)})"
+            view.text = "${config.VERSION_NAME} (${config.BUILD_VERSION.substringAfterLast("-")})"
             if (config.COMMITTED) {
                 view.setTextColor(rh.gac(context, app.aaps.core.ui.R.attr.omniGrayColor))
                 view.alpha = 1.0f

@@ -1286,7 +1286,8 @@ internal class DashboardShellController(
             overviewData.treatmentsSeries as? PointsWithLabelGraphSeries<DataPointWithLabelInterface>
                 ?: return@runCatching emptyList()
         val bolusStep = activePlugin.activePump.pumpDescription.bolusStep
-        val out = ArrayList<ChartSmbMarker>()
+        val smbOnly = ArrayList<ChartSmbMarker>()
+        val seenTimestamps = HashSet<Long>()
         val iterator = series.getValues(fromMs.toDouble(), toMs.toDouble())
         while (iterator.hasNext()) {
             when (val dp = iterator.next()) {
@@ -1294,12 +1295,30 @@ internal class DashboardShellController(
                     if (dp.data.type == BS.Type.SMB) {
                         val t = dp.x.toLong()
                         val label = decimalFormatter.toPumpSupportedBolusWithUnits(dp.data.amount, bolusStep)
-                        out.add(ChartSmbMarker(timestampEpochMs = t, amountLabel = label))
+                        smbOnly.add(ChartSmbMarker(timestampEpochMs = t, amountLabel = label))
+                        seenTimestamps.add(t)
                     }
                 else -> Unit
             }
         }
-        out
+        // Some pumps/sync paths persist SMB without explicit SMB type (e.g. Medtrum, T3c mode).
+        // Merge SMB-typed + any valid non-SMB bolus so users always see their deliveries on the graph.
+        val merged = ArrayList<ChartSmbMarker>(smbOnly)
+        val iterator2 = series.getValues(fromMs.toDouble(), toMs.toDouble())
+        while (iterator2.hasNext()) {
+            when (val dp = iterator2.next()) {
+                is BolusDataPoint -> {
+                    val t = dp.x.toLong()
+                    if (dp.data.amount <= 0.0) continue
+                    if (t in seenTimestamps) continue
+                    val label = decimalFormatter.toPumpSupportedBolusWithUnits(dp.data.amount, bolusStep)
+                    merged.add(ChartSmbMarker(timestampEpochMs = t, amountLabel = label))
+                }
+                else -> Unit
+            }
+        }
+        if (merged.isEmpty()) return@runCatching emptyList()
+        merged
     }.getOrElse { emptyList() }
 
     private fun extractTbrChangeMarkerTimes(fromMs: Long, toMs: Long): List<Long> = runCatching {

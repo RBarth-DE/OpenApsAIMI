@@ -66,10 +66,7 @@ val gitStatusProvider    = gitExec("status", "-s").map { output ->
 }
 
 fun generateDate(): String {
-    val stringBuilder: StringBuilder = StringBuilder()
-    // showing only date prevents app to rebuild everytime
-    stringBuilder.append(SimpleDateFormat("yyyy.MM.dd").format(Date()))
-    return stringBuilder.toString()
+    return SimpleDateFormat("yyyy.MM.dd HH:mm").format(Date())
 }
 
 fun isMaster(): Boolean = !Versions.appVersion.contains("-")
