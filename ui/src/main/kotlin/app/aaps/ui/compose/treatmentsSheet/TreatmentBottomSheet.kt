@@ -372,27 +372,3 @@ private fun TreatmentItem(
         } else Modifier
     )
 }
-
-@Composable
-private fun TreatmentBottomSheetPreview() {
-    MaterialTheme {
-        TreatmentSelectionContent(
-            onDismiss = {},
-            onNavigate = {},
-            quickWizardItems = listOf(
-                QuickWizardItem(guid = "1", buttonText = "Meal", detail = "36g / 2.5U", isEnabled = true),
-                QuickWizardItem(guid = "2", buttonText = "Snack", detail = "12g / 0.8U", disabledReason = "No insulin required")
-            ),
-            showCgm = true,
-            showCalibration = true,
-            showTreatment = true,
-            showInsulin = true,
-            showAfrezza = true,
-            showCarbs = true,
-            showCalculator = true,
-            isDexcomSource = false,
-            showSettingsIcon = true,
-            onSettingsClick = {}
-        )
-    }
-}

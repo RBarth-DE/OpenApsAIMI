@@ -531,25 +531,3 @@ private fun DestinationChips(
         )
     }
 }
-
-@Composable
-private fun MaintenanceBottomSheetContentPreview() {
-    MaterialTheme {
-        MaintenanceBottomSheetContent(
-            exportConfig = ExportConfig(
-                isCloudActive = true,
-                isCloudError = false,
-                hasCloudCredentials = true,
-                settingsLocal = true,
-                settingsCloud = true,
-                logEmail = true,
-                logCloud = false,
-                csvLocal = true,
-                csvCloud = false,
-                aimiCloud = false,
-                cloudDisplayName = "Google Drive"
-            ),
-            isDirectoryAccessGranted = true
-        )
-    }
-}
