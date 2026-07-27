@@ -76,6 +76,7 @@ import app.aaps.plugins.aps.openAPSAIMI.pkpd.InsulinKineticsAuthority
 import app.aaps.plugins.aps.openAPSAIMI.pkpd.PkpdLearningDiagnostics
 import app.aaps.plugins.aps.openAPSAIMI.orchestration.AimiIntelligenceSnapshot
 import app.aaps.plugins.aps.openAPSAIMI.orchestration.AimiIntelligenceSnapshotBuilder
+import app.aaps.plugins.aps.openAPSAIMI.orchestration.AimiAdaptationStatusBuilder
 import app.aaps.plugins.aps.openAPSAIMI.orchestration.IntelligenceSnapshotJson
 import app.aaps.plugins.aps.openAPSAIMI.orchestration.DoseTerminalSnapshot
 import app.aaps.plugins.aps.openAPSAIMI.orchestration.DoseTerminalSnapshotBuilder
@@ -87,6 +88,7 @@ import app.aaps.plugins.aps.openAPSAIMI.prediction.NaiveEventualBgSignGuard
 import app.aaps.plugins.aps.openAPSAIMI.prediction.PredictionSanityResult
 import app.aaps.plugins.aps.openAPSAIMI.prediction.minPredictedAcrossCurves
 import app.aaps.plugins.aps.openAPSAIMI.quality.ReplayQualityExportBuilder
+import app.aaps.plugins.aps.openAPSAIMI.quality.SmbBindingTrace
 import app.aaps.plugins.aps.openAPSAIMI.recursive.BasalFirstChannel
 import app.aaps.plugins.aps.openAPSAIMI.recursive.RecursiveBeliefAuthorityGate
 import app.aaps.plugins.aps.openAPSAIMI.release.HyperSeverityClassifier
@@ -167,6 +169,7 @@ import app.aaps.plugins.aps.openAPSAIMI.safety.signalTrajectoryStack
 import app.aaps.plugins.aps.openAPSAIMI.safety.HypoThresholdMath
 import app.aaps.plugins.aps.openAPSAIMI.safety.InsulinLoadGovernor
 import app.aaps.plugins.aps.openAPSAIMI.safety.MealSafetyContext
+import app.aaps.plugins.aps.openAPSAIMI.safety.HyperInstalledDroppingExemption
 import app.aaps.plugins.aps.openAPSAIMI.safety.PredictiveHypoEvaluator
 import app.aaps.plugins.aps.openAPSAIMI.safety.PredictiveHypoInput
 import app.aaps.plugins.aps.openAPSAIMI.scenario.ScenarioProjectionApplicator
@@ -209,9 +212,11 @@ import app.aaps.plugins.aps.openAPSAIMI.patient.HarmoniaSensorTelemetry
 import app.aaps.plugins.aps.openAPSAIMI.patient.HarmoniaDecision
 import app.aaps.plugins.aps.openAPSAIMI.patient.HarmoniaDecisionEngine
 import app.aaps.plugins.aps.openAPSAIMI.patient.HarmoniaDecisionEnvironment
+import app.aaps.plugins.aps.openAPSAIMI.patient.AimiCascadeArbitrationArtifacts
 import app.aaps.plugins.aps.openAPSAIMI.patient.BodyKineticsDigest
 import app.aaps.plugins.aps.openAPSAIMI.patient.MealCertainty
 import app.aaps.plugins.aps.openAPSAIMI.patient.MealCertaintyBuilder
+import app.aaps.plugins.aps.openAPSAIMI.patient.MealRiseGeometry
 import app.aaps.plugins.aps.openAPSAIMI.patient.HarmoniaAction
 import app.aaps.plugins.aps.openAPSAIMI.patient.GlobalPhysiologicalState
 import app.aaps.plugins.aps.openAPSAIMI.patient.PhysiologicalRiskLevel
@@ -261,6 +266,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import org.json.JSONObject
 import kotlin.math.abs
 import kotlin.math.exp
 import kotlin.math.max
@@ -311,6 +317,8 @@ internal data class AimiDecisionContext(
         var recursive_authority_gate: org.json.JSONObject? = null,
         /** Replay-oriented quality bridge built from existing guards and shadow channels. */
         var replay_quality: org.json.JSONObject? = null,
+        /** Diagnostic-only ordered SMB cap chain; never consumed by dose calculation. */
+        var smb_binding_trace: JSONObject? = null,
         /** Shared latent physiological state reused across engines for the tick. */
         var physio_latent_state: org.json.JSONObject? = null,
         /** Multi-hypothesis UAM interpretation for meal vs endogenous vs stress vs rebound. */
@@ -319,7 +327,7 @@ internal data class AimiDecisionContext(
         var patient_state: org.json.JSONObject? = null,
         /** High-level patient mode and strategy derived from the shared state. */
         var patient_mode: org.json.JSONObject? = null,
-        /** AIMI Harmonia physiological tree, context-only in Lot 1 with no insulin authority. */
+        /** AIMI Harmonia physiological tree — deploys insulin intent; Harmonia arbitrates dose. */
         var physiological_tree: org.json.JSONObject? = null,
         /** Lot A endocrine belief (WCycle + hypo dampen) — context for tree/Harmonia/forensics. */
         var endocrine_belief: org.json.JSONObject? = null,
@@ -333,6 +341,8 @@ internal data class AimiDecisionContext(
         var harmonia_simulation: org.json.JSONObject? = null,
         /** AIMI Harmonia production owner state; basal-first only and safety-gated. */
         var harmonia_production: org.json.JSONObject? = null,
+        /** Harmonia SMB authority arbitration (ACCEPT / LIFT_WITHIN_ENVELOPE / REDUCE). */
+        var harmonia_smb_authority: org.json.JSONObject? = null,
         /** Unified intelligence snapshot (kinetics, causal, ISF, predictions) — intelligence_snapshot_v1. */
         var intelligence_snapshot: org.json.JSONObject? = null,
         /** Runtime ownership of T3C for this tick: native RBT, legacy fallback, or safety terminal. */
@@ -663,6 +673,9 @@ internal data class AimiDecisionContext(
             adjustments.replay_quality?.let { rq ->
                 adj.put("replay_quality", rq)
             }
+            adjustments.smb_binding_trace?.let { trace ->
+                adj.put("smb_binding_trace", trace)
+            }
             adjustments.physio_latent_state?.let { latent ->
                 adj.put("physio_latent_state", latent)
             }
@@ -695,6 +708,9 @@ internal data class AimiDecisionContext(
             }
             adjustments.harmonia_production?.let { production ->
                 adj.put("harmonia_production", production)
+            }
+            adjustments.harmonia_smb_authority?.let { smbAuthority ->
+                adj.put("harmonia_smb_authority", smbAuthority)
             }
             adjustments.intelligence_snapshot?.let { snapshot ->
                 adj.put("intelligence_snapshot_v1", snapshot)
@@ -1633,6 +1649,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         lastSmbProposed = 0.0
         lastSmbCapped = 0.0
         lastSmbFinal = 0.0
+        lastSmbBindingTraceDraft = SmbBindingTrace.Draft(timestampMs = ctx.currentTime)
         lastNgrBasalMultiplier = 1.0
         lastHyperTrajectoryRelease = null
         lastRecursiveBeliefSnapshot = null
@@ -1646,6 +1663,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         lastLoadGovernorMultiplierG = 1.0
         lastPhysiologicalPhaseOutput = null
         lastPhysiologicalPatternSnapshot = null
+        AimiCascadeArbitrationArtifacts.clear()
         lastMealAbsorptionOutput = null
         lastPhysioLatentState = null
         lastEffortAssessment = null // per-tick computed; memory (lastEffortMemory) persists across ticks
@@ -3633,6 +3651,10 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             harmoniaExerciseBlock = harmoniaExerciseBlock,
             harmoniaHardSafetyBlock = harmoniaHardSafetyBlock,
             harmoniaBlockReason = harmoniaBlockReason,
+            insulinIntent = lastPhysiologicalTreeSnapshot?.insulinIntent?.name,
+            mealCertaintySupports = lastMealCertainty?.supportsMealSupport == true,
+            riseConfirmed = lastMealCertainty?.riseGeometry == MealRiseGeometry.OK ||
+                (delta >= 1.2f && bg >= 140.0),
             postHypoDeliverySuppressSmb =
                 lastPostHypoDeliveryAuthority.active && lastPostHypoDeliveryAuthority.suppressMealDelivery,
             postHypoOrdinal = postHypoOrdinal,
@@ -3858,7 +3880,8 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         patternSnapshot.dominant?.let { dominant ->
             consoleLog.add(
                 "🧬 PATTERN: dominant=$dominant conf=${"%.2f".format(patternSnapshot.dominantConfidence)} " +
-                    "cap=${patternSnapshot.smbCapU?.let { "%.2f".format(it) + "U" } ?: "none"} " +
+                    "cap=${patternSnapshot.smbCapU?.let { "%.2f".format(it) + "U" } ?: "none"}" +
+                    "${patternSnapshot.smbCapKind?.let { "/$it" } ?: ""} " +
                     "mealSupp=${patternSnapshot.suppressMealInterpretation} " +
                     "hyperSupp=${patternSnapshot.suppressHyperRelease} | ${patternSnapshot.reasonSummary}",
             )
@@ -4072,6 +4095,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                 bgMgdl = bg,
                 targetBgMgdl = targetForPostHypoExit,
                 deltaMgdl5m = delta.toDouble(),
+                mealHyperBypassEnabled = rbtPrefs.mealHyperBypassEnabled,
             ),
         )
         lastRecursiveAuthorityGateDecision = authorityGate
@@ -4105,12 +4129,18 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         val stackingCapU = lastInsulinStackingEvaluation?.takeIf {
             it.kind == InsulinStackingStance.Kind.SURVEILLANCE_IOB
         }?.smbAbsoluteCapU
+        // Soft meal proposals never bind here; PatternCapHold only re-applies HARD caps.
         val patternCapU = patternCapHold.resolve(
             rawCapU = lastPhysiologicalPatternSnapshot?.smbCapU,
             rising = delta > 0f,
+            rawKind = lastPhysiologicalPatternSnapshot?.smbCapKind,
         )
+        val softPatternProposalU = lastPhysiologicalPatternSnapshot?.softProposedCapU()
         if (patternCapHold.holding && patternCapU != null) {
-            consoleLog.add("🧷 Pattern cap hold: keeping ${"%.2f".format(patternCapU)}U during rise (pattern flapped)")
+            consoleLog.add("🧷 Pattern cap hold: keeping HARD ${"%.2f".format(patternCapU)}U during rise (pattern flapped)")
+        }
+        if (softPatternProposalU != null) {
+            consoleLog.add("🍽️ Pattern soft proposal ${"%.2f".format(softPatternProposalU)}U (Harmonia may lift within maxSMBHB)")
         }
         consoleLog.add("🪜 RBT_GATE: ${authorityGate.summary()}")
         val rbtAuthority = authorityGate.effectiveAuthority != ReleaseAuthority.NONE
@@ -4130,6 +4160,47 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             physioCapU?.let { lifted = min(lifted, it) }
             stackingCapU?.let { lifted = min(lifted, it) }
             patternCapU?.let { cap -> lifted = min(lifted, cap) }
+            var traceDraft = lastSmbBindingTraceDraft.copy(
+                htrBeforeU = htr.v3SmbBeforeU,
+                htrAfterU = htr.v3SmbAfterU,
+                rbtBeforeU = htr.v3SmbAfterU,
+                rbtAfterU = rawLifted,
+                patternActive = lastPhysiologicalPatternSnapshot?.active
+                    ?.joinToString(separator = "+") { it.id.name }
+                    ?.takeIf { it.isNotEmpty() },
+                patternCapU = patternCapU ?: softPatternProposalU,
+            )
+                .appendStage("HTR", htr.v3SmbBeforeU, htr.v3SmbAfterU, phase = "AUTODRIVE_PRE_TERMINAL", kind = "LIFT")
+                .appendStage("RBT", htr.v3SmbAfterU, rawLifted, phase = "AUTODRIVE_PRE_TERMINAL", kind = "LIFT")
+            var traceValue = rawLifted
+            physioCapU?.let { cap ->
+                val after = min(traceValue, cap)
+                traceDraft = traceDraft.appendStage("PHYSIO_CAP", traceValue, after, cap, "AUTODRIVE_PRE_TERMINAL", "CAP")
+                traceValue = after
+            }
+            stackingCapU?.let { cap ->
+                val after = min(traceValue, cap)
+                traceDraft = traceDraft.appendStage("IOB_SURVEILLANCE_CAP", traceValue, after, cap, "AUTODRIVE_PRE_TERMINAL", "CAP")
+                traceValue = after
+            }
+            softPatternProposalU?.let { proposal ->
+                // Telemetry only — soft meal proposal must not bind terminal pre-caps.
+                traceDraft = traceDraft.appendStage(
+                    "PATTERN_SOFT_PROPOSAL",
+                    traceValue,
+                    traceValue,
+                    proposal,
+                    "AUTODRIVE_PRE_TERMINAL",
+                    "PROPOSAL",
+                )
+            }
+            patternCapU?.let { cap ->
+                val after = min(traceValue, cap)
+                traceDraft = traceDraft.appendStage("PATTERN_CAP", traceValue, after, cap, "AUTODRIVE_PRE_TERMINAL", "CAP")
+                traceValue = after
+            }
+            traceDraft = traceDraft.copy(preTerminalAfterCapsU = traceValue)
+            lastSmbBindingTraceDraft = traceDraft
             htr.copy(
                 active = lifted > htr.v3SmbBeforeU + 0.02,
                 smbFloorU = if (rbtAuthority) min(r.smbDemandU, lifted) else min(htr.smbFloorU, lifted),
@@ -4535,6 +4606,32 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                 0.0
             }
             val v3SmbRaw = maxOf(v3SmbModel, v3SmbFloor)
+            val smallPrebolusPref = preferences.get(DoubleKey.OApsAIMIautodrivesmallPrebolus)
+            val largePrebolusPref = preferences.get(DoubleKey.OApsAIMIautodrivePrebolus)
+            val v3FloorTier = when {
+                v3SmbFloor <= 0.0 -> "OFF"
+                combinedDelta >= 5.0f && shortAvgDeltaAdj >= 3.0f -> "LARGE"
+                else -> "SMALL"
+            }
+            lastSmbBindingTraceDraft = lastSmbBindingTraceDraft.copy(
+                originOwner = "AutodriveV3",
+                modelOutputU = v3SmbModel,
+                mpcOutputU = v3SmbModel,
+                tier = v3FloorTier,
+                smallPrebolusPrefU = smallPrebolusPref,
+                largePrebolusPrefU = largePrebolusPref,
+                autodriveFloorU = v3SmbFloor,
+                maxSmbU = maxSMB,
+                maxSmbHighBgU = maxSMBHB,
+                iobHeadroomU = iobHeadroomForFloor,
+            ).appendStage(
+                name = "AUTODRIVE_FLOOR",
+                beforeU = v3SmbModel,
+                afterU = v3SmbRaw,
+                referenceU = v3SmbFloor,
+                phase = "AUTODRIVE_PRE_TERMINAL",
+                kind = "FLOOR",
+            )
             if (v3SmbFloor > v3SmbModel + 1e-6) {
                 consoleLog.add(
                     "🚀 AUTODRIVE_AGGR_SMB_FLOOR: model=${"%.2f".format(v3SmbModel)} → " +
@@ -4542,6 +4639,13 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                 )
             }
             val v3Smb = lastPostHypoDeliveryAuthority.capSmbU(v3SmbRaw)
+            lastSmbBindingTraceDraft = lastSmbBindingTraceDraft.appendStage(
+                name = "POST_HYPO_CAP",
+                beforeU = v3SmbRaw,
+                afterU = v3Smb,
+                phase = "AUTODRIVE_PRE_TERMINAL",
+                kind = "CAP",
+            )
             if (v3Smb < v3SmbRaw - 1e-6) {
                 consoleLog.add(
                     "${PostHypoDeliveryAuthority.LOG_PREFIX}: v3_smb " +
@@ -5652,6 +5756,21 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         highBgOverrideUsed = smbExecution.highBgOverrideUsed
         smbExecution.newSmbInterval?.let { intervalsmb = it }
         val smbToGive = smbExecution.finalSmb
+        if (lastSmbBindingTraceDraft.originOwner == "NONE") {
+            lastSmbBindingTraceDraft = lastSmbBindingTraceDraft.copy(
+                originOwner = "GlobalAIMI",
+                modelOutputU = predictedSMB.toDouble(),
+                maxSmbU = maxSMB,
+                maxSmbHighBgU = maxSMBHB,
+                iobHeadroomU = (maxIob - iob).coerceAtLeast(0.0),
+            ).appendStage(
+                "SMB_EXECUTOR",
+                predictedSMB.toDouble(),
+                smbToGive.toDouble(),
+                phase = "GLOBAL_AIMI_PROPOSAL",
+                kind = "PROPOSAL",
+            )
+        }
         consoleLog.add(
             String.format(
                 java.util.Locale.US,
@@ -5747,6 +5866,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             } else {
                 effectiveMaxIobForPriority
             }
+        val pkpdGuardInput = smbToGiveLocal
         val pkpdGuardApply = applyPkpdAbsorptionGuardOncePerTick(
             smbIn = smbToGiveLocal,
             pkpdRuntime = pkpdRuntime,
@@ -5758,6 +5878,26 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             logChannel = PkpdGuardLogChannel.PIPELINE,
         )
         smbToGiveLocal = pkpdGuardApply.smbOut
+        lastSmbBindingTraceDraft = if (pkpdGuardApply.skippedDuplicate) {
+            lastSmbBindingTraceDraft.appendStage(
+                "PKPD_GUARD_SKIPPED_DUPLICATE",
+                pkpdGuardInput.toDouble(),
+                pkpdGuardInput.toDouble(),
+                phase = "LEGACY_GUARD",
+                kind = "OBSERVATION",
+            )
+        } else {
+            lastSmbBindingTraceDraft.copy(
+                pkpdBeforeU = lastSmbBindingTraceDraft.pkpdBeforeU ?: pkpdGuardInput.toDouble(),
+                pkpdAfterU = lastSmbBindingTraceDraft.pkpdAfterU ?: smbToGiveLocal.toDouble(),
+            ).appendStage(
+                "PKPD_GUARD",
+                pkpdGuardInput.toDouble(),
+                smbToGiveLocal.toDouble(),
+                phase = "LEGACY_GUARD",
+                kind = "GUARD",
+            )
+        }
         intervalsmbLocal = intervalsmb
         if (pkpdGuardApply.skippedDuplicate) {
             consoleLog.add("PKPD_GUARD_SKIP: already applied this tick (e.g. Autodrive V3 finalize)")
@@ -5784,6 +5924,13 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         if (endoSmbMult < 1.0) {
             val beforeEndo = smbToGiveLocal
             smbToGiveLocal = (smbToGiveLocal * endoSmbMult.toFloat()).coerceAtLeast(0f)
+            lastSmbBindingTraceDraft = lastSmbBindingTraceDraft.appendStage(
+                "ENDO_DAMPEN",
+                beforeEndo.toDouble(),
+                smbToGiveLocal.toDouble(),
+                phase = "LEGACY_GUARD",
+                kind = "DAMPEN",
+            )
             if (smbToGiveLocal < beforeEndo) {
                 consoleLog.add("SMB_ENDO_DAMPEN: ${"%.2f".format(beforeEndo)}U → ${"%.2f".format(smbToGiveLocal)}U (x${"%.2f".format(endoSmbMult)})")
                 rT.reason.append(" | EndoDampen x${"%.2f".format(endoSmbMult)}")
@@ -5902,6 +6049,18 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         if (smbToGiveLocal < beforeCap) {
             rT.reason.append(" | 🛡️ Cap: ${"%.2f".format(beforeCap)} → ${"%.2f".format(smbToGiveLocal)}")
         }
+        lastSmbBindingTraceDraft = lastSmbBindingTraceDraft.copy(
+            safetyNetBaseLimitU = lastSmbBindingTraceDraft.safetyNetBaseLimitU ?: currentMaxSmb,
+            redCarpetBeforeU = lastSmbBindingTraceDraft.redCarpetBeforeU ?: beforeCap.toDouble(),
+            redCarpetAfterU = lastSmbBindingTraceDraft.redCarpetAfterU ?: smbToGiveLocal.toDouble(),
+        ).appendStage(
+            "LEGACY_RED_CARPET_MAX_SMB_IOB",
+            beforeCap.toDouble(),
+            smbToGiveLocal.toDouble(),
+            currentMaxSmb,
+            phase = "LEGACY_GUARD",
+            kind = "COMPOSITE",
+        )
 
         return AimiPkpdGuardEndoRedCarpetSmbStage(
             smbToGive = smbToGiveLocal,
@@ -8005,6 +8164,8 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             govTag = "MAIN",
         )
 
+        // Refresh the earlier early-exit snapshot after main-path governance learning has completed.
+        assignAimiAdaptationStatus(finalResult)
         return finalResult
     }
 
@@ -8089,9 +8250,10 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             }
         )
 
+        val terminalSmbAmountU = SmbBindingTrace.terminalAmountU(finalResult.units)
         decisionCtx.outcome = AimiDecisionContext.Outcome(
             clinical_decision = if ((finalResult.units ?: 0.0) > 0) "SMB_Delivery" else if ((finalResult.rate ?: profile.current_basal) != profile.current_basal) "Basal_Modulation" else "No_Action",
-            dosage_u = finalResult.units ?: 0.0,
+            dosage_u = terminalSmbAmountU,
             target_basal_uph = finalResult.rate,
             narrative_explanation = finalResult.reason.toString().replace("\n", " | ").take(2048)
         )
@@ -8102,12 +8264,15 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         decisionCtx.adjustments.scenario_projection = lastScenarioProjection?.toDecisionContextExport()
         decisionCtx.adjustments.hyper_trajectory_release = lastHyperTrajectoryRelease?.toDecisionContextExport()
         decisionCtx.adjustments.physiological_phase = physiologicalPhaseExport()
-        lastPhysiologicalPatternSnapshot?.takeIf { it.active.isNotEmpty() }?.let { patterns ->
-            decisionCtx.adjustments.physiological_patterns = PhysiologicalPatternExport.toJsonObject(patterns)
+        val patternsJson = lastPhysiologicalPatternSnapshot?.takeIf { it.active.isNotEmpty() }?.let { patterns ->
+            PhysiologicalPatternExport.toJsonObject(patterns).also {
+                decisionCtx.adjustments.physiological_patterns = it
+            }
         }
         decisionCtx.adjustments.meal_absorption_phase = mealAbsorptionPhaseExport()
         decisionCtx.adjustments.pred_divergence = lastPredDivergenceExport
         val rbtPrefs = RecursiveBeliefPreferences.from(preferences)
+        var harmoniaSmbAuthorityJson: org.json.JSONObject? = null
         lastRecursiveBeliefSnapshot?.let { snap ->
             val t3cApplied = snap.resolutions.t3cBasalFirst?.selectedForProduction == true
             val harmoniaApplied = snap.resolutions.harmoniaBasalFirst?.selectedForProduction == true
@@ -8123,7 +8288,24 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                 authorityGate = lastRecursiveAuthorityGateDecision,
             )
             decisionCtx.adjustments.recursive_belief = UnfoldExporter.toJsonObject(export)
+            snap.resolutions.harmoniaSmb?.let { smb ->
+                harmoniaSmbAuthorityJson = org.json.JSONObject().apply {
+                    put("mode", smb.authorityMode ?: JSONObject.NULL)
+                    put("smb_u", smb.demandAfterU)
+                    put("demand_before_u", smb.demandBeforeU)
+                    put("max_smb_cap_u", smb.maxSmbCapU)
+                    put("adds_smb_authority", smb.addsSmbAuthority)
+                    put("insulin_intent", smb.insulinIntent ?: JSONObject.NULL)
+                    put("reason_codes", org.json.JSONArray(smb.reasonCodes))
+                    put("source", "harmonia_smb_authority_v1")
+                }
+                decisionCtx.adjustments.harmonia_smb_authority = harmoniaSmbAuthorityJson
+            }
         }
+        AimiCascadeArbitrationArtifacts.publish(
+            physiologicalPatterns = patternsJson,
+            harmoniaSmbAuthority = harmoniaSmbAuthorityJson,
+        )
         decisionCtx.adjustments.recursive_authority_gate = lastRecursiveAuthorityGateDecision?.toJsonObject()
         decisionCtx.adjustments.physio_latent_state = lastPhysioLatentState?.toJsonObject()
         decisionCtx.adjustments.uam_hypotheses = lastUamHypothesisState?.toJsonObject()
@@ -8157,8 +8339,9 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         }
 
         decisionCtx.adjustments.physiological_tree = lastPhysiologicalTreeSnapshot?.toJsonObject()?.apply {
+            // Keep tree authority label honest: Harmonia arbitrates basal + SMB (not "none"/context-only).
+            put("insulin_authority", "harmonia_basal_and_smb_arbitration")
             lastIntelligenceSnapshot?.let { snap ->
-                put("insulin_authority", "context_modulation_lot2")
                 put("insulin_kinetics_context", org.json.JSONObject().apply {
                     put("effective_dia_h", snap.kinetics.effective.diaHours)
                     put("effective_peak_min", snap.kinetics.effective.peakMinutes)
@@ -8197,6 +8380,15 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                 rbtPreferences = rbtPrefs,
             ),
         )
+        val bindingFinalU = terminalSmbAmountU
+        val bindingExportDraft = lastSmbBindingTraceDraft.appendStage(
+            "FINAL",
+            bindingFinalU,
+            bindingFinalU,
+            phase = "EXPORT",
+            kind = "OBSERVATION",
+        )
+        decisionCtx.adjustments.smb_binding_trace = bindingExportDraft.build(bindingFinalU).toJsonObject()
 
         lastAuditorLoopSnapshot?.let { snapshot ->
             decisionCtx.adjustments.auditor_tick = snapshot.toJsonObject()
@@ -8880,6 +9072,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             profile = profile,
             delta = delta.toDouble(),
             endogenousReversionEnabled = preferences.get(BooleanKey.OApsAIMIPkpdEndogenousReversion),
+            hyperReversionEnabled = preferences.get(BooleanKey.OApsAIMIPkpdHyperReversion),
         )
         lastAdvancedPredictionCurves = curves
         recordPkpdSoftFloor(curves)
@@ -9727,6 +9920,8 @@ class DetermineBasalaimiSMB2 @Inject constructor(
     private var lastPredictionSize: Int = 0
     private var lastEventualBgSnapshot: Double = 0.0
     private var lastSmbProposed: Double = 0.0
+    /** Diagnostic-only immutable SMB cap chain, replaced at every tick bootstrap. */
+    private var lastSmbBindingTraceDraft = SmbBindingTrace.Draft()
     /** Cross-tick effort-load memory for [EffortActivityBelief]; intentionally NOT reset per tick. */
     private var lastEffortMemory = EffortActivityBelief.Memory()
     private var lastEffortAssessment: EffortActivityBelief.Assessment? = null
@@ -11089,6 +11284,45 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                 else -> "none"
             },
         )
+        assignAimiAdaptationStatus(rT)
+    }
+
+    private fun assignAimiAdaptationStatus(rT: RT) {
+        val now = dateUtil.now()
+        rT.aimiAdaptationStatus = AimiAdaptationStatusBuilder.build(
+            AimiAdaptationStatusBuilder.BuildInput(
+                now = now,
+                basalGovernanceEnabled = AimiAdaptationStatusBuilder.basalGovernanceEnabled(
+                    t3cBrittleModeEnabled = preferences.get(BooleanKey.OApsAIMIT3cBrittleMode),
+                    adaptiveBasalEnabled = preferences.get(BooleanKey.OApsAIMIT3cAdaptiveBasalEnabled),
+                ),
+                basalGovernance = if (::basalNeuralLearner.isInitialized) {
+                    basalNeuralLearner.getGovernanceSnapshot()
+                } else {
+                    null
+                },
+                unifiedReactivityEnabled = preferences.get(BooleanKey.OApsAIMIUnifiedReactivityEnabled),
+                unifiedReactivity = if (::unifiedReactivityLearner.isInitialized) {
+                    unifiedReactivityLearner.statusSnapshot()
+                } else {
+                    null
+                },
+                // BasalLearner.process runs on every AIMI tick; it has no independent feature switch.
+                basalLearnerEnabled = true,
+                basalLearner = if (::basalLearner.isInitialized) basalLearner.statusSnapshot() else null,
+                pkpdEnabled = preferences.get(BooleanKey.OApsAIMIPkpdEnabled),
+                pkpd = pkpdIntegration.learningStatusSnapshot(),
+                onlineLearnerEnabled = preferences.get(BooleanKey.OApsAIMIautoDriveActive) ||
+                    preferences.get(BooleanKey.OApsAIMIT3cBrittleMode),
+                onlineLearner = autodriveEngine.onlineLearnerStatus(),
+                ngrEnabled = preferences.getIfExists(BooleanKey.OApsAIMINightGrowthEnabled) == true,
+                ngr = nightGrowthResistanceMode.latestResult(),
+                wCycleEnabled = wCyclePreferences.enabled(),
+                wCycle = wCycleInfoForRun,
+                peakGovernorEnabled = preferences.get(BooleanKey.OApsAIMIPeakGovernorEnabled),
+                diaGovernorEnabled = preferences.get(BooleanKey.OApsAIMIDiaGovernorEnabled),
+            )
+        )
     }
 
     private fun recordBasalActionType(decisionType: String) {
@@ -11768,13 +12002,21 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             allowAuditorSoftLanding = allowAuditorSoftLanding,
         )
         chainBaseLimit = baseLimit
+        lastSmbBindingTraceDraft = lastSmbBindingTraceDraft.copy(
+            originOwner = lastSmbBindingTraceDraft.originOwner.takeUnless { it == "NONE" } ?: decisionSource,
+            finalOwner = decisionSource,
+            maxSmbU = maxSMB,
+            maxSmbHighBgU = maxSMBHB,
+            iobHeadroomU = (maxIob - iob).coerceAtLeast(0.0),
+            safetyNetBaseLimitU = baseLimit,
+        )
 
          // 🔒 FCL Safety: Enforce Safety Precautions (Dropping Fast, Hypo Risk, etc)
          // finalizeAndCapSMB often handles forced boluses, but they MUST yield to critical physical safety.
          // 🔧 RESTORED: Pass PKPD runtime for tail damping
          // Note: pkpdRuntime is calculated later in determine_basal, so we pass null here
          // and rely on the PKPD tail damping in applySafetyPrecautions for context-aware reduction
-         val safetyCappedUnits = applySafetyPrecautions(
+         val pkpdSafetyUnits = applySafetyPrecautions(
             mealData = mealData,
             smbToGiveParam = proposedFloat,
             hypoThreshold = hypoThreshold,
@@ -11783,9 +12025,28 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             exerciseFlag = sportTime, // Pass exercise state
             suspectedLateFatMeal = lateFatRiseFlag, // Pass late fat flag
             ignoreSafetyConditions = isExplicitUserAction
-         ).coerceAtMost(baseLimit.toFloat()) // Apply the SafetyNet limit immediately
+         )
+         val safetyCappedUnits = pkpdSafetyUnits.coerceAtMost(baseLimit.toFloat()) // Apply the SafetyNet limit immediately
          chainSafetyCapped = safetyCappedUnits
-
+         lastSmbBindingTraceDraft = lastSmbBindingTraceDraft.copy(
+             pkpdBeforeU = proposedFloat.toDouble(),
+             pkpdAfterU = pkpdSafetyUnits.toDouble(),
+         )
+             .appendStage(
+                 "SAFETY_PRECAUTIONS_PKPD",
+                 proposedFloat.toDouble(),
+                 pkpdSafetyUnits.toDouble(),
+                 phase = "FINALIZE",
+                 kind = "GUARD",
+             )
+             .appendStage(
+                 "SAFETY_NET",
+                 pkpdSafetyUnits.toDouble(),
+                 safetyCappedUnits.toDouble(),
+                 baseLimit,
+                 phase = "FINALIZE",
+                 kind = "CAP",
+             )
          if (safetyCappedUnits < proposedFloat) {
               consoleLog.add("Safety Precautions reduced SMB: $proposedFloat -> $safetyCappedUnits (BaseLimit=${"%.2f".format(baseLimit)})")
          }
@@ -11856,6 +12117,13 @@ class DetermineBasalaimiSMB2 @Inject constructor(
              )
          }
         chainAfterRefractory = gatedUnits
+        lastSmbBindingTraceDraft = lastSmbBindingTraceDraft.appendStage(
+            "REFRACTORY_AND_THYROID",
+            safetyCappedUnits.toDouble(),
+            gatedUnits.toDouble(),
+            phase = "FINALIZE",
+            kind = "GUARD",
+        )
 
          // 🔧 FIX 2: Adaptive AbsorptionGuard threshold (pediatric-safe)
          val tdd24h = resolveTdd24hForLoop(30.0)
@@ -11870,6 +12138,14 @@ class DetermineBasalaimiSMB2 @Inject constructor(
              val degraded = (maxSMB * 0.5).toFloat()
              if (gatedUnits > degraded) gatedUnits = degraded
          }
+         val beforeThrottle = gatedUnits
+         lastSmbBindingTraceDraft = lastSmbBindingTraceDraft.appendStage(
+             "ABSORPTION_AND_PREDICTION",
+             chainAfterRefractory.toDouble(),
+             beforeThrottle.toDouble(),
+             phase = "FINALIZE",
+             kind = "GUARD",
+         )
          
          // 🚀 NOUVEAUTÉ: Real-Time Insulin Observer Throttle
          if (!isExplicitUserAction) {
@@ -11941,6 +12217,16 @@ class DetermineBasalaimiSMB2 @Inject constructor(
              pkpdPreferTbrBoost = 1.0
          }
         chainAfterThrottle = gatedUnits
+        lastSmbBindingTraceDraft = lastSmbBindingTraceDraft.copy(
+            throttleBeforeU = beforeThrottle.toDouble(),
+            throttleAfterU = gatedUnits.toDouble(),
+        ).appendStage(
+            "PKPD_THROTTLE",
+            beforeThrottle.toDouble(),
+            gatedUnits.toDouble(),
+            phase = "FINALIZE",
+            kind = "DAMPEN",
+        )
 
         var stackingReducedSmbThisFinalize = false
         if (stackingEval.kind == InsulinStackingStance.Kind.SURVEILLANCE_IOB) {
@@ -11975,6 +12261,23 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             iob = this.iob.toDouble(),
             maxIob = this.maxIob
         )
+        lastSmbBindingTraceDraft = lastSmbBindingTraceDraft
+            .appendStage(
+                "IOB_SURVEILLANCE",
+                chainAfterThrottle.toDouble(),
+                gatedUnits.toDouble(),
+                stackingEval.smbAbsoluteCapU,
+                phase = "FINALIZE",
+                kind = "CAP",
+            )
+            .appendStage(
+                "MAX_SMB_IOB_CAP",
+                gatedUnits.toDouble(),
+                safeCap.toDouble(),
+                baseLimit,
+                phase = "FINALIZE",
+                kind = "CAP",
+            )
         
         // 🚀 MEAL MODES FORCE SEND: "Red Carpet" Logic
         var finalUnits: Double
@@ -12055,6 +12358,17 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             // Comportement standard (Pas de repas ou demande nulle)
             finalUnits = safeCap.toDouble()
         }
+        val afterRedCarpet = finalUnits
+        lastSmbBindingTraceDraft = lastSmbBindingTraceDraft.copy(
+            redCarpetBeforeU = safeCap.toDouble(),
+            redCarpetAfterU = afterRedCarpet,
+        ).appendStage(
+            "RED_CARPET",
+            safeCap.toDouble(),
+            afterRedCarpet,
+            phase = "FINALIZE",
+            kind = if (afterRedCarpet > safeCap + SmbBindingTrace.REDUCTION_TOLERANCE_U) "RESTORE" else "PASS",
+        )
         if (hyperReleaseFloorU > 0.0 && !isRedCarpetSituation) {
             val iobSpace = (this.maxIob - this.iob).toDouble().coerceAtLeast(0.0)
             val floorCap = minOf(hyperReleaseFloorU, iobSpace, baseLimit)
@@ -12124,6 +12438,13 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         // Charge the SlowCarbMeal early-window budget with the ACTUAL delivered amount (post-effort).
         if (chargeSlowCarbBudget && finalUnits > 0.0) slowCarbBudgetDeliveredU += finalUnits
         chainFinal = finalUnits
+        lastSmbBindingTraceDraft = lastSmbBindingTraceDraft.appendStage(
+            "TERMINAL_PROTECTIONS",
+            afterRedCarpet,
+            finalUnits,
+            phase = "FINALIZE",
+            kind = "GUARD",
+        )
         
         lastSmbCapped = finalUnits
         lastSmbFinal = finalUnits
@@ -13008,15 +13329,37 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             (context.delta >= 2.0) &&
             (context.iob < context.maxIob * 0.8)
 
+        // Lever 1: on a hyper-installed plateau (undeclared meal / deep hyper), do not hard-zero SMB
+        // solely because the sawtooth redesignation has Δ<0. The classic rise-fallback requires
+        // delta≥2 so it never fires on down-ticks — that was the dominant SMB=0 cutter on 25/07.
+        val mealClockActive = context.mealTime || context.bfastTime || context.lunchTime ||
+            context.dinnerTime || context.highCarbTime || context.snackTime
+        val hyperDropExempt = HyperInstalledDroppingExemption.shouldBypass(
+            HyperInstalledDroppingExemption.Input(
+                enabled = preferences.get(BooleanKey.OApsAIMIHyperDroppingExemptEnabled),
+                bgMgdl = context.bg,
+                targetBgMgdl = context.targetBg,
+                deltaMgdl5m = context.delta,
+                hypoThresholdMgdl = context.hypoThreshold,
+                mealContextActive = mealClockActive,
+                cobG = context.cob,
+            )
+        )
+
         fun addIfActive(
             active: Boolean,
             conditionLabel: String,
             bypassedByFallback: Boolean = false,
+            bypassedByHyperDrop: Boolean = false,
             bypassTag: String
         ) {
             if (!active) return
             if (fallback && bypassedByFallback) {
                 consoleLog.add("SMB_FALLBACK_BYPASS: $bypassTag")
+                return
+            }
+            if (hyperDropExempt && bypassedByHyperDrop) {
+                consoleLog.add("SMB_HYPER_DROP_BYPASS: $bypassTag")
                 return
             }
             conditions.add(conditionLabel)
@@ -13073,22 +13416,31 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         addIfActive(
             active = isDroppingFast(context),
             conditionLabel = ctx.getString(R.string.condition_droppingfast),
+            bypassedByHyperDrop = true,
             bypassTag = "droppingFast"
         )
         addIfActive(
             active = isDroppingFastAtHigh(context),
             conditionLabel = ctx.getString(R.string.condition_droppingfastathigh),
+            bypassedByHyperDrop = true,
             bypassTag = "droppingFastAtHigh"
         )
         addIfActive(
             active = isDroppingVeryFast(context),
             conditionLabel = ctx.getString(R.string.condition_droppingveryfast),
+            bypassedByHyperDrop = true,
             bypassTag = "droppingVeryFast"
         )
+        // Lever 1 (P0): on a hyper-installed descent, the dropping-fast family alone is not enough —
+        // isPrediction (emergency-brake branch, Δ<-3) and isAcceleratingDown also hard-zero the SMB
+        // while BG is still ~2-3× target. Exempt them under the SAME projection-gated predicate
+        // (HyperInstalledDroppingExemption). isBg90 is a genuine low-BG guard and is left untouched
+        // (mutually exclusive with the exemption's bg>180 anyway).
         addIfActive(
             active = isPrediction(context),
             conditionLabel = ctx.getString(R.string.condition_prediction),
             bypassedByFallback = true,
+            bypassedByHyperDrop = true,
             bypassTag = "prediction"
         )
         addIfActive(
@@ -13099,6 +13451,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         addIfActive(
             active = isAcceleratingDown(context),
             conditionLabel = ctx.getString(R.string.condition_acceleratingdown),
+            bypassedByHyperDrop = true,
             bypassTag = "acceleratingDown"
         )
 
@@ -13809,6 +14162,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                 delta = delta,
                 modulation = predictionModulation,
                 endogenousReversionEnabled = preferences.get(BooleanKey.OApsAIMIPkpdEndogenousReversion),
+                hyperReversionEnabled = preferences.get(BooleanKey.OApsAIMIPkpdHyperReversion),
             )
         } catch (e: Exception) {
             consoleLog.add("Error in AdvancedPredictionEngine: ${e.message}")
@@ -15046,6 +15400,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                 currentBG = bg, iobArray = iob_data_array, finalSensitivity = sens,
                 cobG = effectiveCOB, profile = profile, delta = delta.toDouble(),
                 endogenousReversionEnabled = preferences.get(BooleanKey.OApsAIMIPkpdEndogenousReversion),
+                hyperReversionEnabled = preferences.get(BooleanKey.OApsAIMIPkpdHyperReversion),
             )
             lastAdvancedPredictionCurves = curves
             val softFloor = recordPkpdSoftFloor(curves)

@@ -244,6 +244,200 @@ class RecursiveBeliefAuthorityGateTest {
     }
 
     @Test
+    fun evaluate_keeps_soft_authority_on_corroborated_hyper_meal_without_rise_confirmed_when_a1_enabled() {
+        val decision = RecursiveBeliefAuthorityGate.evaluate(
+            hyperMealInput(mealHyperBypassEnabled = true, mealRiseConfirmed = false),
+        )
+
+        // A1: hallucinated PKPD hypo must not pin authority to NONE on a corroborated, non-falling hyper.
+        assertThat(decision.effectiveAuthority).isEqualTo(ReleaseAuthority.SOFT)
+        assertThat(decision.reasonCodes).contains("PREDICTIVE_HYPO_MEAL_BYPASS_HYPER")
+        assertThat(decision.reasonCodes).doesNotContain("PREDICTIVE_HYPO_MEAL_BYPASS")
+        assertThat(decision.reasonCodes).doesNotContain("PREDICTIVE_HYPO")
+    }
+
+    @Test
+    fun evaluate_does_not_hyper_bypass_when_a1_disabled() {
+        val decision = RecursiveBeliefAuthorityGate.evaluate(
+            hyperMealInput(mealHyperBypassEnabled = false, mealRiseConfirmed = false),
+        )
+
+        // Fail-safe off → legacy behaviour: no hyper bypass code, authority stays denied by predictive hypo.
+        assertThat(decision.reasonCodes).doesNotContain("PREDICTIVE_HYPO_MEAL_BYPASS_HYPER")
+    }
+
+    @Test
+    fun evaluate_holds_soft_on_clear_hyper_gently_falling_without_meal_corroboration() {
+        // Clear hyper (BG≫threshold), gently falling, NO meal corroboration → the predictive-hypo halt
+        // was merely suppressed (no imminent hypo), so authority must hold SOFT, not drop to NONE.
+        val decision = RecursiveBeliefAuthorityGate.evaluate(
+            clearHyperInput(mealHyperBypassEnabled = true, deltaMgdl5m = -2.0),
+        )
+
+        assertThat(decision.effectiveAuthority).isEqualTo(ReleaseAuthority.SOFT)
+        assertThat(decision.reasonCodes).contains("PREDICTIVE_HYPO_HYPER_HOLD")
+        assertThat(decision.reasonCodes).doesNotContain("PREDICTIVE_HYPO")
+    }
+
+    @Test
+    fun evaluate_holds_soft_on_hyper_descent_at_quiche_rate() {
+        // P1: the quiche descent (BG 247, Δ≈−9) must now HOLD — projection stays well above hypo, so
+        // authority opens at the same moment as the terminal safety exemption. Previously (flat −3
+        // threshold) this collapsed to NONE and produced 14 hard-zero cycles.
+        val decision = RecursiveBeliefAuthorityGate.evaluate(
+            clearHyperInput(mealHyperBypassEnabled = true, deltaMgdl5m = -9.0),
+        )
+
+        assertThat(decision.effectiveAuthority).isEqualTo(ReleaseAuthority.SOFT)
+        assertThat(decision.reasonCodes).contains("PREDICTIVE_HYPO_HYPER_HOLD")
+        assertThat(decision.reasonCodes).doesNotContain("PREDICTIVE_HYPO")
+    }
+
+    @Test
+    fun evaluate_denies_on_hyper_freefall() {
+        // True freefall (Δ<−15) → the shared exemption predicate closes; stay conservative (NONE).
+        val decision = RecursiveBeliefAuthorityGate.evaluate(
+            clearHyperInput(mealHyperBypassEnabled = true, deltaMgdl5m = -16.0),
+        )
+
+        assertThat(decision.reasonCodes).doesNotContain("PREDICTIVE_HYPO_HYPER_HOLD")
+        assertThat(decision.effectiveAuthority).isEqualTo(ReleaseAuthority.NONE)
+    }
+
+    @Test
+    fun evaluate_no_hyper_hold_when_a1_disabled() {
+        val decision = RecursiveBeliefAuthorityGate.evaluate(
+            clearHyperInput(mealHyperBypassEnabled = false, deltaMgdl5m = -9.0),
+        )
+
+        assertThat(decision.reasonCodes).doesNotContain("PREDICTIVE_HYPO_HYPER_HOLD")
+        assertThat(decision.effectiveAuthority).isEqualTo(ReleaseAuthority.NONE)
+    }
+
+    /**
+     * Clear-hyper cycle with the predictive-hypo halt suppressed and NO meal evidence
+     * (dominant non-meal hypothesis) — isolates the A1b "clear-hyper hold" branch from A1 meal bypass.
+     */
+    private fun clearHyperInput(
+        mealHyperBypassEnabled: Boolean,
+        deltaMgdl5m: Double,
+    ): RecursiveBeliefAuthorityGate.Input =
+        RecursiveBeliefAuthorityGate.Input(
+            authorityEnabled = true,
+            requestedAuthority = ReleaseAuthority.HARD,
+            predictionAvailable = true,
+            phaseOutput = null,
+            patternSnapshot = PhysiologicalPatternSnapshot.EMPTY,
+            latentState = PhysioLatentState(
+                mealProb = 0.10,
+                endogenousGlucoseDrive = 0.40,
+                transientResistanceProb = 0.20,
+                sensorConfidence = 0.95,
+                postHypoReboundProb = 0.05,
+                source = "test",
+            ),
+            hypothesisState = UamHypothesisState(
+                mealProb = 0.10,
+                dawnEndogenousProb = 0.72,
+                stressProb = 0.10,
+                postHypoProb = 0.05,
+                dominant = UamHypothesisId.DAWN_ENDOGENOUS,
+                dominantConfidence = 0.72,
+                suppressMealInterpretation = false,
+            ),
+            patientState = null,
+            patientModeDecision = null,
+            safetyRiskExport = SafetyRiskExportSnapshot(
+                phase = AimiRiskPhase.DECISION,
+                predictiveHypoSuppressed = true,
+                safetyGate = "suppressed",
+                haltRemainingPipeline = false,
+                mealContextActive = false,
+                mealRiseConfirmed = false,
+                compositeMinMgdl = 39.0,
+                predBgMgdl = 39.0,
+                eventualBgMgdl = 39.0,
+                uamTerminalMgdl = 210.0,
+                hypoThresholdMgdl = 70.0,
+            ),
+            bgMgdl = 213.0,
+            targetBgMgdl = 112.0,
+            deltaMgdl5m = deltaMgdl5m,
+            mealHyperBypassEnabled = mealHyperBypassEnabled,
+        )
+
+    /** Corroborated undeclared-meal hyper (BG≫target, not falling), PKPD predictive hypo suppressed. */
+    private fun hyperMealInput(
+        mealHyperBypassEnabled: Boolean,
+        mealRiseConfirmed: Boolean,
+    ): RecursiveBeliefAuthorityGate.Input {
+        val patientState = PatientStateSnapshot(
+            timestampMs = 1_718_000_000_000L,
+            mealProb = 0.84,
+            postHypoReboundProb = 0.18,
+            sensorConfidence = 0.95,
+            causalPosterior = CausalStatePosterior(
+                fastMealProb = 0.86,
+                prolongedMealProb = 0.32,
+                dominant = CausalStateId.FAST_MEAL,
+                dominantConfidence = 0.84,
+                learningQuality = 0.90,
+            ),
+        )
+        return RecursiveBeliefAuthorityGate.Input(
+            authorityEnabled = true,
+            requestedAuthority = ReleaseAuthority.HARD,
+            predictionAvailable = true,
+            phaseOutput = null,
+            patternSnapshot = PhysiologicalPatternSnapshot.EMPTY,
+            latentState = PhysioLatentState(
+                mealProb = 0.84,
+                endogenousGlucoseDrive = 0.10,
+                transientResistanceProb = 0.18,
+                sensorConfidence = 0.95,
+                postHypoReboundProb = 0.18,
+                source = "test",
+            ),
+            hypothesisState = UamHypothesisState(
+                mealProb = 0.88,
+                dawnEndogenousProb = 0.06,
+                stressProb = 0.04,
+                postHypoProb = 0.08,
+                dominant = UamHypothesisId.MEAL,
+                dominantConfidence = 0.88,
+                suppressMealInterpretation = false,
+            ),
+            patientState = patientState,
+            patientModeDecision = PatientModeOrchestrator.Decision(
+                mode = PatientMode.FAST_MEAL,
+                confidence = 0.86,
+                strategyHint = PatientStrategyHint.SMB_PRIORITY,
+                mealBias = 0.92,
+                protectionBias = 0.16,
+                userIntentConfidence = 0.20,
+                reasonCodes = listOf("CAUSAL_FAST_MEAL"),
+            ),
+            safetyRiskExport = SafetyRiskExportSnapshot(
+                phase = AimiRiskPhase.DECISION,
+                predictiveHypoSuppressed = true,
+                safetyGate = "suppressed",
+                haltRemainingPipeline = false,
+                mealContextActive = true,
+                mealRiseConfirmed = mealRiseConfirmed,
+                compositeMinMgdl = 108.0,
+                predBgMgdl = 196.0,
+                eventualBgMgdl = 39.0,
+                uamTerminalMgdl = 248.0,
+                hypoThresholdMgdl = 75.0,
+            ),
+            bgMgdl = 224.0,
+            targetBgMgdl = 112.0,
+            deltaMgdl5m = 1.0,
+            mealHyperBypassEnabled = mealHyperBypassEnabled,
+        )
+    }
+
+    @Test
     fun evaluate_soft_limits_post_hypo_rebound_episode() {
         val episode = RbtEpisodeMemory.EpisodeState(
             kind = RbtEpisodeMemory.EpisodeKind.POST_HYPO_REBOUND,

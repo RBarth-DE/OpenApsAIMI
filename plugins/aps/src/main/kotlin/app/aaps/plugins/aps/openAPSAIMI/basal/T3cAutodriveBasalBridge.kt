@@ -76,7 +76,12 @@ object T3cAutodriveBasalBridge {
         }
         val activityConf = tree.branches.activity.confidence
         val postActivityConf = tree.branches.postActivity.confidence
-        if (activityConf >= 0.55 || postActivityConf >= 0.45) {
+        val activityBlocksUnlock = activityConf >= 0.55 || postActivityConf >= 0.45
+        val glycemicEvidenceStrong = bg > activationThreshold + 30.0 && delta >= 4.0f
+        // Activity/post-activity tree normally blocks basal unlock (conservative).
+        // But strong glycemic evidence (high BG + fast rise, e.g. unannounced meal)
+        // overrides this block so the system can respond to the real BG trajectory.
+        if (activityBlocksUnlock && !glycemicEvidenceStrong) {
             return UnlockDecision(false, "tree_activity")
         }
         val rising = bg > activationThreshold + 15.0 &&

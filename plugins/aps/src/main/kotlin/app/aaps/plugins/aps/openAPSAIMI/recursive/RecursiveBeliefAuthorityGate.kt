@@ -8,6 +8,7 @@ import app.aaps.plugins.aps.openAPSAIMI.patient.PatientMode
 import app.aaps.plugins.aps.openAPSAIMI.patient.PatientModeOrchestrator
 import app.aaps.plugins.aps.openAPSAIMI.patient.PatientStateSnapshot
 import app.aaps.plugins.aps.openAPSAIMI.physio.pattern.PhysiologicalPatternSnapshot
+import app.aaps.plugins.aps.openAPSAIMI.safety.HyperInstalledDroppingExemption
 import app.aaps.plugins.aps.openAPSAIMI.safety.PostHypoAggressiveRiseExit
 import app.aaps.plugins.aps.openAPSAIMI.safety.SafetyRiskExportSnapshot
 import org.json.JSONArray
@@ -25,6 +26,19 @@ internal object RecursiveBeliefAuthorityGate {
     private const val MEAL_BYPASS_CAUSAL_CONFIDENCE = 0.68
     private const val MEAL_BYPASS_MEAL_MARGIN = 0.10
     private const val MEAL_BYPASS_PROTECTION_CONFIDENCE = 0.68
+
+    // A1 — hyper meal-rise bypass: how far above target BG must be, and the minimum 5-min delta
+    // (mg/dL) for the rise to count as "not falling". Tunable after field monitoring.
+    private const val HYPER_BYPASS_MARGIN_MGDL = 45.0
+    private const val HYPER_BYPASS_MIN_DELTA_MGDL5M = 0.0
+
+    // A1b — "clear-hyper hold": when the predictive-hypo LGS halt was suppressed *because BG is
+    // clearly hyperglycemic* (PredictiveHypoEvaluator hyperArtifact), there is no imminent hypo, so
+    // authority must NOT be forced to NONE. Margin matches PredictiveHypoConstants hyper-artefact
+    // margin (40). The FALLING side reuses HyperInstalledDroppingExemption's projection-gated
+    // predicate (P1) so authority and the terminal safety wall open at the exact same moment on a
+    // hyper descent; rising/flat clear-hyper holds directly. Fail-closed on unknown BG/delta.
+    private const val HYPER_HOLD_MARGIN_MGDL = 40.0
 
     data class Input(
         val authorityEnabled: Boolean,
@@ -45,6 +59,9 @@ internal object RecursiveBeliefAuthorityGate {
         val targetBgMgdl: Double? = null,
         /** 5‑minute delta (mg/dL). */
         val deltaMgdl5m: Double? = null,
+        /** A1: allow the predictive-hypo meal bypass on a corroborated, non-falling hyper even when
+         *  `safety.mealRiseConfirmed` is false. Fail-safe: false → legacy behaviour. */
+        val mealHyperBypassEnabled: Boolean = false,
     )
 
     data class Decision(
@@ -135,9 +152,40 @@ internal object RecursiveBeliefAuthorityGate {
             }
         }
         if (input.safetyRiskExport?.predictiveHypoSuppressed == true) {
+            // A1b — the halt was *suppressed*, not triggered: it may simply mean BG is clearly hyper.
+            // In that case there is no imminent hypo, so keep SOFT release instead of denying authority
+            // (which surfaced as a phantom PREDICTIVE_HYPO → NONE). Fail-closed: unknown BG/delta → not
+            // eligible. Rising/flat clear-hyper holds directly; a hyper *descent* holds only while the
+            // shared terminal-safety predicate (HyperInstalledDroppingExemption: bg>180, ≥target+45,
+            // Δ>−15, 10-min projection ≥ hypo+40) is satisfied, so authority and the safety wall open
+            // together (P1).
+            val safety = input.safetyRiskExport
+            val bg = input.bgMgdl
+            val delta = input.deltaMgdl5m
+            val clearHyperRisingOrFlat = bg != null && delta != null &&
+                delta >= 0.0 &&
+                bg >= safety.hypoThresholdMgdl + HYPER_HOLD_MARGIN_MGDL
+            val hyperDescentSafe = bg != null && delta != null && input.targetBgMgdl != null &&
+                delta < 0.0 &&
+                HyperInstalledDroppingExemption.shouldBypass(
+                    HyperInstalledDroppingExemption.Input(
+                        enabled = true,
+                        bgMgdl = bg,
+                        targetBgMgdl = input.targetBgMgdl,
+                        deltaMgdl5m = delta,
+                        hypoThresholdMgdl = safety.hypoThresholdMgdl,
+                        mealContextActive = safety.mealContextActive,
+                    ),
+                )
+            val clearHyperNotFalling = input.mealHyperBypassEnabled &&
+                (clearHyperRisingOrFlat || hyperDescentSafe)
             when {
                 predictiveHypoMealBypass -> {
-                    reasonCodes += "PREDICTIVE_HYPO_MEAL_BYPASS"
+                    reasonCodes += if (safety.mealRiseConfirmed) {
+                        "PREDICTIVE_HYPO_MEAL_BYPASS"
+                    } else {
+                        "PREDICTIVE_HYPO_MEAL_BYPASS_HYPER"
+                    }
                     if (maxAllowedAuthority == ReleaseAuthority.HARD) {
                         maxAllowedAuthority = ReleaseAuthority.SOFT
                     }
@@ -146,6 +194,14 @@ internal object RecursiveBeliefAuthorityGate {
                 // before meal-bypass confirmation catches up (typically 1–2 ticks later).
                 aggressiveRiseExit -> {
                     reasonCodes += "PREDICTIVE_HYPO_AGGRESSIVE_RISE"
+                    if (maxAllowedAuthority == ReleaseAuthority.HARD) {
+                        maxAllowedAuthority = ReleaseAuthority.SOFT
+                    }
+                }
+                // Clear hyper, not falling hard: the suppressed halt carries no imminent hypo →
+                // hold SOFT correction authority rather than forcing NONE.
+                clearHyperNotFalling -> {
+                    reasonCodes += "PREDICTIVE_HYPO_HYPER_HOLD"
                     if (maxAllowedAuthority == ReleaseAuthority.HARD) {
                         maxAllowedAuthority = ReleaseAuthority.SOFT
                     }
@@ -326,7 +382,18 @@ internal object RecursiveBeliefAuthorityGate {
         aggressiveRiseExit: Boolean,
     ): Boolean {
         val safety = input.safetyRiskExport ?: return false
-        if (!safety.predictiveHypoSuppressed || !safety.mealContextActive || !safety.mealRiseConfirmed) {
+        if (!safety.predictiveHypoSuppressed || !safety.mealContextActive) {
+            return false
+        }
+        // A1: the legacy gate required `mealRiseConfirmed`, which short-circuits the meal corroboration
+        // below and lets a hallucinated PKPD hypo floor (≈39) pin authority to NONE on a real undeclared
+        // meal. Accept the rise as corroborated when BG sits well above target and is not falling — the
+        // actual meal evidence (mode/causal/latent/hypothesis) is still required before returning true.
+        val hyperNotFalling = input.mealHyperBypassEnabled &&
+            input.bgMgdl != null && input.targetBgMgdl != null && input.deltaMgdl5m != null &&
+            input.bgMgdl >= input.targetBgMgdl + HYPER_BYPASS_MARGIN_MGDL &&
+            input.deltaMgdl5m >= HYPER_BYPASS_MIN_DELTA_MGDL5M
+        if (!safety.mealRiseConfirmed && !hyperNotFalling) {
             return false
         }
         if (input.patternSnapshot?.suppressMealInterpretation == true) return false
