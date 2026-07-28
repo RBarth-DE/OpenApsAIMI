@@ -118,8 +118,9 @@ open class OpenAPSSMBPlugin @Inject constructor(
         .shortName(app.aaps.core.ui.R.string.smb_shortname)
         .preferencesVisibleInSimpleMode(false)
         .showInList { config.APS || config.AAPSCLIENT }   // AAPSCLIENT: visible so a client can select the master's APS
-        .description(R.string.description_smb)
-        .setDefault(),
+        .description(R.string.description_smb),
+        // NOTE: .setDefault() moved to OpenAPSBoostV5Plugin (Boost V6) — this fork defaults to V6.
+        // Exactly one APS plugin may be the default; keep it off SMB here.
     ownPreferences = listOf(ApsIntentKey::class.java),
     aapsLogger, rh, preferences
 ), APS, PluginConstraints {
