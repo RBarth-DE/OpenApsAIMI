@@ -33,6 +33,7 @@ import app.aaps.core.interfaces.db.PersistenceLayer
 import app.aaps.core.interfaces.db.ProcessedTbrEbData
 import app.aaps.core.interfaces.aps.GlucoseStatus
 import app.aaps.core.interfaces.aps.GlucoseStatusAIMI
+import app.aaps.core.interfaces.aps.RT
 import app.aaps.core.interfaces.iob.GlucoseStatusProvider
 import app.aaps.core.interfaces.iob.IobCobCalculator
 import app.aaps.core.interfaces.logging.AAPSLogger
@@ -67,6 +68,7 @@ import app.aaps.core.keys.UnitDoubleKey
 import app.aaps.core.keys.StringKey
 import app.aaps.core.keys.interfaces.withCompose
 import app.aaps.plugins.aps.openAPSAIMI.autodrive.learning.OnlineLearner
+import app.aaps.plugins.aps.openAPSAIMI.compose.AimiAdaptationStatusLabScreen
 import app.aaps.plugins.aps.openAPSAIMI.compose.AimiLearnerOverviewScreen
 import app.aaps.plugins.aps.openAPSAIMI.context.ui.AimiPreferenceInfoScreen
 import app.aaps.core.keys.interfaces.withEntries
@@ -1920,6 +1922,19 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
                                 onlineLearner = onlineLearner,
                                 pkpdElapsedHours = pkpdIntegration.elapsedLearningHours,
                                 preferences = preferences,
+                                onBack = onBack,
+                            )
+                        },
+                    ),
+                )
+                add(
+                    ApsIntentKey.AimiAdaptationStatus.withCompose(
+                        ComposeScreenContent { onBack ->
+                            val loop = loopProvider.get()
+                            val rt = loop.lastRun?.request?.rawData() as? RT
+                            val status = rt?.aimiAdaptationStatus
+                            AimiAdaptationStatusLabScreen(
+                                status = status,
                                 onBack = onBack,
                             )
                         },

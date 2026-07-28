@@ -97,4 +97,11 @@ enum class ApsIntentKey(
         summaryResId = R.string.aimi_hypo_risk_alarm_summary,
         preferenceType = PreferenceType.CLICK,
     ),
+
+    AimiAdaptationStatus(
+        key = "aimi_adaptation_status_compose",
+        titleResId = R.string.aimi_adaptation_status_lab_entry_title,
+        summaryResId = R.string.aimi_adaptation_status_lab_entry_summary,
+        preferenceType = PreferenceType.ACTIVITY,
+    ),
 }

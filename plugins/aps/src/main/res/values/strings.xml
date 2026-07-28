@@ -1294,4 +1294,106 @@
     <string name="aimi_hormonitor_hypo_suppressed">Predictive hypo suppressed</string>
     <string name="aimi_hormonitor_composite_min">Composite min</string>
     <string name="aimi_hormonitor_mean">mean</string>
+
+    <!-- Aimi Adaptation Status (Lab) -->
+    <string name="aimi_adaptation_status_title">AIMI adaptation status</string>
+    <string name="aimi_adaptation_status_lab_entry_title">Adaptation status</string>
+    <string name="aimi_adaptation_status_lab_entry_summary">View the adaptation phase and metrics of each AIMI learning module</string>
+    <string name="aimi_adaptation_status_no_data">No adaptation status data available yet.\nWait for the next APS loop cycle.</string>
+    <string name="aimi_adaptation_status_counts" comment="%1$d=active count, %2$d=ready count, %3$d=waiting/learning count, %4$d=attention count">%1$d active, %2$d ready, %3$d waiting/learning, %4$d need attention</string>
+    <string name="aimi_adaptation_no_module_update">No update received yet</string>
+    <string name="aimi_adaptation_progress_format" comment="%1$s=evidence type label, %2$d=completed count, %3$d=required count">%1$s: %2$d / %3$d</string>
+    <string name="aimi_adaptation_metrics_title">Metrics</string>
+    <string name="aimi_adaptation_last_update_format" comment="%1$s=timestamp, %2$s=age label">Last update: %1$s (%2$s ago)</string>
+    <string name="aimi_adaptation_freshness_now">now</string>
+    <string name="aimi_adaptation_freshness_minutes" comment="%1$d=minutes">%1$d min</string>
+    <string name="aimi_adaptation_freshness_hours" comment="%1$d=hours">%1$d h</string>
+
+    <!-- Aimi Adaptation Status — module names -->
+    <string name="aimi_adaptation_module_basal_neural_governance">Basal neural governance</string>
+    <string name="aimi_adaptation_module_unified_reactivity">Unified reactivity</string>
+    <string name="aimi_adaptation_module_basal_multi_scale">Multi-scale basal</string>
+    <string name="aimi_adaptation_module_pkpd">PK/PD</string>
+    <string name="aimi_adaptation_module_online_learner">Online learner (Autodrive)</string>
+    <string name="aimi_adaptation_module_night_growth_resistance">Night growth resistance</string>
+    <string name="aimi_adaptation_module_wcycle">Women\'s cycle</string>
+    <string name="aimi_adaptation_module_peak_governor">Peak governor</string>
+    <string name="aimi_adaptation_module_dia_governor">DIA governor</string>
+
+    <!-- Aimi Adaptation Status — phases -->
+    <string name="aimi_adaptation_phase_disabled">Disabled</string>
+    <string name="aimi_adaptation_phase_waiting">Waiting</string>
+    <string name="aimi_adaptation_phase_learning">Learning</string>
+    <string name="aimi_adaptation_phase_ready">Ready</string>
+    <string name="aimi_adaptation_phase_active">Active</string>
+    <string name="aimi_adaptation_phase_stale">Stale</string>
+    <string name="aimi_adaptation_phase_blocked">Blocked</string>
+
+    <!-- Aimi Adaptation Status — reasons -->
+    <string name="aimi_adaptation_reason_feature_disabled">Feature is disabled</string>
+    <string name="aimi_adaptation_reason_waiting_for_samples">Waiting for samples</string>
+    <string name="aimi_adaptation_reason_waiting_for_events">Waiting for events</string>
+    <string name="aimi_adaptation_reason_waiting_for_feedbacks">Waiting for feedbacks</string>
+    <string name="aimi_adaptation_reason_waiting_for_observations">Waiting for observations</string>
+    <string name="aimi_adaptation_reason_warmup">Warmup</string>
+    <string name="aimi_adaptation_reason_learning_in_progress">Learning in progress</string>
+    <string name="aimi_adaptation_reason_ready">Ready</string>
+    <string name="aimi_adaptation_reason_active">Active</string>
+    <string name="aimi_adaptation_reason_data_stale">Data stale</string>
+    <string name="aimi_adaptation_reason_safety_hold">Safety hold</string>
+    <string name="aimi_adaptation_reason_context_blocked">Context blocked</string>
+    <string name="aimi_adaptation_reason_dependency_disabled">Dependency disabled</string>
+    <string name="aimi_adaptation_reason_no_result">No result</string>
+
+    <!-- Aimi Adaptation Status — evidence types -->
+    <string name="aimi_adaptation_evidence_samples">Samples</string>
+    <string name="aimi_adaptation_evidence_events">Events</string>
+    <string name="aimi_adaptation_evidence_feedbacks">Feedbacks</string>
+    <string name="aimi_adaptation_evidence_observations">Observations</string>
+
+    <!-- Aimi Adaptation Status — metric names -->
+    <string name="aimi_adaptation_metric_sample_count">Sample count</string>
+    <string name="aimi_adaptation_metric_short_buffer_count">Short buffer count</string>
+    <string name="aimi_adaptation_metric_medium_buffer_count">Medium buffer count</string>
+    <string name="aimi_adaptation_metric_fasting_sample_count">Fasting sample count</string>
+    <string name="aimi_adaptation_metric_short_update_count">Short update count</string>
+    <string name="aimi_adaptation_metric_medium_update_count">Medium update count</string>
+    <string name="aimi_adaptation_metric_long_update_count">Long update count</string>
+    <string name="aimi_adaptation_metric_short_analysis_count">Short analysis count</string>
+    <string name="aimi_adaptation_metric_long_analysis_count">Long analysis count</string>
+    <string name="aimi_adaptation_metric_pending_prediction_count">Pending prediction count</string>
+    <string name="aimi_adaptation_metric_evaluated_feedback_count">Evaluated feedback count</string>
+    <string name="aimi_adaptation_metric_release_count">Release count</string>
+    <string name="aimi_adaptation_metric_accepted_update_count">Accepted update count</string>
+    <string name="aimi_adaptation_metric_short_multiplier">Short multiplier</string>
+    <string name="aimi_adaptation_metric_medium_multiplier">Medium multiplier</string>
+    <string name="aimi_adaptation_metric_long_multiplier">Long multiplier</string>
+    <string name="aimi_adaptation_metric_combined_multiplier">Combined multiplier</string>
+    <string name="aimi_adaptation_metric_global_factor">Global factor</string>
+    <string name="aimi_adaptation_metric_short_factor">Short factor</string>
+    <string name="aimi_adaptation_metric_segment_factor">Segment factor</string>
+    <string name="aimi_adaptation_metric_sensitivity_factor">Sensitivity factor</string>
+    <string name="aimi_adaptation_metric_last_error">Last error</string>
+    <string name="aimi_adaptation_metric_dia">DIA</string>
+    <string name="aimi_adaptation_metric_peak">Peak</string>
+    <string name="aimi_adaptation_metric_tir">TIR</string>
+    <string name="aimi_adaptation_metric_cv">CV</string>
+    <string name="aimi_adaptation_metric_confidence">Confidence</string>
+    <string name="aimi_adaptation_metric_smb_multiplier">SMB multiplier</string>
+    <string name="aimi_adaptation_metric_basal_multiplier">Basal multiplier</string>
+    <string name="aimi_adaptation_metric_extra_iob_headroom">Extra IOB headroom</string>
+    <string name="aimi_adaptation_metric_day_in_cycle">Day in cycle</string>
+    <string name="aimi_adaptation_metric_ic_multiplier">IC multiplier</string>
+    <string name="aimi_adaptation_metric_effective_value">Effective value</string>
+    <string name="aimi_adaptation_metric_prior_value">Prior value</string>
+    <string name="aimi_adaptation_metric_learned_value">Learned value</string>
+
+    <!-- Aimi Adaptation Status — metric value formats -->
+    <string name="aimi_adaptation_metric_value_count" comment="%1$.0f=a whole-number count. Example: 12">%1$.0f</string>
+    <string name="aimi_adaptation_metric_value_hours" comment="%1$.1f=a duration in hours. Example: 6.0 h">%1$.1f h</string>
+    <string name="aimi_adaptation_metric_value_minutes" comment="%1$.0f=a duration in minutes. Example: 55 min">%1$.0f min</string>
+    <string name="aimi_adaptation_metric_value_percent" comment="%1$.1f=a percentage value. Example: 82.5%%">%1$.1f%%</string>
+    <string name="aimi_adaptation_metric_value_units" comment="%1$.2f=insulin units. Example: 0.50 U">%1$.2f U</string>
+    <string name="aimi_adaptation_metric_value_mgdl" comment="%1$.1f=a glucose prediction error in mg/dL. Example: 12.5 mg/dL">%1$.1f mg/dL</string>
+    <string name="aimi_adaptation_metric_value_number" comment="%1$.3f=a decimal metric value. Example: 1.025">%1$.3f</string>
 </resources>
