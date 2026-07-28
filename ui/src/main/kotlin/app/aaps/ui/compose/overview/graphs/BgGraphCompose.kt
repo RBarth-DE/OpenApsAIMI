@@ -778,7 +778,21 @@ fun BgGraphCompose(
             )
         )
     }
-    val smbLines = remember(smbLine) { listOf(smbLine) }
+    val smbLineInvisible = remember {
+        LineCartesianLayer.Line(
+            fill = LineCartesianLayer.LineFill.single(Fill(Color.Transparent)),
+            areaFill = null,
+            pointProvider = LineCartesianLayer.PointProvider.single(
+                LineCartesianLayer.Point(
+                    component = ShapeComponent(fill = Fill(Color.Transparent), shape = TriangleShape),
+                    size = 0.dp
+                )
+            )
+        )
+    }
+    val smbLines = remember(smbLine, smbLineInvisible, showBolus) {
+        listOf(if (showBolus) smbLine else smbLineInvisible)
+    }
 
     // Basal Y-axis range: maxBasal * 4 so basal occupies ~25% of chart height
     // EPS layer shares End axis with basal, so both must use the same Y-range (basalMaxY)
