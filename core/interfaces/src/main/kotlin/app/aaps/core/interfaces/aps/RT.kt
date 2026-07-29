@@ -142,32 +142,44 @@ data class RT(
     var boostV5_prospectiveShot: Double? = null          // V5 pre-brake dose
     var BoostV5AutoConfigSchemaVersion: Int? = null      // V5 auto-config schema version
     var boostV5_velocityBudgetWouldAdd: Double? = null    // V5 velocity budget uplift
+    // Boost V7 SHADOW telemetry (2026-07) — live instrument for the REVISED distributional-sizing
+    // formulation after the offline NO-GO (backtesting/reports/2026-07_v7_foundation_REPORT.md §3:
+    // cost-ratio insensitive + rode the biased substrate). Filled by V7Shadow at the V1 engine's
+    // seam (AFTER V5 runShadow, BEFORE the V6 override). READ-ONLY: never feeds the dose path;
+    // delivered dosing is bit-identical with or without it. See plugins/aps/.../openAPSBoostV7/V7_SHADOW.md.
+    var boostV7_wouldDoseR4: Double? = null     // sizing rule's would-dose (U) at low:high cost ratio R=4. With R7/R10 = the criterion-(a) instrument: identical values in the field ⇒ formulation still wrong. Null = abstained (cold pool / no V5 decision / unusable sens)
+    var boostV7_wouldDoseR7: Double? = null     // would-dose (U) at R=7
+    var boostV7_wouldDoseR10: Double? = null    // would-dose (U) at R=10
+    var boostV7_pLow90: Double? = null          // p(BG<70 within 90 min) off the regime pool's piecewise-linear CDF at h=90, undosed projection; <5% truncates to 0 (left tail not fitted — report §1). DISPLAY ONLY, never permission
+    var boostV7_q50Drift: Double? = null        // active regime pool's MEDIAN 30-min residual (mg/dL) — the criterion-(b) instrument: quiet-flat cycles must read ≈0 once regime conditioning has debiased the substrate
+    var boostV7_pool: String? = null            // active regime pool + n at h=60, e.g. "quiet_flat(n=812)"; "meal(warming n=42)" below warm threshold (sizer abstains); "excluded" = cycle fits no pool (non-flat non-meal daytime — the unannounced-onset pollution, deliberately dropped)
+    var boostV7_innovSensFrozen: Double? = null // rolling 30-min innovation SUM (mg/dL) with sens FROZEN at profile ISF — Backtest-2 follow-up (adapted variable_sens absorbed the signal, d=0.02). Log-only
 
     // ── v4-specific fields (after BOOST for v3 compat) ──
     @Serializable(with = StringBuilderSerializer::class)
-    var aimilog: StringBuilder = StringBuilder() 
-    var isHypoRisk: Boolean = false 
-    var aiAuditorEnabled: Boolean = false 
-    var aiAuditorVerdict: String? = null 
-    var aiAuditorConfidence: Double? = null 
-    var aiAuditorModulation: String? = null 
-    var aiAuditorRiskFlags: String? = null 
-    var learnersInfo: String? = null 
-    var trajectoryEnabled: Boolean = false 
-    var trajectoryType: String? = null 
-    var trajectoryCurvature: Double? = null 
-    var trajectoryConvergence: Double? = null 
-    var trajectoryCoherence: Double? = null 
-    var trajectoryEnergy: Double? = null 
-    var trajectoryOpenness: Double? = null 
-    var trajectoryHealth: Int? = null 
-    var trajectoryModulationActive: Boolean = false 
-    var trajectoryWarningsCount: Int? = null 
-    var trajectoryConvergenceETA: Int? = null 
-    var trajectoryRelevanceScore: Double? = null 
-    var contextEnabled: Boolean = false 
-    var contextIntentCount: Int = 0 
-    var contextModulation: Double = 1.0 
+    var aimilog: StringBuilder = StringBuilder()
+    var isHypoRisk: Boolean = false
+    var aiAuditorEnabled: Boolean = false
+    var aiAuditorVerdict: String? = null
+    var aiAuditorConfidence: Double? = null
+    var aiAuditorModulation: String? = null
+    var aiAuditorRiskFlags: String? = null
+    var learnersInfo: String? = null
+    var trajectoryEnabled: Boolean = false
+    var trajectoryType: String? = null
+    var trajectoryCurvature: Double? = null
+    var trajectoryConvergence: Double? = null
+    var trajectoryCoherence: Double? = null
+    var trajectoryEnergy: Double? = null
+    var trajectoryOpenness: Double? = null
+    var trajectoryHealth: Int? = null
+    var trajectoryModulationActive: Boolean = false
+    var trajectoryWarningsCount: Int? = null
+    var trajectoryConvergenceETA: Int? = null
+    var trajectoryRelevanceScore: Double? = null
+    var contextEnabled: Boolean = false
+    var contextIntentCount: Int = 0
+    var contextModulation: Double = 1.0
     @Transient
     var aimiAdaptationStatus: AimiAdaptationStatus? = null
 
@@ -188,30 +200,30 @@ data class RT(
 
     /**
      * 🛡️ Custom serializer for consoleLog that sanitizes decorative characters
-     * 
+     *
      * Purpose: Keep visual logs with emojis for display, but serialize clean ASCII-only JSON
-     * 
+     *
      * Removes:
      * - Emojis (📊 🍱 ⚠️ etc.)
-     * - Box drawing characters (│ └ etc.)  
+     * - Box drawing characters (│ └ etc.)
      * - Unicode arrows (→ × etc.)
      * - Control characters (\0 \n \t etc.)
-     * 
+     *
      * Preserves:
      * - ASCII printable characters (0x20-0x7E)
      * - Essential content (numbers, letters, punctuation)
      */
     object ConsoleLogSerializer : KSerializer<MutableList<String>?> {
-        
-        override val descriptor: SerialDescriptor = 
+
+        override val descriptor: SerialDescriptor =
             kotlinx.serialization.descriptors.listSerialDescriptor<String>()
-        
+
         override fun serialize(encoder: Encoder, value: MutableList<String>?) {
             if (value == null) {
                 encoder.encodeNull()
                 return
             }
-            
+
             // Sanitize each log entry before serialization
             val sanitized = value.map { entry ->
                 entry
@@ -222,7 +234,7 @@ data class RT(
                     // Trim leading/trailing spaces
                     .trim()
             }.filter { it.isNotEmpty() }  // Remove empty entries
-            
+
             // Encode as list
             val compositeEncoder = encoder.beginCollection(descriptor, sanitized.size)
             sanitized.forEachIndexed { index, item ->
@@ -230,12 +242,12 @@ data class RT(
             }
             compositeEncoder.endStructure(descriptor)
         }
-        
+
         override fun deserialize(decoder: Decoder): MutableList<String>? {
             // Simple deserialization: decode as list normally
             val compositeDecoder = decoder.beginStructure(descriptor)
             val list = mutableListOf<String>()
-            
+
             while (true) {
                 val index = compositeDecoder.decodeElementIndex(descriptor)
                 if (index == kotlinx.serialization.encoding.CompositeDecoder.DECODE_DONE) break
