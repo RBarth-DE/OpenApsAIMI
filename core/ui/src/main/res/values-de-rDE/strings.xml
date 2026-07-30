@@ -786,6 +786,7 @@
     <string name="open_navigation">Navigation öffnen</string>
     <string name="nav_history_browser">Verlaufsübersicht</string>
     <string name="nav_history_browser_desc">Historische Daten und Grafiken anzeigen</string>
+    <string name="overview">Allgemeines II</string>
     <string name="appearance">Aussehen</string>
     <string name="manage">Verwalten</string>
     <string name="nav_setupwizard">Einrichtungsassistent</string>

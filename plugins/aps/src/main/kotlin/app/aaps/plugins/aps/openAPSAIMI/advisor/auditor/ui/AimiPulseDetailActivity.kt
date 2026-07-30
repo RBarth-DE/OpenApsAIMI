@@ -14,6 +14,9 @@ import app.aaps.core.interfaces.logging.AAPSLogger
 import app.aaps.core.interfaces.resources.ResourceHelper
 import app.aaps.core.interfaces.utils.DateUtil
 import app.aaps.core.interfaces.utils.DecimalFormatter
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
 import dagger.android.support.DaggerAppCompatActivity
 import javax.inject.Inject
 
@@ -32,11 +35,23 @@ class AimiPulseDetailActivity : DaggerAppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        // Make system bars transparent so the dark background extends fully
+        window.statusBarColor = Color.TRANSPARENT
+        window.navigationBarColor = Color.TRANSPARENT
+        // Enable edge-to-edge so content draws behind system bars
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+
         val scroll = ScrollView(this).apply {
             layoutParams = ViewGroup.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.MATCH_PARENT
             )
+            // Pad around system bars so content is fully readable
+            ViewCompat.setOnApplyWindowInsetsListener(this) { v, insets ->
+                val bars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+                v.setPadding(bars.left, bars.top, bars.right, bars.bottom)
+                insets
+            }
         }
 
         val container = LinearLayout(this).apply {

@@ -37,6 +37,7 @@ import app.aaps.core.keys.UnitDoubleKey
 import app.aaps.core.keys.interfaces.Preferences
 import app.aaps.core.objects.extensions.put
 import app.aaps.core.objects.extensions.store
+import app.aaps.core.ui.compose.icons.library.unused.IcPluginOverview
 import app.aaps.core.ui.compose.preference.PreferenceSubScreenDef
 import app.aaps.plugins.main.R
 import app.aaps.plugins.main.general.overview.OverviewEntryFragment
@@ -73,6 +74,7 @@ class OverviewPlugin @Inject constructor(
         .alwaysVisible(true)
         .alwaysEnabled(true)
         .simpleModePosition(PluginDescription.Position.TAB)
+        .icon(IcPluginOverview)
         .pluginName(app.aaps.core.ui.R.string.overview)
         .shortName(R.string.overview_shortname)
         .description(R.string.description_overview),
@@ -130,7 +132,6 @@ class OverviewPlugin @Inject constructor(
         key = "overview_settings",
         titleResId = app.aaps.core.ui.R.string.overview,
         items = listOf(
-            BooleanKey.OverviewKeepScreenOn,
             PreferenceSubScreenDef(
                 key = "overview_buttons_settings",
                 titleResId = R.string.overview_buttons_selection,
@@ -158,23 +159,6 @@ class OverviewPlugin @Inject constructor(
                     DoubleKey.ActionsFillButton3
                 )
             ),
-            PreferenceSubScreenDef(
-                key = "range_settings",
-                titleResId = app.aaps.core.keys.R.string.prefs_range_title,
-                items = listOf(
-                    UnitDoubleKey.OverviewLowMark,
-                    UnitDoubleKey.OverviewHighMark
-                )
-            ),
-            PreferenceSubScreenDef(
-                key = "vico_chart_appearance",
-                titleResId = app.aaps.core.keys.R.string.prefs_vico_chart_appearance_title,
-                items = listOf(
-                    StringKey.OverviewVicoBgReadingTint,
-                    StringKey.OverviewVicoChartBackdrop,
-                )
-            ),
-            BooleanKey.OverviewShowNotesInDialogs,
             PreferenceSubScreenDef(
                 key = "statuslights_overview_advanced",
                 titleResId = app.aaps.core.ui.R.string.statuslights,
