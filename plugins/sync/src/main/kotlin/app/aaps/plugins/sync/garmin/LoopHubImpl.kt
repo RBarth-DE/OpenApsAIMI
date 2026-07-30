@@ -11,8 +11,11 @@ import app.aaps.core.data.model.TT
 import app.aaps.core.data.ue.Action
 import app.aaps.core.data.ue.Sources
 import app.aaps.core.data.ue.ValueWithUnit
+import app.aaps.core.interfaces.aps.APSResult
 import app.aaps.core.interfaces.aps.Loop
+import app.aaps.core.interfaces.aps.RT
 import app.aaps.core.interfaces.bolus.WizardBolusExecutor
+import app.aaps.core.interfaces.plugin.ActivePlugin
 import app.aaps.core.interfaces.constraints.ConstraintsChecker
 import app.aaps.core.interfaces.db.PersistenceLayer
 import app.aaps.core.interfaces.db.ProcessedTbrEbData
@@ -36,6 +39,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import java.time.Clock
 import java.time.Instant
+import java.util.Locale
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -58,6 +62,7 @@ class LoopHubImpl @Inject constructor(
     private val processedTbrEbData: ProcessedTbrEbData,
     private val dateUtil: DateUtil,
     private val wizardBolusExecutor: WizardBolusExecutor,
+    private val activePlugin: ActivePlugin,
     @ApplicationScope private val appScope: CoroutineScope
 ) : LoopHub {
 
@@ -115,6 +120,25 @@ class LoopHubImpl @Inject constructor(
         get() = profileUtil.convertToMgdl(
             preferences.get(UnitDoubleKey.OverviewHighMark), glucoseUnit
         )
+
+    // ── BOOST fields for Garmin watchface ──
+    private val boostResult: APSResult?
+        get() = activePlugin.activeAPS?.takeIf { it.algorithm == APSResult.Algorithm.BOOST }?.lastAPSResult
+
+    override val isBoostActive: Boolean
+        get() = activePlugin.activeAPS?.algorithm == APSResult.Algorithm.BOOST
+
+    override val boostV5State: String?
+        get() = (boostResult?.rawData() as? RT)?.boostV5_state
+
+    override val boostTier: String?
+        get() = (boostResult?.rawData() as? RT)?.boostTier
+
+    override val boostDynIsf: String?
+        get() = boostResult?.variableSens?.let { String.format(Locale.US, "%.0f", it) }
+
+    override val boostTdd: String?
+        get() = (boostResult?.rawData() as? RT)?.tdd?.let { String.format(Locale.US, "%.1f", it) }
 
     /** Tells the loop algorithm that the pump is physically connected. */
     override fun connectPump() {
@@ -229,7 +253,7 @@ class LoopHubImpl @Inject constructor(
             beatsPerMinute = avgHeartRate.toDouble(),
             device = device ?: "Garmin",
         )
-        appScope.launch {
+        runBlocking {
             persistenceLayer.insertOrUpdateHeartRates(listOf(hr))
         }
     }
@@ -257,13 +281,66 @@ class LoopHubImpl @Inject constructor(
             device = device ?: "Garmin",
             dateCreated = clock.millis(),
         )
-        appScope.launch {
+        runBlocking {
             try {
                 val result: PersistenceLayer.TransactionResult<SC> = persistenceLayer.insertOrUpdateStepsCount(sc)
                 val id = result.inserted.firstOrNull()?.id ?: result.updated.firstOrNull()?.id
                 aapsLogger.info(
                     LTag.GARMIN,
                     "✅ Steps stored in DB: ID=$id, 5min=$steps5min, timestamp=${java.util.Date(samplingEnd.toEpochMilli())}"
+                )
+            } catch (error: Exception) {
+                aapsLogger.error(
+                    LTag.GARMIN,
+                    "❌ Failed to store steps: ${error.message}"
+                )
+            }
+        }
+    }
+
+    /** Stores a batch of fine-grained (≈1-min) HR samples from CIQ background service. */
+    override fun storeHeartRates(samples: List<Pair<Long, Int>>, device: String?) {
+        val dev = device ?: "Garmin"
+        val hrList = samples.mapNotNull { (endMs, bpm) ->
+            if (bpm <= 10 || endMs <= 0L) return@mapNotNull null
+            HR(
+                timestamp = endMs,
+                duration = 60_000L,
+                dateCreated = clock.millis(),
+                beatsPerMinute = bpm.toDouble(),
+                device = dev,
+            )
+        }
+        if (hrList.isNotEmpty()) {
+            runBlocking {
+                persistenceLayer.insertOrUpdateHeartRates(hrList)
+            }
+        }
+    }
+
+    /** Stores a Garmin step-count snapshot with single end timestamp (venu3 format). */
+    override fun storeSteps(
+        timestampMs: Long,
+        steps5min: Int, steps10min: Int, steps15min: Int,
+        steps30min: Int, steps60min: Int, steps180min: Int,
+        device: String?
+    ) {
+        if (timestampMs <= 0L) return
+        val sc = SC(
+            duration = 300_000L,
+            timestamp = timestampMs,
+            steps5min = steps5min, steps10min = steps10min, steps15min = steps15min,
+            steps30min = steps30min, steps60min = steps60min, steps180min = steps180min,
+            device = device ?: "Garmin",
+            dateCreated = clock.millis(),
+        )
+        runBlocking {
+            try {
+                val result: PersistenceLayer.TransactionResult<SC> = persistenceLayer.insertOrUpdateStepsCount(sc)
+                val id = result.inserted.firstOrNull()?.id ?: result.updated.firstOrNull()?.id
+                aapsLogger.info(
+                    LTag.GARMIN,
+                    "✅ Steps stored in DB: ID=$id, 5min=$steps5min, timestamp=${java.util.Date(timestampMs)}"
                 )
             } catch (error: Exception) {
                 aapsLogger.error(

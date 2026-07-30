@@ -32,6 +32,7 @@ dependencies {
     implementation("org.tensorflow:tensorflow-lite-support:0.1.0")
     implementation("org.tensorflow:tensorflow-lite-metadata:0.1.0")
     implementation("androidx.core:core-i18n:1.0.0-alpha01")
+    implementation("androidx.preference:preference-ktx:1.2.1")
 
     // Health Connect — steps integration (Android 14+); stable line for IDE + runtime alignment
     implementation("androidx.health.connect:connect-client:1.1.0")

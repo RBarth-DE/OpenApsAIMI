@@ -10,6 +10,7 @@ import app.aaps.core.interfaces.aps.Loop
 import app.aaps.core.interfaces.aps.MealData
 import app.aaps.core.interfaces.aps.OapsProfile
 import app.aaps.core.interfaces.aps.OapsProfileAutoIsf
+import app.aaps.core.interfaces.aps.OapsProfileBoost
 import app.aaps.core.interfaces.aps.RT
 import app.aaps.core.interfaces.resources.ResourceHelper
 import app.aaps.core.interfaces.rx.bus.RxBus
@@ -26,11 +27,19 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 
 @Immutable
+data class BoostChipData(
+    val label: String = "",
+    val color: Long = 0xFF78909C,    // blue-grey default
+    val detail: String = ""           // e.g. "×1.20" action multiplier
+)
+
+@Immutable
 data class OpenAPSUiState(
     val lastRun: String = "",
     val sections: List<OpenAPSSection> = emptyList(),
     val statusMessage: String = "",
-    val isRefreshing: Boolean = false
+    val isRefreshing: Boolean = false,
+    val boostChip: BoostChipData? = null   // V5 state chip, non-null when BOOST is active with V5 enabled
 )
 
 @Immutable
@@ -135,8 +144,9 @@ class OpenAPSViewModel(
                 )
             }
 
-            // Profile (OapsProfile or OapsProfileAutoIsf)
-            val profileRows = lastAPSResult.oapsProfileAutoIsf?.toRows()
+            // Profile (OapsProfile, OapsProfileAutoIsf, or OapsProfileBoost)
+            val profileRows = lastAPSResult.oapsProfileBoost?.toRows()
+                ?: lastAPSResult.oapsProfileAutoIsf?.toRows()
                 ?: lastAPSResult.oapsProfile?.toRows()
             if (profileRows != null) {
                 add(
@@ -146,6 +156,20 @@ class OpenAPSViewModel(
                         collapsedByDefault = true
                     )
                 )
+            }
+
+            // ── BOOST Decision section ──
+            if (lastAPSResult.algorithm == app.aaps.core.interfaces.aps.APSResult.Algorithm.BOOST) {
+                val rawData = lastAPSResult.rawData()
+                if (rawData is RT) {
+                    val boostRows = rawData.toBoostDecisionRows()
+                    if (boostRows.isNotEmpty()) {
+                        add(OpenAPSSection(
+                            titleResId = R.string.boost_decision_title,
+                            rows = boostRows
+                        ))
+                    }
+                }
             }
 
             // Meal Data
@@ -208,10 +232,29 @@ class OpenAPSViewModel(
             }
         }
 
+        // ── BOOST V5 state chip ──
+        val boostChip = if (lastAPSResult.algorithm == app.aaps.core.interfaces.aps.APSResult.Algorithm.BOOST) {
+            val raw = lastAPSResult.rawData()
+            if (raw is RT && raw.boostV5_state != null) {
+                BoostChipData(
+                    label = raw.boostV5_state ?: "IDLE",
+                    color = v5StateColor(raw.boostV5_state),
+                    detail = raw.boostV5_actionMult?.let { "×%.2f".format(it) } ?: ""
+                )
+            } else if (raw is RT && raw.boostTier != null) {
+                // V1-only: show tier
+                BoostChipData(
+                    label = raw.boostTier ?: "INACTIVE",
+                    color = 0xFF4CAF50  // green = active
+                )
+            } else null
+        } else null
+
         _uiState.value = OpenAPSUiState(
             lastRun = dateUtil.dateAndTimeString(apsPlugin.lastAPSRun),
             sections = sections,
-            isRefreshing = false
+            isRefreshing = false,
+            boostChip = boostChip
         )
     }
 
@@ -403,5 +446,53 @@ class OpenAPSViewModel(
         IOB?.let { add(KeyValueRow("IOB", it.toString())) }
         variable_sens?.let { add(KeyValueRow("variable_sens", it.toString())) }
         isfMgdlForCarbs?.let { add(KeyValueRow("isfMgdlForCarbs", it.toString())) }
+    }
+
+    // ── BOOST-specific display helpers ──
+
+    private fun OapsProfileBoost.toRows(): List<KeyValueRow> = buildList {
+        add(KeyValueRow("dia", dia.toString()))
+        add(KeyValueRow("boostActive", boostActive.toString()))
+        add(KeyValueRow("dynamicISF", "sens=${sens}, variable=${variable_sens}, TDD=${TDD}"))
+        add(KeyValueRow("dynISFVelocity", dynISFvelocity.toString()))
+        add(KeyValueRow("insulinPeak", insulinPeak.toString()))
+        add(KeyValueRow("boost_bolus", boost_bolus.toString()))
+        add(KeyValueRow("boost_maxIOB", boost_maxIOB.toString()))
+        add(KeyValueRow("Boost_InsulinReq", Boost_InsulinReq.toString()))
+        add(KeyValueRow("profileSwitch", profileSwitch.toString()))
+        add(KeyValueRow("steps5m/15m/30m", "$recentSteps5Minutes / $recentSteps15Minutes / $recentSteps30Minutes"))
+    }
+
+    private fun RT.toBoostDecisionRows(): List<KeyValueRow> = buildList {
+        boostTier?.let { add(KeyValueRow("Tier", it)) }
+        dynamicISF?.let { add(KeyValueRow("DynISF", "%.1f".format(it))) }
+        tdd?.let { add(KeyValueRow("TDD", "%.1f".format(it))) }
+        tddRatio?.let { add(KeyValueRow("TDD Ratio", "%.3f".format(it))) }
+        insulinReqPctEffective?.let { add(KeyValueRow("Insulin Req %", "%.0f%%".format(it))) }
+        deltaAcceleration?.let { add(KeyValueRow("Delta Accl", "%.1f%%".format(it))) }
+        sensNormalTarget?.let { add(KeyValueRow("Sens@Target", "%.1f".format(it))) }
+        fastCarbProtection?.let {
+            if (it) add(KeyValueRow("Fast-Carb Guard", "ACTIVE"))
+        }
+        deviationSensRatio?.let { add(KeyValueRow("Dev Sens Ratio", "%.3f".format(it))) }
+        mlHypoRisk?.let { add(KeyValueRow("ML Hypo Risk", "%.2f".format(it))) }
+        mlMealLikely?.let { add(KeyValueRow("ML Meal Likely", "%.2f".format(it))) }
+        // V5 state machine telemetry
+        boostV5_state?.let { add(KeyValueRow("V5 State", it)) }
+        boostV5_score?.let { add(KeyValueRow("V5 Score", "%.3f".format(it))) }
+        boostV5_age?.let { add(KeyValueRow("V5 Age", "${it}c")) }
+        boostV5_budget?.let { add(KeyValueRow("V5 Budget", "%.3fU".format(it))) }
+        boostV5_actionMult?.let { add(KeyValueRow("V5 Action×", "%.2f".format(it))) }
+        boostV5_finalDose?.let { add(KeyValueRow("V5 Final Dose", "%.3fU".format(it))) }
+        boostV5_gateReduction?.let { add(KeyValueRow("V5 Gate Reduction", it)) }
+    }
+
+    /** V5 meal-hypothesis state → color (matches v3 BOOST overview palette). */
+    private fun v5StateColor(state: String?): Long = when (state?.uppercase()) {
+        "OBSERVING" -> 0xFFFFC107L   // amber
+        "CONFIRMED" -> 0xFFFF6E40L   // orange-red
+        "COMMITTED" -> 0xFFFF9800L   // orange
+        "RECOVERING"-> 0xFF26C6DAL   // teal
+        else        -> 0xFF78909CL   // blue-grey (IDLE / unknown)
     }
 }

@@ -20,4 +20,5 @@ enum class GarminBooleanKey(
 ) : BooleanPreferenceKey {
 
     LocalHttpServer("communication_http", false, titleResId = R.string.garmin_local_http_server, defaultedBySM = true, hideParentScreenIfHidden = true),
+    SendBoostData("garmin_send_boost_data", false, titleResId = R.string.garmin_send_boost_data, exportable = true),
 }

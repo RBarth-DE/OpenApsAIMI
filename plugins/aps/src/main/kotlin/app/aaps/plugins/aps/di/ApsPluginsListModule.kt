@@ -9,6 +9,8 @@ import app.aaps.plugins.aps.openAPSAIMI.OpenAPSAIMIPlugin
 import app.aaps.plugins.aps.openAPSAMA.OpenAPSAMAPlugin
 import app.aaps.plugins.aps.openAPSAutoISF.OpenAPSAutoISFPlugin
 import app.aaps.plugins.aps.openAPSSMB.OpenAPSSMBPlugin
+import app.aaps.plugins.aps.openAPSBoost.OpenAPSBoostPlugin
+import app.aaps.plugins.aps.openAPSBoostV5.OpenAPSBoostV5Plugin
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -56,6 +58,18 @@ abstract class ApsPluginsListModule {
     @IntoMap
     @IntKey(230)
     abstract fun bindOpenAPSAutoISFPlugin(plugin: OpenAPSAutoISFPlugin): PluginBase
+
+    @Binds
+    @AllConfigs
+    @IntoMap
+    @IntKey(231)
+    abstract fun bindOpenAPSBoostPlugin(plugin: OpenAPSBoostPlugin): PluginBase
+
+    @Binds
+    @AllConfigs
+    @IntoMap
+    @IntKey(239)
+    abstract fun bindOpenAPSBoostV5Plugin(plugin: OpenAPSBoostV5Plugin): PluginBase
 
     @Binds
     @AllConfigs

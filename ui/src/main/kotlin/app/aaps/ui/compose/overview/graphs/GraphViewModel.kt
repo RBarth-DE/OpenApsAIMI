@@ -85,6 +85,23 @@ import javax.inject.Inject
 /**
  * Static chart configuration (doesn't change during graph lifetime)
  */
+@Stable
+data class BoostPanelState(
+    val enabled: Boolean = false,
+    val dynIsf: String = "--",
+    val tdd: String = "--",
+    val activityLabel: String = "",
+    val activityColor: Long = 0xFFFFFFFF,
+    val status: String = "",
+    val statusColor: Long = 0xFF4CAF50L,
+    // ── V5 state strip ──
+    val v5Active: Boolean = false,
+    val v5StateLabel: String = "",
+    val v5Score: Float = 0f,
+    val v5DoseBudget: String = "",
+    val v5Brakes: String = ""
+)
+
 data class ChartConfig(
     val highMark: Double,
     val lowMark: Double
@@ -598,6 +615,70 @@ class GraphViewModel @AssistedInject constructor(
     val isAIMIActiveFlow: StateFlow<Boolean> = ticker30s.map {
         activePlugin.activeAPS?.algorithm == APSResult.Algorithm.AIMI
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), activePlugin.activeAPS?.algorithm == APSResult.Algorithm.AIMI)
+
+    val isBoostActiveFlow: StateFlow<Boolean> = ticker30s.map {
+        activePlugin.activeAPS?.algorithm == APSResult.Algorithm.BOOST
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), activePlugin.activeAPS?.algorithm == APSResult.Algorithm.BOOST)
+
+    val boostPanelFlow: StateFlow<BoostPanelState> = ticker30s.map { buildBoostPanelState() }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), BoostPanelState())
+
+    private fun buildBoostPanelState(): BoostPanelState {
+        val aps = activePlugin.activeAPS ?: return BoostPanelState()
+        if (aps.algorithm != APSResult.Algorithm.BOOST) return BoostPanelState()
+        val r = aps.lastAPSResult ?: return BoostPanelState(enabled = true)
+        val raw = r.rawData()
+        if (raw !is app.aaps.core.interfaces.aps.RT) return BoostPanelState(enabled = true)
+        val v5State = raw.boostV5_state
+        val v5Active = v5State != null
+        val actionMult = raw.boostV5_actionMult ?: 1.0
+        val ageCycles = raw.boostV5_age ?: 0
+        val v5Score = (raw.boostV5_score ?: 0.0).toFloat()
+        val budget = raw.boostV5_budget ?: 0.0
+        val dose = raw.boostV5_finalDose ?: 0.0
+        val gateReduction = raw.boostV5_gateReduction
+        val tier = raw.boostTier
+        val boostActive = raw.boostActive ?: true
+        val profileSwitch = raw.boostProfileSwitch ?: 100
+        val sleepState = raw.sleepState
+
+        val (activityLabel, activityColor) = when {
+            !boostActive && sleepState == "SLEEPING" -> "Sleep-in" to 0xFFAB47BCL
+            !boostActive -> "Boost off" to 0xFF78909CL
+            profileSwitch < 100 -> "Active" to 0xFF42A5F5L
+            profileSwitch > 100 -> "Inactive" to 0xFFFF9800L
+            else -> "Normal" to 0xFFFFFFFFL
+        }
+
+        return BoostPanelState(
+            enabled = true,
+            dynIsf = r.variableSens?.let { "%.0f".format(it) } ?: "--",
+            tdd = raw.tdd?.let { "%.1fU".format(it) } ?: "--",
+            activityLabel = activityLabel,
+            activityColor = activityColor,
+            status = v5State ?: tier ?: "BOOST",
+            statusColor = when (v5State?.uppercase()) {
+                "OBSERVING" -> 0xFFFFC107L; "CONFIRMED" -> 0xFFFF6E40L
+                "COMMITTED" -> 0xFFFF9800L; "RECOVERING" -> 0xFF26C6DAL
+                else -> 0xFF4CAF50L
+            },
+            v5Active = v5Active,
+            v5StateLabel = if (v5Active) {
+                buildString {
+                    append(v5State)
+                    if (v5State == "IDLE" || v5State == "COMMITTED") append("  ×1.0")
+                    else if (v5State == "RECOVERING") append("  ×0.4")
+                    else append("  ×%.1f".format(actionMult))
+                    if (ageCycles > 0) append("  ·  ${ageCycles}c")
+                }
+            } else "",
+            v5Score = v5Score,
+            v5DoseBudget = if (dose > 0.0 || budget > 0.0) {
+                "dose %.2fU  ·  budget %.2fU".format(dose, budget)
+            } else "",
+            v5Brakes = gateReduction?.takeIf { it != "none" && it.isNotBlank() } ?: ""
+        )
+    }
 
     @Volatile var lastInteractionMs: Long = 0L
         private set

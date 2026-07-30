@@ -552,4 +552,21 @@ enum class IntKey(
         unitType = UnitType.MIN,
     ),
 
+    // ── BOOST algorithm keys ──
+    ApsBoostInactivitySteps("boost_inactivity_steps", 500, 0, 1000, summaryResId = R.string.pref_summary_boost_inactivity_steps, defaultedBySM = true),
+    ApsBoostSleepInSteps("boost_sleep_in_steps", 250, 0, 1000, summaryResId = R.string.pref_summary_boost_sleep_in_steps, defaultedBySM = true),
+    ApsBoostActivitySteps5("boost_activity_steps_5", 420, 0, 5000, summaryResId = R.string.pref_summary_boost_activity_steps_5, defaultedBySM = true),
+    ApsBoostActivitySteps15("boost_activity_steps_15", 800, 0, 10000, summaryResId = R.string.pref_summary_boost_activity_steps_15, defaultedBySM = true),
+    ApsBoostActivitySteps30("boost_activity_steps_30", 1200, 0, 10000, summaryResId = R.string.pref_summary_boost_activity_steps_30, defaultedBySM = true),
+    ApsBoostActivitySteps60("boost_activity_steps_60", 1800, 0, 10000, summaryResId = R.string.pref_summary_boost_activity_steps_60, defaultedBySM = true),
+    ApsBoostDynIsfAdjustmentFactor("DynISFAdjust", 100, 1, 300, summaryResId = R.string.pref_summary_boost_dynisf_adjust),
+    ApsBoostHrMaxBpm("boost_hr_max_bpm", 180, 150, 220, summaryResId = R.string.pref_summary_boost_hr_max, defaultedBySM = true),
+    ApsBoostHrRestingBpm("boost_hr_resting_bpm", 60, 30, 100, summaryResId = R.string.pref_summary_boost_hr_resting, defaultedBySM = true),
+    ApsBoostHrWindowMinutes("boost_hr_window_minutes", 15, 5, 60, summaryResId = R.string.pref_summary_boost_hr_window_minutes, defaultedBySM = true),
+    ApsBoostPreSleepLeadMin("boost_pre_sleep_lead_min", 60, 0, 180, summaryResId = R.string.pref_summary_boost_pre_sleep_lead, defaultedBySM = true),
+    ApsBoostSleepHysteresisMin("boost_sleep_hysteresis_min", 10, 5, 30, summaryResId = R.string.pref_summary_boost_sleep_hysteresis, defaultedBySM = true),
+    ApsBoostWakeHrHysteresisMin("boost_wake_hr_hysteresis_min", 5, 2, 15, summaryResId = R.string.pref_summary_boost_wake_hr_hysteresis, defaultedBySM = true),
+    ApsBoostHealthConnectPollMin("boost_health_connect_poll_min", 5, 1, 30, summaryResId = R.string.pref_summary_boost_health_connect_poll, defaultedBySM = true),
+    ApsBoostPostExerciseMinDuration("boost_post_exercise_min_duration", 10, 1, 120, summaryResId = R.string.pref_summary_boost_post_exercise_min, defaultedBySM = true),
+
 }

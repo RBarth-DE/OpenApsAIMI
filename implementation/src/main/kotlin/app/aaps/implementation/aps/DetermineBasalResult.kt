@@ -14,6 +14,7 @@ import app.aaps.core.interfaces.aps.MealData
 import app.aaps.core.interfaces.aps.OapsProfile
 import app.aaps.core.interfaces.aps.OapsProfileAimi
 import app.aaps.core.interfaces.aps.OapsProfileAutoIsf
+import app.aaps.core.interfaces.aps.OapsProfileBoost
 import app.aaps.core.interfaces.aps.Predictions
 import app.aaps.core.interfaces.aps.RT
 import app.aaps.core.interfaces.constraints.Constraint
@@ -58,7 +59,8 @@ class DetermineBasalResult @Inject constructor(
             APSResult.Algorithm.AMA,
             APSResult.Algorithm.SMB,
             APSResult.Algorithm.AUTO_ISF,
-            APSResult.Algorithm.AIMI
+            APSResult.Algorithm.AIMI,
+            APSResult.Algorithm.BOOST
         )
     }
 
@@ -97,6 +99,7 @@ class DetermineBasalResult @Inject constructor(
     override var oapsProfile: OapsProfile? = null
     override var oapsProfileAutoIsf: OapsProfileAutoIsf? = null
     override var oapsProfileAimi: OapsProfileAimi? = null   // <-- garde override si l'interface le définit
+    override var oapsProfileBoost: OapsProfileBoost? = null
     override var mealData: MealData? = null
 
     lateinit var result: RT

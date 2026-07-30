@@ -12,4 +12,5 @@ enum class IntNonKey(
     ObjectivesManualEnacts("ObjectivesmanualEnacts", 0),
     TddCycleOffset("tdd_cycle_offset", 0),
     RangeToDisplay("rangetodisplay", 6),
+    BoostV5AutoConfigSchemaVersion("boost_v5_autoconfig_schema_version", 0),
 }

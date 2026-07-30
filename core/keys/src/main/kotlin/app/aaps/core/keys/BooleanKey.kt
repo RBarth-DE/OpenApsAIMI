@@ -48,6 +48,8 @@ enum class BooleanKey(
         R.string.pref_title_overview_use_dashboard_layout,
         R.string.pref_summary_overview_use_dashboard_layout
     ),
+    OverviewUseBoostOverview("use_boost_overview", false),
+    OverviewUseBoostOverviewV2("use_boost_overview_v2", false),
     /** "Last AIMI run" summary card on the hybrid dashboard (Compose + classic). */
     OverviewShowHybridDashboardAimiPulse(
         "overview_show_hybrid_aimi_pulse", false,
@@ -630,7 +632,33 @@ enum class BooleanKey(
         R.string.pref_title_aimi_tpo_notify_on_apply,
         R.string.pref_summary_aimi_tpo_notify_on_apply,
         dependency = OApsAIMITpoEnabled,
-    )
+    ),
+
+    // ── BOOST algorithm keys ──
+    ApsBoostEnablePercentScale("enableBoostPercentScale", false, summaryResId = R.string.pref_summary_boost_percent_scale, defaultedBySM = true),
+    ApsBoostEnableCircadianIsf("enableCircadianISF", false, summaryResId = R.string.pref_summary_boost_circadian_isf, defaultedBySM = true),
+    ApsBoostAllowWithHighTt("enableBoost_with_high_temptarget", false, summaryResId = R.string.pref_summary_boost_allow_high_tt, defaultedBySM = true),
+    ApsBoostUseTdd("boost_use_tdd", false, summaryResId = R.string.pref_summary_boost_use_tdd, defaultedBySM = true),
+    ApsBoostAdjustSensitivity("boost_adjust_sensitivity", false, summaryResId = R.string.pref_summary_boost_adjust_sensitivity, defaultedBySM = true),
+    ApsBoostAllowAllBgSources("boost_allow_all_bg_sources", true, summaryResId = R.string.pref_summary_boost_allow_all_bg_sources, defaultedBySM = true),
+    ApsBoostNightModeEnabled("boost_night_mode_enabled", false, summaryResId = R.string.pref_summary_boost_night_mode, defaultedBySM = true),
+    ApsBoostNightModeDisableWithCob("boost_night_mode_disable_with_cob", false, summaryResId = R.string.pref_summary_boost_night_disable_cob, defaultedBySM = true),
+    ApsBoostNightModeDisableWithLowTt("boost_night_mode_disable_with_low_tt", false, summaryResId = R.string.pref_summary_boost_night_disable_low_tt, defaultedBySM = true),
+    ApsBoostNightModeAutoBySleep("boost_night_mode_auto_by_sleep", false, summaryResId = R.string.pref_summary_boost_night_auto_sleep, defaultedBySM = true),
+    ApsBoostHealthConnectHrEnabled("boost_health_connect_hr_enabled", false, summaryResId = R.string.pref_summary_boost_health_connect_hr, defaultedBySM = true),
+    ApsBoostBypassVersionCheck("boost_bypass_version_check", true, summaryResId = R.string.pref_summary_boost_bypass_version_check, defaultedBySM = true),
+    ApsBoostV5ActiveDosing("boost_v5_active_dosing", false, summaryResId = R.string.pref_summary_boost_v5_active_dosing, defaultedBySM = true),
+    ApsBoostV6PreMealTarget("boost_v6_pre_meal_target", false, summaryResId = R.string.pref_summary_boost_v6_pre_meal, defaultedBySM = true),
+    ApsBoostV5FastCarbConfirm("boost_v5_fast_carb_confirm", true, summaryResId = R.string.pref_summary_boost_v5_fast_carb_confirm, defaultedBySM = true),
+    ApsBoostV5AggressiveEarlyConfirm("boost_v5_aggressive_early_confirm", false, summaryResId = R.string.pref_summary_boost_v5_early_confirm, defaultedBySM = true),
+    ApsBoostV5ComposedFloorActive("boost_v5_composed_floor_active", false, summaryResId = R.string.pref_summary_boost_v5_floor_active, defaultedBySM = true),
+    ApsBoostV5VelocityBudgetActive("boost_v5_velocity_budget_active", false, summaryResId = R.string.pref_summary_boost_v5_velocity_budget, defaultedBySM = true),
+    ApsBoostV5AutoConfigDone("boost_v5_autoconfig_done", false, defaultedBySM = true),
+    ApsBoostPostExerciseRecoveryEnabled("boost_post_exercise_recovery_enabled", false, summaryResId = R.string.pref_summary_boost_post_exercise_recovery, defaultedBySM = true),
+    ApsBoostActivityShadowEnabled("boost_activity_shadow_enabled", true, summaryResId = R.string.pref_summary_boost_activity_shadow, defaultedBySM = true),
+    ApsBoostAutosensWhenNoTdd("boost_autosens_when_no_tdd", false, summaryResId = R.string.pref_summary_boost_autosens_no_tdd, defaultedBySM = true),
+    ApsBoostHrIntegrationEnabled("boost_hr_integration_enabled", false, summaryResId = R.string.pref_summary_boost_hr_integration, defaultedBySM = true),
+    ApsBoostHrStressDetection("boost_hr_stress_detection", false, summaryResId = R.string.pref_summary_boost_hr_stress, defaultedBySM = true),
 }
 
 

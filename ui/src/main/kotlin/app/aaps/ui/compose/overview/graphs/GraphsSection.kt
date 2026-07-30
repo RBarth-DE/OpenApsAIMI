@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -30,6 +31,9 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.Surface
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -69,6 +73,7 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.TextUnitType
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.repeatOnLifecycle
@@ -500,7 +505,7 @@ fun GraphsSection(
         var editingGraphIndex by remember { mutableIntStateOf(-1) }
         for (i in 0 until activeCount) {
             val secondary = graphConfig.secondaryGraphs[i]
-            val customType = secondary.series.firstOrNull { it in AIMI_SERIES || it == SeriesType.PULSE }
+            val customType = secondary.series.firstOrNull { it in AIMI_SERIES || it == SeriesType.PULSE || it == SeriesType.BOOST }
             Box(modifier = Modifier.offset(y = (-8).dp)) {
                 when (customType) {
                     SeriesType.MODES -> {
@@ -526,6 +531,22 @@ fun GraphsSection(
                     SeriesType.TIR -> {
                         TirPanel(
                             state = tirState,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(secondary.height.dp)
+                                .then(
+                                    if (!isSimpleMode) Modifier.combinedClickable(
+                                        onClick = {},
+                                        onLongClick = { editingGraphIndex = i }
+                                    ) else Modifier
+                                )
+                        )
+                    }
+
+                    SeriesType.BOOST -> {
+                        val boostState by graphViewModel.boostPanelFlow.collectAsStateWithLifecycle()
+                        BoostDataCard(
+                            state = boostState,
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(secondary.height.dp)
@@ -699,6 +720,7 @@ private fun seriesShortNameId(type: SeriesType): Int = when (type) {
     SeriesType.BG_ISF          -> app.aaps.core.ui.R.string.bg_isf_shortname
     SeriesType.PP_ISF          -> app.aaps.core.ui.R.string.pp_isf_shortname
     SeriesType.DURA_ISF        -> app.aaps.core.ui.R.string.dura_isf_shortname
+    SeriesType.BOOST           -> app.aaps.core.ui.R.string.boost
 }
 
 // =========================================================================
@@ -1012,6 +1034,106 @@ private fun GraphSeriesBottomSheet(
                             selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
                             selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer
                         )
+                    )
+                }
+            }
+        }
+    }
+}
+
+
+@Composable
+private fun BoostDataCard(state: BoostPanelState, modifier: Modifier) {
+    if (!state.enabled) return
+    Card(modifier = modifier.padding(horizontal = 8.dp, vertical = 2.dp)) {
+        Column(Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp)) {
+            // ── Row 1: numeric stats (DynISF | TDD | Activity | Status) ──
+            Row(
+                Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceEvenly,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text("DynISF", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(state.dynIsf, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurface)
+                }
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text("TDD", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(state.tdd, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurface)
+                }
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text("Activity", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(state.activityLabel, style = MaterialTheme.typography.bodyMedium, color = Color(state.activityColor.toInt()))
+                }
+                Surface(shape = RoundedCornerShape(12.dp), color = Color(state.statusColor.toInt()).copy(alpha = 0.15f)) {
+                    Text(state.status, Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                        style = MaterialTheme.typography.labelMedium, color = Color(state.statusColor.toInt()))
+                }
+            }
+
+            // ── V5 state strip (only when V5 meal-hypothesis is active) ──
+            if (state.v5Active) {
+                Spacer(Modifier.height(6.dp))
+                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
+                Spacer(Modifier.height(6.dp))
+
+                // Row 2: state label + dose/budget
+                if (state.v5StateLabel.isNotEmpty()) {
+                    Row(
+                        Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            state.v5StateLabel,
+                            style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
+                            color = Color(state.statusColor.toInt())
+                        )
+                        if (state.v5DoseBudget.isNotEmpty()) {
+                            Text(
+                                state.v5DoseBudget,
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                }
+
+                // Row 3: score bar
+                if (state.v5Score > 0f) {
+                    Spacer(Modifier.height(4.dp))
+                    Row(
+                        Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            "SCORE",
+                            style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp, letterSpacing = 0.1.sp),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Spacer(Modifier.width(8.dp))
+                        LinearProgressIndicator(
+                            progress = { state.v5Score },
+                            modifier = Modifier.weight(1f).height(6.dp),
+                            color = Color(state.statusColor.toInt()),
+                            trackColor = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f),
+                        )
+                        Spacer(Modifier.width(8.dp))
+                        Text(
+                            "%.2f".format(state.v5Score),
+                            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+                }
+
+                // Row 4: active brakes
+                if (state.v5Brakes.isNotEmpty()) {
+                    Spacer(Modifier.height(4.dp))
+                    Text(
+                        state.v5Brakes,
+                        style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
+                        color = Color(0xFFFB923C)
                     )
                 }
             }

@@ -784,4 +784,75 @@
     <string name="pref_summary_aimi_pkpd_endo_reversion">Stop the pkpd eventual prediction from sticking at the 39 mg/dL floor once insulin is spent, letting counter-regulation drift it back toward a low-normal. Affects the eventual only; the hypo-protection floor is unchanged.</string>
     <string name="pref_title_aimi_pkpd_prediction_kinetics">Prediction: learned insulin kinetics</string>
     <string name="pref_summary_aimi_pkpd_prediction_kinetics">Shape the glucose prediction curves with the adaptive PK/PD learned DIA and peak instead of the fixed insulin profile, so eventual and minPred reflect how your insulin actually acts. Falls back to the profile kinetics when the learner is off or its values are out of range.</string>
+
+    <!-- ── BOOST algorithm: preference summaries (one sentence each) ── -->
+
+    <!-- Boolean keys -->
+    <string name="pref_summary_boost_percent_scale">Scale ISF by the percentage factor below during confirmed meals to appear more insulin-sensitive and reduce dosing.</string>
+    <string name="pref_summary_boost_circadian_isf">Apply a time-of-day sine-model ISF adjustment to reflect natural insulin sensitivity variation across 24 hours.</string>
+    <string name="pref_summary_boost_allow_high_tt">Keep Boost active even when a high temporary target is set (e.g. exercise mode); otherwise Boost disables on high TT.</string>
+    <string name="pref_summary_boost_use_tdd">Compute dynamic ISF from 24 h total daily dose instead of the profile sensitivity value only.</string>
+    <string name="pref_summary_boost_adjust_sensitivity">Allow Boost to adjust the sensitivity ratio from UAM / COB feedback; turn off to freeze the ratio at 1.0 for troubleshooting.</string>
+    <string name="pref_summary_boost_allow_all_bg_sources">Use glucose values from any source (including xDrip) for Boost calculations, not only the configured primary CGM.</string>
+    <string name="pref_summary_boost_night_mode">Apply a night-mode BG target offset to reduce insulin delivery during the configured night window.</string>
+    <string name="pref_summary_boost_night_disable_cob">Exit night mode when carbs-on-board is present, treating the COB as a signal that the user is awake and eating.</string>
+    <string name="pref_summary_boost_night_disable_low_tt">Exit night mode when a low temporary target is set, treating it as a signal that the user is awake and managing.</string>
+    <string name="pref_summary_boost_night_auto_sleep">Let the HR/steps sleep detector automatically engage night mode instead of relying only on the fixed time window.</string>
+    <string name="pref_summary_boost_health_connect_hr">Pull heart rate data from Android Health Connect to supplement the live CIQ/watch HR feed.</string>
+    <string name="pref_summary_boost_bypass_version_check">Allow the Boost plugin to run on dev builds that are not tagged as a supported release version.</string>
+    <string name="pref_summary_boost_v5_active_dosing">Use V5 meal-hypothesis dosing to control SMB amounts; when OFF, V5 shadows only without affecting actual delivery.</string>
+    <string name="pref_summary_boost_v6_pre_meal">Lower the BG target before an anticipated meal (detected by the meal-hypothesis engine) to pre-load insulin.</string>
+    <string name="pref_summary_boost_v5_fast_carb_confirm">Permit a CONFIRMED meal hypothesis immediately (skip OBSERVING) when COB is present or velocity is very high.</string>
+    <string name="pref_summary_boost_v5_early_confirm">Confirm meal hypotheses more aggressively — shortens the OBSERVING phase to speed up dosing escalation.</string>
+    <string name="pref_summary_boost_v5_floor_active">Apply a composed safety floor to meal dosing: never dose below what a hypo-corrected basal would add.</string>
+    <string name="pref_summary_boost_v5_velocity_budget">Allocate additional aggression budget when BG velocity is high, letting V5 dose more during fast rises.</string>
+    <string name="pref_summary_boost_post_exercise_recovery">Apply a post-exercise recovery window with adjusted targets and SMB scaling after detected exercise ends.</string>
+    <string name="pref_summary_boost_activity_shadow">Run a parallel activity-load forecast (inactivity ISF penalty) without affecting dosing, for comparison.</string>
+    <string name="pref_summary_boost_autosens_no_tdd">Still apply autosens ratio even when TDD is unavailable, falling back to the profile sensitivity adjustment.</string>
+    <string name="pref_summary_boost_hr_integration">Incorporate heart-rate data into the Boost algorithm for sleep/wake and stress detection.</string>
+    <string name="pref_summary_boost_hr_stress">Detect physical stress from elevated HR and adjust targets/dosing to prevent over-correction during stress.</string>
+
+    <!-- Double keys (numeric values) -->
+    <string name="pref_summary_boost_bolus_cap">Maximum single SMB bolus that Boost may deliver; acts as a safety ceiling on meal-amplified doses.</string>
+    <string name="pref_summary_boost_max_iob">Hard ceiling on insulin-on-board (IOB) that Boost is allowed to maintain when dosing aggressively.</string>
+    <string name="pref_summary_boost_insulin_req_pct">Percentage of the calculated insulin requirement that Boost actually delivers — lower values make Boost more conservative, 100% means full delivery.</string>
+    <string name="pref_summary_boost_scale">Sensitivity scale applied multiplicatively to the ISF — values above 1.0 make the patient appear more insulin-sensitive.</string>
+    <string name="pref_summary_boost_percent_scale_factor">Percent ISF scaling factor applied during confirmed-meal PERCENT_SCALE tier; 200 means double ISF (half the dose).</string>
+    <string name="pref_summary_boost_dynisf_velocity">How much weight BG velocity has on dynamic ISF; 100 = full velocity effect, 0 = no velocity effect.</string>
+    <string name="pref_summary_boost_sleep_in_hrs">Hours after night-mode end during which near-zero steps trigger the lie-in failsafe (disabling Boost).</string>
+    <string name="pref_summary_boost_inactivity_pct">Profile percentage to use when inactivity is detected (low steps); >100 means increase basal during sedentary periods.</string>
+    <string name="pref_summary_boost_activity_pct">Profile percentage to use when activity is detected (high steps); &lt;100 means reduce basal during exercise.</string>
+    <string name="pref_summary_boost_post_exercise_hours">Duration of the post-exercise recovery window where targets are raised and SMBs are scaled down.</string>
+    <string name="pref_summary_boost_post_exercise_scale">SMB scaling factor during post-exercise recovery; 0.5 = half the normal SMB dose during the recovery window.</string>
+    <string name="pref_summary_boost_smb_cap_60min">Maximum total SMB insulin that Boost may deliver within a rolling 60-minute window; 0 disables the cap.</string>
+    <string name="pref_summary_boost_v5_aggression">User-facing multiplier for CONFIRMED-state dosing; 1.0 = standard, 1.6 = aggressive, 0.7 = cautious.</string>
+    <string name="pref_summary_boost_v5_confirmed_cap">Hard ceiling on a single SMB dose during the CONFIRMED meal-hypothesis state (catch-up bolus).</string>
+    <string name="pref_summary_boost_v5_committed_cap">Hard ceiling on a single SMB dose during the COMMITTED meal-hypothesis state (sustained meal dosing).</string>
+    <string name="pref_summary_boost_v5_hypo_caution">Multiplier that increases the BG target floor for V5 dosing when BG is low or falling; 2.0 = double the floor.</string>
+    <string name="pref_summary_boost_v5_sensitivity">Global V5 sensitivity tuning factor; values above 1.0 make the algorithm more conservative across all states.</string>
+    <string name="pref_summary_boost_v6_pre_meal_target">BG target (mg/dL) that V6 aims for during the pre-meal lead-in window before a predicted meal.</string>
+    <string name="pref_summary_boost_v6_pre_meal_lead">Minutes before a predicted meal arrival that V6 starts lowering the target to pre-load insulin.</string>
+
+    <!-- Int keys -->
+    <string name="pref_summary_boost_inactivity_steps">60-minute step count threshold below which the user is classified as inactive; profile % shifts up by inactivity_pct.</string>
+    <string name="pref_summary_boost_sleep_in_steps">60-minute step count threshold below which the lie-in failsafe engages within the sleep-in window.</string>
+    <string name="pref_summary_boost_activity_steps_5">5-minute step count threshold for activity detection; exceeding it raises the activity state.</string>
+    <string name="pref_summary_boost_activity_steps_15">15-minute step count threshold for activity detection; exceeding it raises the activity state.</string>
+    <string name="pref_summary_boost_activity_steps_30">30-minute step count threshold for activity detection; exceeding it raises the activity state.</string>
+    <string name="pref_summary_boost_activity_steps_60">60-minute step count threshold for sustained activity detection; stepping above this for an hour switches to active mode.</string>
+    <string name="pref_summary_boost_dynisf_adjust">Percentage factor for the global dynamic ISF strength; 100 = standard, higher = more dynamic adjustment.</string>
+    <string name="pref_summary_boost_hr_max">Maximum heart rate used to scale the HR-based activity classifier; values above this are treated as vigorous.</string>
+    <string name="pref_summary_boost_hr_resting">Resting heart rate baseline; the HR classifier uses this as the floor for light/no activity.</string>
+    <string name="pref_summary_boost_hr_window_minutes">Rolling time window over which HR data is averaged for sleep/wake and stress detection.</string>
+    <string name="pref_summary_boost_pre_sleep_lead">Minutes before the night-mode start time that Boost begins tapering insulin delivery.</string>
+    <string name="pref_summary_boost_sleep_hysteresis">Minutes of sustained low-HR/low-steps conditions before the sleep detector transitions to SLEEPING state.</string>
+    <string name="pref_summary_boost_wake_hr_hysteresis">Minutes of sustained elevated HR before the sleep detector transitions from SLEEPING to AWAKE.</string>
+    <string name="pref_summary_boost_health_connect_poll">Interval in minutes at which Health Connect HR data is polled; shorter = more responsive but higher battery use.</string>
+    <string name="pref_summary_boost_post_exercise_min">Minimum exercise duration in minutes before the post-exercise recovery window is triggered.</string>
+
+    <!-- UnitDouble keys (unit-carrying numeric values) -->
+    <string name="pref_summary_boost_dynisf_bg_cap">BG ceiling for dynamic ISF calculation; glucose values above this are progressively damped to prevent runaway ISF.</string>
+    <string name="pref_summary_boost_dynisf_normal_target">Reference BG target used by dynamic ISF to compute the normalised sensitivity; typically your profile target.</string>
+    <string name="pref_summary_boost_night_bg_offset">BG target increase during night mode; e.g. 27 adds 27 mg/dL to the normal target when sleep is detected.</string>
+    <string name="pref_summary_boost_post_exercise_target">BG target (mg/dL) to aim for during the post-exercise recovery window; typically raised to prevent hypos.</string>
 </resources>

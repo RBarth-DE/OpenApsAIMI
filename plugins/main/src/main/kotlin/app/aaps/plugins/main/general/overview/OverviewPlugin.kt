@@ -22,6 +22,7 @@ import app.aaps.core.interfaces.resources.ResourceHelper
 import app.aaps.core.interfaces.rx.AapsSchedulers
 import app.aaps.core.interfaces.rx.bus.RxBus
 import app.aaps.core.interfaces.rx.events.EventIobCalculationProgress
+import app.aaps.core.interfaces.rx.events.EventPreferenceChange
 import app.aaps.core.interfaces.rx.events.EventPumpStatusChanged
 import app.aaps.core.interfaces.rx.events.EventUpdateOverviewCalcProgress
 import app.aaps.core.interfaces.ui.UiInteraction
@@ -41,6 +42,8 @@ import app.aaps.core.ui.compose.icons.library.unused.IcPluginOverview
 import app.aaps.core.ui.compose.preference.PreferenceSubScreenDef
 import app.aaps.plugins.main.R
 import app.aaps.plugins.main.general.overview.OverviewEntryFragment
+import app.aaps.plugins.main.general.overview.boost.BoostOverviewFragment
+import app.aaps.plugins.main.general.overview.boost.BoostOverviewV2Fragment
 import app.aaps.plugins.main.general.overview.keys.OverviewStringKey
 import app.aaps.shared.impl.rx.bus.RxBusImpl
 import io.reactivex.rxjava3.disposables.CompositeDisposable
@@ -104,7 +107,6 @@ class OverviewPlugin @Inject constructor(
             .subscribe({
                            overviewData.pumpStatus = it.getStatus(context)
                        }, fabricPrivacy::logException)
-
     }
 
     override suspend fun onStop() {

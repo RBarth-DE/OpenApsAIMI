@@ -69,6 +69,22 @@ interface LoopHub {
         device: String?
     )
 
+    /** Stores a batch of fine-grained (≈1-min) HR samples from venu3/CIQ background service.
+     *  Each pair is (endOfMinuteEpochMs, bpm). Peak preservation is downstream. */
+    fun storeHeartRates(samples: List<Pair<Long, Int>>, device: String?)
+
+    // ── BOOST algorithm fields for Garmin watchface ──
+    /** True when BOOST is the active APS algorithm */
+    val isBoostActive: Boolean
+    /** V5 state: IDLE/OBSERVING/CONFIRMED/COMMITTED/RECOVERING */
+    val boostV5State: String?
+    /** BOOST dosing tier (UAM_BOOST, PERCENT_SCALE, etc.) */
+    val boostTier: String?
+    /** Dynamic ISF value from BOOST engine */
+    val boostDynIsf: String?
+    /** Total daily dose from BOOST engine */
+    val boostTdd: String?
+
     /** Stores steps count readings aggregated over multiple intervals. */
     fun storeStepsCount(
         samplingStart: Instant,
@@ -80,5 +96,14 @@ interface LoopHub {
         steps60min: Int,
         steps180min: Int,
         device: String?,
+    )
+
+    /** Stores a Garmin step-count snapshot (venu3/CIQ format) with a single end-of-window
+     *  [timestampMs]. The six trailing-window counts are computed device-side. */
+    fun storeSteps(
+        timestampMs: Long,
+        steps5min: Int, steps10min: Int, steps15min: Int,
+        steps30min: Int, steps60min: Int, steps180min: Int,
+        device: String?
     )
 }

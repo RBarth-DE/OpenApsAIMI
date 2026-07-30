@@ -40,5 +40,11 @@ enum class UnitDoubleKey(
         defaultedBySM = true,
         dependency = BooleanKey.ApsUseDynamicSensitivity,
         sync = SyncSpec(SyncChannel.Cold, SyncDirection.Bidirectional)
-    )
+    ),
+
+    // ── BOOST algorithm keys ──
+    ApsBoostDynIsfBgCap("boost_dynisf_bg_cap", 210.0, 100, 300, summaryResId = R.string.pref_summary_boost_dynisf_bg_cap, defaultedBySM = true),
+    ApsBoostDynIsfNormalTarget("boost_dynisf_normal_target", 99.0, 70, 120, summaryResId = R.string.pref_summary_boost_dynisf_normal_target, defaultedBySM = true),
+    ApsBoostNightModeBgOffset("boost_night_mode_bg_offset", 27.0, 0, 90, summaryResId = R.string.pref_summary_boost_night_bg_offset, defaultedBySM = true),
+    ApsBoostPostExerciseRecoveryTarget("boost_post_exercise_recovery_target", 144.0, 90, 200, summaryResId = R.string.pref_summary_boost_post_exercise_target, defaultedBySM = true),
 }

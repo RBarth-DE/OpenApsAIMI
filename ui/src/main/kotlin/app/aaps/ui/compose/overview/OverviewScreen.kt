@@ -4,14 +4,18 @@ import android.content.res.Configuration
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import kotlinx.coroutines.delay
@@ -29,8 +33,13 @@ import app.aaps.core.data.model.RM
 import app.aaps.core.data.model.TT
 import app.aaps.core.interfaces.notifications.AapsNotification
 import app.aaps.core.interfaces.pump.BolusProgressState
+import app.aaps.core.keys.BooleanKey
+import app.aaps.core.ui.compose.LocalPreferences
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import app.aaps.core.ui.compose.TABLET_MIN_SW_DP
 import app.aaps.core.ui.compose.navigation.NavigationRequest
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.aaps.core.ui.compose.preference.PreferenceSubScreenDef
 import app.aaps.core.ui.compose.pump.PumpActivityDialog
 import app.aaps.core.ui.compose.pump.PumpActivityFab
@@ -116,6 +125,9 @@ fun OverviewScreen(
     val configuration = LocalConfiguration.current
     val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
     val isTablet = configuration.smallestScreenWidthDp >= TABLET_MIN_SW_DP && isLandscape
+
+    // BOOST V5 state chip — appears automatically when BOOST is active APS
+    val boostChip by chipsViewModel.boostChipState.collectAsStateWithLifecycle()
 
     Box(modifier = modifier.fillMaxSize()) {
         if (isTablet) {
@@ -247,6 +259,23 @@ fun OverviewScreen(
                 .padding(paddingValues)
                 .padding(end = 16.dp, bottom = 72.dp + fabBottomOffset)
         )
+
+        // BOOST V5 state banner — on top of everything, auto-appears when BOOST is active
+        if (boostChip.isBoost && boostChip.state.isNotEmpty()) {
+            val c = Color(boostChip.color.toInt())
+            Box(
+                Modifier.fillMaxWidth().align(Alignment.TopCenter)
+                    .background(c.copy(alpha = 0.18f))
+                    .padding(horizontal = 12.dp, vertical = 2.dp)
+            ) {
+                Text(
+                    if (boostChip.detail.isNotEmpty()) "${boostChip.state} ${boostChip.detail}"
+                    else if (boostChip.tier.isNotEmpty()) boostChip.tier else boostChip.state,
+                    style = MaterialTheme.typography.labelSmall, color = c, fontWeight = FontWeight.Bold,
+                    modifier = Modifier.align(Alignment.Center)
+                )
+            }
+        }
     }
 
     if (showPumpActivityDialog) {

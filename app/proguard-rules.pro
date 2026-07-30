@@ -28,3 +28,15 @@
 # Glance AppWidget
 -keep class * extends androidx.glance.appwidget.GlanceAppWidget { *; }
 -keep class * extends androidx.glance.appwidget.GlanceAppWidgetReceiver { *; }
+# DetermineBasalBoost has a very large method that triggers R8 optimizer bugs
+-dontoptimize class app.aaps.plugins.aps.openAPSBoost.DetermineBasalBoost
+
+# Boost plugin — large methods trigger R8 VerifyError
+-keep class app.aaps.plugins.aps.openAPSBoost.** { *; }
+-dontoptimize class app.aaps.plugins.aps.openAPSBoost.**
+
+# R8-specific: disable optimization for Boost (different from ProGuard -dontoptimize)
+-optimizations !code/simplification/*,!field/*,!class/merging/*
+-keepclassmembers,allowshrinking,allowobfuscation class app.aaps.plugins.aps.openAPSBoost.DetermineBasalBoost {
+    app.aaps.core.interfaces.aps.RT determine_basal(...);
+}

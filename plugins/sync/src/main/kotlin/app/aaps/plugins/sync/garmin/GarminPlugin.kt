@@ -173,6 +173,8 @@ class GarminPlugin @Inject constructor(
                 registerEndpoint("/temptarget", requestHandler(::onPostTempTarget))
                 registerEndpoint("/connect", requestHandler(::onConnectPump))
                 registerEndpoint("/sgv.json", requestHandler(::onSgv))
+                registerEndpoint("/hr", requestHandler(::onHeartRate))
+                registerEndpoint("/steps", requestHandler(::onSteps))
                 awaitReady(wait)
             }
         } else if (server != null) {
@@ -235,6 +237,11 @@ class GarminPlugin @Inject constructor(
         "temporaryBasalRate" to
             (loopHub.temporaryBasal.takeIf(java.lang.Double::isFinite) ?: 1.0),
         "connected" to loopHub.isConnected,
+        "isBoost" to preferences.get(GarminBooleanKey.SendBoostData),
+        "boostState" to (if (preferences.get(GarminBooleanKey.SendBoostData)) loopHub.boostV5State ?: "" else ""),
+        "boostTier" to (if (preferences.get(GarminBooleanKey.SendBoostData)) loopHub.boostTier ?: "" else ""),
+        "boostDynIsf" to (if (preferences.get(GarminBooleanKey.SendBoostData)) loopHub.boostDynIsf ?: "" else ""),
+        "boostTdd" to (if (preferences.get(GarminBooleanKey.SendBoostData)) loopHub.boostTdd ?: "" else ""),
         "timestamp" to clock.instant().epochSecond
     )
 
@@ -320,6 +327,13 @@ class GarminPlugin @Inject constructor(
         }
         jo.addProperty("profile", profileName.first().toString())
         jo.addProperty("connected", loopHub.isConnected)
+        // ── BOOST data (only when enabled in Garmin preferences) ──
+        if (preferences.get(GarminBooleanKey.SendBoostData)) {
+            loopHub.boostV5State?.let { jo.addProperty("boostState", it) }
+            loopHub.boostTier?.let { jo.addProperty("boostTier", it) }
+            loopHub.boostDynIsf?.let { jo.addProperty("boostDynIsf", it) }
+            loopHub.boostTdd?.let { jo.addProperty("boostTdd", it) }
+        }
         return jo.toString()
     }
 
@@ -422,6 +436,58 @@ class GarminPlugin @Inject constructor(
         receiveSteps(uri)
     }
 
+    /** Standalone /hr endpoint for watchfaces that POST heart rate data to a dedicated path.
+     *  Handles both the legacy format (hr/hrStart/hrEnd params) and the venu3 samples format
+     *  (samples=epochSec:bpm,epochSec:bpm,...). Venu3 fine-grained samples are stored individually
+     *  via [loopHub.storeHeartRates] so peak preservation works downstream. */
+    @VisibleForTesting
+    fun onHeartRate(uri: URI): CharSequence {
+        if (getQueryParameter(uri, "test", false)) return ""
+        val samplesParam = getQueryParameter(uri, "samples")
+        if (samplesParam != null) {
+            val device = getQueryParameter(uri, "device")
+            val samplePairs = samplesParam.split(",").mapNotNull { pair ->
+                val parts = pair.split(":")
+                if (parts.size != 2) return@mapNotNull null
+                val tSec = parts[0].trim().toLongOrNull() ?: return@mapNotNull null
+                val bpm = parts[1].trim().toIntOrNull() ?: return@mapNotNull null
+                Pair(tSec * 1000L, bpm)
+            }
+            if (samplePairs.isNotEmpty()) {
+                aapsLogger.info(LTag.GARMIN, "received ${samplePairs.size} HR samples from ${device ?: "Garmin"}")
+                loopHub.storeHeartRates(samplePairs, device)
+            }
+        } else {
+            receiveHeartRate(uri)
+        }
+        return ""
+    }
+
+    /** Standalone /steps endpoint for watchfaces that POST steps data to a dedicated path.
+     *  Handles both the venu3 format (t + s5/s10/s15/s30/s60/s180) and the legacy format
+     *  (stepsStart/stepsEnd + steps5/steps10/...). Venu3 format calls [loopHub.storeSteps]
+     *  directly; legacy format delegates to [receiveSteps]. */
+    @VisibleForTesting
+    fun onSteps(uri: URI): CharSequence {
+        if (getQueryParameter(uri, "test", false)) return ""
+        val tSec = getQueryParameter(uri, "t", 0L)
+        if (tSec > 0L) {
+            loopHub.storeSteps(
+                tSec * 1000L,
+                getQueryParameter(uri, "s5", 0L).toInt(),
+                getQueryParameter(uri, "s10", 0L).toInt(),
+                getQueryParameter(uri, "s15", 0L).toInt(),
+                getQueryParameter(uri, "s30", 0L).toInt(),
+                getQueryParameter(uri, "s60", 0L).toInt(),
+                getQueryParameter(uri, "s180", 0L).toInt(),
+                getQueryParameter(uri, "device")
+            )
+        } else {
+            receiveSteps(uri)
+        }
+        return ""
+    }
+
     private fun receiveHeartRate(
         samplingStart: Instant, samplingEnd: Instant,
         avg: Int, device: String?, test: Boolean
@@ -498,13 +564,18 @@ class GarminPlugin @Inject constructor(
         // 🔍 DIAGNOSTIC
         aapsLogger.debug(LTag.GARMIN, "receiveSteps(HTTP) - Query: ${uri.query ?: "<empty>"}")
 
-        // 1. Extract timestamps with fallbacks
+        // 1. Extract timestamps with fallbacks (supports venu3 "t" and legacy "stepsStart"/"stepsEnd")
         var samplingStart: Long? = getQueryParameter(uri, "stepsStart")?.toLongOrNull()
+            ?: getQueryParameter(uri, "t")?.toLongOrNull()
         var samplingEnd: Long? = getQueryParameter(uri, "stepsEnd")?.toLongOrNull()
+            ?: getQueryParameter(uri, "t")?.toLongOrNull()
 
         // 🔧 FALLBACK: Use current time if missing
         if (samplingStart == null || samplingEnd == null) {
-            if ((uri.query ?: "").contains("steps", ignoreCase = true)) {
+            if ((uri.query ?: "").contains("steps", ignoreCase = true) ||
+                (uri.query ?: "").contains("s5=") || (uri.query ?: "").contains("s10=") ||
+                (uri.query ?: "").contains("&s5=") || (uri.query ?: "").contains("&s10=")
+            ) {
                 val now = clock.instant().epochSecond
                 aapsLogger.warn(LTag.GARMIN, "HTTP steps without timestamps. Using fallback: now-5min to now")
                 samplingStart = now - 300
@@ -514,14 +585,19 @@ class GarminPlugin @Inject constructor(
             }
         }
 
-        // 2. Lenient Bucket Retrieval (Default to 0 if missing)
-        // This allows watchfaces to send only partial data (e.g. only steps5) without failing
-        val steps5 = getQueryParameter(uri, "steps5")?.toIntOrNull() ?: 0
-        val steps10 = getQueryParameter(uri, "steps10")?.toIntOrNull() ?: 0
-        val steps15 = getQueryParameter(uri, "steps15")?.toIntOrNull() ?: 0
-        val steps30 = getQueryParameter(uri, "steps30")?.toIntOrNull() ?: 0
-        val steps60 = getQueryParameter(uri, "steps60")?.toIntOrNull() ?: 0
-        val steps180 = getQueryParameter(uri, "steps180")?.toIntOrNull() ?: 0
+        // 2. Lenient Bucket Retrieval (supports "steps5"/"s5", "steps10"/"s10", etc.)
+        val steps5 = getQueryParameter(uri, "steps5")?.toIntOrNull()
+            ?: getQueryParameter(uri, "s5")?.toIntOrNull() ?: 0
+        val steps10 = getQueryParameter(uri, "steps10")?.toIntOrNull()
+            ?: getQueryParameter(uri, "s10")?.toIntOrNull() ?: 0
+        val steps15 = getQueryParameter(uri, "steps15")?.toIntOrNull()
+            ?: getQueryParameter(uri, "s15")?.toIntOrNull() ?: 0
+        val steps30 = getQueryParameter(uri, "steps30")?.toIntOrNull()
+            ?: getQueryParameter(uri, "s30")?.toIntOrNull() ?: 0
+        val steps60 = getQueryParameter(uri, "steps60")?.toIntOrNull()
+            ?: getQueryParameter(uri, "s60")?.toIntOrNull() ?: 0
+        val steps180 = getQueryParameter(uri, "steps180")?.toIntOrNull()
+            ?: getQueryParameter(uri, "s180")?.toIntOrNull() ?: 0
         val device = getQueryParameter(uri, "device")
         val test = getQueryParameter(uri, "test", false)
 
@@ -787,37 +863,46 @@ class GarminPlugin @Inject constructor(
                     GlucoseUnit.MGDL -> jo.addProperty("units_hint", "mgdl")
                     GlucoseUnit.MMOL -> jo.addProperty("units_hint", "mmol")
                 }
-                // let wf do the default for 0 / non existing
-                val remainingInsulin = loopHub.insulinOnboard
-                val remainingBasalInsulin = loopHub.insulinBasalOnboard
-                if (remainingInsulin > 0.0 || remainingBasalInsulin > 0.0) {
-                    jo.addProperty("iob", remainingInsulin + remainingBasalInsulin)
-                }
+                jo.addProperty("iob", loopHub.insulinOnboard + loopHub.insulinBasalOnboard)
                 // TBR as "value/%"
                 val profile = loopHub.currentProfile
                 val basal = profile?.getBasal() ?: 0.0
                 loopHub.temporaryBasal.also {
-                    if (!it.isNaN()) {
-                        val safeTbrFactor = if (it.isFinite()) it else 0.0
+                    if (!it.isNaN() && it.isFinite()) {
+                        val tbrPercent = (it * 100.0).toInt()
+                        if (preferences.get(GarminBooleanKey.SendBoostData)) {
+                            // Boost watchface format: integer percent e.g. 280
+                            jo.addProperty("tbr", tbrPercent)
 
-                        val curBasalAsValue = basal * safeTbrFactor
-                        val tbrPercent = (safeTbrFactor * 100.0).toInt()   // or roundToInt()
-
-                        if (curBasalAsValue != 0.0 || tbrPercent != 0) {
-                            jo.addProperty("tbr", String.format(Locale.US, "%.1f/%d", curBasalAsValue, tbrPercent))
                         } else {
-                            jo.addProperty("tbr", "0")
+                            // AIMI/standard watchface format: "value/%" e.g. "1.4/280"
+                            val curBasalAsValue = basal * it
+                            if (curBasalAsValue != 0.0 || tbrPercent != 0) {
+                                jo.addProperty("tbr", String.format(Locale.US, "%.1f/%d", curBasalAsValue, tbrPercent))
+                            } else {
+                                jo.addProperty("tbr", "0")
+                            }
                         }
+                        // NaN: keep current values on watch
                     }
-                    // we did not get valid values (happens sometimes that loopHub.temporaryBasal. delivers NaN instead of real value)
-                    // => Keep current values on watch.
+                    jo.addProperty("cob", loopHub.carbsOnboard ?: 0.0)
+                    // ── BOOST data (only when enabled in Garmin preferences) ──
+                    if (preferences.get(GarminBooleanKey.SendBoostData)) {
+                        jo.addProperty("isBoost", true)
+                        // Also emit TBR as a plain integer percentage (reference format for CIQ watchfaces)
+                        loopHub.temporaryBasal.let {
+                            if (!it.isNaN() && it.isFinite()) {
+                                jo.addProperty("tbrPercent", (it * 100.0).toInt())
+                            }
+                        }
+                        loopHub.boostV5State?.let { jo.addProperty("boostState", it) }
+                        loopHub.boostTier?.let { jo.addProperty("boostTier", it) }
+                        loopHub.boostDynIsf?.let { jo.addProperty("boostDynIsf", it) }
+                        loopHub.boostTdd?.let { jo.addProperty("boostTdd", it) }
+                    }
                 }
-                // let wf do the default for 0 / non existing
-                if ((loopHub.carbsOnboard ?: 0.0) > 0.0) {
-                    jo.addProperty("cob", loopHub.carbsOnboard)
-                }
+                joa.add(jo)
             }
-            joa.add(jo)
         }
         return joa.toString()
     }
@@ -828,7 +913,8 @@ class GarminPlugin @Inject constructor(
         items = listOf(
             GarminBooleanKey.LocalHttpServer,
             GarminIntKey.LocalHttpPort,
-            GarminStringKey.RequestKey
+            GarminStringKey.RequestKey,
+            GarminBooleanKey.SendBoostData
 
         ),
         icon = pluginDescription.icon

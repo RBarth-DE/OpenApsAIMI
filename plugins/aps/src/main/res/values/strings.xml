@@ -1396,4 +1396,16 @@
     <string name="aimi_adaptation_metric_value_units" comment="%1$.2f=insulin units. Example: 0.50 U">%1$.2f U</string>
     <string name="aimi_adaptation_metric_value_mgdl" comment="%1$.1f=a glucose prediction error in mg/dL. Example: 12.5 mg/dL">%1$.1f mg/dL</string>
     <string name="aimi_adaptation_metric_value_number" comment="%1$.3f=a decimal metric value. Example: 1.025">%1$.3f</string>
+    <string name="boost_post_exercise_recovery_title">Post-Exercise Recovery</string>
+    <string name="boost_night_mode_smb_disabled">SMB disabled by Boost Night Mode</string>
+    <string name="boost_decision_title">BOOST Decision</string>
+
+    <!-- BOOST algorithm -->
+    <string name="openaps_boost">OpenAPS BOOST</string>
+    <string name="boost_shortname">BOOST</string>
+    <string name="description_boost">BOOST algorithm with DynISF, activity detection, and multi-tier SMB dosing</string>
+    <string name="openaps_boost_v6">OpenAPS BOOST V6</string>
+    <string name="boost_v6_shortname">BOOST V6</string>
+    <string name="description_boost_v6">BOOST V6 Observe-Confirm-Commit dosing pipeline with meal hypothesis state machine</string>
+
 </resources>

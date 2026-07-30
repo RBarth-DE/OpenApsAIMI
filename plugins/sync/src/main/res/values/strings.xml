@@ -119,6 +119,7 @@
     <string name="garmin_description">Connection to Garmin device (Fenix, Edge, …)</string>
     <string name="garmin_local_http_server_port">Local HTTP server port</string>
     <string name="garmin_local_http_server">Local HTTP server</string>
+    <string name="garmin_send_boost_data">Send BOOST data to watch</string>
 
 
     <string name="wear_shortname">WEAR</string>

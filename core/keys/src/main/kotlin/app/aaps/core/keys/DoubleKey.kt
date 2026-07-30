@@ -811,9 +811,30 @@ enum class DoubleKey(
         //titleResId = empty
         summaryResId = R.string.pref_activ_mon_sum_activity_scale_factor,
         defaultValue = 1.0, min = 0.0, max = 1.5, defaultedBySM = true, dependency = BooleanKey.ActivityMonitorDetection),
-    InactivityScaleFactor(
-        "inactivity_scale_factor",
-        //titleResId = empty,
-        summaryResId = R.string.pref_activ_mon_sum_inactivity_scale_factor,
-        defaultValue = 1.0, min = 0.0, max = 1.5, defaultedBySM = true, dependency = BooleanKey.ActivityMonitorDetection),
+	    InactivityScaleFactor(
+	        "inactivity_scale_factor",
+	        //titleResId = empty,
+	        summaryResId = R.string.pref_activ_mon_sum_inactivity_scale_factor,
+	        defaultValue = 1.0, min = 0.0, max = 1.5, defaultedBySM = true, dependency = BooleanKey.ActivityMonitorDetection),
+
+    // ── BOOST algorithm keys ──
+    ApsBoostBolus("boost_bolus_cap", 2.5, 0.1, 10.0, summaryResId = R.string.pref_summary_boost_bolus_cap),
+    ApsBoostMaxIob("boost_max_iob", 1.0, 0.1, 12.0, summaryResId = R.string.pref_summary_boost_max_iob),
+    ApsBoostInsulinReqPct("boost_insulin_req_pct", 50.0, 30.0, 100.0, summaryResId = R.string.pref_summary_boost_insulin_req_pct),
+    ApsBoostScale("boost_scale_value", 1.0, 0.1, 3.0, summaryResId = R.string.pref_summary_boost_scale),
+    ApsBoostPercentScale("boost_percent_scale_factor", 200.0, 50.0, 500.0, summaryResId = R.string.pref_summary_boost_percent_scale_factor),
+    ApsBoostDynIsfVelocity("boost_dynisf_velocity", 100.0, 0.0, 100.0, summaryResId = R.string.pref_summary_boost_dynisf_velocity),
+    ApsBoostSleepInHours("boost_sleep_in_hrs", 2.0, 0.0, 18.0, summaryResId = R.string.pref_summary_boost_sleep_in_hrs),
+    ApsBoostInactivityPct("boost_inactivity_pct", 130.0, 100.0, 200.0, summaryResId = R.string.pref_summary_boost_inactivity_pct),
+    ApsBoostActivityPct("boost_activity_pct", 80.0, 30.0, 150.0, summaryResId = R.string.pref_summary_boost_activity_pct),
+    ApsBoostPostExerciseRecoveryHours("boost_post_exercise_recovery_hours", 2.0, 0.5, 8.0, summaryResId = R.string.pref_summary_boost_post_exercise_hours),
+    ApsBoostPostExerciseRecoveryScale("boost_post_exercise_recovery_scale", 0.5, 0.0, 1.0, summaryResId = R.string.pref_summary_boost_post_exercise_scale),
+    ApsBoostCumulativeSmbCap60Min("boost_cumulative_smb_cap_60min", 10.0, 0.0, 10.0, summaryResId = R.string.pref_summary_boost_smb_cap_60min),
+    ApsBoostV5Aggression("boost_v5_aggression", 1.0, 0.7, 1.6, summaryResId = R.string.pref_summary_boost_v5_aggression),
+    ApsBoostV5ConfirmedCapU("boost_v5_confirmed_cap_u", 2.5, 0.0, 7.5, summaryResId = R.string.pref_summary_boost_v5_confirmed_cap),
+    ApsBoostV5CommittedCapU("boost_v5_committed_cap_u", 0.5, 0.0, 2.5, summaryResId = R.string.pref_summary_boost_v5_committed_cap),
+    ApsBoostV5HypoCaution("boost_v5_hypo_caution", 1.0, 1.0, 2.0, summaryResId = R.string.pref_summary_boost_v5_hypo_caution),
+    ApsBoostV5Sensitivity("boost_v5_sensitivity", 1.0, 0.8, 1.2, summaryResId = R.string.pref_summary_boost_v5_sensitivity),
+    ApsBoostV6PreMealTargetMgdl("boost_v6_pre_meal_target_mgdl", 72.0, 65.0, 90.0, summaryResId = R.string.pref_summary_boost_v6_pre_meal_target),
+    ApsBoostV6PreMealLeadMin("boost_v6_pre_meal_lead_min", 60.0, 30.0, 90.0, summaryResId = R.string.pref_summary_boost_v6_pre_meal_lead),
 }

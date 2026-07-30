@@ -345,4 +345,8 @@
     <string name="aimi_adaptation_metric_value_percent" comment="%1$.1f=a percentage value. Example: 82.5%">%1$.1f%%</string>
     <string name="aimi_adaptation_metric_value_units" comment="%1$.2f=insulin units. Example: 0.50 U">%1$.2f U</string>
     <string name="aimi_adaptation_metric_value_mgdl" comment="%1$.1f=a glucose prediction error in mg/dL. Example: 12.5 mg/dL">%1$.1f mg/dL</string>
+    <string name="boost_widget_configuration">Boost Widget Configuration</string>
+    <string name="boost_widget_configure_opacity">Configure opacity</string>
+    <string name="boost_widget_use_black">Use black color</string>
+    <string name="boost_widget_description">Boost algorithm widget</string>
 </resources>

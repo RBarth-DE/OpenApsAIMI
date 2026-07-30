@@ -1270,6 +1270,7 @@
     <string name="pulse_series_shortname" comment="Short label for APS Pulse/Rate custom panel">Pulse</string>
     <string name="tir_series_shortname" comment="Short label for Time In Range custom panel">TIR</string>
     <string name="graph_series_smb" comment="Short label for SMB triangle markers on BG graph">SMBs</string>
+    <string name="boost" comment="Short label for Boost algorithm card/series">Boost</string>
     <string name="iob_threshold_shortname" comment="Short label for AutoISF IOB Threshold graph series">IOBth</string>
     <string name="final_isf_shortname" comment="Short label for AutoISF Final ISF graph series">finalISF</string>
     <string name="acce_isf_shortname" comment="Short label for AutoISF Acceleration ISF graph series">acceISF</string>

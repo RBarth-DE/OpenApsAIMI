@@ -4,12 +4,15 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.Stable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import app.aaps.core.interfaces.aps.APSResult
 import app.aaps.core.interfaces.aps.Loop
+import app.aaps.core.interfaces.aps.RT
 import app.aaps.core.interfaces.configuration.Config
 import app.aaps.core.interfaces.constraints.ConstraintsChecker
 import app.aaps.core.interfaces.db.PersistenceLayer
 import app.aaps.core.interfaces.iob.IobCobCalculator
 import app.aaps.core.interfaces.logging.AAPSLogger
+import app.aaps.core.interfaces.logging.LTag
 import app.aaps.core.interfaces.nsclient.ProcessedDeviceStatusData
 import app.aaps.core.interfaces.overview.graph.OverviewDataCache
 import app.aaps.core.interfaces.plugin.ActivePlugin
@@ -34,6 +37,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.flow.stateIn
 import java.util.Locale
@@ -63,6 +67,23 @@ data class SensitivityUiState(
 )
 
 @Stable
+data class BoostChipState(
+    val state: String = "",       // IDLE/OBSERVING/CONFIRMED/COMMITTED/RECOVERING
+    val color: Long = 0xFF78909C, // blue-grey default
+    val detail: String = "",      // e.g. "×1.20"
+    val tier: String = "",        // V1 tier fallback
+    val isBoost: Boolean = false, // true when BOOST is active APS
+    // Widget-style data
+    val dynIsf: String = "",      // e.g. "32.1"
+    val tdd: String = "",         // e.g. "38.4U"
+    val profilePct: String = "",  // e.g. "130%"
+    val activity: String = "",    // e.g. "INACTIVE" or V5 score
+    val iob: String = "",         // e.g. "4.6U"
+    val boostTier: String = "",   // e.g. "UAM_BOOST"
+    val mlRisk: String = ""       // e.g. "0.12"
+)
+
+@Stable
 class ChipsViewModel @AssistedInject constructor(
     @Assisted cache: OverviewDataCache,
     private val iobCobCalculator: IobCobCalculator,
@@ -81,6 +102,12 @@ class ChipsViewModel @AssistedInject constructor(
     private val preferences: Preferences,
     private val rxBus: RxBus
 ) : ViewModel() {
+
+    init {
+        android.util.Log.e("BOOST_DASH", "ChipsViewModel created, activeAPS=${activePlugin.activeAPS?.javaClass?.simpleName} algo=${activePlugin.activeAPS?.algorithm}")
+        val initial = buildBoostChipState()
+        android.util.Log.e("BOOST_DASH", "Initial boost chip: isBoost=${initial.isBoost} state=${initial.state}")
+    }
 
     @AssistedFactory
     interface Factory {
@@ -141,6 +168,64 @@ class ChipsViewModel @AssistedInject constructor(
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = SensitivityUiState()
     )
+
+    val boostChipState: StateFlow<BoostChipState> = flow {
+        while (true) { emit(buildBoostChipState()); delay(30_000L) }
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.Eagerly,
+        initialValue = buildBoostChipState()
+    )
+
+    private fun buildBoostChipState(): BoostChipState {
+        val aps = activePlugin.activeAPS
+        aapsLogger.debug(LTag.UI, "buildBoostChipState: activeAPS=${aps?.javaClass?.simpleName} algo=${aps?.algorithm}")
+        if (aps == null) return BoostChipState()
+        if (aps.algorithm != APSResult.Algorithm.BOOST) {
+            aapsLogger.debug(LTag.UI, "buildBoostChipState: not BOOST, algo=${aps.algorithm}")
+            return BoostChipState()
+        }
+        val result = aps.lastAPSResult
+        aapsLogger.debug(LTag.UI, "buildBoostChipState: lastAPSResult=$result boostV5_state=${(result?.rawData() as? RT)?.boostV5_state}")
+        if (result == null) return BoostChipState(isBoost = true, state = "BOOST", color = 0xFF4CAF50L)
+        val raw = result.rawData()
+        if (raw !is RT) return BoostChipState(isBoost = true, state = "BOOST", color = 0xFF4CAF50L)
+        val v5State = raw.boostV5_state
+        val dynIsf = result.variableSens?.let { "%.0f".format(it) } ?: "--"
+        val tdd = raw.tdd?.let { "%.1fU".format(it) } ?: "--"
+        val profilePct = raw.boostProfileSwitch?.let { "${it}%" } ?: "--"
+        val activity = v5State?.let { raw.boostV5_score?.let { "%.2f".format(it) } ?: "--" }
+            ?: raw.boostActive?.let { if (it) "ACTIVE" else "INACTIVE" } ?: "--"
+        val iob = raw.IOB?.let { "%.1fU".format(it) } ?: "--"
+        val boostTier = raw.boostTier ?: "--"
+        val mlRisk = raw.mlHypoRisk?.let { "%.2f".format(it) } ?: "--"
+
+        return if (v5State != null) {
+            BoostChipState(
+                state = v5State,
+                color = when (v5State.uppercase()) {
+                    "OBSERVING" -> 0xFFFFC107L
+                    "CONFIRMED" -> 0xFFFF6E40L
+                    "COMMITTED" -> 0xFFFF9800L
+                    "RECOVERING" -> 0xFF26C6DAL
+                    else -> 0xFF78909CL
+                },
+                detail = raw.boostV5_actionMult?.let { "×%.2f".format(it) } ?: "",
+                isBoost = true,
+                dynIsf = dynIsf, tdd = tdd, profilePct = profilePct, activity = activity, iob = iob,
+                boostTier = boostTier, mlRisk = mlRisk
+            )
+        } else {
+            BoostChipState(
+                state = raw.boostTier ?: "BOOST",
+                color = 0xFF4CAF50L,
+                tier = raw.boostTier ?: "",
+                isBoost = true,
+                dynIsf = dynIsf, tdd = tdd, profilePct = profilePct, activity = activity, iob = iob,
+                boostTier = boostTier, mlRisk = mlRisk
+            )
+        }
+    }
 
     private suspend fun buildSensitivityUiState(): SensitivityUiState {
         val lastAutosensData = iobCobCalculator.ads.getLastAutosensData("Overview", aapsLogger, dateUtil)

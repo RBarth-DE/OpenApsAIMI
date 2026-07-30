@@ -186,6 +186,7 @@ fun SecondaryGraphCompose(
         SeriesType.MODES,
         SeriesType.PULSE,
         SeriesType.TIR,
+        SeriesType.BOOST,
         SeriesType.BOLUS           -> emptyList()
         null                       -> emptyList()
     }
@@ -873,6 +874,7 @@ data class SeriesColors(
         SeriesType.MODES,
         SeriesType.PULSE,
         SeriesType.TIR,
+        SeriesType.BOOST,
         SeriesType.BOLUS           -> activity
     }
 }

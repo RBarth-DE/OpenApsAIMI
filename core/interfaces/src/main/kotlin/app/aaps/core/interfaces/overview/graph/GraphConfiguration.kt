@@ -37,7 +37,10 @@ enum class SeriesType {
     ACCE_ISF,       // Acceleration ISF factor
     BG_ISF,         // BG-based ISF factor
     PP_ISF,         // Post-prandial ISF factor
-    DURA_ISF        // Duration ISF factor
+    DURA_ISF,       // Duration ISF factor
+
+    // BOOST algorithm data panel
+    BOOST           // DynISF | TDD | IOB | Status card (active only when BOOST is the APS)
 }
 
 /**

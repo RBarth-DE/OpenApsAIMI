@@ -292,4 +292,19 @@ enum class StringKey(
         summaryResId = R.string.pref_summary_aimi_sos_phone2,
         dependency = BooleanKey.AimiEmergencySosEnable,
     ),
+
+    // ── BOOST algorithm keys ──
+    ApsBoostStartTime("boost_start_time", "07:00", defaultedBySM = true),
+    ApsBoostEndTime("boost_end_time", "07:01", defaultedBySM = true),
+    ApsBoostNightModeStart("boost_night_mode_start", "22:00", defaultedBySM = true),
+    ApsBoostNightModeEnd("boost_night_mode_end", "07:00", defaultedBySM = true),
+    ApsBoostV5State("boost_v5_state", "", defaultedBySM = true),
+    ApsBoostIsfShadowState("boost_isf_shadow_state", "", defaultedBySM = true),
+    ApsBoostAnticipHistory("boost_anticip_history", "", defaultedBySM = true),
+    ApsBoostSleepState("boost_sleep_state", "", defaultedBySM = true),
+    ApsBoostSleepHistory("boost_sleep_history", "", defaultedBySM = true),
+    ApsBoostMlRingBuffer("boost_ml_ring_buffer", "", defaultedBySM = true),
+    ApsBoostMealTimeHistory("boost_meal_time_history", "", defaultedBySM = true),
+    ApsBoostDailyStepHistory("boost_daily_step_history", "", defaultedBySM = true),
+    ApsBoostIntradayStepBank("boost_intraday_step_bank", "", defaultedBySM = true),
 }

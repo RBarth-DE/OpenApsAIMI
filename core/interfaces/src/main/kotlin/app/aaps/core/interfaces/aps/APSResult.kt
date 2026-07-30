@@ -25,6 +25,7 @@ interface APSResult {
     var isfMgdlForCarbs: Double? // used only to pass to AAPS client
     var scriptDebug: List<String>?
     var isHypoRisk: Boolean
+    var oapsProfileBoost: OapsProfileBoost?
 
 
     val predictionsAsGv: MutableList<GV>
@@ -67,7 +68,8 @@ interface APSResult {
         AMA,
         SMB,
         AIMI,
-        AUTO_ISF
+        AUTO_ISF,
+        BOOST
     }
 }
 
