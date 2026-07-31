@@ -710,13 +710,18 @@ open class OpenAPSBoostPlugin @Inject constructor(
         // it is false by construction, which is why the original report fired before dawn.
         val detectorAsleep = sleepStateCached.state == SleepStateDetector.SleepState.SLEEPING ||
             sleepStateCached.state == SleepStateDetector.SleepState.PRE_SLEEP
+        // The configured night window as a clock fact, read WHATEVER ApsBoostNightModeEnabled says.
+        // This is what makes "INACTIVE never fires overnight" hold by default instead of depending
+        // on the user having enabled night mode, and it needs no HR, no steps and no detector.
+        val nightStartMs = midnight + parseTimeToMillisOrDefault(preferences.getBoostDosing(StringKey.ApsBoostNightModeStart), "22:00")
+        val inNightWindow = NightWindow.contains(now, nightStartMs, nightEndMs)
         // Audit trail for the 2026-07-31 fix: record when the step test alone WOULD have raised the
         // profile but sleep blocked it, so the suppression is visible in NS rather than silent.
         if (StepFeed.inactivityStepsMet(stepsAvailable, profilePercent, recentSteps60Min, inactivitySteps) &&
-            (sleepInActive || detectorAsleep)
+            (sleepInActive || detectorAsleep || inNightWindow)
         ) {
             debug.append("\nInactivity SUPPRESSED by sleep (60m steps $recentSteps60Min < $inactivitySteps; " +
-                "sleepIn=$sleepInActive detector=${sleepStateCached.state}) → profile held at 100%")
+                "nightWindow=$inNightWindow sleepIn=$sleepInActive detector=${sleepStateCached.state}) → profile held at 100%")
         }
         if (boostActive && StepFeed.lieInFailsafeEngages(sleepInActive, nightModeEnabled, autoBySleepActive, detectorSleeping)) {
             boostActive = false
@@ -824,7 +829,8 @@ open class OpenAPSBoostPlugin @Inject constructor(
                 }
             } else if (StepFeed.inactivityEligible(
                     stepsAvailable, currentProfileSwitch, recentSteps60Min, inactivitySteps,
-                    sleepInActive = sleepInActive, asleep = detectorAsleep
+                    sleepInActive = sleepInActive, asleep = detectorAsleep,
+                    inNightWindow = inNightWindow
                 )) {
                 // Inactivity confirmed on a LIVE feed — check HR for stress. (F1 2026-07-07: a dark
                 // feed can no longer reach this branch — "no steps" must not mean "sedentary".)
