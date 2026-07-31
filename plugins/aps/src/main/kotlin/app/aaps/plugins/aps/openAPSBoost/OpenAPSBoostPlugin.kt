@@ -120,6 +120,7 @@ open class OpenAPSBoostPlugin @Inject constructor(
     // in parallel with V1's instantaneous ratio. Singleton with SharedPreferences-backed
     // EMA state, so the ratio survives plugin restarts.
     private val boostIsfShadow: BoostIsfShadow,
+    private val deviationSensAnalyzer: DeviationSensAnalyzer,
     private val profiler: Profiler,
     private val apsResultProvider: Provider<APSResult>,
     // V5 silent shadow — V1 hands the cycle's RT + inputs to V5 after determine_basal
@@ -1105,7 +1106,7 @@ open class OpenAPSBoostPlugin @Inject constructor(
         // 120% profile → 83% ISF (more resistant).
         val profileScale = activityResult.profileSwitch.toDouble() / 100.0
         val scaledProfileSens = profile.getIsfMgdl("OpenAPSBoostPlugin") / profileScale
-        val isfResult = calculateBoostIsf(
+        val isfResultRaw = calculateBoostIsf(
             profileSens = scaledProfileSens,
             profilePercent = activityResult.profileSwitch,
             targetBg = targetBg,
@@ -1113,6 +1114,26 @@ open class OpenAPSBoostPlugin @Inject constructor(
             glucoseValue = glucoseStatus.glucose,
             isTempTarget = isTempTarget
         )
+
+        // Deviation-based sensitivity adjustment — compares observed BG against expected
+        // over an 8H window to detect systematic insulin-sensitivity drift.
+        val devSensResult = deviationSensAnalyzer.analyze(now)
+        val isfResult = if (devSensResult.source == "deviation" && devSensResult.ratio != 1.0) {
+            val adjusted = isfResultRaw.copy(
+                sensNormalTarget = isfResultRaw.sensNormalTarget / devSensResult.ratio,
+                variableSens = isfResultRaw.variableSens / devSensResult.ratio,
+                isfDebug = isfResultRaw.isfDebug +
+                    "\nDevSens: ratio=%.3f src=%s clean=%d/%d → ISF@target=%.1f".format(
+                        devSensResult.ratio, devSensResult.source,
+                        devSensResult.cleanCount, devSensResult.totalCount,
+                        isfResultRaw.sensNormalTarget / devSensResult.ratio
+                    )
+            )
+            aapsLogger.debug(LTag.APS, "Boost DevSens applied: ${adjusted.isfDebug}")
+            adjusted
+        } else {
+            isfResultRaw
+        }
 
         // 4. Sensitivity ratio that drives basal / target / CR scaling in determine_basal.
         //    Two DISTINCT levers feed DetermineBasalBoost:
@@ -1419,6 +1440,13 @@ open class OpenAPSBoostPlugin @Inject constructor(
                     it.isfShadow_microBolus = Round.roundTo(u / scale, 0.001)
                 }
             }
+            // Populate deviation-based sensitivity telemetry on RT so the Boost overview
+            // panel and Nightscout upload see the applied ratio.
+            it.deviationSensRatio = devSensResult.ratio
+            it.deviationSensSource = devSensResult.source
+            it.deviationSensClean = devSensResult.cleanCount
+            it.deviationSensTotal = devSensResult.totalCount
+
             // Persist the v12 ML lookback ring buffer (updated in-place during this
             // cycle's inference) so the lag features survive a process restart.
             preferences.put(StringKey.ApsBoostMlRingBuffer, determineBasalBoost.serializeMlRingBuffer())

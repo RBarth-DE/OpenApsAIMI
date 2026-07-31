@@ -21,6 +21,7 @@ import app.aaps.core.keys.valueResId
 import app.aaps.core.ui.R
 import app.aaps.core.ui.compose.LocalPreferences
 import java.text.DecimalFormat
+import kotlin.math.roundToInt
 
 /**
  * Composable double preference for use inside card sections.
@@ -39,9 +40,7 @@ fun AdaptiveDoublePreferenceItem(
 ) {
     val preferences = LocalPreferences.current
     val effectiveTitleResId = if (titleResId != 0) titleResId else doubleKey.titleResId
-
-    // Skip if no title resource is available
-    if (effectiveTitleResId == 0) return
+    val titleText = preferenceDisplayTitle(effectiveTitleResId, doubleKey.key)
 
     val visibility = calculatePreferenceVisibility(
         preferenceKey = doubleKey,
@@ -81,7 +80,7 @@ fun AdaptiveDoublePreferenceItem(
                 .padding(theme.padding)
         ) {
             TextWithSyncBadge(
-                text = stringResource(effectiveTitleResId),
+                text = titleText,
                 key = doubleKey,
                 style = theme.titleTextStyle,
                 // Mirror Preference's disabled styling (the switch row greys the same way) since this
@@ -106,9 +105,10 @@ fun AdaptiveDoublePreferenceItem(
                 step = step,
                 showValue = true,
                 valueFormatResId = valueFormatResId,
+                formatAsInt = decimalPlaces == 0,
                 valueFormat = valueFormat,
                 unitLabel = unitLabel,
-                dialogLabel = stringResource(effectiveTitleResId),
+                dialogLabel = titleText,
                 dialogSummary = summary,
                 enabled = visibility.enabled
             )
@@ -116,8 +116,11 @@ fun AdaptiveDoublePreferenceItem(
     } else {
         // For unspecified ranges, use text field with range summary
         val rangeFormatResId = unitType.rangeResId()
+        val displayedValue = if (decimalPlaces == 0) value.roundToInt() else value
+        val displayedMin = if (decimalPlaces == 0) doubleKey.min.roundToInt() else doubleKey.min
+        val displayedMax = if (decimalPlaces == 0) doubleKey.max.roundToInt() else doubleKey.max
         val summaryText = if (rangeFormatResId != null) {
-            stringResource(rangeFormatResId, value, doubleKey.min, doubleKey.max)
+            stringResource(rangeFormatResId, displayedValue, displayedMin, displayedMax)
         } else {
             stringResource(R.string.preference_range_summary, valueFormat.format(value), unitLabel, valueFormat.format(doubleKey.min), valueFormat.format(doubleKey.max))
         }

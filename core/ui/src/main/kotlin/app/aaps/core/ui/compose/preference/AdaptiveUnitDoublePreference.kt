@@ -37,9 +37,7 @@ fun AdaptiveUnitDoublePreferenceItem(
     val preferences = LocalPreferences.current
     val profileUtil = LocalProfileUtil.current
     val effectiveTitleResId = if (titleResId != 0) titleResId else unitKey.titleResId
-
-    // Skip if no title resource is available
-    if (effectiveTitleResId == 0) return
+    val titleText = preferenceDisplayTitle(effectiveTitleResId, unitKey.key)
 
     val visibility = calculatePreferenceVisibility(
         preferenceKey = unitKey,
@@ -79,7 +77,7 @@ fun AdaptiveUnitDoublePreferenceItem(
             .padding(theme.padding)
     ) {
         TextWithSyncBadge(
-            text = stringResource(effectiveTitleResId),
+            text = titleText,
             key = unitKey,
             style = theme.titleTextStyle,
             // Mirror Preference's disabled styling (the switch row greys the same way) since this
@@ -107,7 +105,7 @@ fun AdaptiveUnitDoublePreferenceItem(
             showValue = true,
             valueFormat = valueFormat,
             unitLabel = unitLabel,
-            dialogLabel = stringResource(effectiveTitleResId),
+            dialogLabel = titleText,
             dialogSummary = summary,
             enabled = visibility.enabled
         )

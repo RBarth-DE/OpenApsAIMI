@@ -358,29 +358,29 @@ enum class DoubleKey(
     ),
 
     // === Tes ajouts AIMI / custom ===
-    EquilMaxBolus("equil_maxbolus", 10.0, 0.1, 25.0),
+    EquilMaxBolus("equil_maxbolus", 10.0, 0.1, 25.0, unitType = UnitType.INSULIN),
 
     OApsAIMIMaxSMB("key_openapsaimi_max_smb", 1.0, 0.05, 30.0, unitType = UnitType.DOUBLE_2),
     OApsAIMIHighBGMaxSMB("key_openapsaimi_high_bg_max_smb", 1.0, 0.05, 30.0, unitType = UnitType.DOUBLE_2),
 
-    OApsAIMIweight("key_aimiweight", 50.0, 1.0, 200.0),
+    OApsAIMIweight("key_aimiweight", 50.0, 1.0, 200.0, unitType = UnitType.DOUBLE),
     /** MPC: max insulin (U) per kg body weight per 5-minute dose search; combined with Max SMB / High BG SMB caps. */
     OApsAIMIMpcInsulinUPerKgPerStep("aimi_mpc_insulin_u_per_kg_per_5min", 0.065, 0.03, 0.12, unitType = UnitType.DOUBLE_3),
-    OApsAIMICHO("key_cho", 50.0, 1.0, 150.0),
-    OApsAIMITDD7("key_tdd7", 40.0, 1.0, 150.0),
+    OApsAIMICHO("key_cho", 50.0, 1.0, 150.0, unitType = UnitType.GRAMS),
+    OApsAIMITDD7("key_tdd7", 40.0, 1.0, 150.0, unitType = UnitType.INSULIN),
 
-    OApsAIMIPkpdInitialDiaH("aimi_pkpd_initial_dia_h", 6.0, 4.0, 24.0),
-    OApsAIMIPkpdInitialPeakMin("aimi_pkpd_initial_peak_min", 75.0, 35.0, 300.0),
-    OApsAIMIPkpdAnchorDiaH("aimi_pkpd_anchor_dia_h", 4.0, 4.0, 12.0),
-    OApsAIMIPkpdAnchorPeakMin("aimi_pkpd_anchor_peak_min", 75.0, 35.0, 180.0),
-    OApsAIMIPkpdBoundsDiaMinH("aimi_pkpd_bounds_dia_min_h", 4.0, 4.0, 24.0),
-    OApsAIMIPkpdBoundsDiaMaxH("aimi_pkpd_bounds_dia_max_h", 24.0, 6.0, 36.0),
-    OApsAIMIPkpdBoundsPeakMinMin("aimi_pkpd_bounds_peak_min_min", 30.0, 20.0, 240.0),
-    OApsAIMIPkpdBoundsPeakMinMax("aimi_pkpd_bounds_peak_min_max", 240.0, 60.0, 480.0),
-    OApsAIMIPkpdMaxDiaChangePerDayH("aimi_pkpd_max_dia_change_per_day_h", 3.0, 0.1, 6.0),
-    OApsAIMIPkpdMaxPeakChangePerDayMin("aimi_pkpd_max_peak_change_per_day_min", 20.0, 1.0, 60.0),
-    OApsAIMIPkpdStateDiaH("aimi_pkpd_state_dia_h", 6.0, 4.0, 24.0),
-    OApsAIMIPkpdStatePeakMin("aimi_pkpd_state_peak_min", 75.0, 40.0, 300.0),
+    OApsAIMIPkpdInitialDiaH("aimi_pkpd_initial_dia_h", 6.0, 4.0, 24.0, unitType = UnitType.HOURS_DOUBLE),
+    OApsAIMIPkpdInitialPeakMin("aimi_pkpd_initial_peak_min", 75.0, 35.0, 300.0, unitType = UnitType.MIN),
+    OApsAIMIPkpdAnchorDiaH("aimi_pkpd_anchor_dia_h", 4.0, 4.0, 12.0, unitType = UnitType.HOURS_DOUBLE),
+    OApsAIMIPkpdAnchorPeakMin("aimi_pkpd_anchor_peak_min", 75.0, 35.0, 180.0, unitType = UnitType.MIN),
+    OApsAIMIPkpdBoundsDiaMinH("aimi_pkpd_bounds_dia_min_h", 4.0, 4.0, 24.0, unitType = UnitType.HOURS_DOUBLE),
+    OApsAIMIPkpdBoundsDiaMaxH("aimi_pkpd_bounds_dia_max_h", 24.0, 6.0, 36.0, unitType = UnitType.HOURS_DOUBLE),
+    OApsAIMIPkpdBoundsPeakMinMin("aimi_pkpd_bounds_peak_min_min", 30.0, 20.0, 240.0, unitType = UnitType.MIN),
+    OApsAIMIPkpdBoundsPeakMinMax("aimi_pkpd_bounds_peak_min_max", 240.0, 60.0, 480.0, unitType = UnitType.MIN),
+    OApsAIMIPkpdMaxDiaChangePerDayH("aimi_pkpd_max_dia_change_per_day_h", 3.0, 0.1, 6.0, unitType = UnitType.HOURS_DOUBLE),
+    OApsAIMIPkpdMaxPeakChangePerDayMin("aimi_pkpd_max_peak_change_per_day_min", 20.0, 1.0, 60.0, unitType = UnitType.MIN),
+    OApsAIMIPkpdStateDiaH("aimi_pkpd_state_dia_h", 6.0, 4.0, 24.0, unitType = UnitType.HOURS_DOUBLE),
+    OApsAIMIPkpdStatePeakMin("aimi_pkpd_state_peak_min", 75.0, 40.0, 300.0, unitType = UnitType.MIN),
     OApsAIMIPkpdStateInitializedAtEpochMs("aimi_pkpd_state_initialized_at_ms", 0.0, 0.0, 4000000000000.0),
     OApsAIMIPkpdStatePriorPeak("aimi_pkpd_state_prior_peak", 75.0, 0.0, 300.0),
     OApsAIMIPkpdStatePhysioPeak("aimi_pkpd_state_physio_peak", 0.0, -100.0, 100.0),
@@ -401,10 +401,11 @@ enum class DoubleKey(
         defaultValue = 0.45,
         min = 0.0,
         max = 1.0,
+        unitType = UnitType.DOUBLE_2,
     ),
-    OApsAIMIIsfFusionMinFactor("aimi_isf_fusion_min_factor", 0.75, 0.3, 1.0),
-    OApsAIMIIsfFusionMaxFactor("aimi_isf_fusion_max_factor", 2.0, 1.0, 2.0),
-    OApsAIMIIsfFusionMaxChangePerTick("aimi_isf_fusion_max_change_per_tick", 0.4, 0.0, 0.5),
+    OApsAIMIIsfFusionMinFactor("aimi_isf_fusion_min_factor", 0.75, 0.3, 1.0, unitType = UnitType.DOUBLE_2),
+    OApsAIMIIsfFusionMaxFactor("aimi_isf_fusion_max_factor", 2.0, 1.0, 2.0, unitType = UnitType.DOUBLE),
+    OApsAIMIIsfFusionMaxChangePerTick("aimi_isf_fusion_max_change_per_tick", 0.4, 0.0, 0.5, unitType = UnitType.DOUBLE_2),
     /** Max relative DynISF change from trajectory tuning when a tick qualifies (rise or fall). */
     OApsAIMIDynIsfTrajectoryMaxFraction(
         key = "aimi_dyn_isf_trajectory_max_fraction",
@@ -414,35 +415,36 @@ enum class DoubleKey(
         titleResId = R.string.pref_title_aimi_dyn_isf_trajectory_max_fraction,
         summaryResId = R.string.pref_summary_aimi_dyn_isf_trajectory_max_fraction,
         dependency = BooleanKey.OApsAIMIDynIsfTrajectoryTuningEnabled,
+        unitType = UnitType.DOUBLE_3,
     ),
-    OApsAIMISmbTailThreshold("aimi_smb_tail_threshold", 0.25, 0.0, 1.0),
-    OApsAIMISmbTailDamping("aimi_smb_tail_damping", 0.5, 0.0, 1.0),
-    OApsAIMISmbExerciseDamping("aimi_smb_exercise_damping", 0.6, 0.0, 1.0),
-    OApsAIMISmbLateFatDamping("aimi_smb_late_fat_damping", 0.7, 0.0, 1.0),
-    OApsAIMIPkpdPragmaticReliefMinFactor("aimi_pkpd_pragmatic_relief_min_factor", 0.75, 0.50, 1.0),
-    OApsAIMIRedCarpetRestoreThreshold("aimi_red_carpet_restore_threshold", 0.75, 0.50, 0.95),
-    OApsAIMIPriorityMaxIobFactor("aimi_priority_max_iob_factor", 1.20, 1.0, 1.6),
-    OApsAIMIPriorityMaxIobExtraU("aimi_priority_max_iob_extra_u", 2.0, 0.0, 5.0),
+    OApsAIMISmbTailThreshold("aimi_smb_tail_threshold", 0.25, 0.0, 1.0, unitType = UnitType.DOUBLE_2),
+    OApsAIMISmbTailDamping("aimi_smb_tail_damping", 0.5, 0.0, 1.0, unitType = UnitType.DOUBLE_2),
+    OApsAIMISmbExerciseDamping("aimi_smb_exercise_damping", 0.6, 0.0, 1.0, unitType = UnitType.DOUBLE_2),
+    OApsAIMISmbLateFatDamping("aimi_smb_late_fat_damping", 0.7, 0.0, 1.0, unitType = UnitType.DOUBLE_2),
+    OApsAIMIPkpdPragmaticReliefMinFactor("aimi_pkpd_pragmatic_relief_min_factor", 0.75, 0.50, 1.0, unitType = UnitType.DOUBLE_2),
+    OApsAIMIRedCarpetRestoreThreshold("aimi_red_carpet_restore_threshold", 0.75, 0.50, 0.95, unitType = UnitType.DOUBLE_2),
+    OApsAIMIPriorityMaxIobFactor("aimi_priority_max_iob_factor", 1.20, 1.0, 1.6, unitType = UnitType.DOUBLE_2),
+    OApsAIMIPriorityMaxIobExtraU("aimi_priority_max_iob_extra_u", 2.0, 0.0, 5.0, unitType = UnitType.INSULIN),
     // ❌ TIME-BASED REACTIVITY REMOVED - replaced by UnifiedReactivityLearner.globalFactor
     // Previously: OApsAIMIMorningFactor, OApsAIMIAfternoonFactor, OApsAIMIEveningFactor
 
-    OApsAIMIMealFactor("key_oaps_aimi_meal_factor", 50.0, 1.0, 150.0),
-    OApsAIMIFCLFactor("key_oaps_aimi_FCL_factor", 50.0, 1.0, 150.0),
-    OApsAIMIBFFactor("key_oaps_aimi_BF_factor", 50.0, 1.0, 150.0),
+    OApsAIMIMealFactor("key_oaps_aimi_meal_factor", 50.0, 1.0, 150.0, unitType = UnitType.PERCENT),
+    OApsAIMIFCLFactor("key_oaps_aimi_FCL_factor", 50.0, 1.0, 150.0, unitType = UnitType.PERCENT),
+    OApsAIMIBFFactor("key_oaps_aimi_BF_factor", 50.0, 1.0, 150.0, unitType = UnitType.PERCENT),
 
-    OApsAIMIBFPrebolus("key_prebolus_BF_mode", 2.5, 0.1, 20.0),
-    OApsAIMIBFPrebolus2("key_prebolus2_BF_mode", 2.0, 0.1, 20.0),
+    OApsAIMIBFPrebolus("key_prebolus_BF_mode", 2.5, 0.1, 20.0, unitType = UnitType.INSULIN),
+    OApsAIMIBFPrebolus2("key_prebolus2_BF_mode", 2.0, 0.1, 20.0, unitType = UnitType.INSULIN),
 
-    OApsAIMILunchFactor("key_oaps_aimi_lunch_factor", 50.0, 1.0, 150.0),
-    OApsAIMIDinnerFactor("key_oaps_aimi_dinner_factor", 50.0, 1.0, 150.0),
-    OApsAIMIHCFactor("key_oaps_aimi_HC_factor", 50.0, 1.0, 150.0),
-    OApsAIMISnackFactor("key_oaps_aimi_snack_factor", 50.0, 1.0, 150.0),
+    OApsAIMILunchFactor("key_oaps_aimi_lunch_factor", 50.0, 1.0, 150.0, unitType = UnitType.PERCENT),
+    OApsAIMIDinnerFactor("key_oaps_aimi_dinner_factor", 50.0, 1.0, 150.0, unitType = UnitType.PERCENT),
+    OApsAIMIHCFactor("key_oaps_aimi_HC_factor", 50.0, 1.0, 150.0, unitType = UnitType.PERCENT),
+    OApsAIMISnackFactor("key_oaps_aimi_snack_factor", 50.0, 1.0, 150.0, unitType = UnitType.PERCENT),
     // ❌ HYPER REACTIVITY REMOVED - replaced by UnifiedReactivityLearner.globalFactor
     // Previously: OApsAIMIHyperFactor
 
-    OApsAIMIsleepFactor("key_oaps_aimi_sleep_factor", 60.0, 1.0, 150.0),
+    OApsAIMIsleepFactor("key_oaps_aimi_sleep_factor", 60.0, 1.0, 150.0, unitType = UnitType.PERCENT),
 
-    OApsAIMIMealPrebolus("key_prebolus_meal_mode", 2.0, 0.1, 20.0),
+    OApsAIMIMealPrebolus("key_prebolus_meal_mode", 2.0, 0.1, 20.0, unitType = UnitType.INSULIN),
     OApsAIMIautodrivePrebolus(
         key = "key_prebolus_autodrive_mode",
         defaultValue = 1.0,
@@ -451,6 +453,7 @@ enum class DoubleKey(
         titleResId = R.string.pref_title_aimi_autodrive_prebolus,
         summaryResId = R.string.aimi_summary_o_aps_a_i_m_iautodrive_prebolus,
         dependency = BooleanKey.OApsAIMIautoDriveActive,
+        unitType = UnitType.INSULIN,
     ),
     OApsAIMIautodrivesmallPrebolus(
         key = "key_prebolussmall_autodrive_mode",
@@ -460,33 +463,34 @@ enum class DoubleKey(
         titleResId = R.string.pref_title_aimi_autodrive_small_prebolus,
         summaryResId = R.string.aimi_summary_o_aps_a_i_m_iautodrivesmall_prebolus,
         dependency = BooleanKey.OApsAIMIautoDriveActive,
+        unitType = UnitType.INSULIN,
     ),
 
-    OApsAIMIcombinedDelta("key_combinedDelta_autodrive_mode", 1.0, 0.1, 20.0),
-    OApsAIMIAutodriveDeviation("key_mindeviation_autodrive_mode", 1.0, 0.1, 5.0),
-    OApsAIMIAutodriveAcceleration("key_Acceleration_autodrive_mode", 1.0, 0.1, 5.0),
+    OApsAIMIcombinedDelta("key_combinedDelta_autodrive_mode", 1.0, 0.1, 20.0, unitType = UnitType.DOUBLE),
+    OApsAIMIAutodriveDeviation("key_mindeviation_autodrive_mode", 1.0, 0.1, 5.0, unitType = UnitType.DOUBLE),
+    OApsAIMIAutodriveAcceleration("key_Acceleration_autodrive_mode", 1.0, 0.1, 5.0, unitType = UnitType.DOUBLE),
 
-    autodriveMaxBasal("autodrive_max_basal", 1.0, 0.05, 25.0),
-    meal_modes_MaxBasal("meal_modes_max_basal", 1.0, 0.05, 25.0),
+    autodriveMaxBasal("autodrive_max_basal", 1.0, 0.05, 25.0, unitType = UnitType.INSULIN_RATE),
+    meal_modes_MaxBasal("meal_modes_max_basal", 1.0, 0.05, 25.0, unitType = UnitType.INSULIN_RATE),
 
-    OApsAIMILunchPrebolus("key_prebolus_lunch_mode", 2.5, 0.1, 20.0),
-    OApsAIMILunchPrebolus2("key_prebolus2_lunch_mode", 2.0, 0.1, 20.0),
-    OApsAIMIDinnerPrebolus("key_prebolus_dinner_mode", 2.5, 0.1, 20.0),
-    OApsAIMIDinnerPrebolus2("key_prebolus2_dinner_mode", 2.0, 0.1, 20.0),
-    OApsAIMISnackPrebolus("key_prebolus_snack_mode", 1.0, 0.1, 20.0),
-    OApsAIMIHighCarbPrebolus("key_prebolus_highcarb_mode", 5.0, 0.1, 20.0),
-    OApsAIMIHighCarbPrebolus2("key_prebolus_highcarb_mode2", 5.0, 0.1, 20.0),
+    OApsAIMILunchPrebolus("key_prebolus_lunch_mode", 2.5, 0.1, 20.0, unitType = UnitType.INSULIN),
+    OApsAIMILunchPrebolus2("key_prebolus2_lunch_mode", 2.0, 0.1, 20.0, unitType = UnitType.INSULIN),
+    OApsAIMIDinnerPrebolus("key_prebolus_dinner_mode", 2.5, 0.1, 20.0, unitType = UnitType.INSULIN),
+    OApsAIMIDinnerPrebolus2("key_prebolus2_dinner_mode", 2.0, 0.1, 20.0, unitType = UnitType.INSULIN),
+    OApsAIMISnackPrebolus("key_prebolus_snack_mode", 1.0, 0.1, 20.0, unitType = UnitType.INSULIN),
+    OApsAIMIHighCarbPrebolus("key_prebolus_highcarb_mode", 5.0, 0.1, 20.0, unitType = UnitType.INSULIN),
+    OApsAIMIHighCarbPrebolus2("key_prebolus_highcarb_mode2", 5.0, 0.1, 20.0, unitType = UnitType.INSULIN),
 
     OApsAIMIwcycledateday("key_wcycledateday", 1.0, 1.0, 31.0),
-    OApsAIMIWCycleClampMin("key_wcycle_clamp_min", 0.8, 0.5, 1.0),
-    OApsAIMIWCycleClampMax("key_wcycle_clamp_max", 1.25, 1.0, 2.0),
+    OApsAIMIWCycleClampMin("key_wcycle_clamp_min", 0.8, 0.5, 1.0, unitType = UnitType.DOUBLE_2),
+    OApsAIMIWCycleClampMax("key_wcycle_clamp_max", 1.25, 1.0, 2.0, unitType = UnitType.DOUBLE_2),
 
-    OApsAIMINightGrowthMinRiseSlope("key_oaps_aimi_ngr_min_rise_slope", 5.0, 0.5, 30.0),
-    OApsAIMINightGrowthSmbMultiplier("key_oaps_aimi_ngr_smb_multiplier", 1.2, 1.0, 1.5),
-    OApsAIMINightGrowthBasalMultiplier("key_oaps_aimi_ngr_basal_multiplier", 1.1, 1.0, 1.5),
-    OApsAIMINightGrowthMaxSmbClamp("key_oaps_aimi_ngr_max_smb_clamp", 1.2, 0.1, 5.0),
-    OApsAIMINightGrowthMaxIobExtra("key_oaps_aimi_ngr_max_iob_extra", 0.5, 0.0, 3.0),
-    OApsAIMIActivityBasalCapFactor("key_aimi_activity_basal_cap_factor", 1.3, 0.5, 3.0),
+    OApsAIMINightGrowthMinRiseSlope("key_oaps_aimi_ngr_min_rise_slope", 5.0, 0.5, 30.0, unitType = UnitType.DOUBLE),
+    OApsAIMINightGrowthSmbMultiplier("key_oaps_aimi_ngr_smb_multiplier", 1.2, 1.0, 1.5, unitType = UnitType.DOUBLE_2),
+    OApsAIMINightGrowthBasalMultiplier("key_oaps_aimi_ngr_basal_multiplier", 1.1, 1.0, 1.5, unitType = UnitType.DOUBLE_2),
+    OApsAIMINightGrowthMaxSmbClamp("key_oaps_aimi_ngr_max_smb_clamp", 1.2, 0.1, 5.0, unitType = UnitType.DOUBLE),
+    OApsAIMINightGrowthMaxIobExtra("key_oaps_aimi_ngr_max_iob_extra", 0.5, 0.0, 3.0, unitType = UnitType.INSULIN),
+    OApsAIMIActivityBasalCapFactor("key_aimi_activity_basal_cap_factor", 1.3, 0.5, 3.0, unitType = UnitType.DOUBLE),
 
     // --- AIMI Adaptive Basal ---
     OApsAIMIHighBg(
@@ -496,6 +500,7 @@ enum class DoubleKey(
         max = 250.0,
         titleResId = R.string.pref_title_aimi_high_bg,
         summaryResId = R.string.pref_summary_aimi_high_bg,
+        unitType = UnitType.MGDL,
     ),
     OApsAIMIHyperEstablishedDevMgdl(
         key = "key_aimi_hyper_established_dev_mgdl",
@@ -505,6 +510,7 @@ enum class DoubleKey(
         titleResId = R.string.pref_title_aimi_hyper_established_dev,
         summaryResId = R.string.pref_summary_aimi_hyper_established_dev,
         dependency = BooleanKey.OApsAIMIHyperTrajectoryRelease,
+        unitType = UnitType.MGDL,
     ),
     OApsAIMIHyperDeepDevMgdl(
         key = "key_aimi_hyper_deep_dev_mgdl",
@@ -514,29 +520,30 @@ enum class DoubleKey(
         titleResId = R.string.pref_title_aimi_hyper_deep_dev,
         summaryResId = R.string.pref_summary_aimi_hyper_deep_dev,
         dependency = BooleanKey.OApsAIMIHyperTrajectoryRelease,
+        unitType = UnitType.MGDL,
     ),
-    OApsAIMIPlateauBandAbs(key = "OApsAIMIPlateauBandAbs", 2.5, 0.5, 6.0), // bande de tolérance du plateau (|Δ| ≤ X mg/dL/5m)
-    OApsAIMIR2Confident(key = "OApsAIMIR2Confident", 0.7, 0.3, 0.95), // seuil de confiance du fit quadratique
-    OApsAIMIMaxMultiplier(key = "OApsAIMIMaxMultiplier", 1.6, 1.0,2.5), // plafond multiplicatif de la basale (× profil)
-    OApsAIMIKickerStep(key = "OApsAIMIKickerStep", 0.15, 0.05, 0.5), // intensité du “kicker” plateau (incrément multiplicatif)
-    OApsAIMIKickerMinUph(key = "OApsAIMIKickerMinUph", 0.2,0.05, 1.0), // plancher absolu U/h pour les kicks très bas
+    OApsAIMIPlateauBandAbs(key = "OApsAIMIPlateauBandAbs", 2.5, 0.5, 6.0, unitType = UnitType.DOUBLE), // bande de tolérance du plateau (|Δ| ≤ X mg/dL/5m)
+    OApsAIMIR2Confident(key = "OApsAIMIR2Confident", 0.7, 0.3, 0.95, unitType = UnitType.DOUBLE_2), // seuil de confiance du fit quadratique
+    OApsAIMIMaxMultiplier(key = "OApsAIMIMaxMultiplier", 1.6, 1.0,2.5, unitType = UnitType.DOUBLE), // plafond multiplicatif de la basale (× profil)
+    OApsAIMIKickerStep(key = "OApsAIMIKickerStep", 0.15, 0.05, 0.5, unitType = UnitType.DOUBLE_2), // intensité du “kicker” plateau (incrément multiplicatif)
+    OApsAIMIKickerMinUph(key = "OApsAIMIKickerMinUph", 0.2,0.05, 1.0, unitType = UnitType.INSULIN_RATE), // plancher absolu U/h pour les kicks très bas
     OApsAIMIZeroResumeFrac(key = "OApsAIMIZeroResumeFrac", 0.25, 0.05, 0.8, unitType = UnitType.DOUBLE_2), // fraction du basal profil pour la micro-reprise
-    OApsAIMIAntiStallBias(key = "OApsAIMIAntiStallBias", 0.10, 0.0, 0.5), // biais de “décollage” anti-stagnation (+%)
-    OApsAIMIDeltaPosRelease(key = "OApsAIMIDeltaPosRelease", 1.0, 0.5, 3.0), // seuil Δ positif au-delà duquel on arrête l’intensification
-    AimiUamConfidence (key = "AIMI_UAM_CONFIDENCE", 0.5, 0.0, 1.0),
-    OApsAIMILastEstimatedCarbs(key = "OApsAIMILastEstimatedCarbs", 0.0, 0.0, 300.0), // Meal Advisor Estimate
+    OApsAIMIAntiStallBias(key = "OApsAIMIAntiStallBias", 0.10, 0.0, 0.5, unitType = UnitType.DOUBLE_2), // biais de “décollage” anti-stagnation (+%)
+    OApsAIMIDeltaPosRelease(key = "OApsAIMIDeltaPosRelease", 1.0, 0.5, 3.0, unitType = UnitType.DOUBLE), // seuil Δ positif au-delà duquel on arrête l’intensification
+    AimiUamConfidence (key = "AIMI_UAM_CONFIDENCE", 0.5, 0.0, 1.0, unitType = UnitType.DOUBLE_2),
+    OApsAIMILastEstimatedCarbs(key = "OApsAIMILastEstimatedCarbs", 0.0, 0.0, 300.0, unitType = UnitType.GRAMS), // Meal Advisor Estimate
 
     OApsAIMILastEstimatedCarbTime(key = "OApsAIMILastEstimatedCarbTime", 0.0, 0.0, 20000000000000.0), // Timestamp as Double
 
     // 🌸 Endometriosis & Cycle Management (MTR)
-    AimiEndometriosisBasalMult("aimi_endo_basal_mult", 1.3, 1.0, 2.0),
-    AimiEndometriosisSmbDampen("aimi_endo_smb_dampen", 0.7, 0.0, 1.0),
+    AimiEndometriosisBasalMult("aimi_endo_basal_mult", 1.3, 1.0, 2.0, unitType = UnitType.DOUBLE),
+    AimiEndometriosisSmbDampen("aimi_endo_smb_dampen", 0.7, 0.0, 1.0, unitType = UnitType.DOUBLE_2),
 
     // 🌀 Adaptive Kernel Bank (Cosine Gate)
-    AimiCosineGateAlpha("aimi_cosine_gate_alpha", 2.0, 0.1, 10.0),
-    AimiCosineGateMinDataQuality("aimi_cosine_gate_min_dq", 0.3, 0.0, 1.0),
-    AimiCosineGateMinSensitivity("aimi_cosine_gate_min_sens", 0.7, 0.5, 1.0),
-    AimiCosineGateMaxSensitivity("aimi_cosine_gate_max_sens", 1.3, 1.0, 2.0),
+    AimiCosineGateAlpha("aimi_cosine_gate_alpha", 2.0, 0.1, 10.0, unitType = UnitType.DOUBLE),
+    AimiCosineGateMinDataQuality("aimi_cosine_gate_min_dq", 0.3, 0.0, 1.0, unitType = UnitType.DOUBLE_2),
+    AimiCosineGateMinSensitivity("aimi_cosine_gate_min_sens", 0.7, 0.5, 1.0, unitType = UnitType.DOUBLE_2),
+    AimiCosineGateMaxSensitivity("aimi_cosine_gate_max_sens", 1.3, 1.0, 2.0, unitType = UnitType.DOUBLE),
 
     // --- Straight-line tube advisor (MPC-lite on SMB + optional basal trim) ---
     AimiTubeHypoFloorMgdl(
@@ -591,16 +598,17 @@ enum class DoubleKey(
     ),
 
     // --- T3C Enhancements ---
-    OApsAIMIT3cActivationThreshold("key_aimi_t3c_activation_threshold", 130.0, 100.0, 250.0),
+    OApsAIMIT3cActivationThreshold("key_aimi_t3c_activation_threshold", 130.0, 100.0, 250.0, unitType = UnitType.MGDL),
     /** 0 = parabolic PI only (legacy). >0 blends eventual BG + prediction curve timing into T3C basal. */
-    OApsAIMIT3cAnticipationStrength("key_aimi_t3c_anticipation_strength", 0.0, 0.0, 1.0),
-    OApsAIMIT3cAggressiveness("key_aimi_t3c_aggressiveness", 1.0, 0.5, 3.0),
+    OApsAIMIT3cAnticipationStrength("key_aimi_t3c_anticipation_strength", 0.0, 0.0, 1.0, unitType = UnitType.DOUBLE_2),
+    OApsAIMIT3cAggressiveness("key_aimi_t3c_aggressiveness", 1.0, 0.5, 3.0, unitType = UnitType.DOUBLE),
     OApsAIMIT3cCfrdLgsFloorMgdl(
         key = "key_aimi_t3c_cfrd_lgs_floor",
         defaultValue = 80.0,
         min = 70.0,
         max = 95.0,
         summaryResId = R.string.pref_summary_aimi_t3c_cfrd_lgs_floor,
+        unitType = UnitType.MGDL,
     ),
     OApsAIMIT3cCfrdCobDelayMin(
         key = "key_aimi_t3c_cfrd_cob_delay_min",
@@ -608,6 +616,7 @@ enum class DoubleKey(
         min = 0.0,
         max = 90.0,
         summaryResId = R.string.pref_summary_aimi_t3c_cfrd_cob_delay,
+        unitType = UnitType.MIN,
     ),
     /** Undeclared-meal COB estimation: hard upper bound (grams) the estimator may inject into the
      *  prediction path. Conservative by default. Only active when [BooleanKey.OApsAIMIUndeclaredCobEnabled] is on. */
@@ -616,6 +625,7 @@ enum class DoubleKey(
         titleResId = R.string.pref_title_aimi_undeclared_cob_max_g,
         summaryResId = R.string.pref_summary_aimi_undeclared_cob_max_g,
         dependency = BooleanKey.OApsAIMIUndeclaredCobEnabled,
+        unitType = UnitType.GRAMS,
     ),
     OApsAIMIAdaptiveBasalMaxScaling(
         key = "key_aimi_adaptive_basal_max_scaling",
@@ -624,6 +634,7 @@ enum class DoubleKey(
         max = 2.0,
         titleResId = R.string.pref_title_aimi_adaptive_basal_max_scaling,
         summaryResId = R.string.pref_summary_aimi_adaptive_basal_max_scaling,
+        unitType = UnitType.DOUBLE,
     ),
 
     // --- AIMI adaptive basal governance (on-device; depends on Universal Adaptive Basal) ---
@@ -810,31 +821,31 @@ enum class DoubleKey(
         key= "activity_scale_factor",
         //titleResId = empty
         summaryResId = R.string.pref_activ_mon_sum_activity_scale_factor,
-        defaultValue = 1.0, min = 0.0, max = 1.5, defaultedBySM = true, dependency = BooleanKey.ActivityMonitorDetection),
+        defaultValue = 1.0, min = 0.0, max = 1.5, unitType = UnitType.DOUBLE, defaultedBySM = true, dependency = BooleanKey.ActivityMonitorDetection),
 	    InactivityScaleFactor(
 	        "inactivity_scale_factor",
 	        //titleResId = empty,
 	        summaryResId = R.string.pref_activ_mon_sum_inactivity_scale_factor,
-	        defaultValue = 1.0, min = 0.0, max = 1.5, defaultedBySM = true, dependency = BooleanKey.ActivityMonitorDetection),
+	        defaultValue = 1.0, min = 0.0, max = 1.5, unitType = UnitType.DOUBLE, defaultedBySM = true, dependency = BooleanKey.ActivityMonitorDetection),
 
     // ── BOOST algorithm keys ──
-    ApsBoostBolus("boost_bolus_cap", 2.5, 0.1, 10.0, summaryResId = R.string.pref_summary_boost_bolus_cap),
-    ApsBoostMaxIob("boost_max_iob", 1.0, 0.1, 12.0, summaryResId = R.string.pref_summary_boost_max_iob),
-    ApsBoostInsulinReqPct("boost_insulin_req_pct", 50.0, 30.0, 100.0, summaryResId = R.string.pref_summary_boost_insulin_req_pct),
-    ApsBoostScale("boost_scale_value", 1.0, 0.1, 3.0, summaryResId = R.string.pref_summary_boost_scale),
-    ApsBoostPercentScale("boost_percent_scale_factor", 200.0, 50.0, 500.0, summaryResId = R.string.pref_summary_boost_percent_scale_factor),
-    ApsBoostDynIsfVelocity("boost_dynisf_velocity", 100.0, 0.0, 100.0, summaryResId = R.string.pref_summary_boost_dynisf_velocity),
-    ApsBoostSleepInHours("boost_sleep_in_hrs", 2.0, 0.0, 18.0, summaryResId = R.string.pref_summary_boost_sleep_in_hrs),
-    ApsBoostInactivityPct("boost_inactivity_pct", 130.0, 100.0, 200.0, summaryResId = R.string.pref_summary_boost_inactivity_pct),
-    ApsBoostActivityPct("boost_activity_pct", 80.0, 30.0, 150.0, summaryResId = R.string.pref_summary_boost_activity_pct),
-    ApsBoostPostExerciseRecoveryHours("boost_post_exercise_recovery_hours", 2.0, 0.5, 8.0, summaryResId = R.string.pref_summary_boost_post_exercise_hours),
-    ApsBoostPostExerciseRecoveryScale("boost_post_exercise_recovery_scale", 0.5, 0.0, 1.0, summaryResId = R.string.pref_summary_boost_post_exercise_scale),
-    ApsBoostCumulativeSmbCap60Min("boost_cumulative_smb_cap_60min", 10.0, 0.0, 10.0, summaryResId = R.string.pref_summary_boost_smb_cap_60min),
-    ApsBoostV5Aggression("boost_v5_aggression", 1.0, 0.7, 1.6, summaryResId = R.string.pref_summary_boost_v5_aggression),
-    ApsBoostV5ConfirmedCapU("boost_v5_confirmed_cap_u", 2.5, 0.0, 7.5, summaryResId = R.string.pref_summary_boost_v5_confirmed_cap),
-    ApsBoostV5CommittedCapU("boost_v5_committed_cap_u", 0.5, 0.0, 2.5, summaryResId = R.string.pref_summary_boost_v5_committed_cap),
-    ApsBoostV5HypoCaution("boost_v5_hypo_caution", 1.0, 1.0, 2.0, summaryResId = R.string.pref_summary_boost_v5_hypo_caution),
-    ApsBoostV5Sensitivity("boost_v5_sensitivity", 1.0, 0.8, 1.2, summaryResId = R.string.pref_summary_boost_v5_sensitivity),
-    ApsBoostV6PreMealTargetMgdl("boost_v6_pre_meal_target_mgdl", 72.0, 65.0, 90.0, summaryResId = R.string.pref_summary_boost_v6_pre_meal_target),
-    ApsBoostV6PreMealLeadMin("boost_v6_pre_meal_lead_min", 60.0, 30.0, 90.0, summaryResId = R.string.pref_summary_boost_v6_pre_meal_lead),
+    ApsBoostBolus("boost_bolus_cap", 2.5, 0.1, 10.0, unitType = UnitType.INSULIN, summaryResId = R.string.pref_summary_boost_bolus_cap),
+    ApsBoostMaxIob("boost_max_iob", 1.0, 0.1, 12.0, unitType = UnitType.INSULIN, summaryResId = R.string.pref_summary_boost_max_iob),
+    ApsBoostInsulinReqPct("boost_insulin_req_pct", 50.0, 30.0, 100.0, unitType = UnitType.PERCENT, summaryResId = R.string.pref_summary_boost_insulin_req_pct),
+    ApsBoostScale("boost_scale_value", 1.0, 0.1, 3.0, unitType = UnitType.DOUBLE, summaryResId = R.string.pref_summary_boost_scale),
+    ApsBoostPercentScale("boost_percent_scale_factor", 200.0, 50.0, 500.0, unitType = UnitType.PERCENT, summaryResId = R.string.pref_summary_boost_percent_scale_factor),
+    ApsBoostDynIsfVelocity("boost_dynisf_velocity", 100.0, 0.0, 100.0, unitType = UnitType.PERCENT, summaryResId = R.string.pref_summary_boost_dynisf_velocity),
+    ApsBoostSleepInHours("boost_sleep_in_hrs", 2.0, 0.0, 18.0, unitType = UnitType.HOURS_DOUBLE, summaryResId = R.string.pref_summary_boost_sleep_in_hrs),
+    ApsBoostInactivityPct("boost_inactivity_pct", 130.0, 100.0, 200.0, unitType = UnitType.PERCENT, summaryResId = R.string.pref_summary_boost_inactivity_pct),
+    ApsBoostActivityPct("boost_activity_pct", 80.0, 30.0, 150.0, unitType = UnitType.PERCENT, summaryResId = R.string.pref_summary_boost_activity_pct),
+    ApsBoostPostExerciseRecoveryHours("boost_post_exercise_recovery_hours", 2.0, 0.5, 8.0, unitType = UnitType.HOURS_DOUBLE, summaryResId = R.string.pref_summary_boost_post_exercise_hours),
+    ApsBoostPostExerciseRecoveryScale("boost_post_exercise_recovery_scale", 0.5, 0.0, 1.0, unitType = UnitType.DOUBLE, summaryResId = R.string.pref_summary_boost_post_exercise_scale),
+    ApsBoostCumulativeSmbCap60Min("boost_cumulative_smb_cap_60min", 10.0, 0.0, 10.0, unitType = UnitType.INSULIN, summaryResId = R.string.pref_summary_boost_smb_cap_60min),
+    ApsBoostV5Aggression("boost_v5_aggression", 1.0, 0.7, 1.6, unitType = UnitType.DOUBLE, summaryResId = R.string.pref_summary_boost_v5_aggression),
+    ApsBoostV5ConfirmedCapU("boost_v5_confirmed_cap_u", 2.5, 0.0, 7.5, unitType = UnitType.INSULIN, summaryResId = R.string.pref_summary_boost_v5_confirmed_cap),
+    ApsBoostV5CommittedCapU("boost_v5_committed_cap_u", 0.5, 0.0, 2.5, unitType = UnitType.INSULIN, summaryResId = R.string.pref_summary_boost_v5_committed_cap),
+    ApsBoostV5HypoCaution("boost_v5_hypo_caution", 1.0, 1.0, 2.0, unitType = UnitType.DOUBLE, summaryResId = R.string.pref_summary_boost_v5_hypo_caution),
+    ApsBoostV5Sensitivity("boost_v5_sensitivity", 1.0, 0.8, 1.2, unitType = UnitType.DOUBLE, summaryResId = R.string.pref_summary_boost_v5_sensitivity),
+    ApsBoostV6PreMealTargetMgdl("boost_v6_pre_meal_target_mgdl", 72.0, 65.0, 90.0, unitType = UnitType.MGDL, summaryResId = R.string.pref_summary_boost_v6_pre_meal_target),
+    ApsBoostV6PreMealLeadMin("boost_v6_pre_meal_lead_min", 60.0, 30.0, 90.0, unitType = UnitType.MIN, summaryResId = R.string.pref_summary_boost_v6_pre_meal_lead),
 }

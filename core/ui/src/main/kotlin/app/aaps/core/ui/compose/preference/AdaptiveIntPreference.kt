@@ -35,9 +35,7 @@ fun AdaptiveIntPreferenceItem(
     visibilityContext: VisibilityContext? = null
 ) {
     val effectiveTitleResId = if (titleResId != 0) titleResId else intKey.titleResId
-
-    // Skip if no title resource is available
-    if (effectiveTitleResId == 0) return
+    val titleText = preferenceDisplayTitle(effectiveTitleResId, intKey.key)
 
     val visibility = calculatePreferenceVisibility(
         preferenceKey = intKey,
@@ -73,7 +71,7 @@ fun AdaptiveIntPreferenceItem(
                 .padding(theme.padding)
         ) {
             TextWithSyncBadge(
-                text = stringResource(effectiveTitleResId),
+                text = titleText,
                 key = intKey,
                 style = theme.titleTextStyle,
                 // Mirror Preference's disabled styling (the switch row greys the same way) since this
@@ -101,7 +99,7 @@ fun AdaptiveIntPreferenceItem(
                 formatAsInt = true,
                 valueFormat = DecimalFormat("0"),
                 unitLabel = unitLabel,
-                dialogLabel = stringResource(effectiveTitleResId),
+                dialogLabel = titleText,
                 dialogSummary = summary,
                 enabled = visibility.enabled
             )

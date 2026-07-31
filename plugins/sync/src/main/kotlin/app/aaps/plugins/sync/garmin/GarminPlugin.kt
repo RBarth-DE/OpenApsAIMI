@@ -455,7 +455,7 @@ class GarminPlugin @Inject constructor(
             }
             if (samplePairs.isNotEmpty()) {
                 aapsLogger.info(LTag.GARMIN, "received ${samplePairs.size} HR samples from ${device ?: "Garmin"}")
-                loopHub.storeHeartRates(samplePairs, device)
+                loopHub.storeHeartRates(samplePairs, "garmin")
             }
         } else {
             receiveHeartRate(uri)
@@ -480,7 +480,7 @@ class GarminPlugin @Inject constructor(
                 getQueryParameter(uri, "s30", 0L).toInt(),
                 getQueryParameter(uri, "s60", 0L).toInt(),
                 getQueryParameter(uri, "s180", 0L).toInt(),
-                getQueryParameter(uri, "device")
+                "garmin"
             )
         } else {
             receiveSteps(uri)
@@ -495,7 +495,7 @@ class GarminPlugin @Inject constructor(
         aapsLogger.debug(LTag.GARMIN, "average heart rate $avg BPM $samplingStart to $samplingEnd")
         if (test) return
         if (avg > 10 && samplingStart > Instant.ofEpochMilli(0L) && samplingEnd > samplingStart) {
-            loopHub.storeHeartRate(samplingStart, samplingEnd, avg, device)
+            loopHub.storeHeartRate(samplingStart, samplingEnd, avg, "garmin")
         } else if (avg > 0) {
             aapsLogger.warn(LTag.GARMIN, "Skip saving invalid HR $avg $samplingStart..$samplingEnd")
         }
@@ -671,7 +671,7 @@ class GarminPlugin @Inject constructor(
                 val todayCount = runBlocking {
                     persistenceLayer.getStepsCountFromTimeToTime(midnight, now)
                         // Device label may vary ("Garmin", "Garmin Connect", …); match family.
-                        .count { it.device.startsWith("Garmin") }
+                        .count { it.device.startsWith("garmin", ignoreCase = true) }
                 }
                 if (todayCount == 0) {
                     aapsLogger.info(LTag.GARMIN, "[GarminHTTP] no records today, storing initial total=$totalSteps")
@@ -684,7 +684,7 @@ class GarminPlugin @Inject constructor(
                         none,
                         none,
                         none,
-                        device
+                        "garmin"
                     )
                 } else {
                     aapsLogger.info(LTag.GARMIN, "[GarminHTTP] delta=0 but $todayCount records already today, skipping")
@@ -708,7 +708,7 @@ class GarminPlugin @Inject constructor(
                     none,
                     none,
                     none,
-                    device
+                    "garmin"
                 )
             }
             return
@@ -730,7 +730,7 @@ class GarminPlugin @Inject constructor(
             none,
             none,
             none,
-            device
+            "garmin"
         )
     }
 
@@ -765,7 +765,7 @@ class GarminPlugin @Inject constructor(
                 steps30,
                 steps60,
                 steps180,
-                device,
+                "garmin",
             )
         } else {
             aapsLogger.warn(
