@@ -138,8 +138,8 @@ open class OpenAPSBoostPlugin @Inject constructor(
     PluginDescription()
         .mainType(PluginType.APS)
         .composeContent { plugin -> app.aaps.plugins.aps.compose.OpenAPSComposeContent(apsPlugin = plugin as APS, loop = loopProvider.get(), rxBus = rxBus, rh = rh, dateUtil = dateUtil) }
-        
-        
+
+
         .pluginName(R.string.openaps_boost)
         .shortName(R.string.boost_shortname)
                 .preferencesVisibleInSimpleMode(false)
@@ -288,8 +288,24 @@ open class OpenAPSBoostPlugin @Inject constructor(
     // Steps: boostSteps_feed transitions, reason-line only (no notification).
     @Volatile private var lastStepsFeed: String? = null
 
-    // Anticipation shadow (Twin) disabled in v4 port — sources not yet adapted
-    private val anticipShadow: Any? by lazy { null }
+    // Per-user ANTICIPATION shadow (2026-07-27): refits per-user exercise/meal onset-hazard models
+    // offline, predicts p(onset) at 45-min lead, runs the two retractable arms in shadow. READ-ONLY —
+    // logs anticip=...; delivers nothing. Onset history persists as a StringKey JSON blob (V7 idiom).
+    // See openAPSBoostTwin/ANTICIPATION_ARCHITECTURE_SPEC.md (Phase 1+2). Runs in the shared engine, so
+    // it covers plain Boost, V5/V6, and the V7-shadow line identically.
+    private val anticipShadow by lazy {
+        app.aaps.plugins.aps.openAPSBoostTwin.AnticipationShadow(
+            loadState = { preferences.get(StringKey.ApsBoostAnticipHistory) },
+            saveState = { preferences.put(StringKey.ApsBoostAnticipHistory, it) },
+            logError = { msg, t -> aapsLogger.error(LTag.APS, msg, t) },
+            weekMinuteOf = { ms ->
+                val z = java.time.Instant.ofEpochMilli(ms).atZone(java.time.ZoneId.systemDefault())
+                app.aaps.plugins.aps.openAPSBoostTwin.AnticipationHabitModel.weekMinute(
+                    z.dayOfWeek.value - 1, z.hour * 60 + z.minute
+                )
+            },
+        )
+    }
 
     // ---- Post-exercise recovery state ----
     @Volatile private var recoveryWindowEnd: Long = 0L
@@ -1568,7 +1584,20 @@ open class OpenAPSBoostPlugin @Inject constructor(
             }
 
             // Per-user ANTICIPATION shadow (2026-07-27) — READ-ONLY, delivers NOTHING. Records this
-            // Anticipation shadow (Twin) disabled in v4 port
+            // cycle's exercise/meal onset, refits the per-user habit models offline, predicts p(onset)
+            // at a 45-min lead, and runs the two retractable arms in shadow. Appends anticip=... .
+            // Belt-and-braces on top of the shadow's own try/catch — can never break a cycle.
+            runCatching {
+                anticipShadow.runCycle(
+                    reason = it.reason,
+                    nowMs = now,
+                    steps5Min = recentSteps5Min,
+                    mealStateName = v5decision?.mealHypothesis?.name,
+                    bg = glucoseStatus.glucose,
+                    delta = glucoseStatus.delta,
+                    inPostRescueWindow = inPostRescueWindow,
+                )
+            }.onFailure { t -> aapsLogger.error(LTag.APS, "Anticipation shadow invocation failed (swallowed)", t) }
 
             // V6: surface the anticipatory pre-meal target decision computed earlier this cycle.
             v6PreMealReason?.let { r -> it.reason.append(r) }
