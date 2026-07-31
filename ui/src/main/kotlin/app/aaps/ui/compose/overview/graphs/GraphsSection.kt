@@ -505,7 +505,9 @@ fun GraphsSection(
         var editingGraphIndex by remember { mutableIntStateOf(-1) }
         for (i in 0 until activeCount) {
             val secondary = graphConfig.secondaryGraphs[i]
-            val customType = secondary.series.firstOrNull { it in AIMI_SERIES || it == SeriesType.PULSE || it == SeriesType.BOOST }
+            val customType = secondary.series.firstOrNull {
+                it in AIMI_SERIES || it == SeriesType.PULSE || it == SeriesType.BOOST
+            }
             Box(modifier = Modifier.offset(y = (-8).dp)) {
                 when (customType) {
                     SeriesType.MODES -> {
@@ -1047,15 +1049,29 @@ private fun BoostDataCard(state: BoostPanelState, modifier: Modifier) {
     if (!state.enabled) return
     Card(modifier = modifier.padding(horizontal = 8.dp, vertical = 2.dp)) {
         Column(Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp)) {
-            // ── Row 1: numeric stats (DynISF | TDD | Activity | Status) ──
+            // ── Row 1: numeric stats (Fast Carb | DynISF | TDD | Activity ) ──
             Row(
                 Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceEvenly,
                 verticalAlignment = Alignment.CenterVertically
             ) {
+                if (state.fastCarbProtection) {
+                    Surface(shape = RoundedCornerShape(8.dp), color = Color(0xFFFF9800).copy(alpha = 0.18f)) {
+                        Text("Fast Carb", Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
+                            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                            color = Color(0xFFFF9800))
+                    }
+                }
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text("DynISF", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    Text(state.dynIsf, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurface)
+                    if (state.dynIsfLabel.isNotEmpty()) {
+                        Text(state.dynIsfLabel, style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                    else
+                    {
+                        Text(state.dynIsf, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurface)
+                    }
                 }
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text("TDD", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -1065,10 +1081,10 @@ private fun BoostDataCard(state: BoostPanelState, modifier: Modifier) {
                     Text("Activity", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     Text(state.activityLabel, style = MaterialTheme.typography.bodyMedium, color = Color(state.activityColor.toInt()))
                 }
-                Surface(shape = RoundedCornerShape(12.dp), color = Color(state.statusColor.toInt()).copy(alpha = 0.15f)) {
-                    Text(state.status, Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
-                        style = MaterialTheme.typography.labelMedium, color = Color(state.statusColor.toInt()))
-                }
+                // Surface(shape = RoundedCornerShape(12.dp), color = Color(state.statusColor.toInt()).copy(alpha = 0.15f)) {
+                //     Text(state.status, Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                //         style = MaterialTheme.typography.labelMedium, color = Color(state.statusColor.toInt()))
+                // }
             }
 
             // ── V5 state strip (only when V5 meal-hypothesis is active) ──

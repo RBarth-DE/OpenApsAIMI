@@ -89,6 +89,7 @@ import javax.inject.Inject
 data class BoostPanelState(
     val enabled: Boolean = false,
     val dynIsf: String = "--",
+    val dynIsfLabel: String = "",   // "113 → 127 mg/dL" when ISF range available
     val tdd: String = "--",
     val activityLabel: String = "",
     val activityColor: Long = 0xFFFFFFFF,
@@ -99,7 +100,9 @@ data class BoostPanelState(
     val v5StateLabel: String = "",
     val v5Score: Float = 0f,
     val v5DoseBudget: String = "",
-    val v5Brakes: String = ""
+    val v5Brakes: String = "",
+    // ── Safety flags ──
+    val fastCarbProtection: Boolean = false
 )
 
 data class ChartConfig(
@@ -650,9 +653,19 @@ class GraphViewModel @AssistedInject constructor(
             else -> "Normal" to 0xFFFFFFFFL
         }
 
+        // ── DynISF range: base (normal-target ISF) → adjusted (live DynISF) ──
+        val dynIsfValue = r.variableSens?.let { "%.0f".format(it) } ?: "--"
+        val dynIsfLabel = run {
+            val baseIsf = raw.sensNormalTarget ?: return@run ""
+            val adjustedIsf = r.variableSens ?: return@run ""
+            if (baseIsf <= 0.0 || adjustedIsf <= 0.0) return@run ""
+            "%.0f → %.0f %s".format(baseIsf, adjustedIsf, profileUtil.units.asText)
+        }
+
         return BoostPanelState(
             enabled = true,
-            dynIsf = r.variableSens?.let { "%.0f".format(it) } ?: "--",
+            dynIsf = dynIsfValue,
+            dynIsfLabel = dynIsfLabel,
             tdd = raw.tdd?.let { "%.1fU".format(it) } ?: "--",
             activityLabel = activityLabel,
             activityColor = activityColor,
@@ -676,7 +689,8 @@ class GraphViewModel @AssistedInject constructor(
             v5DoseBudget = if (dose > 0.0 || budget > 0.0) {
                 "dose %.2fU  ·  budget %.2fU".format(dose, budget)
             } else "",
-            v5Brakes = gateReduction?.takeIf { it != "none" && it.isNotBlank() } ?: ""
+            v5Brakes = gateReduction?.takeIf { it != "none" && it.isNotBlank() } ?: "",
+            fastCarbProtection = raw.fastCarbProtection ?: false
         )
     }
 

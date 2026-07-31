@@ -32,6 +32,7 @@ import app.aaps.core.interfaces.utils.DateUtil
 import app.aaps.core.keys.BooleanComposedKey
 import app.aaps.core.keys.BooleanKey
 import app.aaps.core.keys.DoubleKey
+import app.aaps.core.keys.IntKey
 import app.aaps.core.keys.IntNonKey
 import app.aaps.core.keys.UnitDoubleKey
 import app.aaps.core.keys.interfaces.Preferences
@@ -128,25 +129,51 @@ open class OpenAPSBoostV5Plugin @Inject constructor(
             DoubleKey.ApsBoostV5ConfirmedCapU,
             DoubleKey.ApsBoostV5CommittedCapU,
             BooleanKey.ApsBoostV6PreMealTarget,
-            // ── Engine settings (V1 inherited by V5) ──
+            // ── BOOST engine settings (shared V1/V5/V6) ──
+            BooleanKey.ApsBoostUseTdd,
+            BooleanKey.ApsBoostAdjustSensitivity,
+            BooleanKey.ApsBoostAutosensWhenNoTdd,
+            BooleanKey.ApsBoostEnableCircadianIsf,
+            BooleanKey.ApsBoostAllowWithHighTt,
+            BooleanKey.ApsBoostEnablePercentScale,
+            DoubleKey.ApsBoostPercentScale,
+            DoubleKey.ApsBoostBolus,
+            DoubleKey.ApsBoostMaxIob,
+            DoubleKey.ApsBoostInsulinReqPct,
+            DoubleKey.ApsBoostScale,
+            DoubleKey.ApsBoostDynIsfVelocity,
+            DoubleKey.ApsBoostCumulativeSmbCap60Min,
+            DoubleKey.ApsBoostV6PreMealTargetMgdl,
+            DoubleKey.ApsBoostV6PreMealLeadMin,
+            // ── Activity / HR / Sleep ──
+            BooleanKey.ApsBoostHrIntegrationEnabled,
+            BooleanKey.ApsBoostHrStressDetection,
+            BooleanKey.ApsBoostNightModeEnabled,
+            BooleanKey.ApsBoostPostExerciseRecoveryEnabled,
+            BooleanKey.ApsBoostActivityShadowEnabled,
+            DoubleKey.ApsBoostSleepInHours,
+            IntKey.ApsBoostSleepInSteps,
+            DoubleKey.ApsBoostInactivityPct,
+            DoubleKey.ApsBoostActivityPct,
+            DoubleKey.ApsBoostPostExerciseRecoveryHours,
+            DoubleKey.ApsBoostPostExerciseRecoveryScale,
+            // ── Standard AAPS / SMB settings (shared with BOOST engine) ──
             app.aaps.core.ui.compose.preference.PreferenceSubScreenDef(
-                key = "boost_v5_engine",
-                titleResId = R.string.openaps_boost,
+                key = "boost_v5_standard_aaps",
+                titleResId = app.aaps.core.ui.R.string.advanced_settings_title,
                 items = listOf(
-                    BooleanKey.ApsBoostUseTdd,
-                    BooleanKey.ApsBoostAdjustSensitivity,
-                    BooleanKey.ApsBoostAutosensWhenNoTdd,
-                    BooleanKey.ApsBoostEnableCircadianIsf,
-                    BooleanKey.ApsBoostEnablePercentScale,
-                    DoubleKey.ApsBoostPercentScale,
-                    DoubleKey.ApsBoostScale,
-                    DoubleKey.ApsBoostBolus,
-                    DoubleKey.ApsBoostMaxIob,
-                    DoubleKey.ApsBoostInsulinReqPct,
-                    DoubleKey.ApsBoostDynIsfVelocity,
-                    BooleanKey.ApsBoostHrIntegrationEnabled,
-                    BooleanKey.ApsBoostNightModeEnabled,
-                    BooleanKey.ApsBoostPostExerciseRecoveryEnabled,
+                    DoubleKey.ApsMaxBasal,
+                    DoubleKey.ApsSmbMaxIob,
+                    BooleanKey.ApsUseSmb,
+                    BooleanKey.ApsUseSmbAlways,
+                    BooleanKey.ApsUseSmbWithCob,
+                    BooleanKey.ApsUseSmbAfterCarbs,
+                    IntKey.ApsMaxMinutesOfBasalToLimitSmb,
+                    IntKey.ApsUamMaxMinutesOfBasalToLimitSmb,
+                    IntKey.ApsMaxSmbFrequency,
+                    BooleanKey.ApsUseUam,
+                    BooleanKey.ApsUseDynamicSensitivity,
+                    BooleanKey.ApsUseAutosens,
                 )
             ),
         ),

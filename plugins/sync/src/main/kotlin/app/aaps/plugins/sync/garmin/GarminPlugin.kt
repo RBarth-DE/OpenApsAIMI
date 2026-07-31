@@ -889,6 +889,9 @@ class GarminPlugin @Inject constructor(
                     // ── BOOST data (only when enabled in Garmin preferences) ──
                     if (preferences.get(GarminBooleanKey.SendBoostData)) {
                         jo.addProperty("isBoost", true)
+                        jo.addProperty("loop", loopHub.loopStatus)
+                        loopHub.lastLoopEpochMs?.let { jo.addProperty("loopMs", it) }
+                        loopHub.variableSensInUnits?.let { jo.addProperty("isf", it) }
                         // Also emit TBR as a plain integer percentage (reference format for CIQ watchfaces)
                         loopHub.temporaryBasal.let {
                             if (!it.isNaN() && it.isFinite()) {
