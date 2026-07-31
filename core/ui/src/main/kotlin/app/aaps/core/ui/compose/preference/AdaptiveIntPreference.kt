@@ -5,15 +5,12 @@
 package app.aaps.core.ui.compose.preference
 
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
 import app.aaps.core.keys.interfaces.IntPreferenceKey
 import app.aaps.core.keys.interfaces.VisibilityContext
 import app.aaps.core.keys.rangeResId
@@ -38,7 +35,9 @@ fun AdaptiveIntPreferenceItem(
     visibilityContext: VisibilityContext? = null
 ) {
     val effectiveTitleResId = if (titleResId != 0) titleResId else intKey.titleResId
-    val titleText = preferenceDisplayTitle(effectiveTitleResId, intKey.key)
+
+    // Skip if no title resource is available
+    if (effectiveTitleResId == 0) return
 
     val visibility = calculatePreferenceVisibility(
         preferenceKey = intKey,
@@ -58,11 +57,10 @@ fun AdaptiveIntPreferenceItem(
 
     // Get unit label from UnitType (for dialog input suffix)
     val unitLabelResId = unitType.unitLabelResId()
-    val unitLabel = unitLabelResId?.takeIf { it != 0 }?.let { stringResource(it) } ?: unit
+    val unitLabel = unitLabelResId?.let { stringResource(it) } ?: unit
 
     // Get summary if available
     val summaryResId = intKey.summaryResId
-        ?: app.aaps.core.keys.AimiPreferenceSummaries.map[intKey.key]
     val summary = if (summaryResId != null && summaryResId != 0) stringResource(summaryResId) else null
 
     // Use slider if min/max range is specified (not default extreme values)
@@ -74,16 +72,14 @@ fun AdaptiveIntPreferenceItem(
                 .fillMaxWidth()
                 .padding(theme.padding)
         ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(
-                    text = titleText,
-                    style = theme.titleTextStyle,
-                    // Mirror Preference's disabled styling (the switch row greys the same way) since this
-                    // slider branch builds its own row instead of going through Preference.
-                    color = theme.titleColor.let { if (visibility.enabled) it else it.copy(alpha = theme.disabledOpacity) }
-                )
-                SyncBadge(intKey, Modifier.padding(start = 6.dp))
-            }
+            TextWithSyncBadge(
+                text = stringResource(effectiveTitleResId),
+                key = intKey,
+                style = theme.titleTextStyle,
+                // Mirror Preference's disabled styling (the switch row greys the same way) since this
+                // slider branch builds its own row instead of going through Preference.
+                color = theme.titleColor.let { if (visibility.enabled) it else it.copy(alpha = theme.disabledOpacity) }
+            )
             if (summary != null) {
                 Text(
                     text = summary,
@@ -105,7 +101,7 @@ fun AdaptiveIntPreferenceItem(
                 formatAsInt = true,
                 valueFormat = DecimalFormat("0"),
                 unitLabel = unitLabel,
-                dialogLabel = titleText,
+                dialogLabel = stringResource(effectiveTitleResId),
                 dialogSummary = summary,
                 enabled = visibility.enabled
             )
@@ -113,19 +109,14 @@ fun AdaptiveIntPreferenceItem(
     } else {
         // For unspecified ranges, use text field with range summary
         val rangeFormatResId = unitType.rangeResId()
-        val summaryText = if (rangeFormatResId != null && rangeFormatResId != 0) {
+        val summaryText = if (rangeFormatResId != null) {
             stringResource(rangeFormatResId, value, intKey.min, intKey.max)
         } else {
             stringResource(R.string.preference_range_summary, value.toString(), unitLabel, intKey.min.toString(), intKey.max.toString())
         }
         TextFieldPreference(
             state = state,
-            title = {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(titleText)
-                    SyncBadge(intKey, Modifier.padding(start = 6.dp))
-                }
-            },
+            title = { PreferenceTitleWithSyncBadge(effectiveTitleResId, intKey) },
             textToValue = { text ->
                 text.toIntOrNull()?.coerceIn(intKey.min, intKey.max)
             },

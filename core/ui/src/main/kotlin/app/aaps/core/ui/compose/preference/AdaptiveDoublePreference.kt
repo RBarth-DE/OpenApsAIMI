@@ -5,31 +5,23 @@
 package app.aaps.core.ui.compose.preference
 
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.ui.Alignment
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
-import app.aaps.core.keys.UnitType
 import app.aaps.core.keys.decimalPlaces
 import app.aaps.core.keys.interfaces.DoublePreferenceKey
 import app.aaps.core.keys.interfaces.VisibilityContext
-import app.aaps.core.keys.decimalPlaces
 import app.aaps.core.keys.rangeResId
 import app.aaps.core.keys.step
 import app.aaps.core.keys.unitLabelResId
 import app.aaps.core.keys.valueResId
-import kotlin.math.abs
 import app.aaps.core.ui.R
 import app.aaps.core.ui.compose.LocalPreferences
 import java.text.DecimalFormat
-import app.aaps.core.keys.resolvedStep
+
 /**
  * Composable double preference for use inside card sections.
  *
@@ -47,7 +39,9 @@ fun AdaptiveDoublePreferenceItem(
 ) {
     val preferences = LocalPreferences.current
     val effectiveTitleResId = if (titleResId != 0) titleResId else doubleKey.titleResId
-    val titleText = preferenceDisplayTitle(effectiveTitleResId, doubleKey.key)
+
+    // Skip if no title resource is available
+    if (effectiveTitleResId == 0) return
 
     val visibility = calculatePreferenceVisibility(
         preferenceKey = doubleKey,
@@ -57,44 +51,23 @@ fun AdaptiveDoublePreferenceItem(
     if (!visibility.visible || (preferences.simpleMode && doubleKey.calculatedBySM)) return
 
     val state = rememberPreferenceDoubleState(doubleKey)
+    val value = state.value
     val theme = LocalPreferenceTheme.current
 
-    val span = (doubleKey.max - doubleKey.min).let { if (abs(it) < 1e-12) 1e-9 else it }
+    // Get formatting info from UnitType
     val unitType = doubleKey.unitType
-    val (decimalPlaces, step) = if (unitType == UnitType.NONE) {
-        when {
-            span <= 0.15  -> 3 to 0.001
-            span <= 1.5   -> 2 to 0.01
-            span <= 25.0  -> 1 to 0.1
-            else          -> 0 to 1.0
-        }
-    } else {
-        unitType.decimalPlaces() to unitType.step()
-    }
-    val valueFormatResId = if (doubleKey.step != null) null else unitType.valueResId()
-
-    LaunchedEffect(doubleKey.key) {
-        val v = state.value
-        if (v < doubleKey.min || v > doubleKey.max) {
-            state.value = v.coerceIn(doubleKey.min, doubleKey.max)
-        }
-    }
-    val value = state.value
+    val decimalPlaces = unitType.decimalPlaces()
+    val step = unitType.step()
+    val valueFormatResId = unitType.valueResId()
 
     // Get unit label from UnitType (for dialog input suffix)
     val unitLabelResId = unitType.unitLabelResId()
-    val unitLabel = unitLabelResId?.takeIf { it != 0 }?.let { stringResource(it) } ?: unit
+    val unitLabel = unitLabelResId?.let { stringResource(it) } ?: unit
 
-    val valueFormat = when (decimalPlaces) {
-        0    -> DecimalFormat("0")
-        1    -> DecimalFormat("0.0")
-        2    -> DecimalFormat("0.00")
-        else -> DecimalFormat("0.000")
-    }
+    val valueFormat = if (decimalPlaces == 0) DecimalFormat("0") else DecimalFormat("0.${"0".repeat(decimalPlaces)}")
 
     // Get summary if available
     val summaryResId = doubleKey.summaryResId
-        ?: app.aaps.core.keys.AimiPreferenceSummaries.map[doubleKey.key]
     val summary = if (summaryResId != null && summaryResId != 0) stringResource(summaryResId) else null
 
     // Use slider if min/max range is specified (not default extreme values)
@@ -107,16 +80,14 @@ fun AdaptiveDoublePreferenceItem(
                 .fillMaxWidth()
                 .padding(theme.padding)
         ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(
-                    text = titleText,
-                    style = theme.titleTextStyle,
-                    // Mirror Preference's disabled styling (the switch row greys the same way) since this
-                    // slider branch builds its own row instead of going through Preference.
-                    color = theme.titleColor.let { if (visibility.enabled) it else it.copy(alpha = theme.disabledOpacity) }
-                )
-                SyncBadge(doubleKey, Modifier.padding(start = 6.dp))
-            }
+            TextWithSyncBadge(
+                text = stringResource(effectiveTitleResId),
+                key = doubleKey,
+                style = theme.titleTextStyle,
+                // Mirror Preference's disabled styling (the switch row greys the same way) since this
+                // slider branch builds its own row instead of going through Preference.
+                color = theme.titleColor.let { if (visibility.enabled) it else it.copy(alpha = theme.disabledOpacity) }
+            )
             if (summary != null) {
                 Text(
                     text = summary,
@@ -137,7 +108,7 @@ fun AdaptiveDoublePreferenceItem(
                 valueFormatResId = valueFormatResId,
                 valueFormat = valueFormat,
                 unitLabel = unitLabel,
-                dialogLabel = titleText,
+                dialogLabel = stringResource(effectiveTitleResId),
                 dialogSummary = summary,
                 enabled = visibility.enabled
             )
@@ -145,19 +116,14 @@ fun AdaptiveDoublePreferenceItem(
     } else {
         // For unspecified ranges, use text field with range summary
         val rangeFormatResId = unitType.rangeResId()
-        val summaryText = if (rangeFormatResId != null && rangeFormatResId != 0) {
+        val summaryText = if (rangeFormatResId != null) {
             stringResource(rangeFormatResId, value, doubleKey.min, doubleKey.max)
         } else {
             stringResource(R.string.preference_range_summary, valueFormat.format(value), unitLabel, valueFormat.format(doubleKey.min), valueFormat.format(doubleKey.max))
         }
         TextFieldPreference(
             state = state,
-            title = {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(titleText)
-                    SyncBadge(doubleKey, Modifier.padding(start = 6.dp))
-                }
-            },
+            title = { PreferenceTitleWithSyncBadge(effectiveTitleResId, doubleKey) },
             textToValue = { text ->
                 text.toDoubleOrNull()?.coerceIn(doubleKey.min, doubleKey.max)
             },

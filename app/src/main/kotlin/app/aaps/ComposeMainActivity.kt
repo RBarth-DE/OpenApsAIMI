@@ -873,6 +873,7 @@ class ComposeMainActivity : AppCompatActivity() {
                 preferences = preferences,
                 rh = rh,
                 builtInSearchables = builtInSearchables,
+                configBuilder = configBuilder,
                 prefFileList = prefFileList,
                 persistenceLayer = persistenceLayer,
                 visibilityContext = visibilityContext,

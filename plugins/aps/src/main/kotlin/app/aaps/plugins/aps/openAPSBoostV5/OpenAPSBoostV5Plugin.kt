@@ -676,7 +676,9 @@ open class OpenAPSBoostV5Plugin @Inject constructor(
     override fun getGlucoseStatusData(allowOldData: Boolean): GlucoseStatus? =
         openAPSBoostEngine.get().getGlucoseStatusData(allowOldData)
 
-    override fun supportsDynamicIsf(): Boolean = openAPSBoostEngine.get().supportsDynamicIsf()
+    override fun supportsDynamicIc(): Boolean = openAPSBoostEngine.get().supportsDynamicIc()
+    override fun getIc(profile: Profile): Double? = openAPSBoostEngine.get().getIc(profile)
+    override fun getIc(timestamp: Long, profile: Profile): Double? = openAPSBoostEngine.get().getIc(timestamp, profile)
     override fun getIsfMgdl(profile: Profile, caller: String): Double? = openAPSBoostEngine.get().getIsfMgdl(profile, caller)
     override fun getAverageIsfMgdl(timestamp: Long, caller: String): Double? = openAPSBoostEngine.get().getAverageIsfMgdl(timestamp, caller)
     override fun getSensitivityOverviewString(): String? = openAPSBoostEngine.get().getSensitivityOverviewString()

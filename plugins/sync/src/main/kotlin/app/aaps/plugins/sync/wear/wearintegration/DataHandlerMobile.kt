@@ -10,7 +10,6 @@ import app.aaps.core.data.model.BS
 import app.aaps.core.data.model.GV
 import app.aaps.core.data.model.GlucoseUnit
 import app.aaps.core.data.model.HR
-import app.aaps.core.data.model.IDs
 import app.aaps.core.data.model.RM
 import app.aaps.core.data.model.SC
 import app.aaps.core.data.model.Scene
@@ -20,9 +19,7 @@ import app.aaps.core.data.model.TDD
 import app.aaps.core.data.model.TT
 import app.aaps.core.data.model.TrendArrow
 import app.aaps.core.data.time.T
-import app.aaps.core.data.ue.Action
 import app.aaps.core.data.ue.Sources
-import app.aaps.core.data.ue.ValueWithUnit
 import app.aaps.core.data.ui.ConfirmationLine
 import app.aaps.core.data.ui.ConfirmationRole
 import app.aaps.core.interfaces.aps.GlucoseStatus
@@ -39,14 +36,10 @@ import app.aaps.core.interfaces.constraints.ConstraintsChecker
 import app.aaps.core.interfaces.db.PersistenceLayer
 import app.aaps.core.interfaces.db.ProcessedTbrEbData
 import app.aaps.core.interfaces.insulin.ConcentrationHelper
-import app.aaps.core.interfaces.insulin.Insulin
-import app.aaps.core.interfaces.insulin.InsulinManager
-import app.aaps.core.interfaces.insulin.InsulinType
 import app.aaps.core.interfaces.iob.GlucoseStatusProvider
 import app.aaps.core.interfaces.iob.IobCobCalculator
 import app.aaps.core.interfaces.logging.AAPSLogger
 import app.aaps.core.interfaces.logging.LTag
-import app.aaps.core.interfaces.logging.UserEntryLogger
 import app.aaps.core.interfaces.maintenance.ImportExportPrefs
 import app.aaps.core.interfaces.nsclient.ProcessedDeviceStatusData
 import app.aaps.core.interfaces.plugin.ActivePlugin
@@ -144,8 +137,6 @@ class DataHandlerMobile @Inject constructor(
     private val dateUtil: DateUtil,
     private val constraintChecker: ConstraintsChecker,
     private val activePlugin: ActivePlugin,
-    private val insulin: Insulin,
-    private val insulinManager: InsulinManager,
     private val commandQueue: CommandQueue,
     private val fabricPrivacy: FabricPrivacy,
     private val uiInteraction: UiInteraction,
@@ -162,7 +153,6 @@ class DataHandlerMobile @Inject constructor(
     // wizardBolusExecutor stays on the wear path for Fill ONLY (no relay command for Fill).
     private val batchExecutor: BatchExecutor,
     private val wizardExecutor: WizardExecutor,
-    private val uel: UserEntryLogger,
 ) {
 
     @Inject lateinit var automation: Automation
@@ -282,12 +272,6 @@ class DataHandlerMobile @Inject constructor(
             onCommitResult(batchExecutor.commit(it.bolusId, Sources.Wear, rh.gs(app.aaps.core.ui.R.string.overview_treatment_label))) {
                 sendQuickWizardListToWear()
             }
-        }
-        onEvent<EventData.ActionAfrezzaPreCheck> { handleAfrezzaPreCheck(it) }
-        onEvent<EventData.ActionAfrezzaConfirmed> {
-            // Defense-in-depth: Afrezza logging is local DB insert — a client must never reach here.
-            if (rejectIfAapsClient()) return@onEvent
-            doAfrezzaBolus(it.units)
         }
         onEvent<EventData.ActionECarbsPreCheck> { handleECarbsPreCheck(it) }
         onEvent<EventData.ActionECarbsConfirmed> {
@@ -776,71 +760,6 @@ class DataHandlerMobile @Inject constructor(
             ),
             rh.gs(app.aaps.core.ui.R.string.overview_treatment_label)
         ) { EventData.ActionBolusConfirmed(it) }
-    }
-
-    private suspend fun handleAfrezzaPreCheck(command: EventData.ActionAfrezzaPreCheck) {
-        val units = command.units
-        if (units !in listOf(4, 8, 12)) {
-            sendError("Invalid Afrezza cartridge: ${units}U")
-            return
-        }
-        val afrezzaIcfg = findAfrezzaIcfg()
-        if (afrezzaIcfg == null) {
-            sendError(rh.gs(app.aaps.core.ui.R.string.afrezza_not_configured))
-            return
-        }
-        val message = "Afrezza: ${units}U"
-        sendToWear(
-            EventData.ConfirmAction(
-                title = rh.gs(app.aaps.core.ui.R.string.confirm).uppercase(),
-                message = message,
-                returnCommand = EventData.ActionAfrezzaConfirmed(units),
-                deferConfirm = config.AAPSCLIENT
-            )
-        )
-    }
-
-    /**
-     * Resolve Afrezza ICfg including edited peaks that no longer match the exact
-     * [InsulinType.OREF_INHALED_AFREZZA] peak but still have inhaled-shaped Peak/DIA.
-     */
-    private fun findAfrezzaIcfg() =
-        insulinManager.insulins.firstOrNull { it.insulinPeakTime == InsulinType.OREF_INHALED_AFREZZA.insulinPeakTime }
-            ?: insulinManager.insulins.firstOrNull { InsulinType.fromPeak(it.insulinPeakTime).isInhaled }
-            ?: insulinManager.insulins.firstOrNull { cfg ->
-                cfg.peak in HardLimits.MIN_PEAK_INHALED..HardLimits.MAX_PEAK_INHALED &&
-                    cfg.dia < HardLimits.MIN_DIA.min() &&
-                    cfg.dia in HardLimits.MIN_DIA_INHALED[0]..HardLimits.MAX_DIA_INHALED[0]
-            }
-
-    private suspend fun doAfrezzaBolus(units: Int) {
-        if (rejectIfAapsClient()) return
-        val afrezzaIcfg = findAfrezzaIcfg()
-        if (afrezzaIcfg == null) {
-            sendError(rh.gs(app.aaps.core.ui.R.string.afrezza_not_configured))
-            return
-        }
-        val now = dateUtil.now()
-        val bolus = BS(
-            timestamp = now,
-            amount = units.toDouble(),
-            type = BS.Type.NORMAL,
-            notes = "Afrezza inhaled",
-            iCfg = afrezzaIcfg,
-            ids = IDs(pumpId = now)
-        )
-        persistenceLayer.insertOrUpdateBolus(
-            bolus = bolus,
-            action = Action.BOLUS,
-            source = Sources.Wear,
-            note = "Afrezza inhaled"
-        )
-        uel.log(
-            action = Action.BOLUS, source = Sources.Wear,
-            "Afrezza inhaled",
-            ValueWithUnit.Insulin(units.toDouble())
-        )
-        aapsLogger.info(LTag.WEAR, "Afrezza ${units}U logged via Wear with ICfg: ${afrezzaIcfg.insulinLabel}")
     }
 
     internal suspend fun handleECarbsPreCheck(command: EventData.ActionECarbsPreCheck) {
@@ -1428,13 +1347,21 @@ class DataHandlerMobile @Inject constructor(
         } ?: ""
         // Reservoir Level
         val pump = activePlugin.activePump
-        val iCfg = insulin.iCfg
         val maxReading = pump.pumpDescription.maxReservoirReading.toDouble()
-        val reservoir = pump.reservoirLevel.value.iU(iCfg.concentration).let { if (pump.pumpDescription.isPatchPump && it > maxReading) maxReading else it }
+        // Concentration comes from the running profile, which owns the authoritative iCfg. With no
+        // profile there is no IU conversion to make, so the reservoir is reported as unavailable
+        // rather than converted at a guessed concentration.
+        val concentration = profile?.iCfg?.concentration
+        val reservoir = concentration?.let { c ->
+            pump.reservoirLevel.value.iU(c).let { if (pump.pumpDescription.isPatchPump && it > maxReading) maxReading else it }
+        } ?: 0.0
         val reservoirString = if (reservoir > 0) decimalFormatter.to0Decimal(reservoir, rh.gs(app.aaps.core.ui.R.string.insulin_unit_shortname)) else ""
         val resUrgent = preferences.get(IntKey.OverviewResCritical)
         val resWarn = preferences.get(IntKey.OverviewResWarning)
         val reservoirLevel = when {
+            // Unknown must not fall through the thresholds: a 0.0 reservoir is <= resUrgent and would
+            // raise a false critical-reservoir alarm on the watch.
+            concentration == null  -> 0
             reservoir <= resUrgent -> 2
             reservoir <= resWarn   -> 1
             else                   -> 0

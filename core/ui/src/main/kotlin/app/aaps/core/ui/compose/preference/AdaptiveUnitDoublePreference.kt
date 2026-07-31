@@ -5,15 +5,12 @@
 package app.aaps.core.ui.compose.preference
 
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
 import app.aaps.core.keys.interfaces.VisibilityContext
 import app.aaps.core.keys.interfaces.UnitDoublePreferenceKey
 import app.aaps.core.ui.compose.LocalPreferences
@@ -40,7 +37,9 @@ fun AdaptiveUnitDoublePreferenceItem(
     val preferences = LocalPreferences.current
     val profileUtil = LocalProfileUtil.current
     val effectiveTitleResId = if (titleResId != 0) titleResId else unitKey.titleResId
-    val titleText = preferenceDisplayTitle(effectiveTitleResId, unitKey.key)
+
+    // Skip if no title resource is available
+    if (effectiveTitleResId == 0) return
 
     val visibility = calculatePreferenceVisibility(
         preferenceKey = unitKey,
@@ -79,16 +78,14 @@ fun AdaptiveUnitDoublePreferenceItem(
             .fillMaxWidth()
             .padding(theme.padding)
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(
-                text = titleText,
-                style = theme.titleTextStyle,
-                // Mirror Preference's disabled styling (the switch row greys the same way) since this
-                // slider branch builds its own row instead of going through Preference.
-                color = theme.titleColor.let { if (visibility.enabled) it else it.copy(alpha = theme.disabledOpacity) }
-            )
-            SyncBadge(unitKey, Modifier.padding(start = 6.dp))
-        }
+        TextWithSyncBadge(
+            text = stringResource(effectiveTitleResId),
+            key = unitKey,
+            style = theme.titleTextStyle,
+            // Mirror Preference's disabled styling (the switch row greys the same way) since this
+            // slider branch builds its own row instead of going through Preference.
+            color = theme.titleColor.let { if (visibility.enabled) it else it.copy(alpha = theme.disabledOpacity) }
+        )
         if (summary != null) {
             Text(
                 text = summary,
@@ -110,7 +107,7 @@ fun AdaptiveUnitDoublePreferenceItem(
             showValue = true,
             valueFormat = valueFormat,
             unitLabel = unitLabel,
-            dialogLabel = titleText,
+            dialogLabel = stringResource(effectiveTitleResId),
             dialogSummary = summary,
             enabled = visibility.enabled
         )

@@ -325,7 +325,11 @@ open class OpenAPSBoostPlugin @Inject constructor(
     private fun engineActive(): Boolean =
         isEnabled() || runCatching { boostV5Plugin.get().isEnabled() }.getOrDefault(false)
 
-    override fun supportsDynamicIsf() = true
+    override fun supportsDynamicIc() = true
+
+    override fun getIc(profile: Profile): Double? = null
+
+    override fun getIc(timestamp: Long, profile: Profile): Double? = null
 
     override fun getPreferenceScreenContent() = app.aaps.core.ui.compose.preference.PreferenceSubScreenDef(
         key = "boost_settings",

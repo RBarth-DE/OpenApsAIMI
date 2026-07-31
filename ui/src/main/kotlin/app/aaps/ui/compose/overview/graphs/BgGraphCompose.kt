@@ -77,6 +77,7 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import kotlin.math.abs
+import com.patrykandpatrick.vico.compose.common.data.ExtraStore
 
 /** Series identifiers */
 /** Basal on BG graph — deprecated, now shown as flipped overlay on IOB graph. Set to true to restore. */
@@ -95,6 +96,38 @@ private const val SERIES_DASHBOARD_SMB = "dashboard_smb"
 
 /** All prediction series identifiers */
 private val PREDICTION_SERIES = listOf(SERIES_PRED_IOB, SERIES_PRED_COB, SERIES_PRED_ACOB, SERIES_PRED_UAM, SERIES_PRED_ZT)
+
+/**
+ * CartesianChartModelProducer.update() skips notifying receivers (and thus skips recomputing axis
+ * ranges) when a transaction's partials AND extraStore are both unchanged from the last one. Since
+ * scrolling/zooming re-submits identical series data (only the visible window changed), stashing
+ * the visible window here forces the extraStore to differ, so Vico actually reprocesses the
+ * transaction instead of silently dropping it. Same mechanism as SecondaryGraphCompose.kt.
+ */
+private val BG_VISIBLE_RANGE_KEY = ExtraStore.Key<Pair<Long?, Long?>>()
+
+/**
+ * A [CartesianLayerRangeProvider] backed by plain mutable fields instead of an immutable value
+ * object. [CartesianLayerRangeProvider.fixed] returns a NEW instance whenever bounds change,
+ * which forces Vico to rebuild the [com.patrykandpatrick.vico.compose.cartesian.layer.LineCartesianLayer]
+ * and mint a new CartesianChart id — that in turn triggers Vico's internal chart re-registration,
+ * which was found to destabilize BG's live pinch-zoom/scroll gesture handling (BG is the only
+ * graph with an interactive chart). This object's IDENTITY never changes across scroll/zoom; only
+ * its field values do, read fresh whenever Vico next processes a modelProducer transaction — so
+ * the chart itself is never rebuilt mid-gesture. Private to this file: BG is the only graph that
+ * needs this (secondary graphs are non-interactive, so `.fixed(...)` churn never affected them).
+ */
+private class MutableYRangeProvider(
+    @Volatile var maxX: Double,
+    @Volatile var minY: Double,
+    @Volatile var maxY: Double,
+    @Volatile var yStep: Double = 0.0
+) : CartesianLayerRangeProvider {
+    override fun getMinX(minX: Double, maxX: Double, extraStore: ExtraStore) = 0.0
+    override fun getMaxX(minX: Double, maxX: Double, extraStore: ExtraStore) = this.maxX
+    override fun getMinY(minY: Double, maxY: Double, extraStore: ExtraStore) = this.minY
+    override fun getMaxY(minY: Double, maxY: Double, extraStore: ExtraStore) = this.maxY
+}
 
 /**
  * BG Graph using Vico — dual-layer chart.
@@ -223,12 +256,17 @@ fun BgGraphCompose(
     val uamPredColor = AapsTheme.generalColors.uamPrediction
     val ztPredColor = AapsTheme.generalColors.ztPrediction
 
-    val viewConfiguration = LocalViewConfiguration.current
-
     // Calculate x-axis range (must match COB graph for alignment)
     val maxX = remember(minTimestamp, maxTimestamp) {
         timestampToX(maxTimestamp, minTimestamp)
     }
+
+    // // Stable range-provider instance for the start (BG) axis — created once, mutated in place by
+    // // the LaunchedEffect below rather than recreated (see MutableYRangeProvider).
+    // val startAxisRangeProvider = remember {
+    //     val initialScale = niceScale(chartConfig.lowMark, chartConfig.highMark)
+    //     MutableYRangeProvider(maxX = maxX, minY = initialScale.min, maxY = initialScale.max, yStep = initialScale.step)
+    // }
 
     // Track which series are currently included (for matching LineProvider)
     val activeSeriesState = remember { mutableStateOf(listOf<String>()) }
@@ -248,6 +286,7 @@ fun BgGraphCompose(
         currentTargetData: TargetLineData,
         currentEpsPoints: List<EpsGraphPoint>,
         currentActivityData: ActivityGraphData,
+        currentMinBgY: Double,
         currentMaxBgY: Double,
         currentTreatmentData: TreatmentGraphData,
         showBolusMarkers: Boolean,
@@ -353,9 +392,9 @@ fun BgGraphCompose(
             // Same principle as legacy (originalPercentage/100 * baseline); baseline = 75% of the BG axis height.
             lineModel {
                 if (currentEpsPoints.isNotEmpty()) {
-                    val epsBaseline = currentMaxBgY * 0.75
+                    val epsBaseline = (currentMaxBgY - currentMinBgY) * 0.75
                     val pts = currentEpsPoints
-                        .map { eps -> timestampToX(eps.timestamp, minTimestamp) to (eps.originalPercentage / 100.0 * epsBaseline) }
+                        .map { eps -> timestampToX(eps.timestamp, minTimestamp) to (currentMinBgY + eps.originalPercentage / 100.0 * epsBaseline) }
                         .sortedBy { it.first }
                     series(x = pts.map { it.first }, y = pts.map { it.second })
                 } else {
@@ -374,16 +413,16 @@ fun BgGraphCompose(
                     series(x = listOf(0.0, 1.0), y = listOf(0.0, 0.0))
                     return@lineModel
                 }
-                val scaleFactor = currentMaxBgY * 0.8 / maxAct
+                val scaleFactor = (currentMaxBgY - currentMinBgY) * 0.8 / maxAct
 
                 val pts = currentActivityData.activity
-                    .map { timestampToX(it.timestamp, minTimestamp) to (it.value * scaleFactor) }
+                    .map { timestampToX(it.timestamp, minTimestamp) to (currentMinBgY + it.value * scaleFactor) }
                     .sortedBy { it.first }
                 series(x = pts.map { it.first }, y = pts.map { it.second })
 
                 if (currentActivityData.activityPrediction.size >= 2) {
                     val predPts = currentActivityData.activityPrediction
-                        .map { timestampToX(it.timestamp, minTimestamp) to (it.value * scaleFactor) }
+                        .map { timestampToX(it.timestamp, minTimestamp) to (currentMinBgY + it.value * scaleFactor) }
                         .sortedBy { it.first }
                     series(x = predPts.map { it.first }, y = predPts.map { it.second })
                 } else {
@@ -454,7 +493,8 @@ fun BgGraphCompose(
         // maxBgY clamped against highMark (same as legacy GraphData.maxY logic)
         val allBgValues = (bgReadings + bucketedData).map { it.value }
         var maxBgY = if (allBgValues.isNotEmpty()) maxOf(allBgValues.max(), chartConfig.highMark) else chartConfig.highMark
-        rebuildChart(basalData, targetData, epsPoints, activityData, maxBgY, treatmentData, showBolus, chartConfig.lowMark, chartConfig.highMark)
+        val minBgY = if (allBgValues.isNotEmpty()) minOf(allBgValues.min(), chartConfig.lowMark) else chartConfig.lowMark
+        rebuildChart(basalData, targetData, epsPoints, activityData, minBgY, maxBgY, treatmentData, showBolus, chartConfig.lowMark, chartConfig.highMark)
         val sortedBgAsc = bgReadings.sortedBy { it.timestamp }
         val fallbackSmbY = viewModel.glucoseDisplayYToMgdl(
             (chartConfig.lowMark + chartConfig.highMark) / 2.0,
@@ -487,7 +527,7 @@ fun BgGraphCompose(
         } else {
             maxOf(chartConfig.highMark, targetPeakDisplay)
         }
-        rebuildChart(basalData, targetData, epsPoints, activityData, maxBgY, treatmentData, showBolus, chartConfig.lowMark, chartConfig.highMark)
+        rebuildChart(basalData, targetData, epsPoints, activityData,minBgY, maxBgY, treatmentData, showBolus, chartConfig.lowMark, chartConfig.highMark)
     }
 
     // Build lookup map for BUCKETED points: x-value -> BgDataPoint (for PointProvider)
