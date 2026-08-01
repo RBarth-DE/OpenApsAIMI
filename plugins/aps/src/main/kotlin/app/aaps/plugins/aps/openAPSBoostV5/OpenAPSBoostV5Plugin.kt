@@ -134,6 +134,8 @@ open class OpenAPSBoostV5Plugin @Inject constructor(
             DoubleKey.ApsBoostV5ConfirmedCapU,
             DoubleKey.ApsBoostV5CommittedCapU,
             BooleanKey.ApsBoostV6PreMealTarget,
+            DoubleKey.ApsBoostV6PreMealTargetMgdl,
+            DoubleKey.ApsBoostV6PreMealLeadMin,
             // ── BOOST engine settings (shared V1/V5/V6) ──
             app.aaps.core.ui.compose.preference.PreferenceSubScreenDef(
                 key = "boost_v1_settings",
@@ -151,21 +153,24 @@ open class OpenAPSBoostV5Plugin @Inject constructor(
                     DoubleKey.ApsBoostInsulinReqPct,
                     DoubleKey.ApsBoostScale,
                     DoubleKey.ApsBoostDynIsfVelocity,
+                    UnitDoubleKey.ApsBoostDynIsfBgCap,
+                    UnitDoubleKey.ApsBoostDynIsfNormalTarget,
                     DoubleKey.ApsBoostCumulativeSmbCap60Min,
-                    DoubleKey.ApsBoostV6PreMealTargetMgdl,
-                    DoubleKey.ApsBoostV6PreMealLeadMin,
+                    DoubleKey.ApsBoostCumulativeSmbCap60Min,
                     // ── Activity / HR / Sleep ──
                     BooleanKey.ApsBoostHrIntegrationEnabled,
                     BooleanKey.ApsBoostHrStressDetection,
                     BooleanKey.ApsBoostNightModeEnabled,
-                    BooleanKey.ApsBoostPostExerciseRecoveryEnabled,
+                    UnitDoubleKey.ApsBoostNightModeBgOffset,
                     BooleanKey.ApsBoostActivityShadowEnabled,
-                    DoubleKey.ApsBoostSleepInHours,
-                    IntKey.ApsBoostSleepInSteps,
                     DoubleKey.ApsBoostInactivityPct,
                     DoubleKey.ApsBoostActivityPct,
+                    DoubleKey.ApsBoostSleepInHours,
+                    IntKey.ApsBoostSleepInSteps,
+                    BooleanKey.ApsBoostPostExerciseRecoveryEnabled,
                     DoubleKey.ApsBoostPostExerciseRecoveryHours,
                     DoubleKey.ApsBoostPostExerciseRecoveryScale,
+                    UnitDoubleKey.ApsBoostPostExerciseRecoveryTarget,
                 )
             ),
             // ── Standard AAPS / SMB settings (shared with BOOST engine) ──
@@ -185,6 +190,7 @@ open class OpenAPSBoostV5Plugin @Inject constructor(
                     BooleanKey.ApsUseUam,
                     BooleanKey.ApsUseDynamicSensitivity,
                     BooleanKey.ApsUseAutosens,
+                    UnitDoubleKey.ApsLgsThreshold
                 )
             ),
         ),
