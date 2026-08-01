@@ -43,8 +43,7 @@ android {
             // packaged — Watch Face Push validation rejects any APK containing code (same recipe
             // as Google's WatchFaceFormat samples)
             isMinifyEnabled = true
-            // The watch face IS resources — never shrink them
-            isShrinkResources = false
+            // The watch face IS resources — shrinkResources defaults to false; never enable
             signingConfig = signingConfigs.getByName("debug")
         }
     }

@@ -1,6 +1,7 @@
 package app.aaps.plugins.aps.compose
 
 import app.aaps.core.interfaces.aps.APS
+import app.aaps.core.interfaces.aps.Loop
 import app.aaps.core.interfaces.resources.ResourceHelper
 import app.aaps.core.interfaces.rx.bus.RxBus
 import app.aaps.core.interfaces.utils.DateUtil
@@ -20,6 +21,7 @@ import org.mockito.kotlin.whenever
 internal class OpenAPSViewModelTest {
 
     @Mock private lateinit var apsPlugin: APS
+    @Mock private lateinit var loop: Loop
     @Mock private lateinit var rxBus: RxBus
     @Mock private lateinit var rh: ResourceHelper
     @Mock private lateinit var dateUtil: DateUtil
@@ -38,7 +40,7 @@ internal class OpenAPSViewModelTest {
     // apsPlugin.invoke) eagerly and synchronously, so state and interactions settle in-line. The
     // never-completing toFlow subscriptions just park; a standalone scope has no leaked-coroutine check.
     private fun viewModel() =
-        OpenAPSViewModel(apsPlugin, rxBus, rh, dateUtil, CoroutineScope(Dispatchers.Unconfined))
+        OpenAPSViewModel(apsPlugin, loop, rxBus, rh, dateUtil, CoroutineScope(Dispatchers.Unconfined))
 
     @Test
     fun uiState_showsNotAvailable_whenNoApsResult() {

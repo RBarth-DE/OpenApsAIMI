@@ -9,7 +9,7 @@ import org.json.JSONException
 import org.json.JSONObject
 import javax.inject.Inject
 
-open class DetermineBasalResultSMB internal constructor(injector: HasAndroidInjector) : APSResultObject(injector), VariableSensitivityResult {
+open class DetermineBasalResultSMBFromJS internal constructor(injector: HasAndroidInjector) : APSResultObject(injector), VariableSensitivityResult {
 
     @Inject lateinit var dateUtil: DateUtil
 
@@ -62,8 +62,8 @@ open class DetermineBasalResultSMB internal constructor(injector: HasAndroidInje
         }
     }
 
-    override fun newAndClone(): DetermineBasalResultSMB {
-        val newResult = DetermineBasalResultSMB(injector)
+    override fun newAndClone(): DetermineBasalResultSMBFromJS {
+        val newResult = DetermineBasalResultSMBFromJS(injector)
         doClone(newResult)
         newResult.eventualBG = eventualBG
         newResult.snoozeBG = snoozeBG
