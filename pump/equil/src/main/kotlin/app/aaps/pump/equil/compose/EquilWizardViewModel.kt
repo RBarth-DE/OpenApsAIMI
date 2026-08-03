@@ -920,7 +920,6 @@ class EquilWizardViewModel @Inject constructor(
 
     fun confirmUnpair() {
         val name = equilManager.equilState?.serialNumber ?: return
-        val bondAddress = equilManager.equilState?.address?.takeIf { it.isNotEmpty() }
         _isLoading.value = true
         _errorMessage.value = null
         viewModelScope.launch {
@@ -930,7 +929,7 @@ class EquilWizardViewModel @Inject constructor(
             equilManager.setSerialNumber("")
             equilManager.setAddress("")
             rxBus.send(EventEquilUnPairChanged())
-            equilPumpPlugin.teardownEquilSession(bondAddress)
+            equilPumpPlugin.clearData()
             _serialNumberDisplay.value = ""
             _unpairResultMessage.value = message
         }

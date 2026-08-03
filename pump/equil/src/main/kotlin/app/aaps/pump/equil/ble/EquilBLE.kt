@@ -68,6 +68,9 @@ class EquilBLE @Inject constructor(
             isConnected = true
             equilManager?.equilState?.bluetoothConnectionState = BluetoothConnectionState.CONNECTED
             handler.removeMessages(TIME_OUT_CONNECT_WHAT)
+            // Link up: stop the parallel advert-harvest scan (the pump stops advertising once connected; if it
+            // already caught an advert it stopped itself in the scan collector).
+            stopScan()
             synchronized(notifyLock) {
                 // New link: notifications not yet enabled. Block command dispatch until onDescriptorWritten.
                 notificationEnabled = false
@@ -85,7 +88,6 @@ class EquilBLE @Inject constructor(
     override fun onServicesDiscovered(success: Boolean) {
         if (!success) {
             aapsLogger.debug(LTag.PUMPBTCOMM, "onServicesDiscovered failed")
-            disconnect()
             return
         }
         bleTransport.gatt.enableNotifications()
@@ -153,18 +155,14 @@ class EquilBLE @Inject constructor(
         }
     }
 
-    /** Clears in-flight connect state so a later command (e.g. SMB after queue timeout) can reconnect. */
-    private fun cancelPendingConnect() {
-        connectInitiated = false
-        connectRunnable?.let { handler.removeCallbacks(it) }
-        connectRunnable = null
-    }
-
     fun disconnect() {
         isConnected = false
         connecting = false
-        cancelPendingConnect()
-        startTrue = false
+        connectInitiated = false
+        // Cancel any pending delayed connect so a stale runnable can't re-open a GATT after teardown.
+        connectRunnable?.let { handler.removeCallbacks(it) }
+        connectRunnable = null
+        stopScan() // cancel any in-flight advert-harvest scan (hybrid connect); also clears startTrue
         autoScan = false
         equilManager?.equilState?.bluetoothConnectionState = BluetoothConnectionState.DISCONNECTED
         aapsLogger.debug(LTag.PUMPBTCOMM, "Closing GATT connection")
@@ -197,8 +195,7 @@ class EquilBLE @Inject constructor(
 
     private fun connectEquil(address: String) {
         // Guard against the scan emitting the same device multiple times (and other re-entrant
-        // calls): only one connect attempt per session, reset on disconnect()/stopConnecting().
-        // Prevents stacking
+        // calls): only one connect attempt per session, reset on disconnect(). Prevents stacking
         // overlapping GATT clients. See also the close-before-connect guard in EquilBleTransportImpl.
         if (connectInitiated) return
         connectInitiated = true
@@ -372,11 +369,23 @@ class EquilBLE @Inject constructor(
         if (connecting || isConnected) {
             return
         }
-        autoScan = true
         baseCmd = null
-        startScan()
-        handler.removeMessages(TIME_OUT_CONNECT_WHAT)
-        handler.sendEmptyMessageDelayed(TIME_OUT_CONNECT_WHAT, EquilConst.EQUIL_BLE_CONNECT_TIMEOUT_MS)
+        macAddress = equilManager?.equilState?.address
+        val mac = macAddress
+        if (!mac.isNullOrEmpty()) {
+            // Known/bonded pump: connect straight to its MAC (autoConnect, see EquilBleTransportImpl) instead of
+            // scan-to-connect. Scan discovery was the #5040 bottleneck (60-90 s on many phones). In parallel run
+            // a best-effort advert harvest that does NOT gate the connection - it refreshes the pump's current
+            // history index + battery/reservoir/alarm. Scanning stays as the fallback for an unknown MAC.
+            connecting = true
+            equilManager?.equilState?.bluetoothConnectionState = BluetoothConnectionState.CONNECTING
+            connectEquil(mac)
+            autoScan = false
+            startScan()
+        } else {
+            autoScan = true
+            startScan()
+        }
     }
 
     fun stopScan() {
@@ -391,35 +400,6 @@ class EquilBLE @Inject constructor(
     fun unBond(transmitterMAC: String?) {
         if (transmitterMAC == null) return
         bleTransport.adapter.removeBond(transmitterMAC)
-    }
-
-    /** Abort an in-flight scan/connect attempt (queue connection timeout). */
-    fun stopConnecting() {
-        handler.removeMessages(TIME_OUT_CONNECT_WHAT)
-        cancelPendingConnect()
-        stopScan()
-        connecting = false
-        if (!isConnected) {
-            equilManager?.equilState?.bluetoothConnectionState = BluetoothConnectionState.DISCONNECTED
-        }
-    }
-
-    /** Full BLE teardown: stop scan, disconnect GATT, remove Android bond. */
-    fun teardownSession(bondAddress: String?) {
-        handler.removeMessages(TIME_OUT_WHAT)
-        handler.removeMessages(TIME_OUT_CONNECT_WHAT)
-        stopScan()
-        baseCmd = null
-        preCmd = null
-        if (isConnected || connecting) {
-            disconnect()
-        } else {
-            connecting = false
-            autoScan = false
-            equilManager?.equilState?.bluetoothConnectionState = BluetoothConnectionState.DISCONNECTED
-        }
-        bondAddress?.takeIf { it.isNotEmpty() }?.let { unBond(it) }
-        macAddress = null
     }
 
     var handler: Handler = object : Handler(HandlerThread(this::class.simpleName + "MessageHandler").also { it.start() }.looper) {

@@ -29,7 +29,6 @@ import app.aaps.core.ui.compose.pump.tickerFlow
 import app.aaps.pump.equil.EquilPumpPlugin
 import app.aaps.pump.equil.R
 import app.aaps.pump.equil.data.RunMode
-import app.aaps.pump.equil.driver.definition.ActivationProgress
 import app.aaps.pump.equil.events.EventEquilDataChanged
 import app.aaps.pump.equil.events.EventEquilModeChanged
 import app.aaps.pump.equil.manager.EquilManager
@@ -231,7 +230,7 @@ class EquilOverviewViewModel @Inject constructor(
                 label = rh.gs(R.string.equil_pair),
                 icon = Icons.Filled.Bluetooth,
                 category = ActionCategory.MANAGEMENT,
-                onClick = { startWizard(EquilWorkflow.PAIR) }
+                onClick = { _events.tryEmit(EquilOverviewEvent.StartWizard(EquilWorkflow.PAIR)) }
             ))
         } else {
             add(
@@ -255,29 +254,6 @@ class EquilOverviewViewModel @Inject constructor(
                 category = ActionCategory.MANAGEMENT,
                 onClick = { _events.tryEmit(EquilOverviewEvent.StartWizard(EquilWorkflow.UNPAIR)) }
             ))
-        }
-    }
-
-    private fun startWizard(workflow: EquilWorkflow) {
-        viewModelScope.launch {
-            if (workflow == EquilWorkflow.PAIR) {
-                ensureFreshSessionBeforePair()
-            }
-            _events.tryEmit(EquilOverviewEvent.StartWizard(workflow))
-        }
-    }
-
-    private fun ensureFreshSessionBeforePair() {
-        val progress = equilManager.getActivationProgress()
-        if (progress != ActivationProgress.NONE &&
-            progress != ActivationProgress.COMPLETED &&
-            !equilManager.isActivationCompleted()
-        ) {
-            aapsLogger.warn(
-                LTag.PUMPCOMM,
-                "Stale Equil activation ($progress) — forcing session teardown before new pair",
-            )
-            equilPumpPlugin.teardownEquilSession()
         }
     }
 
