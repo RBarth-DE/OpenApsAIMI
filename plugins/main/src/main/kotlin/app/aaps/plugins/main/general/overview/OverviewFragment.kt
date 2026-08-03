@@ -636,7 +636,7 @@ class OverviewFragment : DaggerFragment(), View.OnClickListener, View.OnLongClic
                                     message = resultHtml,
                                     ok = {
                                         uel.log(Action.ACCEPTS_TEMP_BASAL, Sources.Overview)
-                                        (context?.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager?)?.cancel(Constants.notificationID)
+                                        (context?.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager?)?.cancel(Constants.NOTIFICATION_ID)
                                         rxBus.send(EventMobileToWear(EventData.CancelNotification(dateUtil.now())))
                                         viewLifecycleOwner.lifecycleScope.launch { loop.acceptChangeRequest() }
                                         binding.buttonsLayout.acceptTempButton.visibility = View.GONE
