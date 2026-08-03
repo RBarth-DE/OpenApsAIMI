@@ -469,6 +469,8 @@ class DetermineBasalBoostV5 @Inject constructor() {
         val vbTarget = velocityBudgetFloorTarget(
             state = newHypothesisState.state,
             bg = inputs.bg,
+            eventualBg = inputs.eventualBg,
+            targetBg = inputs.targetBg,
             budgetU = budget.budget,
             committedCapU = inputs.committedCapU,
             asleep = inputs.asleep,
@@ -741,6 +743,13 @@ internal const val VELOCITY_BUDGET_MIN_BG_MGDL = 180.0
  *  floor EXCLUDES (it requires budget>0). The two floors are mutually exclusive by this condition. */
 internal const val VELOCITY_BUDGET_MAX_BUDGET_U = 0.01
 
+/** Velocity-budget floor: eventual BG must exceed target BG by at least this margin (mg/dL).
+ *  Prevents the floor from adding insulin when the system already predicts BG will land near or
+ *  below target — the situation where oref's "no insulin needed" is correct, not conservative.
+ *  Tighter than [COMPOSED_FLOOR_MIN_EVENTUAL_OFFSET_MGDL] (20) because this floor fires when
+ *  insulinReq ≈ 0 (budget ≤ 0.01), where the base algorithm is almost always right. */
+internal const val VELOCITY_BUDGET_MIN_EVENTUAL_ABOVE_TARGET_MGDL = 10.0
+
 /** Tier-equivalent hold delivered by the velocity-budget floor (U), before the committedCap and
  *  maxIOB bounds. ≈ V1's per-cycle velocity-tier addition (~0.5U) that V6 drops to 0 on this tail. */
 internal const val VELOCITY_BUDGET_TIER_U = 0.5
@@ -761,9 +770,15 @@ internal const val VELOCITY_BUDGET_TIER_U = 0.5
  * (BooleanKey.ApsBoostV5VelocityBudgetActive ∧ composedFloorTbrAllowed) — it deliberately overrides
  * a prediction that was right-by-outcome on the shadow data, justified only by low hypo exposure.
  *
- * Conditions (ALL): state ≠ RECOVERING ∧ bg > 180 ∧ budget ≤ 0.01 ∧ !asleep ∧ !postRescueWindow.
+ * Conditions (ALL): state ≠ RECOVERING ∧ bg > 180 ∧ budget ≤ 0.01
+ *     ∧ eventualBg > targetBg + [VELOCITY_BUDGET_MIN_EVENTUAL_ABOVE_TARGET_MGDL]
+ *     ∧ !asleep ∧ !postRescueWindow.
  * - RECOVERING is EXCLUDED: dosing into a decelerating high is the RECOVERING-SMB pattern rejected
  *   2026-07-03 (adds into a high-IOB tail → lows).
+ * - eventualBg gate (2026-08-03): the floor must NOT add insulin when the system already predicts
+ *   BG will land near or below target — that means oref's "no insulin needed" is correct, not
+ *   conservative. This prevents the floor from dosing into rapid falls where eventualBG is already
+ *   below the target + margin threshold.
  * - Deliberately NOT gated on "rising": the 2026-07-17 sizing showed the rising (delta>3) sub-cell
  *   is crash-prone (10.7% pre-low, n=28) while the sustained high tail prices under the base rate
  *   (4.3% vs 5.8%). Sustained-high is the safer target than sharp-rise.
@@ -771,6 +786,8 @@ internal const val VELOCITY_BUDGET_TIER_U = 0.5
 internal fun velocityBudgetFloorTarget(
     state: MealHypothesis,
     bg: Double,
+    eventualBg: Double,
+    targetBg: Double,
     budgetU: Double,
     committedCapU: Double,
     asleep: Boolean,
@@ -780,6 +797,7 @@ internal fun velocityBudgetFloorTarget(
     val conditionsMet = state != MealHypothesis.RECOVERING &&
         bg > VELOCITY_BUDGET_MIN_BG_MGDL &&
         budgetU <= VELOCITY_BUDGET_MAX_BUDGET_U &&
+        eventualBg > targetBg + VELOCITY_BUDGET_MIN_EVENTUAL_ABOVE_TARGET_MGDL &&
         !asleep &&
         !postRescueWindow
     if (!conditionsMet) return null
