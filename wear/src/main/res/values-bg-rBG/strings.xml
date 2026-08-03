@@ -301,6 +301,9 @@
     <string name="wizard_result_cob">Въгл: (%1$.1f гр)</string>
     <string name="wizard_result_carbs">Въгл (%1$d гр)</string>
     <string name="wizard_result_subtotal">Междинна сума</string>
+    <string name="wizard_result_total">Общо</string>
+    <string name="wizard_insulin_format">%1$s Е</string>
+    <string name="wizard_result_correction_percentage">%1$d%%</string>
     <string name="wizard_result_correction">Корекция</string>
     <string name="wizard_result_total">Общо</string>
     <string name="wizard_insulin_format">%1$s Е</string>

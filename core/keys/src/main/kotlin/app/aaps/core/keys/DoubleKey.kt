@@ -336,7 +336,7 @@ enum class DoubleKey(
     ),
     ApsAutoIsfSmbDeliveryRatioMax(
         key = "openapsama_smb_delivery_ratio_max",
-        defaultValue = 0.9,
+        defaultValue = 0.5,
         min = 0.5,
         max = 1.0,
         titleResId = R.string.pref_title_smb_delivery_ratio_max,
@@ -418,7 +418,7 @@ enum class DoubleKey(
         unitType = UnitType.DOUBLE_3,
     ),
     OApsAIMISmbTailThreshold("aimi_smb_tail_threshold", 0.25, 0.0, 1.0, unitType = UnitType.DOUBLE_2),
-    OApsAIMISmbTailDamping("aimi_smb_tail_damping", 0.5, 0.0, 1.0, unitType = UnitType.DOUBLE_2),
+    OApsAIMISmbTailDamping("aimi_smb_tail_damping", 0.85, 0.0, 1.0, unitType = UnitType.DOUBLE_2),
     OApsAIMISmbExerciseDamping("aimi_smb_exercise_damping", 0.6, 0.0, 1.0, unitType = UnitType.DOUBLE_2),
     OApsAIMISmbLateFatDamping("aimi_smb_late_fat_damping", 0.7, 0.0, 1.0, unitType = UnitType.DOUBLE_2),
     OApsAIMIPkpdPragmaticReliefMinFactor("aimi_pkpd_pragmatic_relief_min_factor", 0.75, 0.50, 1.0, unitType = UnitType.DOUBLE_2),
@@ -574,7 +574,7 @@ enum class DoubleKey(
         titleResId = R.string.aimi_tube_aggressiveness_title,
         summaryResId = R.string.aimi_tube_aggressiveness_summary,
         dependency = BooleanKey.OApsAIMIStraightLineTubeAdvisorEnabled,
-        unitType = UnitType.DOUBLE,
+        unitType = UnitType.DOUBLE_2,
     ),
     AimiTubeBasalTrimMax(
         key = "key_aimi_tube_basal_trim_max",
@@ -602,21 +602,29 @@ enum class DoubleKey(
     /** 0 = parabolic PI only (legacy). >0 blends eventual BG + prediction curve timing into T3C basal. */
     OApsAIMIT3cAnticipationStrength("key_aimi_t3c_anticipation_strength", 0.0, 0.0, 1.0, unitType = UnitType.DOUBLE_2),
     OApsAIMIT3cAggressiveness("key_aimi_t3c_aggressiveness", 1.0, 0.5, 3.0, unitType = UnitType.DOUBLE),
+    /** CFRD mode: minimum LGS threshold (mg/dL) for T3C anticipation.
+     *  Impaired glucagon counter-regulation in CFRD requires a higher safety floor than standard DT1. */
     OApsAIMIT3cCfrdLgsFloorMgdl(
         key = "key_aimi_t3c_cfrd_lgs_floor",
-        defaultValue = 80.0,
+        defaultValue = 95.0,
         min = 70.0,
         max = 95.0,
+        titleResId = R.string.pref_title_aimi_t3c_cfrd_lgs_floor,
         summaryResId = R.string.pref_summary_aimi_t3c_cfrd_lgs_floor,
-        unitType = UnitType.MGDL,
+        dependency = BooleanKey.OApsAIMIT3cCfrdMode,
+        unitType = UnitType.NONE,
     ),
+    /** CFRD mode: exocrine malabsorption COB delay (minutes).
+     *  Shifts the COB absorption curve forward to account for delayed / irregular carbohydrate digestion. */
     OApsAIMIT3cCfrdCobDelayMin(
         key = "key_aimi_t3c_cfrd_cob_delay_min",
-        defaultValue = 0.0,
+        defaultValue = 30.0,
         min = 0.0,
         max = 90.0,
+        titleResId = R.string.pref_title_aimi_t3c_cfrd_cob_delay,
         summaryResId = R.string.pref_summary_aimi_t3c_cfrd_cob_delay,
-        unitType = UnitType.MIN,
+        dependency = BooleanKey.OApsAIMIT3cCfrdMode,
+        unitType = UnitType.NONE,
     ),
     /** Undeclared-meal COB estimation: hard upper bound (grams) the estimator may inject into the
      *  prediction path. Conservative by default. Only active when [BooleanKey.OApsAIMIUndeclaredCobEnabled] is on. */
@@ -699,7 +707,7 @@ enum class DoubleKey(
         titleResId = R.string.aimi_gov_hold_basal_decay_rate_title,
         summaryResId = R.string.aimi_gov_hold_basal_decay_rate_summary,
         preferenceType = PreferenceType.TEXT_FIELD,
-        unitType = UnitType.DOUBLE_3,
+        unitType = UnitType.DOUBLE_2,
         dependency = BooleanKey.OApsAIMIT3cAdaptiveBasalEnabled,
     ),
     OApsAIMIGovernanceHoldAggFloorRate(
@@ -721,7 +729,7 @@ enum class DoubleKey(
         titleResId = R.string.aimi_gov_hold_agg_decay_rate_title,
         summaryResId = R.string.aimi_gov_hold_agg_decay_rate_summary,
         preferenceType = PreferenceType.TEXT_FIELD,
-        unitType = UnitType.DOUBLE_3,
+        unitType = UnitType.DOUBLE_2,
         dependency = BooleanKey.OApsAIMIT3cAdaptiveBasalEnabled,
     ),
     OApsAIMIGovernanceHoldBasalFloorSevere(
@@ -765,7 +773,7 @@ enum class DoubleKey(
         titleResId = R.string.aimi_gov_hold_agg_decay_severe_title,
         summaryResId = R.string.aimi_gov_hold_agg_decay_severe_summary,
         preferenceType = PreferenceType.TEXT_FIELD,
-        unitType = UnitType.DOUBLE_3,
+        unitType = UnitType.DOUBLE_2,
         dependency = BooleanKey.OApsAIMIT3cAdaptiveBasalEnabled,
     ),
     /** Recent governance samples (5-min cadence) used for short-horizon prediction relief (A3). */

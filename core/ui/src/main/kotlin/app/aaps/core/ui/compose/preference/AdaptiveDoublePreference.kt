@@ -9,15 +9,23 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import app.aaps.core.keys.DoubleKey
+import app.aaps.core.keys.UnitType
 import app.aaps.core.keys.decimalPlaces
 import app.aaps.core.keys.interfaces.DoublePreferenceKey
 import app.aaps.core.keys.interfaces.VisibilityContext
+import app.aaps.core.keys.decimalPlaces
 import app.aaps.core.keys.rangeResId
 import app.aaps.core.keys.step
 import app.aaps.core.keys.unitLabelResId
 import app.aaps.core.keys.valueResId
+import kotlin.math.abs
 import app.aaps.core.ui.R
 import app.aaps.core.ui.compose.LocalPreferences
 import java.text.DecimalFormat
@@ -50,20 +58,40 @@ fun AdaptiveDoublePreferenceItem(
     if (!visibility.visible || (preferences.simpleMode && doubleKey.calculatedBySM)) return
 
     val state = rememberPreferenceDoubleState(doubleKey)
-    val value = state.value
     val theme = LocalPreferenceTheme.current
 
-    // Get formatting info from UnitType
+    val span = (doubleKey.max - doubleKey.min).let { if (abs(it) < 1e-12) 1e-9 else it }
     val unitType = doubleKey.unitType
-    val decimalPlaces = unitType.decimalPlaces()
-    val step = unitType.step()
+    val (decimalPlaces, step) = if (unitType == UnitType.NONE) {
+        when {
+            span <= 0.15  -> 3 to 0.001
+            span <= 1.5   -> 2 to 0.01
+            span <= 25.0  -> 1 to 0.1
+            else          -> 0 to 1.0
+        }
+    } else {
+        unitType.decimalPlaces() to unitType.step()
+    }
     val valueFormatResId = unitType.valueResId()
+
+    LaunchedEffect(doubleKey.key) {
+        val v = state.value
+        if (v < doubleKey.min || v > doubleKey.max) {
+            state.value = v.coerceIn(doubleKey.min, doubleKey.max)
+        }
+    }
+    val value = state.value
 
     // Get unit label from UnitType (for dialog input suffix)
     val unitLabelResId = unitType.unitLabelResId()
-    val unitLabel = unitLabelResId?.let { stringResource(it) } ?: unit
+    val unitLabel = unitLabelResId?.takeIf { it != 0 }?.let { stringResource(it) } ?: unit
 
-    val valueFormat = if (decimalPlaces == 0) DecimalFormat("0") else DecimalFormat("0.${"0".repeat(decimalPlaces)}")
+    val valueFormat = when (decimalPlaces) {
+        0    -> DecimalFormat("0")
+        1    -> DecimalFormat("0.0")
+        2    -> DecimalFormat("0.00")
+        else -> DecimalFormat("0.000")
+    }
 
     // Get summary if available
     val summaryResId = doubleKey.summaryResId
@@ -126,7 +154,7 @@ fun AdaptiveDoublePreferenceItem(
         }
         TextFieldPreference(
             state = state,
-            title = { PreferenceTitleWithSyncBadge(effectiveTitleResId, doubleKey) },
+            title = { TextWithSyncBadge(titleText, doubleKey) },
             textToValue = { text ->
                 text.toDoubleOrNull()?.coerceIn(doubleKey.min, doubleKey.max)
             },

@@ -29,6 +29,7 @@ wear/aapsclient/*
 wear/aapsclient2/*
 wear/aapsclient3/*
 wear/pumpcontrol/*
+wear/full/
 wear/watchfacepush/aapsclient/*
 wear/watchfacepush/aapsclient2/*
 wear/watchfacepush/aapsclient3/*
@@ -52,3 +53,11 @@ core/keys/bin/
 /build-libkeks-gradle.txt
 /build-xdrip-tree.json
 /build-xdrip-pin/
+.venv_onnx/
+.tmp_eversense_patches/
+eversense_upstream_patches/
+build-xdrip-pin/
+build-libkeks*.txt
+build-oneplus*.log
+build-a*.log
+build-xdrip-tree.json

@@ -121,6 +121,11 @@ enum class NotificationId(
     BG_READINGS_MISSED(URGENT, CGM),
     SENSOR_CHANGE_DETECTED(NORMAL, CGM),
 
+    // CGM — user-configured glucose value/rate alarms (source-agnostic; notification-only, never dosing)
+    BG_HYPO(URGENT, CGM),
+    BG_HYPER(IMPORTANT, CGM),
+    BG_RAPID_FALL(URGENT, CGM),
+
     // CGM — Aidex
     AIDEX_SENSOR_EXPIRED(IMPORTANT, CGM),
     AIDEX_SENSOR_ERROR(IMPORTANT, CGM),
@@ -128,7 +133,7 @@ enum class NotificationId(
     AIDEX_REPLACE_SENSOR(NORMAL, CGM),
     AIDEX_SIGNAL_LOST(NORMAL, CGM),
 
-    // CGM Eversense
+    // CGM — Eversense (fork native plugin)
     EVERSENSE_ALARM(URGENT, CGM, allowMultiple = true),
     EVERSENSE_FIRMWARE(INFO, CGM),
     EVERSENSE_RELEASE(INFO, CGM),
@@ -180,7 +185,7 @@ enum class NotificationId(
     SETTINGS_EXPORT_RESULT(INFO, SYSTEM),
     SNACKBAR_FALLBACK(NORMAL, SYSTEM, allowMultiple = true),
 
-    /** Runtime permission prompts (legacy Android notification IDs preserved). */
+    /** Runtime permission prompts (fork — used by [AndroidPermissionImpl]). */
     PERMISSION_STORAGE(URGENT, SYSTEM),
     PERMISSION_LOCATION(URGENT, SYSTEM),
     PERMISSION_BATTERY(URGENT, SYSTEM),
@@ -198,12 +203,18 @@ enum class NotificationId(
     SCENE_CHAIN_SKIPPED(NORMAL, AUTOMATION, allowMultiple = true),
     SCENE_CHAIN_ERROR(IMPORTANT, AUTOMATION, allowMultiple = true),
 
+    /** AIMI AI Decision Auditor — new insight available (in-app + optional system notification). */
+    AIMI_AUDITOR_INSIGHT(INFO, LOOP),
     /** Bolus succeeded but the accompanying carbs could not be persisted — the user must re-enter them. */
     CARBS_STORE_FAILED(URGENT, PUMP),
 
-    /** AIMI AI Decision Auditor — new insight available (in-app + optional system notification). */
-    AIMI_AUDITOR_INSIGHT(INFO, LOOP);
-
+    /**
+     * The AAPS directory can no longer be reached, so the Dexcom ONE+ engineering marker file
+     * cannot be checked. Distinct from a merely absent marker file, which stays silent. Appended
+     * last on purpose — the system notification id is the ordinal, so inserting mid-enum would
+     * renumber every entry after it.
+     */
+    DEXCOM_ONEPLUS_DIR_ACCESS_LOST(NORMAL, SYSTEM);
 
     companion object {
 

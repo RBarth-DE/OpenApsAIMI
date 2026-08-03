@@ -9,6 +9,7 @@ import androidx.test.uiautomator.BySelector
 import androidx.test.uiautomator.StaleObjectException
 import androidx.test.uiautomator.UiDevice
 import androidx.test.uiautomator.UiObject2
+import androidx.work.WorkInfo
 import androidx.work.WorkManager
 import app.aaps.core.data.ue.Action
 import app.aaps.core.data.ue.Sources

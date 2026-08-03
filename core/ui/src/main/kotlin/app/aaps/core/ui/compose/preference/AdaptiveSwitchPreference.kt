@@ -82,24 +82,14 @@ fun AdaptiveSwitchPreferenceItem(
                     guardMessage = message
                 }
             },
-            title = {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(titleText)
-                    SyncBadge(booleanKey, Modifier.padding(start = 6.dp))
-                }
-            },
+            title = { PreferenceTitleWithSyncBadge(effectiveTitleResId, booleanKey) },
             summary = summary,
             enabled = visibility.enabled
         )
     } else {
         SwitchPreference(
             state = state,
-            title = {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(titleText)
-                    SyncBadge(booleanKey, Modifier.padding(start = 6.dp))
-                }
-            },
+            title = { PreferenceTitleWithSyncBadge(effectiveTitleResId, booleanKey) },
             summary = summary,
             enabled = visibility.enabled
         )

@@ -2,6 +2,7 @@ package app.aaps.implementation.plugin
 
 import android.Manifest
 import android.app.AlarmManager
+import android.app.NotificationManager
 import android.content.ComponentName
 import android.content.Context
 import android.content.pm.PackageManager
@@ -31,6 +32,7 @@ import app.aaps.core.interfaces.pump.PumpWithConcentration
 import app.aaps.core.interfaces.smoothing.Smoothing
 import app.aaps.core.interfaces.source.BgSource
 import app.aaps.core.interfaces.sync.Sync
+import app.aaps.core.keys.BooleanKey
 import app.aaps.core.keys.StringKey
 import app.aaps.core.keys.interfaces.Preferences
 import app.aaps.implementation.R
@@ -107,6 +109,19 @@ class PluginStore @Inject constructor(
         // on. Background alarms instead wake the screen and launch the alarm activity via
         // AlarmManager.setAlarmClock() (see AlarmScreenWakeReceiver / AlarmNotificationManager),
         // which is permission-free.
+        // DND override for URGENT medical alarms. Only surfaced when the user keeps the override on
+        // (default): a bypass-DND notification channel is honored by the OS only once the user grants
+        // notification-policy access via Settings.ACTION_NOTIFICATION_POLICY_ACCESS_SETTINGS.
+        if (preferences.get(BooleanKey.AlertOverrideDoNotDisturb)) {
+            add(
+                PermissionGroup(
+                    permissions = listOf(Manifest.permission.ACCESS_NOTIFICATION_POLICY),
+                    rationaleTitle = R.string.permission_dnd_title,
+                    rationaleDescription = R.string.permission_dnd_description,
+                    special = true,
+                )
+            )
+        }
     }
 
     private var activeBgSourceStore: BgSource? = null
@@ -326,6 +341,11 @@ class PluginStore @Inject constructor(
 
             PERMISSION_NOTIFICATION_LISTENER                         ->
                 !isNotificationListenerEnabled(context)
+
+            Manifest.permission.ACCESS_NOTIFICATION_POLICY           -> {
+                val nm = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+                nm.isNotificationPolicyAccessGranted.not()
+            }
 
             else                                                     ->
                 ContextCompat.checkSelfPermission(context, perm) != PackageManager.PERMISSION_GRANTED

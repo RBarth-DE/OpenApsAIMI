@@ -55,7 +55,7 @@ fun AdaptiveIntPreferenceItem(
 
     // Get unit label from UnitType (for dialog input suffix)
     val unitLabelResId = unitType.unitLabelResId()
-    val unitLabel = unitLabelResId?.let { stringResource(it) } ?: unit
+    val unitLabel = unitLabelResId?.takeIf { it != 0 }?.let { stringResource(it) } ?: unit
 
     // Get summary if available
     val summaryResId = intKey.summaryResId
@@ -107,14 +107,14 @@ fun AdaptiveIntPreferenceItem(
     } else {
         // For unspecified ranges, use text field with range summary
         val rangeFormatResId = unitType.rangeResId()
-        val summaryText = if (rangeFormatResId != null) {
+        val summaryText = if (rangeFormatResId != null && rangeFormatResId != 0) {
             stringResource(rangeFormatResId, value, intKey.min, intKey.max)
         } else {
             stringResource(R.string.preference_range_summary, value.toString(), unitLabel, intKey.min.toString(), intKey.max.toString())
         }
         TextFieldPreference(
             state = state,
-            title = { PreferenceTitleWithSyncBadge(effectiveTitleResId, intKey) },
+            title = { TextWithSyncBadge(titleText, intKey) },
             textToValue = { text ->
                 text.toIntOrNull()?.coerceIn(intKey.min, intKey.max)
             },

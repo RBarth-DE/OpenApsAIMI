@@ -19,11 +19,9 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
-import androidx.compose.ui.platform.LocalViewConfiguration
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.layout.padding
-import android.util.Log
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -39,10 +37,10 @@ import app.aaps.core.interfaces.overview.graph.BasalGraphData
 import app.aaps.core.interfaces.overview.graph.BgDataPoint
 import app.aaps.core.interfaces.overview.graph.BgRange
 import app.aaps.core.interfaces.overview.graph.BgType
-import app.aaps.core.interfaces.overview.graph.BolusGraphPoint
-import app.aaps.core.interfaces.overview.graph.BolusType
 import app.aaps.core.interfaces.overview.graph.ChartSmbMarker
 import app.aaps.core.interfaces.overview.graph.ChartTbrSegment
+import app.aaps.core.interfaces.overview.graph.BolusGraphPoint
+import app.aaps.core.interfaces.overview.graph.BolusType
 import app.aaps.core.interfaces.overview.graph.EpsGraphPoint
 import app.aaps.core.interfaces.overview.graph.SeriesType
 import app.aaps.core.interfaces.overview.graph.TargetLineData
@@ -64,10 +62,10 @@ import com.patrykandpatrick.vico.compose.cartesian.layer.rememberLineCartesianLa
 import com.patrykandpatrick.vico.compose.cartesian.rememberCartesianChart
 import com.patrykandpatrick.vico.compose.cartesian.marker.CartesianMarker
 import com.patrykandpatrick.vico.compose.cartesian.marker.CartesianMarkerController
-import com.patrykandpatrick.vico.compose.cartesian.marker.DefaultCartesianMarker
-import com.patrykandpatrick.vico.compose.cartesian.marker.rememberDefaultCartesianMarker
 import com.patrykandpatrick.vico.compose.cartesian.marker.Interaction
 import com.patrykandpatrick.vico.compose.cartesian.marker.LineCartesianLayerMarkerTarget
+import com.patrykandpatrick.vico.compose.cartesian.marker.DefaultCartesianMarker
+import com.patrykandpatrick.vico.compose.cartesian.marker.rememberDefaultCartesianMarker
 import com.patrykandpatrick.vico.compose.common.Fill
 import com.patrykandpatrick.vico.compose.common.component.LineComponent
 import com.patrykandpatrick.vico.compose.common.component.ShapeComponent
@@ -134,6 +132,10 @@ private class MutableYRangeProvider(
  *
  * Layer 0 (start axis): BG readings — regular (outlined circles) + bucketed (filled, range-colored)
  * Layer 1 (end axis, hidden): Basal — profile (dashed step) + actual delivered (solid step + area fill)
+ *
+ * **BG start-axis Y** follows legacy [app.aaps.core.graph.data.GlucoseValueDataPoint] / GraphView:
+ * display units from General → Units (mg/dL or mmol/L). Cache [BgDataPoint.value] stays mg/dL; conversion
+ * happens when building Vico series so ticks and data share one coordinate space.
  *
  * Basal Y-axis is scaled so maxBasal occupies [BASAL_HEIGHT_FRACTION] of the chart height (maxY = maxBasal / BASAL_HEIGHT_FRACTION).
  *
@@ -389,7 +391,9 @@ fun BgGraphCompose(
             }
 
             // Block 4 → EPS layer (layer 3, start axis — Y based on profile %, scaled into BG coordinate space)
-            // Same principle as legacy (originalPercentage/100 * baseline); baseline = 75% of the BG axis height.
+            // Same principle as legacy (originalPercentage/100 * baseline); baseline = 75% of the BG axis
+            // height. Anchored at currentMinBgY (not 0) — since the axis floor is no longer fixed at 0,
+            // a 0%-profile point must sit at the axis' actual bottom, not fall below it and disappear.
             lineModel {
                 if (currentEpsPoints.isNotEmpty()) {
                     val epsBaseline = (currentMaxBgY - currentMinBgY) * 0.75

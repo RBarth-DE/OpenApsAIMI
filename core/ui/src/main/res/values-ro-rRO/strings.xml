@@ -393,12 +393,12 @@
     <string name="scene_no_profile_store">Niciun spațiu de stocare pentru profiluri disponibil</string>
     <string name="scene_no_actions">Scenariul nu are acțiuni</string>
     <string name="scene_profile_not_found">Profilul \"%1$s\" nu a fost găsit</string>
-    <string name="scene_lock_banner_master_offline">Dispozitivul principal nu este accesibil. Controlul scenariilor se va relua atunci când conexiunea va fi restabilită.</string>
     <string name="scene_lock_banner_control_disabled">Principalul are dezactivat controlul la distanță. Controalele de scenarii vor fi reluate când sunt reactivate pe principal.</string>
-    <string name="master_offline_banner">Dispozitivul principal nu este accesibil. Editarea este dezactivată până când conexiunea este restabilită.</string>
     <string name="master_control_disabled_banner">Principalul are control la distanță dezactivat. Editarea este dezactivată până când este reactivată pe principal.</string>
-    <string name="scene_lock_reason_master_offline">Dispozitiv principal deconectat</string>
     <string name="scene_lock_reason_control_disabled">Control la distanță dezactivat</string>
+    <string name="scene_lock_banner_master_offline">Dispozitivul principal nu este accesibil. Controlul scenariilor se va relua atunci când conexiunea va fi restabilită.</string>
+    <string name="master_offline_banner">Dispozitivul principal nu este accesibil. Editarea este dezactivată până când conexiunea este restabilită.</string>
+    <string name="scene_lock_reason_master_offline">Dispozitiv principal deconectat</string>
     <string name="scene_lock_reason_scene_active">Opriți mai întâi scenariul în derulare</string>
     <!-- Client-control action labels (shown in the pending/failure modal as "Couldn't {label}") -->
     <string name="clientcontrol_action_set_temp_target">Setați ținta temporară</string>

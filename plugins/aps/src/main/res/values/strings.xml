@@ -397,6 +397,8 @@
     <string name="oaps_aimi_smb_tail_damping_title">Tail damping factor</string>
     <string name="oaps_aimi_pkpd_relief_enabled_title">Enable PKPD pragmatic relief</string>
     <string name="oaps_aimi_pkpd_relief_enabled_summary">ON by default. Keep ON if SMB intent is often over-reduced in explicit meal/high-rise contexts. Turn OFF only if you observe recurrent over-corrections despite hard caps.</string>
+    <string name="oaps_aimi_pkpd_stack_aware_guardb_title">Stack-aware hyper floor release</string>
+    <string name="oaps_aimi_pkpd_stack_aware_guardb_summary">OFF by default. During a descent from a high glucose, releases the prediction floor as soon as the insulin on board can physiologically bring glucose down and glucose is no longer rising, so the basal cuts and holds instead of bouncing on sensor noise. May leave highs a little longer — turn ON only if you see the basal whipsawing with a large insulin stack.</string>
     <string name="oaps_aimi_pkpd_relief_factor_title">PKPD relief minimum factor</string>
     <string name="oaps_aimi_redcarpet_restore_title">Red Carpet restore threshold</string>
     <string name="oaps_aimi_priority_max_iob_factor_title">Priority MaxIOB factor</string>

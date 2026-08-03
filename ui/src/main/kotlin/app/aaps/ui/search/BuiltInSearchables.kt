@@ -48,8 +48,8 @@ import javax.inject.Singleton
 class BuiltInSearchables @Inject constructor(
     private val rh: ResourceHelper,
     private val insulinManager: InsulinManager,
-    private val profileFunction: ProfileFunction,
     private val skinDescriptionProvider: SkinDescriptionProvider,
+    private val profileFunction: ProfileFunction,
     private val config: Config
 ) : SearchableProvider {
 
@@ -200,7 +200,14 @@ class BuiltInSearchables @Inject constructor(
             BooleanKey.AlertCarbsRequired,
             BooleanKey.AlertUrgentAsAndroidNotification,
             BooleanKey.AlertIncreaseVolume,
-            BooleanKey.AlertOverrideDoNotDisturb
+            BooleanKey.AlertOverrideDoNotDisturb,
+            BooleanKey.AlertHypo,
+            UnitDoubleKey.AlertHypoThreshold,
+            BooleanKey.AlertHyper,
+            UnitDoubleKey.AlertHyperThreshold,
+            BooleanKey.AlertRapidFall,
+            UnitDoubleKey.AlertRapidFallDrop,
+            IntKey.AlertRapidFallWindow
         ),
         icon = Icons.Default.Notifications
     )
