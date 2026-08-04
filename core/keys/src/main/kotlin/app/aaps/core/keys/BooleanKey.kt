@@ -133,7 +133,6 @@ enum class BooleanKey(
     ),
     ApsUseSmbAfterCarbs(
         "enableSMB_after_carbs", true, R.string.pref_title_aps_use_smb_after_carbs, R.string.pref_summary_aps_use_smb_after_carbs, defaultedBySM = true, dependency = ApsUseSmb,
-        visibility = ElementVisibility { !it.preferences.get(ApsUseSmbAlways) && it.advancedFilteringSupported },
         sync = SyncSpec(SyncChannel.Cold, SyncDirection.Bidirectional)
     ),
     ApsUseUam("use_uam", true, R.string.pref_title_aps_use_uam, R.string.pref_summary_aps_use_uam, defaultedBySM = true, sync = SyncSpec(SyncChannel.Cold, SyncDirection.Bidirectional)),

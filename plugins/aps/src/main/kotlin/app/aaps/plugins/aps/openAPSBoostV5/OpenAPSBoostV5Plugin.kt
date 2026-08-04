@@ -156,7 +156,6 @@ open class OpenAPSBoostV5Plugin @Inject constructor(
                     UnitDoubleKey.ApsBoostDynIsfBgCap,
                     UnitDoubleKey.ApsBoostDynIsfNormalTarget,
                     DoubleKey.ApsBoostCumulativeSmbCap60Min,
-                    DoubleKey.ApsBoostCumulativeSmbCap60Min,
                     // ── Activity / HR / Sleep ──
                     BooleanKey.ApsBoostHrIntegrationEnabled,
                     BooleanKey.ApsBoostHrStressDetection,
