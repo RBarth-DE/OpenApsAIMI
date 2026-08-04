@@ -7,7 +7,7 @@ import androidx.work.WorkerParameters
 import androidx.work.workDataOf
 import app.aaps.core.data.aps.SMBDefaults
 import app.aaps.core.data.configuration.Constants
-import app.aaps.core.data.iob.InMemoryGlucoseValue
+import app.aaps.core.data.model.TE
 import app.aaps.core.data.time.T
 import app.aaps.core.interfaces.aps.AutosensData
 import app.aaps.core.interfaces.aps.AutosensDataStore
@@ -178,7 +178,7 @@ class PrepareGraphDataWorker @AssistedInject constructor(
         val bolusIob = iobCobCalculator.calculateIobFromBolus().iob
         val basalIob = iobCobCalculator.calculateIobFromTempBasalsIncludingConvertedExtended().iob
         val smoothingContext = SmoothingContext(cachedTotalIobUnits = bolusIob + basalIob)
-        val workingCopy: MutableList<InMemoryGlucoseValue> = synchronized(dataLock) {
+        val workingCopy = synchronized(dataLock) {
             bucketedData?.map { it.copy(smoothed = null, calibrated = null) }?.toMutableList()
         } ?: return
         val calibrated = activePlugin.activeCalibration.calibrate(workingCopy, CalibrationContext.NONE)
@@ -201,23 +201,21 @@ class PrepareGraphDataWorker @AssistedInject constructor(
         val newFromTime = newToTime - T.hours(Constants.GRAPH_TIME_RANGE_HOURS.toLong()).msecs()
         data.cache.updateTimeRange(TimeRange(fromTime = newFromTime, toTime = newToTime, endTime = newToTime))
 
-        val highMarkInUnits = preferences.get(UnitDoubleKey.OverviewHighMark)
-        val lowMarkInUnits = preferences.get(UnitDoubleKey.OverviewLowMark)
-        val highMgdl = profileUtil.convertToMgdl(highMarkInUnits, profileUtil.units)
-        val lowMgdl = profileUtil.convertToMgdl(lowMarkInUnits, profileUtil.units)
+        val highMark = preferences.get(UnitDoubleKey.OverviewHighMark)
+        val lowMark = preferences.get(UnitDoubleKey.OverviewLowMark)
 
         val bucketedDataPoints = bucketedData
             .filter { it.timestamp in newFromTime..newToTime }
             .map { value ->
-                val mgdl = value.recalculated
+                val valueInUnits = profileUtil.fromMgdlToUnits(value.recalculated)
                 val range = when {
-                    mgdl > highMgdl -> BgRange.HIGH
-                    mgdl < lowMgdl  -> BgRange.LOW
-                    else            -> BgRange.IN_RANGE
+                    valueInUnits > highMark -> BgRange.HIGH
+                    valueInUnits < lowMark  -> BgRange.LOW
+                    else                    -> BgRange.IN_RANGE
                 }
                 BgDataPoint(
                     timestamp = value.timestamp,
-                    value = mgdl,
+                    value = valueInUnits,
                     range = range,
                     type = BgType.BUCKETED,
                     filledGap = value.filledGap
@@ -235,20 +233,18 @@ class PrepareGraphDataWorker @AssistedInject constructor(
 
         val highMarkInUnits = preferences.get(UnitDoubleKey.OverviewHighMark)
         val lowMarkInUnits = preferences.get(UnitDoubleKey.OverviewLowMark)
-        val highMgdl = profileUtil.convertToMgdl(highMarkInUnits, profileUtil.units)
-        val lowMgdl = profileUtil.convertToMgdl(lowMarkInUnits, profileUtil.units)
 
         val bgDataPoints = bgReadingsArray
             .filter { it.timestamp in fromTime..toTime }
             .map { bg ->
-                val mgdl = bg.value
+                val valueInUnits = profileUtil.fromMgdlToUnits(bg.value)
                 BgDataPoint(
                     timestamp = bg.timestamp,
-                    value = mgdl,
+                    value = valueInUnits,
                     range = when {
-                        mgdl > highMgdl -> BgRange.HIGH
-                        mgdl < lowMgdl  -> BgRange.LOW
-                        else            -> BgRange.IN_RANGE
+                        valueInUnits > highMarkInUnits -> BgRange.HIGH
+                        valueInUnits < lowMarkInUnits  -> BgRange.LOW
+                        else                           -> BgRange.IN_RANGE
                     },
                     type = BgType.REGULAR
                 )
@@ -280,15 +276,13 @@ class PrepareGraphDataWorker @AssistedInject constructor(
             val prevDataTime = ads.roundUpTime(bucketedData[bucketedData.size - 3].timestamp)
             aapsLogger.debug(LTag.AUTOSENS) { "Prev data time: " + dateUtil.dateAndTimeString(prevDataTime) }
             var previous = autosensDataTable[prevDataTime]
-            val oldestBucketIndex = AppInitCalculationPolicy.warmStartOldestBucketIndex(bucketedData.size, data.reason)
-            if (oldestBucketIndex > 0) {
-                aapsLogger.debug(
-                    LTag.AUTOSENS,
-                    "AUTOSENSDATA warm-start ${data.reason}: skipping buckets 0..${oldestBucketIndex - 1} of ${bucketedData.size}"
-                )
-            }
+            // These three inputs depend only on the fixed detection start, so read them once here instead
+            // of inside detectSensitivity, which is called for every bucketed data point in the loop below.
+            val sensitivityProfile = profileFunction.getProfile()
+            val siteChanges = persistenceLayer.getTherapyEventDataFromTime(oldestTimeWithData, TE.Type.CANNULA_CHANGE, true)
+            val profileSwitches = persistenceLayer.getProfileSwitchesFromTime(oldestTimeWithData, true)
             // start from oldest to be able sub cob
-            for (i in bucketedData.size - 4 downTo oldestBucketIndex) {
+            for (i in bucketedData.size - 4 downTo 0) {
                 data.signals.emitProgress(CalculationWorkflow.ProgressData.IOB_COB_OREF, 100 - (100.0 * i / bucketedData.size).toInt())
                 if (isStopped) {
                     aapsLogger.debug(LTag.AUTOSENS, "Aborting calculation thread (trigger): ${data.reason}")
@@ -467,7 +461,7 @@ class PrepareGraphDataWorker @AssistedInject constructor(
                 aapsLogger.debug(LTag.AUTOSENS) {
                     "Running detectSensitivity from: " + dateUtil.dateAndTimeString(oldestTimeWithData) + " to: " + dateUtil.dateAndTimeString(bgTime) + " lastDataTime:" + ads.lastDataTime(dateUtil)
                 }
-                val sensitivity = activePlugin.activeSensitivity.detectSensitivity(ads, oldestTimeWithData, bgTime)
+                val sensitivity = activePlugin.activeSensitivity.detectSensitivity(ads, oldestTimeWithData, bgTime, sensitivityProfile, siteChanges, profileSwitches)
                 aapsLogger.debug(LTag.AUTOSENS, "Sensitivity result: $sensitivity")
                 autosensData.autosensResult = sensitivity
                 aapsLogger.debug(LTag.AUTOSENS) { autosensData.toString() }
@@ -506,15 +500,13 @@ class PrepareGraphDataWorker @AssistedInject constructor(
             val prevDataTime = ads.roundUpTime(bucketedData[bucketedData.size - 3].timestamp)
             aapsLogger.debug(LTag.AUTOSENS) { "Prev data time: " + dateUtil.dateAndTimeString(prevDataTime) }
             var previous = autosensDataTable[prevDataTime]
-            val oldestBucketIndexOref = AppInitCalculationPolicy.warmStartOldestBucketIndex(bucketedData.size, data.reason)
-            if (oldestBucketIndexOref > 0) {
-                aapsLogger.debug(
-                    LTag.AUTOSENS,
-                    "AUTOSENSDATA warm-start ${data.reason}: skipping buckets 0..${oldestBucketIndexOref - 1} of ${bucketedData.size}"
-                )
-            }
+            // These three inputs depend only on the fixed detection start, so read them once here instead
+            // of inside detectSensitivity, which is called for every bucketed data point in the loop below.
+            val sensitivityProfile = profileFunction.getProfile()
+            val siteChanges = persistenceLayer.getTherapyEventDataFromTime(oldestTimeWithData, TE.Type.CANNULA_CHANGE, true)
+            val profileSwitches = persistenceLayer.getProfileSwitchesFromTime(oldestTimeWithData, true)
             // start from oldest to be able to sub cob
-            for (i in bucketedData.size - 4 downTo oldestBucketIndexOref) {
+            for (i in bucketedData.size - 4 downTo 0) {
                 data.signals.emitProgress(CalculationWorkflow.ProgressData.IOB_COB_OREF, 100 - (100.0 * i / bucketedData.size).toInt())
                 if (isStopped) {
                     aapsLogger.debug(LTag.AUTOSENS) { "Aborting calculation thread (trigger): ${data.reason}" }
@@ -653,7 +645,7 @@ class PrepareGraphDataWorker @AssistedInject constructor(
                 aapsLogger.debug(LTag.AUTOSENS) {
                     "Running detectSensitivity from: ${dateUtil.dateAndTimeString(oldestTimeWithData)} to: ${dateUtil.dateAndTimeString(bgTime)} lastDataTime:${ads.lastDataTime(dateUtil)}"
                 }
-                val sensitivity = activePlugin.activeSensitivity.detectSensitivity(ads, oldestTimeWithData, bgTime)
+                val sensitivity = activePlugin.activeSensitivity.detectSensitivity(ads, oldestTimeWithData, bgTime, sensitivityProfile, siteChanges, profileSwitches)
                 aapsLogger.debug(LTag.AUTOSENS) { "Sensitivity result: $sensitivity" }
                 autosensData.autosensResult = sensitivity
                 aapsLogger.debug(LTag.AUTOSENS, autosensData.toString())
