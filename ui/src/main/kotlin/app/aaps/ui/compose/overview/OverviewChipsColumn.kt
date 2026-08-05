@@ -136,7 +136,7 @@ private fun NarrowChips(
                     mode = runningMode,
                     text = runningModeText,
                     progress = runningModeProgress,
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier.fillMaxWidth(),
                     remaining = runningModeRemaining,
                     sceneManaged = runningModeSceneManaged,
                     smbEnabled = smbEnabled,
