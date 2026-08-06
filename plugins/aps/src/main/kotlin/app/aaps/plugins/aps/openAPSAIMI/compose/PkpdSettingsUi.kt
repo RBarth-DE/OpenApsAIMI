@@ -19,8 +19,6 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.PrimaryTabRow
-import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -37,6 +35,7 @@ import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.debounce
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import app.aaps.core.data.format.NumberFormat
 import app.aaps.core.keys.BooleanKey
 import app.aaps.core.keys.DoubleKey
 import app.aaps.core.keys.decimalPlaces
@@ -735,7 +734,7 @@ fun PkpdReactiveDoubleSlider(
     val decimalPlaces = unitType.decimalPlaces()
     val step = unitType.step()
     val valueFormatResId = unitType.valueResId()
-    val valueFormat = if (decimalPlaces == 0) DecimalFormat("0") else DecimalFormat("0.${"0".repeat(decimalPlaces)}")
+    val valueFormat = NumberFormat.withDecimals(decimalPlaces)
     val unitLabelResId = unitType.unitLabelResId()
     val unitLabel = unitLabelResId?.takeIf { it != 0 }?.let { stringResource(it) } ?: ""
 

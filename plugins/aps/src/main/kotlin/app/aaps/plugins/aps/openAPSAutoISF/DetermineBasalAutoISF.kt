@@ -3,6 +3,7 @@ package app.aaps.plugins.aps.openAPSAutoISF
 import android.content.Context
 import app.aaps.core.data.configuration.Constants
 import app.aaps.core.data.model.GlucoseUnit
+import app.aaps.core.data.format.NumberFormat
 import app.aaps.core.interfaces.aps.APSResult
 import app.aaps.core.interfaces.aps.AutosensResult
 import app.aaps.core.interfaces.aps.CurrentTemp
@@ -45,7 +46,7 @@ class DetermineBasalAutoISF @Inject constructor(
     private var consoleError = mutableListOf<String>()
     private var consoleLog = mutableListOf<String>()
 
-    private fun Double.toFixed2(): String = DecimalFormat("0.00#").format(round(this, 2))
+    private fun Double.toFixed2(): String = NumberFormat.DECIMAL_2_UP_TO_3.format(round(this, 2))
 
     fun round_basal(value: Double): Double = value
 
@@ -65,7 +66,7 @@ class DetermineBasalAutoISF @Inject constructor(
     private fun Double.coerceAtLeastFinite(minimum: Double): Double =
         if (isFinite()) maxOf(this, minimum) else minimum
 
-    fun Double.withoutZeros(): String = DecimalFormat("0.##").format(this)
+    fun Double.withoutZeros(): String = NumberFormat.UP_TO_2_DECIMALS.format(this)
     fun round(value: Double): Int =
         // Crash backstop: roundToInt() throws on NaN and saturates at Int.MAX_VALUE on ±Infinity.
         // Substitute 0, but record a token that the reportNonFiniteRtFields tripwire

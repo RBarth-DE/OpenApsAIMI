@@ -17,6 +17,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import app.aaps.core.keys.DoubleKey
 import app.aaps.core.keys.UnitType
+import app.aaps.core.data.format.NumberFormat
 import app.aaps.core.keys.decimalPlaces
 import app.aaps.core.keys.interfaces.DoublePreferenceKey
 import app.aaps.core.keys.interfaces.VisibilityContext
@@ -86,12 +87,7 @@ fun AdaptiveDoublePreferenceItem(
     val unitLabelResId = unitType.unitLabelResId()
     val unitLabel = unitLabelResId?.takeIf { it != 0 }?.let { stringResource(it) } ?: unit
 
-    val valueFormat = when (decimalPlaces) {
-        0    -> DecimalFormat("0")
-        1    -> DecimalFormat("0.0")
-        2    -> DecimalFormat("0.00")
-        else -> DecimalFormat("0.000")
-    }
+    val valueFormat = NumberFormat.withDecimals(decimalPlaces)
 
     // Get summary if available
     val summaryResId = doubleKey.summaryResId
