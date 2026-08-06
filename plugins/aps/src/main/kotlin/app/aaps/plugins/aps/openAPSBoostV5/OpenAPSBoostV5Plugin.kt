@@ -178,6 +178,8 @@ open class OpenAPSBoostV5Plugin @Inject constructor(
                 titleResId = app.aaps.core.ui.R.string.advanced_settings_title,
                 items = listOf(
                     DoubleKey.ApsMaxBasal,
+                    DoubleKey.ApsMaxCurrentBasalMultiplier,
+                    DoubleKey.ApsMaxDailyMultiplier,
                     DoubleKey.ApsSmbMaxIob,
                     BooleanKey.ApsUseSmb,
                     BooleanKey.ApsUseSmbAlways,
