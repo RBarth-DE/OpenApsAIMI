@@ -469,10 +469,9 @@ fun TreatmentBeltGraphCompose(
     val modeNameMap = rememberModeNameMap()
     val beltMarker = rememberBeltMarker(modeNameMap)
 
-    // Now line decoration
-    val nowLineColor = MaterialTheme.colorScheme.onSurface
-    val nowLine = rememberNowLine(minTimestamp, nowTimestamp, nowLineColor)
-    val beltDecorations = remember(nowLine) { listOf(nowLine) }
+    // No now-line on the treatment belt — it shows historical events, the now-line
+    // only causes per-second decoration rebuilds that make the belt flicker.
+    val beltDecorations = remember { emptyList<NowLine>() }
 
     val rangeProvider = remember(maxX) {
         CartesianLayerRangeProvider.fixed(minX = 0.0, maxX = maxX, minY = 0.0, maxY = 1.0)

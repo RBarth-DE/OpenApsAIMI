@@ -1,10 +1,16 @@
 package app.aaps.plugins.main.general.dashboard.compose
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -30,9 +36,15 @@ internal fun DashboardNotificationsComposeList(
     modifier: Modifier = Modifier,
 ) {
     val notifications = composeState.notifications
-    if (notifications.isEmpty()) return
     val itemPadding = dimensionResource(R.dimen.dashboard_notification_padding)
     val itemMargin = dimensionResource(R.dimen.dashboard_notification_margin)
+    // Use AnimatedVisibility so notification cards fade/slide instead of making the graph jump
+    val hasNotifications = notifications.isNotEmpty()
+    AnimatedVisibility(
+        visible = hasNotifications,
+        enter = fadeIn() + expandVertically(),
+        exit = fadeOut() + shrinkVertically(),
+    ) {
     if (compact) {
         val first = notifications.first()
         val line = stringResource(
@@ -61,6 +73,7 @@ internal fun DashboardNotificationsComposeList(
                 )
                 TextButton(
                     onClick = { composeState.onDismissNotification?.invoke(first.id) },
+                    modifier = Modifier.widthIn(min = 60.dp),  // stable width → no horizontal jump
                 ) {
                     Text(
                         text = first.dismissText.ifBlank { stringResource(app.aaps.core.ui.R.string.snooze) },
@@ -69,8 +82,7 @@ internal fun DashboardNotificationsComposeList(
                 }
             }
         }
-        return
-    }
+    } else {
     Column(
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(itemMargin),
@@ -83,6 +95,8 @@ internal fun DashboardNotificationsComposeList(
             )
         }
     }
+    } // else
+    } // AnimatedVisibility
 }
 
 @Composable

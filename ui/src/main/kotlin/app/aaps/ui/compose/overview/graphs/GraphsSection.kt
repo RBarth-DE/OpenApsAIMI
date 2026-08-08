@@ -398,44 +398,6 @@ fun GraphsSection(
     // when model producers fire. Watch for any divergence and re-sync to BG.
     // No isSyncing guard needed: primary sync only reads BG state, so writing to
     // secondary states here cannot trigger primary sync (no feedback loop).
-    LaunchedEffect(lifecycleOwner) {
-        lifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-            snapshotFlow {
-                // Only read states that are attached to a chart (belt + IOB fixed + active secondary)
-                val count = activeCount
-                buildList {
-                    add(beltScrollState.value to beltZoomState.value)
-                    add(iobScrollState.value to iobZoomState.value)
-                    for (i in 0 until count) {
-                        add(secScrollStates[i].value to secZoomStates[i].value)
-                    }
-                }
-            }
-                .debounce(100) // Let Vico settle after model update
-                .collect { states ->
-                    val bgScroll = bgScrollState.value
-                    val bgZoom = bgZoomState.value
-                    val needsSync = states.any { (scroll, zoom) ->
-                        abs(scroll - bgScroll) > 1f || abs(zoom - bgZoom) > 0.001f
-                    }
-                    if (needsSync) {
-                        val count = activeCount
-                        beltZoomState.zoom(Zoom.fixed(bgZoom))
-                        iobZoomState.zoom(Zoom.fixed(bgZoom))
-                        for (i in 0 until count) secZoomStates[i].zoom(Zoom.fixed(bgZoom))
-                        delay(10)
-                        beltScrollState.scroll(Scroll.Absolute.pixels(bgScroll))
-                        iobScrollState.scroll(Scroll.Absolute.pixels(bgScroll))
-                        for (i in 0 until count) secScrollStates[i].scroll(Scroll.Absolute.pixels(bgScroll))
-                    }
-                }
-        }
-    }
-
-    // Correct secondary graph scroll drift — Vico may internally adjust scroll
-    // when model producers fire. Watch for any divergence and re-sync to BG.
-    // No isSyncing guard needed: primary sync only reads BG state, so writing to
-    // secondary states here cannot trigger primary sync (no feedback loop).
     // Keyed on bgScrollState/bgZoomState (not Unit) — MUST restart when they're recreated by a
     // reset, otherwise this keeps comparing secondary graphs against a stale, abandoned pre-reset
     // reference forever and fires wrong corrections (the actual cause of the "dancing" regression
