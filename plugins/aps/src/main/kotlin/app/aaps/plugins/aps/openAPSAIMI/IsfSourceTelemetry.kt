@@ -110,6 +110,63 @@ object IsfSourceTelemetry {
     @Volatile var lastDynamicFactor: Double? = null; private set
     @Volatile var lastTrajectoryMultiplier: Double? = null; private set
 
+    /**
+     * Physiological ISF factor of the tick, bounds [0.85, 1.15].
+     *
+     * Exported because the fix that made it apply once instead of twice could not be verified from
+     * a support package: the only comparable field, `dynamic_isf.final_value_mgdl`, turned out to
+     * carry the PKPD fused ISF, an unrelated quantity.
+     */
+    @Volatile var lastPhysioIsfFactor: Double? = null; private set
+
+    fun recordPhysioFactor(factor: Double?) {
+        lastPhysioIsfFactor = factor
+    }
+
+    /**
+     * Lower bound of the shadow exit clamp, as a fraction of the profile ISF.
+     *
+     * Today the only relative bound in the whole chain lives inside `DynIsfTrajectoryTuning`
+     * (`[0.58, 1.42] × profile`), behind six gates that skip it. Measured on 2026-08-06: **94 of 285
+     * ticks (33 %) fell outside it**, extremes ×0.32 and ×2.15. This is the same shape as
+     * `BasalTerminalInvariants` with `meal_mode_exempt` — a correct invariant written in a branch
+     * instead of at the exit.
+     *
+     * A wider band than the trajectory layer's is used on purpose: the point is to keep the
+     * commanded sensitivity inside the domain where the profile still means something, not to
+     * reproduce a tuning decision. See `docs/adr/0008-isf-decision-architecture.md`.
+     */
+    const val PROFILE_RELATIVE_LOW: Double = 0.5
+
+    /** Upper bound of the shadow exit clamp, as a fraction of the profile ISF. */
+    const val PROFILE_RELATIVE_HIGH: Double = 2.0
+
+    /** What the commanded sensitivity would be with an exit-level relative bound. Shadow: never applied. */
+    @Volatile var lastProfileRelativeShadowMgdl: Double? = null; private set
+
+    /** True when the shadow bound would have changed the value. */
+    @Volatile var lastProfileRelativeBoundHit: Boolean? = null; private set
+
+    /**
+     * Records what an unconditional exit clamp would produce, without applying it.
+     *
+     * @param blendedMgdl the value the chain actually produces
+     * @param profileIsfMgdl the static profile block for this time of day
+     */
+    fun recordProfileRelativeShadow(blendedMgdl: Double, profileIsfMgdl: Double) {
+        if (!blendedMgdl.isFinite() || !profileIsfMgdl.isFinite() || profileIsfMgdl <= 0.0) {
+            lastProfileRelativeShadowMgdl = null
+            lastProfileRelativeBoundHit = null
+            return
+        }
+        val bounded = blendedMgdl.coerceIn(
+            profileIsfMgdl * PROFILE_RELATIVE_LOW,
+            profileIsfMgdl * PROFILE_RELATIVE_HIGH,
+        )
+        lastProfileRelativeShadowMgdl = bounded
+        lastProfileRelativeBoundHit = bounded != blendedMgdl
+    }
+
     fun recordComponents(
         kalmanFastIsf: Double?,
         isfAdjEngine: Double?,
@@ -133,5 +190,6 @@ object IsfSourceTelemetry {
         lastCacheKey = null
         lastCacheGlucoseMgdl = null
         lastProfileStaticMgdl = null
+        lastPhysioIsfFactor = null
     }
 }

@@ -891,6 +891,12 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
 
         blended = blended.coerceIn(5.0, 300.0)
 
+        // Shadow only — nothing below reads this. Records what an **unconditional exit clamp**
+        // relative to the profile would produce. The chain's only relative bound today sits inside
+        // `DynIsfTrajectoryTuning`, behind gates that skip it; the absolute [5, 300] above is so wide
+        // it has never bound. See `docs/adr/0008-isf-decision-architecture.md`.
+        IsfSourceTelemetry.recordProfileRelativeShadow(blended, profileIsf)
+
         // Diagnostic only: keep the intermediate terms so a support package can attribute the
         // movement of the commanded sensitivity. See `docs/adr/0002-sensitivity-three-levels.md`.
         IsfSourceTelemetry.recordComponents(
@@ -1368,6 +1374,7 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
             IsfSourceTelemetry.recordProfileStatic(
                 runCatching { profile.getProfileIsfMgdl() }.getOrNull()
             )
+            IsfSourceTelemetry.recordPhysioFactor(physioMults.isfFactor)
             val oapsProfile = OapsProfileAimi(
                 dia = eff.iCfg.dia,
                 min_5m_carbimpact = 0.0, // not used
