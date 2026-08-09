@@ -44,6 +44,7 @@ class HardLimitsImpl @Inject constructor(
         return HardLimits.AgeType.entries.firstOrNull { values[it.ordinal] == stored } ?: HardLimits.AgeType.ADULT
     }
 
+
     private fun loadAge_int(): Int = when (preferences.get(StringKey.SafetyAge)) {
         ageEntryValues()[HardLimits.AgeType.CHILD.ordinal]           -> HardLimits.AgeType.CHILD.ordinal
         ageEntryValues()[HardLimits.AgeType.TEENAGE.ordinal]         -> HardLimits.AgeType.TEENAGE.ordinal
@@ -63,6 +64,7 @@ class HardLimitsImpl @Inject constructor(
     override fun maxPeakInhaled(): Int = HardLimits.MAX_PEAK_INHALED
     override fun minIC(): Double = HardLimits.MIN_IC[loadAge_int()]
     override fun maxIC(): Double = HardLimits.MAX_IC[loadAge_int()]
+
     // The maps below hold an entry for every AgeType and loadAge() always returns one, so getValue cannot fail.
     override fun maxBolus(): Double = HardLimits.MAX_BOLUS.getValue(loadAge())
     override fun maxIobAMA(): Double = HardLimits.MAX_IOB_AMA.getValue(loadAge())
@@ -71,13 +73,12 @@ class HardLimitsImpl @Inject constructor(
     override fun diaRange(): ClosedFloatingPointRange<Double> = HardLimits.LIMIT_DIA.getValue(loadAge())
     override fun peakRange(): IntRange = HardLimits.LIMIT_PEAK
     override fun icRange(): ClosedFloatingPointRange<Double> = HardLimits.LIMIT_IC.getValue(loadAge())
+    override fun diaRangeInhaled(): ClosedFloatingPointRange<Double> = HardLimits.LIMIT_DIA_INHALED.getValue(loadAge())
+    override fun peakRangeInhaled(): IntRange = HardLimits.LIMIT_PEAK_INHALED
 
     // safety checks
     override fun checkHardLimits(value: Double, valueName: Int, lowLimit: Double, highLimit: Double): Boolean =
         value == verifyHardLimits(value, valueName, lowLimit, highLimit)
-
-    override fun isInRange(value: Double, lowLimit: Double, highLimit: Double): Boolean =
-        value in lowLimit..highLimit
 
     override fun verifyHardLimits(value: Double, valueName: Int, lowLimit: Double, highLimit: Double): Double {
         var newValue = value

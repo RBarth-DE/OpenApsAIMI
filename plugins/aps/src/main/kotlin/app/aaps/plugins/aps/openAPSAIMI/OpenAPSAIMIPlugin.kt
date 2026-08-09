@@ -58,6 +58,7 @@ import app.aaps.core.interfaces.ui.UiInteraction
 import app.aaps.core.interfaces.utils.DateUtil
 import app.aaps.core.interfaces.utils.HardLimits
 import app.aaps.core.interfaces.utils.Round
+import app.aaps.core.interfaces.utils.fabric.FabricPrivacy
 import app.aaps.core.keys.BooleanKey
 import app.aaps.core.keys.DoubleKey
 import app.aaps.core.keys.R as CoreKeysR
@@ -215,6 +216,7 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
     private val basalNeuralLearner: app.aaps.plugins.aps.openAPSAIMI.learning.BasalNeuralLearner,
     private val basalLearner: app.aaps.plugins.aps.openAPSAIMI.learning.BasalLearner,
     private val onlineLearner: OnlineLearner,
+    private val fabricPrivacy: FabricPrivacy,
 ) : PluginBaseWithPreferences(
     PluginDescription()
         .mainType(PluginType.APS)
@@ -951,15 +953,14 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
         val inputConstraints = ConstraintObject(0.0, aapsLogger) // fake. only for collecting all results
 
         val eff = profile as EffectiveProfile
-        if (!hardLimits.checkHardLimits(eff.iCfg.dia, app.aaps.core.ui.R.string.profile_dia, hardLimits.minDia(), hardLimits.maxDia())) return@withContext
+        if (!hardLimits.checkHardLimits(eff.iCfg.dia, app.aaps.core.ui.R.string.profile_dia, hardLimits.diaRange())) return@withContext
         if (!hardLimits.checkHardLimits(
                 profile.getIcTimeFromMidnight(MidnightUtils.secondsFromMidnight()),
                 app.aaps.core.ui.R.string.profile_carbs_ratio_value,
-                hardLimits.minIC(),
-                hardLimits.maxIC()
+                hardLimits.icRange()
             )
         ) return@withContext
-        if (!hardLimits.checkHardLimits(profile.getIsfMgdl("OpenAPSAIMIPlugin"), app.aaps.core.ui.R.string.profile_sensitivity_value, HardLimits.MIN_ISF, HardLimits.MAX_ISF)) return@withContext
+        if (!hardLimits.checkHardLimits(profile.getIsfMgdl("OpenAPSAIMIPlugin"), app.aaps.core.ui.R.string.profile_sensitivity_value, HardLimits.LIMIT_ISF)) return@withContext
         if (!hardLimits.checkHardLimits(profile.getMaxDailyBasal(), app.aaps.core.ui.R.string.profile_max_daily_basal_value, 0.02, hardLimits.maxBasal())) return@withContext
         if (!hardLimits.checkHardLimits(ch.fromPump(pump.baseBasalRate), app.aaps.core.ui.R.string.current_basal_value, 0.01, hardLimits.maxBasal())) return@withContext
 
@@ -1035,14 +1036,17 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
 
             // Calcul du TDD sur 2 jours
             var tdd2Days = tddCalculator.averageTDD(tddCalculator.calculate(2, allowMissingDays = false))?.data?.totalAmount ?: 0.0
-            if (tdd2Days == 0.0 || tdd2Days < tdd7P) tdd2Days = tdd7P
+            // `!isFinite()` first: NaN and ±Infinity slip through `== 0.0` and `< tdd7P` (every
+            // comparison with NaN is false), so without it a broken value would pass the floor
+            // untouched and spread to the weighted tdd below. No change for any finite value.
+            if (!tdd2Days.isFinite() || tdd2Days == 0.0 || tdd2Days < tdd7P) tdd2Days = tdd7P
 //
             val tdd2DaysPerHour = tdd2Days / 24
             val tddLast4H = tdd2DaysPerHour * 4
 //
 // Calcul du TDD sur 1 jour avec une limite minimale pour ?viter des instabilit?s
             var tddDaily = tddCalculator.averageTDD(tddCalculator.calculate(1, allowMissingDays = false))?.data?.totalAmount ?: 0.0
-            if (tddDaily == 0.0 || tddDaily < tdd7P / 2) tddDaily = maxOf(tdd7P, minTDD)
+            if (!tddDaily.isFinite() || tddDaily == 0.0 || tddDaily < tdd7P / 2) tddDaily = maxOf(tdd7P, minTDD)
 
             if (tddDaily > tdd7P && tddDaily > 1.1 * tdd7P) {
                 tddDaily = 1.1 * tdd7P
@@ -1050,7 +1054,7 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
             }
 // // Calcul du TDD sur 24 heures
             var tdd24Hrs = tddCalculator.calculateDaily(-24, 0)?.totalAmount ?: 0.0
-            if (tdd24Hrs == 0.0) tdd24Hrs = tdd7P
+            if (!tdd24Hrs.isFinite() || tdd24Hrs == 0.0) tdd24Hrs = tdd7P
             val tdd24HrsPerHour = tdd24Hrs / 24
             val tddLast8to4H = tdd24HrsPerHour * 4
 // // Calcul pond?r? du TDD r?cent pour ?viter les fluctuations extr?mes
@@ -1432,16 +1436,29 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
 
             // Keep AIMI aligned with the upstream SMB/AutoISF crash guard: these values feed divisions in
             // determine_basal and a non-finite/non-positive input can otherwise cascade into NaN dosing fields.
+            // TDD is checked for finiteness only, and outside the dynIsfMode gate on purpose.
+            // Unlike SMB, AIMI always has a TDD: it falls back to the OApsAIMITDD7 preference, so
+            // `TDD <= 0.0` cannot happen and adding it would be dead code that only creates a
+            // dependency on that preference's lower bound. A NaN, on the other hand, is not caught
+            // by the `== 0.0 || < tdd7P` floors that build it (every comparison with NaN is false),
+            // and it would reach `basalaimi` and `ci` in DetermineBasalAIMI2. Those floors are now
+            // NaN-proof too; this check stays as the backstop.
             val invalidInputs = !oapsProfile.sens.isFinite() || oapsProfile.sens <= 0.0 ||
                 !oapsProfile.carb_ratio.isFinite() || oapsProfile.carb_ratio <= 0.0 ||
                 !autosensResult.ratio.isFinite() || autosensResult.ratio <= 0.0 ||
+                !oapsProfile.TDD.isFinite() ||
                 (dynIsfMode && (!oapsProfile.variable_sens.isFinite() || oapsProfile.variable_sens <= 0.0))
             if (invalidInputs) {
                 val msg = "OpenAPS AIMI aborting: invalid ISF inputs " +
                     "dynIsfMode=$dynIsfMode sens=${oapsProfile.sens} carb_ratio=${oapsProfile.carb_ratio} " +
-                    "autosensRatio=${autosensResult.ratio} variable_sens=${oapsProfile.variable_sens}"
+                    "autosensRatio=${autosensResult.ratio} variable_sens=${oapsProfile.variable_sens} " +
+                    "TDD=${oapsProfile.TDD}"
                 aapsLogger.error(LTag.APS, msg)
+                // Parity with OpenAPSSMBPlugin: without these two the abort is invisible - it never
+                // reaches Crashlytics and the APS card keeps showing the previous run.
+                fabricPrivacy.logException(IllegalStateException(msg))
                 rxBus.send(EventResetOpenAPSGui(msg))
+                rxBus.send(EventOpenAPSUpdateGui())
                 return@withContext
             }
 

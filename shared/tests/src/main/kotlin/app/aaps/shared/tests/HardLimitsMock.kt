@@ -23,17 +23,6 @@ class HardLimitsMock @Inject constructor(
         return HardLimits.AgeType.entries.firstOrNull { values[it.ordinal] == stored } ?: HardLimits.AgeType.ADULT
     }
 
-    override fun minDia(): Double = HardLimits.MIN_DIA[loadAge()]
-    override fun maxDia(): Double = HardLimits.MAX_DIA[loadAge()]
-    override fun minDiaInhaled(): Double = HardLimits.MIN_DIA_INHALED[loadAge()]
-    override fun maxDiaInhaled(): Double = HardLimits.MAX_DIA_INHALED[loadAge()]
-    override fun minPeak(): Int = HardLimits.MIN_PEAK
-    override fun maxPeak(): Int = HardLimits.MAX_PEAK
-    override fun minPeakInhaled(): Int = HardLimits.MIN_PEAK_INHALED
-    override fun maxPeakInhaled(): Int = HardLimits.MAX_PEAK_INHALED
-    override fun minIC(): Double = HardLimits.MIN_IC[loadAge()]
-    override fun maxIC(): Double = HardLimits.MAX_IC[loadAge()]
-
     override fun maxBolus(): Double = HardLimits.MAX_BOLUS.getValue(loadAge())
     override fun maxIobAMA(): Double = HardLimits.MAX_IOB_AMA.getValue(loadAge())
     override fun maxIobSMB(): Double = HardLimits.MAX_IOB_SMB.getValue(loadAge())
@@ -41,13 +30,12 @@ class HardLimitsMock @Inject constructor(
     override fun diaRange(): ClosedFloatingPointRange<Double> = HardLimits.LIMIT_DIA.getValue(loadAge())
     override fun peakRange(): IntRange = HardLimits.LIMIT_PEAK
     override fun icRange(): ClosedFloatingPointRange<Double> = HardLimits.LIMIT_IC.getValue(loadAge())
+    override fun diaRangeInhaled(): ClosedFloatingPointRange<Double> = HardLimits.LIMIT_DIA_INHALED.getValue(loadAge())
+    override fun peakRangeInhaled(): IntRange = HardLimits.LIMIT_PEAK_INHALED
 
     // safety checks
     override fun checkHardLimits(value: Double, valueName: Int, lowLimit: Double, highLimit: Double): Boolean =
         value == verifyHardLimits(value, valueName, lowLimit, highLimit)
-
-    override fun isInRange(value: Double, lowLimit: Double, highLimit: Double): Boolean =
-        value in lowLimit..highLimit
 
     override fun verifyHardLimits(value: Double, valueName: Int, lowLimit: Double, highLimit: Double): Double {
         var newValue = value

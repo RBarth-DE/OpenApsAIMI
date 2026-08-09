@@ -140,8 +140,21 @@ class HardLimitsImplTest : TestBase() {
         whenever(preferences.get(StringKey.SafetyAge)).thenReturn("child")
         assertThat(hardLimits.diaRange()).isEqualTo(5.0..9.0)
 
+        // Fork values, wider than upstream (5.0..10.0 for pregnant, 5.0 bottom from adult up):
+        // AIMI needs the wider band for fast insulins and learned-DIA profiles. See HardLimits.LIMIT_DIA.
+        whenever(preferences.get(StringKey.SafetyAge)).thenReturn("adult")
+        assertThat(hardLimits.diaRange()).isEqualTo(4.0..9.0)
+
         whenever(preferences.get(StringKey.SafetyAge)).thenReturn("pregnant")
-        assertThat(hardLimits.diaRange()).isEqualTo(5.0..10.0)
+        assertThat(hardLimits.diaRange()).isEqualTo(4.0..12.0)
+    }
+
+    @Test
+    fun `diaRangeInhaled and peakRangeInhaled return the fork inhaled-insulin limits`() {
+        // Fork-only: inhaled insulin (e.g. Afrezza) has a much shorter DIA and an earlier peak.
+        whenever(preferences.get(StringKey.SafetyAge)).thenReturn("adult")
+        assertThat(hardLimits.diaRangeInhaled()).isEqualTo(1.5..4.0)
+        assertThat(hardLimits.peakRangeInhaled()).isEqualTo(20..45)
     }
 
     @Test

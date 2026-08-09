@@ -812,9 +812,9 @@ class DataHandlerMobile @Inject constructor(
         insulinManager.insulins.firstOrNull { it.insulinPeakTime == InsulinType.OREF_INHALED_AFREZZA.insulinPeakTime }
             ?: insulinManager.insulins.firstOrNull { InsulinType.fromPeak(it.insulinPeakTime).isInhaled }
             ?: insulinManager.insulins.firstOrNull { cfg ->
-                cfg.peak in HardLimits.MIN_PEAK_INHALED..HardLimits.MAX_PEAK_INHALED &&
-                    cfg.dia < HardLimits.MIN_DIA.min() &&
-                    cfg.dia in HardLimits.MIN_DIA_INHALED[0]..HardLimits.MAX_DIA_INHALED[0]
+                cfg.peak in HardLimits.LIMIT_PEAK_INHALED &&
+                    cfg.dia < HardLimits.LIMIT_DIA.values.minOf { it.start } &&
+                    cfg.dia in HardLimits.LIMIT_DIA_INHALED.getValue(HardLimits.AgeType.ADULT)
             }
 
     private suspend fun doAfrezzaBolus(units: Int) {

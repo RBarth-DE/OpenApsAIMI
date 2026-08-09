@@ -41,14 +41,30 @@ interface HardLimits {
         val LIMIT_TEMP_MIN_BG = 72.0..180.0
         val LIMIT_TEMP_MAX_BG = 72.0..270.0
         val LIMIT_TEMP_TARGET_BG = 72.0..200.0
+        // Fork: DIA bottom is 4.0 from ADULT up and the PREGNANT top is 12.0 (upstream: 5.0 bottom
+        // everywhere, 10.0 top for PREGNANT). AIMI needs the wider band for fast insulins and for
+        // learned-DIA profiles.
         val LIMIT_DIA = mapOf(
             AgeType.CHILD to 5.0..9.0,
             AgeType.TEENAGE to 5.0..9.0,
-            AgeType.ADULT to 5.0..9.0,
-            AgeType.RESISTANT_ADULT to 5.0..9.0,
-            AgeType.PREGNANT to 5.0..10.0
+            AgeType.ADULT to 4.0..9.0,
+            AgeType.RESISTANT_ADULT to 4.0..9.0,
+            AgeType.PREGNANT to 4.0..12.0
+        )
+
+        // Fork: inhaled insulin (e.g. Afrezza) has a much shorter DIA than injected insulin.
+        val LIMIT_DIA_INHALED = mapOf(
+            AgeType.CHILD to 1.5..4.0,
+            AgeType.TEENAGE to 1.5..4.0,
+            AgeType.ADULT to 1.5..4.0,
+            AgeType.RESISTANT_ADULT to 1.5..4.0,
+            AgeType.PREGNANT to 1.5..4.0
         )
         val LIMIT_PEAK = 35..120 // min
+
+        // Fork: inhaled insulin (e.g. Afrezza) clinical Tmax is ~35–45 min; the range must include
+        // the local default Peak of 40 min.
+        val LIMIT_PEAK_INHALED = 20..45 // min
         val LIMIT_IC = mapOf(
             AgeType.CHILD to 2.0..100.0,
             AgeType.TEENAGE to 2.0..100.0,
@@ -56,7 +72,7 @@ interface HardLimits {
             AgeType.RESISTANT_ADULT to 2.0..100.0,
             AgeType.PREGNANT to 0.3..100.0
         )
-        val LIMIT_ISF = 2.0..1000.0 // mgdl
+        val LIMIT_ISF = 2.0..1200.0 // mgdl - fork: top raised from 1000.0 for AIMI dynamic ISF
         val MAX_IOB_AMA = mapOf(
             AgeType.CHILD to 3.0,
             AgeType.TEENAGE to 5.0,
@@ -105,10 +121,18 @@ interface HardLimits {
     fun peakRange(): IntRange
     fun icRange(): ClosedFloatingPointRange<Double>
 
+    /** Fork: DIA range for inhaled insulin (e.g. Afrezza). See [LIMIT_DIA_INHALED]. */
+    fun diaRangeInhaled(): ClosedFloatingPointRange<Double>
+
+    /** Fork: peak range for inhaled insulin (e.g. Afrezza). See [LIMIT_PEAK_INHALED]. */
+    fun peakRangeInhaled(): IntRange
+
     // safety checks
     fun checkHardLimits(value: Double, valueName: Int, lowLimit: Double, highLimit: Double): Boolean
 
-    fun isInRange(value: Double, lowLimit: Double, highLimit: Double): Boolean
+    /** Same as [checkHardLimits], for the limit ranges defined above. */
+    fun checkHardLimits(value: Double, valueName: Int, limits: ClosedFloatingPointRange<Double>): Boolean =
+        checkHardLimits(value, valueName, limits.start, limits.endInclusive)
 
     fun verifyHardLimits(value: Double, valueName: Int, lowLimit: Double, highLimit: Double): Double
 

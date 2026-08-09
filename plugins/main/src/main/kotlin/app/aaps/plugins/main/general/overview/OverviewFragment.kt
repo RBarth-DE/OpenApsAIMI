@@ -218,8 +218,8 @@ class OverviewFragment : DaggerFragment(), View.OnClickListener, View.OnLongClic
         val wm = requireActivity().windowManager.currentWindowMetrics
         val screenWidth = wm.bounds.width()
         val screenHeight = wm.bounds.height()
-        smallWidth = screenWidth <= Constants.SMALL_WIDTH
-        smallHeight = screenHeight <= Constants.SMALL_HEIGHT
+        smallWidth = screenWidth <= SMALL_WIDTH
+        smallHeight = screenHeight <= SMALL_HEIGHT
 
         if (config.AAPSCLIENT1)
             binding.nsclientCard.setBackgroundColor(Color.argb(80, 0xE8, 0xC5, 0x0C))
@@ -1667,4 +1667,12 @@ class OverviewFragment : DaggerFragment(), View.OnClickListener, View.OnLongClic
         }
     }
 
+    companion object {
+
+        // Screen size thresholds for the small-width / small-height layout of this legacy overview.
+        // Upstream dropped them from Constants together with the XML overview; this fork keeps the
+        // classic skin, so they live here now.
+        private const val SMALL_WIDTH = 320
+        private const val SMALL_HEIGHT = 480
+    }
 }

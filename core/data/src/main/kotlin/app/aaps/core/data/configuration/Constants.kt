@@ -29,11 +29,6 @@ object Constants {
 
     // Scenes
     val SCENE_DURATION = 0.0..(3 * 24 * 60).toDouble() // [min] up to ~ 3 days
-    const val CPP_MIN_PERCENTAGE = 30
-    const val CPP_MAX_PERCENTAGE = 300
-    const val CPP_MIN_TIMESHIFT = -23
-    const val CPP_MAX_TIMESHIFT = 23
-    const val MAX_PROFILE_SWITCH_DURATION = (7 * 24 * 60).toDouble()// [min] ~ 7 days
 
     //DanaR
     const val DAILY_RESERVOIR_LIMIT_WARNING = 0.95
@@ -53,13 +48,6 @@ object Constants {
     const val DEFAULT_TT_ACTIVITY_DURATION = 90
     const val DEFAULT_TT_HYPO_TARGET = 160.0
     const val DEFAULT_TT_HYPO_DURATION = 60
-
-    //NSClientInternal
-    const val MAX_LOG_LINES = 90
-
-    //Screen: Threshold for width/height to go into small width/height layout
-    const val SMALL_WIDTH = 320
-    const val SMALL_HEIGHT = 480
 
     //Autosens
     const val DEVIATION_TO_BE_EQUAL = 2.0
@@ -85,7 +73,6 @@ object Constants {
 
     // Local profile
     const val LOCAL_PROFILE = "LocalProfile"
-    const val DEFAULT_PROFILE_ARRAY = "[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":0}]"
 
     // One Time Password
     /**

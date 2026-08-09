@@ -10,14 +10,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
+import app.aaps.core.data.format.NumberFormat
 import app.aaps.core.keys.DoubleKey
 import app.aaps.core.keys.UnitType
-import app.aaps.core.data.format.NumberFormat
 import app.aaps.core.keys.decimalPlaces
 import app.aaps.core.keys.interfaces.DoublePreferenceKey
 import app.aaps.core.keys.interfaces.VisibilityContext
@@ -29,7 +26,6 @@ import app.aaps.core.keys.valueResId
 import kotlin.math.abs
 import app.aaps.core.ui.R
 import app.aaps.core.ui.compose.LocalPreferences
-import java.text.DecimalFormat
 import kotlin.math.roundToInt
 
 /**

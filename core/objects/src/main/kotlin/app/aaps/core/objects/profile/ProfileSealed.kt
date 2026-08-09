@@ -190,12 +190,10 @@ sealed class ProfileSealed(
             // edited peaks that no longer match OREF_INHALED_AFREZZA exactly when DIA is still
             // in the inhaled range (outside regular pump-insulin DIA limits).
             val byPeakInhaled = InsulinType.fromPeak(it.insulinPeakTime).isInhaled
-            val diaLooksInhaled = !hardLimits.isInRange(it.dia, hardLimits.minDia(), hardLimits.maxDia()) &&
-                hardLimits.isInRange(it.dia, hardLimits.minDiaInhaled(), hardLimits.maxDiaInhaled())
+            val diaLooksInhaled = it.dia !in hardLimits.diaRange() && it.dia in hardLimits.diaRangeInhaled()
             val isInhaled = byPeakInhaled || diaLooksInhaled
-            val minDia = if (isInhaled) hardLimits.minDiaInhaled() else hardLimits.minDia()
-            val maxDia = if (isInhaled) hardLimits.maxDiaInhaled() else hardLimits.maxDia()
-            if (!hardLimits.isInRange(it.dia, minDia, maxDia)) {
+            val diaRange = if (isInhaled) hardLimits.diaRangeInhaled() else hardLimits.diaRange()
+            if (it.dia !in diaRange) {
                 validityCheck.isValid = false
                 validityCheck.reasons.add(rh.gs(R.string.value_out_of_hard_limits, rh.gs(R.string.profile_dia), it.dia))
             }

@@ -52,7 +52,6 @@ import app.aaps.plugins.aps.R
 import app.aaps.plugins.aps.openAPSAIMI.advisor.AimiRecommendation
 import app.aaps.plugins.aps.openAPSAIMI.model.AimiAction
 import app.aaps.plugins.aps.openAPSAIMI.model.AimiDomain
-import java.text.DecimalFormat
 import kotlin.math.abs
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch

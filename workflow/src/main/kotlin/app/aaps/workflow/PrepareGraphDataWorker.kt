@@ -8,6 +8,7 @@ import androidx.work.workDataOf
 import app.aaps.core.data.aps.SMBDefaults
 import app.aaps.core.data.configuration.Constants
 import app.aaps.core.data.model.TE
+import app.aaps.core.data.iob.InMemoryGlucoseValue
 import app.aaps.core.data.time.T
 import app.aaps.core.interfaces.aps.AutosensData
 import app.aaps.core.interfaces.aps.AutosensDataStore
@@ -276,13 +277,20 @@ class PrepareGraphDataWorker @AssistedInject constructor(
             val prevDataTime = ads.roundUpTime(bucketedData[bucketedData.size - 3].timestamp)
             aapsLogger.debug(LTag.AUTOSENS) { "Prev data time: " + dateUtil.dateAndTimeString(prevDataTime) }
             var previous = autosensDataTable[prevDataTime]
+            val oldestBucketIndex = AppInitCalculationPolicy.warmStartOldestBucketIndex(bucketedData.size, data.reason)
+            if (oldestBucketIndex > 0) {
+                aapsLogger.debug(
+                    LTag.AUTOSENS,
+                    "AUTOSENSDATA warm-start ${data.reason}: skipping buckets 0..${oldestBucketIndex - 1} of ${bucketedData.size}"
+                )
+            }
             // These three inputs depend only on the fixed detection start, so read them once here instead
             // of inside detectSensitivity, which is called for every bucketed data point in the loop below.
             val sensitivityProfile = profileFunction.getProfile()
             val siteChanges = persistenceLayer.getTherapyEventDataFromTime(oldestTimeWithData, TE.Type.CANNULA_CHANGE, true)
             val profileSwitches = persistenceLayer.getProfileSwitchesFromTime(oldestTimeWithData, true)
             // start from oldest to be able sub cob
-            for (i in bucketedData.size - 4 downTo 0) {
+            for (i in bucketedData.size - 4 downTo oldestBucketIndex) {
                 data.signals.emitProgress(CalculationWorkflow.ProgressData.IOB_COB_OREF, 100 - (100.0 * i / bucketedData.size).toInt())
                 if (isStopped) {
                     aapsLogger.debug(LTag.AUTOSENS, "Aborting calculation thread (trigger): ${data.reason}")
@@ -500,13 +508,20 @@ class PrepareGraphDataWorker @AssistedInject constructor(
             val prevDataTime = ads.roundUpTime(bucketedData[bucketedData.size - 3].timestamp)
             aapsLogger.debug(LTag.AUTOSENS) { "Prev data time: " + dateUtil.dateAndTimeString(prevDataTime) }
             var previous = autosensDataTable[prevDataTime]
+            val oldestBucketIndexOref = AppInitCalculationPolicy.warmStartOldestBucketIndex(bucketedData.size, data.reason)
+            if (oldestBucketIndexOref > 0) {
+                aapsLogger.debug(
+                    LTag.AUTOSENS,
+                    "AUTOSENSDATA warm-start ${data.reason}: skipping buckets 0..${oldestBucketIndexOref - 1} of ${bucketedData.size}"
+                )
+            }
             // These three inputs depend only on the fixed detection start, so read them once here instead
             // of inside detectSensitivity, which is called for every bucketed data point in the loop below.
             val sensitivityProfile = profileFunction.getProfile()
             val siteChanges = persistenceLayer.getTherapyEventDataFromTime(oldestTimeWithData, TE.Type.CANNULA_CHANGE, true)
             val profileSwitches = persistenceLayer.getProfileSwitchesFromTime(oldestTimeWithData, true)
             // start from oldest to be able to sub cob
-            for (i in bucketedData.size - 4 downTo 0) {
+            for (i in bucketedData.size - 4 downTo oldestBucketIndexOref) {
                 data.signals.emitProgress(CalculationWorkflow.ProgressData.IOB_COB_OREF, 100 - (100.0 * i / bucketedData.size).toInt())
                 if (isStopped) {
                     aapsLogger.debug(LTag.AUTOSENS) { "Aborting calculation thread (trigger): ${data.reason}" }

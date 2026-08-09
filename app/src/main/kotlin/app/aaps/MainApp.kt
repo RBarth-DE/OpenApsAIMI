@@ -231,6 +231,9 @@ class MainApp : Application(), HasAndroidInjector, Configuration.Provider {
                 // later, so the (memory heavy) VACUUM has the DB to itself. Runs at most monthly.
                 vacuumDatabaseIfDue()
 
+                // Light DB maintenance while quiescent (no startup VACUUM — see maintainDatabaseIfDue).
+                maintainDatabaseIfDue()
+
                 // Register and initialize plugins
                 config.updateInitProgress(getString(R.string.initializing_plugins))
                 pluginStore.plugins = plugins
@@ -260,6 +263,26 @@ class MainApp : Application(), HasAndroidInjector, Configuration.Provider {
             }
         }
     }
+    // Monthly startup maintenance: PRAGMA optimize + WAL checkpoint only (no VACUUM). Full VACUUM
+    // remains available from Maintenance / NS cleanup (runVacuum=true) but caused SQLITE_NOMEM and
+    // startup crashes on large AIMI databases when run automatically at launch (May 2026).
+    private suspend fun maintainDatabaseIfDue() {
+        val lastRun = preferences.get(LongNonKey.LastVacuumRun)
+        if (lastRun < dateUtil.now() - T.days(30).msecs()) {
+            config.updateInitProgress(getString(R.string.optimizing_database))
+            try {
+                withTimeout(T.mins(2).msecs()) {
+                    persistenceLayer.maintainDatabaseAtStartup()
+                }
+                preferences.put(LongNonKey.LastVacuumRun, dateUtil.now())
+                aapsLogger.debug(LTag.CORE, "Startup DB maintenance done (no VACUUM)")
+            } catch (e: Throwable) {
+                // DB maintenance must never abort app initialization (includes OOM / timeout).
+                aapsLogger.error(LTag.CORE, "Startup DB maintenance failed", e)
+            }
+        }
+    }
+
 
     // Perform a full VACUUM at most once a month. VACUUM defragments the DB file and reclaims
     // space, restoring query performance that degrades after long use. It is heavy and memory
