@@ -1,7 +1,7 @@
 # AIMI Algorithm Context
 Version: 2.2
-Source commit: 0320615cfe7e2268d48bf37ae3c9fb39881b9d0f
-Generated: 2026-07-22T16:58:31.834360+00:00
+Source commit: 4c41219ae907abcdda2cc637df3c43c6cfda4e91
+Generated: 2026-08-09T17:02:23.926141+00:00
 
 ## Algorithm Overview
 AIMI (AI-powered Modular Insulin)
@@ -143,7 +143,7 @@ Gate: key_aimi_pkpd_enabled
 
 Real-time PKPD model with Weibull-based insulin action curves, adaptive estimator and InsulinActionProfiler. Computes fusedIsf from profile ISF, dynamic ISF and learned values. PkpdAbsorptionGuard dampens SMB during limited absorption. IOB consensus reconciles AAPS IOB with PKPD IOB.
 
-Key parameters (24):
+Key parameters (26):
 - aimi_pkpd_anchor_dia_h
 - aimi_pkpd_anchor_peak_min
 - aimi_pkpd_bounds_dia_max_h
@@ -159,7 +159,7 @@ Key parameters (24):
 - aimi_pkpd_state_effective_peak
 - aimi_pkpd_state_initialized_at_ms
 - aimi_pkpd_state_peak_min
-- ... and 9 more
+- ... and 11 more
 
 ### unified_reactivity
 Gate: key_use_Aimi_UnifiedReactivityLearner
@@ -423,8 +423,9 @@ Gate: key_aimi_hyper_trajectory_release
 
 Hyper trajectory release system for managing established and deep hyperglycemia. Controls when to release insulin constraints based on deviation magnitude.
 
-Key parameters (4):
+Key parameters (5):
 - key_aimi_hyper_deep_dev_mgdl
+- key_aimi_hyper_dropping_exempt_enabled
 - key_aimi_hyper_established_dev_mgdl
 - key_aimi_hyper_trajectory_release
 - key_aimi_hyper_trajectory_release_aggressive
@@ -509,7 +510,7 @@ Key parameters (11):
 - `key_aimi_context_enabled`
 - `key_aimi_context_llm_enabled`
 
-### core (95 params)
+### core (101 params)
 - `OApsAIMIDeltaPosRelease` [default: 1.0]
 - `OApsAIMIHighBg` [default: 180.0]
 - `OApsAIMI_Enable_night`
@@ -554,8 +555,9 @@ Key parameters (11):
 - `key_aimi_gov_hold_agg_floor_severe` [default: 0.72]
 - `key_aimi_gov_hold_basal_decay_rate` [default: 0.98]
 
-### hyper_trajectory (4 params)
+### hyper_trajectory (5 params)
 - `key_aimi_hyper_deep_dev_mgdl` [default: 0.0]
+- `key_aimi_hyper_dropping_exempt_enabled`
 - `key_aimi_hyper_established_dev_mgdl` [default: 0.0]
 - `key_aimi_hyper_trajectory_release` [default: True]
 - `key_aimi_hyper_trajectory_release_aggressive` [default: False]
@@ -579,17 +581,17 @@ Key parameters (11):
 - `OApsAIMILastEstimatedCarbTime` [default: 0.0]
 - `OApsAIMILastEstimatedCarbs` [default: 0.0]
 
-### meal_modes (22 params)
+### meal_modes (25 params)
 - `aimi_meal_advisor_trigger`
 - `aimi_physio_sleep_enable`
+- `key_aimi_meal_confirmed_early_release` [default: False]
+- `key_aimi_meal_hyper_bypass_enabled`
+- `key_aimi_tree_meal_rise_frontload` [default: False]
 - `key_oaps_aimi_dinner_factor` [default: 50.0]
 - `key_oaps_aimi_dinner_interval` [default: 3]
 - `key_oaps_aimi_lunch_factor` [default: 50.0]
 - `key_oaps_aimi_lunch_interval` [default: 3]
 - `key_oaps_aimi_meal_factor` [default: 50.0]
-- `key_oaps_aimi_meal_interval` [default: 3]
-- `key_oaps_aimi_sleep_factor` [default: 60.0]
-- `key_oaps_aimi_sleep_interval` [default: 3]
 
 ### ngr (11 params)
 - `key_oaps_aimi_ngr_age_years` [default: 14]
@@ -610,7 +612,7 @@ Key parameters (11):
 - `aimi_physio_llm_enable`
 - `aimi_physio_llm_provider`
 
-### pkpd (22 params)
+### pkpd (24 params)
 - `aimi_pkpd_bounds_dia_max_h` [default: 24.0]
 - `aimi_pkpd_bounds_dia_min_h` [default: 4.0]
 - `aimi_pkpd_bounds_peak_min_max` [default: 240.0]
@@ -630,7 +632,7 @@ Key parameters (11):
 ### smb_tail (4 params)
 - `aimi_smb_exercise_damping` [default: 0.6]
 - `aimi_smb_late_fat_damping` [default: 0.7]
-- `aimi_smb_tail_damping` [default: 0.5]
+- `aimi_smb_tail_damping` [default: 0.85]
 - `aimi_smb_tail_threshold` [default: 0.25]
 
 ### sos_emergency (6 params)
@@ -641,17 +643,17 @@ Key parameters (11):
 - `aimi_emergency_sos_stale_threshold` [default: 30]
 - `aimi_emergency_sos_threshold` [default: 70]
 
-### t3c_adaptive_basal (11 params)
+### t3c_adaptive_basal (12 params)
 - `key_aimi_t3c_activation_threshold` [default: 130.0]
 - `key_aimi_t3c_aggressiveness` [default: 1.0]
 - `key_aimi_t3c_anticipation_strength` [default: 0.0]
 - `key_aimi_t3c_autodrive_basal_authority` [default: True]
 - `key_aimi_t3c_brittle_mode`
-- `key_aimi_t3c_cfrd_cob_delay_min` [default: 0.0]
-- `key_aimi_t3c_cfrd_exacerbation`
-- `key_aimi_t3c_cfrd_lgs_floor` [default: 80.0]
-- `key_aimi_t3c_cfrd_mode`
-- `key_aimi_t3c_physio_informed`
+- `key_aimi_t3c_cfrd_cob_delay_min` [default: 30.0]
+- `key_aimi_t3c_cfrd_exacerbation` [default: False]
+- `key_aimi_t3c_cfrd_lgs_floor` [default: 95.0]
+- `key_aimi_t3c_cfrd_mode` [default: True]
+- `key_aimi_t3c_hyper_basal_floor` [default: True]
 
 ### thyroid (6 params)
 - `key_aimi_thyroid_debug`

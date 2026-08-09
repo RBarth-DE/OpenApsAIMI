@@ -26,30 +26,93 @@ except ImportError:
 app = FastAPI(title="AIMI Parameter Analyzer v2")
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
 
-# ─── Load data ────────────────────────────────────────────────────────────────
-DATA_FILE = Path("/data/aimi_parameters.json")
-with open(DATA_FILE) as f:
-    raw = json.load(f)
+# ─── Load multi-plugin data ────────────────────────────────────────────────
 
-PARAMETERS    = raw.get("parameters", [])
-FEATURE_GROUPS= {fg["id"]: fg for fg in raw.get("feature_groups", [])}
-PARAMS_BY_KEY = {p["key"]: p for p in PARAMETERS}
+PLUGIN_CONFIG = {
+    "aimi": {
+        "params_file": "aimi_parameters.json",
+        "context_file": "aimi_context_compact.txt",
+        "lookup_file": "aimi_param_lookup.json",
+        "context_json": "aimi_context_for_ai.json",
+        "label": "AIMI",
+    },
+    "boost": {
+        "params_file": "boost_parameters.json",
+        "context_file": "boost_context_compact.txt",
+        "lookup_file": "boost_param_lookup.json",
+        "context_json": "boost_context_for_ai.json",
+        "label": "BOOST",
+    },
+    "autoisf": {
+        "params_file": "autoisf_parameters.json",
+        "context_file": "autoisf_context_compact.txt",
+        "lookup_file": "autoisf_param_lookup.json",
+        "context_json": "autoisf_context_for_ai.json",
+        "label": "AutoISF",
+    },
+}
 
-# Separate active (used by algorithm) vs all
-ACTIVE_PARAMS = [p for p in PARAMETERS if not p.get("orphaned")]
+PLUGIN_DATA: dict[str, dict] = {}
+for plug_id, cfg in PLUGIN_CONFIG.items():
+    params_file = Path(f"/data/{cfg['params_file']}")
+    if not params_file.exists():
+        print(f"[{plug_id}] No data file: {params_file} — skipping")
+        continue
 
-print(f"Loaded {len(PARAMETERS)} params, {len(ACTIVE_PARAMS)} active, {len(FEATURE_GROUPS)} feature groups")
+    with open(params_file) as f:
+        raw = json.load(f)
 
-# ─── Load AIMI algorithm context (for AI prompts) ────────────────────────────
-AIMI_CONTEXT_COMPACT = ""
-AIMI_PARAM_LOOKUP: dict = {}
-try:
-    AIMI_CONTEXT_COMPACT = Path("/data/aimi_context_compact.txt").read_text(encoding="utf-8")
-    with open("/data/aimi_param_lookup.json", encoding="utf-8") as f:
-        AIMI_PARAM_LOOKUP = json.load(f)
-    print(f"AIMI context: {len(AIMI_CONTEXT_COMPACT)} chars, {len(AIMI_PARAM_LOOKUP)} param summaries")
-except Exception as e:
-    print(f"AIMI context not found (optional): {e}")
+    parameters = raw.get("parameters", [])
+    feature_groups_raw = raw.get("feature_groups", {})
+    if isinstance(feature_groups_raw, list):
+        feature_groups = {fg["id"]: fg for fg in feature_groups_raw}
+    else:
+        feature_groups = feature_groups_raw  # It's already a dict
+    params_by_key = {p["key"]: p for p in parameters}
+    active_params = [p for p in parameters if not p.get("orphaned")]
+
+    context_compact = ""
+    param_lookup = {}
+    context_json = {}
+    try:
+        context_compact = Path(f"/data/{cfg['context_file']}").read_text(encoding="utf-8")
+        with open(f"/data/{cfg['lookup_file']}", encoding="utf-8") as f:
+            param_lookup = json.load(f)
+        ctx_json_path = Path(f"/data/{cfg['context_json']}")
+        if ctx_json_path.exists():
+            with open(ctx_json_path, encoding="utf-8") as f:
+                context_json = json.load(f)
+    except Exception as e:
+        print(f"[{plug_id}] Context not found: {e}")
+
+    PLUGIN_DATA[plug_id] = {
+        "parameters": parameters,
+        "active_params": active_params,
+        "params_by_key": params_by_key,
+        "feature_groups": feature_groups,
+        "context_compact": context_compact,
+        "param_lookup": param_lookup,
+        "context_json": context_json,
+        "label": cfg["label"],
+    }
+    print(f"[{plug_id}] {len(parameters)} params, {len(active_params)} active, "
+          f"{len(feature_groups)} feature groups, {len(context_compact)} ctx chars")
+
+# Backward-compatible aliases
+_default_plugin = "aimi"
+PARAMETERS     = PLUGIN_DATA.get(_default_plugin, {}).get("parameters", [])
+FEATURE_GROUPS = PLUGIN_DATA.get(_default_plugin, {}).get("feature_groups", {})
+PARAMS_BY_KEY  = PLUGIN_DATA.get(_default_plugin, {}).get("params_by_key", {})
+ACTIVE_PARAMS  = PLUGIN_DATA.get(_default_plugin, {}).get("active_params", [])
+AIMI_CONTEXT_COMPACT = PLUGIN_DATA.get("aimi", {}).get("context_compact", "")
+AIMI_PARAM_LOOKUP    = PLUGIN_DATA.get("aimi", {}).get("param_lookup", {})
+
+print(f"Plugins loaded: {list(PLUGIN_DATA.keys())}")
+
+
+def get_plugin_data(plugin: str = "aimi") -> dict:
+    """Get plugin data, falling back to aimi if requested plugin not available."""
+    return PLUGIN_DATA.get(plugin, PLUGIN_DATA.get("aimi", {}))
 
 # ─── Models ───────────────────────────────────────────────────────────────────
 class AnalysisRequest(BaseModel):
@@ -59,6 +122,7 @@ class AnalysisRequest(BaseModel):
     current_params: list = []   # list of param objects from import
     active_gates: dict = {}
     overrides: dict = {}
+    plugin: str = "aimi"
 
 class DiffAnalysisRequest(BaseModel):
     snapshot_a: dict
@@ -78,6 +142,7 @@ class AIAnalysisRequest(BaseModel):
     active_gates: dict = {}
     user_observations: str | None = None
     model: str | None = None
+    plugin: str = "aimi"
     lang: str = "de"
 
 # ─── Nightscout ───────────────────────────────────────────────────────────────
@@ -405,25 +470,30 @@ def generate_recommendations(cgm, treatments, current_params, active_gates={}):
 # ─── API Endpoints ─────────────────────────────────────────────────────────────
 @app.get("/api/parameters")
 def get_parameters(
+    plugin: str = "aimi",
     category: Optional[str] = None,
     impact: Optional[str] = None,
     gate_key: Optional[str] = None,
     always_active: Optional[bool] = None,
     include_orphaned: bool = False,
 ):
-    params = ACTIVE_PARAMS if not include_orphaned else PARAMETERS
+    pd = get_plugin_data(plugin)
+    params = pd.get("active_params", []) if not include_orphaned else pd.get("parameters", [])
     if category:    params = [p for p in params if p.get("feature_group","").lower() == category.lower()]
     if impact:      params = [p for p in params if p.get("impact","").lower() == impact.lower()]
     if gate_key:    params = [p for p in params if p.get("gate_key") == gate_key]
     if always_active is not None:
         params = [p for p in params if p.get("always_active") == always_active]
-    return {"total": len(params), "active_total": len(ACTIVE_PARAMS), "parameters": params}
+    return {"total": len(params), "active_total": len(pd.get("active_params", [])), "parameters": params, "plugin": plugin}
 
 @app.get("/api/feature-groups")
-def get_feature_groups():
+def get_feature_groups(plugin: str = "aimi"):
+    pd = get_plugin_data(plugin)
+    fg_map = pd.get("feature_groups", {})
+    active_params = pd.get("active_params", [])
     result = []
-    for fg_id, fg in FEATURE_GROUPS.items():
-        params_in_group = [p for p in ACTIVE_PARAMS if p.get("feature_group") == fg_id]
+    for fg_id, fg in fg_map.items():
+        params_in_group = [p for p in active_params if p.get("feature_group") == fg_id]
         result.append({
             "id": fg_id,
             "name": fg.get("name", fg_id),
@@ -678,10 +748,16 @@ async def decrypt_export(file: UploadFile = File(...), password: str = Form(...)
 
     def is_sensitive(k): return any(s in k.lower() for s in ('_key','_token','_pin','_secret','_password'))
 
+    # Build a unified param lookup across ALL plugins
+    all_params_by_key = {}
+    for plug_id, pd in PLUGIN_DATA.items():
+        all_params_by_key.update(pd.get("params_by_key", {}))
+
     all_prefs = inner if isinstance(inner, dict) else {}
     enriched = []
     for k, v in all_prefs.items():
-        param_def = PARAMS_BY_KEY.get(k, {})
+        # Try the unified lookup first, fall back to AIMI-only for backward compat
+        param_def = all_params_by_key.get(k) or PARAMS_BY_KEY.get(k, {})
         enriched.append({
             "key": k, "value": "••••••••" if is_sensitive(k) and v else v,
             "value_length": len(str(v)) if is_sensitive(k) and v else None,
@@ -694,7 +770,8 @@ async def decrypt_export(file: UploadFile = File(...), password: str = Form(...)
             "type": param_def.get("type","String"),
             "default": param_def.get("default"),
             "min": param_def.get("min"), "max": param_def.get("max"),
-            "is_default": str(v) == str(param_def.get("default")) if param_def else None,
+            "is_default": str(v) == str(param_def.get("default")) if param_def.get("default") is not None else None,
+            "settings_path": param_def.get("settings_path"),
             "has_definition": bool(param_def),
             "is_sensitive": is_sensitive(k),
             "orphaned": param_def.get("orphaned", not bool(param_def)),
@@ -824,6 +901,14 @@ async def diff_snapshots(req: DiffAnalysisRequest):
 # ─── AI Analysis ───────────────────────────────────────────────────────────────
 @app.post("/api/ai-analysis")
 async def ai_analysis(req: AIAnalysisRequest):
+    plugin = req.plugin or "aimi"
+    pd = get_plugin_data(plugin)
+    plugin_label = pd.get("label", plugin.upper())
+    plugin_ctx = pd.get("context_compact", "")
+    plugin_lookup = pd.get("param_lookup", {})
+    plugin_fg = pd.get("feature_groups", {})
+    plugin_params = pd.get("params_by_key", {})
+
     cgm, trt = req.cgm_metrics, req.treatment_metrics
     has_cgm    = bool(cgm and cgm.get("tir_pct") is not None)
     has_params = bool(req.current_params)
@@ -835,6 +920,7 @@ async def ai_analysis(req: AIAnalysisRequest):
 
     # Build unified gate state from all sources
     # Priority: req.active_gates (from import) > current_params gate_active field > param value > default off
+    # Collect all gate keys from the selected plugin's feature groups
     GATES_OFF_BY_DEFAULT = {
         "key_use_aimi_t3c_adaptive_basal", "key_aimi_t3c_brittle_mode",
         "key_aimi_pkpd_enabled", "key_use_Aimi_autoDrive",
@@ -846,6 +932,11 @@ async def ai_analysis(req: AIAnalysisRequest):
         "aimi_endo_enable", "key_aimi_thyroid_enabled",
         "aimi_emergency_sos_enable", "key_enable_ML_training",
     }
+    # Add the selected plugin's feature group gate keys (they are off-by-default)
+    for fg_id, fg in plugin_fg.items():
+        gk = fg.get("gate_key")
+        if gk:
+            GATES_OFF_BY_DEFAULT.add(gk)
 
     # Merge all gate sources into one dict
     effective_gates = {}
@@ -879,7 +970,7 @@ async def ai_analysis(req: AIAnalysisRequest):
     # Active features from gates
     active_features = []
     inactive_features = []
-    for fg_id, fg in FEATURE_GROUPS.items():
+    for fg_id, fg in plugin_fg.items():
         gate = fg.get("gate_key")
         if gate is None:
             active_features.append(fg.get("name", fg_id))
@@ -897,7 +988,7 @@ async def ai_analysis(req: AIAnalysisRequest):
         return eff_gate(gate)
 
     def neg_gate_suppressed(p):
-        neg = PARAMS_BY_KEY.get(p.get("key",""), {}).get("negative_gate_key")
+        neg = plugin_params.get(p.get("key",""), {}).get("negative_gate_key")
         if not neg: return False
         return eff_gate(neg)
 
@@ -921,7 +1012,7 @@ async def ai_analysis(req: AIAnalysisRequest):
         if isinstance(v, bool) or str(v).lower() in ("true","false"):
             is_on = v is True or str(v).lower() == "true"
             delta = f" [{'✅ CURRENTLY ACTIVE' if is_on else '❌ CURRENTLY INACTIVE'}]"
-        ctx_info = AIMI_PARAM_LOOKUP.get(p.get("key",""), {})
+        ctx_info = plugin_lookup.get(p.get("key",""), {})
         summary = ctx_info.get("summary","")
         path = p.get("settings_path") or ctx_info.get("settings_path","")
         gate_key = p.get("gate_key")
@@ -935,8 +1026,17 @@ async def ai_analysis(req: AIAnalysisRequest):
         and not p.get("orphaned") and gate_ok(p) and not neg_gate_suppressed(p)
         and p.get("key","") not in AAPS_NOT_AIMI          # exclude non-AIMI AAPS params
         and p.get("name","") not in AAPS_NOT_AIMI]        # also check by name
-    critical_high = [p for p in active_non_default if p.get("impact") in ("critical","high")]
-    other = [p for p in active_non_default if p.get("impact") not in ("critical","high")]
+
+    # Filter to only show params belonging to the selected plugin
+    if plugin != "aimi":
+        active_non_default = [p for p in active_non_default
+            if p.get("key","") in plugin_params]
+        # Re-split critical/high after filtering
+        critical_high = [p for p in active_non_default if p.get("impact") in ("critical","high")]
+        other = [p for p in active_non_default if p.get("impact") not in ("critical","high")]
+    else:
+        critical_high = [p for p in active_non_default if p.get("impact") in ("critical","high")]
+        other = [p for p in active_non_default if p.get("impact") not in ("critical","high")]
 
     # Parameters that exist in settings but are suppressed by active mode
     suppressed = [p for p in req.current_params
@@ -992,7 +1092,33 @@ async def ai_analysis(req: AIAnalysisRequest):
         user_obs_task = ""
 
     # AIMI algorithm context (from source code analysis)
-    aimi_ctx_block = f"\n{AIMI_CONTEXT_COMPACT}\n" if AIMI_CONTEXT_COMPACT else ""
+    plugin_ctx_block = f"\n{plugin_ctx}\n" if plugin_ctx else ""
+
+    # Plugin-specific AI instructions
+    if plugin == "aimi":
+        plugin_instructions = """## AIMI-specific knowledge (apply when analysing these settings)
+- Autodrive V2 vs V3: `key_use_Aimi_autoDrive=false` + `key_use_aimi_autodrive_active=true` is the CORRECT and INTENDED configuration for Autodrive V3. The old V2 key is deprecated and should remain false. Do NOT flag this as a contradiction or bug.
+- `OApsAIMIMLtraining=true` means ML training is ALREADY ACTIVE. Do not recommend enabling it if it is already true.
+- AutoISF parameters (ApsAutoIsfMin, ApsAutoIsfMax, ApsDynIsfAdjustmentFactor) have NO effect when AIMI is active. Do not recommend changing these.
+- Parameters marked [✅ CURRENTLY ACTIVE] are boolean features that are already enabled — do not recommend enabling them.
+- Parameters marked [❌ CURRENTLY INACTIVE] are boolean features that are currently off.
+"""
+    elif plugin == "boost":
+        plugin_instructions = """## BOOST-specific knowledge (apply when analysing these settings)
+- `boost_use_tdd=ON` is the main gate for TDD-based dynamic ISF. If OFF, Boost uses static profile ISF (less adaptive).
+- `boost_insulin_req_pct` is the PRIMARY aggressiveness control: >100% = more insulin, <100% = more conservative.
+- `boost_dynisf_velocity` controls how FAST ISF adapts to changing conditions — high values can cause oscillation.
+- `boost_night_mode_enabled` is critical for overnight safety — recommend enabling if overnight hypos.
+- ISF Shadow (V4.4.2 EMA) is DIAGNOSTIC ONLY — it does NOT affect dosing. No action needed on shadow values.
+- Meal model V5/V6/V7 parameters only apply when the corresponding meal hypothesis gates are enabled.
+- Activity settings (boost_activity_pct, boost_inactivity_pct) work together: activity reduces insulin, inactivity increases it.
+- Parameters marked [✅ CURRENTLY ACTIVE] are boolean features that are already enabled.
+- Parameters marked [❌ CURRENTLY INACTIVE] are boolean features that are currently off.
+"""
+    else:
+        plugin_instructions = """## Parameters marked [✅ CURRENTLY ACTIVE] are boolean features that are already enabled.
+- Parameters marked [❌ CURRENTLY INACTIVE] are boolean features that are currently off.
+"""
 
     LABELS = {
         "active_features":   "Active Features",
@@ -1008,14 +1134,18 @@ async def ai_analysis(req: AIAnalysisRequest):
     }
 
     l = LABELS
-    prompt = f"""You are an expert on AndroidAPS and the AIMI plugin (branch dev_OAPSAIMI_RB).
-{aimi_ctx_block}
-## AIMI-specific knowledge (apply when analysing these settings)
-- Autodrive V2 vs V3: `key_use_Aimi_autoDrive=false` + `key_use_aimi_autodrive_active=true` is the CORRECT and INTENDED configuration for Autodrive V3. The old V2 key is deprecated and should remain false. Do NOT flag this as a contradiction or bug.
-- `OApsAIMIMLtraining=true` means ML training is ALREADY ACTIVE. Do not recommend enabling it if it is already true.
-- AutoISF parameters (ApsAutoIsfMin, ApsAutoIsfMax, ApsDynIsfAdjustmentFactor) have NO effect when AIMI is active. Do not recommend changing these.
-- Parameters marked [✅ CURRENTLY ACTIVE] are boolean features that are already enabled — do not recommend enabling them.
-- Parameters marked [❌ CURRENTLY INACTIVE] are boolean features that are currently off.
+    plugin_note = (
+        f"\n⚠️ IMPORTANT: You are analyzing the **{plugin_label}** plugin ONLY. "
+        f"The parameters listed below are exclusively {plugin_label}-specific settings. "
+        f"Do NOT recommend changes to parameters from other plugins (AIMI, AutoISF, standard OpenAPS SMB) "
+        f"unless they appear in the list below. Only use parameter keys and settings paths "
+        f"that are explicitly provided in this prompt.\n"
+    ) if plugin != "aimi" else ""
+
+    prompt = f"""You are an expert on AndroidAPS and the {plugin_label} plugin (branch dev_OAPSAIMI_RB).
+{plugin_note}
+{plugin_ctx_block}
+{plugin_instructions}
 
 ## {l['active_features']}
 {', '.join(active_features[:20]) or '—'}
@@ -1131,10 +1261,22 @@ async def _call_openai(api_key, prompt, model=None):
                 "analysis":d["choices"][0]["message"]["content"],
                 "tokens":d.get("usage",{})}
 
+@app.get("/api/plugins")
+def list_plugins():
+    return {
+        "plugins": {plug_id: {"label": pd["label"],
+                              "total_params": len(pd.get("parameters",[])),
+                              "active_params": len(pd.get("active_params",[])),
+                              "feature_groups": len(pd.get("feature_groups",{})),
+                              "has_context": bool(pd.get("context_compact"))}
+                    for plug_id, pd in PLUGIN_DATA.items()}
+    }
+
 @app.get("/api/health")
 def health():
-    return {"status":"ok","parameters":len(PARAMETERS),"active":len(ACTIVE_PARAMS),
-            "feature_groups":len(FEATURE_GROUPS)}
+    d = PLUGIN_DATA.get("aimi", {})
+    return {"status":"ok","parameters":len(d.get("parameters",[])),"active":len(d.get("active_params",[])),
+            "feature_groups":len(d.get("feature_groups",{})),"plugins": list(PLUGIN_DATA.keys())}
 
 @app.get("/api/debug/treatments")
 async def debug_treatments(nightscout_url: str, nightscout_token: str = "", hours: int = 6):

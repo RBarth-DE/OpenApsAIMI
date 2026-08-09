@@ -1,0 +1,1219 @@
+{
+  "version": "1.0",
+  "plugin": "autoisf",
+  "source_commit": "4c41219ae907abcdda2cc637df3c43c6cfda4e91",
+  "generated_at": "2026-08-09T17:02:24.477627+00:00",
+  "total": 39,
+  "active": 37,
+  "orphaned": 2,
+  "with_used_in": 37,
+  "with_negative_gate": 0,
+  "with_settings_path": 19,
+  "parameters": [
+    {
+      "key": "Enable alternative activation of SMB always",
+      "name": "ApsAutoIsfSmbOnEvenTarget",
+      "type": "Boolean",
+      "default": null,
+      "min": null,
+      "max": null,
+      "used_in": [
+        {
+          "file": "OpenAPSAutoISFPlugin.kt",
+          "function": "unknown"
+        }
+      ],
+      "orphaned": false,
+      "negative_gate_key": null,
+      "negative_gate_note": null,
+      "logic_summary": "Enables/disables Enable alternative activation of SMB always. Gate flag for AutoISF.",
+      "effect_high": "Feature is ON — associated functionality runs",
+      "effect_low": "Feature is OFF — associated functionality is disabled",
+      "impact": "medium",
+      "feature_group": "shared_aaps",
+      "is_gate": false,
+      "settings_path": null,
+      "settings_gate": null
+    },
+    {
+      "key": "always_use_shortavg",
+      "name": "ApsAlwaysUseShortDeltas",
+      "type": "Boolean",
+      "default": null,
+      "min": null,
+      "max": null,
+      "used_in": [
+        {
+          "file": "OpenAPSAutoISFPlugin.kt",
+          "function": "getPreferenceScreenContent"
+        }
+      ],
+      "orphaned": false,
+      "negative_gate_key": null,
+      "negative_gate_note": null,
+      "logic_summary": "When ON: uses short delta (5min) instead of medium delta (15min) for all calculations.",
+      "effect_high": "Feature is ON — associated functionality runs",
+      "effect_low": "Feature is OFF — associated functionality is disabled",
+      "impact": "medium",
+      "feature_group": "shared_aaps",
+      "is_gate": false,
+      "settings_path": "Auto ISF → Advanced Settings",
+      "settings_gate": null
+    },
+    {
+      "key": "autoISF_max",
+      "name": "ApsAutoIsfMax",
+      "type": "Double",
+      "default": 1.0,
+      "min": 1.0,
+      "max": 3.0,
+      "used_in": [
+        {
+          "file": "OpenAPSAutoISFPlugin.kt",
+          "function": "unknown"
+        },
+        {
+          "file": "AutoIsfWeightsAdvisor.kt",
+          "function": "analyze"
+        },
+        {
+          "file": "AutoIsfAiClient.kt",
+          "function": "buildPrompt"
+        },
+        {
+          "file": "AutoIsfAdvisorService.kt",
+          "function": "collectPrefs"
+        }
+      ],
+      "orphaned": false,
+      "negative_gate_key": null,
+      "negative_gate_note": null,
+      "logic_summary": "Maximum ISF multiplier (1.0-3.0). Upper bound for AutoISF adjustments. Higher = allows stronger ISF increase (less insulin).",
+      "effect_high": "Allows stronger ISF increase → less insulin → more conservative",
+      "effect_low": "Limits ISF increase → more insulin → more aggressive",
+      "impact": "high",
+      "feature_group": "isf_weights",
+      "is_gate": false,
+      "settings_path": null,
+      "settings_gate": null
+    },
+    {
+      "key": "autoISF_min",
+      "name": "ApsAutoIsfMin",
+      "type": "Double",
+      "default": 1.0,
+      "min": 0.3,
+      "max": 1.0,
+      "used_in": [
+        {
+          "file": "OpenAPSAutoISFPlugin.kt",
+          "function": "unknown"
+        },
+        {
+          "file": "AutoIsfWeightsAdvisor.kt",
+          "function": "analyze"
+        },
+        {
+          "file": "AutoIsfAiClient.kt",
+          "function": "buildPrompt"
+        },
+        {
+          "file": "AutoIsfAdvisorService.kt",
+          "function": "collectPrefs"
+        }
+      ],
+      "orphaned": false,
+      "negative_gate_key": null,
+      "negative_gate_note": null,
+      "logic_summary": "Minimum ISF multiplier (0.3-1.0). Lower bound for AutoISF adjustments. Lower = allows stronger ISF reduction (more insulin).",
+      "effect_high": "Allows stronger ISF reduction → more insulin → more aggressive",
+      "effect_low": "Limits ISF reduction → less insulin → more conservative",
+      "impact": "high",
+      "feature_group": "isf_weights",
+      "is_gate": false,
+      "settings_path": null,
+      "settings_gate": null
+    },
+    {
+      "key": "autosens_adjust_targets",
+      "name": "ApsAmaAutosensAdjustTargets",
+      "type": "Boolean",
+      "default": null,
+      "min": null,
+      "max": null,
+      "used_in": [],
+      "orphaned": true,
+      "negative_gate_key": null,
+      "negative_gate_note": null,
+      "logic_summary": "Enables/disables adjust_targets. Gate flag for AutoISF.",
+      "effect_high": "Feature is ON — associated functionality runs",
+      "effect_low": "Feature is OFF — associated functionality is disabled",
+      "impact": "medium",
+      "feature_group": "shared_aaps",
+      "is_gate": false,
+      "settings_path": null,
+      "settings_gate": null
+    },
+    {
+      "key": "autosens_max",
+      "name": "AutosensMax",
+      "type": "Double",
+      "default": 1.2,
+      "min": 0.5,
+      "max": 3.0,
+      "used_in": [
+        {
+          "file": "OpenAPSAutoISFPlugin.kt",
+          "function": "invoke"
+        },
+        {
+          "file": "AutoIsfAdvisorService.kt",
+          "function": "collectPrefs"
+        }
+      ],
+      "orphaned": false,
+      "negative_gate_key": null,
+      "negative_gate_note": null,
+      "logic_summary": "Used in AutoISF algorithm for max.",
+      "effect_high": "Higher value — more insulin/greater effect",
+      "effect_low": "Lower value — less insulin/reduced effect",
+      "impact": "high",
+      "feature_group": "shared_aaps",
+      "is_gate": false,
+      "settings_path": null,
+      "settings_gate": "ApsUseAutosens"
+    },
+    {
+      "key": "autosens_min",
+      "name": "AutosensMin",
+      "type": "Double",
+      "default": 0.7,
+      "min": 0.1,
+      "max": 1.0,
+      "used_in": [],
+      "orphaned": true,
+      "negative_gate_key": null,
+      "negative_gate_note": null,
+      "logic_summary": "Used in AutoISF algorithm for min.",
+      "effect_high": "Higher value — more insulin/greater effect",
+      "effect_low": "Lower value — less insulin/reduced effect",
+      "impact": "high",
+      "feature_group": "shared_aaps",
+      "is_gate": false,
+      "settings_path": null,
+      "settings_gate": "ApsUseAutosens"
+    },
+    {
+      "key": "bgAccel_ISF_weight",
+      "name": "ApsAutoIsfBgAccelWeight",
+      "type": "Double",
+      "default": 0.0,
+      "min": 0.0,
+      "max": 1.0,
+      "used_in": [
+        {
+          "file": "OpenAPSAutoISFPlugin.kt",
+          "function": "unknown"
+        },
+        {
+          "file": "AutoIsfWeightsAdvisor.kt",
+          "function": "analyze"
+        },
+        {
+          "file": "AutoIsfAiClient.kt",
+          "function": "buildPrompt"
+        },
+        {
+          "file": "AutoIsfAdvisorService.kt",
+          "function": "collectPrefs"
+        }
+      ],
+      "orphaned": false,
+      "negative_gate_key": null,
+      "negative_gate_note": null,
+      "logic_summary": "Used in AutoISF algorithm for bgAccel_ISF_weight.",
+      "effect_high": "Higher value — more insulin/greater effect",
+      "effect_low": "Lower value — less insulin/reduced effect",
+      "impact": "medium",
+      "feature_group": "shared_aaps",
+      "is_gate": false,
+      "settings_path": null,
+      "settings_gate": null
+    },
+    {
+      "key": "bgBrake_ISF_weight",
+      "name": "ApsAutoIsfBgBrakeWeight",
+      "type": "Double",
+      "default": 0.0,
+      "min": 0.0,
+      "max": 1.0,
+      "used_in": [
+        {
+          "file": "OpenAPSAutoISFPlugin.kt",
+          "function": "unknown"
+        },
+        {
+          "file": "AutoIsfWeightsAdvisor.kt",
+          "function": "analyze"
+        },
+        {
+          "file": "AutoIsfAiClient.kt",
+          "function": "buildPrompt"
+        },
+        {
+          "file": "AutoIsfAdvisorService.kt",
+          "function": "collectPrefs"
+        }
+      ],
+      "orphaned": false,
+      "negative_gate_key": null,
+      "negative_gate_note": null,
+      "logic_summary": "Used in AutoISF algorithm for bgBrake_ISF_weight.",
+      "effect_high": "Higher value — more insulin/greater effect",
+      "effect_low": "Lower value — less insulin/reduced effect",
+      "impact": "medium",
+      "feature_group": "shared_aaps",
+      "is_gate": false,
+      "settings_path": null,
+      "settings_gate": null
+    },
+    {
+      "key": "carbsReqThreshold",
+      "name": "ApsCarbsRequestThreshold",
+      "type": "Int",
+      "default": 1,
+      "min": 1,
+      "max": 100,
+      "used_in": [
+        {
+          "file": "OpenAPSAutoISFPlugin.kt",
+          "function": "invoke"
+        }
+      ],
+      "orphaned": false,
+      "negative_gate_key": null,
+      "negative_gate_note": null,
+      "logic_summary": "Used in AutoISF algorithm for carbsReqThreshold.",
+      "effect_high": "Higher value — more insulin/greater effect",
+      "effect_low": "Lower value — less insulin/reduced effect",
+      "impact": "medium",
+      "feature_group": "shared_aaps",
+      "is_gate": false,
+      "settings_path": "Auto ISF",
+      "settings_gate": null
+    },
+    {
+      "key": "dura_ISF_weight",
+      "name": "ApsAutoIsfDuraWeight",
+      "type": "Double",
+      "default": 0.0,
+      "min": 0.0,
+      "max": 3.0,
+      "used_in": [
+        {
+          "file": "OpenAPSAutoISFPlugin.kt",
+          "function": "unknown"
+        },
+        {
+          "file": "AutoIsfWeightsAdvisor.kt",
+          "function": "analyze"
+        },
+        {
+          "file": "AutoIsfAiClient.kt",
+          "function": "buildPrompt"
+        },
+        {
+          "file": "AutoIsfAdvisorService.kt",
+          "function": "collectPrefs"
+        }
+      ],
+      "orphaned": false,
+      "negative_gate_key": null,
+      "negative_gate_note": null,
+      "logic_summary": "Duration weight. Higher = ISF adjustment persists longer.",
+      "effect_high": "Higher value — more insulin/greater effect",
+      "effect_low": "Lower value — less insulin/reduced effect",
+      "impact": "medium",
+      "feature_group": "isf_weights",
+      "is_gate": false,
+      "settings_path": null,
+      "settings_gate": null
+    },
+    {
+      "key": "enableSMB_after_carbs",
+      "name": "ApsUseSmbAfterCarbs",
+      "type": "Boolean",
+      "default": null,
+      "min": null,
+      "max": null,
+      "used_in": [
+        {
+          "file": "OpenAPSAutoISFPlugin.kt",
+          "function": "preprocessPreferences"
+        }
+      ],
+      "orphaned": false,
+      "negative_gate_key": null,
+      "negative_gate_note": null,
+      "logic_summary": "Enables/disables enableSMB_after_carbs. Gate flag for AutoISF.",
+      "effect_high": "Feature is ON — associated functionality runs",
+      "effect_low": "Feature is OFF — associated functionality is disabled",
+      "impact": "medium",
+      "feature_group": "shared_aaps",
+      "is_gate": false,
+      "settings_path": "Auto ISF",
+      "settings_gate": "ApsUseSmb"
+    },
+    {
+      "key": "enableSMB_always",
+      "name": "ApsUseSmbAlways",
+      "type": "Boolean",
+      "default": null,
+      "min": null,
+      "max": null,
+      "used_in": [
+        {
+          "file": "OpenAPSAutoISFPlugin.kt",
+          "function": "preprocessPreferences"
+        }
+      ],
+      "orphaned": false,
+      "negative_gate_key": null,
+      "negative_gate_note": null,
+      "logic_summary": "Enables/disables enableSMB_always. Gate flag for AutoISF.",
+      "effect_high": "Feature is ON — associated functionality runs",
+      "effect_low": "Feature is OFF — associated functionality is disabled",
+      "impact": "medium",
+      "feature_group": "shared_aaps",
+      "is_gate": false,
+      "settings_path": "Auto ISF",
+      "settings_gate": "ApsUseSmb"
+    },
+    {
+      "key": "enableSMB_with_COB",
+      "name": "ApsUseSmbWithCob",
+      "type": "Boolean",
+      "default": null,
+      "min": null,
+      "max": null,
+      "used_in": [
+        {
+          "file": "OpenAPSAutoISFPlugin.kt",
+          "function": "preprocessPreferences"
+        }
+      ],
+      "orphaned": false,
+      "negative_gate_key": null,
+      "negative_gate_note": null,
+      "logic_summary": "Enables/disables enableSMB_with_COB. Gate flag for AutoISF.",
+      "effect_high": "Feature is ON — associated functionality runs",
+      "effect_low": "Feature is OFF — associated functionality is disabled",
+      "impact": "medium",
+      "feature_group": "shared_aaps",
+      "is_gate": false,
+      "settings_path": "Auto ISF",
+      "settings_gate": "ApsUseSmb"
+    },
+    {
+      "key": "enableSMB_with_high_temptarget",
+      "name": "ApsUseSmbWithHighTt",
+      "type": "Boolean",
+      "default": null,
+      "min": null,
+      "max": null,
+      "used_in": [
+        {
+          "file": "OpenAPSAutoISFPlugin.kt",
+          "function": "invoke"
+        }
+      ],
+      "orphaned": false,
+      "negative_gate_key": null,
+      "negative_gate_note": null,
+      "logic_summary": "Enables/disables enableSMB_with_high_temptarget. Gate flag for AutoISF.",
+      "effect_high": "Feature is ON — associated functionality runs",
+      "effect_low": "Feature is OFF — associated functionality is disabled",
+      "impact": "medium",
+      "feature_group": "shared_aaps",
+      "is_gate": false,
+      "settings_path": "Auto ISF",
+      "settings_gate": "ApsUseSmb"
+    },
+    {
+      "key": "enableSMB_with_temptarget",
+      "name": "ApsUseSmbWithLowTt",
+      "type": "Boolean",
+      "default": null,
+      "min": null,
+      "max": null,
+      "used_in": [
+        {
+          "file": "OpenAPSAutoISFPlugin.kt",
+          "function": "preprocessPreferences"
+        }
+      ],
+      "orphaned": false,
+      "negative_gate_key": null,
+      "negative_gate_note": null,
+      "logic_summary": "Enables/disables enableSMB_with_temptarget. Gate flag for AutoISF.",
+      "effect_high": "Feature is ON — associated functionality runs",
+      "effect_low": "Feature is OFF — associated functionality is disabled",
+      "impact": "medium",
+      "feature_group": "shared_aaps",
+      "is_gate": false,
+      "settings_path": "Auto ISF",
+      "settings_gate": "ApsUseSmb"
+    },
+    {
+      "key": "half_basal_exercise_target",
+      "name": "ApsAutoIsfHalfBasalExerciseTarget",
+      "type": "Int",
+      "default": 160,
+      "min": 120,
+      "max": 200,
+      "used_in": [
+        {
+          "file": "OpenAPSAutoISFPlugin.kt",
+          "function": "unknown"
+        }
+      ],
+      "orphaned": false,
+      "negative_gate_key": null,
+      "negative_gate_note": null,
+      "logic_summary": "BG target (mg/dL) at which basal is halved during exercise. Default 160.",
+      "effect_high": "Higher value — more insulin/greater effect",
+      "effect_low": "Lower value — less insulin/reduced effect",
+      "impact": "medium",
+      "feature_group": "temp_target_interaction",
+      "is_gate": false,
+      "settings_path": "Auto ISF",
+      "settings_gate": null
+    },
+    {
+      "key": "high_temptarget_raises_sensitivity",
+      "name": "ApsAutoIsfHighTtRaisesSens",
+      "type": "Boolean",
+      "default": null,
+      "min": null,
+      "max": null,
+      "used_in": [
+        {
+          "file": "OpenAPSAutoISFPlugin.kt",
+          "function": "unknown"
+        }
+      ],
+      "orphaned": false,
+      "negative_gate_key": null,
+      "negative_gate_note": null,
+      "logic_summary": "Enables/disables high_temptarget_raises_sensitivity. Gate flag for AutoISF.",
+      "effect_high": "Feature is ON — associated functionality runs",
+      "effect_low": "Feature is OFF — associated functionality is disabled",
+      "impact": "medium",
+      "feature_group": "shared_aaps",
+      "is_gate": false,
+      "settings_path": "Auto ISF",
+      "settings_gate": null
+    },
+    {
+      "key": "higher_ISFrange_weight",
+      "name": "ApsAutoIsfHighBgWeight",
+      "type": "Double",
+      "default": 0.0,
+      "min": 0.0,
+      "max": 2.0,
+      "used_in": [
+        {
+          "file": "OpenAPSAutoISFPlugin.kt",
+          "function": "unknown"
+        },
+        {
+          "file": "AutoIsfWeightsAdvisor.kt",
+          "function": "analyze"
+        },
+        {
+          "file": "AutoIsfAiClient.kt",
+          "function": "buildPrompt"
+        },
+        {
+          "file": "AutoIsfAdvisorService.kt",
+          "function": "collectPrefs"
+        }
+      ],
+      "orphaned": false,
+      "negative_gate_key": null,
+      "negative_gate_note": null,
+      "logic_summary": "Used in AutoISF algorithm for higher_ISFrange_weight.",
+      "effect_high": "Higher value — more insulin/greater effect",
+      "effect_low": "Lower value — less insulin/reduced effect",
+      "impact": "medium",
+      "feature_group": "shared_aaps",
+      "is_gate": false,
+      "settings_path": null,
+      "settings_gate": null
+    },
+    {
+      "key": "iob_threshold_percent",
+      "name": "ApsAutoIsfIobThPercent",
+      "type": "Int",
+      "default": 100,
+      "min": 10,
+      "max": 100,
+      "used_in": [
+        {
+          "file": "OpenAPSAutoISFPlugin.kt",
+          "function": "unknown"
+        },
+        {
+          "file": "AutoIsfAdvisorService.kt",
+          "function": "collectPrefs"
+        },
+        {
+          "file": "AutoIsfSmbAdvisor.kt",
+          "function": "analyze"
+        }
+      ],
+      "orphaned": false,
+      "negative_gate_key": null,
+      "negative_gate_note": null,
+      "logic_summary": "IOB threshold as % of basal. Below this IOB, AutoISF disengages (conservative).",
+      "effect_high": "Higher threshold → AutoISF active at higher IOB → more responsive",
+      "effect_low": "Lower threshold → AutoISF only at low IOB → more conservative",
+      "impact": "high",
+      "feature_group": "isf_weights",
+      "is_gate": false,
+      "settings_path": null,
+      "settings_gate": null
+    },
+    {
+      "key": "lgsThreshold",
+      "name": "ApsLgsThreshold",
+      "type": "UnitDouble",
+      "default": 65.0,
+      "min": null,
+      "max": null,
+      "used_in": [
+        {
+          "file": "OpenAPSAutoISFPlugin.kt",
+          "function": "invoke"
+        }
+      ],
+      "orphaned": false,
+      "negative_gate_key": null,
+      "negative_gate_note": null,
+      "logic_summary": "Parameter for lgsThreshold.",
+      "effect_high": "Higher value — more insulin/greater effect",
+      "effect_low": "Lower value — less insulin/reduced effect",
+      "impact": "medium",
+      "feature_group": "shared_aaps",
+      "is_gate": false,
+      "settings_path": null,
+      "settings_gate": "ApsUseDynamicSensitivity"
+    },
+    {
+      "key": "low_temptarget_lowers_sensitivity",
+      "name": "ApsAutoIsfLowTtLowersSens",
+      "type": "Boolean",
+      "default": null,
+      "min": null,
+      "max": null,
+      "used_in": [
+        {
+          "file": "OpenAPSAutoISFPlugin.kt",
+          "function": "invoke"
+        }
+      ],
+      "orphaned": false,
+      "negative_gate_key": null,
+      "negative_gate_note": null,
+      "logic_summary": "Enables/disables low_temptarget_lowers_sensitivity. Gate flag for AutoISF.",
+      "effect_high": "Feature is ON — associated functionality runs",
+      "effect_low": "Feature is OFF — associated functionality is disabled",
+      "impact": "medium",
+      "feature_group": "shared_aaps",
+      "is_gate": false,
+      "settings_path": "Auto ISF",
+      "settings_gate": null
+    },
+    {
+      "key": "lower_ISFrange_weight",
+      "name": "ApsAutoIsfLowBgWeight",
+      "type": "Double",
+      "default": 0.0,
+      "min": 0.0,
+      "max": 2.0,
+      "used_in": [
+        {
+          "file": "OpenAPSAutoISFPlugin.kt",
+          "function": "unknown"
+        },
+        {
+          "file": "AutoIsfWeightsAdvisor.kt",
+          "function": "analyze"
+        },
+        {
+          "file": "AutoIsfAiClient.kt",
+          "function": "buildPrompt"
+        },
+        {
+          "file": "AutoIsfAdvisorService.kt",
+          "function": "collectPrefs"
+        }
+      ],
+      "orphaned": false,
+      "negative_gate_key": null,
+      "negative_gate_note": null,
+      "logic_summary": "Used in AutoISF algorithm for lower_ISFrange_weight.",
+      "effect_high": "Higher value — more insulin/greater effect",
+      "effect_low": "Lower value — less insulin/reduced effect",
+      "impact": "medium",
+      "feature_group": "shared_aaps",
+      "is_gate": false,
+      "settings_path": null,
+      "settings_gate": null
+    },
+    {
+      "key": "openapsama_current_basal_safety_multiplier",
+      "name": "ApsMaxCurrentBasalMultiplier",
+      "type": "Double",
+      "default": 4.0,
+      "min": 1.0,
+      "max": 10.0,
+      "used_in": [
+        {
+          "file": "OpenAPSAutoISFPlugin.kt",
+          "function": "invoke"
+        }
+      ],
+      "orphaned": false,
+      "negative_gate_key": null,
+      "negative_gate_note": null,
+      "logic_summary": "Used in AutoISF algorithm for current_basal_safety_multiplier.",
+      "effect_high": "Higher value — more insulin/greater effect",
+      "effect_low": "Lower value — less insulin/reduced effect",
+      "impact": "critical",
+      "feature_group": "shared_aaps",
+      "is_gate": false,
+      "settings_path": "Auto ISF → Advanced Settings",
+      "settings_gate": null
+    },
+    {
+      "key": "openapsama_enable_autoISF",
+      "name": "ApsUseAutoIsfWeights",
+      "type": "Boolean",
+      "default": null,
+      "min": null,
+      "max": null,
+      "used_in": [
+        {
+          "file": "OpenAPSAutoISFPlugin.kt",
+          "function": "unknown"
+        },
+        {
+          "file": "AutoIsfWeightsAdvisor.kt",
+          "function": "analyze"
+        },
+        {
+          "file": "AutoIsfAdvisorService.kt",
+          "function": "collectPrefs"
+        }
+      ],
+      "orphaned": false,
+      "negative_gate_key": null,
+      "negative_gate_note": null,
+      "logic_summary": "Enables/disables enable_autoISF. Gate flag for AutoISF.",
+      "effect_high": "Feature is ON — associated functionality runs",
+      "effect_low": "Feature is OFF — associated functionality is disabled",
+      "impact": "medium",
+      "feature_group": "shared_aaps",
+      "is_gate": false,
+      "settings_path": null,
+      "settings_gate": null
+    },
+    {
+      "key": "openapsama_max_daily_safety_multiplier",
+      "name": "ApsMaxDailyMultiplier",
+      "type": "Double",
+      "default": 3.0,
+      "min": 1.0,
+      "max": 10.0,
+      "used_in": [
+        {
+          "file": "OpenAPSAutoISFPlugin.kt",
+          "function": "invoke"
+        }
+      ],
+      "orphaned": false,
+      "negative_gate_key": null,
+      "negative_gate_note": null,
+      "logic_summary": "Maximum daily insulin multiplier × profile. Safety limit.",
+      "effect_high": "Higher value — more insulin/greater effect",
+      "effect_low": "Lower value — less insulin/reduced effect",
+      "impact": "critical",
+      "feature_group": "shared_aaps",
+      "is_gate": false,
+      "settings_path": "Auto ISF → Advanced Settings",
+      "settings_gate": null
+    },
+    {
+      "key": "openapsama_smb_delivery_ratio",
+      "name": "ApsAutoIsfSmbDeliveryRatio",
+      "type": "Double",
+      "default": 0.5,
+      "min": 0.1,
+      "max": 1.0,
+      "used_in": [
+        {
+          "file": "OpenAPSAutoISFPlugin.kt",
+          "function": "unknown"
+        },
+        {
+          "file": "AutoIsfWeightsAdvisor.kt",
+          "function": "analyze"
+        },
+        {
+          "file": "AutoIsfAiClient.kt",
+          "function": "buildPrompt"
+        },
+        {
+          "file": "AutoIsfAdvisorService.kt",
+          "function": "collectPrefs"
+        },
+        {
+          "file": "AutoIsfSmbAdvisor.kt",
+          "function": "analyze"
+        }
+      ],
+      "orphaned": false,
+      "negative_gate_key": null,
+      "negative_gate_note": null,
+      "logic_summary": "Base SMB delivery ratio (0.5-3.0). 1.0 = standard SMB. Higher = larger SMBs.",
+      "effect_high": "Larger SMBs → more aggressive correction",
+      "effect_low": "Smaller SMBs → more conservative",
+      "impact": "high",
+      "feature_group": "smb_delivery",
+      "is_gate": false,
+      "settings_path": null,
+      "settings_gate": null
+    },
+    {
+      "key": "openapsama_smb_delivery_ratio_bg_range",
+      "name": "ApsAutoIsfSmbDeliveryRatioBgRange",
+      "type": "Double",
+      "default": 0.0,
+      "min": 0.0,
+      "max": 100.0,
+      "used_in": [
+        {
+          "file": "OpenAPSAutoISFPlugin.kt",
+          "function": "unknown"
+        },
+        {
+          "file": "AutoIsfAiClient.kt",
+          "function": "buildPrompt"
+        },
+        {
+          "file": "AutoIsfAdvisorService.kt",
+          "function": "collectPrefs"
+        }
+      ],
+      "orphaned": false,
+      "negative_gate_key": null,
+      "negative_gate_note": null,
+      "logic_summary": "Base SMB delivery ratio (0.5-3.0). 1.0 = standard SMB. Higher = larger SMBs.",
+      "effect_high": "Larger SMBs → more aggressive correction",
+      "effect_low": "Smaller SMBs → more conservative",
+      "impact": "high",
+      "feature_group": "smb_delivery",
+      "is_gate": false,
+      "settings_path": null,
+      "settings_gate": null
+    },
+    {
+      "key": "openapsama_smb_delivery_ratio_max",
+      "name": "ApsAutoIsfSmbDeliveryRatioMax",
+      "type": "Double",
+      "default": 0.5,
+      "min": 0.5,
+      "max": 1.0,
+      "used_in": [
+        {
+          "file": "OpenAPSAutoISFPlugin.kt",
+          "function": "unknown"
+        },
+        {
+          "file": "AutoIsfWeightsAdvisor.kt",
+          "function": "analyze"
+        },
+        {
+          "file": "AutoIsfAiClient.kt",
+          "function": "buildPrompt"
+        },
+        {
+          "file": "AutoIsfAdvisorService.kt",
+          "function": "collectPrefs"
+        }
+      ],
+      "orphaned": false,
+      "negative_gate_key": null,
+      "negative_gate_note": null,
+      "logic_summary": "Base SMB delivery ratio (0.5-3.0). 1.0 = standard SMB. Higher = larger SMBs.",
+      "effect_high": "Larger SMBs → more aggressive correction",
+      "effect_low": "Smaller SMBs → more conservative",
+      "impact": "high",
+      "feature_group": "smb_delivery",
+      "is_gate": false,
+      "settings_path": null,
+      "settings_gate": null
+    },
+    {
+      "key": "openapsama_smb_delivery_ratio_min",
+      "name": "ApsAutoIsfSmbDeliveryRatioMin",
+      "type": "Double",
+      "default": 0.5,
+      "min": 0.1,
+      "max": 1.0,
+      "used_in": [
+        {
+          "file": "OpenAPSAutoISFPlugin.kt",
+          "function": "unknown"
+        },
+        {
+          "file": "AutoIsfWeightsAdvisor.kt",
+          "function": "analyze"
+        },
+        {
+          "file": "AutoIsfAiClient.kt",
+          "function": "buildPrompt"
+        },
+        {
+          "file": "AutoIsfAdvisorService.kt",
+          "function": "collectPrefs"
+        },
+        {
+          "file": "AutoIsfSmbAdvisor.kt",
+          "function": "analyze"
+        }
+      ],
+      "orphaned": false,
+      "negative_gate_key": null,
+      "negative_gate_note": null,
+      "logic_summary": "Base SMB delivery ratio (0.5-3.0). 1.0 = standard SMB. Higher = larger SMBs.",
+      "effect_high": "Larger SMBs → more aggressive correction",
+      "effect_low": "Smaller SMBs → more conservative",
+      "impact": "high",
+      "feature_group": "smb_delivery",
+      "is_gate": false,
+      "settings_path": null,
+      "settings_gate": null
+    },
+    {
+      "key": "openapsama_smb_max_range_extension",
+      "name": "ApsAutoIsfSmbMaxRangeExtension",
+      "type": "Double",
+      "default": 1.0,
+      "min": 1.0,
+      "max": 5.0,
+      "used_in": [
+        {
+          "file": "OpenAPSAutoISFPlugin.kt",
+          "function": "unknown"
+        },
+        {
+          "file": "AutoIsfAiClient.kt",
+          "function": "buildPrompt"
+        },
+        {
+          "file": "AutoIsfAdvisorService.kt",
+          "function": "collectPrefs"
+        }
+      ],
+      "orphaned": false,
+      "negative_gate_key": null,
+      "negative_gate_note": null,
+      "logic_summary": "Max range extension (mg/dL). Extends the BG window for SMB ratio scaling.",
+      "effect_high": "Higher value — more insulin/greater effect",
+      "effect_low": "Lower value — less insulin/reduced effect",
+      "impact": "medium",
+      "feature_group": "smb_delivery",
+      "is_gate": false,
+      "settings_path": null,
+      "settings_gate": null
+    },
+    {
+      "key": "openapsma_max_basal",
+      "name": "ApsMaxBasal",
+      "type": "Double",
+      "default": 1.0,
+      "min": 0.1,
+      "max": 25.0,
+      "used_in": [
+        {
+          "file": "OpenAPSAutoISFPlugin.kt",
+          "function": "applyBasalConstraints"
+        }
+      ],
+      "orphaned": false,
+      "negative_gate_key": null,
+      "negative_gate_note": null,
+      "logic_summary": "Maximum temporary basal rate (U/h). Shared safety limit.",
+      "effect_high": "Higher value — more insulin/greater effect",
+      "effect_low": "Lower value — less insulin/reduced effect",
+      "impact": "critical",
+      "feature_group": "shared_aaps",
+      "is_gate": false,
+      "settings_path": "Auto ISF",
+      "settings_gate": null
+    },
+    {
+      "key": "openapsmb_max_iob",
+      "name": "ApsSmbMaxIob",
+      "type": "Double",
+      "default": 3.0,
+      "min": 0.0,
+      "max": 70.0,
+      "used_in": [
+        {
+          "file": "OpenAPSAutoISFPlugin.kt",
+          "function": "applyMaxIOBConstraints"
+        }
+      ],
+      "orphaned": false,
+      "negative_gate_key": null,
+      "negative_gate_note": null,
+      "logic_summary": "Maximum IOB for SMB delivery (U).",
+      "effect_high": "Higher value — more insulin/greater effect",
+      "effect_low": "Lower value — less insulin/reduced effect",
+      "impact": "critical",
+      "feature_group": "shared_aaps",
+      "is_gate": false,
+      "settings_path": "Auto ISF",
+      "settings_gate": null
+    },
+    {
+      "key": "pp_ISF_weight",
+      "name": "ApsAutoIsfPpWeight",
+      "type": "Double",
+      "default": 0.0,
+      "min": 0.0,
+      "max": 0.15,
+      "used_in": [
+        {
+          "file": "OpenAPSAutoISFPlugin.kt",
+          "function": "unknown"
+        },
+        {
+          "file": "AutoIsfWeightsAdvisor.kt",
+          "function": "analyze"
+        },
+        {
+          "file": "AutoIsfAiClient.kt",
+          "function": "buildPrompt"
+        },
+        {
+          "file": "AutoIsfAdvisorService.kt",
+          "function": "collectPrefs"
+        }
+      ],
+      "orphaned": false,
+      "negative_gate_key": null,
+      "negative_gate_note": null,
+      "logic_summary": "Post-prandial weight. Higher = stronger ISF adjustment after meals.",
+      "effect_high": "Higher value — more insulin/greater effect",
+      "effect_low": "Lower value — less insulin/reduced effect",
+      "impact": "medium",
+      "feature_group": "isf_weights",
+      "is_gate": false,
+      "settings_path": null,
+      "settings_gate": null
+    },
+    {
+      "key": "smbinterval",
+      "name": "ApsMaxSmbFrequency",
+      "type": "Int",
+      "default": 3,
+      "min": 1,
+      "max": 10,
+      "used_in": [
+        {
+          "file": "OpenAPSAutoISFPlugin.kt",
+          "function": "unknown"
+        }
+      ],
+      "orphaned": false,
+      "negative_gate_key": null,
+      "negative_gate_note": null,
+      "logic_summary": "Used in AutoISF algorithm for smbinterval.",
+      "effect_high": "Higher value — more insulin/greater effect",
+      "effect_low": "Lower value — less insulin/reduced effect",
+      "impact": "medium",
+      "feature_group": "shared_aaps",
+      "is_gate": false,
+      "settings_path": "Auto ISF",
+      "settings_gate": "ApsUseSmb"
+    },
+    {
+      "key": "smbmaxminutes",
+      "name": "ApsMaxMinutesOfBasalToLimitSmb",
+      "type": "Int",
+      "default": 30,
+      "min": 15,
+      "max": 120,
+      "used_in": [
+        {
+          "file": "OpenAPSAutoISFPlugin.kt",
+          "function": "invoke"
+        }
+      ],
+      "orphaned": false,
+      "negative_gate_key": null,
+      "negative_gate_note": null,
+      "logic_summary": "Used in AutoISF algorithm for smbmaxminutes.",
+      "effect_high": "Higher value — more insulin/greater effect",
+      "effect_low": "Lower value — less insulin/reduced effect",
+      "impact": "medium",
+      "feature_group": "shared_aaps",
+      "is_gate": false,
+      "settings_path": "Auto ISF",
+      "settings_gate": "ApsUseSmb"
+    },
+    {
+      "key": "uamsmbmaxminutes",
+      "name": "ApsUamMaxMinutesOfBasalToLimitSmb",
+      "type": "Int",
+      "default": 30,
+      "min": 15,
+      "max": 120,
+      "used_in": [
+        {
+          "file": "OpenAPSAutoISFPlugin.kt",
+          "function": "invoke"
+        }
+      ],
+      "orphaned": false,
+      "negative_gate_key": null,
+      "negative_gate_note": null,
+      "logic_summary": "Used in AutoISF algorithm for uamsmbmaxminutes.",
+      "effect_high": "Higher value — more insulin/greater effect",
+      "effect_low": "Lower value — less insulin/reduced effect",
+      "impact": "medium",
+      "feature_group": "shared_aaps",
+      "is_gate": false,
+      "settings_path": "Auto ISF",
+      "settings_gate": "ApsUseSmb"
+    },
+    {
+      "key": "use_smb",
+      "name": "ApsUseSmb",
+      "type": "Boolean",
+      "default": null,
+      "min": null,
+      "max": null,
+      "used_in": [
+        {
+          "file": "OpenAPSAutoISFPlugin.kt",
+          "function": "preprocessPreferences"
+        }
+      ],
+      "orphaned": false,
+      "negative_gate_key": null,
+      "negative_gate_note": null,
+      "logic_summary": "Master SMB gate.",
+      "effect_high": "Feature is ON — associated functionality runs",
+      "effect_low": "Feature is OFF — associated functionality is disabled",
+      "impact": "critical",
+      "feature_group": "shared_aaps",
+      "is_gate": false,
+      "settings_path": "Auto ISF",
+      "settings_gate": null
+    },
+    {
+      "key": "use_uam",
+      "name": "ApsUseUam",
+      "type": "Boolean",
+      "default": null,
+      "min": null,
+      "max": null,
+      "used_in": [
+        {
+          "file": "OpenAPSAutoISFPlugin.kt",
+          "function": "isUAMEnabled"
+        }
+      ],
+      "orphaned": false,
+      "negative_gate_key": null,
+      "negative_gate_note": null,
+      "logic_summary": "Enables/disables use_uam. Gate flag for AutoISF.",
+      "effect_high": "Feature is ON — associated functionality runs",
+      "effect_low": "Feature is OFF — associated functionality is disabled",
+      "impact": "medium",
+      "feature_group": "shared_aaps",
+      "is_gate": false,
+      "settings_path": "Auto ISF",
+      "settings_gate": null
+    }
+  ],
+  "feature_groups": {
+    "isf_weights": {
+      "id": "isf_weights",
+      "name": "AutoISF Weights",
+      "description": "Core AutoISF weight system. Six weights control how different signals contribute to ISF adjustment: bgAccel (rising BG), bgBrake (falling BG), lowBg (hypo risk), highBg (hyper), pp (post-prandial), dura (duration). Weights are clamped by ApsAutoIsfMin/ApsAutoIsfMax and bounded by IobThPercent (IOB threshold % of basal).",
+      "gate_key": "openapsama_use_autoisf_weights",
+      "param_count": 5,
+      "key_params": [
+        "autoISF_max",
+        "autoISF_min",
+        "dura_ISF_weight",
+        "iob_threshold_percent",
+        "pp_ISF_weight"
+      ]
+    },
+    "smb_delivery": {
+      "id": "smb_delivery",
+      "name": "SMB Delivery Ratio",
+      "description": "Dynamic SMB delivery ratio that scales SMB size based on BG position. Ratio/slope with min/max bounds, BG range definition, and max range extension. SmbOnEvenTarget allows delivery even when BG equals target (no delta signal).",
+      "gate_key": "openapsama_use_smb",
+      "param_count": 5,
+      "key_params": [
+        "openapsama_smb_delivery_ratio",
+        "openapsama_smb_delivery_ratio_bg_range",
+        "openapsama_smb_delivery_ratio_max",
+        "openapsama_smb_delivery_ratio_min",
+        "openapsama_smb_max_range_extension"
+      ]
+    },
+    "temp_target_interaction": {
+      "id": "temp_target_interaction",
+      "name": "Temp Target Interaction",
+      "description": "How AutoISF interacts with temp targets. HighTtRaisesSens: high temp target → raise sensitivity (less insulin). LowTtLowersSens: low temp target → lower sensitivity (more insulin). HalfBasalExerciseTarget defines the BG for half-basal during exercise.",
+      "gate_key": null,
+      "param_count": 1,
+      "key_params": [
+        "half_basal_exercise_target"
+      ]
+    },
+    "shared_aaps": {
+      "id": "shared_aaps",
+      "name": "Shared AAPS Settings",
+      "description": "Standard OpenAPS settings that AutoISF also reads: max basal, max IOB, SMB gates, autosens, sensitivity/target interactions.",
+      "gate_key": null,
+      "param_count": 28,
+      "key_params": [
+        "Enable alternative activation of SMB always",
+        "always_use_shortavg",
+        "autosens_adjust_targets",
+        "autosens_max",
+        "autosens_min",
+        "bgAccel_ISF_weight",
+        "bgBrake_ISF_weight",
+        "carbsReqThreshold",
+        "enableSMB_after_carbs",
+        "enableSMB_always",
+        "enableSMB_with_COB",
+        "enableSMB_with_high_temptarget",
+        "enableSMB_with_temptarget",
+        "high_temptarget_raises_sensitivity",
+        "higher_ISFrange_weight"
+      ]
+    }
+  }
+}

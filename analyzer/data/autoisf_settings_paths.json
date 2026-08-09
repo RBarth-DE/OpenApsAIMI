@@ -1,0 +1,141 @@
+{
+  "generated_at": "2026-08-09T17:02:24.540057+00:00",
+  "source_commit": "4c41219ae907abcdda2cc637df3c43c6cfda4e91",
+  "paths": {
+    "openapsma_max_basal": {
+      "path": "Auto ISF",
+      "screen_titles": [
+        "Auto ISF"
+      ]
+    },
+    "openapsmb_max_iob": {
+      "path": "Auto ISF",
+      "screen_titles": [
+        "Auto ISF"
+      ]
+    },
+    "openapsama_useautosens": {
+      "path": "Auto ISF",
+      "screen_titles": [
+        "Auto ISF"
+      ]
+    },
+    "sensitivity_raises_target": {
+      "path": "Auto ISF",
+      "screen_titles": [
+        "Auto ISF"
+      ]
+    },
+    "resistance_lowers_target": {
+      "path": "Auto ISF",
+      "screen_titles": [
+        "Auto ISF"
+      ]
+    },
+    "high_temptarget_raises_sensitivity": {
+      "path": "Auto ISF",
+      "screen_titles": [
+        "Auto ISF"
+      ]
+    },
+    "low_temptarget_lowers_sensitivity": {
+      "path": "Auto ISF",
+      "screen_titles": [
+        "Auto ISF"
+      ]
+    },
+    "half_basal_exercise_target": {
+      "path": "Auto ISF",
+      "screen_titles": [
+        "Auto ISF"
+      ]
+    },
+    "use_smb": {
+      "path": "Auto ISF",
+      "screen_titles": [
+        "Auto ISF"
+      ]
+    },
+    "enableSMB_with_high_temptarget": {
+      "path": "Auto ISF",
+      "screen_titles": [
+        "Auto ISF"
+      ]
+    },
+    "enableSMB_always": {
+      "path": "Auto ISF",
+      "screen_titles": [
+        "Auto ISF"
+      ]
+    },
+    "enableSMB_with_COB": {
+      "path": "Auto ISF",
+      "screen_titles": [
+        "Auto ISF"
+      ]
+    },
+    "enableSMB_with_temptarget": {
+      "path": "Auto ISF",
+      "screen_titles": [
+        "Auto ISF"
+      ]
+    },
+    "enableSMB_after_carbs": {
+      "path": "Auto ISF",
+      "screen_titles": [
+        "Auto ISF"
+      ]
+    },
+    "use_uam": {
+      "path": "Auto ISF",
+      "screen_titles": [
+        "Auto ISF"
+      ]
+    },
+    "smbinterval": {
+      "path": "Auto ISF",
+      "screen_titles": [
+        "Auto ISF"
+      ]
+    },
+    "smbmaxminutes": {
+      "path": "Auto ISF",
+      "screen_titles": [
+        "Auto ISF"
+      ]
+    },
+    "uamsmbmaxminutes": {
+      "path": "Auto ISF",
+      "screen_titles": [
+        "Auto ISF"
+      ]
+    },
+    "carbsReqThreshold": {
+      "path": "Auto ISF",
+      "screen_titles": [
+        "Auto ISF"
+      ]
+    },
+    "always_use_shortavg": {
+      "path": "Auto ISF → Advanced Settings",
+      "screen_titles": [
+        "Auto ISF",
+        "Advanced Settings"
+      ]
+    },
+    "openapsama_max_daily_safety_multiplier": {
+      "path": "Auto ISF → Advanced Settings",
+      "screen_titles": [
+        "Auto ISF",
+        "Advanced Settings"
+      ]
+    },
+    "openapsama_current_basal_safety_multiplier": {
+      "path": "Auto ISF → Advanced Settings",
+      "screen_titles": [
+        "Auto ISF",
+        "Advanced Settings"
+      ]
+    }
+  }
+}

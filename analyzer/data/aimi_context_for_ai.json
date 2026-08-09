@@ -1,6 +1,6 @@
 {
   "version": "2.2",
-  "generated_at": "2026-07-22T16:58:31.834360+00:00",
+  "generated_at": "2026-08-09T17:02:23.926141+00:00",
   "algorithm_overview": {
     "name": "AIMI (AI-powered Modular Insulin)",
     "base": "OpenAPS oref1 with extensive extensions",
@@ -127,9 +127,11 @@
         "aimi_pkpd_state_traj_peak",
         "key_aimi_pkpd_enabled",
         "key_aimi_pkpd_endo_reversion",
+        "key_aimi_pkpd_hyper_reversion",
         "key_aimi_pkpd_pragmatic_relief_enabled",
         "key_aimi_pkpd_prediction_kinetics",
-        "key_aimi_pkpd_setup_wizard_completed"
+        "key_aimi_pkpd_setup_wizard_completed",
+        "key_aimi_pkpd_stack_aware_guardb"
       ]
     },
     "unified_reactivity": {
@@ -383,6 +385,7 @@
       "gate_key": "key_aimi_hyper_trajectory_release",
       "key_params": [
         "key_aimi_hyper_deep_dev_mgdl",
+        "key_aimi_hyper_dropping_exempt_enabled",
         "key_aimi_hyper_established_dev_mgdl",
         "key_aimi_hyper_trajectory_release",
         "key_aimi_hyper_trajectory_release_aggressive"
@@ -435,7 +438,7 @@
       "workaround": "None — parameters are ineffective."
     }
   ],
-  "source_commit": "0320615cfe7e2268d48bf37ae3c9fb39881b9d0f",
+  "source_commit": "4c41219ae907abcdda2cc637df3c43c6cfda4e91",
   "parameter_knowledge": [
     {
       "key": "AIMI_UAM_CONFIDENCE",
@@ -1552,6 +1555,30 @@
       "function": "aimiComposeAutodriveSubScreen"
     },
     {
+      "key": "key_aimi_basal_channel_safety_guards",
+      "name": "OApsAIMIBasalChannelSafetyGuards",
+      "logic_summary": "Boolean switch for basal_channel_safety_guards.",
+      "effect_high": "Feature is active — associated functionality runs",
+      "effect_low": "Feature is inactive — associated functionality is disabled",
+      "feature_group": "core",
+      "impact": "critical",
+      "settings_path": "AIMI → Preferences user → Universal Adaptive Basal",
+      "usage_type": "",
+      "function": "aimiComposeAdaptiveBasalSubScreen"
+    },
+    {
+      "key": "key_aimi_basal_projected_error",
+      "name": "OApsAIMIBasalProjectedError",
+      "logic_summary": "Boolean switch for basal_projected_error.",
+      "effect_high": "Feature is active — associated functionality runs",
+      "effect_low": "Feature is inactive — associated functionality is disabled",
+      "feature_group": "core",
+      "impact": "medium",
+      "settings_path": "AIMI → Preferences user → Universal Adaptive Basal",
+      "usage_type": "",
+      "function": "aimiComposeAdaptiveBasalSubScreen"
+    },
+    {
       "key": "key_aimi_basal_slew_limit",
       "name": "OApsAIMIBasalSlewLimitEnabled",
       "logic_summary": "Boolean switch for basal_slew_limit.",
@@ -1559,9 +1586,21 @@
       "effect_low": "Feature is inactive — associated functionality is disabled",
       "feature_group": "core",
       "impact": "medium",
-      "settings_path": "AIMI → Preferences user → Core",
+      "settings_path": "AIMI → Preferences user → Universal Adaptive Basal",
       "usage_type": "",
-      "function": "runPostBasalEngineLearnersRtInstrumentationAndAuditorStage"
+      "function": "aimiComposeAdaptiveBasalSubScreen"
+    },
+    {
+      "key": "key_aimi_basal_terminal_invariants",
+      "name": "OApsAIMIBasalTerminalInvariants",
+      "logic_summary": "Boolean switch for basal_terminal_invariants.",
+      "effect_high": "Feature is active — associated functionality runs",
+      "effect_low": "Feature is inactive — associated functionality is disabled",
+      "feature_group": "core",
+      "impact": "medium",
+      "settings_path": "AIMI → Preferences user → Universal Adaptive Basal",
+      "usage_type": "",
+      "function": "aimiComposeAdaptiveBasalSubScreen"
     },
     {
       "key": "key_aimi_context_enabled",
@@ -1597,7 +1636,7 @@
       "impact": "medium",
       "settings_path": "AIMI → Preferences user → Governance",
       "usage_type": "",
-      "function": "runT9PhysioEarlyPkpdAndTubeBootstrap"
+      "function": "invoke"
     },
     {
       "key": "key_aimi_effective_iob_release_enabled",
@@ -1828,6 +1867,18 @@
       "function": "aimiComposeAutodriveSubScreen"
     },
     {
+      "key": "key_aimi_hyper_dropping_exempt_enabled",
+      "name": "OApsAIMIHyperDroppingExemptEnabled",
+      "logic_summary": "Enables/disables hyper_dropping_exempt_enabled. Gate flag for feature control.",
+      "effect_high": "Feature is active — associated functionality runs",
+      "effect_low": "Feature is inactive — associated functionality is disabled",
+      "feature_group": "hyper_trajectory",
+      "impact": "medium",
+      "settings_path": "AIMI → Preferences user → Hyper Trajectory",
+      "usage_type": "",
+      "function": "determineCriticalConditions"
+    },
+    {
       "key": "key_aimi_hyper_established_dev_mgdl",
       "name": "OApsAIMIHyperEstablishedDevMgdl",
       "logic_summary": "Deviation threshold (mg/dL) for established hyperglycemia.",
@@ -1948,6 +1999,30 @@
       "function": "traceDetermineBasalTick"
     },
     {
+      "key": "key_aimi_meal_confirmed_early_release",
+      "name": "OApsAIMIMealConfirmedEarlyRelease",
+      "logic_summary": "Boolean switch for meal_confirmed_early_release.",
+      "effect_high": "Feature is active — associated functionality runs",
+      "effect_low": "Feature is inactive — associated functionality is disabled",
+      "feature_group": "meal_modes",
+      "impact": "high",
+      "settings_path": "AIMI → Preferences user → Autodrive",
+      "usage_type": "",
+      "function": "aimiComposeAutodriveSubScreen"
+    },
+    {
+      "key": "key_aimi_meal_hyper_bypass_enabled",
+      "name": "OApsAIMIMealHyperBypassEnabled",
+      "logic_summary": "Enables/disables meal_hyper_bypass_enabled. Gate flag for feature control.",
+      "effect_high": "Feature is active — associated functionality runs",
+      "effect_low": "Feature is inactive — associated functionality is disabled",
+      "feature_group": "meal_modes",
+      "impact": "high",
+      "settings_path": "AIMI → Preferences user → Meal Modes",
+      "usage_type": "",
+      "function": "from"
+    },
+    {
       "key": "key_aimi_peak_governor_enabled",
       "name": "OApsAIMIPeakGovernorEnabled",
       "logic_summary": "Enables Peak Governor — learns and adjusts insulin peak timing.",
@@ -1984,6 +2059,18 @@
       "function": "aimiComposePkpdSubScreen"
     },
     {
+      "key": "key_aimi_pkpd_hyper_reversion",
+      "name": "OApsAIMIPkpdHyperReversion",
+      "logic_summary": "Boolean switch for pkpd_hyper_reversion.",
+      "effect_high": "Feature is active — associated functionality runs",
+      "effect_low": "Feature is inactive — associated functionality is disabled",
+      "feature_group": "pkpd",
+      "impact": "high",
+      "settings_path": "AIMI → Preferences user → Pkpd",
+      "usage_type": "",
+      "function": "runAdvancedPredictionsAndPredPipePrep"
+    },
+    {
       "key": "key_aimi_pkpd_pragmatic_relief_enabled",
       "name": "OApsAIMIPkpdPragmaticReliefEnabled",
       "logic_summary": "Minimum factor for Pragmatic Relief — temporary maxIOB increase in critical phases.",
@@ -2018,6 +2105,18 @@
       "settings_path": "AIMI → Preferences user → Pkpd",
       "usage_type": "",
       "function": "AimiPkpdSettingsScreen"
+    },
+    {
+      "key": "key_aimi_pkpd_stack_aware_guardb",
+      "name": "OApsAIMIPkpdStackAwareGuardB",
+      "logic_summary": "Boolean switch for pkpd_stack_aware_guardb.",
+      "effect_high": "Feature is active — associated functionality runs",
+      "effect_low": "Feature is inactive — associated functionality is disabled",
+      "feature_group": "pkpd",
+      "impact": "high",
+      "settings_path": "AIMI → Preferences user → Pkpd",
+      "usage_type": "",
+      "function": "runAdvancedPredictionsAndPredPipePrep"
     },
     {
       "key": "key_aimi_prediction_authority_enabled",
@@ -2074,6 +2173,18 @@
       "effect_high": "Feature is active — associated functionality runs",
       "effect_low": "Feature is inactive — associated functionality is disabled",
       "feature_group": "recursive_belief",
+      "impact": "medium",
+      "settings_path": "AIMI → Preferences user → Autodrive",
+      "usage_type": "",
+      "function": "aimiComposeAutodriveSubScreen"
+    },
+    {
+      "key": "key_aimi_sensor_confidence_cgm_first",
+      "name": "OApsAIMISensorConfidenceCgmFirst",
+      "logic_summary": "Boolean switch for sensor_confidence_cgm_first.",
+      "effect_high": "Feature is active — associated functionality runs",
+      "effect_low": "Feature is inactive — associated functionality is disabled",
+      "feature_group": "core",
       "impact": "medium",
       "settings_path": "AIMI → Preferences user → Autodrive",
       "usage_type": "",
@@ -2147,7 +2258,7 @@
       "effect_low": "Feature is inactive — associated functionality is disabled",
       "feature_group": "t3c_adaptive_basal",
       "impact": "high",
-      "settings_path": "AIMI → Preferences user → T3C Adaptive Basal",
+      "settings_path": "AIMI → Preferences user → T3C Brittle Mode Settings",
       "usage_type": "",
       "function": "aimiComposeT3cSubScreen"
     },
@@ -2183,9 +2294,9 @@
       "effect_low": "Feature is inactive — associated functionality is disabled",
       "feature_group": "t3c_adaptive_basal",
       "impact": "high",
-      "settings_path": "AIMI → Preferences user → T3C Adaptive Basal",
+      "settings_path": "AIMI → Preferences user → T3C Brittle Mode Settings",
       "usage_type": "",
-      "function": "estimateUndeclaredVirtualCob"
+      "function": "aimiComposeT3cSubScreen"
     },
     {
       "key": "key_aimi_t3c_cfrd_lgs_floor",
@@ -2207,9 +2318,21 @@
       "effect_low": "Feature is inactive — associated functionality is disabled",
       "feature_group": "t3c_adaptive_basal",
       "impact": "high",
-      "settings_path": "AIMI → Preferences user → T3C Adaptive Basal",
+      "settings_path": "AIMI → Preferences user → T3C Brittle Mode Settings",
       "usage_type": "",
-      "function": "runT3cBrittleBypassOrReturn"
+      "function": "aimiComposeT3cSubScreen"
+    },
+    {
+      "key": "key_aimi_t3c_hyper_basal_floor",
+      "name": "OApsAIMIT3cHyperBasalFloor",
+      "logic_summary": "Boolean switch for t3c_hyper_basal_floor.",
+      "effect_high": "Feature is active — associated functionality runs",
+      "effect_low": "Feature is inactive — associated functionality is disabled",
+      "feature_group": "t3c_adaptive_basal",
+      "impact": "high",
+      "settings_path": "AIMI → Preferences user → T3C Brittle Mode Settings",
+      "usage_type": "",
+      "function": "aimiComposeT3cSubScreen"
     },
     {
       "key": "key_aimi_t3c_physio_informed",
@@ -2342,6 +2465,18 @@
       "settings_path": "AIMI → Preferences user → Trajectory Guard",
       "usage_type": "",
       "function": "computeTrajectoryPeakNudgeForGovernor"
+    },
+    {
+      "key": "key_aimi_tree_meal_rise_frontload",
+      "name": "OApsAIMITreeMealRiseFrontLoad",
+      "logic_summary": "Boolean switch for tree_meal_rise_frontload.",
+      "effect_high": "Feature is active — associated functionality runs",
+      "effect_low": "Feature is inactive — associated functionality is disabled",
+      "feature_group": "meal_modes",
+      "impact": "high",
+      "settings_path": "AIMI → Preferences user → Autodrive",
+      "usage_type": "",
+      "function": "aimiComposeAutodriveSubScreen"
     },
     {
       "key": "key_aimi_tube_aggressiveness",
@@ -3314,18 +3449,6 @@
       "feature_group": "core",
       "impact": "medium",
       "settings_path": "AIMI → Preferences user → Core"
-    },
-    {
-      "key": "openapsama_useautosens",
-      "name": "ApsUseAutosens",
-      "logic_summary": "Boolean switch for useautosens.",
-      "effect_high": "Feature is active — associated functionality runs",
-      "effect_low": "Feature is inactive — associated functionality is disabled",
-      "feature_group": "core",
-      "impact": "medium",
-      "settings_path": "AIMI → Advanced Settings",
-      "usage_type": "",
-      "function": "isAutosensModeEnabled"
     },
     {
       "key": "openapsma_max_basal",

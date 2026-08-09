@@ -7,6 +7,8 @@
     "summary": "UAM confidence (0-1) for meal detection without carb announcement.",
     "default": 0.5,
     "min": 0.0,
+    "max": 1.0,
+    "unit_type": "DOUBLE_2",
     "orphaned": false,
     "is_gate": false,
     "negative_gate_key": null,
@@ -28,6 +30,8 @@
     "summary": "Used in AIMI internal calculations for AntiStallBias.",
     "default": 0.1,
     "min": 0.0,
+    "max": 0.5,
+    "unit_type": "DOUBLE_2",
     "orphaned": true,
     "is_gate": false,
     "negative_gate_key": null,
@@ -43,6 +47,8 @@
     "summary": "Used in AIMI internal calculations for DeltaPosRelease.",
     "default": 1.0,
     "min": 0.5,
+    "max": 3.0,
+    "unit_type": "DOUBLE",
     "orphaned": true,
     "is_gate": false,
     "negative_gate_key": null,
@@ -59,6 +65,7 @@
     "default": 180.0,
     "min": 140.0,
     "max": 250.0,
+    "unit_type": "MGDL",
     "orphaned": false,
     "is_gate": false,
     "negative_gate_key": null,
@@ -98,6 +105,8 @@
     "summary": "Used in AIMI internal calculations for KickerMinUph.",
     "default": 0.2,
     "min": 0.05,
+    "max": 1.0,
+    "unit_type": "INSULIN_RATE",
     "orphaned": true,
     "is_gate": false,
     "negative_gate_key": null,
@@ -127,6 +136,8 @@
     "summary": "Used in AIMI internal calculations for KickerStep.",
     "default": 0.15,
     "min": 0.05,
+    "max": 0.5,
+    "unit_type": "DOUBLE_2",
     "orphaned": true,
     "is_gate": false,
     "negative_gate_key": null,
@@ -167,6 +178,8 @@
     "summary": "Used in AIMI internal calculations for LastEstimatedCarbs.",
     "default": 0.0,
     "min": 0.0,
+    "max": 300.0,
+    "unit_type": "GRAMS",
     "orphaned": false,
     "is_gate": false,
     "negative_gate_key": null,
@@ -192,6 +205,8 @@
     "summary": "Used in AIMI internal calculations for MaxMultiplier.",
     "default": 1.6,
     "min": 1.0,
+    "max": 2.5,
+    "unit_type": "DOUBLE",
     "orphaned": false,
     "is_gate": false,
     "negative_gate_key": null,
@@ -217,6 +232,8 @@
     "summary": "Used in AIMI internal calculations for PlateauBandAbs.",
     "default": 2.5,
     "min": 0.5,
+    "max": 6.0,
+    "unit_type": "DOUBLE",
     "orphaned": true,
     "is_gate": false,
     "negative_gate_key": null,
@@ -232,6 +249,8 @@
     "summary": "Used in AIMI internal calculations for R2Confident.",
     "default": 0.7,
     "min": 0.3,
+    "max": 0.95,
+    "unit_type": "DOUBLE_2",
     "orphaned": true,
     "is_gate": false,
     "negative_gate_key": null,
@@ -350,6 +369,7 @@
     "default": 1.0,
     "min": 0.0,
     "max": 1.5,
+    "unit_type": "DOUBLE",
     "dependency": "ActivityMonitorDetection",
     "orphaned": true,
     "is_gate": false,
@@ -764,6 +784,8 @@
     "summary": "Sharpness of cosine gate (0.1-10). Higher = steeper transition.",
     "default": 2.0,
     "min": 0.1,
+    "max": 10.0,
+    "unit_type": "DOUBLE",
     "orphaned": false,
     "is_gate": false,
     "negative_gate_key": null,
@@ -804,6 +826,8 @@
     "summary": "Maximum sensitivity for cosine gate (1-2).",
     "default": 1.3,
     "min": 1.0,
+    "max": 2.0,
+    "unit_type": "DOUBLE",
     "orphaned": false,
     "is_gate": false,
     "negative_gate_key": null,
@@ -845,6 +869,8 @@
     "summary": "Minimum data quality for cosine gate activation (0-1).",
     "default": 0.3,
     "min": 0.0,
+    "max": 1.0,
+    "unit_type": "DOUBLE_2",
     "orphaned": false,
     "is_gate": false,
     "negative_gate_key": null,
@@ -866,6 +892,8 @@
     "summary": "Minimum sensitivity for cosine gate (0.5-1).",
     "default": 0.7,
     "min": 0.5,
+    "max": 1.0,
+    "unit_type": "DOUBLE_2",
     "orphaned": false,
     "is_gate": false,
     "negative_gate_key": null,
@@ -888,6 +916,7 @@
     "default": 0.45,
     "min": 0.0,
     "max": 1.0,
+    "unit_type": "DOUBLE_2",
     "orphaned": false,
     "is_gate": false,
     "negative_gate_key": null,
@@ -914,6 +943,7 @@
     "default": 0.06,
     "min": 0.02,
     "max": 0.12,
+    "unit_type": "DOUBLE_3",
     "dependency": "OApsAIMIDynIsfTrajectoryTuningEnabled",
     "orphaned": false,
     "is_gate": false,
@@ -1158,6 +1188,8 @@
     "summary": "Basal multiplier during endometriosis flare. 1.3 = 30% more basal.",
     "default": 1.3,
     "min": 1.0,
+    "max": 2.0,
+    "unit_type": "DOUBLE",
     "orphaned": false,
     "is_gate": false,
     "negative_gate_key": null,
@@ -1253,6 +1285,8 @@
     "summary": "SMB dampening during endometriosis flare. 0.7 = 30% reduction.",
     "default": 0.7,
     "min": 0.0,
+    "max": 1.0,
+    "unit_type": "DOUBLE_2",
     "orphaned": false,
     "is_gate": false,
     "negative_gate_key": null,
@@ -1291,6 +1325,8 @@
     "summary": "Maximum factor for ISF fusion. Limits how far ISF can be scaled up.",
     "default": 0.4,
     "min": 0.0,
+    "max": 0.5,
+    "unit_type": "DOUBLE_2",
     "orphaned": false,
     "is_gate": false,
     "negative_gate_key": "key_aimi_t3c_brittle_mode",
@@ -1320,6 +1356,8 @@
     "summary": "Maximum factor for ISF fusion. Limits how far ISF can be scaled up.",
     "default": 2.0,
     "min": 1.0,
+    "max": 2.0,
+    "unit_type": "DOUBLE",
     "orphaned": false,
     "is_gate": false,
     "negative_gate_key": "key_aimi_t3c_brittle_mode",
@@ -1349,6 +1387,8 @@
     "summary": "Minimum factor for ISF fusion. Limits how far ISF can be scaled down.",
     "default": 0.75,
     "min": 0.3,
+    "max": 1.0,
+    "unit_type": "DOUBLE_2",
     "orphaned": false,
     "is_gate": false,
     "negative_gate_key": "key_aimi_t3c_brittle_mode",
@@ -1613,6 +1653,8 @@
     "summary": "Reference daily carbohydrate intake. Influences max carb limit for meal boluses.",
     "default": 4.0,
     "min": 4.0,
+    "max": 12.0,
+    "unit_type": "HOURS_DOUBLE",
     "orphaned": false,
     "is_gate": false,
     "negative_gate_key": null,
@@ -1642,6 +1684,8 @@
     "summary": "Reference daily carbohydrate intake. Influences max carb limit for meal boluses.",
     "default": 75.0,
     "min": 35.0,
+    "max": 180.0,
+    "unit_type": "MIN",
     "orphaned": false,
     "is_gate": false,
     "negative_gate_key": null,
@@ -1671,6 +1715,8 @@
     "summary": "Bounds (min/max) for PKPD parameters. Prevents the learning algorithm from adopting unrealistic values.",
     "default": 24.0,
     "min": 6.0,
+    "max": 36.0,
+    "unit_type": "HOURS_DOUBLE",
     "orphaned": false,
     "is_gate": false,
     "negative_gate_key": null,
@@ -1700,6 +1746,8 @@
     "summary": "Bounds (min/max) for PKPD parameters. Prevents the learning algorithm from adopting unrealistic values.",
     "default": 4.0,
     "min": 4.0,
+    "max": 24.0,
+    "unit_type": "HOURS_DOUBLE",
     "orphaned": false,
     "is_gate": false,
     "negative_gate_key": null,
@@ -1729,6 +1777,8 @@
     "summary": "Bounds (min/max) for PKPD parameters. Prevents the learning algorithm from adopting unrealistic values.",
     "default": 240.0,
     "min": 60.0,
+    "max": 480.0,
+    "unit_type": "MIN",
     "orphaned": false,
     "is_gate": false,
     "negative_gate_key": null,
@@ -1758,6 +1808,8 @@
     "summary": "Bounds (min/max) for PKPD parameters. Prevents the learning algorithm from adopting unrealistic values.",
     "default": 30.0,
     "min": 20.0,
+    "max": 240.0,
+    "unit_type": "MIN",
     "orphaned": false,
     "is_gate": false,
     "negative_gate_key": null,
@@ -1787,6 +1839,8 @@
     "summary": "Initial insulin action duration (DIA) in hours for the PKPD model. Starting value for Weibull-based estimator.",
     "default": 6.0,
     "min": 4.0,
+    "max": 24.0,
+    "unit_type": "HOURS_DOUBLE",
     "orphaned": false,
     "is_gate": false,
     "negative_gate_key": null,
@@ -1816,6 +1870,8 @@
     "summary": "Initial peak time (minutes) for the PKPD model. When maximum insulin action occurs.",
     "default": 75.0,
     "min": 35.0,
+    "max": 300.0,
+    "unit_type": "MIN",
     "orphaned": false,
     "is_gate": false,
     "negative_gate_key": null,
@@ -1845,6 +1901,8 @@
     "summary": "Maximum DIA change per day (hours). Limits how quickly the model can adapt.",
     "default": 3.0,
     "min": 0.1,
+    "max": 6.0,
+    "unit_type": "HOURS_DOUBLE",
     "orphaned": false,
     "is_gate": false,
     "negative_gate_key": null,
@@ -1874,6 +1932,8 @@
     "summary": "Maximum peak time change per day (minutes).",
     "default": 20.0,
     "min": 1.0,
+    "max": 60.0,
+    "unit_type": "MIN",
     "orphaned": false,
     "is_gate": false,
     "negative_gate_key": null,
@@ -1903,6 +1963,8 @@
     "summary": "Minimum factor for Pragmatic Relief — temporary maxIOB increase in critical phases.",
     "default": 0.75,
     "min": 0.5,
+    "max": 1.0,
+    "unit_type": "DOUBLE_2",
     "orphaned": false,
     "is_gate": false,
     "negative_gate_key": null,
@@ -1932,6 +1994,8 @@
     "summary": "Stored PKPD state — read and written by the learning algorithm.",
     "default": 6.0,
     "min": 4.0,
+    "max": 24.0,
+    "unit_type": "HOURS_DOUBLE",
     "orphaned": false,
     "is_gate": false,
     "negative_gate_key": null,
@@ -2007,6 +2071,8 @@
     "summary": "Stored PKPD state — read and written by the learning algorithm.",
     "default": 75.0,
     "min": 40.0,
+    "max": 300.0,
+    "unit_type": "MIN",
     "orphaned": false,
     "is_gate": false,
     "negative_gate_key": null,
@@ -2136,6 +2202,8 @@
     "summary": "Extra units for priority MaxIOB. Absolute addition to IOB limit.",
     "default": 2.0,
     "min": 0.0,
+    "max": 5.0,
+    "unit_type": "INSULIN",
     "orphaned": false,
     "is_gate": false,
     "negative_gate_key": null,
@@ -2165,6 +2233,8 @@
     "summary": "Multiplier for priority MaxIOB. Raises IOB limit for prioritized actions.",
     "default": 1.2,
     "min": 1.0,
+    "max": 1.6,
+    "unit_type": "DOUBLE_2",
     "orphaned": false,
     "is_gate": false,
     "negative_gate_key": null,
@@ -2194,6 +2264,8 @@
     "summary": "Threshold for Red Carpet Restore — restores SMB doses reduced by safety mechanisms.",
     "default": 0.75,
     "min": 0.5,
+    "max": 0.95,
+    "unit_type": "DOUBLE_2",
     "orphaned": false,
     "is_gate": false,
     "negative_gate_key": null,
@@ -2223,6 +2295,8 @@
     "summary": "SMB damping during physical activity. 0.0 = max damping (safe), 1.0 = no damping.",
     "default": 0.6,
     "min": 0.0,
+    "max": 1.0,
+    "unit_type": "DOUBLE_2",
     "orphaned": false,
     "is_gate": false,
     "negative_gate_key": "key_aimi_t3c_brittle_mode",
@@ -2252,6 +2326,8 @@
     "summary": "SMB damping during late fat rise detection. 0.0 = max damping, 1.0 = none.",
     "default": 0.7,
     "min": 0.0,
+    "max": 1.0,
+    "unit_type": "DOUBLE_2",
     "orphaned": false,
     "is_gate": false,
     "negative_gate_key": "key_aimi_t3c_brittle_mode",
@@ -2279,8 +2355,10 @@
     "type": "Double",
     "feature_group": "smb_tail",
     "summary": "0.0 = maximum damping (conservative), 1.0 = no damping. Increase for postprandial hypers.",
-    "default": 0.5,
+    "default": 0.85,
     "min": 0.0,
+    "max": 1.0,
+    "unit_type": "DOUBLE_2",
     "orphaned": false,
     "is_gate": false,
     "negative_gate_key": "key_aimi_t3c_brittle_mode",
@@ -2310,6 +2388,8 @@
     "summary": "IOB level at which SMB tail damping activates. Higher = more SMB allowed. Lower if frequent hypos.",
     "default": 0.25,
     "min": 0.0,
+    "max": 1.0,
+    "unit_type": "DOUBLE_2",
     "orphaned": false,
     "is_gate": false,
     "negative_gate_key": "key_aimi_t3c_brittle_mode",
@@ -2415,6 +2495,7 @@
     "min": 0.5,
     "max": 3.0,
     "unit_type": "DOUBLE",
+    "dependency": "ApsUseAutosens",
     "orphaned": false,
     "is_gate": false,
     "negative_gate_key": null,
@@ -2438,6 +2519,7 @@
     "min": 0.1,
     "max": 1.0,
     "unit_type": "DOUBLE",
+    "dependency": "ApsUseAutosens",
     "orphaned": true,
     "is_gate": false,
     "negative_gate_key": null,
@@ -2495,6 +2577,19 @@
     "impact": "medium",
     "effect_high": "Higher value — more insulin/greater effect",
     "effect_low": "Lower value — less insulin/reduced effect"
+  },
+  "boost_autosens_when_no_tdd": {
+    "key": "boost_autosens_when_no_tdd",
+    "name": "ApsBoostAutosensWhenNoTdd",
+    "type": "Boolean",
+    "feature_group": "core",
+    "summary": "Boolean switch for boost_autosens_when_no_tdd.",
+    "orphaned": true,
+    "is_gate": false,
+    "negative_gate_key": null,
+    "impact": "medium",
+    "effect_high": "Feature is active — associated functionality runs",
+    "effect_low": "Feature is inactive — associated functionality is disabled"
   },
   "count_steps_watch": {
     "key": "count_steps_watch",
@@ -2554,6 +2649,8 @@
     "summary": "Used in AIMI internal calculations for equil_maxbolus.",
     "default": 10.0,
     "min": 0.1,
+    "max": 25.0,
+    "unit_type": "INSULIN",
     "orphaned": true,
     "is_gate": false,
     "negative_gate_key": null,
@@ -2632,6 +2729,7 @@
     "default": 0.0,
     "min": 0.0,
     "max": 0.0,
+    "unit_type": "DOUBLE",
     "dependency": "ActivityMonitorDetection",
     "orphaned": true,
     "is_gate": false,
@@ -2648,6 +2746,8 @@
     "summary": "Acceleration threshold for autodrive mode.",
     "default": 1.0,
     "min": 0.1,
+    "max": 5.0,
+    "unit_type": "DOUBLE",
     "orphaned": false,
     "is_gate": false,
     "negative_gate_key": null,
@@ -2669,6 +2769,8 @@
     "summary": "Used in AIMI internal calculations for activity_basal_cap_factor.",
     "default": 1.3,
     "min": 0.5,
+    "max": 3.0,
+    "unit_type": "DOUBLE",
     "orphaned": false,
     "is_gate": false,
     "negative_gate_key": null,
@@ -2691,6 +2793,7 @@
     "default": 1.0,
     "min": 0.5,
     "max": 2.0,
+    "unit_type": "DOUBLE",
     "orphaned": false,
     "is_gate": false,
     "negative_gate_key": null,
@@ -2816,6 +2919,60 @@
       }
     ]
   },
+  "key_aimi_basal_channel_safety_guards": {
+    "key": "key_aimi_basal_channel_safety_guards",
+    "name": "OApsAIMIBasalChannelSafetyGuards",
+    "type": "Boolean",
+    "feature_group": "core",
+    "summary": "Boolean switch for basal_channel_safety_guards.",
+    "orphaned": false,
+    "is_gate": false,
+    "negative_gate_key": null,
+    "impact": "critical",
+    "effect_high": "Feature is active — associated functionality runs",
+    "effect_low": "Feature is inactive — associated functionality is disabled",
+    "used_in": [
+      {
+        "file": "OpenAPSAIMIPlugin.kt",
+        "function": "aimiComposeAdaptiveBasalSubScreen"
+      },
+      {
+        "file": "DetermineBasalAIMI2.kt",
+        "function": "refineRbtMergeAfterDoseSnapshot"
+      },
+      {
+        "file": "BasalChannelSafetyGuards.kt",
+        "function": "unknown"
+      }
+    ]
+  },
+  "key_aimi_basal_projected_error": {
+    "key": "key_aimi_basal_projected_error",
+    "name": "OApsAIMIBasalProjectedError",
+    "type": "Boolean",
+    "feature_group": "core",
+    "summary": "Boolean switch for basal_projected_error.",
+    "orphaned": false,
+    "is_gate": false,
+    "negative_gate_key": null,
+    "impact": "medium",
+    "effect_high": "Feature is active — associated functionality runs",
+    "effect_low": "Feature is inactive — associated functionality is disabled",
+    "used_in": [
+      {
+        "file": "OpenAPSAIMIPlugin.kt",
+        "function": "aimiComposeAdaptiveBasalSubScreen"
+      },
+      {
+        "file": "DetermineBasalAIMI2.kt",
+        "function": "runBasalDecisionEngineDecideStage"
+      },
+      {
+        "file": "BasalDecisionEngine.kt",
+        "function": "unknown"
+      }
+    ]
+  },
   "key_aimi_basal_slew_limit": {
     "key": "key_aimi_basal_slew_limit",
     "name": "OApsAIMIBasalSlewLimitEnabled",
@@ -2830,8 +2987,39 @@
     "effect_low": "Feature is inactive — associated functionality is disabled",
     "used_in": [
       {
+        "file": "OpenAPSAIMIPlugin.kt",
+        "function": "aimiComposeAdaptiveBasalSubScreen"
+      },
+      {
         "file": "DetermineBasalAIMI2.kt",
         "function": "runPostBasalEngineLearnersRtInstrumentationAndAuditorStage"
+      }
+    ]
+  },
+  "key_aimi_basal_terminal_invariants": {
+    "key": "key_aimi_basal_terminal_invariants",
+    "name": "OApsAIMIBasalTerminalInvariants",
+    "type": "Boolean",
+    "feature_group": "core",
+    "summary": "Boolean switch for basal_terminal_invariants.",
+    "orphaned": false,
+    "is_gate": false,
+    "negative_gate_key": null,
+    "impact": "medium",
+    "effect_high": "Feature is active — associated functionality runs",
+    "effect_low": "Feature is inactive — associated functionality is disabled",
+    "used_in": [
+      {
+        "file": "OpenAPSAIMIPlugin.kt",
+        "function": "aimiComposeAdaptiveBasalSubScreen"
+      },
+      {
+        "file": "DetermineBasalAIMI2.kt",
+        "function": "setTempBasal"
+      },
+      {
+        "file": "BasalTerminalInvariants.kt",
+        "function": "unknown"
       }
     ]
   },
@@ -2903,12 +3091,16 @@
     "effect_low": "Feature is inactive — associated functionality is disabled",
     "used_in": [
       {
+        "file": "OpenAPSAIMIPlugin.kt",
+        "function": "invoke"
+      },
+      {
         "file": "DetermineBasalAIMI2.kt",
         "function": "runT9PhysioEarlyPkpdAndTubeBootstrap"
       },
       {
-        "file": "InsulinKineticsAuthority.kt",
-        "function": "resolve"
+        "file": "AimiLearnerOverviewScreen.kt",
+        "function": "AimiLearnerOverviewScreen"
       }
     ]
   },
@@ -3092,7 +3284,7 @@
     "default": 0.97,
     "min": 0.9,
     "max": 0.999,
-    "unit_type": "DOUBLE_3",
+    "unit_type": "DOUBLE_2",
     "dependency": "OApsAIMIT3cAdaptiveBasalEnabled",
     "orphaned": false,
     "is_gate": false,
@@ -3124,7 +3316,7 @@
     "default": 0.965,
     "min": 0.9,
     "max": 0.999,
-    "unit_type": "DOUBLE_3",
+    "unit_type": "DOUBLE_2",
     "dependency": "OApsAIMIT3cAdaptiveBasalEnabled",
     "orphaned": false,
     "is_gate": false,
@@ -3220,7 +3412,7 @@
     "default": 0.98,
     "min": 0.9,
     "max": 0.999,
-    "unit_type": "DOUBLE_3",
+    "unit_type": "DOUBLE_2",
     "dependency": "OApsAIMIT3cAdaptiveBasalEnabled",
     "orphaned": false,
     "is_gate": false,
@@ -3476,6 +3668,7 @@
     "default": 0.0,
     "min": 0.0,
     "max": 200.0,
+    "unit_type": "MGDL",
     "dependency": "OApsAIMIHyperTrajectoryRelease",
     "orphaned": false,
     "is_gate": false,
@@ -3498,6 +3691,25 @@
       }
     ]
   },
+  "key_aimi_hyper_dropping_exempt_enabled": {
+    "key": "key_aimi_hyper_dropping_exempt_enabled",
+    "name": "OApsAIMIHyperDroppingExemptEnabled",
+    "type": "Boolean",
+    "feature_group": "hyper_trajectory",
+    "summary": "Enables/disables hyper_dropping_exempt_enabled. Gate flag for feature control.",
+    "orphaned": false,
+    "is_gate": false,
+    "negative_gate_key": null,
+    "impact": "medium",
+    "effect_high": "Feature is active — associated functionality runs",
+    "effect_low": "Feature is inactive — associated functionality is disabled",
+    "used_in": [
+      {
+        "file": "DetermineBasalAIMI2.kt",
+        "function": "determineCriticalConditions"
+      }
+    ]
+  },
   "key_aimi_hyper_established_dev_mgdl": {
     "key": "key_aimi_hyper_established_dev_mgdl",
     "name": "OApsAIMIHyperEstablishedDevMgdl",
@@ -3507,6 +3719,7 @@
     "default": 0.0,
     "min": 0.0,
     "max": 160.0,
+    "unit_type": "MGDL",
     "dependency": "OApsAIMIHyperTrajectoryRelease",
     "orphaned": false,
     "is_gate": false,
@@ -3733,6 +3946,53 @@
       }
     ]
   },
+  "key_aimi_meal_confirmed_early_release": {
+    "key": "key_aimi_meal_confirmed_early_release",
+    "name": "OApsAIMIMealConfirmedEarlyRelease",
+    "type": "Boolean",
+    "feature_group": "meal_modes",
+    "summary": "Boolean switch for meal_confirmed_early_release.",
+    "default": false,
+    "orphaned": false,
+    "is_gate": false,
+    "negative_gate_key": null,
+    "impact": "high",
+    "effect_high": "Feature is active — associated functionality runs",
+    "effect_low": "Feature is inactive — associated functionality is disabled",
+    "used_in": [
+      {
+        "file": "OpenAPSAIMIPlugin.kt",
+        "function": "aimiComposeAutodriveSubScreen"
+      },
+      {
+        "file": "DetermineBasalAIMI2.kt",
+        "function": "publishDoseTerminalAuthorityAndSnapshot"
+      },
+      {
+        "file": "DecisionPredictionAuthority.kt",
+        "function": "unknown"
+      }
+    ]
+  },
+  "key_aimi_meal_hyper_bypass_enabled": {
+    "key": "key_aimi_meal_hyper_bypass_enabled",
+    "name": "OApsAIMIMealHyperBypassEnabled",
+    "type": "Boolean",
+    "feature_group": "meal_modes",
+    "summary": "Enables/disables meal_hyper_bypass_enabled. Gate flag for feature control.",
+    "orphaned": false,
+    "is_gate": false,
+    "negative_gate_key": null,
+    "impact": "high",
+    "effect_high": "Feature is active — associated functionality runs",
+    "effect_low": "Feature is inactive — associated functionality is disabled",
+    "used_in": [
+      {
+        "file": "RecursiveBeliefPreferences.kt",
+        "function": "from"
+      }
+    ]
+  },
   "key_aimi_peak_governor_enabled": {
     "key": "key_aimi_peak_governor_enabled",
     "name": "OApsAIMIPeakGovernorEnabled",
@@ -3752,12 +4012,12 @@
         "function": "computeTrajectoryPeakNudgeForGovernor"
       },
       {
-        "file": "PkpdSettingsUi.kt",
-        "function": "PkpdExpertSettingsContent"
+        "file": "DetermineBasalAIMI2.kt",
+        "function": "assignAimiAdaptationStatus"
       },
       {
-        "file": "InsulinKineticsAuthority.kt",
-        "function": "resolve"
+        "file": "AimiLearnerOverviewScreen.kt",
+        "function": "AimiLearnerOverviewScreen"
       }
     ]
   },
@@ -3783,8 +4043,8 @@
         "function": "runT9PhysioEarlyPkpdAndTubeBootstrap"
       },
       {
-        "file": "PkpdSettingsUi.kt",
-        "function": "PkpdSetupWizardDialog"
+        "file": "AimiLearnerOverviewScreen.kt",
+        "function": "AimiLearnerOverviewScreen"
       }
     ]
   },
@@ -3805,6 +4065,27 @@
         "file": "OpenAPSAIMIPlugin.kt",
         "function": "aimiComposePkpdSubScreen"
       },
+      {
+        "file": "DetermineBasalAIMI2.kt",
+        "function": "runAdvancedPredictionsAndPredPipePrep"
+      }
+    ]
+  },
+  "key_aimi_pkpd_hyper_reversion": {
+    "key": "key_aimi_pkpd_hyper_reversion",
+    "name": "OApsAIMIPkpdHyperReversion",
+    "type": "Boolean",
+    "feature_group": "pkpd",
+    "summary": "Boolean switch for pkpd_hyper_reversion.",
+    "default": true,
+    "dependency": "OApsAIMIPkpdEndogenousReversion",
+    "orphaned": false,
+    "is_gate": false,
+    "negative_gate_key": null,
+    "impact": "high",
+    "effect_high": "Feature is active — associated functionality runs",
+    "effect_low": "Feature is inactive — associated functionality is disabled",
+    "used_in": [
       {
         "file": "DetermineBasalAIMI2.kt",
         "function": "runAdvancedPredictionsAndPredPipePrep"
@@ -3881,6 +4162,31 @@
       {
         "file": "PkpdSettingsUi.kt",
         "function": "PkpdSetupWizardDialog"
+      }
+    ]
+  },
+  "key_aimi_pkpd_stack_aware_guardb": {
+    "key": "key_aimi_pkpd_stack_aware_guardb",
+    "name": "OApsAIMIPkpdStackAwareGuardB",
+    "type": "Boolean",
+    "feature_group": "pkpd",
+    "summary": "Boolean switch for pkpd_stack_aware_guardb.",
+    "default": false,
+    "dependency": "OApsAIMIPkpdHyperReversion",
+    "orphaned": false,
+    "is_gate": false,
+    "negative_gate_key": null,
+    "impact": "high",
+    "effect_high": "Feature is active — associated functionality runs",
+    "effect_low": "Feature is inactive — associated functionality is disabled",
+    "used_in": [
+      {
+        "file": "DetermineBasalAIMI2.kt",
+        "function": "runAdvancedPredictionsAndPredPipePrep"
+      },
+      {
+        "file": "PkpdSettingsUi.kt",
+        "function": "PkpdAdvancedSettingsContent"
       }
     ]
   },
@@ -4011,6 +4317,30 @@
       }
     ]
   },
+  "key_aimi_sensor_confidence_cgm_first": {
+    "key": "key_aimi_sensor_confidence_cgm_first",
+    "name": "OApsAIMISensorConfidenceCgmFirst",
+    "type": "Boolean",
+    "feature_group": "core",
+    "summary": "Boolean switch for sensor_confidence_cgm_first.",
+    "default": false,
+    "orphaned": false,
+    "is_gate": false,
+    "negative_gate_key": null,
+    "impact": "medium",
+    "effect_high": "Feature is active — associated functionality runs",
+    "effect_low": "Feature is inactive — associated functionality is disabled",
+    "used_in": [
+      {
+        "file": "OpenAPSAIMIPlugin.kt",
+        "function": "aimiComposeAutodriveSubScreen"
+      },
+      {
+        "file": "DetermineBasalAIMI2.kt",
+        "function": "updatePhysioLatentState"
+      }
+    ]
+  },
   "key_aimi_smb_comparator_enabled": {
     "key": "key_aimi_smb_comparator_enabled",
     "name": "OApsAIMIAimiSmbComparatorEnabled",
@@ -4066,6 +4396,8 @@
     "summary": "BG threshold (mg/dL) at which T3c brittle mode activates. 130 = moderate.",
     "default": 130.0,
     "min": 100.0,
+    "max": 250.0,
+    "unit_type": "MGDL",
     "orphaned": false,
     "is_gate": false,
     "negative_gate_key": null,
@@ -4091,6 +4423,8 @@
     "summary": "Overall T3c mode aggressiveness. 1.0 = neutral, >1.0 = more aggressive.",
     "default": 1.0,
     "min": 0.5,
+    "max": 3.0,
+    "unit_type": "DOUBLE",
     "orphaned": false,
     "is_gate": false,
     "negative_gate_key": null,
@@ -4120,6 +4454,8 @@
     "summary": "Anticipation strength (0-1). 0 = reactive, 1 = maximum proactive.",
     "default": 0.0,
     "min": 0.0,
+    "max": 1.0,
+    "unit_type": "DOUBLE_2",
     "orphaned": false,
     "is_gate": false,
     "negative_gate_key": null,
@@ -4195,9 +4531,11 @@
     "type": "Double",
     "feature_group": "t3c_adaptive_basal",
     "summary": "Used in AIMI internal calculations for t3c_cfrd_cob_delay_min.",
-    "default": 0.0,
+    "default": 30.0,
     "min": 0.0,
     "max": 90.0,
+    "unit_type": "NONE",
+    "dependency": "OApsAIMIT3cCfrdMode",
     "orphaned": false,
     "is_gate": false,
     "negative_gate_key": null,
@@ -4221,6 +4559,8 @@
     "type": "Boolean",
     "feature_group": "t3c_adaptive_basal",
     "summary": "Boolean switch for t3c_cfrd_exacerbation.",
+    "default": false,
+    "dependency": "OApsAIMIT3cCfrdMode",
     "orphaned": false,
     "is_gate": false,
     "negative_gate_key": null,
@@ -4228,6 +4568,10 @@
     "effect_high": "Feature is active — associated functionality runs",
     "effect_low": "Feature is inactive — associated functionality is disabled",
     "used_in": [
+      {
+        "file": "OpenAPSAIMIPlugin.kt",
+        "function": "aimiComposeT3cSubScreen"
+      },
       {
         "file": "DetermineBasalAIMI2.kt",
         "function": "estimateUndeclaredVirtualCob"
@@ -4240,9 +4584,11 @@
     "type": "Double",
     "feature_group": "t3c_adaptive_basal",
     "summary": "Used in AIMI internal calculations for t3c_cfrd_lgs_floor.",
-    "default": 80.0,
+    "default": 95.0,
     "min": 70.0,
     "max": 95.0,
+    "unit_type": "NONE",
+    "dependency": "OApsAIMIT3cCfrdMode",
     "orphaned": false,
     "is_gate": false,
     "negative_gate_key": null,
@@ -4266,6 +4612,8 @@
     "type": "Boolean",
     "feature_group": "t3c_adaptive_basal",
     "summary": "Boolean switch for t3c_cfrd_mode.",
+    "default": true,
+    "dependency": "OApsAIMIT3cBrittleMode",
     "orphaned": false,
     "is_gate": false,
     "negative_gate_key": null,
@@ -4274,8 +4622,37 @@
     "effect_low": "Feature is inactive — associated functionality is disabled",
     "used_in": [
       {
+        "file": "OpenAPSAIMIPlugin.kt",
+        "function": "aimiComposeT3cSubScreen"
+      },
+      {
         "file": "DetermineBasalAIMI2.kt",
         "function": "runT3cBrittleBypassOrReturn"
+      }
+    ]
+  },
+  "key_aimi_t3c_hyper_basal_floor": {
+    "key": "key_aimi_t3c_hyper_basal_floor",
+    "name": "OApsAIMIT3cHyperBasalFloor",
+    "type": "Boolean",
+    "feature_group": "t3c_adaptive_basal",
+    "summary": "Boolean switch for t3c_hyper_basal_floor.",
+    "default": true,
+    "dependency": "OApsAIMIT3cBrittleMode",
+    "orphaned": false,
+    "is_gate": false,
+    "negative_gate_key": null,
+    "impact": "high",
+    "effect_high": "Feature is active — associated functionality runs",
+    "effect_low": "Feature is inactive — associated functionality is disabled",
+    "used_in": [
+      {
+        "file": "OpenAPSAIMIPlugin.kt",
+        "function": "aimiComposeT3cSubScreen"
+      },
+      {
+        "file": "DetermineBasalAIMI2.kt",
+        "function": "executeT3cBrittleMode"
       }
     ]
   },
@@ -4538,6 +4915,30 @@
       }
     ]
   },
+  "key_aimi_tree_meal_rise_frontload": {
+    "key": "key_aimi_tree_meal_rise_frontload",
+    "name": "OApsAIMITreeMealRiseFrontLoad",
+    "type": "Boolean",
+    "feature_group": "meal_modes",
+    "summary": "Boolean switch for tree_meal_rise_frontload.",
+    "default": false,
+    "orphaned": false,
+    "is_gate": false,
+    "negative_gate_key": null,
+    "impact": "high",
+    "effect_high": "Feature is active — associated functionality runs",
+    "effect_low": "Feature is inactive — associated functionality is disabled",
+    "used_in": [
+      {
+        "file": "OpenAPSAIMIPlugin.kt",
+        "function": "aimiComposeAutodriveSubScreen"
+      },
+      {
+        "file": "RecursiveBeliefPreferences.kt",
+        "function": "from"
+      }
+    ]
+  },
   "key_aimi_tube_aggressiveness": {
     "key": "key_aimi_tube_aggressiveness",
     "name": "AimiTubeAggressiveness",
@@ -4547,7 +4948,7 @@
     "default": 1.0,
     "min": 0.5,
     "max": 2.0,
-    "unit_type": "DOUBLE",
+    "unit_type": "DOUBLE_2",
     "dependency": "OApsAIMIStraightLineTubeAdvisorEnabled",
     "orphaned": false,
     "is_gate": false,
@@ -4730,6 +5131,7 @@
     "default": 25.0,
     "min": 5.0,
     "max": 80.0,
+    "unit_type": "GRAMS",
     "dependency": "OApsAIMIUndeclaredCobEnabled",
     "orphaned": false,
     "is_gate": false,
@@ -4756,6 +5158,8 @@
     "summary": "Body weight in kg. Used for weight-based insulin calculations (TDD, MPC). Must match actual weight.",
     "default": 50.0,
     "min": 1.0,
+    "max": 200.0,
+    "unit_type": "DOUBLE",
     "orphaned": false,
     "is_gate": false,
     "negative_gate_key": null,
@@ -4785,6 +5189,8 @@
     "summary": "Reference daily carbohydrate intake. Influences max carb limit for meal boluses.",
     "default": 50.0,
     "min": 1.0,
+    "max": 150.0,
+    "unit_type": "GRAMS",
     "orphaned": false,
     "is_gate": false,
     "negative_gate_key": null,
@@ -4814,6 +5220,8 @@
     "summary": "Combined delta value for autodrive condition.",
     "default": 1.0,
     "min": 0.1,
+    "max": 20.0,
+    "unit_type": "DOUBLE",
     "orphaned": false,
     "is_gate": false,
     "negative_gate_key": null,
@@ -4889,6 +5297,8 @@
     "summary": "Minimum deviation for autodrive activation.",
     "default": 1.0,
     "min": 0.1,
+    "max": 5.0,
+    "unit_type": "DOUBLE",
     "orphaned": false,
     "is_gate": false,
     "negative_gate_key": null,
@@ -4910,6 +5320,8 @@
     "summary": "Breakfast factor for insulin adjustment.",
     "default": 50.0,
     "min": 1.0,
+    "max": 150.0,
+    "unit_type": "PERCENT",
     "orphaned": false,
     "is_gate": false,
     "negative_gate_key": null,
@@ -4967,6 +5379,8 @@
     "summary": "FCL factor for insulin adjustment.",
     "default": 50.0,
     "min": 1.0,
+    "max": 150.0,
+    "unit_type": "PERCENT",
     "orphaned": true,
     "is_gate": false,
     "negative_gate_key": null,
@@ -4982,6 +5396,8 @@
     "summary": "High-carb factor for insulin adjustment during large meals.",
     "default": 50.0,
     "min": 1.0,
+    "max": 150.0,
+    "unit_type": "PERCENT",
     "orphaned": false,
     "is_gate": false,
     "negative_gate_key": null,
@@ -5073,6 +5489,8 @@
     "summary": "Dinner factor for insulin adjustment.",
     "default": 50.0,
     "min": 1.0,
+    "max": 150.0,
+    "unit_type": "PERCENT",
     "orphaned": false,
     "is_gate": false,
     "negative_gate_key": null,
@@ -5164,6 +5582,8 @@
     "summary": "Lunch factor for insulin adjustment.",
     "default": 50.0,
     "min": 1.0,
+    "max": 150.0,
+    "unit_type": "PERCENT",
     "orphaned": false,
     "is_gate": false,
     "negative_gate_key": null,
@@ -5221,6 +5641,8 @@
     "summary": "Meal factor for insulin adjustment. Higher = more insulin during meals.",
     "default": 50.0,
     "min": 1.0,
+    "max": 150.0,
+    "unit_type": "PERCENT",
     "orphaned": false,
     "is_gate": false,
     "negative_gate_key": null,
@@ -5319,6 +5741,8 @@
     "summary": "Basal rate multiplier during NGR. 1.1 = 10% more basal per hour.",
     "default": 1.1,
     "min": 1.0,
+    "max": 1.5,
+    "unit_type": "DOUBLE_2",
     "orphaned": false,
     "is_gate": false,
     "negative_gate_key": null,
@@ -5374,8 +5798,8 @@
         "function": "buildNightGrowthResistanceConfig"
       },
       {
-        "file": "AimiControlCenterSnapshot.kt",
-        "function": "buildContextSection"
+        "file": "AimiLearnerOverviewScreen.kt",
+        "function": "AimiLearnerOverviewScreen"
       }
     ]
   },
@@ -5387,6 +5811,8 @@
     "summary": "Extra IOB headroom for NGR phase (units).",
     "default": 0.5,
     "min": 0.0,
+    "max": 3.0,
+    "unit_type": "INSULIN",
     "orphaned": false,
     "is_gate": false,
     "negative_gate_key": null,
@@ -5412,6 +5838,8 @@
     "summary": "Upper limit for each SMB bolus size (units). Higher = more insulin per correction, faster but riskier.",
     "default": 1.2,
     "min": 0.1,
+    "max": 5.0,
+    "unit_type": "DOUBLE",
     "orphaned": false,
     "is_gate": false,
     "negative_gate_key": null,
@@ -5473,6 +5901,8 @@
     "summary": "Minimum rise rate (mg/dL/5min) for NGR detection.",
     "default": 5.0,
     "min": 0.5,
+    "max": 30.0,
+    "unit_type": "DOUBLE",
     "orphaned": false,
     "is_gate": false,
     "negative_gate_key": null,
@@ -5540,6 +5970,8 @@
     "summary": "SMB multiplier during NGR phase. 1.2 = 20% more insulin per SMB.",
     "default": 1.2,
     "min": 1.0,
+    "max": 1.5,
+    "unit_type": "DOUBLE_2",
     "orphaned": false,
     "is_gate": false,
     "negative_gate_key": null,
@@ -5561,6 +5993,8 @@
     "summary": "Sleep factor — insulin adjustment during sleep phases.",
     "default": 60.0,
     "min": 1.0,
+    "max": 150.0,
+    "unit_type": "PERCENT",
     "orphaned": false,
     "is_gate": false,
     "negative_gate_key": null,
@@ -5610,6 +6044,8 @@
     "summary": "Snack factor for insulin adjustment.",
     "default": 50.0,
     "min": 1.0,
+    "max": 150.0,
+    "unit_type": "PERCENT",
     "orphaned": false,
     "is_gate": false,
     "negative_gate_key": null,
@@ -5817,6 +6253,8 @@
     "summary": "Prebolus window (minutes) for breakfast mode P2.",
     "default": 2.0,
     "min": 0.1,
+    "max": 20.0,
+    "unit_type": "INSULIN",
     "orphaned": false,
     "is_gate": false,
     "negative_gate_key": null,
@@ -5846,6 +6284,8 @@
     "summary": "Prebolus window (minutes) for dinner mode P2.",
     "default": 2.0,
     "min": 0.1,
+    "max": 20.0,
+    "unit_type": "INSULIN",
     "orphaned": false,
     "is_gate": false,
     "negative_gate_key": null,
@@ -5875,6 +6315,8 @@
     "summary": "Prebolus window (minutes) for lunch mode P2.",
     "default": 2.0,
     "min": 0.1,
+    "max": 20.0,
+    "unit_type": "INSULIN",
     "orphaned": false,
     "is_gate": false,
     "negative_gate_key": null,
@@ -5904,6 +6346,8 @@
     "summary": "Prebolus window (minutes) for breakfast mode P1.",
     "default": 2.5,
     "min": 0.1,
+    "max": 20.0,
+    "unit_type": "INSULIN",
     "orphaned": false,
     "is_gate": false,
     "negative_gate_key": null,
@@ -5934,6 +6378,7 @@
     "default": 1.0,
     "min": 0.1,
     "max": 20.0,
+    "unit_type": "INSULIN",
     "dependency": "OApsAIMIautoDriveActive",
     "orphaned": false,
     "is_gate": false,
@@ -5964,6 +6409,8 @@
     "summary": "Prebolus window (minutes) for dinner mode P1.",
     "default": 2.5,
     "min": 0.1,
+    "max": 20.0,
+    "unit_type": "INSULIN",
     "orphaned": false,
     "is_gate": false,
     "negative_gate_key": null,
@@ -5993,6 +6440,8 @@
     "summary": "Prebolus window (minutes) for high-carb mode.",
     "default": 5.0,
     "min": 0.1,
+    "max": 20.0,
+    "unit_type": "INSULIN",
     "orphaned": false,
     "is_gate": false,
     "negative_gate_key": null,
@@ -6022,6 +6471,8 @@
     "summary": "Prebolus window (minutes) for high-carb mode.",
     "default": 5.0,
     "min": 0.1,
+    "max": 20.0,
+    "unit_type": "INSULIN",
     "orphaned": false,
     "is_gate": false,
     "negative_gate_key": null,
@@ -6051,6 +6502,8 @@
     "summary": "Prebolus window (minutes) for lunch mode P1.",
     "default": 2.5,
     "min": 0.1,
+    "max": 20.0,
+    "unit_type": "INSULIN",
     "orphaned": false,
     "is_gate": false,
     "negative_gate_key": null,
@@ -6080,6 +6533,8 @@
     "summary": "Prebolus window (minutes) for meal mode P1.",
     "default": 2.0,
     "min": 0.1,
+    "max": 20.0,
+    "unit_type": "INSULIN",
     "orphaned": false,
     "is_gate": false,
     "negative_gate_key": null,
@@ -6109,6 +6564,8 @@
     "summary": "Prebolus window (minutes) for snack mode.",
     "default": 1.0,
     "min": 0.1,
+    "max": 20.0,
+    "unit_type": "INSULIN",
     "orphaned": false,
     "is_gate": false,
     "negative_gate_key": null,
@@ -6135,6 +6592,7 @@
     "default": 0.1,
     "min": 0.05,
     "max": 20.0,
+    "unit_type": "INSULIN",
     "dependency": "OApsAIMIautoDriveActive",
     "orphaned": false,
     "is_gate": false,
@@ -6165,6 +6623,8 @@
     "summary": "7-day total daily insulin dose. Central to hyperglycemia classification and correction strategy.",
     "default": 40.0,
     "min": 1.0,
+    "max": 150.0,
+    "unit_type": "INSULIN",
     "orphaned": false,
     "is_gate": false,
     "negative_gate_key": null,
@@ -6276,8 +6736,8 @@
         "function": "enabled"
       },
       {
-        "file": "AimiControlCenterSnapshot.kt",
-        "function": "buildContextSection"
+        "file": "AimiLearnerOverviewScreen.kt",
+        "function": "AimiLearnerOverviewScreen"
       }
     ]
   },
@@ -6370,8 +6830,8 @@
         "function": "buildPreTherapyAutodriveByodaBootstrap"
       },
       {
-        "file": "AimiControlCenterSupport.kt",
-        "function": "readAutonomyMode"
+        "file": "AimiLearnerOverviewScreen.kt",
+        "function": "AimiLearnerOverviewScreen"
       }
     ]
   },
@@ -6453,6 +6913,8 @@
     "summary": "Enables Women's Cycle detection for ISF adjustment.",
     "default": 1.25,
     "min": 1.0,
+    "max": 2.0,
+    "unit_type": "DOUBLE_2",
     "orphaned": false,
     "is_gate": false,
     "negative_gate_key": null,
@@ -6478,6 +6940,8 @@
     "summary": "Enables Women's Cycle detection for ISF adjustment.",
     "default": 0.8,
     "min": 0.5,
+    "max": 1.0,
+    "unit_type": "DOUBLE_2",
     "orphaned": false,
     "is_gate": false,
     "negative_gate_key": null,
@@ -6722,7 +7186,7 @@
     "type": "Double",
     "feature_group": "core",
     "summary": "Used in AIMI internal calculations for smb_delivery_ratio_max.",
-    "default": 0.9,
+    "default": 0.5,
     "min": 0.5,
     "max": 1.0,
     "unit_type": "DOUBLE_2",
@@ -6766,25 +7230,6 @@
     "impact": "medium",
     "effect_high": "Higher value — more insulin/greater effect",
     "effect_low": "Lower value — less insulin/reduced effect"
-  },
-  "openapsama_useautosens": {
-    "key": "openapsama_useautosens",
-    "name": "ApsUseAutosens",
-    "type": "Boolean",
-    "feature_group": "core",
-    "summary": "Boolean switch for useautosens.",
-    "orphaned": false,
-    "is_gate": false,
-    "negative_gate_key": null,
-    "impact": "medium",
-    "effect_high": "Feature is active — associated functionality runs",
-    "effect_low": "Feature is inactive — associated functionality is disabled",
-    "used_in": [
-      {
-        "file": "OpenAPSAIMIPlugin.kt",
-        "function": "isAutosensModeEnabled"
-      }
-    ]
   },
   "openapsma_max_basal": {
     "key": "openapsma_max_basal",
@@ -6972,5 +7417,31 @@
     "impact": "critical",
     "effect_high": "Higher value — more insulin/greater effect",
     "effect_low": "Lower value — less insulin/reduced effect"
+  },
+  "use_boost_overview": {
+    "key": "use_boost_overview",
+    "name": "OverviewUseBoostOverview",
+    "type": "Boolean",
+    "feature_group": "core",
+    "summary": "Enables/disables use_boost_overview. Gate flag for feature control.",
+    "orphaned": true,
+    "is_gate": false,
+    "negative_gate_key": null,
+    "impact": "medium",
+    "effect_high": "Feature is active — associated functionality runs",
+    "effect_low": "Feature is inactive — associated functionality is disabled"
+  },
+  "use_boost_overview_v2": {
+    "key": "use_boost_overview_v2",
+    "name": "OverviewUseBoostOverviewV2",
+    "type": "Boolean",
+    "feature_group": "core",
+    "summary": "Enables/disables use_boost_overview_v2. Gate flag for feature control.",
+    "orphaned": true,
+    "is_gate": false,
+    "negative_gate_key": null,
+    "impact": "medium",
+    "effect_high": "Feature is active — associated functionality runs",
+    "effect_low": "Feature is inactive — associated functionality is disabled"
   }
 }

@@ -247,7 +247,16 @@ input[type=number]{width:100%}
 
 <!-- ── NAV ── -->
 <nav>
-  <div class="nav-logo">AIMI <span>Analyzer</span></div>
+  <div class="nav-logo" id="nav-logo">AIMI <span>Analyzer</span></div>
+  <select id="plugin-selector" onchange="switchPlugin(this.value)" style="
+    background:var(--bg3);color:var(--text);border:1px solid var(--border);
+    border-radius:7px;padding:6px 10px;font-size:.82rem;font-weight:500;
+    cursor:pointer;outline:none;margin-right:4px;
+  ">
+    <option value="aimi">AIMI</option>
+    <option value="boost">BOOST</option>
+    <option value="autoisf">AutoISF</option>
+  </select>
   <button onclick="showTab('dashboard')" id="nav-dashboard" class="active">📊 Dashboard</button>
   <button onclick="showTab('import')" id="nav-import">📂 Import <span id="import-dot" class="nav-dot"></span></button>
   <button onclick="showTab('ai')" id="nav-ai">🤖 AI</button>
@@ -614,6 +623,40 @@ let activeGates={},currentDiff=[],profileData={};
 let config=JSON.parse(localStorage.getItem('aimi_config')||'{}');
 let overrides=JSON.parse(localStorage.getItem('aimi_overrides')||'{}');
 
+let currentPlugin='aimi';
+
+async function switchPlugin(plugin){
+  currentPlugin=plugin;
+  // Update logo
+  const labels={aimi:'AIMI',boost:'BOOST',autoisf:'AutoISF'};
+  document.getElementById('nav-logo').innerHTML=labels[plugin]+' <span>Analyzer</span>';
+  document.title=labels[plugin]+' Analyzer';
+  // Reload data for the new plugin
+  await loadParameters();
+  await loadFeatureGroups();
+  // Re-render current tab if needed
+  const activeTab=document.querySelector('.tab-content.active');
+  if(activeTab){
+    const tabId=activeTab.id.replace('tab-','');
+    if(tabId==='features') renderFeatureGroups();
+    if(tabId==='params') { renderFeatureGroupSelect(); filterParams(); }
+    if(tabId==='dashboard') runAnalysis();
+  }
+  localStorage.setItem('analyzer_plugin',plugin);
+}
+
+function apiUrl(path,plugin){return path+'?plugin='+(plugin||currentPlugin);}
+
+// Restore saved plugin
+const savedPlugin=localStorage.getItem('analyzer_plugin');
+if(savedPlugin && ['aimi','boost','autoisf'].includes(savedPlugin)){
+  currentPlugin=savedPlugin;
+  document.getElementById('plugin-selector').value=currentPlugin;
+  const labels={aimi:'AIMI',boost:'BOOST',autoisf:'AutoISF'};
+  document.getElementById('nav-logo').innerHTML=labels[currentPlugin]+' <span>Analyzer</span>';
+  document.title=labels[currentPlugin]+' Analyzer';
+}
+
 // ── NAV ──
 function showTab(name){
   document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
@@ -682,15 +725,27 @@ async function apiFetch(path,opts={}){
 }
 
 // ── INIT ──
+async function loadParameters(){
+  try{
+    const d=await apiFetch('/api/parameters?plugin='+currentPlugin);
+    allParams=d.parameters||[];
+    return allParams;
+  }catch(e){console.error('Load params failed:',e);return[];}
+}
+async function loadFeatureGroups(){
+  try{
+    const d=await apiFetch('/api/feature-groups?plugin='+currentPlugin);
+    featureGroups=d||[]; // Returns array directly
+    return featureGroups;
+  }catch(e){console.error('Load features failed:',e);return[];}
+}
+
 async function init(){
   applySavedConfig();
-  try{
-    const d=await apiFetch('/api/parameters');
-    allParams=d.parameters||[];
-    featureGroups=d.feature_groups||[];
-    renderFeatureGroupSelect();
-    filterParams();
-  }catch(e){console.error('Init failed:',e);}
+  try{await loadParameters();}catch(e){console.error('Init failed:',e);}
+  try{featureGroups=await loadFeatureGroups();}catch(e){}
+  renderFeatureGroupSelect();
+  filterParams();
 }
 
 // ── GATES ──
@@ -720,7 +775,7 @@ async function runAnalysis(){
   document.getElementById('dash-error').style.display='none';
   try{
     const d=await apiFetch('/api/analyze',{method:'POST',body:JSON.stringify({
-      nightscout_url:url,nightscout_token:token,days,
+      nightscout_url:url,nightscout_token:token,days,plugin:currentPlugin,
       current_params:importedParams,active_gates:activeGates,overrides})});
     analysisResult=d;
     if(d.profile&&!d.profile.error) profileData=d.profile;
@@ -1288,6 +1343,7 @@ async function runAI(){
         nightscout_days:parseInt(config.days||7),
         active_gates:activeGates,
         user_observations:userInput||null,
+        plugin:currentPlugin,
         lang:'en'})});
     document.getElementById('ai-result-text').innerHTML=formatAI(data.analysis||'');
     document.getElementById('ai-model-used').textContent=`${data.provider} · ${data.model}`;

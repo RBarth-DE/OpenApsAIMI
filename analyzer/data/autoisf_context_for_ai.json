@@ -1,0 +1,293 @@
+{
+  "plugin": "autoisf",
+  "algorithm_overview": "AutoISF (Automatic ISF) is a dynamic insulin sensitivity factor engine that blends 6 weighted signals (BG acceleration, BG brake, low BG risk, high BG, post-prandial, duration) to compute a real-time ISF multiplier. The multiplier is clamped between ApsAutoIsfMin and ApsAutoIsfMax and gated by an IOB threshold (% of basal). SMB delivery ratio scales SMB size based on BG position with configurable min/max, BG range, and extension. Temp target interaction controls how AutoISF responds to exercise/eating-soon targets. The existing AutoIsfAdvisorService provides heuristic recommendations that can complement AI analysis.",
+  "feature_groups": {
+    "isf_weights": {
+      "id": "isf_weights",
+      "name": "AutoISF Weights",
+      "description": "Core AutoISF weight system. Six weights control how different signals contribute to ISF adjustment: bgAccel (rising BG), bgBrake (falling BG), lowBg (hypo risk), highBg (hyper), pp (post-prandial), dura (duration). Weights are clamped by ApsAutoIsfMin/ApsAutoIsfMax and bounded by IobThPercent (IOB threshold % of basal).",
+      "gate_key": "openapsama_use_autoisf_weights",
+      "param_count": 5,
+      "key_params": [
+        "autoISF_max",
+        "autoISF_min",
+        "dura_ISF_weight",
+        "iob_threshold_percent",
+        "pp_ISF_weight"
+      ]
+    },
+    "smb_delivery": {
+      "id": "smb_delivery",
+      "name": "SMB Delivery Ratio",
+      "description": "Dynamic SMB delivery ratio that scales SMB size based on BG position. Ratio/slope with min/max bounds, BG range definition, and max range extension. SmbOnEvenTarget allows delivery even when BG equals target (no delta signal).",
+      "gate_key": "openapsama_use_smb",
+      "param_count": 5,
+      "key_params": [
+        "openapsama_smb_delivery_ratio",
+        "openapsama_smb_delivery_ratio_bg_range",
+        "openapsama_smb_delivery_ratio_max",
+        "openapsama_smb_delivery_ratio_min",
+        "openapsama_smb_max_range_extension"
+      ]
+    },
+    "temp_target_interaction": {
+      "id": "temp_target_interaction",
+      "name": "Temp Target Interaction",
+      "description": "How AutoISF interacts with temp targets. HighTtRaisesSens: high temp target \u2192 raise sensitivity (less insulin). LowTtLowersSens: low temp target \u2192 lower sensitivity (more insulin). HalfBasalExerciseTarget defines the BG for half-basal during exercise.",
+      "gate_key": null,
+      "param_count": 1,
+      "key_params": [
+        "half_basal_exercise_target"
+      ]
+    },
+    "shared_aaps": {
+      "id": "shared_aaps",
+      "name": "Shared AAPS Settings",
+      "description": "Standard OpenAPS settings that AutoISF also reads: max basal, max IOB, SMB gates, autosens, sensitivity/target interactions.",
+      "gate_key": null,
+      "param_count": 28,
+      "key_params": [
+        "Enable alternative activation of SMB always",
+        "always_use_shortavg",
+        "autosens_adjust_targets",
+        "autosens_max",
+        "autosens_min",
+        "bgAccel_ISF_weight",
+        "bgBrake_ISF_weight",
+        "carbsReqThreshold",
+        "enableSMB_after_carbs",
+        "enableSMB_always",
+        "enableSMB_with_COB",
+        "enableSMB_with_high_temptarget",
+        "enableSMB_with_temptarget",
+        "high_temptarget_raises_sensitivity",
+        "higher_ISFrange_weight"
+      ]
+    }
+  },
+  "parameter_summaries": {
+    "Enable alternative activation of SMB always": {
+      "summary": "Enables/disables Enable alternative activation of SMB always. Gate flag for AutoISF.",
+      "effect_high": "Feature is ON \u2014 associated functionality runs",
+      "impact": "medium",
+      "feature": "shared_aaps"
+    },
+    "always_use_shortavg": {
+      "summary": "When ON: uses short delta (5min) instead of medium delta (15min) for all calculations.",
+      "effect_high": "Feature is ON \u2014 associated functionality runs",
+      "impact": "medium",
+      "feature": "shared_aaps"
+    },
+    "autoISF_max": {
+      "summary": "Maximum ISF multiplier (1.0-3.0). Upper bound for AutoISF adjustments. Higher = allows stronger ISF increase (less insulin).",
+      "effect_high": "Allows stronger ISF increase \u2192 less insulin \u2192 more conservative",
+      "impact": "high",
+      "feature": "isf_weights"
+    },
+    "autoISF_min": {
+      "summary": "Minimum ISF multiplier (0.3-1.0). Lower bound for AutoISF adjustments. Lower = allows stronger ISF reduction (more insulin).",
+      "effect_high": "Allows stronger ISF reduction \u2192 more insulin \u2192 more aggressive",
+      "impact": "high",
+      "feature": "isf_weights"
+    },
+    "autosens_max": {
+      "summary": "Used in AutoISF algorithm for max.",
+      "effect_high": "Higher value \u2014 more insulin/greater effect",
+      "impact": "high",
+      "feature": "shared_aaps"
+    },
+    "bgAccel_ISF_weight": {
+      "summary": "Used in AutoISF algorithm for bgAccel_ISF_weight.",
+      "effect_high": "Higher value \u2014 more insulin/greater effect",
+      "impact": "medium",
+      "feature": "shared_aaps"
+    },
+    "bgBrake_ISF_weight": {
+      "summary": "Used in AutoISF algorithm for bgBrake_ISF_weight.",
+      "effect_high": "Higher value \u2014 more insulin/greater effect",
+      "impact": "medium",
+      "feature": "shared_aaps"
+    },
+    "carbsReqThreshold": {
+      "summary": "Used in AutoISF algorithm for carbsReqThreshold.",
+      "effect_high": "Higher value \u2014 more insulin/greater effect",
+      "impact": "medium",
+      "feature": "shared_aaps"
+    },
+    "dura_ISF_weight": {
+      "summary": "Duration weight. Higher = ISF adjustment persists longer.",
+      "effect_high": "Higher value \u2014 more insulin/greater effect",
+      "impact": "medium",
+      "feature": "isf_weights"
+    },
+    "enableSMB_after_carbs": {
+      "summary": "Enables/disables enableSMB_after_carbs. Gate flag for AutoISF.",
+      "effect_high": "Feature is ON \u2014 associated functionality runs",
+      "impact": "medium",
+      "feature": "shared_aaps"
+    },
+    "enableSMB_always": {
+      "summary": "Enables/disables enableSMB_always. Gate flag for AutoISF.",
+      "effect_high": "Feature is ON \u2014 associated functionality runs",
+      "impact": "medium",
+      "feature": "shared_aaps"
+    },
+    "enableSMB_with_COB": {
+      "summary": "Enables/disables enableSMB_with_COB. Gate flag for AutoISF.",
+      "effect_high": "Feature is ON \u2014 associated functionality runs",
+      "impact": "medium",
+      "feature": "shared_aaps"
+    },
+    "enableSMB_with_high_temptarget": {
+      "summary": "Enables/disables enableSMB_with_high_temptarget. Gate flag for AutoISF.",
+      "effect_high": "Feature is ON \u2014 associated functionality runs",
+      "impact": "medium",
+      "feature": "shared_aaps"
+    },
+    "enableSMB_with_temptarget": {
+      "summary": "Enables/disables enableSMB_with_temptarget. Gate flag for AutoISF.",
+      "effect_high": "Feature is ON \u2014 associated functionality runs",
+      "impact": "medium",
+      "feature": "shared_aaps"
+    },
+    "half_basal_exercise_target": {
+      "summary": "BG target (mg/dL) at which basal is halved during exercise. Default 160.",
+      "effect_high": "Higher value \u2014 more insulin/greater effect",
+      "impact": "medium",
+      "feature": "temp_target_interaction"
+    },
+    "high_temptarget_raises_sensitivity": {
+      "summary": "Enables/disables high_temptarget_raises_sensitivity. Gate flag for AutoISF.",
+      "effect_high": "Feature is ON \u2014 associated functionality runs",
+      "impact": "medium",
+      "feature": "shared_aaps"
+    },
+    "higher_ISFrange_weight": {
+      "summary": "Used in AutoISF algorithm for higher_ISFrange_weight.",
+      "effect_high": "Higher value \u2014 more insulin/greater effect",
+      "impact": "medium",
+      "feature": "shared_aaps"
+    },
+    "iob_threshold_percent": {
+      "summary": "IOB threshold as % of basal. Below this IOB, AutoISF disengages (conservative).",
+      "effect_high": "Higher threshold \u2192 AutoISF active at higher IOB \u2192 more responsive",
+      "impact": "high",
+      "feature": "isf_weights"
+    },
+    "lgsThreshold": {
+      "summary": "Parameter for lgsThreshold.",
+      "effect_high": "Higher value \u2014 more insulin/greater effect",
+      "impact": "medium",
+      "feature": "shared_aaps"
+    },
+    "low_temptarget_lowers_sensitivity": {
+      "summary": "Enables/disables low_temptarget_lowers_sensitivity. Gate flag for AutoISF.",
+      "effect_high": "Feature is ON \u2014 associated functionality runs",
+      "impact": "medium",
+      "feature": "shared_aaps"
+    },
+    "lower_ISFrange_weight": {
+      "summary": "Used in AutoISF algorithm for lower_ISFrange_weight.",
+      "effect_high": "Higher value \u2014 more insulin/greater effect",
+      "impact": "medium",
+      "feature": "shared_aaps"
+    },
+    "openapsama_current_basal_safety_multiplier": {
+      "summary": "Used in AutoISF algorithm for current_basal_safety_multiplier.",
+      "effect_high": "Higher value \u2014 more insulin/greater effect",
+      "impact": "critical",
+      "feature": "shared_aaps"
+    },
+    "openapsama_enable_autoISF": {
+      "summary": "Enables/disables enable_autoISF. Gate flag for AutoISF.",
+      "effect_high": "Feature is ON \u2014 associated functionality runs",
+      "impact": "medium",
+      "feature": "shared_aaps"
+    },
+    "openapsama_max_daily_safety_multiplier": {
+      "summary": "Maximum daily insulin multiplier \u00d7 profile. Safety limit.",
+      "effect_high": "Higher value \u2014 more insulin/greater effect",
+      "impact": "critical",
+      "feature": "shared_aaps"
+    },
+    "openapsama_smb_delivery_ratio": {
+      "summary": "Base SMB delivery ratio (0.5-3.0). 1.0 = standard SMB. Higher = larger SMBs.",
+      "effect_high": "Larger SMBs \u2192 more aggressive correction",
+      "impact": "high",
+      "feature": "smb_delivery"
+    },
+    "openapsama_smb_delivery_ratio_bg_range": {
+      "summary": "Base SMB delivery ratio (0.5-3.0). 1.0 = standard SMB. Higher = larger SMBs.",
+      "effect_high": "Larger SMBs \u2192 more aggressive correction",
+      "impact": "high",
+      "feature": "smb_delivery"
+    },
+    "openapsama_smb_delivery_ratio_max": {
+      "summary": "Base SMB delivery ratio (0.5-3.0). 1.0 = standard SMB. Higher = larger SMBs.",
+      "effect_high": "Larger SMBs \u2192 more aggressive correction",
+      "impact": "high",
+      "feature": "smb_delivery"
+    },
+    "openapsama_smb_delivery_ratio_min": {
+      "summary": "Base SMB delivery ratio (0.5-3.0). 1.0 = standard SMB. Higher = larger SMBs.",
+      "effect_high": "Larger SMBs \u2192 more aggressive correction",
+      "impact": "high",
+      "feature": "smb_delivery"
+    },
+    "openapsama_smb_max_range_extension": {
+      "summary": "Max range extension (mg/dL). Extends the BG window for SMB ratio scaling.",
+      "effect_high": "Higher value \u2014 more insulin/greater effect",
+      "impact": "medium",
+      "feature": "smb_delivery"
+    },
+    "openapsma_max_basal": {
+      "summary": "Maximum temporary basal rate (U/h). Shared safety limit.",
+      "effect_high": "Higher value \u2014 more insulin/greater effect",
+      "impact": "critical",
+      "feature": "shared_aaps"
+    },
+    "openapsmb_max_iob": {
+      "summary": "Maximum IOB for SMB delivery (U).",
+      "effect_high": "Higher value \u2014 more insulin/greater effect",
+      "impact": "critical",
+      "feature": "shared_aaps"
+    },
+    "pp_ISF_weight": {
+      "summary": "Post-prandial weight. Higher = stronger ISF adjustment after meals.",
+      "effect_high": "Higher value \u2014 more insulin/greater effect",
+      "impact": "medium",
+      "feature": "isf_weights"
+    },
+    "smbinterval": {
+      "summary": "Used in AutoISF algorithm for smbinterval.",
+      "effect_high": "Higher value \u2014 more insulin/greater effect",
+      "impact": "medium",
+      "feature": "shared_aaps"
+    },
+    "smbmaxminutes": {
+      "summary": "Used in AutoISF algorithm for smbmaxminutes.",
+      "effect_high": "Higher value \u2014 more insulin/greater effect",
+      "impact": "medium",
+      "feature": "shared_aaps"
+    },
+    "uamsmbmaxminutes": {
+      "summary": "Used in AutoISF algorithm for uamsmbmaxminutes.",
+      "effect_high": "Higher value \u2014 more insulin/greater effect",
+      "impact": "medium",
+      "feature": "shared_aaps"
+    },
+    "use_smb": {
+      "summary": "Master SMB gate.",
+      "effect_high": "Feature is ON \u2014 associated functionality runs",
+      "impact": "critical",
+      "feature": "shared_aaps"
+    },
+    "use_uam": {
+      "summary": "Enables/disables use_uam. Gate flag for AutoISF.",
+      "effect_high": "Feature is ON \u2014 associated functionality runs",
+      "impact": "medium",
+      "feature": "shared_aaps"
+    }
+  },
+  "tuning_guidelines": "1. Start with ApsUseAutoIsfWeights=ON, all weights at default (0.5). 2. If hypos <3% and TIR >75%: tune individual weights, one at a time. 3. If post-meal hypers: increase bgAccelWeight (0.5\u21920.7) to keep ISF higher during rise. 4. If post-meal hypos: increase bgBrakeWeight (0.5\u21920.7) or raise lowBgWeight. 5. If overnight hypos: increase lowBgWeight (0.5\u21920.8) and check halfBasalExerciseTarget. 6. If too conservative overall: lower ApsAutoIsfMin (0.7\u21920.5) to allow stronger ISF reduction. 7. If too aggressive: raise ApsAutoIsfMin (0.7\u21920.9) and lower ApsAutoIsfMax (1.3\u21921.1). 8. SMB delivery ratio: adjust after ISF weights are stable. Increase for more SMB, decrease for less."
+}

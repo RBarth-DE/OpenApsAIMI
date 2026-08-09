@@ -1,13 +1,13 @@
 {
   "version": "3.0",
-  "source_commit": "0320615cfe7e2268d48bf37ae3c9fb39881b9d0f",
-  "generated_at": "2026-07-22T16:58:31.787324+00:00",
-  "total": 293,
-  "active": 247,
-  "orphaned": 46,
-  "with_used_in": 232,
+  "source_commit": "4c41219ae907abcdda2cc637df3c43c6cfda4e91",
+  "generated_at": "2026-08-09T17:02:23.875568+00:00",
+  "total": 306,
+  "active": 257,
+  "orphaned": 49,
+  "with_used_in": 242,
   "with_negative_gate": 9,
-  "with_settings_path": 237,
+  "with_settings_path": 178,
   "parameters": [
     {
       "key": "AIMI_UAM_CONFIDENCE",
@@ -15,6 +15,8 @@
       "type": "Double",
       "default": 0.5,
       "min": 0.0,
+      "max": 1.0,
+      "unit_type": "DOUBLE_2",
       "used_in": [
         {
           "file": "OpenAPSAIMIPlugin.kt",
@@ -39,6 +41,8 @@
       "type": "Double",
       "default": 0.1,
       "min": 0.0,
+      "max": 0.5,
+      "unit_type": "DOUBLE_2",
       "orphaned": true,
       "negative_gate_key": null,
       "negative_gate_note": null,
@@ -57,6 +61,8 @@
       "type": "Double",
       "default": 1.0,
       "min": 0.5,
+      "max": 3.0,
+      "unit_type": "DOUBLE",
       "orphaned": true,
       "negative_gate_key": null,
       "negative_gate_note": null,
@@ -76,6 +82,7 @@
       "default": 180.0,
       "min": 140.0,
       "max": 250.0,
+      "unit_type": "MGDL",
       "used_in": [
         {
           "file": "OpenAPSAIMIPlugin.kt",
@@ -121,6 +128,8 @@
       "type": "Double",
       "default": 0.2,
       "min": 0.05,
+      "max": 1.0,
+      "unit_type": "INSULIN_RATE",
       "orphaned": true,
       "negative_gate_key": null,
       "negative_gate_note": null,
@@ -156,6 +165,8 @@
       "type": "Double",
       "default": 0.15,
       "min": 0.05,
+      "max": 0.5,
+      "unit_type": "DOUBLE_2",
       "orphaned": true,
       "negative_gate_key": null,
       "negative_gate_note": null,
@@ -202,6 +213,8 @@
       "type": "Double",
       "default": 0.0,
       "min": 0.0,
+      "max": 300.0,
+      "unit_type": "GRAMS",
       "used_in": [
         {
           "file": "DetermineBasalAIMI2.kt",
@@ -230,6 +243,8 @@
       "type": "Double",
       "default": 1.6,
       "min": 1.0,
+      "max": 2.5,
+      "unit_type": "DOUBLE",
       "used_in": [
         {
           "file": "OpenAPSAIMIPlugin.kt",
@@ -258,6 +273,8 @@
       "type": "Double",
       "default": 2.5,
       "min": 0.5,
+      "max": 6.0,
+      "unit_type": "DOUBLE",
       "orphaned": true,
       "negative_gate_key": null,
       "negative_gate_note": null,
@@ -276,6 +293,8 @@
       "type": "Double",
       "default": 0.7,
       "min": 0.3,
+      "max": 0.95,
+      "unit_type": "DOUBLE_2",
       "orphaned": true,
       "negative_gate_key": null,
       "negative_gate_note": null,
@@ -415,6 +434,7 @@
       "default": 1.0,
       "min": 0.0,
       "max": 1.5,
+      "unit_type": "DOUBLE",
       "dependency": "ActivityMonitorDetection",
       "orphaned": true,
       "negative_gate_key": null,
@@ -934,6 +954,8 @@
       "type": "Double",
       "default": 2.0,
       "min": 0.1,
+      "max": 10.0,
+      "unit_type": "DOUBLE",
       "used_in": [
         {
           "file": "CosineTrajectoryGate.kt",
@@ -980,6 +1002,8 @@
       "type": "Double",
       "default": 1.3,
       "min": 1.0,
+      "max": 2.0,
+      "unit_type": "DOUBLE",
       "used_in": [
         {
           "file": "CosineTrajectoryGate.kt",
@@ -1027,6 +1051,8 @@
       "type": "Double",
       "default": 0.3,
       "min": 0.0,
+      "max": 1.0,
+      "unit_type": "DOUBLE_2",
       "used_in": [
         {
           "file": "CosineTrajectoryGate.kt",
@@ -1051,6 +1077,8 @@
       "type": "Double",
       "default": 0.7,
       "min": 0.5,
+      "max": 1.0,
+      "unit_type": "DOUBLE_2",
       "used_in": [
         {
           "file": "CosineTrajectoryGate.kt",
@@ -1076,6 +1104,7 @@
       "default": 0.45,
       "min": 0.0,
       "max": 1.0,
+      "unit_type": "DOUBLE_2",
       "used_in": [
         {
           "file": "DetermineBasalAIMI2.kt",
@@ -1105,6 +1134,7 @@
       "default": 0.06,
       "min": 0.02,
       "max": 0.12,
+      "unit_type": "DOUBLE_3",
       "dependency": "OApsAIMIDynIsfTrajectoryTuningEnabled",
       "used_in": [
         {
@@ -1272,7 +1302,7 @@
       "feature_group": "sos_emergency",
       "is_gate": false,
       "settings_path": "AIMI → Preferences user → 🚨 Emergency SOS (Hypo)",
-      "settings_gate": null
+      "settings_gate": "Requires: Aimi Emergency Sos Enable = ON"
     },
     {
       "key": "aimi_emergency_sos_phone",
@@ -1299,7 +1329,7 @@
       "feature_group": "sos_emergency",
       "is_gate": false,
       "settings_path": "AIMI → Preferences user → 🚨 Emergency SOS (Hypo)",
-      "settings_gate": null
+      "settings_gate": "Requires: Aimi Emergency Sos Enable = ON"
     },
     {
       "key": "aimi_emergency_sos_phone2",
@@ -1326,7 +1356,7 @@
       "feature_group": "sos_emergency",
       "is_gate": false,
       "settings_path": "AIMI → Preferences user → 🚨 Emergency SOS (Hypo)",
-      "settings_gate": null
+      "settings_gate": "Requires: Aimi Emergency Sos Enable = ON"
     },
     {
       "key": "aimi_emergency_sos_stale_threshold",
@@ -1357,7 +1387,7 @@
       "feature_group": "sos_emergency",
       "is_gate": false,
       "settings_path": "AIMI → Preferences user → 🚨 Emergency SOS (Hypo)",
-      "settings_gate": null
+      "settings_gate": "Requires: Aimi Emergency Sos Enable = ON"
     },
     {
       "key": "aimi_emergency_sos_threshold",
@@ -1388,7 +1418,7 @@
       "feature_group": "sos_emergency",
       "is_gate": false,
       "settings_path": "AIMI → Preferences user → 🚨 Emergency SOS (Hypo)",
-      "settings_gate": null
+      "settings_gate": "Requires: Aimi Emergency Sos Enable = ON"
     },
     {
       "key": "aimi_endo_basal_mult",
@@ -1396,6 +1426,8 @@
       "type": "Double",
       "default": 1.3,
       "min": 1.0,
+      "max": 2.0,
+      "unit_type": "DOUBLE",
       "used_in": [
         {
           "file": "OpenAPSAIMIPlugin.kt",
@@ -1503,6 +1535,8 @@
       "type": "Double",
       "default": 0.7,
       "min": 0.0,
+      "max": 1.0,
+      "unit_type": "DOUBLE_2",
       "used_in": [
         {
           "file": "OpenAPSAIMIPlugin.kt",
@@ -1547,6 +1581,8 @@
       "type": "Double",
       "default": 0.4,
       "min": 0.0,
+      "max": 0.5,
+      "unit_type": "DOUBLE_2",
       "used_in": [
         {
           "file": "OpenAPSAIMIPlugin.kt",
@@ -1587,6 +1623,8 @@
       "type": "Double",
       "default": 2.0,
       "min": 1.0,
+      "max": 2.0,
+      "unit_type": "DOUBLE",
       "used_in": [
         {
           "file": "OpenAPSAIMIPlugin.kt",
@@ -1627,6 +1665,8 @@
       "type": "Double",
       "default": 0.75,
       "min": 0.3,
+      "max": 1.0,
+      "unit_type": "DOUBLE_2",
       "used_in": [
         {
           "file": "OpenAPSAIMIPlugin.kt",
@@ -1953,6 +1993,8 @@
       "type": "Double",
       "default": 4.0,
       "min": 4.0,
+      "max": 12.0,
+      "unit_type": "HOURS_DOUBLE",
       "used_in": [
         {
           "file": "PkpdSettingsUi.kt",
@@ -1985,6 +2027,8 @@
       "type": "Double",
       "default": 75.0,
       "min": 35.0,
+      "max": 180.0,
+      "unit_type": "MIN",
       "used_in": [
         {
           "file": "PkpdSettingsUi.kt",
@@ -2021,6 +2065,8 @@
       "type": "Double",
       "default": 24.0,
       "min": 6.0,
+      "max": 36.0,
+      "unit_type": "HOURS_DOUBLE",
       "used_in": [
         {
           "file": "OpenAPSAIMIPlugin.kt",
@@ -2061,6 +2107,8 @@
       "type": "Double",
       "default": 4.0,
       "min": 4.0,
+      "max": 24.0,
+      "unit_type": "HOURS_DOUBLE",
       "used_in": [
         {
           "file": "OpenAPSAIMIPlugin.kt",
@@ -2101,6 +2149,8 @@
       "type": "Double",
       "default": 240.0,
       "min": 60.0,
+      "max": 480.0,
+      "unit_type": "MIN",
       "used_in": [
         {
           "file": "OpenAPSAIMIPlugin.kt",
@@ -2141,6 +2191,8 @@
       "type": "Double",
       "default": 30.0,
       "min": 20.0,
+      "max": 240.0,
+      "unit_type": "MIN",
       "used_in": [
         {
           "file": "OpenAPSAIMIPlugin.kt",
@@ -2181,6 +2233,8 @@
       "type": "Double",
       "default": 6.0,
       "min": 4.0,
+      "max": 24.0,
+      "unit_type": "HOURS_DOUBLE",
       "used_in": [
         {
           "file": "OpenAPSAIMIPlugin.kt",
@@ -2221,6 +2275,8 @@
       "type": "Double",
       "default": 75.0,
       "min": 35.0,
+      "max": 300.0,
+      "unit_type": "MIN",
       "used_in": [
         {
           "file": "OpenAPSAIMIPlugin.kt",
@@ -2261,6 +2317,8 @@
       "type": "Double",
       "default": 3.0,
       "min": 0.1,
+      "max": 6.0,
+      "unit_type": "HOURS_DOUBLE",
       "used_in": [
         {
           "file": "OpenAPSAIMIPlugin.kt",
@@ -2297,6 +2355,8 @@
       "type": "Double",
       "default": 20.0,
       "min": 1.0,
+      "max": 60.0,
+      "unit_type": "MIN",
       "used_in": [
         {
           "file": "OpenAPSAIMIPlugin.kt",
@@ -2333,6 +2393,8 @@
       "type": "Double",
       "default": 0.75,
       "min": 0.5,
+      "max": 1.0,
+      "unit_type": "DOUBLE_2",
       "used_in": [
         {
           "file": "OpenAPSAIMIPlugin.kt",
@@ -2373,6 +2435,8 @@
       "type": "Double",
       "default": 6.0,
       "min": 4.0,
+      "max": 24.0,
+      "unit_type": "HOURS_DOUBLE",
       "used_in": [
         {
           "file": "DetermineBasalAIMI2.kt",
@@ -2461,6 +2525,8 @@
       "type": "Double",
       "default": 75.0,
       "min": 40.0,
+      "max": 300.0,
+      "unit_type": "MIN",
       "used_in": [
         {
           "file": "PkpdSettingsUi.kt",
@@ -2605,6 +2671,8 @@
       "type": "Double",
       "default": 2.0,
       "min": 0.0,
+      "max": 5.0,
+      "unit_type": "INSULIN",
       "used_in": [
         {
           "file": "OpenAPSAIMIPlugin.kt",
@@ -2645,6 +2713,8 @@
       "type": "Double",
       "default": 1.2,
       "min": 1.0,
+      "max": 1.6,
+      "unit_type": "DOUBLE_2",
       "used_in": [
         {
           "file": "OpenAPSAIMIPlugin.kt",
@@ -2685,6 +2755,8 @@
       "type": "Double",
       "default": 0.75,
       "min": 0.5,
+      "max": 0.95,
+      "unit_type": "DOUBLE_2",
       "used_in": [
         {
           "file": "OpenAPSAIMIPlugin.kt",
@@ -2725,6 +2797,8 @@
       "type": "Double",
       "default": 0.6,
       "min": 0.0,
+      "max": 1.0,
+      "unit_type": "DOUBLE_2",
       "used_in": [
         {
           "file": "OpenAPSAIMIPlugin.kt",
@@ -2765,6 +2839,8 @@
       "type": "Double",
       "default": 0.7,
       "min": 0.0,
+      "max": 1.0,
+      "unit_type": "DOUBLE_2",
       "used_in": [
         {
           "file": "OpenAPSAIMIPlugin.kt",
@@ -2803,8 +2879,10 @@
       "key": "aimi_smb_tail_damping",
       "name": "OApsAIMISmbTailDamping",
       "type": "Double",
-      "default": 0.5,
+      "default": 0.85,
       "min": 0.0,
+      "max": 1.0,
+      "unit_type": "DOUBLE_2",
       "used_in": [
         {
           "file": "OpenAPSAIMIPlugin.kt",
@@ -2845,6 +2923,8 @@
       "type": "Double",
       "default": 0.25,
       "min": 0.0,
+      "max": 1.0,
+      "unit_type": "DOUBLE_2",
       "used_in": [
         {
           "file": "OpenAPSAIMIPlugin.kt",
@@ -2973,6 +3053,7 @@
       "min": 0.5,
       "max": 3.0,
       "unit_type": "DOUBLE",
+      "dependency": "ApsUseAutosens",
       "used_in": [
         {
           "file": "OpenAPSAIMIPlugin.kt",
@@ -2999,6 +3080,7 @@
       "min": 0.1,
       "max": 1.0,
       "unit_type": "DOUBLE",
+      "dependency": "ApsUseAutosens",
       "orphaned": true,
       "negative_gate_key": null,
       "negative_gate_note": null,
@@ -3072,6 +3154,22 @@
       "settings_gate": null
     },
     {
+      "key": "boost_autosens_when_no_tdd",
+      "name": "ApsBoostAutosensWhenNoTdd",
+      "type": "Boolean",
+      "orphaned": true,
+      "negative_gate_key": null,
+      "negative_gate_note": null,
+      "logic_summary": "Boolean switch for boost_autosens_when_no_tdd.",
+      "effect_high": "Feature is active — associated functionality runs",
+      "effect_low": "Feature is inactive — associated functionality is disabled",
+      "impact": "medium",
+      "feature_group": "core",
+      "is_gate": false,
+      "settings_path": null,
+      "settings_gate": null
+    },
+    {
       "key": "count_steps_watch",
       "name": "OApsAIMIEnableStepsFromWatch",
       "type": "Boolean",
@@ -3136,6 +3234,8 @@
       "type": "Double",
       "default": 10.0,
       "min": 0.1,
+      "max": 25.0,
+      "unit_type": "INSULIN",
       "orphaned": true,
       "negative_gate_key": null,
       "negative_gate_note": null,
@@ -3229,6 +3329,7 @@
       "default": 0.0,
       "min": 0.0,
       "max": 0.0,
+      "unit_type": "DOUBLE",
       "dependency": "ActivityMonitorDetection",
       "orphaned": true,
       "negative_gate_key": null,
@@ -3248,6 +3349,8 @@
       "type": "Double",
       "default": 1.0,
       "min": 0.1,
+      "max": 5.0,
+      "unit_type": "DOUBLE",
       "used_in": [
         {
           "file": "GlucoseStatusCalculatorAimi.kt",
@@ -3272,6 +3375,8 @@
       "type": "Double",
       "default": 1.3,
       "min": 0.5,
+      "max": 3.0,
+      "unit_type": "DOUBLE",
       "used_in": [
         {
           "file": "DetermineBasalAIMI2.kt",
@@ -3297,6 +3402,7 @@
       "default": 1.0,
       "min": 0.5,
       "max": 2.0,
+      "unit_type": "DOUBLE",
       "used_in": [
         {
           "file": "OpenAPSAIMIPlugin.kt",
@@ -3452,10 +3558,74 @@
       "settings_gate": null
     },
     {
+      "key": "key_aimi_basal_channel_safety_guards",
+      "name": "OApsAIMIBasalChannelSafetyGuards",
+      "type": "Boolean",
+      "used_in": [
+        {
+          "file": "OpenAPSAIMIPlugin.kt",
+          "function": "aimiComposeAdaptiveBasalSubScreen"
+        },
+        {
+          "file": "DetermineBasalAIMI2.kt",
+          "function": "refineRbtMergeAfterDoseSnapshot"
+        },
+        {
+          "file": "BasalChannelSafetyGuards.kt",
+          "function": "unknown"
+        }
+      ],
+      "orphaned": false,
+      "negative_gate_key": null,
+      "negative_gate_note": null,
+      "logic_summary": "Boolean switch for basal_channel_safety_guards.",
+      "effect_high": "Feature is active — associated functionality runs",
+      "effect_low": "Feature is inactive — associated functionality is disabled",
+      "impact": "critical",
+      "feature_group": "core",
+      "is_gate": false,
+      "settings_path": "AIMI → Preferences user → Universal Adaptive Basal",
+      "settings_gate": null
+    },
+    {
+      "key": "key_aimi_basal_projected_error",
+      "name": "OApsAIMIBasalProjectedError",
+      "type": "Boolean",
+      "used_in": [
+        {
+          "file": "OpenAPSAIMIPlugin.kt",
+          "function": "aimiComposeAdaptiveBasalSubScreen"
+        },
+        {
+          "file": "DetermineBasalAIMI2.kt",
+          "function": "runBasalDecisionEngineDecideStage"
+        },
+        {
+          "file": "BasalDecisionEngine.kt",
+          "function": "unknown"
+        }
+      ],
+      "orphaned": false,
+      "negative_gate_key": null,
+      "negative_gate_note": null,
+      "logic_summary": "Boolean switch for basal_projected_error.",
+      "effect_high": "Feature is active — associated functionality runs",
+      "effect_low": "Feature is inactive — associated functionality is disabled",
+      "impact": "medium",
+      "feature_group": "core",
+      "is_gate": false,
+      "settings_path": "AIMI → Preferences user → Universal Adaptive Basal",
+      "settings_gate": null
+    },
+    {
       "key": "key_aimi_basal_slew_limit",
       "name": "OApsAIMIBasalSlewLimitEnabled",
       "type": "Boolean",
       "used_in": [
+        {
+          "file": "OpenAPSAIMIPlugin.kt",
+          "function": "aimiComposeAdaptiveBasalSubScreen"
+        },
         {
           "file": "DetermineBasalAIMI2.kt",
           "function": "runPostBasalEngineLearnersRtInstrumentationAndAuditorStage"
@@ -3470,7 +3640,37 @@
       "impact": "medium",
       "feature_group": "core",
       "is_gate": false,
-      "settings_path": "AIMI → Preferences user → Core",
+      "settings_path": "AIMI → Preferences user → Universal Adaptive Basal",
+      "settings_gate": null
+    },
+    {
+      "key": "key_aimi_basal_terminal_invariants",
+      "name": "OApsAIMIBasalTerminalInvariants",
+      "type": "Boolean",
+      "used_in": [
+        {
+          "file": "OpenAPSAIMIPlugin.kt",
+          "function": "aimiComposeAdaptiveBasalSubScreen"
+        },
+        {
+          "file": "DetermineBasalAIMI2.kt",
+          "function": "setTempBasal"
+        },
+        {
+          "file": "BasalTerminalInvariants.kt",
+          "function": "unknown"
+        }
+      ],
+      "orphaned": false,
+      "negative_gate_key": null,
+      "negative_gate_note": null,
+      "logic_summary": "Boolean switch for basal_terminal_invariants.",
+      "effect_high": "Feature is active — associated functionality runs",
+      "effect_low": "Feature is inactive — associated functionality is disabled",
+      "impact": "medium",
+      "feature_group": "core",
+      "is_gate": false,
+      "settings_path": "AIMI → Preferences user → Universal Adaptive Basal",
       "settings_gate": null
     },
     {
@@ -3555,8 +3755,16 @@
       "type": "Boolean",
       "used_in": [
         {
+          "file": "OpenAPSAIMIPlugin.kt",
+          "function": "invoke"
+        },
+        {
           "file": "DetermineBasalAIMI2.kt",
           "function": "runT9PhysioEarlyPkpdAndTubeBootstrap"
+        },
+        {
+          "file": "AimiLearnerOverviewScreen.kt",
+          "function": "AimiLearnerOverviewScreen"
         },
         {
           "file": "InsulinKineticsAuthority.kt",
@@ -3771,7 +3979,7 @@
       "default": 0.97,
       "min": 0.9,
       "max": 0.999,
-      "unit_type": "DOUBLE_3",
+      "unit_type": "DOUBLE_2",
       "dependency": "OApsAIMIT3cAdaptiveBasalEnabled",
       "used_in": [
         {
@@ -3806,7 +4014,7 @@
       "default": 0.965,
       "min": 0.9,
       "max": 0.999,
-      "unit_type": "DOUBLE_3",
+      "unit_type": "DOUBLE_2",
       "dependency": "OApsAIMIT3cAdaptiveBasalEnabled",
       "used_in": [
         {
@@ -3911,7 +4119,7 @@
       "default": 0.98,
       "min": 0.9,
       "max": 0.999,
-      "unit_type": "DOUBLE_3",
+      "unit_type": "DOUBLE_2",
       "dependency": "OApsAIMIT3cAdaptiveBasalEnabled",
       "used_in": [
         {
@@ -4191,6 +4399,7 @@
       "default": 0.0,
       "min": 0.0,
       "max": 200.0,
+      "unit_type": "MGDL",
       "dependency": "OApsAIMIHyperTrajectoryRelease",
       "used_in": [
         {
@@ -4227,12 +4436,35 @@
       "settings_gate": "Requires: Hyper Trajectory Release = ON"
     },
     {
+      "key": "key_aimi_hyper_dropping_exempt_enabled",
+      "name": "OApsAIMIHyperDroppingExemptEnabled",
+      "type": "Boolean",
+      "used_in": [
+        {
+          "file": "DetermineBasalAIMI2.kt",
+          "function": "determineCriticalConditions"
+        }
+      ],
+      "orphaned": false,
+      "negative_gate_key": null,
+      "negative_gate_note": null,
+      "logic_summary": "Enables/disables hyper_dropping_exempt_enabled. Gate flag for feature control.",
+      "effect_high": "Feature is active — associated functionality runs",
+      "effect_low": "Feature is inactive — associated functionality is disabled",
+      "impact": "medium",
+      "feature_group": "hyper_trajectory",
+      "is_gate": false,
+      "settings_path": "AIMI → Preferences user → Hyper Trajectory",
+      "settings_gate": null
+    },
+    {
       "key": "key_aimi_hyper_established_dev_mgdl",
       "name": "OApsAIMIHyperEstablishedDevMgdl",
       "type": "Double",
       "default": 0.0,
       "min": 0.0,
       "max": 160.0,
+      "unit_type": "MGDL",
       "dependency": "OApsAIMIHyperTrajectoryRelease",
       "used_in": [
         {
@@ -4524,6 +4756,59 @@
       "settings_gate": null
     },
     {
+      "key": "key_aimi_meal_confirmed_early_release",
+      "name": "OApsAIMIMealConfirmedEarlyRelease",
+      "type": "Boolean",
+      "default": false,
+      "used_in": [
+        {
+          "file": "OpenAPSAIMIPlugin.kt",
+          "function": "aimiComposeAutodriveSubScreen"
+        },
+        {
+          "file": "DetermineBasalAIMI2.kt",
+          "function": "publishDoseTerminalAuthorityAndSnapshot"
+        },
+        {
+          "file": "DecisionPredictionAuthority.kt",
+          "function": "unknown"
+        }
+      ],
+      "orphaned": false,
+      "negative_gate_key": null,
+      "negative_gate_note": null,
+      "logic_summary": "Boolean switch for meal_confirmed_early_release.",
+      "effect_high": "Feature is active — associated functionality runs",
+      "effect_low": "Feature is inactive — associated functionality is disabled",
+      "impact": "high",
+      "feature_group": "meal_modes",
+      "is_gate": false,
+      "settings_path": "AIMI → Preferences user → Autodrive",
+      "settings_gate": null
+    },
+    {
+      "key": "key_aimi_meal_hyper_bypass_enabled",
+      "name": "OApsAIMIMealHyperBypassEnabled",
+      "type": "Boolean",
+      "used_in": [
+        {
+          "file": "RecursiveBeliefPreferences.kt",
+          "function": "from"
+        }
+      ],
+      "orphaned": false,
+      "negative_gate_key": null,
+      "negative_gate_note": null,
+      "logic_summary": "Enables/disables meal_hyper_bypass_enabled. Gate flag for feature control.",
+      "effect_high": "Feature is active — associated functionality runs",
+      "effect_low": "Feature is inactive — associated functionality is disabled",
+      "impact": "high",
+      "feature_group": "meal_modes",
+      "is_gate": false,
+      "settings_path": "AIMI → Preferences user → Meal Modes",
+      "settings_gate": null
+    },
+    {
       "key": "key_aimi_peak_governor_enabled",
       "name": "OApsAIMIPeakGovernorEnabled",
       "type": "Boolean",
@@ -4532,6 +4817,14 @@
         {
           "file": "OpenAPSAIMIPlugin.kt",
           "function": "computeTrajectoryPeakNudgeForGovernor"
+        },
+        {
+          "file": "DetermineBasalAIMI2.kt",
+          "function": "assignAimiAdaptationStatus"
+        },
+        {
+          "file": "AimiLearnerOverviewScreen.kt",
+          "function": "AimiLearnerOverviewScreen"
         },
         {
           "file": "PkpdSettingsUi.kt",
@@ -4568,16 +4861,16 @@
           "function": "runT9PhysioEarlyPkpdAndTubeBootstrap"
         },
         {
+          "file": "AimiLearnerOverviewScreen.kt",
+          "function": "AimiLearnerOverviewScreen"
+        },
+        {
           "file": "PkpdSettingsUi.kt",
           "function": "PkpdSetupWizardDialog"
         },
         {
           "file": "PkpdSettingsSupport.kt",
           "function": "pkpdPrefsSnapshotFrom"
-        },
-        {
-          "file": "PkpdAdvisor.kt",
-          "function": "analysePkpd"
         }
       ],
       "orphaned": false,
@@ -4616,6 +4909,30 @@
       "feature_group": "pkpd",
       "is_gate": false,
       "settings_path": "AIMI → Preferences user → Adaptive PK/PD",
+      "settings_gate": null
+    },
+    {
+      "key": "key_aimi_pkpd_hyper_reversion",
+      "name": "OApsAIMIPkpdHyperReversion",
+      "type": "Boolean",
+      "default": true,
+      "dependency": "OApsAIMIPkpdEndogenousReversion",
+      "used_in": [
+        {
+          "file": "DetermineBasalAIMI2.kt",
+          "function": "runAdvancedPredictionsAndPredPipePrep"
+        }
+      ],
+      "orphaned": false,
+      "negative_gate_key": null,
+      "negative_gate_note": null,
+      "logic_summary": "Boolean switch for pkpd_hyper_reversion.",
+      "effect_high": "Feature is active — associated functionality runs",
+      "effect_low": "Feature is inactive — associated functionality is disabled",
+      "impact": "high",
+      "feature_group": "pkpd",
+      "is_gate": false,
+      "settings_path": "AIMI → Preferences user → Pkpd",
       "settings_gate": null
     },
     {
@@ -4705,6 +5022,34 @@
       "impact": "high",
       "feature_group": "pkpd",
       "is_gate": true,
+      "settings_path": "AIMI → Preferences user → Pkpd",
+      "settings_gate": null
+    },
+    {
+      "key": "key_aimi_pkpd_stack_aware_guardb",
+      "name": "OApsAIMIPkpdStackAwareGuardB",
+      "type": "Boolean",
+      "default": false,
+      "dependency": "OApsAIMIPkpdHyperReversion",
+      "used_in": [
+        {
+          "file": "DetermineBasalAIMI2.kt",
+          "function": "runAdvancedPredictionsAndPredPipePrep"
+        },
+        {
+          "file": "PkpdSettingsUi.kt",
+          "function": "PkpdAdvancedSettingsContent"
+        }
+      ],
+      "orphaned": false,
+      "negative_gate_key": null,
+      "negative_gate_note": null,
+      "logic_summary": "Boolean switch for pkpd_stack_aware_guardb.",
+      "effect_high": "Feature is active — associated functionality runs",
+      "effect_low": "Feature is inactive — associated functionality is disabled",
+      "impact": "high",
+      "feature_group": "pkpd",
+      "is_gate": false,
       "settings_path": "AIMI → Preferences user → Pkpd",
       "settings_gate": null
     },
@@ -4871,6 +5216,33 @@
       "settings_gate": null
     },
     {
+      "key": "key_aimi_sensor_confidence_cgm_first",
+      "name": "OApsAIMISensorConfidenceCgmFirst",
+      "type": "Boolean",
+      "default": false,
+      "used_in": [
+        {
+          "file": "OpenAPSAIMIPlugin.kt",
+          "function": "aimiComposeAutodriveSubScreen"
+        },
+        {
+          "file": "DetermineBasalAIMI2.kt",
+          "function": "updatePhysioLatentState"
+        }
+      ],
+      "orphaned": false,
+      "negative_gate_key": null,
+      "negative_gate_note": null,
+      "logic_summary": "Boolean switch for sensor_confidence_cgm_first.",
+      "effect_high": "Feature is active — associated functionality runs",
+      "effect_low": "Feature is inactive — associated functionality is disabled",
+      "impact": "medium",
+      "feature_group": "core",
+      "is_gate": false,
+      "settings_path": "AIMI → Preferences user → Autodrive",
+      "settings_gate": null
+    },
+    {
       "key": "key_aimi_smb_comparator_enabled",
       "name": "OApsAIMIAimiSmbComparatorEnabled",
       "type": "Boolean",
@@ -4937,6 +5309,8 @@
       "type": "Double",
       "default": 130.0,
       "min": 100.0,
+      "max": 250.0,
+      "unit_type": "MGDL",
       "used_in": [
         {
           "file": "OpenAPSAIMIPlugin.kt",
@@ -4965,6 +5339,8 @@
       "type": "Double",
       "default": 1.0,
       "min": 0.5,
+      "max": 3.0,
+      "unit_type": "DOUBLE",
       "used_in": [
         {
           "file": "OpenAPSAIMIPlugin.kt",
@@ -4997,6 +5373,8 @@
       "type": "Double",
       "default": 0.0,
       "min": 0.0,
+      "max": 1.0,
+      "unit_type": "DOUBLE_2",
       "used_in": [
         {
           "file": "OpenAPSAIMIPlugin.kt",
@@ -5044,7 +5422,7 @@
       "impact": "high",
       "feature_group": "t3c_adaptive_basal",
       "is_gate": false,
-      "settings_path": "AIMI → Preferences user → T3C Adaptive Basal",
+      "settings_path": "AIMI → Preferences user → T3C Brittle Mode Settings",
       "settings_gate": null
     },
     {
@@ -5069,8 +5447,8 @@
           "function": "runScheduledTraining"
         },
         {
-          "file": "AimiBehaviorFamilyBridge.kt",
-          "function": "buildAimiFamilyBridgeSuggestions"
+          "file": "AimiLearnerOverviewScreen.kt",
+          "function": "AimiLearnerOverviewScreen"
         }
       ],
       "orphaned": false,
@@ -5089,9 +5467,11 @@
       "key": "key_aimi_t3c_cfrd_cob_delay_min",
       "name": "OApsAIMIT3cCfrdCobDelayMin",
       "type": "Double",
-      "default": 0.0,
+      "default": 30.0,
       "min": 0.0,
       "max": 90.0,
+      "unit_type": "NONE",
+      "dependency": "OApsAIMIT3cCfrdMode",
       "used_in": [
         {
           "file": "OpenAPSAIMIPlugin.kt",
@@ -5112,13 +5492,19 @@
       "feature_group": "t3c_adaptive_basal",
       "is_gate": false,
       "settings_path": "AIMI → Preferences user → T3C Brittle Mode Settings",
-      "settings_gate": null
+      "settings_gate": "Requires: T3C Cfrd Mode = ON"
     },
     {
       "key": "key_aimi_t3c_cfrd_exacerbation",
       "name": "OApsAIMIT3cCfrdExacerbationMode",
       "type": "Boolean",
+      "default": false,
+      "dependency": "OApsAIMIT3cCfrdMode",
       "used_in": [
+        {
+          "file": "OpenAPSAIMIPlugin.kt",
+          "function": "aimiComposeT3cSubScreen"
+        },
         {
           "file": "DetermineBasalAIMI2.kt",
           "function": "estimateUndeclaredVirtualCob"
@@ -5133,16 +5519,18 @@
       "impact": "high",
       "feature_group": "t3c_adaptive_basal",
       "is_gate": false,
-      "settings_path": "AIMI → Preferences user → T3C Adaptive Basal",
+      "settings_path": "AIMI → Preferences user → T3C Brittle Mode Settings",
       "settings_gate": null
     },
     {
       "key": "key_aimi_t3c_cfrd_lgs_floor",
       "name": "OApsAIMIT3cCfrdLgsFloorMgdl",
       "type": "Double",
-      "default": 80.0,
+      "default": 95.0,
       "min": 70.0,
       "max": 95.0,
+      "unit_type": "NONE",
+      "dependency": "OApsAIMIT3cCfrdMode",
       "used_in": [
         {
           "file": "OpenAPSAIMIPlugin.kt",
@@ -5163,13 +5551,19 @@
       "feature_group": "t3c_adaptive_basal",
       "is_gate": false,
       "settings_path": "AIMI → Preferences user → T3C Brittle Mode Settings",
-      "settings_gate": null
+      "settings_gate": "Requires: T3C Cfrd Mode = ON"
     },
     {
       "key": "key_aimi_t3c_cfrd_mode",
       "name": "OApsAIMIT3cCfrdMode",
       "type": "Boolean",
+      "default": true,
+      "dependency": "OApsAIMIT3cBrittleMode",
       "used_in": [
+        {
+          "file": "OpenAPSAIMIPlugin.kt",
+          "function": "aimiComposeT3cSubScreen"
+        },
         {
           "file": "DetermineBasalAIMI2.kt",
           "function": "runT3cBrittleBypassOrReturn"
@@ -5184,7 +5578,35 @@
       "impact": "high",
       "feature_group": "t3c_adaptive_basal",
       "is_gate": false,
-      "settings_path": "AIMI → Preferences user → T3C Adaptive Basal",
+      "settings_path": "AIMI → Preferences user → T3C Brittle Mode Settings",
+      "settings_gate": null
+    },
+    {
+      "key": "key_aimi_t3c_hyper_basal_floor",
+      "name": "OApsAIMIT3cHyperBasalFloor",
+      "type": "Boolean",
+      "default": true,
+      "dependency": "OApsAIMIT3cBrittleMode",
+      "used_in": [
+        {
+          "file": "OpenAPSAIMIPlugin.kt",
+          "function": "aimiComposeT3cSubScreen"
+        },
+        {
+          "file": "DetermineBasalAIMI2.kt",
+          "function": "executeT3cBrittleMode"
+        }
+      ],
+      "orphaned": false,
+      "negative_gate_key": null,
+      "negative_gate_note": null,
+      "logic_summary": "Boolean switch for t3c_hyper_basal_floor.",
+      "effect_high": "Feature is active — associated functionality runs",
+      "effect_low": "Feature is inactive — associated functionality is disabled",
+      "impact": "high",
+      "feature_group": "t3c_adaptive_basal",
+      "is_gate": false,
+      "settings_path": "AIMI → Preferences user → T3C Brittle Mode Settings",
       "settings_gate": null
     },
     {
@@ -5480,13 +5902,40 @@
       "settings_gate": null
     },
     {
+      "key": "key_aimi_tree_meal_rise_frontload",
+      "name": "OApsAIMITreeMealRiseFrontLoad",
+      "type": "Boolean",
+      "default": false,
+      "used_in": [
+        {
+          "file": "OpenAPSAIMIPlugin.kt",
+          "function": "aimiComposeAutodriveSubScreen"
+        },
+        {
+          "file": "RecursiveBeliefPreferences.kt",
+          "function": "from"
+        }
+      ],
+      "orphaned": false,
+      "negative_gate_key": null,
+      "negative_gate_note": null,
+      "logic_summary": "Boolean switch for tree_meal_rise_frontload.",
+      "effect_high": "Feature is active — associated functionality runs",
+      "effect_low": "Feature is inactive — associated functionality is disabled",
+      "impact": "high",
+      "feature_group": "meal_modes",
+      "is_gate": false,
+      "settings_path": "AIMI → Preferences user → Autodrive",
+      "settings_gate": null
+    },
+    {
       "key": "key_aimi_tube_aggressiveness",
       "name": "AimiTubeAggressiveness",
       "type": "Double",
       "default": 1.0,
       "min": 0.5,
       "max": 2.0,
-      "unit_type": "DOUBLE",
+      "unit_type": "DOUBLE_2",
       "dependency": "OApsAIMIStraightLineTubeAdvisorEnabled",
       "used_in": [
         {
@@ -5703,6 +6152,7 @@
       "default": 25.0,
       "min": 5.0,
       "max": 80.0,
+      "unit_type": "GRAMS",
       "dependency": "OApsAIMIUndeclaredCobEnabled",
       "used_in": [
         {
@@ -5732,6 +6182,8 @@
       "type": "Double",
       "default": 50.0,
       "min": 1.0,
+      "max": 200.0,
+      "unit_type": "DOUBLE",
       "used_in": [
         {
           "file": "OpenAPSAIMIPlugin.kt",
@@ -5764,6 +6216,8 @@
       "type": "Double",
       "default": 50.0,
       "min": 1.0,
+      "max": 150.0,
+      "unit_type": "GRAMS",
       "used_in": [
         {
           "file": "OpenAPSAIMIPlugin.kt",
@@ -5796,6 +6250,8 @@
       "type": "Double",
       "default": 1.0,
       "min": 0.1,
+      "max": 20.0,
+      "unit_type": "DOUBLE",
       "used_in": [
         {
           "file": "OpenAPSAIMIPlugin.kt",
@@ -5880,6 +6336,8 @@
       "type": "Double",
       "default": 1.0,
       "min": 0.1,
+      "max": 5.0,
+      "unit_type": "DOUBLE",
       "used_in": [
         {
           "file": "OpenAPSAIMIPlugin.kt",
@@ -5904,6 +6362,8 @@
       "type": "Double",
       "default": 50.0,
       "min": 1.0,
+      "max": 150.0,
+      "unit_type": "PERCENT",
       "used_in": [
         {
           "file": "OpenAPSAIMIPlugin.kt",
@@ -5975,6 +6435,8 @@
       "type": "Double",
       "default": 50.0,
       "min": 1.0,
+      "max": 150.0,
+      "unit_type": "PERCENT",
       "orphaned": true,
       "negative_gate_key": null,
       "negative_gate_note": null,
@@ -5993,6 +6455,8 @@
       "type": "Double",
       "default": 50.0,
       "min": 1.0,
+      "max": 150.0,
+      "unit_type": "PERCENT",
       "used_in": [
         {
           "file": "OpenAPSAIMIPlugin.kt",
@@ -6104,6 +6568,8 @@
       "type": "Double",
       "default": 50.0,
       "min": 1.0,
+      "max": 150.0,
+      "unit_type": "PERCENT",
       "used_in": [
         {
           "file": "OpenAPSAIMIPlugin.kt",
@@ -6219,6 +6685,8 @@
       "type": "Double",
       "default": 50.0,
       "min": 1.0,
+      "max": 150.0,
+      "unit_type": "PERCENT",
       "used_in": [
         {
           "file": "OpenAPSAIMIPlugin.kt",
@@ -6294,6 +6762,8 @@
       "type": "Double",
       "default": 50.0,
       "min": 1.0,
+      "max": 150.0,
+      "unit_type": "PERCENT",
       "used_in": [
         {
           "file": "OpenAPSAIMIPlugin.kt",
@@ -6404,6 +6874,8 @@
       "type": "Double",
       "default": 1.1,
       "min": 1.0,
+      "max": 1.5,
+      "unit_type": "DOUBLE_2",
       "used_in": [
         {
           "file": "OpenAPSAIMIPlugin.kt",
@@ -6459,6 +6931,10 @@
           "function": "buildNightGrowthResistanceConfig"
         },
         {
+          "file": "AimiLearnerOverviewScreen.kt",
+          "function": "AimiLearnerOverviewScreen"
+        },
+        {
           "file": "AimiControlCenterSnapshot.kt",
           "function": "buildContextSection"
         }
@@ -6481,6 +6957,8 @@
       "type": "Double",
       "default": 0.5,
       "min": 0.0,
+      "max": 3.0,
+      "unit_type": "INSULIN",
       "used_in": [
         {
           "file": "OpenAPSAIMIPlugin.kt",
@@ -6509,6 +6987,8 @@
       "type": "Double",
       "default": 1.2,
       "min": 0.1,
+      "max": 5.0,
+      "unit_type": "DOUBLE",
       "used_in": [
         {
           "file": "OpenAPSAIMIPlugin.kt",
@@ -6579,6 +7059,8 @@
       "type": "Double",
       "default": 5.0,
       "min": 0.5,
+      "max": 30.0,
+      "unit_type": "DOUBLE",
       "used_in": [
         {
           "file": "OpenAPSAIMIPlugin.kt",
@@ -6655,6 +7137,8 @@
       "type": "Double",
       "default": 1.2,
       "min": 1.0,
+      "max": 1.5,
+      "unit_type": "DOUBLE_2",
       "used_in": [
         {
           "file": "OpenAPSAIMIPlugin.kt",
@@ -6679,6 +7163,8 @@
       "type": "Double",
       "default": 60.0,
       "min": 1.0,
+      "max": 150.0,
+      "unit_type": "PERCENT",
       "used_in": [
         {
           "file": "OpenAPSAIMIPlugin.kt",
@@ -6734,6 +7220,8 @@
       "type": "Double",
       "default": 50.0,
       "min": 1.0,
+      "max": 150.0,
+      "unit_type": "PERCENT",
       "used_in": [
         {
           "file": "OpenAPSAIMIPlugin.kt",
@@ -6981,6 +7469,8 @@
       "type": "Double",
       "default": 2.0,
       "min": 0.1,
+      "max": 20.0,
+      "unit_type": "INSULIN",
       "used_in": [
         {
           "file": "OpenAPSAIMIPlugin.kt",
@@ -7013,6 +7503,8 @@
       "type": "Double",
       "default": 2.0,
       "min": 0.1,
+      "max": 20.0,
+      "unit_type": "INSULIN",
       "used_in": [
         {
           "file": "OpenAPSAIMIPlugin.kt",
@@ -7045,6 +7537,8 @@
       "type": "Double",
       "default": 2.0,
       "min": 0.1,
+      "max": 20.0,
+      "unit_type": "INSULIN",
       "used_in": [
         {
           "file": "OpenAPSAIMIPlugin.kt",
@@ -7077,6 +7571,8 @@
       "type": "Double",
       "default": 2.5,
       "min": 0.1,
+      "max": 20.0,
+      "unit_type": "INSULIN",
       "used_in": [
         {
           "file": "OpenAPSAIMIPlugin.kt",
@@ -7114,6 +7610,7 @@
       "default": 1.0,
       "min": 0.1,
       "max": 20.0,
+      "unit_type": "INSULIN",
       "dependency": "OApsAIMIautoDriveActive",
       "used_in": [
         {
@@ -7155,6 +7652,8 @@
       "type": "Double",
       "default": 2.5,
       "min": 0.1,
+      "max": 20.0,
+      "unit_type": "INSULIN",
       "used_in": [
         {
           "file": "OpenAPSAIMIPlugin.kt",
@@ -7191,6 +7690,8 @@
       "type": "Double",
       "default": 5.0,
       "min": 0.1,
+      "max": 20.0,
+      "unit_type": "INSULIN",
       "used_in": [
         {
           "file": "OpenAPSAIMIPlugin.kt",
@@ -7227,6 +7728,8 @@
       "type": "Double",
       "default": 5.0,
       "min": 0.1,
+      "max": 20.0,
+      "unit_type": "INSULIN",
       "used_in": [
         {
           "file": "OpenAPSAIMIPlugin.kt",
@@ -7259,6 +7762,8 @@
       "type": "Double",
       "default": 2.5,
       "min": 0.1,
+      "max": 20.0,
+      "unit_type": "INSULIN",
       "used_in": [
         {
           "file": "OpenAPSAIMIPlugin.kt",
@@ -7295,6 +7800,8 @@
       "type": "Double",
       "default": 2.0,
       "min": 0.1,
+      "max": 20.0,
+      "unit_type": "INSULIN",
       "used_in": [
         {
           "file": "OpenAPSAIMIPlugin.kt",
@@ -7327,6 +7834,8 @@
       "type": "Double",
       "default": 1.0,
       "min": 0.1,
+      "max": 20.0,
+      "unit_type": "INSULIN",
       "used_in": [
         {
           "file": "OpenAPSAIMIPlugin.kt",
@@ -7356,6 +7865,7 @@
       "default": 0.1,
       "min": 0.05,
       "max": 20.0,
+      "unit_type": "INSULIN",
       "dependency": "OApsAIMIautoDriveActive",
       "used_in": [
         {
@@ -7397,6 +7907,8 @@
       "type": "Double",
       "default": 40.0,
       "min": 1.0,
+      "max": 150.0,
+      "unit_type": "INSULIN",
       "used_in": [
         {
           "file": "KalmanFilter.kt",
@@ -7518,6 +8030,10 @@
           "function": "enabled"
         },
         {
+          "file": "AimiLearnerOverviewScreen.kt",
+          "function": "AimiLearnerOverviewScreen"
+        },
+        {
           "file": "AimiControlCenterSnapshot.kt",
           "function": "buildContextSection"
         }
@@ -7624,16 +8140,16 @@
           "function": "buildPreTherapyAutodriveByodaBootstrap"
         },
         {
+          "file": "AimiLearnerOverviewScreen.kt",
+          "function": "AimiLearnerOverviewScreen"
+        },
+        {
           "file": "AimiControlCenterSupport.kt",
           "function": "readAutonomyMode"
         },
         {
           "file": "AimiBehaviorFamilyRegistry.kt",
           "function": "unknown"
-        },
-        {
-          "file": "AimiControlCenterSnapshot.kt",
-          "function": "buildAutonomyFamily"
         }
       ],
       "orphaned": false,
@@ -7692,8 +8208,8 @@
           "function": "runScheduledTraining"
         },
         {
-          "file": "AimiControlCenterSupport.kt",
-          "function": "buildStabilityPlan"
+          "file": "AimiLearnerOverviewScreen.kt",
+          "function": "AimiLearnerOverviewScreen"
         }
       ],
       "orphaned": false,
@@ -7741,6 +8257,8 @@
       "type": "Double",
       "default": 1.25,
       "min": 1.0,
+      "max": 2.0,
+      "unit_type": "DOUBLE_2",
       "used_in": [
         {
           "file": "OpenAPSAIMIPlugin.kt",
@@ -7769,6 +8287,8 @@
       "type": "Double",
       "default": 0.8,
       "min": 0.5,
+      "max": 1.0,
+      "unit_type": "DOUBLE_2",
       "used_in": [
         {
           "file": "OpenAPSAIMIPlugin.kt",
@@ -8052,7 +8572,7 @@
       "key": "openapsama_smb_delivery_ratio_max",
       "name": "ApsAutoIsfSmbDeliveryRatioMax",
       "type": "Double",
-      "default": 0.9,
+      "default": 0.5,
       "min": 0.5,
       "max": 1.0,
       "unit_type": "DOUBLE_2",
@@ -8106,29 +8626,6 @@
       "feature_group": "core",
       "is_gate": false,
       "settings_path": null,
-      "settings_gate": null
-    },
-    {
-      "key": "openapsama_useautosens",
-      "name": "ApsUseAutosens",
-      "type": "Boolean",
-      "negative_dependency": "ApsUseDynamicSensitivity",
-      "used_in": [
-        {
-          "file": "OpenAPSAIMIPlugin.kt",
-          "function": "isAutosensModeEnabled"
-        }
-      ],
-      "orphaned": false,
-      "negative_gate_key": null,
-      "negative_gate_note": null,
-      "logic_summary": "Boolean switch for useautosens.",
-      "effect_high": "Feature is active — associated functionality runs",
-      "effect_low": "Feature is inactive — associated functionality is disabled",
-      "impact": "medium",
-      "feature_group": "core",
-      "is_gate": false,
-      "settings_path": "AIMI → Advanced Settings",
       "settings_gate": null
     },
     {
@@ -8346,6 +8843,38 @@
       "effect_high": "Higher value — more insulin/greater effect",
       "effect_low": "Lower value — less insulin/reduced effect",
       "impact": "critical",
+      "feature_group": "core",
+      "is_gate": false,
+      "settings_path": null,
+      "settings_gate": null
+    },
+    {
+      "key": "use_boost_overview",
+      "name": "OverviewUseBoostOverview",
+      "type": "Boolean",
+      "orphaned": true,
+      "negative_gate_key": null,
+      "negative_gate_note": null,
+      "logic_summary": "Enables/disables use_boost_overview. Gate flag for feature control.",
+      "effect_high": "Feature is active — associated functionality runs",
+      "effect_low": "Feature is inactive — associated functionality is disabled",
+      "impact": "medium",
+      "feature_group": "core",
+      "is_gate": false,
+      "settings_path": null,
+      "settings_gate": null
+    },
+    {
+      "key": "use_boost_overview_v2",
+      "name": "OverviewUseBoostOverviewV2",
+      "type": "Boolean",
+      "orphaned": true,
+      "negative_gate_key": null,
+      "negative_gate_note": null,
+      "logic_summary": "Enables/disables use_boost_overview_v2. Gate flag for feature control.",
+      "effect_high": "Feature is active — associated functionality runs",
+      "effect_low": "Feature is inactive — associated functionality is disabled",
+      "impact": "medium",
       "feature_group": "core",
       "is_gate": false,
       "settings_path": null,

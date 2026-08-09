@@ -55,22 +55,44 @@ else
     echo "✅ .env exists"
 fi
 
-# 4. Generate data files (only if AIMI source is available)
+# 4. Generate all plugin data files
 echo ""
-if $PYTHON generate_data.py 2>/dev/null | grep -q "Found 0 AIMI-related"; then
-    echo "ℹ️  No AIMI source found — skipping data generation."
-    echo "   Run deploy.sh on the laptop to push data files."
-    if [ ! -f data/aimi_parameters.json ]; then
-        echo "   ⚠️  data/ is empty — analyzer will start with no parameter data."
-    else
-        echo "   ✅ Using existing data files."
-    fi
+echo "📊 Generating plugin data..."
+
+run_gen() { local label="$1"; shift; echo "  ├─ ${label}..."; $PYTHON "$@" || echo "     ⚠️  ${label} failed"; }
+
+run_gen "AIMI"                generate_data.py
+run_gen "AIMI paths"          generate_settings_paths.py
+run_gen "BOOST"               generate_boost_data.py
+run_gen "BOOST paths"         generate_boost_settings_paths.py
+run_gen "AutoISF"             generate_autoisf_data.py
+run_gen "AutoISF paths"       generate_autoisf_settings_paths.py
+
+# Merge settings paths into parameters
+echo "  ├─ Merging paths..."
+$PYTHON -c "
+import json; from pathlib import Path
+DATA = Path('data'); ROOT = Path('.')
+for p in ['aimi','boost','autoisf']:
+    pf = DATA / f'{p}_parameters.json'
+    sf = DATA / f'{p}_settings_paths.json'
+    if not sf.exists(): sf = ROOT / f'{p}_settings_paths.json'
+    if not pf.exists() or not sf.exists(): continue
+    with open(sf) as f: paths = json.load(f).get('paths',{})
+    with open(pf) as f: params = json.load(f)
+    merged = 0
+    for x in params['parameters']:
+        if x['key'] in paths:
+            x['settings_path'] = paths[x['key']]['path']; merged += 1
+    params['with_settings_path'] = merged
+    with open(pf,'w') as f: json.dump(params,f,indent=2,ensure_ascii=False)
+    print(f'     {p}: {merged} paths')
+"
+
+if [ -f data/aimi_parameters.json ] || [ -f data/boost_parameters.json ]; then
+    echo "  └─ ✅ Data files ready"
 else
-    if $PYTHON generate_data.py; then
-        echo "✅ Data files generated"
-    else
-        echo "⚠️  Data generation had issues — see CLAUDE_CODE_TASK_update_data.md"
-    fi
+    echo "  └─ ⚠️  No data generated — deploy.sh on laptop first, or check source"
 fi
 
 # 5. Build and start Docker

@@ -1,0 +1,169 @@
+AutoISF Plugin Algorithm Context
+========================================
+
+## AutoISF Weights (gate: openapsama_use_autoisf_weights)
+Core AutoISF weight system. Six weights control how different signals contribute to ISF adjustment: bgAccel (rising BG), bgBrake (falling BG), lowBg (hypo risk), highBg (hyper), pp (post-prandial), dura (duration). Weights are clamped by ApsAutoIsfMin/ApsAutoIsfMax and bounded by IobThPercent (IOB threshold % of basal).
+Key params: autoISF_max, autoISF_min, dura_ISF_weight, iob_threshold_percent, pp_ISF_weight
+
+## SMB Delivery Ratio (gate: openapsama_use_smb)
+Dynamic SMB delivery ratio that scales SMB size based on BG position. Ratio/slope with min/max bounds, BG range definition, and max range extension. SmbOnEvenTarget allows delivery even when BG equals target (no delta signal).
+Key params: openapsama_smb_delivery_ratio, openapsama_smb_delivery_ratio_bg_range, openapsama_smb_delivery_ratio_max, openapsama_smb_delivery_ratio_min, openapsama_smb_max_range_extension
+
+## Temp Target Interaction (gate: None)
+How AutoISF interacts with temp targets. HighTtRaisesSens: high temp target → raise sensitivity (less insulin). LowTtLowersSens: low temp target → lower sensitivity (more insulin). HalfBasalExerciseTarget defines the BG for half-basal during exercise.
+Key params: half_basal_exercise_target
+
+## Shared AAPS Settings (gate: None)
+Standard OpenAPS settings that AutoISF also reads: max basal, max IOB, SMB gates, autosens, sensitivity/target interactions.
+Key params: Enable alternative activation of SMB always, always_use_shortavg, autosens_adjust_targets, autosens_max, autosens_min, bgAccel_ISF_weight, bgBrake_ISF_weight, carbsReqThreshold, enableSMB_after_carbs, enableSMB_always
+
+
+## Parameter Details
+
+### Enable alternative activation of SMB always (Boolean, default=None)
+  Enables/disables Enable alternative activation of SMB always. Gate flag for AutoISF.
+  High: Feature is ON — associated functionality runs | Low: Feature is OFF — associated functionality is disabled | Impact: medium
+
+### always_use_shortavg (Boolean, default=None)
+  When ON: uses short delta (5min) instead of medium delta (15min) for all calculations.
+  High: Feature is ON — associated functionality runs | Low: Feature is OFF — associated functionality is disabled | Impact: medium
+
+### autoISF_max (Double, default=1.0)
+  Maximum ISF multiplier (1.0-3.0). Upper bound for AutoISF adjustments. Higher = allows stronger ISF increase (less insulin).
+  High: Allows stronger ISF increase → less insulin → more conservative | Low: Limits ISF increase → more insulin → more aggressive | Impact: high
+
+### autoISF_min (Double, default=1.0)
+  Minimum ISF multiplier (0.3-1.0). Lower bound for AutoISF adjustments. Lower = allows stronger ISF reduction (more insulin).
+  High: Allows stronger ISF reduction → more insulin → more aggressive | Low: Limits ISF reduction → less insulin → more conservative | Impact: high
+
+### autosens_max (Double, default=1.2)
+  Used in AutoISF algorithm for max.
+  High: Higher value — more insulin/greater effect | Low: Lower value — less insulin/reduced effect | Impact: high
+
+### bgAccel_ISF_weight (Double, default=0.0)
+  Used in AutoISF algorithm for bgAccel_ISF_weight.
+  High: Higher value — more insulin/greater effect | Low: Lower value — less insulin/reduced effect | Impact: medium
+
+### bgBrake_ISF_weight (Double, default=0.0)
+  Used in AutoISF algorithm for bgBrake_ISF_weight.
+  High: Higher value — more insulin/greater effect | Low: Lower value — less insulin/reduced effect | Impact: medium
+
+### carbsReqThreshold (Int, default=1)
+  Used in AutoISF algorithm for carbsReqThreshold.
+  High: Higher value — more insulin/greater effect | Low: Lower value — less insulin/reduced effect | Impact: medium
+
+### dura_ISF_weight (Double, default=0.0)
+  Duration weight. Higher = ISF adjustment persists longer.
+  High: Higher value — more insulin/greater effect | Low: Lower value — less insulin/reduced effect | Impact: medium
+
+### enableSMB_after_carbs (Boolean, default=None)
+  Enables/disables enableSMB_after_carbs. Gate flag for AutoISF.
+  High: Feature is ON — associated functionality runs | Low: Feature is OFF — associated functionality is disabled | Impact: medium
+
+### enableSMB_always (Boolean, default=None)
+  Enables/disables enableSMB_always. Gate flag for AutoISF.
+  High: Feature is ON — associated functionality runs | Low: Feature is OFF — associated functionality is disabled | Impact: medium
+
+### enableSMB_with_COB (Boolean, default=None)
+  Enables/disables enableSMB_with_COB. Gate flag for AutoISF.
+  High: Feature is ON — associated functionality runs | Low: Feature is OFF — associated functionality is disabled | Impact: medium
+
+### enableSMB_with_high_temptarget (Boolean, default=None)
+  Enables/disables enableSMB_with_high_temptarget. Gate flag for AutoISF.
+  High: Feature is ON — associated functionality runs | Low: Feature is OFF — associated functionality is disabled | Impact: medium
+
+### enableSMB_with_temptarget (Boolean, default=None)
+  Enables/disables enableSMB_with_temptarget. Gate flag for AutoISF.
+  High: Feature is ON — associated functionality runs | Low: Feature is OFF — associated functionality is disabled | Impact: medium
+
+### half_basal_exercise_target (Int, default=160)
+  BG target (mg/dL) at which basal is halved during exercise. Default 160.
+  High: Higher value — more insulin/greater effect | Low: Lower value — less insulin/reduced effect | Impact: medium
+
+### high_temptarget_raises_sensitivity (Boolean, default=None)
+  Enables/disables high_temptarget_raises_sensitivity. Gate flag for AutoISF.
+  High: Feature is ON — associated functionality runs | Low: Feature is OFF — associated functionality is disabled | Impact: medium
+
+### higher_ISFrange_weight (Double, default=0.0)
+  Used in AutoISF algorithm for higher_ISFrange_weight.
+  High: Higher value — more insulin/greater effect | Low: Lower value — less insulin/reduced effect | Impact: medium
+
+### iob_threshold_percent (Int, default=100)
+  IOB threshold as % of basal. Below this IOB, AutoISF disengages (conservative).
+  High: Higher threshold → AutoISF active at higher IOB → more responsive | Low: Lower threshold → AutoISF only at low IOB → more conservative | Impact: high
+
+### lgsThreshold (UnitDouble, default=65.0)
+  Parameter for lgsThreshold.
+  High: Higher value — more insulin/greater effect | Low: Lower value — less insulin/reduced effect | Impact: medium
+
+### low_temptarget_lowers_sensitivity (Boolean, default=None)
+  Enables/disables low_temptarget_lowers_sensitivity. Gate flag for AutoISF.
+  High: Feature is ON — associated functionality runs | Low: Feature is OFF — associated functionality is disabled | Impact: medium
+
+### lower_ISFrange_weight (Double, default=0.0)
+  Used in AutoISF algorithm for lower_ISFrange_weight.
+  High: Higher value — more insulin/greater effect | Low: Lower value — less insulin/reduced effect | Impact: medium
+
+### openapsama_current_basal_safety_multiplier (Double, default=4.0)
+  Used in AutoISF algorithm for current_basal_safety_multiplier.
+  High: Higher value — more insulin/greater effect | Low: Lower value — less insulin/reduced effect | Impact: critical
+
+### openapsama_enable_autoISF (Boolean, default=None)
+  Enables/disables enable_autoISF. Gate flag for AutoISF.
+  High: Feature is ON — associated functionality runs | Low: Feature is OFF — associated functionality is disabled | Impact: medium
+
+### openapsama_max_daily_safety_multiplier (Double, default=3.0)
+  Maximum daily insulin multiplier × profile. Safety limit.
+  High: Higher value — more insulin/greater effect | Low: Lower value — less insulin/reduced effect | Impact: critical
+
+### openapsama_smb_delivery_ratio (Double, default=0.5)
+  Base SMB delivery ratio (0.5-3.0). 1.0 = standard SMB. Higher = larger SMBs.
+  High: Larger SMBs → more aggressive correction | Low: Smaller SMBs → more conservative | Impact: high
+
+### openapsama_smb_delivery_ratio_bg_range (Double, default=0.0)
+  Base SMB delivery ratio (0.5-3.0). 1.0 = standard SMB. Higher = larger SMBs.
+  High: Larger SMBs → more aggressive correction | Low: Smaller SMBs → more conservative | Impact: high
+
+### openapsama_smb_delivery_ratio_max (Double, default=0.5)
+  Base SMB delivery ratio (0.5-3.0). 1.0 = standard SMB. Higher = larger SMBs.
+  High: Larger SMBs → more aggressive correction | Low: Smaller SMBs → more conservative | Impact: high
+
+### openapsama_smb_delivery_ratio_min (Double, default=0.5)
+  Base SMB delivery ratio (0.5-3.0). 1.0 = standard SMB. Higher = larger SMBs.
+  High: Larger SMBs → more aggressive correction | Low: Smaller SMBs → more conservative | Impact: high
+
+### openapsama_smb_max_range_extension (Double, default=1.0)
+  Max range extension (mg/dL). Extends the BG window for SMB ratio scaling.
+  High: Higher value — more insulin/greater effect | Low: Lower value — less insulin/reduced effect | Impact: medium
+
+### openapsma_max_basal (Double, default=1.0)
+  Maximum temporary basal rate (U/h). Shared safety limit.
+  High: Higher value — more insulin/greater effect | Low: Lower value — less insulin/reduced effect | Impact: critical
+
+### openapsmb_max_iob (Double, default=3.0)
+  Maximum IOB for SMB delivery (U).
+  High: Higher value — more insulin/greater effect | Low: Lower value — less insulin/reduced effect | Impact: critical
+
+### pp_ISF_weight (Double, default=0.0)
+  Post-prandial weight. Higher = stronger ISF adjustment after meals.
+  High: Higher value — more insulin/greater effect | Low: Lower value — less insulin/reduced effect | Impact: medium
+
+### smbinterval (Int, default=3)
+  Used in AutoISF algorithm for smbinterval.
+  High: Higher value — more insulin/greater effect | Low: Lower value — less insulin/reduced effect | Impact: medium
+
+### smbmaxminutes (Int, default=30)
+  Used in AutoISF algorithm for smbmaxminutes.
+  High: Higher value — more insulin/greater effect | Low: Lower value — less insulin/reduced effect | Impact: medium
+
+### uamsmbmaxminutes (Int, default=30)
+  Used in AutoISF algorithm for uamsmbmaxminutes.
+  High: Higher value — more insulin/greater effect | Low: Lower value — less insulin/reduced effect | Impact: medium
+
+### use_smb (Boolean, default=None)
+  Master SMB gate.
+  High: Feature is ON — associated functionality runs | Low: Feature is OFF — associated functionality is disabled | Impact: critical
+
+### use_uam (Boolean, default=None)
+  Enables/disables use_uam. Gate flag for AutoISF.
+  High: Feature is ON — associated functionality runs | Low: Feature is OFF — associated functionality is disabled | Impact: medium

@@ -1,4 +1,14 @@
-# Claude Code Task: Enrich AIMI parameter knowledge from source code
+# Claude Code Task: Enrich parameter knowledge from source code
+
+> ⚠️ **Multi-plugin update (2026-08-09):** The analyzer now supports three plugins:
+> AIMI, BOOST, and AutoISF. This document was written for AIMI but the process is
+> identical for all three. Just substitute:
+> - `generate_boost_data.py` / `generate_autoisf_data.py` instead of `generate_data.py`
+> - `boost_parameters.json` / `autoisf_parameters.json` instead of `aimi_parameters.json`
+> - The corresponding plugin source directory instead of `openAPSAIMI/`
+>
+> The AIMI-specific key files, source paths, and parameter names below are examples.
+> Apply the same method to any plugin.
 
 ## Goal
 

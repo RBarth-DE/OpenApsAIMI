@@ -1,4 +1,4 @@
-# AIMI Algorithm Context (commit: 0320615c)
+# AIMI Algorithm Context (commit: 4c41219a)
 
 ## Overview
 The AIMI algorithm runs a 46-stage decision pipeline per 5-minute tick.
@@ -58,11 +58,11 @@ Gate: key_oaps_aimi_ngr_enabled
   Key params: key_oaps_aimi_ngr_age_years, key_oaps_aimi_ngr_basal_multiplier, key_oaps_aimi_ngr_decay_minutes, key_oaps_aimi_ngr_enabled, key_oaps_aimi_ngr_max_iob_extra, key_oaps_aimi_ngr_max_smb_clamp, key_oaps_aimi_ngr_min_duration, key_oaps_aimi_ngr_min_eventual_over_target, key_oaps_aimi_ngr_min_rise_slope, key_oaps_aimi_ngr_night_end
   ... and 2 more
 
-### pkpd (24 params)
+### pkpd (26 params)
 Gate: key_aimi_pkpd_enabled
   Real-time PKPD model with Weibull-based insulin action curves, adaptive estimator and InsulinActionProfiler. Computes fusedIsf from profile ISF, dynamic ISF and learned values. PkpdAbsorptionGuard dampens SMB during limited absorption. IOB consensus reconciles AAPS IOB with PKPD IOB.
   Key params: aimi_pkpd_anchor_dia_h, aimi_pkpd_anchor_peak_min, aimi_pkpd_bounds_dia_max_h, aimi_pkpd_bounds_dia_min_h, aimi_pkpd_bounds_peak_min_max, aimi_pkpd_bounds_peak_min_min, aimi_pkpd_initial_dia_h, aimi_pkpd_initial_peak_min, aimi_pkpd_max_dia_change_per_day_h, aimi_pkpd_max_peak_change_per_day_min
-  ... and 14 more
+  ... and 16 more
 
 ### unified_reactivity (0 params)
 Gate: key_use_Aimi_UnifiedReactivityLearner
@@ -176,10 +176,10 @@ Gate: key_use_aimi_t3c_adaptive_basal
   Key params: OApsAIMIAntiStallBias, OApsAIMIAntiStallBias_NUMERIC, OApsAIMIDeltaPosRelease_NUMERIC, OApsAIMIKickerMaxMin, OApsAIMIKickerMinUph, OApsAIMIKickerMinUph_NUMERIC, OApsAIMIKickerStartMin, OApsAIMIKickerStep, OApsAIMIKickerStep_NUMERIC, OApsAIMIMaxMultiplier
   ... and 10 more
 
-### hyper_trajectory (4 params)
+### hyper_trajectory (5 params)
 Gate: key_aimi_hyper_trajectory_release
   Hyper trajectory release system for managing established and deep hyperglycemia. Controls when to release insulin constraints based on deviation magnitude.
-  Key params: key_aimi_hyper_deep_dev_mgdl, key_aimi_hyper_established_dev_mgdl, key_aimi_hyper_trajectory_release, key_aimi_hyper_trajectory_release_aggressive
+  Key params: key_aimi_hyper_deep_dev_mgdl, key_aimi_hyper_dropping_exempt_enabled, key_aimi_hyper_established_dev_mgdl, key_aimi_hyper_trajectory_release, key_aimi_hyper_trajectory_release_aggressive
 
 ### wcycle (11 params)
 Gate: key_use_Aimi_wcycle
@@ -236,7 +236,7 @@ Gate: key_use_Aimi_wcycle
   - key_aimi_context_enabled
   - key_aimi_context_llm_enabled
 
-### core (95 params)
+### core (101 params)
   - OApsAIMIDeltaPosRelease [default: 1.0]
   - OApsAIMIHighBg [default: 180.0]
   - OApsAIMI_Enable_night
@@ -257,7 +257,7 @@ Gate: key_use_Aimi_wcycle
   - autoISF_min [default: 1.0]
   - autosens_adjust_targets
   - autosens_max [default: 1.2]
-  ... and 75 more
+  ... and 81 more
 
 ### cosine_gate (6 params)
   - aimi_cosine_gate_alpha [default: 2.0]
@@ -300,8 +300,9 @@ Gate: key_use_Aimi_wcycle
   - key_aimi_gov_severe_hypo_bg_mgdl [default: 70.0]
   - key_aimi_peak_governor_enabled [default: True]
 
-### hyper_trajectory (4 params)
+### hyper_trajectory (5 params)
   - key_aimi_hyper_deep_dev_mgdl [default: 0.0]
+  - key_aimi_hyper_dropping_exempt_enabled
   - key_aimi_hyper_established_dev_mgdl [default: 0.0]
   - key_aimi_hyper_trajectory_release [default: True]
   - key_aimi_hyper_trajectory_release_aggressive [default: False]
@@ -325,9 +326,12 @@ Gate: key_use_Aimi_wcycle
   - OApsAIMILastEstimatedCarbTime [default: 0.0]
   - OApsAIMILastEstimatedCarbs [default: 0.0]
 
-### meal_modes (22 params)
+### meal_modes (25 params)
   - aimi_meal_advisor_trigger
   - aimi_physio_sleep_enable
+  - key_aimi_meal_confirmed_early_release [default: False]
+  - key_aimi_meal_hyper_bypass_enabled
+  - key_aimi_tree_meal_rise_frontload [default: False]
   - key_oaps_aimi_dinner_factor [default: 50.0]
   - key_oaps_aimi_dinner_interval [default: 3]
   - key_oaps_aimi_lunch_factor [default: 50.0]
@@ -343,10 +347,7 @@ Gate: key_use_Aimi_wcycle
   - key_prebolus2_lunch_mode [default: 2.0]
   - key_prebolus_BF_mode [default: 2.5]
   - key_prebolus_dinner_mode [default: 2.5]
-  - key_prebolus_highcarb_mode [default: 5.0]
-  - key_prebolus_highcarb_mode2 [default: 5.0]
-  - key_prebolus_lunch_mode [default: 2.5]
-  ... and 2 more
+  ... and 5 more
 
 ### ngr (11 params)
   - key_oaps_aimi_ngr_age_years [default: 14]
@@ -368,7 +369,7 @@ Gate: key_use_Aimi_wcycle
   - aimi_physio_llm_enable
   - aimi_physio_llm_provider
 
-### pkpd (22 params)
+### pkpd (24 params)
   - aimi_pkpd_bounds_dia_max_h [default: 24.0]
   - aimi_pkpd_bounds_dia_min_h [default: 4.0]
   - aimi_pkpd_bounds_peak_min_max [default: 240.0]
@@ -388,8 +389,8 @@ Gate: key_use_Aimi_wcycle
   - aimi_pkpd_state_traj_peak [default: 0.0]
   - key_aimi_pkpd_enabled
   - key_aimi_pkpd_endo_reversion
-  - key_aimi_pkpd_pragmatic_relief_enabled
-  ... and 2 more
+  - key_aimi_pkpd_hyper_reversion [default: True]
+  ... and 4 more
 
 ### recursive_belief (3 params)
   - key_aimi_recursive_belief_authority [default: True]
@@ -399,7 +400,7 @@ Gate: key_use_Aimi_wcycle
 ### smb_tail (4 params)
   - aimi_smb_exercise_damping [default: 0.6]
   - aimi_smb_late_fat_damping [default: 0.7]
-  - aimi_smb_tail_damping [default: 0.5]
+  - aimi_smb_tail_damping [default: 0.85]
   - aimi_smb_tail_threshold [default: 0.25]
 
 ### sos_emergency (6 params)
@@ -410,16 +411,17 @@ Gate: key_use_Aimi_wcycle
   - aimi_emergency_sos_stale_threshold [default: 30]
   - aimi_emergency_sos_threshold [default: 70]
 
-### t3c_adaptive_basal (11 params)
+### t3c_adaptive_basal (12 params)
   - key_aimi_t3c_activation_threshold [default: 130.0]
   - key_aimi_t3c_aggressiveness [default: 1.0]
   - key_aimi_t3c_anticipation_strength [default: 0.0]
   - key_aimi_t3c_autodrive_basal_authority [default: True]
   - key_aimi_t3c_brittle_mode
-  - key_aimi_t3c_cfrd_cob_delay_min [default: 0.0]
-  - key_aimi_t3c_cfrd_exacerbation
-  - key_aimi_t3c_cfrd_lgs_floor [default: 80.0]
-  - key_aimi_t3c_cfrd_mode
+  - key_aimi_t3c_cfrd_cob_delay_min [default: 30.0]
+  - key_aimi_t3c_cfrd_exacerbation [default: False]
+  - key_aimi_t3c_cfrd_lgs_floor [default: 95.0]
+  - key_aimi_t3c_cfrd_mode [default: True]
+  - key_aimi_t3c_hyper_basal_floor [default: True]
   - key_aimi_t3c_physio_informed
   - key_use_aimi_t3c_adaptive_basal
 

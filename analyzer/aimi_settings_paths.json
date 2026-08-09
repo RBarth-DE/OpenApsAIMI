@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-07-15T20:08:24.666627+00:00",
-  "source_commit": "a998f805593d46d31760d9c760cdb5f218136fdf",
+  "generated_at": "2026-08-09T17:02:24.052267+00:00",
+  "source_commit": "4c41219ae907abcdda2cc637df3c43c6cfda4e91",
   "paths": {
     "openapsma_max_basal": {
       "path": "AIMI → Advanced Settings",
@@ -33,14 +33,6 @@
         "Advanced Settings"
       ],
       "gate_key": null
-    },
-    "DynISFAdjust": {
-      "path": "AIMI → Advanced Settings",
-      "screen_titles": [
-        "AIMI",
-        "Advanced Settings"
-      ],
-      "gate_key": "use_dynamic_sensitivity"
     },
     "lgsThreshold": {
       "path": "AIMI → Advanced Settings",
@@ -379,7 +371,7 @@
         "Preferences user",
         "🚨 Emergency SOS (Hypo)"
       ],
-      "gate_key": null
+      "gate_key": "aimi_emergency_sos_enable"
     },
     "aimi_emergency_sos_phone2": {
       "path": "AIMI → Preferences user → 🚨 Emergency SOS (Hypo)",
@@ -388,7 +380,7 @@
         "Preferences user",
         "🚨 Emergency SOS (Hypo)"
       ],
-      "gate_key": null
+      "gate_key": "aimi_emergency_sos_enable"
     },
     "aimi_emergency_sos_threshold": {
       "path": "AIMI → Preferences user → 🚨 Emergency SOS (Hypo)",
@@ -397,7 +389,7 @@
         "Preferences user",
         "🚨 Emergency SOS (Hypo)"
       ],
-      "gate_key": null
+      "gate_key": "aimi_emergency_sos_enable"
     },
     "aimi_emergency_sos_immediate_threshold": {
       "path": "AIMI → Preferences user → 🚨 Emergency SOS (Hypo)",
@@ -406,7 +398,7 @@
         "Preferences user",
         "🚨 Emergency SOS (Hypo)"
       ],
-      "gate_key": null
+      "gate_key": "aimi_emergency_sos_enable"
     },
     "aimi_emergency_sos_stale_threshold": {
       "path": "AIMI → Preferences user → 🚨 Emergency SOS (Hypo)",
@@ -415,18 +407,9 @@
         "Preferences user",
         "🚨 Emergency SOS (Hypo)"
       ],
-      "gate_key": null
+      "gate_key": "aimi_emergency_sos_enable"
     },
     "aimi_sos_permissions_compose": {
-      "path": "AIMI → Preferences user → 🚨 Emergency SOS (Hypo)",
-      "screen_titles": [
-        "AIMI",
-        "Preferences user",
-        "🚨 Emergency SOS (Hypo)"
-      ],
-      "gate_key": null
-    },
-    "aimi_hypo_risk_alarm_info": {
       "path": "AIMI → Preferences user → 🚨 Emergency SOS (Hypo)",
       "screen_titles": [
         "AIMI",
@@ -1073,6 +1056,33 @@
       ],
       "gate_key": null
     },
+    "key_aimi_tree_meal_rise_frontload": {
+      "path": "AIMI → Preferences user → Autodrive",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "Autodrive"
+      ],
+      "gate_key": null
+    },
+    "key_aimi_sensor_confidence_cgm_first": {
+      "path": "AIMI → Preferences user → Autodrive",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "Autodrive"
+      ],
+      "gate_key": null
+    },
+    "key_aimi_meal_confirmed_early_release": {
+      "path": "AIMI → Preferences user → Autodrive",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "Autodrive"
+      ],
+      "gate_key": null
+    },
     "key_aimi_hyper_established_dev_mgdl": {
       "path": "AIMI → Preferences user → Autodrive",
       "screen_titles": [
@@ -1184,7 +1194,7 @@
       ],
       "gate_key": null
     },
-    "key_aimi_t3c_activation_threshold": {
+    "key_aimi_t3c_autodrive_basal_authority": {
       "path": "AIMI → Preferences user → T3C Brittle Mode Settings",
       "screen_titles": [
         "AIMI",
@@ -1193,7 +1203,25 @@
       ],
       "gate_key": null
     },
-    "key_aimi_t3c_aggressiveness": {
+    "key_aimi_t3c_hyper_basal_floor": {
+      "path": "AIMI → Preferences user → T3C Brittle Mode Settings",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "T3C Brittle Mode Settings"
+      ],
+      "gate_key": null
+    },
+    "key_aimi_t3c_cfrd_mode": {
+      "path": "AIMI → Preferences user → T3C Brittle Mode Settings",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "T3C Brittle Mode Settings"
+      ],
+      "gate_key": null
+    },
+    "key_aimi_t3c_cfrd_exacerbation": {
       "path": "AIMI → Preferences user → T3C Brittle Mode Settings",
       "screen_titles": [
         "AIMI",
@@ -1209,9 +1237,27 @@
         "Preferences user",
         "T3C Brittle Mode Settings"
       ],
-      "gate_key": null
+      "gate_key": "key_aimi_t3c_cfrd_mode"
     },
     "key_aimi_t3c_cfrd_cob_delay_min": {
+      "path": "AIMI → Preferences user → T3C Brittle Mode Settings",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "T3C Brittle Mode Settings"
+      ],
+      "gate_key": "key_aimi_t3c_cfrd_mode"
+    },
+    "key_aimi_t3c_activation_threshold": {
+      "path": "AIMI → Preferences user → T3C Brittle Mode Settings",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "T3C Brittle Mode Settings"
+      ],
+      "gate_key": null
+    },
+    "key_aimi_t3c_aggressiveness": {
       "path": "AIMI → Preferences user → T3C Brittle Mode Settings",
       "screen_titles": [
         "AIMI",
@@ -1256,6 +1302,15 @@
       ],
       "gate_key": null
     },
+    "key_aimi_basal_slew_limit": {
+      "path": "AIMI → Preferences user → Universal Adaptive Basal",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "Universal Adaptive Basal"
+      ],
+      "gate_key": null
+    },
     "key_aimi_adaptive_basal_max_scaling": {
       "path": "AIMI → Preferences user → Universal Adaptive Basal",
       "screen_titles": [
@@ -1266,6 +1321,33 @@
       "gate_key": null
     },
     "OApsAIMIMaxMultiplier": {
+      "path": "AIMI → Preferences user → Universal Adaptive Basal",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "Universal Adaptive Basal"
+      ],
+      "gate_key": null
+    },
+    "key_aimi_basal_channel_safety_guards": {
+      "path": "AIMI → Preferences user → Universal Adaptive Basal",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "Universal Adaptive Basal"
+      ],
+      "gate_key": null
+    },
+    "key_aimi_basal_terminal_invariants": {
+      "path": "AIMI → Preferences user → Universal Adaptive Basal",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "Universal Adaptive Basal"
+      ],
+      "gate_key": null
+    },
+    "key_aimi_basal_projected_error": {
       "path": "AIMI → Preferences user → Universal Adaptive Basal",
       "screen_titles": [
         "AIMI",
@@ -1840,6 +1922,24 @@
         "Preferences user",
         "Patient context and body declarations",
         "Night growth resistance"
+      ],
+      "gate_key": null
+    },
+    "aimi_learner_overview_compose": {
+      "path": "AIMI → Preferences user → AIMI Lab",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "AIMI Lab"
+      ],
+      "gate_key": null
+    },
+    "aimi_adaptation_status_compose": {
+      "path": "AIMI → Preferences user → AIMI Lab",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "AIMI Lab"
       ],
       "gate_key": null
     },
