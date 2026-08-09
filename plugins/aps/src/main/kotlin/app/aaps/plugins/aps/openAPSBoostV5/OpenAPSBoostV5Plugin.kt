@@ -160,6 +160,7 @@ open class OpenAPSBoostV5Plugin @Inject constructor(
                     BooleanKey.ApsBoostHrIntegrationEnabled,
                     BooleanKey.ApsBoostHrStressDetection,
                     BooleanKey.ApsBoostNightModeEnabled,
+                    BooleanKey.ApsBoostNightModeDisableWithCob,
                     UnitDoubleKey.ApsBoostNightModeBgOffset,
                     BooleanKey.ApsBoostActivityShadowEnabled,
                     DoubleKey.ApsBoostInactivityPct,
@@ -191,6 +192,8 @@ open class OpenAPSBoostV5Plugin @Inject constructor(
                     BooleanKey.ApsUseUam,
                     BooleanKey.ApsUseDynamicSensitivity,
                     BooleanKey.ApsUseAutosens,
+                    DoubleKey.AutosensMin,
+                    DoubleKey.AutosensMax,
                     UnitDoubleKey.ApsLgsThreshold
                 )
             ),

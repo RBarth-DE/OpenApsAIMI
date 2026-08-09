@@ -196,6 +196,7 @@ enum class DoubleKey(
         titleResId = R.string.pref_title_autosens_min,
         summaryResId = R.string.openapsama_autosens_min_summary,
         defaultedBySM = true,
+        dependency = BooleanKey.ApsUseAutosens,
         unitType = UnitType.DOUBLE,
         sync = SyncSpec(SyncChannel.Cold, SyncDirection.Bidirectional)
     ),
@@ -229,6 +230,7 @@ enum class DoubleKey(
         titleResId = R.string.pref_title_autosens_max,
         summaryResId = R.string.openapsama_autosens_max_summary,
         defaultedBySM = true,
+        dependency = BooleanKey.ApsUseAutosens,
         unitType = UnitType.DOUBLE,
         sync = SyncSpec(SyncChannel.Cold, SyncDirection.Bidirectional)
     ),
