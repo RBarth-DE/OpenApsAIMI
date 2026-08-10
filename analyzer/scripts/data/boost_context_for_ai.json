@@ -1,0 +1,765 @@
+{
+  "plugin": "boost",
+  "algorithm_overview": "The BOOST (Blood Glucose Optimized Open Source Tuning) plugin is a dynamic ISF engine that computes insulin sensitivity from total daily dose (TDD) instead of a static profile value. It blends 7-day, 1-day, 24-hour, 8-hour and 4-hour TDD windows with a weighted formula, adjusts for temp targets, circadian rhythm, activity level, sleep state, heart rate stress, and post-exercise recovery. A parallel V4.4.2-style EMA(τ=3h) ISF shadow runs for comparison but does not affect dosing. The V5/V6/V7 meal model adds multi-version meal hypothesis with committed/confirmed cap thresholds, pre-meal targeting, and anticipation learning.",
+  "feature_groups": {
+    "tdd_isf": {
+      "id": "tdd_isf",
+      "name": "TDD-based ISF",
+      "description": "Core Boost engine: computes dynamic ISF from total daily dose (TDD) using 7D/24H/8H/4H weighted blends. Uses ln(bg/divisor+1)*1800/TDD formula. Includes circadian ISF, DynISF velocity scaling, and sensitivity adjustment.",
+      "gate_key": "boost_use_tdd",
+      "param_count": 6,
+      "key_params": [
+        "boost_adjust_sensitivity",
+        "boost_autosens_when_no_tdd",
+        "boost_percent_scale_factor",
+        "boost_scale_value",
+        "boost_use_tdd",
+        "enableBoostPercentScale"
+      ]
+    },
+    "meal_model": {
+      "id": "meal_model",
+      "name": "Meal Model (V5/V6/V7)",
+      "description": "Multi-version meal hypothesis system. V5: aggression/hypo-caution scaling. V6: pre-meal target, lead time, committed/confirmed cap thresholds. V7: residual pools. Anticipation history for meal-time learning.",
+      "gate_key": null,
+      "param_count": 21,
+      "key_params": [
+        "boost_anticip_history",
+        "boost_meal_time_history",
+        "boost_v5_active_dosing",
+        "boost_v5_aggression",
+        "boost_v5_aggressive_early_confirm",
+        "boost_v5_autoconfig_done",
+        "boost_v5_committed_cap_u",
+        "boost_v5_composed_floor_active",
+        "boost_v5_confirmed_cap_u",
+        "boost_v5_fast_carb_confirm",
+        "boost_v5_hypo_caution",
+        "boost_v5_primer_bolus_mode",
+        "boost_v5_primer_cap_u",
+        "boost_v5_primer_tbr_fallback",
+        "boost_v5_sensitivity",
+        "boost_v5_state",
+        "boost_v5_velocity_budget_active",
+        "boost_v6_pre_meal_lead_min",
+        "boost_v6_pre_meal_target",
+        "boost_v6_pre_meal_target_mgdl"
+      ]
+    },
+    "activity": {
+      "id": "activity",
+      "name": "Activity & Steps",
+      "description": "Step counting from Wear OS / Health Connect / phone sensors. Activity % and inactivity % scale ISF. Activity shadow mode computes but doesn't apply. Post-exercise recovery with configurable duration/scale.",
+      "gate_key": "boost_activity_shadow_enabled",
+      "param_count": 11,
+      "key_params": [
+        "boost_activity_pct",
+        "boost_activity_shadow_enabled",
+        "boost_activity_steps_15",
+        "boost_activity_steps_30",
+        "boost_activity_steps_5",
+        "boost_activity_steps_60",
+        "boost_daily_step_history",
+        "boost_inactivity_pct",
+        "boost_inactivity_steps",
+        "boost_intraday_step_bank",
+        "boost_sleep_in_steps"
+      ]
+    },
+    "night_mode": {
+      "id": "night_mode",
+      "name": "Night Mode",
+      "description": "Reduces insulin during configured night window. Auto-by-sleep option. COB and low-TT disable gates. BG offset for tighter overnight control.",
+      "gate_key": "boost_night_mode_enabled",
+      "param_count": 7,
+      "key_params": [
+        "boost_night_mode_auto_by_sleep",
+        "boost_night_mode_bg_offset",
+        "boost_night_mode_disable_with_cob",
+        "boost_night_mode_disable_with_low_tt",
+        "boost_night_mode_enabled",
+        "boost_night_mode_end",
+        "boost_night_mode_start"
+      ]
+    },
+    "sleep": {
+      "id": "sleep",
+      "name": "Sleep Detection",
+      "description": "Tracks sleep state from steps/inactivity patterns. Sleep-in hours/steps thresholds. Hysteresis for wake/sleep transitions. Pre-sleep lead time.",
+      "gate_key": null,
+      "param_count": 6,
+      "key_params": [
+        "boost_pre_sleep_lead_min",
+        "boost_sleep_history",
+        "boost_sleep_hysteresis_min",
+        "boost_sleep_in_hrs",
+        "boost_sleep_state",
+        "boost_wake_hr_hysteresis_min"
+      ]
+    },
+    "hr_stress": {
+      "id": "hr_stress",
+      "name": "HR Stress Detection",
+      "description": "Health Connect heart rate integration. Detects stress from elevated resting HR. Configurable max/resting BPM, window minutes, polling interval.",
+      "gate_key": "boost_health_connect_hr_enabled",
+      "param_count": 7,
+      "key_params": [
+        "boost_health_connect_hr_enabled",
+        "boost_health_connect_poll_min",
+        "boost_hr_integration_enabled",
+        "boost_hr_max_bpm",
+        "boost_hr_resting_bpm",
+        "boost_hr_stress_detection",
+        "boost_hr_window_minutes"
+      ]
+    },
+    "post_exercise": {
+      "id": "post_exercise",
+      "name": "Post-Exercise Recovery",
+      "description": "Recovery window after exercise ends. Configurable hours, scale factor, minimum duration gate, and recovery target BG.",
+      "gate_key": "boost_post_exercise_recovery_enabled",
+      "param_count": 5,
+      "key_params": [
+        "boost_post_exercise_min_duration",
+        "boost_post_exercise_recovery_enabled",
+        "boost_post_exercise_recovery_hours",
+        "boost_post_exercise_recovery_scale",
+        "boost_post_exercise_recovery_target"
+      ]
+    },
+    "smb_delivery": {
+      "id": "smb_delivery",
+      "name": "SMB Delivery",
+      "description": "Boost SMB delivery controls: cumulative 60-min cap, bolus size, max IOB, insulin requirement %. Interacts with standard SMB settings (frequency, basal-to-limit, UAM limits).",
+      "gate_key": "openapsama_use_smb",
+      "param_count": 19,
+      "key_params": [
+        "boost_bolus_cap",
+        "boost_cumulative_smb_cap_60min",
+        "boost_insulin_req_pct",
+        "boost_max_iob",
+        "enableSMB_after_carbs",
+        "enableSMB_always",
+        "enableSMB_with_COB",
+        "enableSMB_with_high_temptarget",
+        "enableSMB_with_temptarget",
+        "openapsama_smb_delivery_ratio",
+        "openapsama_smb_delivery_ratio_bg_range",
+        "openapsama_smb_delivery_ratio_max",
+        "openapsama_smb_delivery_ratio_min",
+        "openapsama_smb_max_range_extension",
+        "openapsmb_max_iob",
+        "smbinterval",
+        "smbmaxminutes",
+        "uamsmbmaxminutes",
+        "use_smb"
+      ]
+    },
+    "ml_features": {
+      "id": "ml_features",
+      "name": "ML Feature Ring Buffer",
+      "description": "6-position lookback ring buffer for ML features. Stores recent-SMB stats, BG trends. Serialized per cycle to persistence.",
+      "gate_key": null,
+      "param_count": 1,
+      "key_params": [
+        "boost_ml_ring_buffer"
+      ]
+    },
+    "isf_shadow": {
+      "id": "isf_shadow",
+      "name": "ISF Shadow (V4.4.2-style EMA)",
+      "description": "Parallel EMA(τ=3h) sensitivity ratio computed alongside real ISF. Does NOT influence dosing — diagnostic only. Shadow state persisted.",
+      "gate_key": null,
+      "param_count": 1,
+      "key_params": [
+        "boost_isf_shadow_state"
+      ]
+    },
+    "shared_aaps": {
+      "id": "shared_aaps",
+      "name": "Shared AAPS Settings",
+      "description": "Standard OpenAPS settings that Boost's algorithm also reads: max basal, max IOB, SMB gates, autosens, dynamic sensitivity.",
+      "gate_key": null,
+      "param_count": 22,
+      "key_params": [
+        "DynISFAdjust",
+        "autosens_max",
+        "autosens_min",
+        "boost_allow_all_bg_sources",
+        "boost_bypass_version_check",
+        "boost_dynisf_bg_cap",
+        "boost_dynisf_normal_target",
+        "boost_dynisf_velocity",
+        "boost_end_time",
+        "boost_start_time",
+        "carbsReqThreshold",
+        "enableBoost_with_high_temptarget",
+        "enableCircadianISF",
+        "high_temptarget_raises_sensitivity",
+        "lgsThreshold",
+        "low_temptarget_lowers_sensitivity",
+        "openapsama_autosens_period",
+        "openapsama_current_basal_safety_multiplier",
+        "openapsama_max_daily_safety_multiplier",
+        "openapsma_max_basal"
+      ]
+    },
+    "safety": {
+      "id": "safety",
+      "name": "Safety",
+      "description": "Ketoacidosis protection, force limits, half-basal exercise target.",
+      "gate_key": null,
+      "param_count": 0,
+      "key_params": []
+    }
+  },
+  "parameter_summaries": {
+    "DynISFAdjust": {
+      "summary": "Used in Boost algorithm for DynISFAdjust.",
+      "effect_high": "Higher value — more insulin/greater effect",
+      "impact": "medium",
+      "feature": "shared_aaps"
+    },
+    "autosens_max": {
+      "summary": "Maximum autosens ratio. 1.2 = 20% more ISF (less insulin).",
+      "effect_high": "Allows larger autosens sensitivity ratio = less insulin when sensitive",
+      "impact": "high",
+      "feature": "shared_aaps"
+    },
+    "autosens_min": {
+      "summary": "Minimum autosens ratio. 0.7 = 30% less ISF (more insulin).",
+      "effect_high": "Lower minimum = allows stronger ISF reduction when resistant",
+      "impact": "high",
+      "feature": "shared_aaps"
+    },
+    "boost_activity_pct": {
+      "summary": "Used in Boost algorithm for boost_pct.",
+      "effect_high": "More ISF during activity = less insulin = safer",
+      "impact": "high",
+      "feature": "activity"
+    },
+    "boost_activity_shadow_enabled": {
+      "summary": "Enables/disables boost_shadow_enabled. Gate flag for Boost feature.",
+      "effect_high": "Feature is ON — associated functionality runs",
+      "impact": "medium",
+      "feature": "activity"
+    },
+    "boost_activity_steps_15": {
+      "summary": "Used in Boost algorithm for boost_steps_15.",
+      "effect_high": "Higher value — more insulin/greater effect",
+      "impact": "medium",
+      "feature": "activity"
+    },
+    "boost_activity_steps_30": {
+      "summary": "Used in Boost algorithm for boost_steps_30.",
+      "effect_high": "Higher value — more insulin/greater effect",
+      "impact": "medium",
+      "feature": "activity"
+    },
+    "boost_activity_steps_5": {
+      "summary": "Used in Boost algorithm for boost_steps_5.",
+      "effect_high": "Higher value — more insulin/greater effect",
+      "impact": "medium",
+      "feature": "activity"
+    },
+    "boost_activity_steps_60": {
+      "summary": "Used in Boost algorithm for boost_steps_60.",
+      "effect_high": "Higher value — more insulin/greater effect",
+      "impact": "medium",
+      "feature": "activity"
+    },
+    "boost_adjust_sensitivity": {
+      "summary": "When ON: adjusts ISF based on 24H/7D TDD ratio. Higher recent TDD → less ISF (more insulin needed), lower TDD → more ISF (less insulin).",
+      "effect_high": "Feature is ON — associated functionality runs",
+      "impact": "high",
+      "feature": "tdd_isf"
+    },
+    "boost_allow_all_bg_sources": {
+      "summary": "Boolean switch for boost_allow_all_bg_sources.",
+      "effect_high": "Feature is ON — associated functionality runs",
+      "impact": "medium",
+      "feature": "shared_aaps"
+    },
+    "boost_anticip_history": {
+      "summary": "Serialized meal anticipation history for ML learning.",
+      "effect_high": "Higher value — more insulin/greater effect",
+      "impact": "low",
+      "feature": "meal_model"
+    },
+    "boost_autosens_when_no_tdd": {
+      "summary": "When ON and TDD data unavailable: falls back to standard autosens instead of profile ISF. Prevents aggressive dosing during data gaps.",
+      "effect_high": "Feature is ON — associated functionality runs",
+      "impact": "high",
+      "feature": "tdd_isf"
+    },
+    "boost_bolus_cap": {
+      "summary": "Boost meal bolus size (units). Cap for meal-related SMB delivery.",
+      "effect_high": "Larger meal boluses allowed — faster post-meal correction",
+      "impact": "critical",
+      "feature": "smb_delivery"
+    },
+    "boost_cumulative_smb_cap_60min": {
+      "summary": "Maximum total SMB insulin (units) in a 60-minute window. Prevents stacking. Higher = more aggressive. 0 = no cap.",
+      "effect_high": "Higher 60-min cap = more SMB stacking allowed",
+      "impact": "critical",
+      "feature": "smb_delivery"
+    },
+    "boost_daily_step_history": {
+      "summary": "Serialized daily step history for activity trend analysis.",
+      "effect_high": "Higher value — more insulin/greater effect",
+      "impact": "low",
+      "feature": "activity"
+    },
+    "boost_dynisf_bg_cap": {
+      "summary": "Parameter for boost_dynisf_bg_cap.",
+      "effect_high": "Higher value — more insulin/greater effect",
+      "impact": "medium",
+      "feature": "shared_aaps"
+    },
+    "boost_dynisf_normal_target": {
+      "summary": "Parameter for boost_dynisf_normal_target.",
+      "effect_high": "Higher value — more insulin/greater effect",
+      "impact": "medium",
+      "feature": "shared_aaps"
+    },
+    "boost_dynisf_velocity": {
+      "summary": "Used in Boost algorithm for boost_dynisf_velocity.",
+      "effect_high": "Higher value — more insulin/greater effect",
+      "impact": "medium",
+      "feature": "shared_aaps"
+    },
+    "boost_health_connect_hr_enabled": {
+      "summary": "Enables Health Connect HR data ingestion.",
+      "effect_high": "Feature is ON — associated functionality runs",
+      "impact": "medium",
+      "feature": "hr_stress"
+    },
+    "boost_health_connect_poll_min": {
+      "summary": "Minutes between Health Connect data polls.",
+      "effect_high": "Higher value — more insulin/greater effect",
+      "impact": "medium",
+      "feature": "hr_stress"
+    },
+    "boost_hr_integration_enabled": {
+      "summary": "Enables Health Connect heart rate data for stress-based ISF adjustment.",
+      "effect_high": "Feature is ON — associated functionality runs",
+      "impact": "medium",
+      "feature": "hr_stress"
+    },
+    "boost_hr_max_bpm": {
+      "summary": "Maximum expected heart rate. Used to normalize HR stress signal.",
+      "effect_high": "Higher value — more insulin/greater effect",
+      "impact": "medium",
+      "feature": "hr_stress"
+    },
+    "boost_hr_resting_bpm": {
+      "summary": "Resting heart rate. HR above this = potential stress. Lower = more sensitive.",
+      "effect_high": "Higher value — more insulin/greater effect",
+      "impact": "medium",
+      "feature": "hr_stress"
+    },
+    "boost_hr_stress_detection": {
+      "summary": "When ON: elevated HR above resting → stress detection → increases ISF (less insulin needed during stress).",
+      "effect_high": "Feature is ON — associated functionality runs",
+      "impact": "high",
+      "feature": "hr_stress"
+    },
+    "boost_hr_window_minutes": {
+      "summary": "Lookback window for HR stress averaging (minutes).",
+      "effect_high": "Higher value — more insulin/greater effect",
+      "impact": "medium",
+      "feature": "hr_stress"
+    },
+    "boost_inactivity_pct": {
+      "summary": "Used in Boost algorithm for boost_inpct.",
+      "effect_high": "More ISF during activity = less insulin = safer",
+      "impact": "high",
+      "feature": "activity"
+    },
+    "boost_inactivity_steps": {
+      "summary": "Used in Boost algorithm for boost_insteps.",
+      "effect_high": "Higher value — more insulin/greater effect",
+      "impact": "medium",
+      "feature": "activity"
+    },
+    "boost_insulin_req_pct": {
+      "summary": "Insulin requirement scaling (%). Above 100% = Boost delivers more insulin. Below 100% = Boost is more conservative. Primary aggressiveness control.",
+      "effect_high": "Boost delivers MORE insulin — reduces hypers faster, higher hypo risk",
+      "impact": "critical",
+      "feature": "smb_delivery"
+    },
+    "boost_intraday_step_bank": {
+      "summary": "Serialized intraday step bank for short-term activity tracking.",
+      "effect_high": "Higher value — more insulin/greater effect",
+      "impact": "medium",
+      "feature": "activity"
+    },
+    "boost_isf_shadow_state": {
+      "summary": "Serialized ISF shadow state (V4.4.2 EMA diagnostic).",
+      "effect_high": "Higher value — more insulin/greater effect",
+      "impact": "low",
+      "feature": "isf_shadow"
+    },
+    "boost_max_iob": {
+      "summary": "Maximum IOB for Boost dosing. Replaces standard max IOB in Boost mode.",
+      "effect_high": "More IOB allowed — more aggressive corrections",
+      "impact": "critical",
+      "feature": "smb_delivery"
+    },
+    "boost_meal_time_history": {
+      "summary": "Serialized meal time history for meal pattern learning.",
+      "effect_high": "Higher value — more insulin/greater effect",
+      "impact": "low",
+      "feature": "meal_model"
+    },
+    "boost_ml_ring_buffer": {
+      "summary": "Serialized ML feature ring buffer (6-position lookback).",
+      "effect_high": "Higher value — more insulin/greater effect",
+      "impact": "medium",
+      "feature": "ml_features"
+    },
+    "boost_night_mode_auto_by_sleep": {
+      "summary": "When ON: night mode auto-activates based on sleep detection instead of fixed start/end times.",
+      "effect_high": "Feature is ON — associated functionality runs",
+      "impact": "high",
+      "feature": "night_mode"
+    },
+    "boost_night_mode_bg_offset": {
+      "summary": "BG offset during night mode (mg/dL). Lowers target for tighter control.",
+      "effect_high": "Stronger night-time insulin reduction",
+      "impact": "high",
+      "feature": "night_mode"
+    },
+    "boost_night_mode_disable_with_cob": {
+      "summary": "Disables night mode when carbs-on-board > 0.",
+      "effect_high": "Feature is ON — associated functionality runs",
+      "impact": "high",
+      "feature": "night_mode"
+    },
+    "boost_night_mode_disable_with_low_tt": {
+      "summary": "Disables night mode when low temp target is active.",
+      "effect_high": "Feature is ON — associated functionality runs",
+      "impact": "high",
+      "feature": "night_mode"
+    },
+    "boost_night_mode_enabled": {
+      "summary": "Enables reduced insulin during configured night window.",
+      "effect_high": "Feature is ON — associated functionality runs",
+      "impact": "high",
+      "feature": "night_mode"
+    },
+    "boost_night_mode_end": {
+      "summary": "Night mode end time (HH:MM). Default 07:00.",
+      "effect_high": "Stronger night-time insulin reduction",
+      "impact": "high",
+      "feature": "night_mode"
+    },
+    "boost_night_mode_start": {
+      "summary": "Night mode start time (HH:MM). Default 22:00.",
+      "effect_high": "Stronger night-time insulin reduction",
+      "impact": "high",
+      "feature": "night_mode"
+    },
+    "boost_percent_scale_factor": {
+      "summary": "Global ISF scaling percentage. 100% = neutral. >100% = more ISF = less aggressive. <100% = less ISF = more aggressive.",
+      "effect_high": "Higher ISF = less insulin for same BG = more conservative",
+      "impact": "high",
+      "feature": "tdd_isf"
+    },
+    "boost_post_exercise_min_duration": {
+      "summary": "Minimum exercise duration (min) to trigger recovery mode.",
+      "effect_high": "Higher value — more insulin/greater effect",
+      "impact": "high",
+      "feature": "post_exercise"
+    },
+    "boost_post_exercise_recovery_enabled": {
+      "summary": "Enables reduced insulin for hours after exercise ends.",
+      "effect_high": "Feature is ON — associated functionality runs",
+      "impact": "high",
+      "feature": "post_exercise"
+    },
+    "boost_post_exercise_recovery_hours": {
+      "summary": "Recovery duration (hours). ISF stays elevated this long post-exercise.",
+      "effect_high": "Higher value — more insulin/greater effect",
+      "impact": "high",
+      "feature": "post_exercise"
+    },
+    "boost_post_exercise_recovery_scale": {
+      "summary": "Scale factor for recovery (0.0-1.0). Lower = stronger ISF boost = less insulin. 1.0 = no recovery adjustment.",
+      "effect_high": "Higher ISF = less insulin for same BG = more conservative",
+      "impact": "high",
+      "feature": "post_exercise"
+    },
+    "boost_post_exercise_recovery_target": {
+      "summary": "Target BG during post-exercise recovery (mg/dL).",
+      "effect_high": "Higher value — more insulin/greater effect",
+      "impact": "high",
+      "feature": "post_exercise"
+    },
+    "boost_pre_sleep_lead_min": {
+      "summary": "Minutes before detected sleep onset to start pre-sleep insulin reduction.",
+      "effect_high": "Higher value — more insulin/greater effect",
+      "impact": "high",
+      "feature": "sleep"
+    },
+    "boost_scale_value": {
+      "summary": "Global ISF scale factor. 1.0 = neutral. Direct multiplier on ISF.",
+      "effect_high": "Higher ISF = less insulin for same BG = more conservative",
+      "impact": "high",
+      "feature": "tdd_isf"
+    },
+    "boost_sleep_history": {
+      "summary": "Serialized sleep history for sleep pattern learning.",
+      "effect_high": "Higher value — more insulin/greater effect",
+      "impact": "high",
+      "feature": "sleep"
+    },
+    "boost_sleep_hysteresis_min": {
+      "summary": "Minutes of sustained low activity before sleep state confirmed.",
+      "effect_high": "Higher value — more insulin/greater effect",
+      "impact": "high",
+      "feature": "sleep"
+    },
+    "boost_sleep_in_hrs": {
+      "summary": "Used in Boost algorithm for boost_sleep_in_hrs.",
+      "effect_high": "Higher value — more insulin/greater effect",
+      "impact": "high",
+      "feature": "sleep"
+    },
+    "boost_sleep_in_steps": {
+      "summary": "Maximum step count during sleep-in window. Default 50.",
+      "effect_high": "Higher value — more insulin/greater effect",
+      "impact": "high",
+      "feature": "activity"
+    },
+    "boost_sleep_state": {
+      "summary": "Current sleep state (detected/not detected).",
+      "effect_high": "Higher value — more insulin/greater effect",
+      "impact": "high",
+      "feature": "sleep"
+    },
+    "boost_use_tdd": {
+      "summary": "Main gate: enables TDD-based dynamic ISF instead of static profile ISF.",
+      "effect_high": "Feature is ON — associated functionality runs",
+      "impact": "high",
+      "feature": "tdd_isf"
+    },
+    "boost_v5_active_dosing": {
+      "summary": "Boolean switch for boost_v5_active_dosing.",
+      "effect_high": "Feature is ON — associated functionality runs",
+      "impact": "high",
+      "feature": "meal_model"
+    },
+    "boost_v5_aggression": {
+      "summary": "V5 meal model aggression (1.0 = neutral). Higher = more insulin during meals.",
+      "effect_high": "Higher value — more insulin/greater effect",
+      "impact": "high",
+      "feature": "meal_model"
+    },
+    "boost_v5_committed_cap_u": {
+      "summary": "V5 max bolus for COMMITTED meals (units). Cap for confirmed meal dosing.",
+      "effect_high": "Higher value — more insulin/greater effect",
+      "impact": "high",
+      "feature": "meal_model"
+    },
+    "boost_v5_composed_floor_active": {
+      "summary": "Boolean switch for boost_v5_composed_floor_active.",
+      "effect_high": "Feature is ON — associated functionality runs",
+      "impact": "high",
+      "feature": "meal_model"
+    },
+    "boost_v5_confirmed_cap_u": {
+      "summary": "V5 max bolus for CONFIRMED meals (units). Lower cap for less-certain meals.",
+      "effect_high": "Higher value — more insulin/greater effect",
+      "impact": "high",
+      "feature": "meal_model"
+    },
+    "boost_v5_hypo_caution": {
+      "summary": "V5 hypo caution (1.0 = neutral). Higher = more conservative near hypo thresholds.",
+      "effect_high": "Higher value — more insulin/greater effect",
+      "impact": "critical",
+      "feature": "meal_model"
+    },
+    "boost_v5_primer_bolus_mode": {
+      "summary": "Boost meal bolus size (units). Cap for meal-related SMB delivery.",
+      "effect_high": "Feature is ON — associated functionality runs",
+      "impact": "critical",
+      "feature": "meal_model"
+    },
+    "boost_v5_primer_tbr_fallback": {
+      "summary": "Boolean switch for boost_v5_primer_tbr_fallback.",
+      "effect_high": "Feature is ON — associated functionality runs",
+      "impact": "high",
+      "feature": "meal_model"
+    },
+    "boost_v5_velocity_budget_active": {
+      "summary": "Boolean switch for boost_v5_velocity_budget_active.",
+      "effect_high": "Feature is ON — associated functionality runs",
+      "impact": "high",
+      "feature": "meal_model"
+    },
+    "boost_v6_pre_meal_lead_min": {
+      "summary": "Minutes before detected meal to start pre-meal dosing.",
+      "effect_high": "Higher value — more insulin/greater effect",
+      "impact": "high",
+      "feature": "meal_model"
+    },
+    "boost_v6_pre_meal_target": {
+      "summary": "Target BG for pre-meal window (mg/dL). Lower = more aggressive before meals.",
+      "effect_high": "Feature is ON — associated functionality runs",
+      "impact": "high",
+      "feature": "meal_model"
+    },
+    "boost_v6_pre_meal_target_mgdl": {
+      "summary": "Target BG for pre-meal window (mg/dL). Lower = more aggressive before meals.",
+      "effect_high": "Higher value — more insulin/greater effect",
+      "impact": "high",
+      "feature": "meal_model"
+    },
+    "boost_v7_residual_pools": {
+      "summary": "Stored state or configuration string for boost_v7_residual_pools.",
+      "effect_high": "Higher value — more insulin/greater effect",
+      "impact": "high",
+      "feature": "meal_model"
+    },
+    "boost_wake_hr_hysteresis_min": {
+      "summary": "Minutes of sustained HR elevation before wake confirmed.",
+      "effect_high": "Higher value — more insulin/greater effect",
+      "impact": "medium",
+      "feature": "sleep"
+    },
+    "carbsReqThreshold": {
+      "summary": "Used in Boost algorithm for carbsReqThreshold.",
+      "effect_high": "Higher value — more insulin/greater effect",
+      "impact": "medium",
+      "feature": "shared_aaps"
+    },
+    "enableBoostPercentScale": {
+      "summary": "Global ISF scale factor. 1.0 = neutral. Direct multiplier on ISF.",
+      "effect_high": "Feature is ON — associated functionality runs",
+      "impact": "high",
+      "feature": "tdd_isf"
+    },
+    "enableBoost_with_high_temptarget": {
+      "summary": "Enables/disables enableBoost_with_high_temptarget. Gate flag for Boost feature.",
+      "effect_high": "Feature is ON — associated functionality runs",
+      "impact": "medium",
+      "feature": "shared_aaps"
+    },
+    "enableCircadianISF": {
+      "summary": "Enables/disables enableCircadianISF. Gate flag for Boost feature.",
+      "effect_high": "Feature is ON — associated functionality runs",
+      "impact": "medium",
+      "feature": "shared_aaps"
+    },
+    "enableSMB_after_carbs": {
+      "summary": "Enables/disables enableSMB_after_carbs. Gate flag for Boost feature.",
+      "effect_high": "Feature is ON — associated functionality runs",
+      "impact": "medium",
+      "feature": "smb_delivery"
+    },
+    "enableSMB_always": {
+      "summary": "Enables/disables enableSMB_always. Gate flag for Boost feature.",
+      "effect_high": "Feature is ON — associated functionality runs",
+      "impact": "medium",
+      "feature": "smb_delivery"
+    },
+    "enableSMB_with_COB": {
+      "summary": "Enables/disables enableSMB_with_COB. Gate flag for Boost feature.",
+      "effect_high": "Feature is ON — associated functionality runs",
+      "impact": "medium",
+      "feature": "smb_delivery"
+    },
+    "enableSMB_with_high_temptarget": {
+      "summary": "Enables/disables enableSMB_with_high_temptarget. Gate flag for Boost feature.",
+      "effect_high": "Feature is ON — associated functionality runs",
+      "impact": "medium",
+      "feature": "smb_delivery"
+    },
+    "enableSMB_with_temptarget": {
+      "summary": "Enables/disables enableSMB_with_temptarget. Gate flag for Boost feature.",
+      "effect_high": "Feature is ON — associated functionality runs",
+      "impact": "medium",
+      "feature": "smb_delivery"
+    },
+    "high_temptarget_raises_sensitivity": {
+      "summary": "Boolean switch for high_temptarget_raises_sensitivity.",
+      "effect_high": "Feature is ON — associated functionality runs",
+      "impact": "medium",
+      "feature": "shared_aaps"
+    },
+    "lgsThreshold": {
+      "summary": "Parameter for lgsThreshold.",
+      "effect_high": "Higher value — more insulin/greater effect",
+      "impact": "medium",
+      "feature": "shared_aaps"
+    },
+    "low_temptarget_lowers_sensitivity": {
+      "summary": "Boolean switch for low_temptarget_lowers_sensitivity.",
+      "effect_high": "Feature is ON — associated functionality runs",
+      "impact": "medium",
+      "feature": "shared_aaps"
+    },
+    "openapsama_current_basal_safety_multiplier": {
+      "summary": "Used in Boost algorithm for current_basal_safety_multiplier.",
+      "effect_high": "Higher value — more insulin/greater effect",
+      "impact": "critical",
+      "feature": "shared_aaps"
+    },
+    "openapsama_max_daily_safety_multiplier": {
+      "summary": "Used in Boost algorithm for max_daily_safety_multiplier.",
+      "effect_high": "Higher daily multiplier = allows more total daily insulin",
+      "impact": "critical",
+      "feature": "shared_aaps"
+    },
+    "openapsma_max_basal": {
+      "summary": "Maximum temporary basal rate (U/h). Shared with all OpenAPS plugins.",
+      "effect_high": "Higher max basal = more headroom for temporary basal increases",
+      "impact": "critical",
+      "feature": "shared_aaps"
+    },
+    "openapsmb_max_iob": {
+      "summary": "Maximum IOB for Boost dosing. Replaces standard max IOB in Boost mode.",
+      "effect_high": "More IOB allowed — more aggressive corrections",
+      "impact": "critical",
+      "feature": "smb_delivery"
+    },
+    "smbinterval": {
+      "summary": "Used in Boost algorithm for smbinterval.",
+      "effect_high": "Higher value — more insulin/greater effect",
+      "impact": "medium",
+      "feature": "smb_delivery"
+    },
+    "smbmaxminutes": {
+      "summary": "Used in Boost algorithm for smbmaxminutes.",
+      "effect_high": "Higher value — more insulin/greater effect",
+      "impact": "medium",
+      "feature": "smb_delivery"
+    },
+    "uamsmbmaxminutes": {
+      "summary": "Used in Boost algorithm for uamsmbmaxminutes.",
+      "effect_high": "Higher value — more insulin/greater effect",
+      "impact": "medium",
+      "feature": "smb_delivery"
+    },
+    "use_dynamic_sensitivity": {
+      "summary": "Enables dynamic sensitivity (DynISF) engine.",
+      "effect_high": "Feature is ON — associated functionality runs",
+      "impact": "medium",
+      "feature": "shared_aaps"
+    },
+    "use_smb": {
+      "summary": "Master gate for SMB delivery. Must be ON for Boost SMBs.",
+      "effect_high": "Feature is ON — associated functionality runs",
+      "impact": "critical",
+      "feature": "smb_delivery"
+    },
+    "use_uam": {
+      "summary": "Enables unannounced meal detection for automatic SMB dosing.",
+      "effect_high": "Feature is ON — associated functionality runs",
+      "impact": "critical",
+      "feature": "shared_aaps"
+    }
+  },
+  "tuning_guidelines": "1. Start with boost_use_tdd=ON and boost_insulin_req_pct=100 (neutral). 2. If TIR < 70% and mean BG > 160: increase insulinReqPct to 105-115%. 3. If timeBelow70 > 3%: decrease insulinReqPct to 85-95% or raise maxIob. 4. If post-meal spikes > 250: adjust V6 pre-meal lead time up, increase bolus cap. 5. If overnight hypos: enable night mode, set start=22:00, end=07:00, try bgOffset=10. 6. If exercise causes hypos: enable post-exercise recovery, set scale=0.5, hours=3. 7. If too conservative overall: check ApsBoostPercentScale (try 110%) and dynIsfAdjustmentFactor. 8. Monitor ISF shadow vs real ISF divergence — large gaps suggest TDD data quality issues."
+}

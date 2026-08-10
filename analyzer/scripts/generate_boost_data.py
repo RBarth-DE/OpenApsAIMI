@@ -24,11 +24,11 @@ from typing import Dict, List, Optional, Set, Tuple
 # ─── Configuration ───────────────────────────────────────────────────────────
 
 _SCRIPT_DIR = Path(__file__).resolve().parent
-_AUTO_ROOT  = _SCRIPT_DIR.parent
+_AUTO_ROOT  = _SCRIPT_DIR.parent.parent
 
 DEFAULT_SOURCE_ROOT = str(_AUTO_ROOT) if (_AUTO_ROOT / "plugins" / "aps").exists() else None
 
-DATA_DIR = Path(__file__).resolve().parent / "data"
+DATA_DIR = Path(__file__).resolve().parent.parent / "data"
 
 # Boost source directory (relative to source root)
 BOOST_SRC = "plugins/aps/src/main/kotlin/app/aaps/plugins/aps/openAPSBoost"
@@ -528,7 +528,7 @@ def _get_generated_path(key_str: str) -> str | None:
     """Load generated paths from boost_settings_paths.json (lazy, cached)."""
     global _generated_paths_cache
     if _generated_paths_cache is None:
-        paths_file = _SCRIPT_DIR / "data" / "boost_settings_paths.json"
+        paths_file = _SCRIPT_DIR.parent / "data" / "boost_settings_paths.json"
         if paths_file.exists():
             with open(paths_file, encoding="utf-8") as f:
                 data = json.load(f)

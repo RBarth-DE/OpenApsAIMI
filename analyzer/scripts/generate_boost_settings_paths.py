@@ -21,7 +21,7 @@ from pathlib import Path
 
 # ─── Paths ───────────────────────────────────────────────────────────────────
 _SCRIPT_DIR = Path(__file__).resolve().parent
-_AUTO_ROOT  = _SCRIPT_DIR.parent
+_AUTO_ROOT  = _SCRIPT_DIR.parent.parent
 PROJECT_ROOT = _AUTO_ROOT if (_AUTO_ROOT / "plugins" / "aps").exists() else _SCRIPT_DIR
 
 if not (PROJECT_ROOT / "plugins" / "aps").exists():
@@ -38,7 +38,7 @@ STRINGS_XML_PATHS = [
     PROJECT_ROOT / "core/keys/src/main/res/values/strings.xml",
     PROJECT_ROOT / "core/ui/src/main/res/values/strings.xml",
 ]
-OUTPUT_FILE = _SCRIPT_DIR / "data" / "boost_settings_paths.json"
+OUTPUT_FILE = _SCRIPT_DIR.parent / "data" / "boost_settings_paths.json"
 
 KEY_FILES = {
     "DoubleKey": PROJECT_ROOT / "core/keys/src/main/kotlin/app/aaps/core/keys/DoubleKey.kt",

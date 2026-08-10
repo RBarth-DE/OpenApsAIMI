@@ -2,13 +2,13 @@
   "version": "1.0",
   "plugin": "boost",
   "source_commit": "ac6e82a399e2063f47e9454d31af2e9ee56ec22e",
-  "generated_at": "2026-08-10T06:46:12.816796+00:00",
+  "generated_at": "2026-08-10T06:00:36.530060+00:00",
   "total": 106,
   "active": 91,
   "orphaned": 15,
   "with_used_in": 87,
   "with_negative_gate": 0,
-  "with_settings_path": 60,
+  "with_settings_path": 62,
   "parameters": [
     {
       "key": "DynISFAdjust",

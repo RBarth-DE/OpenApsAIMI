@@ -1,0 +1,719 @@
+BOOST Plugin Algorithm Context
+========================================
+
+## Feature Groups
+
+### TDD-based ISF (gate: boost_use_tdd)
+Core Boost engine: computes dynamic ISF from total daily dose (TDD) using 7D/24H/8H/4H weighted blends. Uses ln(bg/divisor+1)*1800/TDD formula. Includes circadian ISF, DynISF velocity scaling, and sensitivity adjustment.
+Key parameters: boost_adjust_sensitivity, boost_autosens_when_no_tdd, boost_percent_scale_factor, boost_scale_value, boost_use_tdd, enableBoostPercentScale
+
+### Meal Model (V5/V6/V7) (gate: None)
+Multi-version meal hypothesis system. V5: aggression/hypo-caution scaling. V6: pre-meal target, lead time, committed/confirmed cap thresholds. V7: residual pools. Anticipation history for meal-time learning.
+Key parameters: boost_anticip_history, boost_meal_time_history, boost_v5_active_dosing, boost_v5_aggression, boost_v5_aggressive_early_confirm, boost_v5_autoconfig_done, boost_v5_committed_cap_u, boost_v5_composed_floor_active, boost_v5_confirmed_cap_u, boost_v5_fast_carb_confirm
+
+### Activity & Steps (gate: boost_activity_shadow_enabled)
+Step counting from Wear OS / Health Connect / phone sensors. Activity % and inactivity % scale ISF. Activity shadow mode computes but doesn't apply. Post-exercise recovery with configurable duration/scale.
+Key parameters: boost_activity_pct, boost_activity_shadow_enabled, boost_activity_steps_15, boost_activity_steps_30, boost_activity_steps_5, boost_activity_steps_60, boost_daily_step_history, boost_inactivity_pct, boost_inactivity_steps, boost_intraday_step_bank
+
+### Night Mode (gate: boost_night_mode_enabled)
+Reduces insulin during configured night window. Auto-by-sleep option. COB and low-TT disable gates. BG offset for tighter overnight control.
+Key parameters: boost_night_mode_auto_by_sleep, boost_night_mode_bg_offset, boost_night_mode_disable_with_cob, boost_night_mode_disable_with_low_tt, boost_night_mode_enabled, boost_night_mode_end, boost_night_mode_start
+
+### Sleep Detection (gate: None)
+Tracks sleep state from steps/inactivity patterns. Sleep-in hours/steps thresholds. Hysteresis for wake/sleep transitions. Pre-sleep lead time.
+Key parameters: boost_pre_sleep_lead_min, boost_sleep_history, boost_sleep_hysteresis_min, boost_sleep_in_hrs, boost_sleep_state, boost_wake_hr_hysteresis_min
+
+### HR Stress Detection (gate: boost_health_connect_hr_enabled)
+Health Connect heart rate integration. Detects stress from elevated resting HR. Configurable max/resting BPM, window minutes, polling interval.
+Key parameters: boost_health_connect_hr_enabled, boost_health_connect_poll_min, boost_hr_integration_enabled, boost_hr_max_bpm, boost_hr_resting_bpm, boost_hr_stress_detection, boost_hr_window_minutes
+
+### Post-Exercise Recovery (gate: boost_post_exercise_recovery_enabled)
+Recovery window after exercise ends. Configurable hours, scale factor, minimum duration gate, and recovery target BG.
+Key parameters: boost_post_exercise_min_duration, boost_post_exercise_recovery_enabled, boost_post_exercise_recovery_hours, boost_post_exercise_recovery_scale, boost_post_exercise_recovery_target
+
+### SMB Delivery (gate: openapsama_use_smb)
+Boost SMB delivery controls: cumulative 60-min cap, bolus size, max IOB, insulin requirement %. Interacts with standard SMB settings (frequency, basal-to-limit, UAM limits).
+Key parameters: boost_bolus_cap, boost_cumulative_smb_cap_60min, boost_insulin_req_pct, boost_max_iob, enableSMB_after_carbs, enableSMB_always, enableSMB_with_COB, enableSMB_with_high_temptarget, enableSMB_with_temptarget, openapsama_smb_delivery_ratio
+
+### ML Feature Ring Buffer (gate: None)
+6-position lookback ring buffer for ML features. Stores recent-SMB stats, BG trends. Serialized per cycle to persistence.
+Key parameters: boost_ml_ring_buffer
+
+### ISF Shadow (V4.4.2-style EMA) (gate: None)
+Parallel EMA(τ=3h) sensitivity ratio computed alongside real ISF. Does NOT influence dosing — diagnostic only. Shadow state persisted.
+Key parameters: boost_isf_shadow_state
+
+### Shared AAPS Settings (gate: None)
+Standard OpenAPS settings that Boost's algorithm also reads: max basal, max IOB, SMB gates, autosens, dynamic sensitivity.
+Key parameters: DynISFAdjust, autosens_max, autosens_min, boost_allow_all_bg_sources, boost_bypass_version_check, boost_dynisf_bg_cap, boost_dynisf_normal_target, boost_dynisf_velocity, boost_end_time, boost_start_time
+
+### Safety (gate: None)
+Ketoacidosis protection, force limits, half-basal exercise target.
+
+
+## Key Parameters
+
+### DynISFAdjust
+Type: Int, Default: 100
+Summary: Used in Boost algorithm for DynISFAdjust.
+High: Higher value — more insulin/greater effect
+Low: Lower value — less insulin/reduced effect
+Impact: medium | Feature: shared_aaps
+
+### autosens_max
+Type: Double, Default: 1.2
+Range: 0.5 – 3.0
+Summary: Maximum autosens ratio. 1.2 = 20% more ISF (less insulin).
+High: Allows larger autosens sensitivity ratio = less insulin when sensitive
+Low: Limits sensitivity ratio = less reduction, more stable
+Impact: high | Feature: shared_aaps
+
+### autosens_min
+Type: Double, Default: 0.7
+Range: 0.1 – 1.0
+Summary: Minimum autosens ratio. 0.7 = 30% less ISF (more insulin).
+High: Lower minimum = allows stronger ISF reduction when resistant
+Low: Higher minimum = less aggressive resistance response
+Impact: high | Feature: shared_aaps
+
+### boost_activity_pct
+Type: Double, Default: 80.0
+Range: 30.0 – 150.0
+Summary: Used in Boost algorithm for boost_pct.
+High: More ISF during activity = less insulin = safer
+Low: Less ISF during activity = more insulin = hypo risk
+Impact: high | Feature: activity
+
+### boost_activity_shadow_enabled [GATE]
+Type: Boolean, Default: None
+Summary: Enables/disables boost_shadow_enabled. Gate flag for Boost feature.
+High: Feature is ON — associated functionality runs
+Low: Feature is OFF — associated functionality is disabled
+Impact: medium | Feature: activity
+
+### boost_activity_steps_15
+Type: Int, Default: 800
+Summary: Used in Boost algorithm for boost_steps_15.
+High: Higher value — more insulin/greater effect
+Low: Lower value — less insulin/reduced effect
+Impact: medium | Feature: activity
+
+### boost_activity_steps_30
+Type: Int, Default: 1200
+Summary: Used in Boost algorithm for boost_steps_30.
+High: Higher value — more insulin/greater effect
+Low: Lower value — less insulin/reduced effect
+Impact: medium | Feature: activity
+
+### boost_activity_steps_5
+Type: Int, Default: 420
+Summary: Used in Boost algorithm for boost_steps_5.
+High: Higher value — more insulin/greater effect
+Low: Lower value — less insulin/reduced effect
+Impact: medium | Feature: activity
+
+### boost_activity_steps_60
+Type: Int, Default: 1800
+Summary: Used in Boost algorithm for boost_steps_60.
+High: Higher value — more insulin/greater effect
+Low: Lower value — less insulin/reduced effect
+Impact: medium | Feature: activity
+
+### boost_adjust_sensitivity [GATE]
+Type: Boolean, Default: None
+Summary: When ON: adjusts ISF based on 24H/7D TDD ratio. Higher recent TDD → less ISF (more insulin needed), lower TDD → more ISF (less insulin).
+High: Feature is ON — associated functionality runs
+Low: Feature is OFF — associated functionality is disabled
+Impact: high | Feature: tdd_isf
+
+### boost_allow_all_bg_sources [GATE]
+Type: Boolean, Default: None
+Summary: Boolean switch for boost_allow_all_bg_sources.
+High: Feature is ON — associated functionality runs
+Low: Feature is OFF — associated functionality is disabled
+Impact: medium | Feature: shared_aaps
+
+### boost_anticip_history
+Type: String, Default: None
+Summary: Serialized meal anticipation history for ML learning.
+High: Higher value — more insulin/greater effect
+Low: Lower value — less insulin/reduced effect
+Impact: low | Feature: meal_model
+
+### boost_autosens_when_no_tdd [GATE]
+Type: Boolean, Default: None
+Summary: When ON and TDD data unavailable: falls back to standard autosens instead of profile ISF. Prevents aggressive dosing during data gaps.
+High: Feature is ON — associated functionality runs
+Low: Feature is OFF — associated functionality is disabled
+Impact: high | Feature: tdd_isf
+
+### boost_bolus_cap
+Type: Double, Default: 2.5
+Range: 0.1 – 10.0
+Summary: Boost meal bolus size (units). Cap for meal-related SMB delivery.
+High: Larger meal boluses allowed — faster post-meal correction
+Low: Smaller boluses — more conservative, less post-meal hypo risk
+Impact: critical | Feature: smb_delivery
+
+### boost_cumulative_smb_cap_60min
+Type: Double, Default: 10.0
+Range: 0.0 – 10.0
+Summary: Maximum total SMB insulin (units) in a 60-minute window. Prevents stacking. Higher = more aggressive. 0 = no cap.
+High: Higher 60-min cap = more SMB stacking allowed
+Low: Lower cap = less stacking, safer
+Impact: critical | Feature: smb_delivery
+
+### boost_daily_step_history
+Type: String, Default: None
+Summary: Serialized daily step history for activity trend analysis.
+High: Higher value — more insulin/greater effect
+Low: Lower value — less insulin/reduced effect
+Impact: low | Feature: activity
+
+### boost_dynisf_bg_cap
+Type: UnitDouble, Default: None
+Summary: Parameter for boost_dynisf_bg_cap.
+High: Higher value — more insulin/greater effect
+Low: Lower value — less insulin/reduced effect
+Impact: medium | Feature: shared_aaps
+
+### boost_dynisf_normal_target
+Type: UnitDouble, Default: None
+Summary: Parameter for boost_dynisf_normal_target.
+High: Higher value — more insulin/greater effect
+Low: Lower value — less insulin/reduced effect
+Impact: medium | Feature: shared_aaps
+
+### boost_dynisf_velocity
+Type: Double, Default: 100.0
+Range: 0.0 – 100.0
+Summary: Used in Boost algorithm for boost_dynisf_velocity.
+High: Higher value — more insulin/greater effect
+Low: Lower value — less insulin/reduced effect
+Impact: medium | Feature: shared_aaps
+
+### boost_health_connect_hr_enabled [GATE]
+Type: Boolean, Default: None
+Summary: Enables Health Connect HR data ingestion.
+High: Feature is ON — associated functionality runs
+Low: Feature is OFF — associated functionality is disabled
+Impact: medium | Feature: hr_stress
+
+### boost_health_connect_poll_min
+Type: Int, Default: 5
+Summary: Minutes between Health Connect data polls.
+High: Higher value — more insulin/greater effect
+Low: Lower value — less insulin/reduced effect
+Impact: medium | Feature: hr_stress
+
+### boost_hr_integration_enabled
+Type: Boolean, Default: None
+Summary: Enables Health Connect heart rate data for stress-based ISF adjustment.
+High: Feature is ON — associated functionality runs
+Low: Feature is OFF — associated functionality is disabled
+Impact: medium | Feature: hr_stress
+
+### boost_hr_max_bpm
+Type: Int, Default: 180
+Summary: Maximum expected heart rate. Used to normalize HR stress signal.
+High: Higher value — more insulin/greater effect
+Low: Lower value — less insulin/reduced effect
+Impact: medium | Feature: hr_stress
+
+### boost_hr_resting_bpm
+Type: Int, Default: 60
+Summary: Resting heart rate. HR above this = potential stress. Lower = more sensitive.
+High: Higher value — more insulin/greater effect
+Low: Lower value — less insulin/reduced effect
+Impact: medium | Feature: hr_stress
+
+### boost_hr_stress_detection [GATE]
+Type: Boolean, Default: None
+Summary: When ON: elevated HR above resting → stress detection → increases ISF (less insulin needed during stress).
+High: Feature is ON — associated functionality runs
+Low: Feature is OFF — associated functionality is disabled
+Impact: high | Feature: hr_stress
+
+### boost_hr_window_minutes
+Type: Int, Default: 15
+Summary: Lookback window for HR stress averaging (minutes).
+High: Higher value — more insulin/greater effect
+Low: Lower value — less insulin/reduced effect
+Impact: medium | Feature: hr_stress
+
+### boost_inactivity_pct
+Type: Double, Default: 130.0
+Range: 100.0 – 200.0
+Summary: Used in Boost algorithm for boost_inpct.
+High: More ISF during activity = less insulin = safer
+Low: Less ISF during activity = more insulin = hypo risk
+Impact: high | Feature: activity
+
+### boost_inactivity_steps
+Type: Int, Default: 500
+Summary: Used in Boost algorithm for boost_insteps.
+High: Higher value — more insulin/greater effect
+Low: Lower value — less insulin/reduced effect
+Impact: medium | Feature: activity
+
+### boost_insulin_req_pct
+Type: Double, Default: 50.0
+Range: 30.0 – 100.0
+Summary: Insulin requirement scaling (%). Above 100% = Boost delivers more insulin. Below 100% = Boost is more conservative. Primary aggressiveness control.
+High: Boost delivers MORE insulin — reduces hypers faster, higher hypo risk
+Low: Boost is MORE conservative — safer but slower hyper correction
+Impact: critical | Feature: smb_delivery
+
+### boost_intraday_step_bank
+Type: String, Default: None
+Summary: Serialized intraday step bank for short-term activity tracking.
+High: Higher value — more insulin/greater effect
+Low: Lower value — less insulin/reduced effect
+Impact: medium | Feature: activity
+
+### boost_isf_shadow_state
+Type: String, Default: None
+Summary: Serialized ISF shadow state (V4.4.2 EMA diagnostic).
+High: Higher value — more insulin/greater effect
+Low: Lower value — less insulin/reduced effect
+Impact: low | Feature: isf_shadow
+
+### boost_max_iob
+Type: Double, Default: 1.0
+Range: 0.1 – 12.0
+Summary: Maximum IOB for Boost dosing. Replaces standard max IOB in Boost mode.
+High: More IOB allowed — more aggressive corrections
+Low: IOB capped lower — safer, less stacking
+Impact: critical | Feature: smb_delivery
+
+### boost_meal_time_history
+Type: String, Default: None
+Summary: Serialized meal time history for meal pattern learning.
+High: Higher value — more insulin/greater effect
+Low: Lower value — less insulin/reduced effect
+Impact: low | Feature: meal_model
+
+### boost_ml_ring_buffer
+Type: String, Default: None
+Summary: Serialized ML feature ring buffer (6-position lookback).
+High: Higher value — more insulin/greater effect
+Low: Lower value — less insulin/reduced effect
+Impact: medium | Feature: ml_features
+
+### boost_night_mode_auto_by_sleep [GATE]
+Type: Boolean, Default: None
+Summary: When ON: night mode auto-activates based on sleep detection instead of fixed start/end times.
+High: Feature is ON — associated functionality runs
+Low: Feature is OFF — associated functionality is disabled
+Impact: high | Feature: night_mode
+
+### boost_night_mode_bg_offset
+Type: UnitDouble, Default: None
+Summary: BG offset during night mode (mg/dL). Lowers target for tighter control.
+High: Stronger night-time insulin reduction
+Low: Weaker night-time reduction = tighter control, hypo risk
+Impact: high | Feature: night_mode
+
+### boost_night_mode_disable_with_cob [GATE]
+Type: Boolean, Default: None
+Summary: Disables night mode when carbs-on-board > 0.
+High: Feature is ON — associated functionality runs
+Low: Feature is OFF — associated functionality is disabled
+Impact: high | Feature: night_mode
+
+### boost_night_mode_disable_with_low_tt [GATE]
+Type: Boolean, Default: None
+Summary: Disables night mode when low temp target is active.
+High: Feature is ON — associated functionality runs
+Low: Feature is OFF — associated functionality is disabled
+Impact: high | Feature: night_mode
+
+### boost_night_mode_enabled [GATE]
+Type: Boolean, Default: None
+Summary: Enables reduced insulin during configured night window.
+High: Feature is ON — associated functionality runs
+Low: Feature is OFF — associated functionality is disabled
+Impact: high | Feature: night_mode
+
+### boost_night_mode_end
+Type: String, Default: None
+Summary: Night mode end time (HH:MM). Default 07:00.
+High: Stronger night-time insulin reduction
+Low: Weaker night-time reduction = tighter control, hypo risk
+Impact: high | Feature: night_mode
+
+### boost_night_mode_start
+Type: String, Default: None
+Summary: Night mode start time (HH:MM). Default 22:00.
+High: Stronger night-time insulin reduction
+Low: Weaker night-time reduction = tighter control, hypo risk
+Impact: high | Feature: night_mode
+
+### boost_percent_scale_factor
+Type: Double, Default: 200.0
+Range: 50.0 – 500.0
+Summary: Global ISF scaling percentage. 100% = neutral. >100% = more ISF = less aggressive. <100% = less ISF = more aggressive.
+High: Higher ISF = less insulin for same BG = more conservative
+Low: Lower ISF = more insulin for same BG = more aggressive
+Impact: high | Feature: tdd_isf
+
+### boost_post_exercise_min_duration
+Type: Int, Default: 10
+Summary: Minimum exercise duration (min) to trigger recovery mode.
+High: Higher value — more insulin/greater effect
+Low: Lower value — less insulin/reduced effect
+Impact: high | Feature: post_exercise
+
+### boost_post_exercise_recovery_enabled [GATE]
+Type: Boolean, Default: None
+Summary: Enables reduced insulin for hours after exercise ends.
+High: Feature is ON — associated functionality runs
+Low: Feature is OFF — associated functionality is disabled
+Impact: high | Feature: post_exercise
+
+### boost_post_exercise_recovery_hours
+Type: Double, Default: 2.0
+Range: 0.5 – 8.0
+Summary: Recovery duration (hours). ISF stays elevated this long post-exercise.
+High: Higher value — more insulin/greater effect
+Low: Lower value — less insulin/reduced effect
+Impact: high | Feature: post_exercise
+
+### boost_post_exercise_recovery_scale
+Type: Double, Default: 0.5
+Range: 0.0 – 1.0
+Summary: Scale factor for recovery (0.0-1.0). Lower = stronger ISF boost = less insulin. 1.0 = no recovery adjustment.
+High: Higher ISF = less insulin for same BG = more conservative
+Low: Lower ISF = more insulin for same BG = more aggressive
+Impact: high | Feature: post_exercise
+
+### boost_post_exercise_recovery_target
+Type: UnitDouble, Default: None
+Summary: Target BG during post-exercise recovery (mg/dL).
+High: Higher value — more insulin/greater effect
+Low: Lower value — less insulin/reduced effect
+Impact: high | Feature: post_exercise
+
+### boost_pre_sleep_lead_min
+Type: Int, Default: 60
+Summary: Minutes before detected sleep onset to start pre-sleep insulin reduction.
+High: Higher value — more insulin/greater effect
+Low: Lower value — less insulin/reduced effect
+Impact: high | Feature: sleep
+
+### boost_scale_value
+Type: Double, Default: 1.0
+Range: 0.1 – 3.0
+Summary: Global ISF scale factor. 1.0 = neutral. Direct multiplier on ISF.
+High: Higher ISF = less insulin for same BG = more conservative
+Low: Lower ISF = more insulin for same BG = more aggressive
+Impact: high | Feature: tdd_isf
+
+### boost_sleep_history
+Type: String, Default: None
+Summary: Serialized sleep history for sleep pattern learning.
+High: Higher value — more insulin/greater effect
+Low: Lower value — less insulin/reduced effect
+Impact: high | Feature: sleep
+
+### boost_sleep_hysteresis_min
+Type: Int, Default: 10
+Summary: Minutes of sustained low activity before sleep state confirmed.
+High: Higher value — more insulin/greater effect
+Low: Lower value — less insulin/reduced effect
+Impact: high | Feature: sleep
+
+### boost_sleep_in_hrs
+Type: Double, Default: 2.0
+Range: 0.0 – 18.0
+Summary: Used in Boost algorithm for boost_sleep_in_hrs.
+High: Higher value — more insulin/greater effect
+Low: Lower value — less insulin/reduced effect
+Impact: high | Feature: sleep
+
+### boost_sleep_in_steps
+Type: Int, Default: 250
+Summary: Maximum step count during sleep-in window. Default 50.
+High: Higher value — more insulin/greater effect
+Low: Lower value — less insulin/reduced effect
+Impact: high | Feature: activity
+
+### boost_sleep_state
+Type: String, Default: None
+Summary: Current sleep state (detected/not detected).
+High: Higher value — more insulin/greater effect
+Low: Lower value — less insulin/reduced effect
+Impact: high | Feature: sleep
+
+### boost_use_tdd [GATE]
+Type: Boolean, Default: None
+Summary: Main gate: enables TDD-based dynamic ISF instead of static profile ISF.
+High: Feature is ON — associated functionality runs
+Low: Feature is OFF — associated functionality is disabled
+Impact: high | Feature: tdd_isf
+
+### boost_v5_active_dosing [GATE]
+Type: Boolean, Default: None
+Summary: Boolean switch for boost_v5_active_dosing.
+High: Feature is ON — associated functionality runs
+Low: Feature is OFF — associated functionality is disabled
+Impact: high | Feature: meal_model
+
+### boost_v5_aggression
+Type: Double, Default: 1.0
+Range: 0.7 – 1.6
+Summary: V5 meal model aggression (1.0 = neutral). Higher = more insulin during meals.
+High: Higher value — more insulin/greater effect
+Low: Lower value — less insulin/reduced effect
+Impact: high | Feature: meal_model
+
+### boost_v5_committed_cap_u
+Type: Double, Default: 0.5
+Range: 0.0 – 2.5
+Summary: V5 max bolus for COMMITTED meals (units). Cap for confirmed meal dosing.
+High: Higher value — more insulin/greater effect
+Low: Lower value — less insulin/reduced effect
+Impact: high | Feature: meal_model
+
+### boost_v5_composed_floor_active [GATE]
+Type: Boolean, Default: None
+Summary: Boolean switch for boost_v5_composed_floor_active.
+High: Feature is ON — associated functionality runs
+Low: Feature is OFF — associated functionality is disabled
+Impact: high | Feature: meal_model
+
+### boost_v5_confirmed_cap_u
+Type: Double, Default: 2.5
+Range: 0.0 – 7.5
+Summary: V5 max bolus for CONFIRMED meals (units). Lower cap for less-certain meals.
+High: Higher value — more insulin/greater effect
+Low: Lower value — less insulin/reduced effect
+Impact: high | Feature: meal_model
+
+### boost_v5_hypo_caution
+Type: Double, Default: 1.0
+Range: 1.0 – 2.0
+Summary: V5 hypo caution (1.0 = neutral). Higher = more conservative near hypo thresholds.
+High: Higher value — more insulin/greater effect
+Low: Lower value — less insulin/reduced effect
+Impact: critical | Feature: meal_model
+
+### boost_v5_primer_bolus_mode [GATE]
+Type: Boolean, Default: None
+Summary: Boost meal bolus size (units). Cap for meal-related SMB delivery.
+High: Feature is ON — associated functionality runs
+Low: Feature is OFF — associated functionality is disabled
+Impact: critical | Feature: meal_model
+
+### boost_v5_primer_tbr_fallback [GATE]
+Type: Boolean, Default: None
+Summary: Boolean switch for boost_v5_primer_tbr_fallback.
+High: Feature is ON — associated functionality runs
+Low: Feature is OFF — associated functionality is disabled
+Impact: high | Feature: meal_model
+
+### boost_v5_velocity_budget_active [GATE]
+Type: Boolean, Default: None
+Summary: Boolean switch for boost_v5_velocity_budget_active.
+High: Feature is ON — associated functionality runs
+Low: Feature is OFF — associated functionality is disabled
+Impact: high | Feature: meal_model
+
+### boost_v6_pre_meal_lead_min
+Type: Double, Default: 60.0
+Range: 30.0 – 90.0
+Summary: Minutes before detected meal to start pre-meal dosing.
+High: Higher value — more insulin/greater effect
+Low: Lower value — less insulin/reduced effect
+Impact: high | Feature: meal_model
+
+### boost_v6_pre_meal_target [GATE]
+Type: Boolean, Default: None
+Summary: Target BG for pre-meal window (mg/dL). Lower = more aggressive before meals.
+High: Feature is ON — associated functionality runs
+Low: Feature is OFF — associated functionality is disabled
+Impact: high | Feature: meal_model
+
+### boost_v6_pre_meal_target_mgdl
+Type: Double, Default: 72.0
+Range: 65.0 – 90.0
+Summary: Target BG for pre-meal window (mg/dL). Lower = more aggressive before meals.
+High: Higher value — more insulin/greater effect
+Low: Lower value — less insulin/reduced effect
+Impact: high | Feature: meal_model
+
+### boost_v7_residual_pools
+Type: String, Default: None
+Summary: Stored state or configuration string for boost_v7_residual_pools.
+High: Higher value — more insulin/greater effect
+Low: Lower value — less insulin/reduced effect
+Impact: high | Feature: meal_model
+
+### boost_wake_hr_hysteresis_min
+Type: Int, Default: 5
+Summary: Minutes of sustained HR elevation before wake confirmed.
+High: Higher value — more insulin/greater effect
+Low: Lower value — less insulin/reduced effect
+Impact: medium | Feature: sleep
+
+### carbsReqThreshold
+Type: Int, Default: 1
+Range: 1 – 100
+Summary: Used in Boost algorithm for carbsReqThreshold.
+High: Higher value — more insulin/greater effect
+Low: Lower value — less insulin/reduced effect
+Impact: medium | Feature: shared_aaps
+
+### enableBoostPercentScale [GATE]
+Type: Boolean, Default: None
+Summary: Global ISF scale factor. 1.0 = neutral. Direct multiplier on ISF.
+High: Feature is ON — associated functionality runs
+Low: Feature is OFF — associated functionality is disabled
+Impact: high | Feature: tdd_isf
+
+### enableBoost_with_high_temptarget [GATE]
+Type: Boolean, Default: None
+Summary: Enables/disables enableBoost_with_high_temptarget. Gate flag for Boost feature.
+High: Feature is ON — associated functionality runs
+Low: Feature is OFF — associated functionality is disabled
+Impact: medium | Feature: shared_aaps
+
+### enableCircadianISF [GATE]
+Type: Boolean, Default: None
+Summary: Enables/disables enableCircadianISF. Gate flag for Boost feature.
+High: Feature is ON — associated functionality runs
+Low: Feature is OFF — associated functionality is disabled
+Impact: medium | Feature: shared_aaps
+
+### enableSMB_after_carbs
+Type: Boolean, Default: None
+Summary: Enables/disables enableSMB_after_carbs. Gate flag for Boost feature.
+High: Feature is ON — associated functionality runs
+Low: Feature is OFF — associated functionality is disabled
+Impact: medium | Feature: smb_delivery
+
+### enableSMB_always
+Type: Boolean, Default: None
+Summary: Enables/disables enableSMB_always. Gate flag for Boost feature.
+High: Feature is ON — associated functionality runs
+Low: Feature is OFF — associated functionality is disabled
+Impact: medium | Feature: smb_delivery
+
+### enableSMB_with_COB
+Type: Boolean, Default: None
+Summary: Enables/disables enableSMB_with_COB. Gate flag for Boost feature.
+High: Feature is ON — associated functionality runs
+Low: Feature is OFF — associated functionality is disabled
+Impact: medium | Feature: smb_delivery
+
+### enableSMB_with_high_temptarget
+Type: Boolean, Default: None
+Summary: Enables/disables enableSMB_with_high_temptarget. Gate flag for Boost feature.
+High: Feature is ON — associated functionality runs
+Low: Feature is OFF — associated functionality is disabled
+Impact: medium | Feature: smb_delivery
+
+### enableSMB_with_temptarget
+Type: Boolean, Default: None
+Summary: Enables/disables enableSMB_with_temptarget. Gate flag for Boost feature.
+High: Feature is ON — associated functionality runs
+Low: Feature is OFF — associated functionality is disabled
+Impact: medium | Feature: smb_delivery
+
+### high_temptarget_raises_sensitivity
+Type: Boolean, Default: None
+Summary: Boolean switch for high_temptarget_raises_sensitivity.
+High: Feature is ON — associated functionality runs
+Low: Feature is OFF — associated functionality is disabled
+Impact: medium | Feature: shared_aaps
+
+### lgsThreshold
+Type: UnitDouble, Default: 65.0
+Summary: Parameter for lgsThreshold.
+High: Higher value — more insulin/greater effect
+Low: Lower value — less insulin/reduced effect
+Impact: medium | Feature: shared_aaps
+
+### low_temptarget_lowers_sensitivity
+Type: Boolean, Default: None
+Summary: Boolean switch for low_temptarget_lowers_sensitivity.
+High: Feature is ON — associated functionality runs
+Low: Feature is OFF — associated functionality is disabled
+Impact: medium | Feature: shared_aaps
+
+### openapsama_current_basal_safety_multiplier
+Type: Double, Default: 4.0
+Range: 1.0 – 10.0
+Summary: Used in Boost algorithm for current_basal_safety_multiplier.
+High: Higher value — more insulin/greater effect
+Low: Lower value — less insulin/reduced effect
+Impact: critical | Feature: shared_aaps
+
+### openapsama_max_daily_safety_multiplier
+Type: Double, Default: 3.0
+Range: 1.0 – 10.0
+Summary: Used in Boost algorithm for max_daily_safety_multiplier.
+High: Higher daily multiplier = allows more total daily insulin
+Low: Lower = safety limit
+Impact: critical | Feature: shared_aaps
+
+### openapsma_max_basal
+Type: Double, Default: 1.0
+Range: 0.1 – 25.0
+Summary: Maximum temporary basal rate (U/h). Shared with all OpenAPS plugins.
+High: Higher max basal = more headroom for temporary basal increases
+Low: Lower max basal = safety limit
+Impact: critical | Feature: shared_aaps
+
+### openapsmb_max_iob
+Type: Double, Default: 3.0
+Range: 0.0 – 70.0
+Summary: Maximum IOB for Boost dosing. Replaces standard max IOB in Boost mode.
+High: More IOB allowed — more aggressive corrections
+Low: IOB capped lower — safer, less stacking
+Impact: critical | Feature: smb_delivery
+
+### smbinterval
+Type: Int, Default: 3
+Range: 1 – 10
+Summary: Used in Boost algorithm for smbinterval.
+High: Higher value — more insulin/greater effect
+Low: Lower value — less insulin/reduced effect
+Impact: medium | Feature: smb_delivery
+
+### smbmaxminutes
+Type: Int, Default: 30
+Range: 15 – 120
+Summary: Used in Boost algorithm for smbmaxminutes.
+High: Higher value — more insulin/greater effect
+Low: Lower value — less insulin/reduced effect
+Impact: medium | Feature: smb_delivery
+
+### uamsmbmaxminutes
+Type: Int, Default: 30
+Range: 15 – 120
+Summary: Used in Boost algorithm for uamsmbmaxminutes.
+High: Higher value — more insulin/greater effect
+Low: Lower value — less insulin/reduced effect
+Impact: medium | Feature: smb_delivery
+
+### use_dynamic_sensitivity
+Type: Boolean, Default: None
+Summary: Enables dynamic sensitivity (DynISF) engine.
+High: Feature is ON — associated functionality runs
+Low: Feature is OFF — associated functionality is disabled
+Impact: medium | Feature: shared_aaps
+
+### use_smb
+Type: Boolean, Default: None
+Summary: Master gate for SMB delivery. Must be ON for Boost SMBs.
+High: Feature is ON — associated functionality runs
+Low: Feature is OFF — associated functionality is disabled
+Impact: critical | Feature: smb_delivery
+
+### use_uam
+Type: Boolean, Default: None
+Summary: Enables unannounced meal detection for automatic SMB dosing.
+High: Feature is ON — associated functionality runs
+Low: Feature is OFF — associated functionality is disabled
+Impact: critical | Feature: shared_aaps

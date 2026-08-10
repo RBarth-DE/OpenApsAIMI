@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-08-10T05:28:59.674939+00:00",
-  "source_commit": "320e7613ee4a6473563d5fe97e2ad807fcf23b6b",
+  "generated_at": "2026-08-10T06:46:13.051275+00:00",
+  "source_commit": "ac6e82a399e2063f47e9454d31af2e9ee56ec22e",
   "paths": {
     "openapsma_max_basal": {
       "path": "Auto ISF",

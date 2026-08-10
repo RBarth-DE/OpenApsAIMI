@@ -28,7 +28,7 @@ from collections import OrderedDict
 # Auto-detect repo root: when script lives at <repo>/analyzer/,
 # the repo root is the parent directory.
 _SCRIPT_DIR = Path(__file__).resolve().parent
-_AUTO_ROOT  = _SCRIPT_DIR.parent
+_AUTO_ROOT  = _SCRIPT_DIR.parent.parent
 PROJECT_ROOT = _AUTO_ROOT if (_AUTO_ROOT / "plugins" / "aps").exists() else _SCRIPT_DIR
 
 if not (PROJECT_ROOT / "plugins" / "aps").exists():
@@ -53,7 +53,7 @@ KEY_FILES = {
     "AimiStringKey": PROJECT_ROOT / "plugins/aps/src/main/kotlin/app/aaps/plugins/aps/openAPSAIMI/keys/AimiStringKey.kt",
     "ApsIntentKey": PROJECT_ROOT / "plugins/aps/src/main/kotlin/app/aaps/plugins/aps/keys/ApsIntentKey.kt",
 }
-OUTPUT_FILE = _SCRIPT_DIR / "aimi_settings_paths.json"
+OUTPUT_FILE = _SCRIPT_DIR.parent / "data" / "aimi_settings_paths.json"
 KNOWN_KEY_CLASSES = set(KEY_FILES.keys())
 
 

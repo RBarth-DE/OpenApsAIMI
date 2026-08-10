@@ -26,11 +26,11 @@ from typing import Dict, List, Optional, Set, Tuple
 # Auto-detect source root: when generate_data.py lives at <repo>/analyzer/,
 # the repo root is the parent directory.
 _SCRIPT_DIR = Path(__file__).resolve().parent
-_AUTO_ROOT  = _SCRIPT_DIR.parent
+_AUTO_ROOT  = _SCRIPT_DIR.parent.parent
 
 DEFAULT_SOURCE_ROOT = str(_AUTO_ROOT) if (_AUTO_ROOT / "plugins" / "aps").exists() else None
 
-DATA_DIR = Path(__file__).resolve().parent / "data"
+DATA_DIR = Path(__file__).resolve().parent.parent / "data"
 
 # AIMI source directory (relative to source root)
 AIMI_SRC = "plugins/aps/src/main/kotlin/app/aaps/plugins/aps/openAPSAIMI"
@@ -1559,9 +1559,9 @@ def merge_settings_paths(params: list, source_root: str) -> list:
     and feature-group-based paths.
     """
     # Look next to this script first (analyzer/), then in source root
-    paths_file = _SCRIPT_DIR / "aimi_settings_paths.json"
+    paths_file = _SCRIPT_DIR.parent / "data" / "aimi_settings_paths.json"
     if not paths_file.exists():
-        paths_file = Path(source_root) / "aimi_settings_paths.json"
+        paths_file = Path(source_root) / "data" / "aimi_settings_paths.json"
     paths_data = {}
     if paths_file.exists():
         try:

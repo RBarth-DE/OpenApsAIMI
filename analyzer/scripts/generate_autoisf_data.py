@@ -18,9 +18,9 @@ from pathlib import Path
 from typing import Dict, List, Optional
 
 _SCRIPT_DIR = Path(__file__).resolve().parent
-_AUTO_ROOT = _SCRIPT_DIR.parent
+_AUTO_ROOT = _SCRIPT_DIR.parent.parent
 DEFAULT_SOURCE_ROOT = str(_AUTO_ROOT) if (_AUTO_ROOT / "plugins" / "aps").exists() else None
-DATA_DIR = _SCRIPT_DIR / "data"
+DATA_DIR = _SCRIPT_DIR.parent / "data"
 
 AUTOISF_SRC = "plugins/aps/src/main/kotlin/app/aaps/plugins/aps/openAPSAutoISF"
 

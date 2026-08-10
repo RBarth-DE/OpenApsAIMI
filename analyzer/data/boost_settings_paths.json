@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-08-10T05:28:59.505542+00:00",
-  "source_commit": "320e7613ee4a6473563d5fe97e2ad807fcf23b6b",
+  "generated_at": "2026-08-10T06:46:12.882111+00:00",
+  "source_commit": "ac6e82a399e2063f47e9454d31af2e9ee56ec22e",
   "paths": {
     "boost_use_tdd": {
       "path": "OpenAPS BOOST V6 → OpenAPS BOOST V1 and up",

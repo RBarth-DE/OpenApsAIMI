@@ -47,16 +47,16 @@ run_gen() {
 }
 
 # AIMI
-run_gen "AIMI parameters"      generate_data.py
-run_gen "AIMI settings paths"  generate_settings_paths.py
+run_gen "AIMI parameters"      scripts/generate_data.py
+run_gen "AIMI settings paths"  scripts/generate_settings_paths.py
 
 # BOOST
-run_gen "BOOST parameters"     generate_boost_data.py
-run_gen "BOOST settings paths" generate_boost_settings_paths.py
+run_gen "BOOST parameters"     scripts/generate_boost_data.py
+run_gen "BOOST settings paths" scripts/generate_boost_settings_paths.py
 
 # AutoISF
-run_gen "AutoISF parameters"     generate_autoisf_data.py
-run_gen "AutoISF settings paths" generate_autoisf_settings_paths.py
+run_gen "AutoISF parameters"     scripts/generate_autoisf_data.py
+run_gen "AutoISF settings paths" scripts/generate_autoisf_settings_paths.py
 
 # Merge settings paths into each plugin's parameters JSON
 echo "  ├─ Merging settings paths..."
@@ -64,11 +64,9 @@ $PYTHON -c "
 import json
 from pathlib import Path
 DATA = Path('data')
-ROOT = Path('.')
 for plugin in ['aimi', 'boost', 'autoisf']:
     pf = DATA / f'{plugin}_parameters.json'
     sf = DATA / f'{plugin}_settings_paths.json'
-    if not sf.exists(): sf = ROOT / f'{plugin}_settings_paths.json'
     if not pf.exists() or not sf.exists():
         print(f'     ⚠️  {plugin}: missing files, skipping')
         continue

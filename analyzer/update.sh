@@ -17,12 +17,12 @@ echo ""
 run_gen() { local label="$1"; shift; echo "  ├─ ${label}..."; $PYTHON "$@" || echo "     ⚠️  ${label} failed"; }
 
 # All three plugins
-run_gen "AIMI"                generate_data.py
-run_gen "AIMI paths"          generate_settings_paths.py
-run_gen "BOOST"               generate_boost_data.py
-run_gen "BOOST paths"         generate_boost_settings_paths.py
-run_gen "AutoISF"             generate_autoisf_data.py
-run_gen "AutoISF paths"       generate_autoisf_settings_paths.py
+run_gen "AIMI"                scripts/generate_data.py
+run_gen "AIMI paths"          scripts/generate_settings_paths.py
+run_gen "BOOST"               scripts/generate_boost_data.py
+run_gen "BOOST paths"         scripts/generate_boost_settings_paths.py
+run_gen "AutoISF"             scripts/generate_autoisf_data.py
+run_gen "AutoISF paths"       scripts/generate_autoisf_settings_paths.py
 
 # Merge settings paths
 echo "  ├─ Merging paths..."
