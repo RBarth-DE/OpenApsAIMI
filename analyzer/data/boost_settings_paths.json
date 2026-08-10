@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-08-09T17:02:24.366215+00:00",
-  "source_commit": "4c41219ae907abcdda2cc637df3c43c6cfda4e91",
+  "generated_at": "2026-08-10T05:28:59.505542+00:00",
+  "source_commit": "320e7613ee4a6473563d5fe97e2ad807fcf23b6b",
   "paths": {
     "boost_use_tdd": {
       "path": "OpenAPS BOOST V6 → OpenAPS BOOST V1 and up",
@@ -304,6 +304,12 @@
         "OpenAPS BOOST V6"
       ]
     },
+    "boost_v5_aggressive_early_confirm": {
+      "path": "OpenAPS BOOST V6",
+      "screen_titles": [
+        "OpenAPS BOOST V6"
+      ]
+    },
     "boost_v5_composed_floor_active": {
       "path": "OpenAPS BOOST V6",
       "screen_titles": [
@@ -323,6 +329,24 @@
       ]
     },
     "boost_v5_committed_cap_u": {
+      "path": "OpenAPS BOOST V6",
+      "screen_titles": [
+        "OpenAPS BOOST V6"
+      ]
+    },
+    "boost_v5_primer_cap_u": {
+      "path": "OpenAPS BOOST V6",
+      "screen_titles": [
+        "OpenAPS BOOST V6"
+      ]
+    },
+    "boost_v5_primer_tbr_fallback": {
+      "path": "OpenAPS BOOST V6",
+      "screen_titles": [
+        "OpenAPS BOOST V6"
+      ]
+    },
+    "boost_v5_primer_bolus_mode": {
       "path": "OpenAPS BOOST V6",
       "screen_titles": [
         "OpenAPS BOOST V6"

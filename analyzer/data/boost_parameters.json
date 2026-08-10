@@ -1,14 +1,14 @@
 {
   "version": "1.0",
   "plugin": "boost",
-  "source_commit": "4c41219ae907abcdda2cc637df3c43c6cfda4e91",
-  "generated_at": "2026-08-09T17:02:24.299938+00:00",
+  "source_commit": "320e7613ee4a6473563d5fe97e2ad807fcf23b6b",
+  "generated_at": "2026-08-10T05:28:59.407990+00:00",
   "total": 106,
   "active": 91,
   "orphaned": 15,
   "with_used_in": 87,
   "with_negative_gate": 0,
-  "with_settings_path": 56,
+  "with_settings_path": 60,
   "parameters": [
     {
       "key": "DynISFAdjust",
@@ -1514,7 +1514,7 @@
       "impact": "high",
       "feature_group": "meal_model",
       "is_gate": false,
-      "settings_path": null,
+      "settings_path": "OpenAPS BOOST V6",
       "settings_gate": null
     },
     {
@@ -1674,7 +1674,7 @@
       "impact": "critical",
       "feature_group": "meal_model",
       "is_gate": true,
-      "settings_path": null,
+      "settings_path": "OpenAPS BOOST V6",
       "settings_gate": null
     },
     {
@@ -1694,7 +1694,7 @@
       "impact": "high",
       "feature_group": "meal_model",
       "is_gate": false,
-      "settings_path": null,
+      "settings_path": "OpenAPS BOOST V6",
       "settings_gate": null
     },
     {
@@ -1714,7 +1714,7 @@
       "impact": "high",
       "feature_group": "meal_model",
       "is_gate": true,
-      "settings_path": null,
+      "settings_path": "OpenAPS BOOST V6",
       "settings_gate": null
     },
     {

@@ -1,8 +1,8 @@
 {
   "version": "1.0",
   "plugin": "autoisf",
-  "source_commit": "4c41219ae907abcdda2cc637df3c43c6cfda4e91",
-  "generated_at": "2026-08-09T17:02:24.477627+00:00",
+  "source_commit": "320e7613ee4a6473563d5fe97e2ad807fcf23b6b",
+  "generated_at": "2026-08-10T05:28:59.613157+00:00",
   "total": 39,
   "active": 37,
   "orphaned": 2,
