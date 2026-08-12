@@ -51,6 +51,7 @@ import app.aaps.plugins.aps.openAPSAIMI.basal.T3cAutodriveBasalBridge
 import app.aaps.plugins.aps.openAPSAIMI.basal.T3cTrajectoryContext
 import app.aaps.plugins.aps.openAPSAIMI.autodrive.models.AutoDriveState
 import app.aaps.plugins.aps.openAPSAIMI.carbs.CarbsAdvisor
+import app.aaps.plugins.aps.openAPSAIMI.ISF.SensitivityRatioEstimator
 import app.aaps.core.interfaces.ui.UiInteraction
 import app.aaps.plugins.aps.openAPSAIMI.context.ContextSnapshot
 import app.aaps.plugins.aps.openAPSAIMI.utils.AimiStorageHelper
@@ -218,6 +219,7 @@ import app.aaps.plugins.aps.openAPSAIMI.patient.AimiCascadeArbitrationArtifacts
 import app.aaps.plugins.aps.openAPSAIMI.patient.BodyKineticsDigest
 import app.aaps.plugins.aps.openAPSAIMI.patient.MealCertainty
 import app.aaps.plugins.aps.openAPSAIMI.patient.MealCertaintyBuilder
+import app.aaps.plugins.aps.openAPSAIMI.patient.MealCertaintyLevel
 import app.aaps.plugins.aps.openAPSAIMI.patient.MealRiseGeometry
 import app.aaps.plugins.aps.openAPSAIMI.patient.HarmoniaAction
 import app.aaps.plugins.aps.openAPSAIMI.patient.InsulinIntent
@@ -329,7 +331,79 @@ internal data class AimiDecisionContext(
         /** Shadow: sensitivity an unconditional exit clamp relative to the profile would command. */
         val isf_profile_relative_shadow_mgdl: Double? = null,
         /** Shadow: true when that clamp would have changed the value. */
-        val isf_profile_relative_bound_hit: Boolean? = null
+        val isf_profile_relative_bound_hit: Boolean? = null,
+        /** Shadow: sensitivity ratio measured from outcomes, dimensionless, 1.0 = the profile is right. */
+        val sensitivity_ratio_r: Double? = null,
+        /** Shadow: sensitivity this ratio would command, i.e. profile x ratio, bounded. */
+        val isf_shadow_s_mgdl: Double? = null,
+        /** Shadow: how many closed windows have been folded in so far. */
+        val sensitivity_observations: Int? = null,
+        /**
+         * Hyper-trajectory Ra floor for this tick, in mg/dL/min, or null when no floor applied.
+         *
+         * `var`, and set late: the floor is computed inside the engaged Autodrive branch, thousands of
+         * lines after this object is built at tick bootstrap. As a `val` read at construction it
+         * exported `null` on every tick, for ever — the one instrument added to make the floor
+         * measurable could not measure it. Written through [markHtrRaFloorForExport].
+         */
+        var htr_ra_floor_mgdl_per_min: Double? = null,
+        /**
+         * Ra the controller actually used this tick, in mg/dL/min.
+         *
+         * Same reason for being a `var`: read at bootstrap it carried the **previous** tick's estimate,
+         * which makes the comparison with [htr_ra_floor_mgdl_per_min] meaningless — that comparison is
+         * the entire point of exporting the two side by side.
+         */
+        var estimated_ra_used_mgdl_per_min: Double? = null,
+        /** Diagnostic: how many times the meal filter advanced, and how many calls were replays. */
+        var ra_estimator_advances: Long? = null,
+        var ra_estimator_replayed_calls: Long? = null,
+        /**
+         * Shadow: Ra the filter would report with its insulin term aligned on the controller's.
+         *
+         * Never dosed on. Answers whether aligning `InsulinActionModel.ESTIMATOR_TAU_MIN` would pin Ra
+         * above the 0.6 / 0.7 / 0.8 gates, which is the one thing the medians could not settle.
+         */
+        var ra_aligned_tau_shadow_mgdl_per_min: Double? = null,
+        /**
+         * Writes to the SMB refused after `finalizeAndCapSMB` sealed the tick, and their total size.
+         *
+         * A non-zero count means a component tried to raise the dose past the terminal. That is the
+         * signal `AiAuditor` and the legacy meal paths never produced before the seal existed.
+         */
+        var smb_seal_refused_count: Int? = null,
+        var smb_seal_refused_total_u: Double? = null,
+        /** Post-seal raises allowed because the owner is a user-initiated action (meal advisor). */
+        var smb_seal_allowed_raise_count: Int? = null,
+        /** Coefficient the barrier used, and what it would be with the floor removed. */
+        var cbf_coefficient_used: Double? = null,
+        var cbf_coefficient_unfloored: Double? = null,
+        /** Shadow: insulin the barrier permitted, floored vs unfloored, in U per 5 min. */
+        var cbf_permitted_u: Double? = null,
+        var cbf_permitted_unfloored_u: Double? = null,
+        /** Profile ISF the barrier was handed, so the two above are interpretable. */
+        var cbf_profile_isf_mgdl: Double? = null,
+        /**
+         * Effort SMB reduction, as actually applied at the universal SMB exit.
+         *
+         * `_requested` is what the effort belief asked for, `_applied` is what was used after the
+         * confirmed-meal floor, and the two unit fields bracket the reduction. Before this existed the
+         * multiplier could only be recovered by parsing the narrative, which cost one wrong
+         * attribution (see docs/AIMI_NEXT_SESSION.md Part A-quater).
+         */
+        var effort_smb_factor_requested: Double? = null,
+        var effort_smb_factor_applied: Double? = null,
+        var effort_smb_before_u: Double? = null,
+        var effort_smb_after_u: Double? = null,
+        /** True when the confirmed-meal floor raised the multiplier this tick. */
+        var effort_smb_floored_by_meal: Boolean? = null,
+        /**
+         * Aggressive-rise floor budget state. The episode budget is out of the dose path, but its
+         * accounting still runs, and its absence from the export is why the 2026-08-10 diagnosis
+         * rested on inference.
+         */
+        var rise_floor_spent_u: Double? = null,
+        var rise_floor_minutes_since_contribution: Double? = null,
     )
     data class Adjustments(
         var dynamic_isf: DynamicIsf? = null,
@@ -570,6 +644,32 @@ internal data class AimiDecisionContext(
             base.put("physio_isf_factor", baseline_state.physio_isf_factor ?: org.json.JSONObject.NULL)
             base.put("isf_profile_relative_shadow_mgdl", baseline_state.isf_profile_relative_shadow_mgdl ?: org.json.JSONObject.NULL)
             base.put("isf_profile_relative_bound_hit", baseline_state.isf_profile_relative_bound_hit ?: org.json.JSONObject.NULL)
+            base.put("sensitivity_ratio_r", baseline_state.sensitivity_ratio_r ?: org.json.JSONObject.NULL)
+            base.put("isf_shadow_s_mgdl", baseline_state.isf_shadow_s_mgdl ?: org.json.JSONObject.NULL)
+            base.put("sensitivity_observations", baseline_state.sensitivity_observations ?: org.json.JSONObject.NULL)
+            base.put("htr_ra_floor_mgdl_per_min", baseline_state.htr_ra_floor_mgdl_per_min ?: org.json.JSONObject.NULL)
+            base.put("estimated_ra_used_mgdl_per_min", baseline_state.estimated_ra_used_mgdl_per_min ?: org.json.JSONObject.NULL)
+            base.put("ra_estimator_advances", baseline_state.ra_estimator_advances ?: org.json.JSONObject.NULL)
+            base.put("ra_estimator_replayed_calls", baseline_state.ra_estimator_replayed_calls ?: org.json.JSONObject.NULL)
+            base.put("ra_aligned_tau_shadow_mgdl_per_min", baseline_state.ra_aligned_tau_shadow_mgdl_per_min ?: org.json.JSONObject.NULL)
+            base.put("smb_seal_refused_count", baseline_state.smb_seal_refused_count ?: org.json.JSONObject.NULL)
+            base.put("smb_seal_refused_total_u", baseline_state.smb_seal_refused_total_u ?: org.json.JSONObject.NULL)
+            base.put("smb_seal_allowed_raise_count", baseline_state.smb_seal_allowed_raise_count ?: org.json.JSONObject.NULL)
+            base.put("cbf_coefficient_used", baseline_state.cbf_coefficient_used ?: org.json.JSONObject.NULL)
+            base.put("cbf_coefficient_unfloored", baseline_state.cbf_coefficient_unfloored ?: org.json.JSONObject.NULL)
+            base.put("cbf_permitted_u", baseline_state.cbf_permitted_u ?: org.json.JSONObject.NULL)
+            base.put("cbf_permitted_unfloored_u", baseline_state.cbf_permitted_unfloored_u ?: org.json.JSONObject.NULL)
+            base.put("cbf_profile_isf_mgdl", baseline_state.cbf_profile_isf_mgdl ?: org.json.JSONObject.NULL)
+            base.put("effort_smb_factor_requested", baseline_state.effort_smb_factor_requested ?: org.json.JSONObject.NULL)
+            base.put("effort_smb_factor_applied", baseline_state.effort_smb_factor_applied ?: org.json.JSONObject.NULL)
+            base.put("effort_smb_before_u", baseline_state.effort_smb_before_u ?: org.json.JSONObject.NULL)
+            base.put("effort_smb_after_u", baseline_state.effort_smb_after_u ?: org.json.JSONObject.NULL)
+            base.put("effort_smb_floored_by_meal", baseline_state.effort_smb_floored_by_meal ?: org.json.JSONObject.NULL)
+            base.put("rise_floor_spent_u", baseline_state.rise_floor_spent_u ?: org.json.JSONObject.NULL)
+            base.put(
+                "rise_floor_minutes_since_contribution",
+                baseline_state.rise_floor_minutes_since_contribution ?: org.json.JSONObject.NULL,
+            )
             json.put("baseline_state", base)
 
             val adj = org.json.JSONObject()
@@ -862,6 +962,14 @@ private const val MEAL_ADVISOR_MIN_CARB_COVERAGE = 0.25
  * **Predictions**: aberrant eventuals → [SafetyNet.sanitizeEventualMgdlForSmbZones] and
  * [InsulinStackingStance.sanitizeEventualMgdlForStackingSignals].
  */
+/**
+ * Idle time after which the aggressive-rise SMB floor may serve a fresh prebolus, in ms.
+ *
+ * 90 minutes: long enough that a second absorption wave of the same meal does not re-arm the budget,
+ * short enough that a genuinely new meal does.
+ */
+private const val RISE_FLOOR_REARM_MS = 90L * 60L * 1000L
+
 private const val TIGHT_SPIRAL_CAP_TDD_REFERENCE_U = 55.0
 
 /** Spiral energy threshold (U) at TDD = [TIGHT_SPIRAL_CAP_TDD_REFERENCE_U] (adult meal scale). */
@@ -1124,6 +1232,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
     @Inject lateinit var contextInfluenceEngine: app.aaps.plugins.aps.openAPSAIMI.context.ContextInfluenceEngine  // 🎯 Context Influence
     @Inject lateinit var physioAdapter: app.aaps.plugins.aps.openAPSAIMI.physio.AIMIInsulinDecisionAdapterMTR  // 🏥 Physiological Modulation
     @Inject lateinit var straightLineTubeAdvisor: StraightLineTubeAdvisor  // 📐 MPC-lite hypo tube + SMB-cap smoothing
+    @Inject lateinit var sensitivityRatioEstimator: SensitivityRatioEstimator
     @Inject lateinit var continuousStateEstimator: app.aaps.plugins.aps.openAPSAIMI.autodrive.estimator.ContinuousStateEstimator
     @Inject lateinit var tpoOrchestrator: TpoOrchestrator
     
@@ -1746,6 +1855,12 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         lastSmbCapped = 0.0
         lastSmbFinal = 0.0
         lastSmbBindingTraceDraft = SmbBindingTrace.Draft(timestampMs = ctx.currentTime)
+        // Effort reduction telemetry is per tick — a basal-only tick must export null, not the last
+        // SMB tick's multiplier.
+        lastEffortSmbFactorRaw = null
+        lastEffortSmbFactorApplied = null
+        lastEffortSmbBeforeU = null
+        lastEffortSmbAfterU = null
         lastNgrBasalMultiplier = 1.0
         lastHyperTrajectoryRelease = null
         lastRecursiveBeliefSnapshot = null
@@ -1833,7 +1948,15 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                 estimated_ra_mgdl_per_min = runCatching { continuousStateEstimator.getLastRa() }.getOrNull(),
                 physio_isf_factor = IsfSourceTelemetry.lastPhysioIsfFactor,
                 isf_profile_relative_shadow_mgdl = IsfSourceTelemetry.lastProfileRelativeShadowMgdl,
-                isf_profile_relative_bound_hit = IsfSourceTelemetry.lastProfileRelativeBoundHit
+                isf_profile_relative_bound_hit = IsfSourceTelemetry.lastProfileRelativeBoundHit,
+                sensitivity_ratio_r = runCatching { sensitivityRatioEstimator.ratio }.getOrNull(),
+                isf_shadow_s_mgdl = runCatching {
+                    IsfSourceTelemetry.lastProfileStaticMgdl?.let { sensitivityRatioEstimator.sensitivityMgdl(it) }
+                }.getOrNull(),
+                sensitivity_observations = runCatching { sensitivityRatioEstimator.observationCount }.getOrNull(),
+                // Laissé null ici et écrit tard par `markHtrRaFloorForExport` : la valeur n'existe
+                // pas encore au bootstrap du tick.
+                htr_ra_floor_mgdl_per_min = null
             )
         )
         val rT = RT(
@@ -2805,7 +2928,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         // Direct send for all Meal Advisor results — bypass finalizeAndCapSMB (refractory + min carb coverage inside advisor).
         if (bolusIntent > 0) {
             val safeIntent = kotlin.math.min(bolusIntent, 30.0)
-            rT.units = safeIntent
+            applySmbUnits(rT, safeIntent, "MealAdvisor")
             rT.reason.append(advisorRes.reason)
 
             val triggerType = if (isExplicitAdvisorRun) "Explicit" else "Auto"
@@ -3042,7 +3165,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                 deltaMgdlPer5 = delta.toDouble(),
                 shortAvgDeltaMgdlPer5 = shortAvgDelta.toDouble(),
                 combinedDeltaMgdlPer5 = combinedDelta.toDouble(),
-                deltaPrevMgdlPer5 = MealAbsorptionMemory.lastDeltaMgdlPer5,
+                deltaPrevMgdlPer5 = mealAbsorptionDeltaPrevOfTick(),
                 mealCobG = cob.toDouble(),
                 hourOfDay = hourOfDay,
                 iobU = iob.toDouble(),
@@ -3289,7 +3412,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             effectivePeakMinutes = tickEffectivePeakMinutes,
             insulinActionState = tickInsulinActionState,
         )
-        val physiologicalTree = PhysiologicalTreeBuilder.build(
+        var physiologicalTree = PhysiologicalTreeBuilder.build(
             enabled = true,
             patientState = patientState,
             patientModeDecision = patientModeDecision,
@@ -3340,6 +3463,26 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             )
         }
         lastMealCertainty = mealCertainty
+        // Cascade D3-bis: a confirmed meal (MealCertainty HIGH) outranks the tree's activity veto.
+        // The tree is built first because MealCertainty reads its trunk and branches, so the intent
+        // has to be re-resolved here. Hypo protection is untouched — only the activity gate moves.
+        val treeBeforeMealCertainty = physiologicalTree
+        if (treeBeforeMealCertainty != null && mealCertainty?.supportsMealOverProtective == true) {
+            val revisedTree = PhysiologicalTreeBuilder.withMealCertainty(
+                snapshot = treeBeforeMealCertainty,
+                mealOverridesProtective = true,
+                deltaMgdl5m = delta.toDouble(),
+                currentBgMgdl = bg,
+            )
+            if (revisedTree.insulinIntent != treeBeforeMealCertainty.insulinIntent) {
+                consoleLog.add(
+                    "🌳 TREE_INTENT: ${treeBeforeMealCertainty.insulinIntent} → ${revisedTree.insulinIntent} " +
+                        "(meal certainty HIGH outranks activity veto)",
+                )
+            }
+            physiologicalTree = revisedTree
+            lastPhysiologicalTreeSnapshot = revisedTree
+        }
         val harmoniaMealRiseConfirmed = mealCertainty?.supportsMealSupport == true
         val harmoniaEnvironment = physiologicalTree?.let {
             val currentBasalForSimulation = basalaimi.toDouble().takeIf { basal -> basal.isFinite() && basal > 0.0 } ?: 1.0
@@ -3995,6 +4138,18 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             trajectoryRelevanceScore = lastFusedPhysioMultipliers?.trajectoryRelevanceScore?.toDouble()
                 ?: lastBasePhysioMultipliers.trajectoryRelevanceScore.toDouble(),
             nowMs = dateUtil.now(),
+            // The catalogue reduces the user's own ceiling instead of imposing absolute units.
+            //
+            // ⚠️ The **configured** ceiling, not `this.maxSMBHB`. That field is reassigned during the
+            // tick and ramps with glucose (0.88 → 1.12 → 1.36 → 1.60 on the dinner of 2026-08-10), so
+            // multiplying a fraction by it applies the reduction twice: the cap fell to 0.66 U at
+            // BG 111 where it should have been 1.20 — 45 % tighter at the start of a meal, exactly
+            // when the prebolus matters. The catalogue reduces a *setting*, and the tick's own
+            // maxSMB/maxSMBHB selection still bounds the dose afterwards.
+            maxSmbHbU = maxOf(
+                preferences.get(DoubleKey.OApsAIMIHighBGMaxSMB),
+                preferences.get(DoubleKey.OApsAIMIMaxSMB),
+            ),
         )
         val patternSnapshot = PhysiologicalPatternDetector.detect(patternInput)
         lastPhysiologicalPatternSnapshot = patternSnapshot
@@ -4030,9 +4185,10 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             iobU = iob.toDouble(),
             maxIobU = maxIob,
             maxSmbEffectiveU = maxSMBHB.coerceAtLeast(maxSMB),
+            barrierPermittedU = autodriveEngine.lastCbfPermittedU.takeIf { it.isFinite() && it >= 0.0 },
             tdd24hU = tdd24hU,
             patientWeightKg = preferences.get(DoubleKey.OApsAIMIweight),
-            deltaPrevMgdlPer5 = MealAbsorptionMemory.lastDeltaMgdlPer5,
+            deltaPrevMgdlPer5 = mealAbsorptionDeltaPrevOfTick(),
             eventualBgMgdl = eventualBG.takeIf { it.isFinite() },
             insulinActivityNow = tickInsulinActionState?.activityNow,
             lastLoadGovernorMultiplierG = lastLoadGovernorMultiplierG,
@@ -4521,11 +4677,311 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         if (bgMgdl < 120.0) return 0.0
         val largePrebolus = preferences.get(DoubleKey.OApsAIMIautodrivePrebolus)
         val smallPrebolus = preferences.get(DoubleKey.OApsAIMIautodrivesmallPrebolus)
-        return when {
+        val tierFloor = when {
             riseSignal >= 5.0f && shortAvgDelta >= 3.0f -> largePrebolus
-            riseSignal >= 2.0f -> smallPrebolus
-            else -> 0.0
+            riseSignal >= 2.0f                          -> smallPrebolus
+            else                                        -> 0.0
         }.coerceAtLeast(0.0)
+        if (tierFloor <= 0.0) return 0.0
+        // No episode budget here — see [remainingRiseFloorBudgetU] for why it was removed after a
+        // measured hyperglycaemia.
+        return tierFloor
+    }
+
+    /**
+     * Removed from the dose path on 2026-08-10. Kept for the export and for the record.
+     *
+     * ## Why it was removed
+     *
+     * It capped the floor at one prebolus per rise. Measured on two consecutive undeclared lunches,
+     * same patient, no meal mode, COB 0:
+     *
+     * | | 2026-08-09, no budget | 2026-08-10, with budget |
+     * |---|---|---|
+     * | peak BG | 225 | **268.7** |
+     * | SMB at peak | 14.06 U | **6.53 U** |
+     *
+     * The design error: the floor was not only a prebolus, it was **carrying the whole meal**. The
+     * governed path was not. `harmonia_smb_authority.insulin_intent` was `PROTECTIVE` on every tick of
+     * the rise — at BG 269 with Ra 5.33 — and that branch of `HarmoniaSmbArbiter` can only accept or
+     * reduce, so `LIFT_WITHIN_ENVELOPE` was unreachable. Removing the bypass without first checking
+     * that the legitimate path could carry the load produced the hyperglycaemia.
+     *
+     * The real brake is elsewhere and is already in place: the `iobSafe < budget` guard on
+     * `ESCAPE_RISE` takes the load governor out of `FULL` at the physiological budget, which would
+     * have stopped 2026-08-09 at IOB 9.04 instead of 16.75. It bounds the accumulation without
+     * starving the start of a meal, which a per-rise budget cannot do.
+     *
+     * Do not reinstate it until Harmonia's intent switches to `MEAL_SUPPORT` on a confirmed meal —
+     * that is, until the governed path can carry a meal on its own.
+     *
+     * ## What it computed
+     *
+     * The floor is a **prebolus**: it exists to put insulin in before a rise is visible in the model.
+     * A prebolus is served once. This one had no memory, so it re-armed on every tick and, at a
+     * 1.6 U ceiling on 5-minute ticks, behaved as a **19 U/h floor** for as long as the rise held.
+     *
+     * Measured on 2026-08-09: it delivered 1.088 U per tick for six consecutive ticks starting at
+     * 14:41, while the MPC was asking for exactly 0.000 and the safety barrier was permitting exactly
+     * 0.000. Peak IOB 16.75 U against a physiological budget of 8.11. The patient needed rescue carbs.
+     *
+     * One large prebolus per rise is the whole intent. The budget re-arms only on a fresh onset —
+     * defined as the floor having been idle for [RISE_FLOOR_REARM_MS], which is long enough that a
+     * second wave of the same meal does not qualify.
+     */
+    private fun remainingRiseFloorBudgetU(largePrebolusU: Double): Double {
+        val now = dateUtil.now()
+        val budget = largePrebolusU.coerceAtLeast(0.0)
+        if (budget <= 0.0) return 0.0
+        if (now - lastRiseFloorContributionMs > RISE_FLOOR_REARM_MS) {
+            riseFloorSpentU = 0.0
+        }
+        return (budget - riseFloorSpentU).coerceAtLeast(0.0)
+    }
+
+    /**
+     * Records what the floor actually contributed, so the budget above can be spent down.
+     *
+     * Called with the amount by which the floor raised the dose above the model — not with the whole
+     * dose. Insulin the model asked for is not the floor's doing and must not consume its budget.
+     */
+    private fun noteRiseFloorContribution(contributedU: Double) {
+        if (contributedU <= 0.0) return
+        riseFloorSpentU += contributedU
+        lastRiseFloorContributionMs = dateUtil.now()
+    }
+
+    /**
+     * Minimal state for **observation only** — the fields [ContinuousStateEstimator] actually reads.
+     *
+     * ## Why this exists
+     *
+     * `updateAndPredict` is the only update path of the meal model, and its single call site sits
+     * inside `AutodriveEngine.tick()`, itself behind `if (gate.engage)`. Measured on 2026-08-08 over
+     * 282 ticks: `Ra` changed on 81 transitions (81 % of them with Autodrive owning the dose) and was
+     * frozen on 200 (7 %), the longest freezes running 37, 32, 23 and 21 consecutive ticks — up to
+     * three hours. An estimator that only advances when a controller engages is not an estimator, and
+     * the decay added to it could not work because the function was never called.
+     *
+     * ## Why a separate builder rather than hoisting `adState`
+     *
+     * The engaged path rebuilds physiology (`refreshPhysiologicalPhase`, `refreshMealAbsorptionPhase`,
+     * `updatePhysioLatentState`) inside the gate, but those already ran unconditionally earlier in the
+     * tick. Hoisting them would fire their persisted side effects — TPO episode ledger, circadian dawn
+     * learning, meal-absorption wave counting — on every tick instead of engaged ones. This builder
+     * reads the values they already published instead.
+     *
+     * ## Contract
+     *
+     * Returns `null` when the tick cannot be observed. It deliberately does **not** lean on
+     * `AutoDriveState.createSafe`'s catch-all, which turns any failure into `bg = 100, velocity = 0,
+     * iob = 0` — a fabricated "quiet" observation is exactly the input that would drive `Ra` to zero
+     * for no reason.
+     *
+     * Nothing here mutates learner state: `learnAndUpdate` and `applyAttention` change values that
+     * engaged ticks depend on. See `docs/adr/0008-isf-decision-architecture.md`.
+     */
+    private fun buildRaObservationState(
+        ctx: AimiTickContext,
+        combinedDelta: Float,
+        shortAvgDeltaAdj: Float,
+        pkpdRuntime: PkPdRuntime?,
+        hasRecentMealEstimate: Boolean,
+    ): app.aaps.plugins.aps.openAPSAIMI.autodrive.models.AutoDriveState? {
+        val bgNow = ctx.glucoseStatus.glucose
+        if (!bgNow.isFinite() || bgNow <= 0.0) return null
+        val velocity = shortAvgDeltaAdj.toDouble() / 5.0
+        if (!velocity.isFinite()) return null
+
+        val canonicalSI = if (pkpdRuntime != null) pkpdRuntime.fusedIsf / 10000.0
+        else variableSensitivity.toDouble() / 10000.0
+        if (!canonicalSI.isFinite() || canonicalSI <= 0.0) return null
+
+        val mealSignals = mealTime || bfastTime || lunchTime || dinnerTime || highCarbTime || snackTime ||
+            ctx.mealData.mealCOB >= 0.1 || hasRecentMealEstimate
+
+        return runCatching {
+            app.aaps.plugins.aps.openAPSAIMI.autodrive.models.AutoDriveState.createSafe(
+                bg = bgNow,
+                bgVelocity = velocity,
+                iob = ctx.iobDataArray.firstOrNull()?.iob ?: 0.0,
+                cob = ctx.mealData.mealCOB,
+                // No online-learner factor: the engaged path stopped applying it too, so the estimator
+                // sees the same sensitivity on every tick. See the note in AutodriveEngine.tick.
+                estimatedSI = canonicalSI,
+                patientWeightKg = preferences.get(DoubleKey.OApsAIMIweight),
+                physiologicalStressMask = lastPhysioLatentState?.toAttentionMask() ?: DoubleArray(0),
+                hour = hourOfDay,
+                steps = physioAdapter.getLatestSnapshot().stepsLast15m,
+                sourceSensor = ctx.glucoseStatus.sourceSensor,
+                combinedDelta = combinedDelta.toDouble(),
+                uamConfidence = AimiUamHandler.confidenceOrZero(),
+                applyHypoRecoveryRaDampening = postHypoRecoveryActive() && !mealSignals,
+                physioExtendedDawnGuard = lastPhysiologicalPhaseOutput?.policy?.extendedDawnGuard == true,
+            )
+        }.getOrNull()
+    }
+
+    /**
+     * Records one training row for a tick where Autodrive did **not** engage.
+     *
+     * The attention classifier answers a physiological question — given this state, what is the risk
+     * of hypoglycaemia within the hour — and that does not depend on whether a controller engaged.
+     * Recording only engaged ticks biased the set twice over: `AutoDriveGater` selects high or rising
+     * glucose, where hypoglycaemia is rarer than in reality, on top of a positive rate already around
+     * 3 %. Worse, the subset is defined by a gate that keeps being retuned, so the training
+     * distribution moved every time the policy did.
+     *
+     * The row carries `engaged = 0` and neutral decision columns, so the model can condition on
+     * engagement explicitly instead of the dataset being filtered by it in silence.
+     */
+    /**
+     * Identity of the observation the meal model is allowed to consume once.
+     *
+     * The CGM sample time, not `ctx.currentTime`. `determine_basal` can be invoked more than once for
+     * the same sample — measured on the production corpus: 2610 consecutive dataset rows carry an
+     * identical `BG_Current` **and** `BG_Velocity` less than 60 s apart, and `Estimated_Ra` moved
+     * between them on 1974 of those (76 %), by more than 0.2 mg/dL/min on 405, up to 2.83. Keying on
+     * the invocation would let every one of those advance the filter again on evidence it has already
+     * used.
+     *
+     * Falls back to the invocation time when the sample carries no date, so the guard degrades to
+     * "once per invocation" rather than to "never".
+     */
+    /**
+     * Writes the hyper-trajectory Ra floor, and the Ra the controller used, into this tick's export.
+     *
+     * Called from inside the engaged branch, because that is where the two values first exist. The
+     * export object is built at tick bootstrap, so reading them there — as the fields used to do —
+     * gave `null` for the floor and the previous tick's estimate for Ra.
+     */
+    /** Poses estimator counters and the aligned-tau shadow on [decisionCtx] before it is serialised. */
+    /**
+     * Owners allowed to raise the dose after the terminal has sealed it.
+     *
+     * The meal advisor is a user-initiated action, not a loop decision, and it deliberately bypasses
+     * `finalizeAndCapSMB` — the comment at its call site says so. It stays allowed, but it is now
+     * counted and logged instead of being indistinguishable from a defect.
+     */
+    private val smbPostSealRaiseAllowedOwners = setOf("MealAdvisor")
+
+    /**
+     * The one way to write the tick's SMB.
+     *
+     * ## Why this exists
+     *
+     * `finalizeAndCapSMB` is meant to be the terminal: every cap, guard and budget converges there.
+     * It was not the last word. Five places wrote `rT.units`, and three of them ran after it — the AI
+     * auditor, and two legacy meal-mode paths. The auditor's own prompt says its role is
+     * *"CONFIRM or SOFTEN only — never invent a lift"*; nothing in the code enforced that, so it could
+     * write any value straight over the terminal's result.
+     *
+     * That is the same shape as the two other defects found on 2026-08-09: a constraint stated in
+     * documentation and absent from the code. Here it becomes structural — after the seal, a write may
+     * only ever **lower** the dose, unless its owner is on [smbPostSealRaiseAllowedOwners].
+     *
+     * Refusals are counted and exported rather than silently swallowed, because a refused raise means
+     * a component disagreed with the terminal and that is worth seeing.
+     *
+     * Note what this does **not** cover: the aggressive-rise floor feeds `finalizeAndCapSMB` as an
+     * input, so it is upstream of the seal. Its problem is that it bypasses `ControlBarrierShield`,
+     * which is a different boundary.
+     */
+    private fun applySmbUnits(rT: RT, requestedU: Double, owner: String) {
+        val requested = if (requestedU.isFinite()) requestedU.coerceAtLeast(0.0) else 0.0
+        val current = rT.units ?: 0.0
+        if (!smbTerminalSealed || requested <= current + 1e-9) {
+            rT.units = requested
+            return
+        }
+        if (owner in smbPostSealRaiseAllowedOwners) {
+            smbSealAllowedRaiseCount++
+            consoleLog.add("🔓 SMB_SEAL_EXCEPTION[$owner]: ${"%.2f".format(current)} -> ${"%.2f".format(requested)} U")
+            rT.units = requested
+            return
+        }
+        smbSealRefusedCount++
+        smbSealRefusedTotalU += requested - current
+        consoleError.add(
+            "🔒 SMB_SEAL_REFUSED[$owner]: tentative ${"%.2f".format(current)} -> ${"%.2f".format(requested)} U " +
+                "apres le terminal ; la dose reste a ${"%.2f".format(current)} U"
+        )
+    }
+
+    /** Closes the terminal for this tick. Called once, at the end of `finalizeAndCapSMB`. */
+    private fun sealSmbTerminal() {
+        smbTerminalSealed = true
+    }
+
+    private fun markEstimatorDiagnosticsForExport(decisionCtx: AimiDecisionContext) {
+        runCatching {
+            decisionCtx.baseline_state.let { b ->
+                b.ra_estimator_advances = continuousStateEstimator.runCount
+                b.ra_estimator_replayed_calls = continuousStateEstimator.replayedCallCount
+                b.ra_aligned_tau_shadow_mgdl_per_min = continuousStateEstimator.lastRaAlignedTauShadow
+                b.smb_seal_refused_count = smbSealRefusedCount
+                b.smb_seal_refused_total_u = smbSealRefusedTotalU.takeIf { it > 0.0 }
+                b.smb_seal_allowed_raise_count = smbSealAllowedRaiseCount
+                // Written here, immediately before serialisation, because this is the one point every
+                // export path goes through — the mistake that made `ra_estimator_advances` reach
+                // 7 ticks out of 93 (Part A-bis correction 1).
+                b.effort_smb_factor_requested = lastEffortSmbFactorRaw
+                b.effort_smb_factor_applied = lastEffortSmbFactorApplied
+                b.effort_smb_before_u = lastEffortSmbBeforeU
+                b.effort_smb_after_u = lastEffortSmbAfterU
+                b.effort_smb_floored_by_meal = lastEffortSmbFactorRaw?.let { raw ->
+                    lastEffortSmbFactorApplied?.let { applied -> applied > raw + 1e-9 }
+                }
+                b.rise_floor_spent_u = riseFloorSpentU
+                b.rise_floor_minutes_since_contribution =
+                    lastRiseFloorContributionMs
+                        .takeIf { it > 0L }
+                        ?.let { (dateUtil.now() - it) / 60000.0 }
+            }
+        }
+    }
+
+    private fun markHtrRaFloorForExport(floorMgdlPerMin: Double?, raUsedMgdlPerMin: Double) {
+        val baseline = pendingDecisionCtxForExport?.baseline_state ?: return
+        baseline.htr_ra_floor_mgdl_per_min = floorMgdlPerMin
+        baseline.estimated_ra_used_mgdl_per_min = raUsedMgdlPerMin.takeIf { it.isFinite() }
+        baseline.cbf_coefficient_used = autodriveEngine.lastControlCoefficientUsed.takeIf { it > 0.0 }
+        baseline.cbf_coefficient_unfloored = autodriveEngine.lastControlCoefficientUnfloored.takeIf { it > 0.0 }
+        baseline.cbf_permitted_u = autodriveEngine.lastCbfPermittedU.takeIf { it.isFinite() }
+        baseline.cbf_permitted_unfloored_u = autodriveEngine.lastCbfPermittedUnflooredU.takeIf { it.isFinite() }
+        baseline.cbf_profile_isf_mgdl = autodriveEngine.lastProfileIsfSeen.takeIf { it > 0.0 }
+    }
+
+    private fun raObservationId(ctx: AimiTickContext): Long =
+        ctx.glucoseStatus.date.takeIf { it > 0L } ?: ctx.currentTime
+
+    private fun stageDisengagedTrainingRow(
+        ctx: AimiTickContext,
+        state: app.aaps.plugins.aps.openAPSAIMI.autodrive.models.AutoDriveState,
+    ) {
+        runCatching {
+            autodriveEngine.stageDisengagedSnapshot(state, tickId = ctx.currentTime, currentEpochMs = dateUtil.now())
+        }
+    }
+
+    /** Runs the meal-model estimator for this tick when no other path has. Observation only. */
+    private fun observeRaIfNotAlreadyRun(
+        ctx: AimiTickContext,
+        combinedDelta: Float,
+        shortAvgDeltaAdj: Float,
+        pkpdRuntime: PkPdRuntime?,
+        hasRecentMealEstimate: Boolean,
+        reason: String,
+    ) {
+        val before = continuousStateEstimator.runCount
+        if (before != raEstimatorRunCountAtTickStart) return // something already observed this tick
+        val state = buildRaObservationState(ctx, combinedDelta, shortAvgDeltaAdj, pkpdRuntime, hasRecentMealEstimate)
+            ?: return
+        val observed = runCatching {
+            continuousStateEstimator.updateAndPredict(state, tickId = raObservationId(ctx))
+        }.getOrNull() ?: state
+        consoleLog.add("🍽️ RA_OBSERVE[$reason]: Ra=${"%.2f".format(continuousStateEstimator.getLastRa())}")
+        stageDisengagedTrainingRow(ctx, observed)
     }
 
     private fun runAutodriveV3MultiVariableBranch(
@@ -4539,11 +4995,17 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         pkpdRuntime: PkPdRuntime?,
     ): AutodriveV3BranchResult {
         if (!preferences.get(BooleanKey.OApsAIMIautoDriveActive)) {
+            // Autodrive off: without this the meal model would stay frozen for the life of the
+            // install, while getLastRa() still feeds the absorption phase, the correction-aggression
+            // gate, the undeclared-COB estimate and the exports.
+            observeRaIfNotAlreadyRun(ctx, combinedDelta, shortAvgDeltaAdj, pkpdRuntime, false, "autodrive_off")
             return AutodriveV3BranchResult(
                 appliedAction = false,
                 skipLegacySmbBlender = false,
             )
         }
+        raNetCombinedDelta = combinedDelta
+        raNetShortAvgDeltaAdj = shortAvgDeltaAdj
         var v3AppliedAction = false
         var skipLegacySmbBlender = false
         val recentEstimateCarbs = preferences.get(DoubleKey.OApsAIMILastEstimatedCarbs)
@@ -4566,6 +5028,15 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             estimatedRa = continuousStateEstimator.getLastRa(),
             mealChannelHint = lastRbtAppliedHints?.mealChannel,
         )
+
+        if (!gate.engage) {
+            // Estimation is unconditional; actuation is gated. Nothing inside the engaged branch
+            // below is touched, so engaged ticks stay bit-identical by construction rather than by
+            // argument. See `docs/adr/0008-isf-decision-architecture.md`.
+            observeRaIfNotAlreadyRun(
+                ctx, combinedDelta, shortAvgDeltaAdj, pkpdRuntime, hasRecentMealEstimate, "gate_disengaged",
+            )
+        }
 
         if (gate.engage) {
             lastAutodriveState = AutodriveState.ENGAGED
@@ -4624,10 +5095,23 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                 isNight = isNightAutodrive,
                 exerciseLockout = exerciseInsulinLockoutActive,
             )
+            // The floor now reaches the MPC, through `tick(mpcRaFloorMgdlPerMin = …)` below.
+            //
+            // It used to be passed as `AutoDriveState.estimatedRa` and silently dropped:
+            // `AutodriveEngine.kt:165` overwrote the field with `stateEstimator.getLastRa()` before the
+            // estimator ran, so the only consumer it ever reached was the recursive belief tree, as
+            // `mpcFeedForwardRa`. Passing it explicitly keeps that route and adds the one its producer
+            // is named after.
+            //
+            // The barrier shield deliberately keeps the estimator's honest Ra — see the parameter doc
+            // on `AutodriveEngine.tick`. `htr_ra_floor_mgdl_per_min` is exported next to
+            // `estimated_ra_mgdl_per_min` so the gap between the two is visible per tick.
             val estimatedRaForMpc = HyperTrajectoryMpcFeedForward.blendEstimatedRa(
                 baseRa = continuousStateEstimator.getLastRa(),
                 hints = mpcHints,
             )
+            lastHtrRaFloorMgdlPerMin = mpcHints.estimatedRaFloorMgdlPerMin.takeIf { it > 0.0 }
+            markHtrRaFloorForExport(lastHtrRaFloorMgdlPerMin, estimatedRaForMpc)
 
             val adState = app.aaps.plugins.aps.openAPSAIMI.autodrive.models.AutoDriveState.createSafe(
                 bg = ctx.glucoseStatus.glucose,
@@ -4687,7 +5171,11 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                 hour = hourOfDay,
                 steps = snapshot.stepsLast15m,
                 hr = snapshot.hrNow,
-                rhr = snapshot.rhrResting
+                rhr = snapshot.rhrResting,
+                mpcRaFloorMgdlPerMin = mpcHints.estimatedRaFloorMgdlPerMin,
+                tickId = ctx.currentTime,
+                observationId = raObservationId(ctx),
+                engaged = true,
             )
 
             val v3CommandSafe = adCommand != null && adCommand.isSafe
@@ -4738,6 +5226,8 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                 0.0
             }
             val v3SmbRaw = maxOf(v3SmbModel, v3SmbFloor)
+            // Only what the floor added on top of the model spends its budget.
+            noteRiseFloorContribution(v3SmbRaw - v3SmbModel)
             val smallPrebolusPref = preferences.get(DoubleKey.OApsAIMIautodrivesmallPrebolus)
             val largePrebolusPref = preferences.get(DoubleKey.OApsAIMIautodrivePrebolus)
             val v3FloorTier = when {
@@ -8274,7 +8764,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                             if (verdict != null) {
                                 consoleLog.add(sanitizeForJson("   Verdict: ${verdict.verdict}, Conf: ${"%.2f".format(verdict.confidence)}"))
                             }
-                            finalResult.units = result.bolusU ?: 0.0
+                            applySmbUnits(finalResult, result.bolusU ?: 0.0, "AiAuditor")
                             if (result.tbrUph != null) {
                                 finalResult.rate = result.tbrUph
                             }
@@ -8369,6 +8859,37 @@ class DetermineBasalaimiSMB2 @Inject constructor(
     ) {
         val snapshotFusedIsf = pkpdRuntime?.fusedIsf ?: profile.sens
         val snapshotProfileIsf = profile.sens
+
+        // Shadow only — nothing reads the result. Feeds the outcome-based sensitivity estimator once
+        // per tick, unconditionally: an estimator that only runs when a controller engages is not an
+        // estimator. See `docs/adr/0008-isf-decision-architecture.md`.
+        val staticIsfForRatio = IsfSourceTelemetry.lastProfileStaticMgdl ?: 0.0
+        runCatching {
+            // Basal that was actually **running** over the interval just elapsed. `finalResult.rate`
+            // is the rate this tick is about to request, which the pump has not delivered yet — using
+            // it made the basal-deficit correction read the future instead of the past. A temp basal
+            // with no remaining duration means the profile rate is what ran.
+            val runningTemp = ctx.currentTemp
+            val deliveredBasalUph =
+                if (runningTemp.duration > 0) runningTemp.rate else profile.current_basal
+            sensitivityRatioEstimator.observe(
+                SensitivityRatioEstimator.Sample(
+                    timestampMs = decisionCtx.timestamp,
+                    bgMgdl = decisionCtx.baseline_state.current_bg_mgdl,
+                    iobU = decisionCtx.baseline_state.iob_u,
+                    profileBasalUph = profile.current_basal,
+                    deliveredBasalUph = deliveredBasalUph,
+                    smbU = finalResult.units ?: 0.0,
+                    profileIsfMgdl = staticIsfForRatio,
+                    // Any digestion disqualifies the window: absorption hides part of the fall, so
+                    // the ratio reads low, so the sensitivity commanded from it reads low, so the
+                    // loop would give more insulin. See SensitivityRatioEstimator.
+                    cobG = decisionCtx.baseline_state.cob_g,
+                    // Boluses of any origin, not only AIMI's own SMBs.
+                    lastBolusMs = ctx.iobDataArray.firstOrNull()?.lastBolusTime ?: 0L,
+                ),
+            )
+        }
 
         decisionCtx.adjustments.dynamic_isf = AimiDecisionContext.DynamicIsf(
             final_value_mgdl = snapshotFusedIsf,
@@ -8545,6 +9066,15 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             smbAfterCapU = lastPostHypoSmbAfterCapU,
         )
 
+        // Les compteurs et l'ombre Ra doivent être posés ICI, pas en fin de tick.
+        //
+        // Mesuré sur le paquet du 09/08 : écrits après `runDetermineBasalTick`, ils n'atteignaient
+        // que 7 lignes sur 93 — celles qui tombent dans le filet de rattrapage. Toutes les autres
+        // étaient déjà sérialisées. Et les 7 survivantes étaient toutes des `Basal_Modulation`, donc
+        // l'échantillon était en plus biaisé vers les ticks calmes.
+        //
+        // Ce point-ci est le seul par lequel tous les chemins d'export passent.
+        markEstimatorDiagnosticsForExport(decisionCtx)
         val medicalJson = decisionCtx.toMedicalJson()
         // NB: do NOT push medicalJson into consoleLog — consoleLog is serialized into the NS deviceStatus
         // (suggested + enacted, twice per document); this multi-hundred-KB blob makes the deviceStatus
@@ -10129,11 +10659,73 @@ class DetermineBasalaimiSMB2 @Inject constructor(
     private var lastPostHypoDeliveryAuthority: PostHypoDeliveryAuthority.Decision =
         PostHypoDeliveryAuthority.INACTIVE
 
+    /** [ContinuousStateEstimator.runCount] at tick entry, to enforce "observe exactly once per tick". */
+    private var raEstimatorRunCountAtTickStart: Long = -1L
+
+    /**
+     * `MealAbsorptionMemory.lastDeltaMgdlPer5` as it stood at tick entry, i.e. the **previous tick's**
+     * delta.
+     *
+     * `refreshMealAbsorptionPhase` reads that memory as `deltaPrevMgdlPer5` and then overwrites it
+     * with the current delta. On an engaged tick the function runs twice — once unconditionally in
+     * the prediction stage, once again inside the Autodrive gate — so the second, authoritative run
+     * was reading `deltaPrev == deltaNow`, making the acceleration term zero by construction exactly
+     * on the ticks that drive dosing.
+     *
+     * Latching the value here makes "previous" mean previous for every read of the tick, whichever
+     * runs first, without having to decide which invocation is authoritative.
+     */
+    private var mealAbsorptionDeltaPrevForTick: Double? = null
+
+    /** Whether [mealAbsorptionDeltaPrevForTick] has been latched this tick — `null` is a valid value. */
+    private var mealAbsorptionDeltaPrevLatched: Boolean = false
+
+    /** HTR Ra floor computed this tick, or `null` when none. Reaches the belief tree, not the MPC. */
+    private var lastHtrRaFloorMgdlPerMin: Double? = null
+
+    /** True once `finalizeAndCapSMB` has written the tick's dose. See [applySmbUnits]. */
+    private var smbTerminalSealed: Boolean = false
+
+    /** Post-seal raises that were refused this tick, and by how much in total. Exported. */
+    private var smbSealRefusedCount: Int = 0
+    private var smbSealRefusedTotalU: Double = 0.0
+
+    /** Post-seal raises that were allowed because their owner is on the exception list. Exported. */
+    private var smbSealAllowedRaiseCount: Int = 0
+
+    /** Units the aggressive-rise floor has contributed to the current rise. See `remainingRiseFloorBudgetU`. */
+    private var riseFloorSpentU: Double = 0.0
+
+    /** When the floor last contributed, so a fresh rise can re-arm the budget. */
+    private var lastRiseFloorContributionMs: Long = 0L
+
+    /**
+     * Deltas the end-of-tick safety net feeds the estimator with.
+     *
+     * Seeded from the tick's own fields and overwritten with the exact values once the Autodrive
+     * branch runs. On paths that return before that branch, `combinedDelta` was never computed, so
+     * the seed is the honest best available — it only drives the process-noise term, not the model.
+     */
+    private var raNetCombinedDelta: Float = 0.0f
+    private var raNetShortAvgDeltaAdj: Float = 0.0f
+
     /** SMB proposed before the post-hypo cap, for `adjustments.post_hypo_delivery`. Per tick. */
     private var lastPostHypoSmbBeforeCapU: Double? = null
 
     /** SMB left after the post-hypo cap, for `adjustments.post_hypo_delivery`. Per tick. */
     private var lastPostHypoSmbAfterCapU: Double? = null
+
+    /** Effort SMB multiplier the belief asked for, before the confirmed-meal floor. Per tick. */
+    private var lastEffortSmbFactorRaw: Double? = null
+
+    /** Effort SMB multiplier actually applied, after the confirmed-meal floor. Per tick. */
+    private var lastEffortSmbFactorApplied: Double? = null
+
+    /** SMB entering the effort reduction, in units. Per tick. */
+    private var lastEffortSmbBeforeU: Double? = null
+
+    /** SMB leaving the effort reduction, in units. Per tick. */
+    private var lastEffortSmbAfterU: Double? = null
     private var mealAdvisorOneShotThisTick: Boolean = false
     private var lastTubeAdvisorSmbCapScale: Double? = null
     private var lastInflammationResult: app.aaps.plugins.aps.openAPSAIMI.inflammatory.InflammationAdjuster.InflammationResult? = null
@@ -12710,14 +13302,31 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         // 🏃 Effort/activity protection — final, unbypassable SMB reduction (see [refreshEffortActivityBelief]).
         // Applied at the universal SMB exit so no upstream maxSMB reset can silently discard it; skips
         // explicit user actions; reduction-only.
-        val effortFactor = lastEffortAssessment?.smbFactor ?: 1.0
+        //
+        // On a *certain* meal the reduction is floored — see
+        // [MealCertaintyBuilder.effortSmbFactorFor]. The gate is `MealCertaintyLevel.HIGH`, which
+        // already requires DIGESTION_ACTIVE, an OK rise, BG above the meal band and terminals with no
+        // hypo conflict, so this cannot relax effort protection outside a confirmed meal. It never
+        // raises the dose above the pre-effort value that the HARD caps, the barrier-bounded
+        // arbitration and the seal already allowed — the floor is at most 1.0.
+        val rawEffortFactor = lastEffortAssessment?.smbFactor ?: 1.0
+        val confirmedMeal = lastMealCertainty?.level == MealCertaintyLevel.HIGH
+        val effortFactor = MealCertaintyBuilder.effortSmbFactorFor(lastMealCertainty, rawEffortFactor)
+        lastEffortSmbFactorRaw = rawEffortFactor
+        lastEffortSmbFactorApplied = effortFactor
+        lastEffortSmbBeforeU = finalUnits
+        lastEffortSmbAfterU = finalUnits
         if (effortFactor < 1.0 && !isExplicitUserAction && finalUnits > 0.0) {
             val beforeEffort = finalUnits
             finalUnits = (finalUnits * effortFactor).coerceAtLeast(0.0)
+            lastEffortSmbBeforeU = beforeEffort
+            lastEffortSmbAfterU = finalUnits
+            val floored = confirmedMeal && effortFactor > rawEffortFactor + 1e-9
             consoleLog.add(
                 "🏃 EFFORT_PROTECT_SMB ×${"%.2f".format(Locale.US, effortFactor)} " +
                     "${"%.2f".format(Locale.US, beforeEffort)}→${"%.2f".format(Locale.US, finalUnits)}U " +
-                    "[${lastEffortAssessment?.state?.name}/${lastEffortAssessment?.posture?.name}]",
+                    "[${lastEffortAssessment?.state?.name}/${lastEffortAssessment?.posture?.name}]" +
+                    if (floored) " (floored from ×${"%.2f".format(Locale.US, rawEffortFactor)}, meal certainty HIGH)" else "",
             )
             rT.reason.append("🏃effort×${"%.2f".format(Locale.US, effortFactor)} ")
         }
@@ -12740,6 +13349,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         }
 
         rT.units = finalUnits.coerceAtLeast(0.0)
+        sealSmbTerminal()
         recordSmbActionType(if (finalUnits > 0.0) "smb" else "none")
         rT.reason.append(reasonHeader)
 
@@ -15173,7 +15783,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                 rT.units = 0.0
                 return
             }
-            rT.units = units
+            applySmbUnits(rT, units, "LegacyMealModes")
             rT.deliverAt = dateUtil.now()
             legacyPrebolusFiredAtMem[logTag] = dateUtil.now() // 🔒 arms the lock on actual fire
             onAllowed(units)
@@ -15232,7 +15842,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                 val timeSinceLastCarryRetry = dateUtil.now() - lastCarryRetryFireMillis
                 val carryOnCooldown = lastCarryRetryFireMillis > 0L && timeSinceLastCarryRetry < CARRY_RETRY_COOLDOWN_MS
                 if (!carryOnCooldown) {
-                    rT.units = pendingLegacyPrebolusUnit.toDouble()
+                    applySmbUnits(rT, pendingLegacyPrebolusUnit.toDouble(), "LegacyPrebolus")
                     rT.deliverAt = dateUtil.now()
                     lastCarryRetryFireMillis = dateUtil.now()
                     consoleLog.add("🍱 LEGACY_PB1_PRIORITY_CARRY: re-proposing ${pendingLegacyPrebolusUnit}U (not yet confirmed in DB)")
@@ -15903,8 +16513,54 @@ class DetermineBasalaimiSMB2 @Inject constructor(
      * [aimiDecisionExportedThisTick], et cette enveloppe ne fait que rattraper les sorties qui n'ont rien
      * écrit. Un échec d'export ne doit jamais compromettre la décision, d'où le `runCatching`.
      */
+    /**
+     * Previous-tick meal delta, latched on first read so any later read within the same tick sees the
+     * same value. `null` is a legitimate latched value, hence the explicit flag rather than `?:`.
+     */
+    private fun mealAbsorptionDeltaPrevOfTick(): Double? {
+        if (!mealAbsorptionDeltaPrevLatched) {
+            mealAbsorptionDeltaPrevForTick = MealAbsorptionMemory.lastDeltaMgdlPer5
+            mealAbsorptionDeltaPrevLatched = true
+        }
+        return mealAbsorptionDeltaPrevForTick
+    }
+
     internal fun runDetermineBasalTick(ctx: AimiTickContext): RT {
-        val result = runDetermineBasalTickInner(ctx)
+        raEstimatorRunCountAtTickStart = continuousStateEstimator.runCount
+        mealAbsorptionDeltaPrevForTick = null
+        mealAbsorptionDeltaPrevLatched = false
+        lastHtrRaFloorMgdlPerMin = null
+        smbTerminalSealed = false
+        smbSealRefusedCount = 0
+        smbSealRefusedTotalU = 0.0
+        smbSealAllowedRaiseCount = 0
+        raNetCombinedDelta = shortAvgDelta
+        raNetShortAvgDeltaAdj = shortAvgDelta
+        val result = try {
+            val inner = runDetermineBasalTickInner(ctx)
+            observeRaIfNotAlreadyRun(
+                ctx = ctx,
+                combinedDelta = raNetCombinedDelta,
+                shortAvgDeltaAdj = raNetShortAvgDeltaAdj,
+                pkpdRuntime = cachedPkpdRuntime,
+                hasRecentMealEstimate = false,
+                reason = "tick_net",
+            )
+            inner
+        } finally {
+            // One training row per tick, written after the dose is decided rather than in the middle
+            // of it.
+            //
+            // In `finally`, not as a plain statement: `AimiLoopTickRecovery` exists because the inner
+            // tick does throw, and a staged row lost on those ticks would bias the training set away
+            // from exactly the anomalous ones. Under the previous immediate write, that row was
+            // already on disk.
+            //
+            // Unconditional, too: the engaged branch stages its row inside `AutodriveEngine.tick`, and
+            // `observeRaIfNotAlreadyRun` returns early on exactly those ticks — flushing from inside
+            // it would drop every engaged row.
+            runCatching { autodriveEngine.flushTickRow(ctx.currentTime) }
+        }
         exportAimiDecisionIfNotYetExported(ctx, result)
         return result
     }
@@ -17389,6 +18045,13 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                 steps = snapshot.stepsLast15m,
                 hr = snapshot.hrNow,
                 rhr = snapshot.rhrResting,
+                // No `mpcRaFloorMgdlPerMin`: the floor is a hyper-trajectory feed-forward produced
+                // by the engaged branch, and this path has no classification to derive it from. The
+                // 0.0 default is the intended value here, not an oversight.
+                tickId = ctx.currentTime,
+                observationId = raObservationId(ctx),
+                // Shadow tick: it enacts nothing, so it must not be labelled as owning the dose.
+                engaged = false,
             )
             consoleLog.add("👻 [T3c_SHADOW] DataLake tick fired for V3 ML continuity.")
         } catch (e: Exception) {
@@ -17459,6 +18122,10 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                 steps = snapshot.stepsLast15m,
                 hr = snapshot.hrNow,
                 rhr = snapshot.rhrResting,
+                tickId = ctx.currentTime,
+                observationId = raObservationId(ctx),
+                // Same reasoning as the shadow tick: no hyper-trajectory classification on this path.
+                mpcRaFloorMgdlPerMin = 0.0,
             )
         } catch (e: Exception) {
             aapsLogger.warn(LTag.APS, "[T3c_AD_BASAL] proposeBasalOnlyTbr failed: ${e.message}")

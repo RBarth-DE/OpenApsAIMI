@@ -2,6 +2,7 @@ package app.aaps.plugins.aps.openAPSAIMI.autodrive.estimator
 
 import app.aaps.core.interfaces.logging.AAPSLogger
 import app.aaps.core.interfaces.logging.LTag
+import app.aaps.plugins.aps.openAPSAIMI.autodrive.InsulinActionModel
 import app.aaps.plugins.aps.openAPSAIMI.autodrive.models.AutoDriveState
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -33,6 +34,45 @@ class ContinuousStateEstimator @Inject constructor(
     /** Instant de la dernière mise à jour, pour l'étape de prédiction de [lastRa]. */
     private var lastUpdateMs: Long = 0L
 
+    /**
+     * Identifiant du tick déjà pris en compte, ou 0 si aucun.
+     *
+     * Voir [updateAndPredict] : c'est ce qui garantit une seule avance par tick, quel que soit le
+     * nombre de chemins de contrôle qui appellent l'estimateur.
+     */
+    private var lastTickId: Long = 0L
+
+    /**
+     * Nombre d'avances réelles depuis le démarrage du process.
+     *
+     * N'est **pas** incrémenté quand [updateAndPredict] rejoue un tick déjà pris en compte, donc il
+     * compte les avances, pas les appels. Ne pas réutiliser [lastUpdateMs] à sa place : il est
+     * alimenté par `System.currentTimeMillis()` alors que le tick raisonne en `dateUtil.now()`, et
+     * mélanger deux horloges dans une garde est la façon la plus sûre de laisser passer un double
+     * appel.
+     */
+    var runCount: Long = 0L
+        private set
+
+    /** Nombre d'appels rejoués sur un tick déjà pris en compte, depuis le démarrage. Diagnostic. */
+    var replayedCallCount: Long = 0L
+        private set
+
+    /** Covariance du filtre fantôme, indépendante de [pRa]. */
+    private var pRaShadow = 1.0
+
+    /**
+     * Ra qu'on obtiendrait si le terme insuline de l'estimateur était aligné sur celui du contrôleur,
+     * en mg/dL/min.
+     *
+     * Calculé à chaque avance, lu **uniquement** par l'export. Il répond à la seule question encore
+     * ouverte sur `InsulinActionModel.ESTIMATOR_TAU_MIN` : est-ce que l'alignement pousse vraiment Ra
+     * au-dessus des portes 0,6 / 0,7 / 0,8 en permanence, ou est-ce que la projection faite à partir
+     * des médianes était trop pessimiste ? Un tick réel tranche.
+     */
+    var lastRaAlignedTauShadow: Double = 0.0
+        private set
+
     companion object {
 
         /**
@@ -63,15 +103,51 @@ class ContinuousStateEstimator @Inject constructor(
      * calculée par AIMI V1 (WCycle + Heart Rate + Autosens). Le PSE va donc l'utiliser
      * comme "truth" robuste et se focaliser sur l'estimation du repas fantôme (Ra).
      */
-    fun updateAndPredict(actualState: AutoDriveState): AutoDriveState {
-        
+    fun updateAndPredict(
+        actualState: AutoDriveState,
+        nowMs: Long = System.currentTimeMillis(),
+        tickId: Long = 0L,
+    ): AutoDriveState {
+        // ⏱️ Une seule avance par tick, quel que soit le nombre de chemins qui appellent.
+        //
+        // `AutodriveEngine.tick()` est atteint depuis trois endroits : la branche Autodrive engagée,
+        // le tick fantôme T3C, et `proposeBasalOnlyTbr` qui délègue lui aussi à `tick()`. Sur un tick
+        // T3C avec Autodrive engagé, l'estimateur était donc appelé deux à trois fois de suite.
+        //
+        // Ce n'est pas anodin : entre deux appels `dtMin ≈ 0`, donc `raDecay ≈ 1` et l'étape de
+        // prédiction ne sépare rien. La même observation était réappliquée, `pRa` refaisait un tour
+        // de `+ qRa` puis de `(1 - kRa)` par appel, et le gain de Kalman effectif doublait ou
+        // triplait. Le taux d'avance de Ra dépendait donc des préférences activées.
+        //
+        // La garde vit ici plutôt que chez l'appelant : déplacer un appel ne protège pas du prochain
+        // site d'appel ajouté. Avec `tickId = 0` (tests, appels hors tick) le comportement reste
+        // l'ancien — chaque appel avance.
+        if (tickId != 0L && tickId == lastTickId) {
+            replayedCallCount++
+            aapsLogger.debug(
+                LTag.APS,
+                "👽 [PSE UKF] Tick $tickId déjà observé — Ra=${lastRa.format(2)} relu, pas de nouvelle avance."
+            )
+            return actualState.copy(estimatedRa = lastRa)
+        }
+        lastTickId = tickId
+        runCount++
+
         // 1. Modèle Interne Prédictif (Ce qu'on PENSE qui aurait dû se passer sans repas)
         // dBG/dt = - [p1 + SI * IOB]*(BG - BG_target) + Ra
         val p1 = 0.015 // Efficacité du glucose à retourner à la basale
         val bgTarget = 100.0
         
         // Dynamique naturelle attendue en mg/dL/min: G' = -p1(G-Gb) - (SI * multiplier)*I*G + Ra
-        val expectedNaturalDelta = -p1 * (actualState.bg - bgTarget) - (actualState.estimatedSI * 0.0012 * actualState.iob * actualState.bg)
+        val insulinEffect = InsulinActionModel.effectMgdlPerMin(
+            isfMgdlPerU = InsulinActionModel.isfFromStateSi(actualState.estimatedSI),
+            iobU = actualState.iob,
+            bgMgdl = actualState.bg,
+            // Not MPC_TAU_MIN — raising it here inflates Ra by nearly the same amount and would put
+            // it above the 0.6 / 0.7 / 0.8 gates on any tick with insulin on board. See the constant.
+            tauMin = InsulinActionModel.ESTIMATOR_TAU_MIN,
+        )
+        val expectedNaturalDelta = -p1 * (actualState.bg - bgTarget) - insulinEffect
         
         // 🚀 LEAD COMPENSATOR (Phase 10 - Hardware-Awareness)
         // Le capteur Dexcom G6 possède un lag matériel (lissage natif) qui écrase et retarde la dérivée.
@@ -86,7 +162,6 @@ class ContinuousStateEstimator @Inject constructor(
         // 1bis. ÉTAPE DE PRÉDICTION de Ra (elle manquait : l'état était propagé à l'identique).
         // Les glucides d'un repas s'épuisent ; en l'absence de preuve nouvelle, Ra doit revenir
         // vers zéro. Voir [RA_DECAY_TAU_MIN].
-        val nowMs = System.currentTimeMillis()
         val dtMin = if (lastUpdateMs == 0L) 5.0
         else ((nowMs - lastUpdateMs) / 60_000.0).coerceIn(0.0, RA_DECAY_MAX_DT_MIN)
         val raDecay = exp(-dtMin / RA_DECAY_TAU_MIN)
@@ -121,25 +196,14 @@ class ContinuousStateEstimator @Inject constructor(
         // 🚀 DYNAMIC MANEUVER DETECTION (Phase 11 - Agile Tracking)
         // confirmation par combinedDelta si > 2.0 ou uamConfidence > 0.5
         val risingConfirmed = actualState.combinedDelta > 2.0 || actualState.uamConfidence > 0.5
-        val baseQ = when {
-            innovation > 3.0 || (innovation > 2.0 && risingConfirmed) -> 5.0   // Repas lourd confirmé
-            innovation > 1.0 -> 0.5 + (innovation - 1.0) * 0.75
-            innovation < -1.0 -> 1.0  // Désamorçage
-            else -> 0.2
-        }
-        
-        // Boost Ra si UAM détecté par le cerveau ML
-        val uamBoost = if (actualState.uamConfidence > 0.7) 1.5 else 1.0
-        val finalBaseQ = baseQ * uamBoost
+        val qRa = processNoise(
+            innovation = innovation,
+            risingConfirmed = risingConfirmed,
+            uamConfidence = actualState.uamConfidence,
+            isDawnGuardActive = isDawnGuardActive,
+            isHypoRecoveryGuard = isHypoRecoveryGuard,
+        )
 
-        // Sous Dawn Guard ou post-hypo: réduire l'acceptation d'une montée comme "repas" (symétrie d'intention).
-        val qRa = when {
-            isDawnGuardActive && isHypoRecoveryGuard && innovation > 0 -> finalBaseQ * 0.25
-            isHypoRecoveryGuard && innovation > 0 -> finalBaseQ * 0.25
-            isDawnGuardActive && innovation > 0 -> finalBaseQ * 0.4
-            else -> finalBaseQ
-        }
-        
         // 4. Prédiction de Covariance (P_k|k-1)
         // Propagation linéaire cohérente avec l'étape de prédiction : F = raDecay, donc P <- F^2 P + Q.
         pRa = raDecay * raDecay * pRa + qRa
@@ -173,6 +237,41 @@ class ContinuousStateEstimator @Inject constructor(
         // 8. Mise à jour de la Covariance (P_k|k)
         pRa = (1 - kRa) * pRa
 
+        // 🔎 SHADOW — le même filtre avec le terme insuline aligné sur celui du contrôleur.
+        //
+        // Rien d'autre ne change : même vitesse compensée, même décroissance, même bruit de mesure,
+        // même écrêtage. Seul `tauMin` diffère, donc l'écart entre `lastRa` et `lastRaAlignedTauShadow`
+        // mesure exactement ce que coûterait l'alignement — la seule question qui reste ouverte sur
+        // `InsulinActionModel.ESTIMATOR_TAU_MIN`.
+        //
+        // Aucun consommateur : cette valeur n'est lue que par l'export. Elle ne doit jamais atteindre
+        // une porte ni une dose tant qu'elle n'a pas été validée sur des repas réels.
+        run {
+            val alignedInsulinEffect = InsulinActionModel.effectMgdlPerMin(
+                isfMgdlPerU = InsulinActionModel.isfFromStateSi(actualState.estimatedSI),
+                iobU = actualState.iob,
+                bgMgdl = actualState.bg,
+                tauMin = InsulinActionModel.MPC_TAU_MIN,
+            )
+            val shadowExpected = -p1 * (actualState.bg - bgTarget) - alignedInsulinEffect
+            val shadowPredicted = lastRaAlignedTauShadow * raDecay
+            val shadowInnovation = hardwareCompensatedVelocity - (shadowExpected + shadowPredicted)
+            val shadowQ = processNoise(
+                innovation = shadowInnovation,
+                risingConfirmed = risingConfirmed,
+                uamConfidence = actualState.uamConfidence,
+                isDawnGuardActive = isDawnGuardActive,
+                isHypoRecoveryGuard = isHypoRecoveryGuard,
+            )
+            pRaShadow = raDecay * raDecay * pRaShadow + shadowQ
+            val shadowGain = pRaShadow / (pRaShadow + rVariance)
+            var shadowRa = shadowPredicted + shadowGain * shadowInnovation
+            shadowRa = shadowRa.coerceIn(0.0, maxBiologicalRa)
+            if (shadowInnovation < -0.5 && hardwareCompensatedVelocity <= 0.0) shadowRa *= 0.25
+            pRaShadow = (1 - shadowGain) * pRaShadow
+            lastRaAlignedTauShadow = shadowRa
+        }
+
         // Sauvegarde d'État Externe
         lastRa = estimatedRa
 
@@ -185,6 +284,36 @@ class ContinuousStateEstimator @Inject constructor(
         return actualState.copy(
             estimatedRa = estimatedRa
         )
+    }
+
+    /**
+     * Process noise for Ra, as a function of how surprising the observation is.
+     *
+     * Extracted so the shadow estimate can use the same rule with its own innovation — otherwise the
+     * two would differ for a reason that has nothing to do with the insulin term being compared.
+     */
+    private fun processNoise(
+        innovation: Double,
+        risingConfirmed: Boolean,
+        uamConfidence: Double,
+        isDawnGuardActive: Boolean,
+        isHypoRecoveryGuard: Boolean,
+    ): Double {
+        val baseQ = when {
+            innovation > 3.0 || (innovation > 2.0 && risingConfirmed) -> 5.0   // Repas lourd confirmé
+            innovation > 1.0                                          -> 0.5 + (innovation - 1.0) * 0.75
+            innovation < -1.0                                         -> 1.0  // Désamorçage
+            else                                                      -> 0.2
+        }
+        // Boost Ra si UAM détecté par le cerveau ML
+        val finalBaseQ = baseQ * (if (uamConfidence > 0.7) 1.5 else 1.0)
+        // Sous Dawn Guard ou post-hypo: réduire l'acceptation d'une montée comme "repas".
+        return when {
+            isDawnGuardActive && isHypoRecoveryGuard && innovation > 0 -> finalBaseQ * 0.25
+            isHypoRecoveryGuard && innovation > 0                      -> finalBaseQ * 0.25
+            isDawnGuardActive && innovation > 0                        -> finalBaseQ * 0.4
+            else                                                       -> finalBaseQ
+        }
     }
 
     fun getLastRa(): Double = lastRa

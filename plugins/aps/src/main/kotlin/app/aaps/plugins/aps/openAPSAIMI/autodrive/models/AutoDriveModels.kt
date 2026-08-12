@@ -1,5 +1,7 @@
 package app.aaps.plugins.aps.openAPSAIMI.autodrive.models
 
+import app.aaps.plugins.aps.openAPSAIMI.autodrive.InsulinActionModel
+
 /**
  * 🧠 AutoDriveState
  *
@@ -120,7 +122,15 @@ data class AutoDriveState(
                     bgVelocity = bgVelocity.coerceIn(-20.0, 20.0),
                     iob = iob.coerceAtLeast(0.0),
                     cob = cob.coerceAtLeast(0.0),
-                    estimatedSI = estimatedSI.coerceAtLeast(0.1),
+                    // Bounded in the caller's units (ISF/10000), not at 0.1.
+                    //
+                    // `coerceAtLeast(0.1)` clamped every patient to the same sensitivity, 22 to 50
+                    // times above the ISF/10000 actually passed in, so the profile ISF stopped
+                    // reaching the controller and the barrier. See `InsulinActionModel`.
+                    estimatedSI = estimatedSI.coerceIn(
+                        InsulinActionModel.MIN_ISF_MGDL_PER_U / 10000.0,
+                        InsulinActionModel.MAX_ISF_MGDL_PER_U / 10000.0,
+                    ),
                     estimatedRa = estimatedRa.coerceAtLeast(0.0),
                     patientWeightKg = patientWeightKg.coerceIn(40.0, 250.0),
                     physiologicalStressMask = physiologicalStressMask,
