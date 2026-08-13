@@ -851,7 +851,7 @@ enum class DoubleKey(
     ApsBoostPostExerciseRecoveryHours("boost_post_exercise_recovery_hours", 2.0, 0.5, 8.0, unitType = UnitType.HOURS_DOUBLE, summaryResId = R.string.pref_summary_boost_post_exercise_hours),
     ApsBoostPostExerciseRecoveryScale("boost_post_exercise_recovery_scale", 0.5, 0.0, 1.0, unitType = UnitType.DOUBLE, summaryResId = R.string.pref_summary_boost_post_exercise_scale),
     ApsBoostCumulativeSmbCap60Min("boost_cumulative_smb_cap_60min", 10.0, 0.0, 10.0, unitType = UnitType.INSULIN, summaryResId = R.string.pref_summary_boost_smb_cap_60min),
-    ApsBoostV5Aggression("boost_v5_aggression", 1.0, 0.7, 1.6, unitType = UnitType.DOUBLE, summaryResId = R.string.pref_summary_boost_v5_aggression),
+    ApsBoostV5Aggression("boost_v5_aggression", 1.0, 0.7, 1.6, unitType = UnitType.DOUBLE_2, summaryResId = R.string.pref_summary_boost_v5_aggression),
     ApsBoostV5ConfirmedCapU("boost_v5_confirmed_cap_u", 2.5, 0.0, 7.5, unitType = UnitType.INSULIN, summaryResId = R.string.pref_summary_boost_v5_confirmed_cap),
     ApsBoostV5CommittedCapU("boost_v5_committed_cap_u", 0.5, 0.0, 2.5, unitType = UnitType.INSULIN, summaryResId = R.string.pref_summary_boost_v5_committed_cap),
     ApsBoostV5PrimerCapU("boost_v5_primer_cap_u", 0.0, 0.0, 1.0, defaultedBySM = true,unitType = UnitType.DOUBLE,),
