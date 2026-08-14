@@ -145,6 +145,48 @@ class AIAnalysisRequest(BaseModel):
     plugin: str = "aimi"
     lang: str = "de"
 
+# ─── AI History ───────────────────────────────────────────────────────────────
+# Persistent memory for the AI: the last runs (proposal + metrics + params at
+# that time) are stored server-side and fed back into the next prompt, so the
+# model knows what it proposed before and what the user applied since.
+HISTORY_FILE = Path("/history/ai_history.json")
+HISTORY_MAX_ENTRIES = 30      # kept per file (all plugins together)
+HISTORY_PROMPT_ENTRIES = 5    # shown in the prompt per plugin
+HISTORY_ANALYSIS_TRIM = 1000  # chars of each old analysis shown in the prompt
+
+def load_history() -> list:
+    try:
+        if not HISTORY_FILE.exists(): return []
+        with open(HISTORY_FILE, encoding="utf-8") as f:
+            data = json.load(f)
+        return data if isinstance(data, list) else []
+    except Exception as e:
+        print(f"[history] load failed: {e}")
+        return []
+
+def write_history(entries: list) -> None:
+    try:
+        HISTORY_FILE.parent.mkdir(parents=True, exist_ok=True)
+        with open(HISTORY_FILE, "w", encoding="utf-8") as f:
+            json.dump(entries, f, indent=2, ensure_ascii=False)
+    except Exception as e:
+        print(f"[history] write failed: {e}")
+
+def append_history_entry(entry: dict) -> None:
+    entries = load_history()
+    entries.append(entry)
+    write_history(entries[-HISTORY_MAX_ENTRIES:])
+
+def params_diff(prev: dict, cur: dict, lookup: dict) -> list:
+    """Return list of {key, name, from, to} for params that changed between two snapshots."""
+    changed = []
+    for key in sorted(set(prev) | set(cur)):
+        a, b = prev.get(key, "(absent)"), cur.get(key, "(absent)")
+        if str(a) == str(b): continue
+        changed.append({"key": key, "name": lookup.get(key, {}).get("name", key),
+                        "from": a, "to": b})
+    return changed
+
 # ─── Nightscout ───────────────────────────────────────────────────────────────
 async def ns_fetch(url, token, path, params={}):
     """Fetch from Nightscout. Tries token as query parameter first (broadest compatibility),
@@ -1079,6 +1121,34 @@ async def ai_analysis(req: AIAnalysisRequest):
         for p in req.diff[:30] if not p.get("is_sensitive") and not p.get("orphaned")
     ) or "No diff available"
 
+    # AI history: last runs of this plugin with automatic diffs.
+    # For each past run the prompt shows its metrics, its proposal, and which
+    # params changed after it (diff vs. the next run, or vs. current params for
+    # the newest entry). This breaks the proposal back-and-forth between runs.
+    history_entries = [h for h in load_history() if h.get("plugin") == plugin][-HISTORY_PROMPT_ENTRIES:]
+    params_snapshot = {p.get("key"): p.get("value") for p in active_non_default if p.get("key")}
+    history_block = ""
+    if history_entries:
+        def fnum(v): return "?" if v is None else v
+        lines = [f"## Analysis history (last {len(history_entries)} runs of {plugin_label}, oldest first)"]
+        for i, h in enumerate(history_entries):
+            m = h.get("metrics", {})
+            lines.append(f"- {h.get('ts','?')[:10]} · TIR {fnum(m.get('tir_pct'))}% · CV {fnum(m.get('cv'))}% · Hypo {fnum(m.get('hypo_l1_pct'))}%")
+            analysis = (h.get("analysis") or "").strip()
+            if analysis:
+                cut = analysis[:HISTORY_ANALYSIS_TRIM] + ("…" if len(analysis) > HISTORY_ANALYSIS_TRIM else "")
+                lines.append("  Previous proposal: " + cut)
+            next_params = history_entries[i + 1].get("params", {}) if i + 1 < len(history_entries) else params_snapshot
+            changes = params_diff(h.get("params", {}), next_params, plugin_params)
+            if changes:
+                lines.append("  Changes applied after this run: " + "; ".join(
+                    f"{c['name']} (`{c['key']}`) {c['from']} → {c['to']}" for c in changes))
+        lines.append("")
+        lines.append("Rules when using the history:")
+        lines.append("- If a previous proposal was already applied (see 'Changes applied after this run') and the metrics did not improve, do NOT repeat it — propose a different direction or reverting the change.")
+        lines.append("- Briefly state where you agree or disagree with the previous analysis.")
+        history_block = "\n".join(lines) + "\n"
+
     # User observations — optional free-text from the user
     if req.user_observations:
         user_obs_block = f"\n## User Observations\n\"{req.user_observations}\"\n\n"
@@ -1107,6 +1177,7 @@ async def ai_analysis(req: AIAnalysisRequest):
         plugin_instructions = """## BOOST-specific knowledge (apply when analysing these settings)
 - `boost_use_tdd=ON` is the main gate for TDD-based dynamic ISF. If OFF, Boost uses static profile ISF (less adaptive).
 - `boost_insulin_req_pct` is the PRIMARY aggressiveness control: >100% = more insulin, <100% = more conservative.
+- `boost_insulin_req_pct` is a PERCENTAGE (range 30–100), NOT insulin units. A proposal like "reduce to 3.0 U" is invalid — a conservative value is e.g. 40%.
 - `boost_dynisf_velocity` controls how FAST ISF adapts to changing conditions — high values can cause oscillation.
 - `boost_night_mode_enabled` is critical for overnight safety — recommend enabling if overnight hypos.
 - ISF Shadow (V4.4.2 EMA) is DIAGNOSTIC ONLY — it does NOT affect dosing. No action needed on shadow values.
@@ -1191,6 +1262,7 @@ if req.profile_data and not req.profile_data.get('error') else '(not available)'
 
 ## {l['changes']}
 {diff_block}
+{history_block}
 {user_obs_block}
 ## {l['task']}
 1. Evaluate metrics (3–4 sentences, specific)
@@ -1198,6 +1270,7 @@ if req.profile_data and not req.profile_data.get('error') else '(not available)'
    - Exact key (in backticks, e.g. `key_openapsaimi_max_smb`)
    - Settings path: EVERY recommendation MUST include the 📍 path exactly as shown next to the parameter above. Copy it verbatim — do NOT invent, shorten, or translate. This is mandatory for all sections (critical, secondary, feature recommendations).
    - Current → Recommendation (with value)
+   - Value: SAME unit as the current value (percent stays percent, U stays U, mg/dL stays mg/dL) and inside the [min–max] range shown next to the parameter. Never mix units — do NOT propose U for a % parameter or % for a U parameter.
    - Reason
    - Risk: low/medium/high
 3. Feature recommendations (enable/disable):
@@ -1209,10 +1282,20 @@ if req.profile_data and not req.profile_data.get('error') else '(not available)'
 
 {l['lang_instruction']}"""
 
-    if req.provider == "anthropic": return await _call_anthropic(req.api_key, prompt, req.model)
-    if req.provider == "deepseek":  return await _call_deepseek(req.api_key, prompt, req.model)
-    if req.provider == "openai":    return await _call_openai(req.api_key, prompt, req.model)
-    raise HTTPException(400, f"Unknown provider: {req.provider}")
+    if req.provider == "anthropic": result = await _call_anthropic(req.api_key, prompt, req.model)
+    elif req.provider == "deepseek":  result = await _call_deepseek(req.api_key, prompt, req.model)
+    elif req.provider == "openai":    result = await _call_openai(req.api_key, prompt, req.model)
+    else: raise HTTPException(400, f"Unknown provider: {req.provider}")
+
+    # Remember this run so the next analysis knows the previous proposals
+    append_history_entry({
+        "ts": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        "plugin": plugin,
+        "metrics": {k: cgm.get(k) for k in ("tir_pct", "cv", "hypo_l1_pct", "hyper_l1_pct")},
+        "params": params_snapshot,
+        "analysis": result.get("analysis", ""),
+    })
+    return result
 
 async def _call_anthropic(api_key, prompt, model=None):
     model = model or "claude-sonnet-4-6"
@@ -1260,6 +1343,20 @@ async def _call_openai(api_key, prompt, model=None):
         return {"provider":"openai","model":d.get("model","?"),
                 "analysis":d["choices"][0]["message"]["content"],
                 "tokens":d.get("usage",{})}
+
+@app.get("/api/ai-history")
+def get_ai_history(plugin: Optional[str] = None):
+    entries = load_history()
+    if plugin: entries = [h for h in entries if h.get("plugin") == plugin]
+    return {"entries": entries}
+
+@app.delete("/api/ai-history")
+def clear_ai_history(plugin: Optional[str] = None):
+    if plugin:
+        write_history([h for h in load_history() if h.get("plugin") != plugin])
+    else:
+        write_history([])
+    return {"status": "ok"}
 
 @app.get("/api/plugins")
 def list_plugins():

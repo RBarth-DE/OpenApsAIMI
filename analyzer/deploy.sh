@@ -112,6 +112,9 @@ if $FULL; then
     echo "📤 Pushing backend + frontend..."
     rsync -a backend/app.py "${NUC}:${NUC_DIR}/backend/" 2>/dev/null || true
     rsync -a frontend/index.html "${NUC}:${NUC_DIR}/frontend/" 2>/dev/null || true
+    # docker-compose.yml (writable /history volume for AI history) + history dir
+    rsync -a docker-compose.yml "${NUC}:${NUC_DIR}/" 2>/dev/null || true
+    ssh "${NUC}" "mkdir -p ${NUC_DIR}/history" 2>/dev/null || true
     echo "  └─ Done"
 fi
 
@@ -123,8 +126,10 @@ if $REBUILD; then
     echo "🐳 Rebuilding Docker on NUC..."
     ssh "${NUC}" "cd ${NUC_DIR} && docker compose up -d --build"
 else
-    echo "🐳 Restarting Docker on NUC..."
-    ssh "${NUC}" "cd ${NUC_DIR} && docker compose restart"
+    # up -d (not restart): re-creates the container when docker-compose.yml
+    # changed, e.g. a new volume mount like /history
+    echo "🐳 Updating Docker on NUC..."
+    ssh "${NUC}" "cd ${NUC_DIR} && docker compose up -d"
 fi
 
 echo ""

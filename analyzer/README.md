@@ -132,6 +132,32 @@ All models receive the full AIMI algorithm context (30 features, 9 known bugs,
 
 ---
 
+## AI history (memory between runs)
+
+Every AI run is remembered on the server. After each successful analysis the
+backend saves a compact entry to `analyzer/history/ai_history.json`:
+
+- date and key metrics (TIR, CV, hypo) at that time
+- the params that were active then
+- the full AI proposal text
+
+The next analysis automatically includes the **last 5 runs of the same plugin**
+in the prompt: metrics, the previous proposal (cut to ~1000 chars) and the
+parameter changes applied after each run. This stops the back-and-forth where
+the AI proposes something it already proposed (or the opposite) because it does
+not know the past.
+
+The AI is also told: if a change was already applied and the metrics did not
+improve, do not repeat it — propose a different direction or reverting.
+
+- Show history: `GET /api/ai-history?plugin=aimi`
+- Clear history: `DELETE /api/ai-history` (all plugins) or
+  `DELETE /api/ai-history?plugin=aimi`
+- The file lives in the writable `/history` Docker volume — it survives
+  container restarts and rebuilds.
+
+---
+
 ## Known issues
 
 - **LastLegacyPrebolusTime**: stale 2020+ timestamp causes permanent prebolus state.
