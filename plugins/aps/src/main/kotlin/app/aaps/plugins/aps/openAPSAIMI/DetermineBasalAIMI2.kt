@@ -77,6 +77,7 @@ import app.aaps.plugins.aps.openAPSAIMI.pkpd.CausalKineticsModulator
 import app.aaps.plugins.aps.openAPSAIMI.pkpd.DiaGovernor
 import app.aaps.plugins.aps.openAPSAIMI.pkpd.InsulinKineticsAuthority
 import app.aaps.plugins.aps.openAPSAIMI.pkpd.PkpdLearningDiagnostics
+import app.aaps.plugins.aps.openAPSAIMI.pkpd.TapSitePeakShift
 import app.aaps.plugins.aps.openAPSAIMI.orchestration.AimiIntelligenceSnapshot
 import app.aaps.plugins.aps.openAPSAIMI.orchestration.AimiIntelligenceSnapshotBuilder
 import app.aaps.plugins.aps.openAPSAIMI.orchestration.AimiAdaptationStatusBuilder
@@ -404,6 +405,17 @@ internal data class AimiDecisionContext(
          */
         var rise_floor_spent_u: Double? = null,
         var rise_floor_minutes_since_contribution: Double? = null,
+        /**
+         * The sensitivity the dosing path actually uses, in mg/dL/U — `rT.variable_sens`.
+         *
+         * Every other ISF field here describes what the *predictions* saw. [command_isf_mgdl] carries
+         * `profile.sens`, which comes from a 30-minute bucket cache; the dosing path reads the fresh
+         * `variable_sens`, and the two are not the same number. Measured by inverting the tube
+         * advisor's exported kappa over 194 ticks of the 2026-08-14 package: the ratio spans 0.70 to
+         * 2.65 and the two agree within 0.5 mg/dL/U on 1 tick. Until this field exists, no statement
+         * about "the ISF the dose used" can be checked.
+         */
+        var variable_sens_mgdl: Double? = null,
     )
     data class Adjustments(
         var dynamic_isf: DynamicIsf? = null,
@@ -461,6 +473,13 @@ internal data class AimiDecisionContext(
         var tube_advisor: JSONObject? = null,
         /** Wave4 H3 — soft-floor/EGP path-min (production curves + study JSON raw/soft). */
         var pkpd_soft_floor: org.json.JSONObject? = null,
+        /**
+         * What the MPC asked for before the control barrier, and the barrier's own terms.
+         *
+         * Separates "the solver wanted nothing" from "the barrier suspended everything", which
+         * `model_output_u` alone cannot do because it is read after the barrier.
+         */
+        var control_barrier: JSONObject? = null,
         /** Lot 2 — invariants terminaux du canal basal: taux avant/apres et invariant liant. */
         var basal_terminal: org.json.JSONObject? = null,
         /** AIMI Harmonia simulated production branch; virtual only, never applied to the real pump. */
@@ -674,6 +693,7 @@ internal data class AimiDecisionContext(
             base.put("effort_smb_after_u", baseline_state.effort_smb_after_u ?: org.json.JSONObject.NULL)
             base.put("effort_smb_floored_by_meal", baseline_state.effort_smb_floored_by_meal ?: org.json.JSONObject.NULL)
             base.put("rise_floor_spent_u", baseline_state.rise_floor_spent_u ?: org.json.JSONObject.NULL)
+            base.put("variable_sens_mgdl", baseline_state.variable_sens_mgdl ?: org.json.JSONObject.NULL)
             base.put(
                 "rise_floor_minutes_since_contribution",
                 baseline_state.rise_floor_minutes_since_contribution ?: org.json.JSONObject.NULL,
@@ -872,6 +892,9 @@ internal data class AimiDecisionContext(
             }
             adjustments.dose_terminal_snapshot?.let { doseTerminal ->
                 adj.put("dose_terminal_snapshot", doseTerminal)
+            }
+            adjustments.control_barrier?.let { cb ->
+                adj.put("control_barrier", cb)
             }
             adjustments.tube_advisor?.let { tube ->
                 adj.put("tube_advisor", tube)
@@ -3466,6 +3489,8 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                     cobG = cob.toDouble(),
                     mealRiseConfirmedLegacy = false,
                     effortVeto = effortSuppressesUndeclaredMeal(),
+                    shortAvgDeltaMgdl5m = this.shortAvgDelta.toDouble(),
+                    effortLive = effortIsLiveMovement(),
                     softCorroboration = MealCertaintyBuilder.softCorroborationFromPhysio(physioLive),
                     pkpdEventualMgdl = pkpdForMeal,
                     scenarioTerminalMgdl = scenarioBestForMeal?.terminalMgdl,
@@ -4944,6 +4969,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                 b.effort_smb_floored_by_meal = lastEffortSmbFactorRaw?.let { raw ->
                     lastEffortSmbFactorApplied?.let { applied -> applied > raw + 1e-9 }
                 }
+                b.variable_sens_mgdl = variableSensitivity.toDouble().takeIf { it.isFinite() && it > 0.0 }
                 b.rise_floor_spent_u = riseFloorSpentU
                 b.rise_floor_minutes_since_contribution =
                     lastRiseFloorContributionMs
@@ -4962,6 +4988,34 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         baseline.cbf_permitted_u = autodriveEngine.lastCbfPermittedU.takeIf { it.isFinite() }
         baseline.cbf_permitted_unfloored_u = autodriveEngine.lastCbfPermittedUnflooredU.takeIf { it.isFinite() }
         baseline.cbf_profile_isf_mgdl = autodriveEngine.lastProfileIsfSeen.takeIf { it > 0.0 }
+        pendingDecisionCtxForExport?.adjustments?.control_barrier = buildControlBarrierExport()
+    }
+
+    /**
+     * What the solver asked for and what the barrier did with it.
+     *
+     * `smb_binding_trace.model_output_u` is read **after** the barrier, so a 0.000 there was being
+     * used to conclude "the controller asked for nothing". On the 2026-08-14 lunch that reading was
+     * wrong: the barrier suspended the dose completely (`cbf_permitted_u` 0.000 from 13:52 to the end
+     * of the meal) because its own `lfh` reached -11.2 mg/dL/min — a predicted fall of 56 mg/dL per
+     * 5 minutes against a measured 9. The two cases need opposite fixes, so they are now separated.
+     */
+    private fun buildControlBarrierExport(): JSONObject? {
+        val d = autodriveEngine.lastBarrierDiagnostics ?: return null
+        return JSONObject().apply {
+            put("mpc_raw_smb_u", autodriveEngine.lastMpcRawSmbU)
+            put("mpc_raw_tbr_uph", autodriveEngine.lastMpcRawTbrUph)
+            put("h_mgdl", d.hMgdl)
+            put("lfh_mgdl_per_min", d.lfhMgdlPerMin)
+            put("lgh_mgdl_per_u_per_min", d.lghMgdlPerUPerMin)
+            put("insulin_term_mgdl_per_min", d.insulinTermMgdlPerMin)
+            put("active_gamma", d.activeGamma)
+            put("safety_boundary", d.safetyBoundary)
+            put("system_evolution", d.systemEvolution)
+            put("si_metabolic", d.siMetabolic)
+            put("fully_suspended", d.fullySuspended)
+            d.safeU?.let { put("safe_u", it) }
+        }
     }
 
     private fun raObservationId(ctx: AimiTickContext): Long =
@@ -8845,6 +8899,9 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                 peakGovernor = null,
                 causalPosterior = lastPatientState?.causalPosterior,
                 physioPeakShiftMinutes = physioMults.peakShiftMinutes,
+                // Site branch: the snapshot used to leave this at its 0.0 default, so the peak
+                // governor always reported site=0.0. The cannula age is already cached here.
+                sitePeakShiftMinutes = TapSitePeakShift.minutesForSiteAge(pumpAgeDaysCached()),
                 preferences = preferences,
                 iobCobCalculator = iobCobCalculator,
                 pkpdPredictionIobArray = ctx.pkpdIobDataArray,
@@ -10384,6 +10441,9 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             put("snapshot_source_used", snapshot.source)
             put("hypo_floor_mgdl", outcome.hypoFloorMgdl)
             put("kappa_mgdl_per_u", outcome.kappaMgdlPerU)
+            // The dose-facing sensitivity the tube reasoned with. kappa cannot stand in for it: the
+            // kappa curve saturates at 45 for every sensitivity at or below ~29.7 mg/dL/U.
+            put("isf_used_mgdl_per_u", outcome.isfUsedMgdlPerU)
             put("max_smb_in_u", outcome.maxSmbU)
             put("s_max_feasible", outcome.sMaxFeasible)
             put("hyper_excess_mgdl", outcome.hyperExcessMgdl)
@@ -16216,6 +16276,26 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         if (a.confidence < EFFORT_MEAL_SUPPRESS_CONF) return false
         val declaredMeal = mealTime || bfastTime || lunchTime || dinnerTime || snackTime || highCarbTime
         return !declaredMeal && cob.toDouble() < EFFORT_MEAL_SUPPRESS_MAX_COB_G
+    }
+
+    /**
+     * Is the effort belief reporting movement **now**, rather than remembering it?
+     *
+     * `effortSuppressesUndeclaredMeal` accepts both `ACTIVE` and `RECENT_EFFORT`, so the veto it raises
+     * cannot tell a walk in progress from a two-hour-old memory of one. Measured over 24 h: the effort
+     * multiplier removed 21.71 U, and **61 of the 82 reduced ticks had `effort = 0.00`** — no live
+     * movement at all, a median of 12 steps per 15 min.
+     *
+     * `MealCertainty` uses this to decide whether the veto may be overridden by an unambiguous glucose
+     * rise. Only a memory can be overridden; live movement keeps the protection whatever glucose does.
+     *
+     * Fails safe: no assessment is treated as live, so the override stays shut.
+     *
+     * @return true when the effort state is `ACTIVE`, or when no assessment is available.
+     */
+    private fun effortIsLiveMovement(): Boolean {
+        val a = lastEffortAssessment ?: return true
+        return a.state == EffortActivityBelief.State.ACTIVE
     }
 
     /**
