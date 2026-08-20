@@ -40,7 +40,10 @@ enum class SeriesType {
     DURA_ISF,       // Duration ISF factor
 
     // BOOST algorithm data panel
-    BOOST           // DynISF | TDD | IOB | Status card (active only when BOOST is the APS)
+    BOOST,          // DynISF | TDD | IOB | Status card (active only when BOOST is the APS)
+
+    // MealHypothesis step line (renders nothing when BOOST is not the active algorithm)
+    MHS
 }
 
 /**

@@ -1283,6 +1283,7 @@
     <string name="tir_series_shortname" comment="Short label for Time In Range custom panel">TIR</string>
     <string name="graph_series_smb" comment="Short label for SMB triangle markers on BG graph">SMBs</string>
     <string name="boost" comment="Short label for Boost algorithm card/series">Boost</string>
+    <string name="mhs" comment="Short label for the Meal Hypothesis State (BOOST) graph series">MHS</string>
     <string name="boost_sens_shortname" comment="Short label for Boost sensitivity deviation panel">SDP</string>
     <string name="iob_threshold_shortname" comment="Short label for AutoISF IOB Threshold graph series">IOBth</string>
     <string name="final_isf_shortname" comment="Short label for AutoISF Final ISF graph series">finalISF</string>

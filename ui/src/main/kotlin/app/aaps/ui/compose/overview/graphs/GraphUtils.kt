@@ -14,6 +14,7 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.graphics.StrokeCap
+import app.aaps.core.interfaces.aps.MealHypothesisCoreState
 import app.aaps.core.interfaces.overview.graph.SeriesType
 import com.patrykandpatrick.vico.compose.cartesian.CartesianDrawingContext
 import com.patrykandpatrick.vico.compose.cartesian.axis.HorizontalAxis
@@ -798,6 +799,20 @@ class VisibleRangeReporter(
 @Composable
 fun rememberVisibleRangeReporter(holder: VisibleRangeHolder): VisibleRangeReporter {
     return remember(holder) { VisibleRangeReporter(holder) }
+}
+
+/**
+ * Color of a meal hypothesis state — the single mapping shared by the BOOST panel status strip
+ * and the MHB graph step line, so the two can never diverge. CONFIRMED (deep orange) and
+ * COMMITTED (red) are deliberately far apart: in the BOOST panel they once shared two similar
+ * orange tones and were easy to confuse.
+ */
+fun mealHypothesisStateColor(state: MealHypothesisCoreState): Color = when (state) {
+    MealHypothesisCoreState.IDLE       -> Color(0xFF4CAF50) // green
+    MealHypothesisCoreState.OBSERVING  -> Color(0xFFFFC107) // amber
+    MealHypothesisCoreState.CONFIRMED  -> Color(0xFFFF6E40) // deep orange
+    MealHypothesisCoreState.COMMITTED  -> Color(0xFFF44336) // red
+    MealHypothesisCoreState.RECOVERING -> Color(0xFF26C6DA) // cyan
 }
 
 // =========================================================================

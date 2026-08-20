@@ -22,6 +22,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.aaps.core.data.configuration.Constants
 import app.aaps.core.graph.vico.AdaptiveStep
 import app.aaps.core.graph.vico.Square
+import app.aaps.core.interfaces.aps.MealHypothesisCoreState
 import app.aaps.core.interfaces.overview.graph.BolusType
 import app.aaps.core.interfaces.overview.graph.DeviationType
 import app.aaps.core.interfaces.overview.graph.GraphDataPoint
@@ -30,6 +31,7 @@ import app.aaps.core.interfaces.overview.graph.TreatmentGraphData
 import app.aaps.core.ui.compose.AapsTheme
 import com.patrykandpatrick.vico.compose.cartesian.CartesianChartHost
 import com.patrykandpatrick.vico.compose.cartesian.CartesianDrawingContext
+import com.patrykandpatrick.vico.compose.cartesian.CartesianMeasuringContext
 import com.patrykandpatrick.vico.compose.cartesian.VicoScrollState
 import com.patrykandpatrick.vico.compose.cartesian.VicoZoomState
 import com.patrykandpatrick.vico.compose.cartesian.axis.Axis
@@ -123,6 +125,57 @@ internal class ClampedVerticalAxisItemPlacer(
     ): List<Double>? = delegate.getLineValues(context, axisHeight, maxLabelHeight, position)?.filter { it in visibleMin()..visibleMax() }
 }
 
+/** The five MHB state ordinals (0 = IDLE .. 4 = RECOVERING). */
+private val MHB_STATE_ORDINALS = listOf(0.0, 1.0, 2.0, 3.0, 4.0)
+
+/**
+ * State names shown on the MHB y axis, in ordinal order. Shortened to 3 letters so the
+ * labels fit the fixed 30 dp axis width and the chart aligns with the other graphs.
+ */
+private val MHB_STATE_NAMES = listOf("IDL", "OBS", "CNF", "CMT", "REC")
+
+/** Maps integer y values 0..4 to the MHB state names; non-integer values render empty. */
+private val MHB_AXIS_VALUE_FORMATTER = CartesianValueFormatter { _, value, _ ->
+    val i = value.toInt()
+    if (value == i.toDouble() && i in MHB_STATE_NAMES.indices) MHB_STATE_NAMES[i] else ""
+}
+
+/**
+ * Fixed item placer for the MHB graph: always returns the five state ordinals for labels,
+ * gridlines, and width/height measurement. Vico's step placer thins ticks on short graphs
+ * and would drop state names; delegating keeps its margin behavior for everything else.
+ */
+private class StateOrdinalVerticalAxisItemPlacer(
+    delegate: VerticalAxis.ItemPlacer
+) : VerticalAxis.ItemPlacer by delegate {
+
+    override fun getLabelValues(
+        context: CartesianDrawingContext,
+        axisHeight: Float,
+        maxLabelHeight: Float,
+        position: Axis.Position.Vertical
+    ): List<Double> = MHB_STATE_ORDINALS
+
+    override fun getLineValues(
+        context: CartesianDrawingContext,
+        axisHeight: Float,
+        maxLabelHeight: Float,
+        position: Axis.Position.Vertical
+    ): List<Double>? = MHB_STATE_ORDINALS
+
+    override fun getWidthMeasurementLabelValues(
+        context: CartesianMeasuringContext,
+        axisHeight: Float,
+        maxLabelHeight: Float,
+        position: Axis.Position.Vertical
+    ): List<Double> = MHB_STATE_ORDINALS
+
+    override fun getHeightMeasurementLabelValues(
+        context: CartesianMeasuringContext,
+        position: Axis.Position.Vertical
+    ): List<Double> = MHB_STATE_ORDINALS
+}
+
 
 /**
  * General-purpose secondary graph composable.
@@ -206,6 +259,7 @@ fun SecondaryGraphCompose(
     val devSlopeData = if (SeriesType.DEV_SLOPE        in seriesTypes) viewModel.devSlopeGraphFlow.collectAsStateWithLifecycle().value else null
     val hrData       = if (SeriesType.HEART_RATE       in seriesTypes) viewModel.heartRateGraphFlow.collectAsStateWithLifecycle().value else null
     val stepsData    = if (SeriesType.STEPS            in seriesTypes) viewModel.stepsGraphFlow.collectAsStateWithLifecycle().value else null
+    val mhbData      = if (SeriesType.MHS              in seriesTypes) viewModel.mealHypothesisGraphFlow.collectAsStateWithLifecycle().value else null
 
     // val iobData = if (hasIob) viewModel.iobGraphFlow.collectAsStateWithLifecycle().value else null
     // val cobData = if (hasCob) viewModel.cobGraphFlow.collectAsStateWithLifecycle().value else null
@@ -271,6 +325,7 @@ fun SecondaryGraphCompose(
         SeriesType.PULSE,
         SeriesType.TIR,
         SeriesType.BOOST,
+        SeriesType.MHS,
         SeriesType.BOLUS           -> emptyList()
         null                       -> emptyList()
     }
@@ -351,6 +406,25 @@ fun SecondaryGraphCompose(
                     if (it.activity.isNotEmpty()) add(SeriesType.ACTIVITY to processPoints(it.activity, minTimestamp, minX, maxX))
                     if (it.activityPrediction.isNotEmpty()) add(SeriesType.ACTIVITY to processPoints(it.activityPrediction, minTimestamp, minX, maxX))
                 }
+            }
+        }
+    }
+
+    // MHB: per-state colored runs. Vico gives one color per series, so each contiguous state run
+    // becomes its own series of [(xStart, yPrev), (xStart, y), (xEnd, y)] — the Square
+    // interpolator draws the vertical riser at the state change plus the horizontal run.
+    val processedMhbPts = remember(mhbData, stableTimeRange) {
+        if (!hasRealTimeRange || mhbData == null) return@remember emptyList()
+        filterToRange(mhbData.points.map { timestampToX(it.timestamp, minTimestamp) to it.value }, minX, maxX)
+    }
+    val processedMhbRuns = remember(processedMhbPts) {
+        buildList {
+            for (i in 0 until processedMhbPts.size - 1) {
+                val y = processedMhbPts[i].second
+                val ordinal = y.toInt()
+                if (y != ordinal.toDouble() || ordinal !in MealHypothesisCoreState.entries.indices) continue
+                val yPrev = processedMhbPts.getOrNull(i - 1)?.second ?: y
+                add(MhbRun(MealHypothesisCoreState.entries[ordinal], yPrev, y, processedMhbPts[i].first, processedMhbPts[i + 1].first))
             }
         }
     }
@@ -499,7 +573,7 @@ fun SecondaryGraphCompose(
     // stale 0..1 axis until the next recomposition ("renders wrong, then fixes itself").
     val primarySeries = remember(
         processedDeviationLines, processedIob, processedIobTreatments, processedCob,
-        processedCarbs, processedSimpleSeries, processedDevSlopeMin, processedActivityOverlay
+        processedCarbs, processedSimpleSeries, processedMhbRuns, processedDevSlopeMin, processedActivityOverlay
     ) {
         buildList {
             // Deviation lines (per-type step lines) — first so other series draw on top
@@ -534,6 +608,10 @@ fun SecondaryGraphCompose(
                 if (pts.isNotEmpty())
                     add(PrimarySeriesSpec(pts.map { it.first }, pts.map { it.second }, SeriesSlot.SimpleLine(type)))
             }
+            // MHB: one series per state run so each run gets its state color
+            processedMhbRuns.forEach { run ->
+                add(PrimarySeriesSpec(listOf(run.xStart, run.xStart, run.xEnd), listOf(run.yPrev, run.y, run.y), SeriesSlot.MhbLine(run.state)))
+            }
             // DevSlope min (separate slot for magenta color)
             if (processedDevSlopeMin.isNotEmpty())
                 add(PrimarySeriesSpec(processedDevSlopeMin.map { it.first }, processedDevSlopeMin.map { it.second }, SeriesSlot.DevSlopeMin))
@@ -559,6 +637,7 @@ fun SecondaryGraphCompose(
         processedBasalActual,
         processedSecondary,
         processedActivityOverlay,
+        processedMhbRuns,
         maxX,
         visibleMinX,
         visibleMaxX
@@ -665,6 +744,7 @@ fun SecondaryGraphCompose(
                         SeriesSlot.DevSlopeMin      -> createDevSlopeMinLine()
                         SeriesSlot.ActivityOverlay  -> createSeriesLine(SeriesType.ACTIVITY, seriesColors)
                         is SeriesSlot.SimpleLine    -> createSeriesLine(slot.type, seriesColors)
+                        is SeriesSlot.MhbLine       -> createMhbLine(slot.state)
                         SeriesSlot.BasalActual      -> basalActualLine
                         SeriesSlot.BasalProfile     -> basalProfileLine
                     }
@@ -689,9 +769,9 @@ fun SecondaryGraphCompose(
     // IOB+basal scale, the dual-axis alignment, the single-axis nice-scale dispatch, and the
     // generic auto-range fallback below all need the exact same union.
     val primaryYValues = remember(
-        processedIob, processedCob, processedSimpleSeries, processedDevSlopeMin, processedDeviationLines, visibleMinX, visibleMaxX
+        processedIob, processedCob, processedSimpleSeries, processedDevSlopeMin, processedDeviationLines, processedMhbPts, visibleMinX, visibleMaxX
     ) {
-        windowedPrimaryY(visibleMinX, visibleMaxX, processedIob, processedCob.first, processedSimpleSeries, processedDevSlopeMin, processedDeviationLines)
+        windowedPrimaryY(visibleMinX, visibleMaxX, processedIob, processedCob.first, processedSimpleSeries, processedDevSlopeMin, processedDeviationLines, processedMhbPts)
     }
 
     // IOB (with basal overlay active): zero-floor nice range — 0 if the visible window has no
@@ -835,8 +915,10 @@ fun SecondaryGraphCompose(
     // Dynamic tick step for the start axis' ItemPlacer — null falls back to Vico's own automatic
     // spacing for series that don't have a "nice" rule yet.
     val primaryYStep = iobBasalScale?.step ?: primarySingleAxisScale?.step
-    val primaryRangeProvider = remember(maxX, iobBasalScale, dualAxisRanges, hasPrimaryData, primarySingleAxisScale, primaryConstantRange, primaryAutoRange) {
+    val primaryRangeProvider = remember(primaryType, maxX, iobBasalScale, dualAxisRanges, hasPrimaryData, primarySingleAxisScale, primaryConstantRange, primaryAutoRange) {
         when {
+            // MHB: fixed state-ordinal axis (0..4) — also anchors the empty frame before the first data arrives
+            primaryType == SeriesType.MHS -> CartesianLayerRangeProvider.fixed(minX = 0.0, maxX = maxX, minY = 0.0, maxY = 4.0)
             // Basal overlay case takes precedence (reserves the top BASAL_HEIGHT_FRACTION of axis for basal)
             iobBasalScale != null        -> CartesianLayerRangeProvider.fixed(minX = 0.0, maxX = maxX, minY = iobBasalScale.min, maxY = iobBasalScale.max)
             // Dual-axis: use zero-aligned primary range so zeros line up with secondary axis
@@ -909,11 +991,12 @@ fun SecondaryGraphCompose(
     )
 
     // Common axis components
-    val startAxisItemPlacer = remember(primaryYStep, iobDataMax, dualAxisRanges?.primaryLabelFloor) {
+    val startAxisItemPlacer = remember(primaryType, primaryYStep, iobDataMax, dualAxisRanges?.primaryLabelFloor) {
         val stepPlacer = VerticalAxis.ItemPlacer.step({ primaryYStep })
         val dataMax = iobDataMax
         val labelFloor = dualAxisRanges?.primaryLabelFloor
         when {
+            primaryType == SeriesType.MHS -> StateOrdinalVerticalAxisItemPlacer(stepPlacer)
             dataMax != null   -> ClampedVerticalAxisItemPlacer(stepPlacer, visibleMax = { dataMax })
             labelFloor != null -> ClampedVerticalAxisItemPlacer(stepPlacer, visibleMin = { labelFloor })
             else               -> stepPlacer
@@ -925,7 +1008,8 @@ fun SecondaryGraphCompose(
             style = TextStyle(color = MaterialTheme.colorScheme.onSurface),
             minWidth = TextComponent.MinWidth.fixed(30.dp)
         ),
-        guideline = LineComponent(fill = Fill(MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)))
+        guideline = LineComponent(fill = Fill(MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))),
+        valueFormatter = if (primaryType == SeriesType.MHS) MHB_AXIS_VALUE_FORMATTER else remember { CartesianValueFormatter.decimal() }
     )
     val bottomAxis = HorizontalAxis.rememberBottom(
         valueFormatter = timeFormatter,
@@ -1001,12 +1085,16 @@ private sealed class SeriesSlot {
     data object FailoverDots : SeriesSlot()
     data object CarbsMarker : SeriesSlot()
     data class SimpleLine(val type: SeriesType) : SeriesSlot()
+    data class MhbLine(val state: MealHypothesisCoreState) : SeriesSlot()
     data object DevSlopeMin : SeriesSlot()
     data object ActivityOverlay : SeriesSlot()
     data object BasalActual : SeriesSlot()
     data object BasalProfile : SeriesSlot()
 
 }
+
+/** One contiguous MHB state run: [state] active from [xStart] to [xEnd]; [yPrev] is the y before the run start. */
+private class MhbRun(val state: MealHypothesisCoreState, val yPrev: Double, val y: Double, val xStart: Double, val xEnd: Double)
 
 // =========================================================================
 // Data processing helpers
@@ -1050,7 +1138,8 @@ internal fun windowedPrimaryY(
     processedCobY: List<Pair<Double, Double>>,
     processedSimpleSeries: List<Pair<SeriesType, List<Pair<Double, Double>>>>,
     processedDevSlopeMin: List<Pair<Double, Double>>,
-    processedDeviationLines: ProcessedDeviationLines?
+    processedDeviationLines: ProcessedDeviationLines?,
+    processedMhbPts: List<Pair<Double, Double>> = emptyList()
 ): List<Double> {
     fun inWindow(x: Double) = visibleMinX == null || visibleMaxX == null || x in visibleMinX..visibleMaxX
     fun deviationY(filterToWindow: Boolean): List<Double> =
@@ -1068,6 +1157,7 @@ internal fun windowedPrimaryY(
         for ((_, pts) in processedSimpleSeries) addAll(pts.filter { inWindow(it.first) }.map { it.second })
         addAll(processedDevSlopeMin.filter { inWindow(it.first) }.map { it.second })
         addAll(deviationY(filterToWindow = true))
+        addAll(processedMhbPts.filter { inWindow(it.first) }.map { it.second })
     }
     return windowed.ifEmpty {
         buildList {
@@ -1076,6 +1166,7 @@ internal fun windowedPrimaryY(
             for ((_, pts) in processedSimpleSeries) addAll(pts.map { it.second })
             addAll(processedDevSlopeMin.map { it.second })
             addAll(deviationY(filterToWindow = false))
+            addAll(processedMhbPts.map { it.second })
         }
     }
 }
@@ -1182,7 +1273,8 @@ data class SeriesColors(
     val acceIsf: Color,
     val bgIsf: Color,
     val ppIsf: Color,
-    val duraIsf: Color
+    val duraIsf: Color,
+    val mhb: Color
 ) {
 
     fun colorFor(type: SeriesType): Color = when (type) {
@@ -1210,6 +1302,7 @@ data class SeriesColors(
         SeriesType.TIR,
         SeriesType.BOOST,
         SeriesType.BOLUS           -> activity
+        SeriesType.MHS             -> mhb
     }
 }
 
@@ -1237,7 +1330,8 @@ fun rememberSeriesColors(): SeriesColors {
             acceIsf = Color(0xFFFFAB40),            // amber — acceleration factor
             bgIsf = Color(0xFF69F0AE),              // teal-green — BG factor
             ppIsf = Color(0xFFEA80FC),              // purple — post-prandial factor
-            duraIsf = Color(0xFF84FFFF)             // cyan-white — duration factor
+            duraIsf = Color(0xFF84FFFF),            // cyan-white — duration factor
+            mhb = Color(0xFF4FC3F7)                 // light blue — MealHypothesis state step line
         )
     }
 }
@@ -1247,6 +1341,18 @@ private fun createDevSlopeMinLine(): LineCartesianLayer.Line {
     return LineCartesianLayer.Line(
         fill = LineCartesianLayer.LineFill.single(Fill(Color(0xFFFF00FF))),
         areaFill = null
+    )
+}
+
+/**
+ * Step line for one MHB state run — clean horizontal line, no fill, colored with the state's
+ * shared color ([mealHypothesisStateColor], same mapping as the BOOST panel status strip).
+ */
+private fun createMhbLine(state: MealHypothesisCoreState): LineCartesianLayer.Line {
+    return LineCartesianLayer.Line(
+        fill = LineCartesianLayer.LineFill.single(Fill(mealHypothesisStateColor(state))),
+        areaFill = null,
+        interpolator = Square
     )
 }
 

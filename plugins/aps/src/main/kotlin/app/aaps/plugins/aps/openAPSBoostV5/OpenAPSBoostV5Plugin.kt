@@ -10,6 +10,9 @@ import app.aaps.core.interfaces.aps.IobTotal
 import app.aaps.core.interfaces.aps.APS
 import app.aaps.core.interfaces.aps.APSResult
 import app.aaps.core.interfaces.aps.GlucoseStatus
+import app.aaps.core.interfaces.aps.MealHypothesisCoreState
+import app.aaps.core.interfaces.aps.MealHypothesisHistorySource
+import app.aaps.core.interfaces.aps.MealHypothesisStateEntry
 import app.aaps.core.interfaces.profile.Profile
 import app.aaps.core.interfaces.aps.OapsProfileBoost
 import app.aaps.core.interfaces.aps.RT
@@ -46,6 +49,8 @@ import javax.inject.Provider
 import javax.inject.Singleton
 import app.aaps.plugins.aps.openAPSBoost.BoostRiskModel
 import app.aaps.plugins.aps.openAPSBoost.OpenAPSBoostPlugin
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlin.math.abs
 import kotlin.math.max
 
@@ -116,9 +121,14 @@ open class OpenAPSBoostV5Plugin @Inject constructor(
         // else is selected and disables every other APS plugin (single-engine invariant).
         .setDefault(),
     aapsLogger, rh
-), APS, PluginConstraints {
+), APS, PluginConstraints, MealHypothesisHistorySource {
 
     override val algorithm = APSResult.Algorithm.BOOST
+
+    // Recorded meal hypothesis state changes for the MHB overview subgraph. Filled on state
+    // changes in runShadow and from the persisted blob on cold start (see V5StateStore).
+    private val _mealHypothesisHistory = MutableStateFlow<List<MealHypothesisStateEntry>>(emptyList())
+    override val historyFlow = _mealHypothesisHistory.asStateFlow()
 
     override fun getPreferenceScreenContent() = app.aaps.core.ui.compose.preference.PreferenceSubScreenDef(
         key = "boost_v5_settings",
@@ -485,9 +495,24 @@ open class OpenAPSBoostV5Plugin @Inject constructor(
     ): V5Decision? {
         return try {
             val priorState = stateStore.load()
+            // MHB subgraph: publish the persisted history on cold start so the overview graph
+            // renders immediately, before the first new state change of this process.
+            _mealHypothesisHistory.value = priorState.mealHypothesisHistory.map { it.toCoreEntry() }
             val inputs = buildInputs(rT, glucoseStatus, iobArray, oapsProfile, pumpBolusStep, activeMode, microBolusAllowed, flatBGsDetected, asleep, postRescueWindow)
             val decision = determineBasalBoostV5.decide(inputs, priorState)
-            stateStore.save(decision.newPersistedState)
+            // MHB subgraph: record the state change (if any). Anchor the history with the prior
+            // state when empty (fresh install / cleared state) so the graph starts right away.
+            val now = dateUtil.now()
+            val history = priorState.mealHypothesisHistory.ifEmpty {
+                listOf(MealHypothesisHistoryEntry(now, priorState.mealHypothesis.state))
+            }
+            val newState = decision.newPersistedState.mealHypothesis.state
+            val appended = if (history.last().state != newState)
+                if (history.last().timestamp == now) history.dropLast(1) + MealHypothesisHistoryEntry(now, newState)
+                else history + MealHypothesisHistoryEntry(now, newState)
+            else history
+            stateStore.save(decision.newPersistedState.copy(mealHypothesisHistory = appended))
+            _mealHypothesisHistory.value = appended.map { it.toCoreEntry() }
 
             // Mutate V4.4.1's rT to attach V5 fields. The same rT instance is referenced by
             // V4.4.1's DetermineBasalResult.result and gets serialised via RT.serialize() when
@@ -741,4 +766,17 @@ open class OpenAPSBoostV5Plugin @Inject constructor(
 
     // Dynamic pref visibility (SMB-with-COB/LowTt/AfterCarbs) — same shared SMB-safety switches
     // appear on V5's screen, so run the engine's logic against V5's fragment.
+}
+
+/** Map a persisted MHB history entry to the core interface type for the overview graph. */
+private fun MealHypothesisHistoryEntry.toCoreEntry(): MealHypothesisStateEntry =
+    MealHypothesisStateEntry(timestamp, state.toCore())
+
+/** Exhaustive plugin-enum → core-enum mapping; declaration order (and ordinal) is identical. */
+private fun MealHypothesis.toCore(): MealHypothesisCoreState = when (this) {
+    MealHypothesis.IDLE       -> MealHypothesisCoreState.IDLE
+    MealHypothesis.OBSERVING  -> MealHypothesisCoreState.OBSERVING
+    MealHypothesis.CONFIRMED  -> MealHypothesisCoreState.CONFIRMED
+    MealHypothesis.COMMITTED  -> MealHypothesisCoreState.COMMITTED
+    MealHypothesis.RECOVERING -> MealHypothesisCoreState.RECOVERING
 }

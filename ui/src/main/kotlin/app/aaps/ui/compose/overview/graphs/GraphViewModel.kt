@@ -2,12 +2,15 @@ package app.aaps.ui.compose.overview.graphs
 
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.Stable
+import androidx.compose.ui.graphics.toArgb
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import app.aaps.core.data.configuration.Constants
 import app.aaps.core.data.model.GlucoseUnit
 import app.aaps.core.data.time.T
 import app.aaps.core.interfaces.aps.Loop
+import app.aaps.core.interfaces.aps.MealHypothesisCoreState
+import app.aaps.core.interfaces.aps.MealHypothesisHistorySource
 import app.aaps.core.interfaces.configuration.Config
 import app.aaps.core.interfaces.constraints.ConstraintsChecker
 import app.aaps.core.interfaces.db.PersistenceLayer
@@ -18,6 +21,8 @@ import app.aaps.core.interfaces.nsclient.ProcessedDeviceStatusData
 import app.aaps.core.interfaces.overview.graph.BgDataPoint
 import app.aaps.core.interfaces.overview.graph.BgInfoData
 import app.aaps.core.interfaces.overview.graph.GraphConfig
+import app.aaps.core.interfaces.overview.graph.GraphDataPoint
+import app.aaps.core.interfaces.overview.graph.MealHypothesisGraphData
 import app.aaps.core.interfaces.overview.graph.GraphConfigRepository
 import app.aaps.core.interfaces.overview.graph.OverviewDataCache
 import app.aaps.core.interfaces.aps.APSResult
@@ -226,7 +231,8 @@ class GraphViewModel @AssistedInject constructor(
     private val activePlugin: ActivePlugin,
     private val automation: Automation,
     private val processedTbrEbData: ProcessedTbrEbData,
-    private val auditorStateProvider: AuditorStateProvider
+    private val auditorStateProvider: AuditorStateProvider,
+    private val mealHypothesisHistorySource: MealHypothesisHistorySource
 ) : ViewModel() {
 
     @Inject lateinit var ch: ConcentrationHelper
@@ -626,6 +632,23 @@ class GraphViewModel @AssistedInject constructor(
     val boostPanelFlow: StateFlow<BoostPanelState> = ticker30s.map { buildBoostPanelState() }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), BoostPanelState())
 
+    /**
+     * MHB subgraph: recorded meal hypothesis state changes as step-line points
+     * (value = state ordinal). Empty while BOOST is not the active algorithm, so the
+     * subgraph renders nothing — same gate as the BOOST panel.
+     */
+    val mealHypothesisGraphFlow: StateFlow<MealHypothesisGraphData> = combine(
+        mealHypothesisHistorySource.historyFlow, isBoostActiveFlow, ticker30s
+    ) { history, boostActive, now ->
+        if (!boostActive || history.isEmpty()) MealHypothesisGraphData(emptyList())
+        else MealHypothesisGraphData(
+            history.map { GraphDataPoint(it.timestamp, it.state.ordinal.toDouble()) } +
+                // Terminal point: repeat the current state at "now" so the last step reaches
+                // the now line and follows it on every 30 s tick.
+                GraphDataPoint(now, history.last().state.ordinal.toDouble())
+        )
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), MealHypothesisGraphData(emptyList()))
+
     private fun buildBoostPanelState(): BoostPanelState {
         val aps = activePlugin.activeAPS ?: return BoostPanelState()
         if (aps.algorithm != APSResult.Algorithm.BOOST) return BoostPanelState()
@@ -670,11 +693,15 @@ class GraphViewModel @AssistedInject constructor(
             activityLabel = activityLabel,
             activityColor = activityColor,
             status = v5State ?: tier ?: "BOOST",
-            statusColor = when (v5State?.uppercase()) {
-                "OBSERVING" -> 0xFFFFC107L; "CONFIRMED" -> 0xFFFF6E40L
-                "COMMITTED" -> 0xFFFF9800L; "RECOVERING" -> 0xFF26C6DAL
-                else -> 0xFF4CAF50L
-            },
+            // Shared color mapping with the MHB graph step line (see GraphUtils) — unknown
+            // state falls back to the IDLE green, same as the previous default branch.
+            // NOTE: convert with toArgb(), not Color.value — value stores the color SHIFTED into
+            // the upper 32 bits of the ULong; the card reads the low 32 bits via .toInt() and
+            // would get fully transparent (0x00000000).
+            statusColor = v5State?.uppercase()
+                ?.let { s -> MealHypothesisCoreState.entries.firstOrNull { it.name == s } }
+                ?.let { mealHypothesisStateColor(it).toArgb().toLong() }
+                ?: 0xFF4CAF50L,
             v5Active = v5Active,
             v5StateLabel = if (v5Active) {
                 buildString {

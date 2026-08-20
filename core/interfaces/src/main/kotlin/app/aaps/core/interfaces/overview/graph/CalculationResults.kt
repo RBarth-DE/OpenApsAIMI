@@ -463,3 +463,12 @@ data class RunningModeSegment(
 data class RunningModeGraphData(
     val segments: List<RunningModeSegment>
 )
+
+/**
+ * Meal hypothesis (MHB) graph data: one point per recorded state change.
+ * Value is the state ordinal (0 = IDLE .. 4 = RECOVERING); the last point
+ * repeats the current state at "now" so the final step reaches the now line.
+ */
+data class MealHypothesisGraphData(
+    val points: List<GraphDataPoint>
+)

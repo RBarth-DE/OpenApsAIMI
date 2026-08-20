@@ -1,5 +1,6 @@
 package app.aaps.plugins.aps.di
 
+import app.aaps.core.interfaces.aps.MealHypothesisHistorySource
 import app.aaps.core.interfaces.di.APS
 import app.aaps.core.interfaces.di.AllConfigs
 import app.aaps.core.interfaces.plugin.PluginBase
@@ -70,6 +71,10 @@ abstract class ApsPluginsListModule {
     @IntoMap
     @IntKey(239)
     abstract fun bindOpenAPSBoostV5Plugin(plugin: OpenAPSBoostV5Plugin): PluginBase
+
+    /** MHB overview subgraph history — read by :ui without a dependency on this plugin. */
+    @Binds
+    abstract fun bindMealHypothesisHistorySource(plugin: OpenAPSBoostV5Plugin): MealHypothesisHistorySource
 
     @Binds
     @AllConfigs

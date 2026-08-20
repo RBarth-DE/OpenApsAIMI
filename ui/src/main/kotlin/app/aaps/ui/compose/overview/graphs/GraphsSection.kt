@@ -203,6 +203,8 @@ fun GraphsSection(
     // Include AutoISF/AIMI series in the picker only when the respective plugin is active
     val isAutoIsfActive by graphViewModel.isAutoIsfActiveFlow.collectAsStateWithLifecycle()
     val isAIMIActive by graphViewModel.isAIMIActiveFlow.collectAsStateWithLifecycle()
+    // MHB subgraph renders nothing when BOOST is not the active algorithm (same gate as the BOOST panel)
+    val isBoostActive by graphViewModel.isBoostActiveFlow.collectAsStateWithLifecycle()
     val configurableSeries = remember(isAutoIsfActive, isAIMIActive) {
         when {
             isAutoIsfActive -> BASE_CONFIGURABLE_SERIES + AUTOISF_SERIES.toList()
@@ -617,35 +619,40 @@ fun GraphsSection(
                     }
 
                     else             -> {
-                        SecondaryGraphCompose(
-                            viewModel = graphViewModel,
-                            seriesTypes = secondary.series,
-                            scrollState = secScrollStates[i],
-                            zoomState = secZoomStates[i],
-                            derivedTimeRange = derivedTimeRange,
-                            nowTimestamp = nowTimestamp,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(secondary.height.dp)
-                                .then(
-                                    if (!isSimpleMode) Modifier.combinedClickable(
-                                        onClick = {},
-                                        onLongClick = { editingGraphIndex = i }
-                                    ) else Modifier
-                                )
-                        )
-                        val secHeaderColors = rememberSeriesColors()
-                        val secHeaderSep = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-                        val secHeaderParts = secondary.series.map { s ->
-                            stringResource(seriesShortNameId(s)) to secHeaderColors.colorFor(s)
+                        // MHB renders nothing when BOOST is not the active algorithm (like the BOOST panel)
+                        if (secondary.series == listOf(SeriesType.MHS) && !isBoostActive) {
+                            // empty slot
+                        } else {
+                            SecondaryGraphCompose(
+                                viewModel = graphViewModel,
+                                seriesTypes = secondary.series,
+                                scrollState = secScrollStates[i],
+                                zoomState = secZoomStates[i],
+                                derivedTimeRange = derivedTimeRange,
+                                nowTimestamp = nowTimestamp,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(secondary.height.dp)
+                                    .then(
+                                        if (!isSimpleMode) Modifier.combinedClickable(
+                                            onClick = {},
+                                            onLongClick = { editingGraphIndex = i }
+                                        ) else Modifier
+                                    )
+                            )
+                            val secHeaderColors = rememberSeriesColors()
+                            val secHeaderSep = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                            val secHeaderParts = secondary.series.map { s ->
+                                stringResource(seriesShortNameId(s)) to secHeaderColors.colorFor(s)
+                            }
+                            Text(
+                                text = coloredSeriesLabel(secHeaderParts, secHeaderSep),
+                                style = MaterialTheme.typography.labelSmall,
+                                modifier = Modifier
+                                    .align(Alignment.TopStart)
+                                    .padding(start = 36.dp, top = 2.dp)
+                            )
                         }
-                        Text(
-                            text = coloredSeriesLabel(secHeaderParts, secHeaderSep),
-                            style = MaterialTheme.typography.labelSmall,
-                            modifier = Modifier
-                                .align(Alignment.TopStart)
-                                .padding(start = 36.dp, top = 2.dp)
-                        )
                     }
                 }
             }
@@ -778,6 +785,7 @@ private fun seriesShortNameId(type: SeriesType): Int = when (type) {
     SeriesType.PP_ISF          -> app.aaps.core.ui.R.string.pp_isf_shortname
     SeriesType.DURA_ISF        -> app.aaps.core.ui.R.string.dura_isf_shortname
     SeriesType.BOOST           -> app.aaps.core.ui.R.string.boost
+    SeriesType.MHS             -> app.aaps.core.ui.R.string.mhs
 }
 
 // =========================================================================

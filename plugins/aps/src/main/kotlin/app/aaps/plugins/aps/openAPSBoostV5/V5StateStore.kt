@@ -4,6 +4,7 @@ import app.aaps.core.interfaces.logging.AAPSLogger
 import app.aaps.core.keys.StringKey
 import app.aaps.core.keys.interfaces.Preferences
 import app.aaps.plugins.aps.getBoostDosing
+import org.json.JSONArray
 import org.json.JSONObject
 import java.util.Locale
 import kotlin.math.round
@@ -44,6 +45,15 @@ import kotlin.math.round
  */
 class V5StateStore(private val preferences: Preferences, private val aapsLogger: AAPSLogger? = null) {
 
+    companion object {
+
+        /** MHB subgraph history cap: keep only the last N state changes. */
+        const val MEAL_HYPOTHESIS_HISTORY_MAX_ENTRIES = 300
+
+        /** MHB subgraph history cap: drop entries older than this. */
+        const val MEAL_HYPOTHESIS_HISTORY_MAX_AGE_MS = 48L * 60 * 60 * 1000
+    }
+
     /**
      * Most recent persisted state, held in memory for synchronous read consistency.
      * Initialised to null (cold-start sentinel — first load() falls through to SharedPreferences).
@@ -81,6 +91,19 @@ class V5StateStore(private val preferences: Preferences, private val aapsLogger:
                 // state → default false (next session entry will reset it explicitly).
                 committedInSession = json.optBoolean("committedInSession", false),
             )
+            // MHB subgraph history — tolerant read: skip unknown/corrupt entries instead of
+            // failing the whole state load. Missing key (pre-feature blobs) → empty list.
+            val history = json.optJSONArray("mealHypothesisHistory")?.let { arr ->
+                buildList {
+                    for (i in 0 until arr.length()) {
+                        val entry = arr.optJSONObject(i) ?: continue
+                        val ts = entry.optLong("t", 0L)
+                        val name = entry.optString("s")
+                        val entryState = MealHypothesis.entries.firstOrNull { it.name == name } ?: continue
+                        if (ts > 0L) add(MealHypothesisHistoryEntry(ts, entryState))
+                    }
+                }
+            } ?: emptyList()
             V5PersistedState(
                 mealHypothesis = state,
                 mlMealLikelyNullStreak = json.optInt("mlMealLikelyNullStreak", 0),
@@ -90,6 +113,7 @@ class V5StateStore(private val preferences: Preferences, private val aapsLogger:
                 primerNettingResidualU = json.optDouble("primerNettingResidualU", 0.0),
                 primerIobU = json.optDouble("primerIobU", 0.0),                              // 2026-07-21 cross-session accumulator
                 primerIobUpdatedMs = json.optLong("primerIobUpdatedMs", 0L),
+                mealHypothesisHistory = history,
                 // lastCycleScore is deliberately NOT in the JSON blob (see V5PersistedState KDoc) —
                 // it lives only in the in-memory cache. Cold start → null → scoreReadyStreak=false
                 // → legacy confirm timing for the first cycle. (2026-07-03)
@@ -112,6 +136,9 @@ class V5StateStore(private val preferences: Preferences, private val aapsLogger:
 
         // NOTE: lastCycleScore is intentionally NOT serialized — cache-only cross-cycle input for
         // the sustained-score early confirm; losing it on restart fails safe. (2026-07-03)
+        val trimmedHistory = state.mealHypothesisHistory
+            .takeLast(MEAL_HYPOTHESIS_HISTORY_MAX_ENTRIES)
+            .filter { it.timestamp >= System.currentTimeMillis() - MEAL_HYPOTHESIS_HISTORY_MAX_AGE_MS }
         val json = JSONObject()
             .put("mealHypothesis", state.mealHypothesis.state.name)
             .put("mealHypothesisAge", state.mealHypothesis.ageCycles)
@@ -123,6 +150,9 @@ class V5StateStore(private val preferences: Preferences, private val aapsLogger:
             .put("primerNettingResidualU", state.primerNettingResidualU)
             .put("primerIobU", state.primerIobU)                            // 2026-07-21 cross-session accumulator
             .put("primerIobUpdatedMs", state.primerIobUpdatedMs)
+            .put("mealHypothesisHistory", JSONArray().apply {
+                trimmedHistory.forEach { put(JSONObject().put("t", it.timestamp).put("s", it.state.name)) }
+            })
         preferences.put(StringKey.ApsBoostV5State, json.toString())
     }
 

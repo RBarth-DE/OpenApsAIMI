@@ -72,6 +72,15 @@ import kotlin.math.max
 enum class MealHypothesis { IDLE, OBSERVING, CONFIRMED, COMMITTED, RECOVERING }
 
 /**
+ * One recorded state change for the MHB overview subgraph: [state] is active from [timestamp] on.
+ * Persisted inside the V5 state blob (V5StateStore), capped to the last 300 entries / 48 h.
+ */
+data class MealHypothesisHistoryEntry(
+    val timestamp: Long,
+    val state: MealHypothesis,
+)
+
+/**
  * Persisted state. The plugin reads this from RT each cycle and writes it back after [step].
  *
  * @property maxScoreInObserving peak meal_signal_score observed during the current OBSERVING run.

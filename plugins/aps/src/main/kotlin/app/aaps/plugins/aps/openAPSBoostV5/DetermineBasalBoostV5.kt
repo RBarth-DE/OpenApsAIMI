@@ -152,6 +152,12 @@ data class V5PersistedState(
     val primerIobU: Double = 0.0,
     /** 2026-07-21 primer: epoch-ms the accumulator was last updated (for the decay). 0 = never. */
     val primerIobUpdatedMs: Long = 0L,
+    /**
+     * Recorded meal hypothesis state changes for the MHB overview subgraph, oldest first.
+     * Filled by the plugin's runShadow (decide() leaves it empty on purpose — it is not part
+     * of the state machine). Persisted in the V5 state blob, capped to 300 entries / 48 h.
+     */
+    val mealHypothesisHistory: List<MealHypothesisHistoryEntry> = emptyList(),
 )
 
 /** Full per-cycle V5 output. Every field is reconstructable into the ~6 NS RT fields. */
