@@ -1,0 +1,244 @@
+package app.aaps.plugins.source.activities
+
+import android.content.Intent
+import android.os.Bundle
+import androidx.activity.compose.setContent
+import androidx.appcompat.app.AppCompatActivity
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Preview
+import app.aaps.core.keys.interfaces.Preferences
+import app.aaps.core.ui.compose.AapsSpacing
+import app.aaps.core.ui.compose.AapsTheme
+import app.aaps.core.ui.compose.AapsTopAppBar
+import app.aaps.core.ui.compose.LocalPreferences
+import app.aaps.plugins.libre3.Libre3CgmDriver
+import app.aaps.plugins.libre3.Libre3CgmDrivers
+import app.aaps.plugins.libre3.identity.Libre3SensorStore
+import app.aaps.plugins.source.Libre3Ingest
+import app.aaps.plugins.source.R
+import app.aaps.plugins.source.compose.Libre3UiLabels
+import app.aaps.plugins.source.logs.DriverLogFilter
+import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.delay
+import javax.inject.Inject
+
+/** Shows which sensor is stored and what the session is doing. Read only. */
+@AndroidEntryPoint
+class Libre3StatusActivity : AppCompatActivity() {
+
+    @Inject lateinit var preferences: Preferences
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContent {
+            CompositionLocalProvider(LocalPreferences provides preferences) {
+                AapsTheme {
+                    Libre3StatusScreen(
+                        onBack = { finish() },
+                        onOpenLog = {
+                            startActivity(
+                                Intent(this, CgmDriverLogActivity::class.java)
+                                    .putExtra(CgmDriverLogActivity.EXTRA_FILTER, DriverLogFilter.LIBRE3.name)
+                            )
+                        },
+                    )
+                }
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+internal fun Libre3StatusScreen(onBack: () -> Unit, onOpenLog: () -> Unit, modifier: Modifier = Modifier) {
+    val context = LocalContext.current
+    val store = remember { Libre3SensorStore(context) }
+    val driver = remember { Libre3CgmDrivers.default() }
+    var identity by remember { mutableStateOf(store.loadIdentity()) }
+    var phase by remember { mutableStateOf(driver.warmupState().phase) }
+    var sessionUp by remember { mutableStateOf(driver.isSessionUp()) }
+    var blockedReason by remember { mutableStateOf(Libre3CgmDrivers.realDriverBlockedReason()) }
+    var askingToForget by remember { mutableStateOf(false) }
+    var forgotten by remember { mutableStateOf(false) }
+
+    LaunchedEffect(Unit) {
+        while (true) {
+            identity = store.loadIdentity()
+            phase = driver.warmupState().phase
+            sessionUp = driver.isSessionUp()
+            blockedReason = Libre3CgmDrivers.realDriverBlockedReason()
+            delay(2_000L)
+        }
+    }
+
+    Scaffold(
+        modifier = modifier,
+        topBar = {
+            AapsTopAppBar(
+                title = { Text(stringResource(R.string.libre3_status_title)) },
+                navigationIcon = {
+                    IconButton(onClick = onBack) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = stringResource(R.string.libre3_nav_back),
+                        )
+                    }
+                },
+            )
+        },
+    ) { innerPadding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+                .padding(AapsSpacing.medium),
+            verticalArrangement = Arrangement.spacedBy(AapsSpacing.small),
+        ) {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
+            ) {
+                Column(
+                    modifier = Modifier.padding(AapsSpacing.medium),
+                    verticalArrangement = Arrangement.spacedBy(AapsSpacing.small),
+                ) {
+                    Text(
+                        text = stringResource(R.string.libre3_status_heading),
+                        style = MaterialTheme.typography.titleMedium,
+                    )
+                    val stored = identity
+                    if (stored == null) {
+                        Text(stringResource(R.string.libre3_status_no_sensor))
+                    } else {
+                        Text(stringResource(R.string.libre3_status_serial, stored.serialNumber))
+                        Text(
+                            stringResource(
+                                R.string.libre3_status_family,
+                                Libre3UiLabels.generationLabel(stored.generation),
+                            )
+                        )
+                        Text(stringResource(R.string.libre3_status_address, stored.bleAddress))
+                    }
+                }
+            }
+            Text(stringResource(R.string.libre3_status_phase, Libre3UiLabels.phaseLabel(phase)))
+            Text(
+                stringResource(
+                    R.string.libre3_status_session,
+                    stringResource(
+                        if (sessionUp) R.string.libre3_status_session_up else R.string.libre3_status_session_down
+                    ),
+                )
+            )
+
+            // Why the real driver is not in use, said plainly rather than left to be guessed.
+            blockedReason?.let { Text(stringResource(R.string.libre3_status_driver_blocked, it)) }
+
+            val stored = identity
+            if (stored != null && blockedReason == null) {
+                Button(onClick = { if (sessionUp) driver.disconnect() else driver.connect(stored.bleAddress) }) {
+                    Text(
+                        stringResource(
+                            if (sessionUp) R.string.libre3_status_disconnect else R.string.libre3_status_connect
+                        )
+                    )
+                }
+            }
+
+            // The way to see what the driver did, without exporting the whole log folder first.
+            OutlinedButton(onClick = onOpenLog) {
+                Text(stringResource(R.string.cgm_driver_log_open))
+            }
+
+            // The way out of a sensor that is stored but can never be reached. Without it the only
+            // escape would be clearing the whole app, because a stored pairing key sends every
+            // later attempt down the short reconnect path, and a fresh scan of the same sensor
+            // keeps that key.
+            if (stored != null) {
+                OutlinedButton(onClick = { askingToForget = true }) {
+                    Text(stringResource(R.string.libre3_forget_sensor))
+                }
+            }
+            if (forgotten) Text(stringResource(R.string.libre3_forget_sensor_done))
+        }
+    }
+
+    if (askingToForget) {
+        AlertDialog(
+            onDismissRequest = { askingToForget = false },
+            title = { Text(stringResource(R.string.libre3_forget_sensor_title)) },
+            text = { Text(stringResource(R.string.libre3_forget_sensor_explain)) },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        askingToForget = false
+                        forgetSensor(driver, store)
+                        identity = null
+                        sessionUp = false
+                        forgotten = true
+                    }
+                ) {
+                    Text(stringResource(R.string.libre3_forget_sensor_confirm))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { askingToForget = false }) {
+                    Text(stringResource(R.string.libre3_forget_sensor_cancel))
+                }
+            },
+        )
+    }
+}
+
+/**
+ * Throws away everything this phone knows about the sensor it is holding.
+ *
+ * The three steps have to go together. Dropping the link first, so no session keeps running on
+ * material that is about to disappear. Then the store, which is what makes the next attempt start
+ * a fresh pairing instead of reusing a key that does not work. Then the ingest mark, because the
+ * next sensor counts its own minutes from zero and a leftover mark would refuse every reading of
+ * it as already seen.
+ *
+ * The sensor itself is left alone. No command is sent to it, and it keeps running.
+ */
+private fun forgetSensor(driver: Libre3CgmDriver, store: Libre3SensorStore) {
+    driver.disconnect()
+    store.clear()
+    Libre3Ingest.reset()
+}
+
+@Preview
+@Composable
+private fun Libre3StatusScreenPreview() {
+    MaterialTheme {
+        Libre3StatusScreen(onBack = {}, onOpenLog = {})
+    }
+}

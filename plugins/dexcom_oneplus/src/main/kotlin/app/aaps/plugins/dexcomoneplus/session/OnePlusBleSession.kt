@@ -2,8 +2,8 @@ package app.aaps.plugins.dexcomoneplus.session
 
 import android.content.Context
 import android.os.PowerManager
-import android.util.Log
 import app.aaps.plugins.dexcomoneplus.OnePlusGlucoseSample
+import app.aaps.plugins.dexcomoneplus.OnePlusLog
 import app.aaps.plugins.dexcomoneplus.OnePlusLogMarkers
 import app.aaps.plugins.dexcomoneplus.OnePlusWarmupState
 import app.aaps.plugins.dexcomoneplus.gatt.OnePlusGattClient
@@ -68,6 +68,44 @@ internal object OnePlusBleSessionCyclePolicy {
 
     /** Continuous ADV silence after which a stale stored MAC is reported. */
     const val STALE_MAC_SUSPICION_AFTER_MS = 6L * 60_000L
+
+    /**
+     * Quiet period after a **successful** EGV cycle before the next ADV wait may start.
+     *
+     * The transmitter keeps radiating the tail of its current advertising burst for a few hundred
+     * milliseconds after it closes the link. Re-arming the wait immediately latches that residual
+     * burst, reports "next-cycle target ADV acquired" and connects into a sensor that is already
+     * going to sleep. CUBOT field log 2026-08-20: cycle down 17:10:14.012 → ADV at 17:10:14.139
+     * (+127 ms) → `connectGatt` → status 133 after 30 s → autoConnect retry → 60 s timeout. That is
+     * 97 s of a 300 s cycle spent on a connect that could not succeed, and the silence clock only
+     * starts once it ends, so the blind-connect escape is late for the real next window too.
+     *
+     * The next genuine burst is a whole duty cycle away (~5 min), so a guard of this size cannot
+     * hide it. Applies to the healthy-cycle path only: after a *failed* connect the sensor may
+     * legitimately still be advertising and that sighting is worth catching.
+     */
+    const val POST_CYCLE_ADV_GUARD_MS = 10_000L
+
+    /**
+     * Length of one filtered ADV window during the persistent wait.
+     *
+     * Android's throttle counts scan **registrations** (5 per 30 s), not scan time, so a few long
+     * windows are far cheaper than many short ones *and* hear the advertisement the moment it
+     * arrives instead of at the next poll. The per-OEM [OemDeviceProfile.preConnectScanMs] stays
+     * what it is for the normal pre-connect rescan; only this open-ended wait uses the long window.
+     *
+     * Sized so that two slots (production + staging) polling together stay under the platform quota
+     * with room to spare for the UI discovery scan: 20 s + [ADV_WAIT_RESTART_DELAY_MS] ≈ 3 starts
+     * per minute per slot, against the 10 per minute the platform allows. It is also the worst-case
+     * lag between `stop` and the wait loop noticing it, which is why it is not longer still.
+     */
+    const val PERSISTENT_ADV_SCAN_MS = 20_000L
+
+    /**
+     * Pause between two ADV windows of the persistent wait. Only long enough to keep `stop`
+     * responsive between windows — the scan-start rate is governed by [PERSISTENT_ADV_SCAN_MS].
+     */
+    const val ADV_WAIT_RESTART_DELAY_MS = 250L
 
     /**
      * A cycle that proved the link works ends in the persistent ADV wait instead of the bounded
@@ -239,10 +277,16 @@ class OnePlusBleSessionSkeleton(
     /**
      * Ob1-style pre-connect: LE rescan / handoff before [OnePlusGattClient.connect].
      * Runs on bleExecutor; must not touch UI. Returns [OnePlusConnectPrep] (ADV freshness).
+     *
+     * `scanMs` overrides [OemDeviceProfile.preConnectScanMs] for this call; null keeps the profile
+     * value. The persistent ADV wait passes
+     * [OnePlusBleSessionCyclePolicy.PERSISTENT_ADV_SCAN_MS] so an open-ended wait costs few scan
+     * registrations instead of one every few seconds.
+     *
      * Default no-op (tests / stub).
      */
-    private val beforeConnect: (deviceAddress: String, attempt: Int) -> OnePlusConnectPrep =
-        { _, _ -> OnePlusConnectPrep() },
+    private val beforeConnect: (deviceAddress: String, attempt: Int, scanMs: Long?) -> OnePlusConnectPrep =
+        { _, _, _ -> OnePlusConnectPrep() },
     /** Juggluco-style reconnect: preload 16-byte KEKS shared key when available. */
     private val savedSharedKeyProvider: () -> ByteArray? = { null },
     /** Persist MAC + shared key after successful auth. */
@@ -316,13 +360,11 @@ class OnePlusBleSessionSkeleton(
         }
         val normalized = OnePlusSessionStart.normalizePairingCode(pairingCode)
         if (deviceAddress.isBlank()) {
-            Log.i(
-                OnePlusLogMarkers.TAG,
+            OnePlusLog.i(
                 "${OnePlusLogMarkers.SESSION}: [$slot] start pairing (addr blank) profile=${profile.id}",
             )
         } else {
-            Log.i(
-                OnePlusLogMarkers.TAG,
+            OnePlusLog.i(
                 "${OnePlusLogMarkers.SESSION}: [$slot] start pairing addr=${redactAddress(deviceAddress)} profile=${profile.id}",
             )
         }
@@ -336,8 +378,7 @@ class OnePlusBleSessionSkeleton(
             }
         }
         if (!startAllowed) {
-            Log.i(
-                OnePlusLogMarkers.TAG,
+            OnePlusLog.i(
                 "${OnePlusLogMarkers.SESSION}: [$slot] start ignored — session already stopped",
             )
             return
@@ -364,8 +405,7 @@ class OnePlusBleSessionSkeleton(
                     // A sensor that has already sent us Control traffic is asleep, not lost: keep
                     // waiting for its next radio window instead of ending in a terminal FAILED only
                     // a manual restart could leave.
-                    Log.w(
-                        OnePlusLogMarkers.TAG,
+                    OnePlusLog.w(
                         "${OnePlusLogMarkers.RECONNECT}: [$slot] retry budget exhausted after proven Control " +
                             "traffic (attempts=$attempt) — switch to persistent ADV wait",
                     )
@@ -381,8 +421,7 @@ class OnePlusBleSessionSkeleton(
                 }
                 if (applyFailureBudget) {
                     val delayMs = reconnectPolicy.nextDelayMs(attempt, profile)
-                    Log.i(
-                        OnePlusLogMarkers.TAG,
+                    OnePlusLog.i(
                         "${OnePlusLogMarkers.RECONNECT}: [$slot] attempt=$attempt delayMs=$delayMs " +
                             "profile=${profile.id} aggressive=${profile.aggressiveReconnect}",
                     )
@@ -396,15 +435,13 @@ class OnePlusBleSessionSkeleton(
                         preparedConnect?.blindFallback == true -> "blind_escape"
                         else -> "prepared_connect"
                     }
-                    Log.i(
-                        OnePlusLogMarkers.TAG,
+                    OnePlusLog.i(
                         "${OnePlusLogMarkers.RECONNECT}: [$slot] bypass retry delay " +
                             "reason=$bypassReason attempt=$attempt profile=${profile.id}",
                     )
                 }
             } else {
-                Log.i(
-                    OnePlusLogMarkers.TAG,
+                OnePlusLog.i(
                     "${OnePlusLogMarkers.RECONNECT}: [$slot] attempt=0 " +
                         "maxRetries=${profile.connectRetryCount} timeoutMs=${profile.connectTimeoutMs}",
                 )
@@ -432,6 +469,7 @@ class OnePlusBleSessionSkeleton(
                     preparedConnect = preparePostCollectionReconnect(
                         deviceAddress = deviceAddress,
                         reason = "egv_cycle_complete_waiting_for_adv",
+                        postCycleQuietMs = OnePlusBleSessionCyclePolicy.POST_CYCLE_ADV_GUARD_MS,
                     )
                     if (!running || preparedConnect == null) return
                     // Attempt 1 suppresses SessionStart and reports a reconnect, while the prepared
@@ -460,8 +498,7 @@ class OnePlusBleSessionSkeleton(
                         }
                         onSession(false, "egv_loop_exit")
                         enterReconnecting("egv_loop_exit")
-                        Log.i(
-                            OnePlusLogMarkers.TAG,
+                        OnePlusLog.i(
                             "${OnePlusLogMarkers.SESSION}: [$slot] down reason=egv_loop_exit → reconnect",
                         )
                         attempt++
@@ -511,7 +548,7 @@ class OnePlusBleSessionSkeleton(
         gatt.disconnect()
         emitWarmup()
         onSession(false, reason)
-        Log.i(OnePlusLogMarkers.TAG, "${OnePlusLogMarkers.SESSION}: [$slot] down reason=$reason")
+        OnePlusLog.i("${OnePlusLogMarkers.SESSION}: [$slot] down reason=$reason")
     }
 
     override fun isUp(): Boolean = up
@@ -532,11 +569,10 @@ class OnePlusBleSessionSkeleton(
         setWarmup(OnePlusWarmupState(phase = connectingPhase, message = "connect_attempt_$attempt"))
 
         val prep = preparedConnect ?: try {
-            beforeConnect(deviceAddress, attempt)
+            beforeConnect(deviceAddress, attempt, null)
         } catch (t: Throwable) {
             val msg = t.message ?: "ONEPLUS_BEFORE_CONNECT_FAILED"
-            Log.e(
-                OnePlusLogMarkers.TAG,
+            OnePlusLog.e(
                 "${OnePlusLogMarkers.ERROR}: [$slot] beforeConnect failed: $msg attempt=$attempt",
             )
             onError(msg, false)
@@ -550,16 +586,14 @@ class OnePlusBleSessionSkeleton(
                 blindFallbackAuthorized = prep.blindFallback,
             )
         ) {
-            Log.i(
-                OnePlusLogMarkers.TAG,
+            OnePlusLog.i(
                 "${OnePlusLogMarkers.SCAN}: [$slot] restored session requires fresh ADV — remain waiting",
             )
             enterReconnecting("waiting_for_next_adv")
             return CycleOutcome.RetryableFailure
         }
         if (prep.blindFallback) {
-            Log.w(
-                OnePlusLogMarkers.TAG,
+            OnePlusLog.w(
                 "${OnePlusLogMarkers.SESSION}: [$slot] blind connect — no ADV sighting, " +
                     "persistent wait escape (attempt=$attempt)",
             )
@@ -574,8 +608,7 @@ class OnePlusBleSessionSkeleton(
             autoConnectFromAttempt = profile.autoConnectFromAttempt,
         )
         lastConnectUsedAutoConnect = useAutoConnect
-        Log.i(
-            OnePlusLogMarkers.TAG,
+        OnePlusLog.i(
             "${OnePlusLogMarkers.SESSION}: [$slot] connect decision advFresh=${prep.advFresh} " +
                 "autoConnect=$useAutoConnect attempt=$attempt profile=${profile.id}",
         )
@@ -583,7 +616,7 @@ class OnePlusBleSessionSkeleton(
             gatt.connect(deviceAddress, autoConnect = useAutoConnect)
         } catch (t: Throwable) {
             val msg = t.message ?: "ONEPLUS_GATT_FAILED"
-            Log.e(OnePlusLogMarkers.TAG, "${OnePlusLogMarkers.ERROR}: [$slot] $msg attempt=$attempt", t)
+            OnePlusLog.e("${OnePlusLogMarkers.ERROR}: [$slot] $msg attempt=$attempt", t)
             onError(msg, false)
             enterReconnecting(msg)
             return if (running) CycleOutcome.RetryableFailure else CycleOutcome.Stopped
@@ -597,7 +630,7 @@ class OnePlusBleSessionSkeleton(
             if (!running) return CycleOutcome.Stopped
             if (!authResult.ok) {
                 val msg = authResult.message ?: "ONEPLUS_AUTH_FAILED"
-                Log.e(OnePlusLogMarkers.TAG, "${OnePlusLogMarkers.ERROR}: [$slot] $msg attempt=$attempt")
+                OnePlusLog.e("${OnePlusLogMarkers.ERROR}: [$slot] $msg attempt=$attempt")
                 if (authResult.invalidateSharedKey ||
                     msg.contains("bond failure", ignoreCase = true) ||
                     msg.contains("key refresh", ignoreCase = true) ||
@@ -622,8 +655,7 @@ class OnePlusBleSessionSkeleton(
                 try {
                     onAuthSuccess(deviceAddress, key)
                 } catch (t: Throwable) {
-                    Log.w(
-                        OnePlusLogMarkers.TAG,
+                    OnePlusLog.w(
                         "${OnePlusLogMarkers.SESSION}: [$slot] onAuthSuccess persist failed: ${t.message}",
                     )
                 }
@@ -634,8 +666,7 @@ class OnePlusBleSessionSkeleton(
             up = true
             setWarmup(OnePlusWarmupState(phase = OnePlusWarmupState.Phase.PAIRING, message = "auth_ok"))
             onSession(true, if (attempt == 0) "session_up" else "session_reconnected")
-            Log.i(
-                OnePlusLogMarkers.TAG,
+            OnePlusLog.i(
                 "${OnePlusLogMarkers.SESSION}: [$slot] up attempt=$attempt newStart=$requestNewSensorStart — Control/EGV",
             )
 
@@ -664,7 +695,7 @@ class OnePlusBleSessionSkeleton(
             } catch (t: Throwable) {
                 if (!running) return CycleOutcome.Stopped
                 val msg = t.message ?: "ONEPLUS_CONTROL_FAILED"
-                Log.e(OnePlusLogMarkers.TAG, "${OnePlusLogMarkers.ERROR}: [$slot] $msg", t)
+                OnePlusLog.e("${OnePlusLogMarkers.ERROR}: [$slot] $msg", t)
                 onError(msg, false)
                 enterReconnecting(msg)
                 return CycleOutcome.RetryableFailure
@@ -691,7 +722,7 @@ class OnePlusBleSessionSkeleton(
                 acquire(AUTH_WAKE_LOCK_MS)
             }
         } catch (t: Throwable) {
-            Log.w(OnePlusLogMarkers.TAG, "${OnePlusLogMarkers.SESSION}: [$slot] wakeLock ${t.message}")
+            OnePlusLog.w("${OnePlusLogMarkers.SESSION}: [$slot] wakeLock ${t.message}")
             null
         }
     }
@@ -741,8 +772,7 @@ class OnePlusBleSessionSkeleton(
                 autoConnectFromAttempt = profile.autoConnectFromAttempt,
             )
         ) {
-            Log.i(
-                OnePlusLogMarkers.TAG,
+            OnePlusLog.i(
                 "${OnePlusLogMarkers.RECONNECT}: [$slot] skip ADV wait — previous was hard connect, " +
                     "retry autoConnect attempt=$nextAttempt profile=${profile.id}",
             )
@@ -771,6 +801,13 @@ class OnePlusBleSessionSkeleton(
     private fun preparePostCollectionReconnect(
         deviceAddress: String,
         reason: String,
+        /**
+         * Quiet period before the first ADV window, so the transmitter's residual advertising burst
+         * is not mistaken for the next cycle — see
+         * [OnePlusBleSessionCyclePolicy.POST_CYCLE_ADV_GUARD_MS]. Only the healthy-cycle path passes
+         * a value; after a failure the sensor may still be advertising for real.
+         */
+        postCycleQuietMs: Long = 0L,
     ): OnePlusConnectPrep? {
         if (!running) return null
         up = false
@@ -782,8 +819,7 @@ class OnePlusBleSessionSkeleton(
         try {
             onSession(false, reason)
         } catch (t: Throwable) {
-            Log.w(
-                OnePlusLogMarkers.TAG,
+            OnePlusLog.w(
                 "${OnePlusLogMarkers.SESSION}: [$slot] down callback failed: ${t.message}",
             )
         }
@@ -791,16 +827,21 @@ class OnePlusBleSessionSkeleton(
         try {
             enterReconnecting("waiting_for_next_adv")
         } catch (t: Throwable) {
-            Log.w(
-                OnePlusLogMarkers.TAG,
+            OnePlusLog.w(
                 "${OnePlusLogMarkers.WARMUP}: [$slot] waiting callback failed: ${t.message}",
             )
         }
         if (!running) return null
-        Log.i(
-            OnePlusLogMarkers.TAG,
+        OnePlusLog.i(
             "${OnePlusLogMarkers.SESSION}: [$slot] cycle down reason=$reason — wait persistently for next ADV",
         )
+        if (postCycleQuietMs > 0L) {
+            OnePlusLog.i(
+                "${OnePlusLogMarkers.SCAN}: [$slot] post-cycle ADV guard ${postCycleQuietMs}ms — " +
+                    "ignoring the residual advertising burst of the cycle that just closed",
+            )
+            if (!sleepWhileRunning(postCycleQuietMs)) return null
+        }
         return awaitFreshAdvertisement(deviceAddress)
     }
 
@@ -834,18 +875,17 @@ class OnePlusBleSessionSkeleton(
                 beforeConnect(
                     deviceAddress,
                     OnePlusBleSessionCyclePolicy.POST_COLLECTION_RECONNECT_ATTEMPT,
+                    OnePlusBleSessionCyclePolicy.PERSISTENT_ADV_SCAN_MS,
                 )
             } catch (t: Throwable) {
-                Log.w(
-                    OnePlusLogMarkers.TAG,
+                OnePlusLog.w(
                     "${OnePlusLogMarkers.SCAN}: [$slot] waiting for next ADV failed: ${t.message}",
                 )
                 OnePlusConnectPrep(advFresh = false)
             }
             if (!running) return null
             if (prep.advFresh) {
-                Log.i(
-                    OnePlusLogMarkers.TAG,
+                OnePlusLog.i(
                     "${OnePlusLogMarkers.SCAN}: [$slot] next-cycle target ADV acquired",
                 )
                 resetAdvSilenceTracking()
@@ -873,7 +913,7 @@ class OnePlusBleSessionSkeleton(
                     "ONEPLUS_ADV_STALE_MAC: target ${redactAddress(deviceAddress)} silent " +
                         "${silenceMinutes}min with no advertisement — stored MAC may be stale"
                 }
-                Log.e(OnePlusLogMarkers.TAG, "${OnePlusLogMarkers.ERROR}: [$slot] $message")
+                OnePlusLog.e("${OnePlusLogMarkers.ERROR}: [$slot] $message")
                 try {
                     onError(message, false)
                 } catch (_: Throwable) {
@@ -883,8 +923,7 @@ class OnePlusBleSessionSkeleton(
             val msSinceLastBlind =
                 if (lastBlindConnectAtMs == 0L) null else nowMs - lastBlindConnectAtMs
             if (OnePlusBleSessionCyclePolicy.authorizeBlindConnect(silenceMs, msSinceLastBlind)) {
-                Log.w(
-                    OnePlusLogMarkers.TAG,
+                OnePlusLog.w(
                     "${OnePlusLogMarkers.SCAN}: [$slot] ADV silent ${silenceMinutes}min — " +
                         "authorising one blind connect (escape from persistent wait)",
                 )
@@ -905,12 +944,11 @@ class OnePlusBleSessionSkeleton(
                 )
                 if (!running) return null
             }
-            Log.i(
-                OnePlusLogMarkers.TAG,
+            OnePlusLog.i(
                 "${OnePlusLogMarkers.SCAN}: [$slot] target ADV absent — remain waiting " +
                     "silentMs=$silenceMs foreign=${foreignEverSeen ?: "-"}",
             )
-            if (!sleepWhileRunning(ADV_WAIT_RESTART_DELAY_MS)) return null
+            if (!sleepWhileRunning(OnePlusBleSessionCyclePolicy.ADV_WAIT_RESTART_DELAY_MS)) return null
         }
         return null
     }
@@ -925,8 +963,8 @@ class OnePlusBleSessionSkeleton(
         setWarmup(OnePlusWarmupState(phase = OnePlusWarmupState.Phase.FAILED, message = message))
         onError(message, fatal)
         onSession(false, message)
-        Log.e(OnePlusLogMarkers.TAG, "${OnePlusLogMarkers.ERROR}: [$slot] $message fatal=$fatal")
-        Log.i(OnePlusLogMarkers.TAG, "${OnePlusLogMarkers.SESSION}: [$slot] down reason=fail")
+        OnePlusLog.e("${OnePlusLogMarkers.ERROR}: [$slot] $message fatal=$fatal")
+        OnePlusLog.i("${OnePlusLogMarkers.SESSION}: [$slot] down reason=fail")
     }
 
     /**
@@ -951,8 +989,7 @@ class OnePlusBleSessionSkeleton(
     /** Logs and publishes [state] to the watcher — outside [lifecycleLock], callbacks are foreign code. */
     private fun emitWarmup(state: OnePlusWarmupState = warmup) {
         val remaining = OnePlusWarmupClock.resolveRemainingMs(state, System.currentTimeMillis())
-        Log.i(
-            OnePlusLogMarkers.TAG,
+        OnePlusLog.i(
             "${OnePlusLogMarkers.WARMUP}: [$slot] phase=${state.phase} remainingMs=$remaining " +
                 "msg=${state.message} advSilenceMin=${state.advSilenceMinutes ?: "-"} " +
                 "staleMac=${state.staleMacSuspected}",
@@ -996,6 +1033,5 @@ class OnePlusBleSessionSkeleton(
          * Juggluco uses an unbounded wake lock for the whole connection; we bound it.
          */
         private const val AUTH_WAKE_LOCK_MS = 600_000L
-        private const val ADV_WAIT_RESTART_DELAY_MS = 250L
     }
 }
