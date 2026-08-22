@@ -1,6 +1,6 @@
 {
   "version": "2.2",
-  "generated_at": "2026-08-10T06:46:12.448576+00:00",
+  "generated_at": "2026-08-22T07:21:26.046954+00:00",
   "algorithm_overview": {
     "name": "AIMI (AI-powered Modular Insulin)",
     "base": "OpenAPS oref1 with extensive extensions",
@@ -438,7 +438,7 @@
       "workaround": "None — parameters are ineffective."
     }
   ],
-  "source_commit": "ac6e82a399e2063f47e9454d31af2e9ee56ec22e",
+  "source_commit": "8d49e0f40f2ac62872c92dd90d85eae85bb58792",
   "parameter_knowledge": [
     {
       "key": "AIMI_UAM_CONFIDENCE",

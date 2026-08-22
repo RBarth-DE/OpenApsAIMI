@@ -1,12 +1,12 @@
 {
   "version": "1.0",
   "plugin": "boost",
-  "source_commit": "ac6e82a399e2063f47e9454d31af2e9ee56ec22e",
-  "generated_at": "2026-08-10T06:46:12.816796+00:00",
-  "total": 106,
-  "active": 91,
-  "orphaned": 15,
-  "with_used_in": 87,
+  "source_commit": "8d49e0f40f2ac62872c92dd90d85eae85bb58792",
+  "generated_at": "2026-08-22T07:21:27.207219+00:00",
+  "total": 98,
+  "active": 98,
+  "orphaned": 0,
+  "with_used_in": 96,
   "with_negative_gate": 0,
   "with_settings_path": 60,
   "parameters": [
@@ -26,7 +26,7 @@
       "orphaned": false,
       "negative_gate_key": null,
       "negative_gate_note": null,
-      "logic_summary": "Used in Boost algorithm for DynISFAdjust.",
+      "logic_summary": "Percentage factor for the global dynamic ISF strength; 100 = standard, higher = more dynamic adjustment.",
       "effect_high": "Higher value — more insulin/greater effect",
       "effect_low": "Lower value — less insulin/reduced effect",
       "impact": "medium",
@@ -46,12 +46,32 @@
         {
           "file": "OpenAPSBoostPlugin.kt",
           "function": "calculateBoostIsf"
+        },
+        {
+          "file": "OpenAPSBoostV5Plugin.kt",
+          "function": "getPreferenceScreenContent"
+        },
+        {
+          "file": "AbstractSensitivityPlugin.kt",
+          "function": "fillResult"
+        },
+        {
+          "file": "SensitivityAAPSPlugin.kt",
+          "function": "getPreferenceScreenContent"
+        },
+        {
+          "file": "SensitivityOref1Plugin.kt",
+          "function": "getPreferenceScreenContent"
+        },
+        {
+          "file": "IobCobCalculatorPlugin.kt",
+          "function": "onStart"
         }
       ],
       "orphaned": false,
       "negative_gate_key": null,
       "negative_gate_note": null,
-      "logic_summary": "Maximum autosens ratio. 1.2 = 20% more ISF (less insulin).",
+      "logic_summary": "Default value: 1.2\\nThis is a multiplier cap for autosens (and deviation sensitivity) to set how high the sensitivity ratio can go, which determines how far ISF can be lowered during resistant periods.",
       "effect_high": "Allows larger autosens sensitivity ratio = less insulin when sensitive",
       "effect_low": "Limits sensitivity ratio = less reduction, more stable",
       "impact": "high",
@@ -71,12 +91,32 @@
         {
           "file": "OpenAPSBoostPlugin.kt",
           "function": "calculateBoostIsf"
+        },
+        {
+          "file": "OpenAPSBoostV5Plugin.kt",
+          "function": "getPreferenceScreenContent"
+        },
+        {
+          "file": "AbstractSensitivityPlugin.kt",
+          "function": "fillResult"
+        },
+        {
+          "file": "SensitivityAAPSPlugin.kt",
+          "function": "getPreferenceScreenContent"
+        },
+        {
+          "file": "SensitivityOref1Plugin.kt",
+          "function": "getPreferenceScreenContent"
+        },
+        {
+          "file": "IobCobCalculatorPlugin.kt",
+          "function": "onStart"
         }
       ],
       "orphaned": false,
       "negative_gate_key": null,
       "negative_gate_note": null,
-      "logic_summary": "Minimum autosens ratio. 0.7 = 30% less ISF (more insulin).",
+      "logic_summary": "Default value: 0.7\\nThis is a floor for autosens (and deviation sensitivity) to set how low the sensitivity ratio can go, which determines how far ISF can be raised during sensitive periods.",
       "effect_high": "Lower minimum = allows stronger ISF reduction when resistant",
       "effect_low": "Higher minimum = less aggressive resistance response",
       "impact": "high",
@@ -96,12 +136,16 @@
         {
           "file": "OpenAPSBoostPlugin.kt",
           "function": "onStop"
+        },
+        {
+          "file": "OpenAPSBoostV5Plugin.kt",
+          "function": "getPreferenceScreenContent"
         }
       ],
       "orphaned": false,
       "negative_gate_key": null,
       "negative_gate_note": null,
-      "logic_summary": "Used in Boost algorithm for boost_pct.",
+      "logic_summary": "Profile percentage to use when activity is detected (high steps); &lt;100 means reduce basal during exercise.",
       "effect_high": "More ISF during activity = less insulin = safer",
       "effect_low": "Less ISF during activity = more insulin = hypo risk",
       "impact": "high",
@@ -114,7 +158,7 @@
       "key": "boost_activity_shadow_enabled",
       "name": "ApsBoostActivityShadowEnabled",
       "type": "Boolean",
-      "default": null,
+      "default": true,
       "min": null,
       "max": null,
       "used_in": [
@@ -125,12 +169,16 @@
         {
           "file": "HealthConnectStepsIngest.kt",
           "function": "syncIfDue"
+        },
+        {
+          "file": "OpenAPSBoostV5Plugin.kt",
+          "function": "getPreferenceScreenContent"
         }
       ],
       "orphaned": false,
       "negative_gate_key": null,
       "negative_gate_note": null,
-      "logic_summary": "Enables/disables boost_shadow_enabled. Gate flag for Boost feature.",
+      "logic_summary": "Run a parallel activity-load forecast (inactivity ISF penalty) without affecting dosing, for comparison.",
       "effect_high": "Feature is ON — associated functionality runs",
       "effect_low": "Feature is OFF — associated functionality is disabled",
       "impact": "medium",
@@ -155,7 +203,7 @@
       "orphaned": false,
       "negative_gate_key": null,
       "negative_gate_note": null,
-      "logic_summary": "Used in Boost algorithm for boost_steps_15.",
+      "logic_summary": "15-minute step count threshold for activity detection; exceeding it raises the activity state.",
       "effect_high": "Higher value — more insulin/greater effect",
       "effect_low": "Lower value — less insulin/reduced effect",
       "impact": "medium",
@@ -180,7 +228,7 @@
       "orphaned": false,
       "negative_gate_key": null,
       "negative_gate_note": null,
-      "logic_summary": "Used in Boost algorithm for boost_steps_30.",
+      "logic_summary": "30-minute step count threshold for activity detection; exceeding it raises the activity state.",
       "effect_high": "Higher value — more insulin/greater effect",
       "effect_low": "Lower value — less insulin/reduced effect",
       "impact": "medium",
@@ -205,7 +253,7 @@
       "orphaned": false,
       "negative_gate_key": null,
       "negative_gate_note": null,
-      "logic_summary": "Used in Boost algorithm for boost_steps_5.",
+      "logic_summary": "5-minute step count threshold for activity detection; exceeding it raises the activity state.",
       "effect_high": "Higher value — more insulin/greater effect",
       "effect_low": "Lower value — less insulin/reduced effect",
       "impact": "medium",
@@ -230,7 +278,7 @@
       "orphaned": false,
       "negative_gate_key": null,
       "negative_gate_note": null,
-      "logic_summary": "Used in Boost algorithm for boost_steps_60.",
+      "logic_summary": "60-minute step count threshold for sustained activity detection; stepping above this for an hour switches to active mode.",
       "effect_high": "Higher value — more insulin/greater effect",
       "effect_low": "Lower value — less insulin/reduced effect",
       "impact": "medium",
@@ -243,19 +291,23 @@
       "key": "boost_adjust_sensitivity",
       "name": "ApsBoostAdjustSensitivity",
       "type": "Boolean",
-      "default": null,
+      "default": false,
       "min": null,
       "max": null,
       "used_in": [
         {
           "file": "OpenAPSBoostPlugin.kt",
           "function": "getPreferenceScreenContent"
+        },
+        {
+          "file": "OpenAPSBoostV5Plugin.kt",
+          "function": "getPreferenceScreenContent"
         }
       ],
       "orphaned": false,
       "negative_gate_key": null,
       "negative_gate_note": null,
-      "logic_summary": "When ON: adjusts ISF based on 24H/7D TDD ratio. Higher recent TDD → less ISF (more insulin needed), lower TDD → more ISF (less insulin).",
+      "logic_summary": "Allow Boost to adjust the sensitivity ratio from UAM / COB feedback; turn off to freeze the ratio at 1.0 for troubleshooting.",
       "effect_high": "Feature is ON — associated functionality runs",
       "effect_low": "Feature is OFF — associated functionality is disabled",
       "impact": "high",
@@ -268,14 +320,14 @@
       "key": "boost_allow_all_bg_sources",
       "name": "ApsBoostAllowAllBgSources",
       "type": "Boolean",
-      "default": null,
+      "default": true,
       "min": null,
       "max": null,
       "used_in": [],
       "orphaned": false,
       "negative_gate_key": null,
       "negative_gate_note": null,
-      "logic_summary": "Boolean switch for boost_allow_all_bg_sources.",
+      "logic_summary": "Use glucose values from any source (including xDrip) for Boost calculations, not only the configured primary CGM.",
       "effect_high": "Feature is ON — associated functionality runs",
       "effect_low": "Feature is OFF — associated functionality is disabled",
       "impact": "medium",
@@ -313,19 +365,23 @@
       "key": "boost_autosens_when_no_tdd",
       "name": "ApsBoostAutosensWhenNoTdd",
       "type": "Boolean",
-      "default": null,
+      "default": false,
       "min": null,
       "max": null,
       "used_in": [
         {
           "file": "OpenAPSBoostPlugin.kt",
           "function": "getPreferenceScreenContent"
+        },
+        {
+          "file": "OpenAPSBoostV5Plugin.kt",
+          "function": "getPreferenceScreenContent"
         }
       ],
       "orphaned": false,
       "negative_gate_key": null,
       "negative_gate_note": null,
-      "logic_summary": "When ON and TDD data unavailable: falls back to standard autosens instead of profile ISF. Prevents aggressive dosing during data gaps.",
+      "logic_summary": "Still apply autosens ratio even when TDD is unavailable, falling back to the profile sensitivity adjustment.",
       "effect_high": "Feature is ON — associated functionality runs",
       "effect_low": "Feature is OFF — associated functionality is disabled",
       "impact": "high",
@@ -345,38 +401,26 @@
         {
           "file": "OpenAPSBoostPlugin.kt",
           "function": "onStop"
+        },
+        {
+          "file": "OpenAPSBoostV5Plugin.kt",
+          "function": "getPreferenceScreenContent"
+        },
+        {
+          "file": "BoostV5AutoConfigApply.kt",
+          "function": "factoryDefaults"
         }
       ],
       "orphaned": false,
       "negative_gate_key": null,
       "negative_gate_note": null,
-      "logic_summary": "Boost meal bolus size (units). Cap for meal-related SMB delivery.",
+      "logic_summary": "Maximum single SMB bolus that Boost may deliver; acts as a safety ceiling on meal-amplified doses.",
       "effect_high": "Larger meal boluses allowed — faster post-meal correction",
       "effect_low": "Smaller boluses — more conservative, less post-meal hypo risk",
       "impact": "critical",
       "feature_group": "smb_delivery",
       "is_gate": false,
       "settings_path": "OpenAPS BOOST V6 → OpenAPS BOOST V1 and up",
-      "settings_gate": null
-    },
-    {
-      "key": "boost_bypass_version_check",
-      "name": "ApsBoostBypassVersionCheck",
-      "type": "Boolean",
-      "default": null,
-      "min": null,
-      "max": null,
-      "used_in": [],
-      "orphaned": true,
-      "negative_gate_key": null,
-      "negative_gate_note": null,
-      "logic_summary": "Boolean switch for boost_bypass_version_check.",
-      "effect_high": "Feature is ON — associated functionality runs",
-      "effect_low": "Feature is OFF — associated functionality is disabled",
-      "impact": "medium",
-      "feature_group": "shared_aaps",
-      "is_gate": false,
-      "settings_path": null,
       "settings_gate": null
     },
     {
@@ -390,12 +434,20 @@
         {
           "file": "OpenAPSBoostPlugin.kt",
           "function": "getPreferenceScreenContent"
+        },
+        {
+          "file": "OpenAPSBoostV5Plugin.kt",
+          "function": "getPreferenceScreenContent"
+        },
+        {
+          "file": "BoostV5AutoConfigApply.kt",
+          "function": "unknown"
         }
       ],
       "orphaned": false,
       "negative_gate_key": null,
       "negative_gate_note": null,
-      "logic_summary": "Maximum total SMB insulin (units) in a 60-minute window. Prevents stacking. Higher = more aggressive. 0 = no cap.",
+      "logic_summary": "Maximum total SMB insulin that Boost may deliver within a rolling 60-minute window; 0 disables the cap.",
       "effect_high": "Higher 60-min cap = more SMB stacking allowed",
       "effect_low": "Lower cap = less stacking, safer",
       "impact": "critical",
@@ -440,12 +492,16 @@
         {
           "file": "OpenAPSBoostPlugin.kt",
           "function": "onStop"
+        },
+        {
+          "file": "OpenAPSBoostV5Plugin.kt",
+          "function": "getPreferenceScreenContent"
         }
       ],
       "orphaned": false,
       "negative_gate_key": null,
       "negative_gate_note": null,
-      "logic_summary": "Parameter for boost_dynisf_bg_cap.",
+      "logic_summary": "BG ceiling for dynamic ISF calculation; glucose values above this are progressively damped to prevent runaway ISF.",
       "effect_high": "Higher value — more insulin/greater effect",
       "effect_low": "Lower value — less insulin/reduced effect",
       "impact": "medium",
@@ -465,12 +521,16 @@
         {
           "file": "OpenAPSBoostPlugin.kt",
           "function": "onStop"
+        },
+        {
+          "file": "OpenAPSBoostV5Plugin.kt",
+          "function": "getPreferenceScreenContent"
         }
       ],
       "orphaned": false,
       "negative_gate_key": null,
       "negative_gate_note": null,
-      "logic_summary": "Parameter for boost_dynisf_normal_target.",
+      "logic_summary": "Reference BG target used by dynamic ISF to compute the normalised sensitivity; typically your profile target.",
       "effect_high": "Higher value — more insulin/greater effect",
       "effect_low": "Lower value — less insulin/reduced effect",
       "impact": "medium",
@@ -490,12 +550,16 @@
         {
           "file": "OpenAPSBoostPlugin.kt",
           "function": "onStop"
+        },
+        {
+          "file": "OpenAPSBoostV5Plugin.kt",
+          "function": "getPreferenceScreenContent"
         }
       ],
       "orphaned": false,
       "negative_gate_key": null,
       "negative_gate_note": null,
-      "logic_summary": "Used in Boost algorithm for boost_dynisf_velocity.",
+      "logic_summary": "How much weight BG velocity has on dynamic ISF; 100 = full velocity effect, 0 = no velocity effect.",
       "effect_high": "Higher value — more insulin/greater effect",
       "effect_low": "Lower value — less insulin/reduced effect",
       "impact": "medium",
@@ -505,30 +569,10 @@
       "settings_gate": null
     },
     {
-      "key": "boost_end_time",
-      "name": "ApsBoostEndTime",
-      "type": "String",
-      "default": null,
-      "min": null,
-      "max": null,
-      "used_in": [],
-      "orphaned": true,
-      "negative_gate_key": null,
-      "negative_gate_note": null,
-      "logic_summary": "Stored state or configuration string for boost_end_time.",
-      "effect_high": "Higher value — more insulin/greater effect",
-      "effect_low": "Lower value — less insulin/reduced effect",
-      "impact": "medium",
-      "feature_group": "shared_aaps",
-      "is_gate": false,
-      "settings_path": null,
-      "settings_gate": null
-    },
-    {
       "key": "boost_health_connect_hr_enabled",
       "name": "ApsBoostHealthConnectHrEnabled",
       "type": "Boolean",
-      "default": null,
+      "default": false,
       "min": null,
       "max": null,
       "used_in": [
@@ -540,7 +584,7 @@
       "orphaned": false,
       "negative_gate_key": null,
       "negative_gate_note": null,
-      "logic_summary": "Enables Health Connect HR data ingestion.",
+      "logic_summary": "Pull heart rate data from Android Health Connect to supplement the live CIQ/watch HR feed.",
       "effect_high": "Feature is ON — associated functionality runs",
       "effect_low": "Feature is OFF — associated functionality is disabled",
       "impact": "medium",
@@ -565,7 +609,7 @@
       "orphaned": false,
       "negative_gate_key": null,
       "negative_gate_note": null,
-      "logic_summary": "Minutes between Health Connect data polls.",
+      "logic_summary": "Interval in minutes at which Health Connect HR data is polled; shorter = more responsive but higher battery use.",
       "effect_high": "Higher value — more insulin/greater effect",
       "effect_low": "Lower value — less insulin/reduced effect",
       "impact": "medium",
@@ -578,19 +622,23 @@
       "key": "boost_hr_integration_enabled",
       "name": "ApsBoostHrIntegrationEnabled",
       "type": "Boolean",
-      "default": null,
+      "default": false,
       "min": null,
       "max": null,
       "used_in": [
         {
           "file": "OpenAPSBoostPlugin.kt",
           "function": "onStop"
+        },
+        {
+          "file": "OpenAPSBoostV5Plugin.kt",
+          "function": "getPreferenceScreenContent"
         }
       ],
       "orphaned": false,
       "negative_gate_key": null,
       "negative_gate_note": null,
-      "logic_summary": "Enables Health Connect heart rate data for stress-based ISF adjustment.",
+      "logic_summary": "Incorporate heart-rate data into the Boost algorithm for sleep/wake and stress detection.",
       "effect_high": "Feature is ON — associated functionality runs",
       "effect_low": "Feature is OFF — associated functionality is disabled",
       "impact": "medium",
@@ -615,7 +663,7 @@
       "orphaned": false,
       "negative_gate_key": null,
       "negative_gate_note": null,
-      "logic_summary": "Maximum expected heart rate. Used to normalize HR stress signal.",
+      "logic_summary": "Maximum heart rate used to scale the HR-based activity classifier; values above this are treated as vigorous.",
       "effect_high": "Higher value — more insulin/greater effect",
       "effect_low": "Lower value — less insulin/reduced effect",
       "impact": "medium",
@@ -640,7 +688,7 @@
       "orphaned": false,
       "negative_gate_key": null,
       "negative_gate_note": null,
-      "logic_summary": "Resting heart rate. HR above this = potential stress. Lower = more sensitive.",
+      "logic_summary": "Resting heart rate baseline; the HR classifier uses this as the floor for light/no activity.",
       "effect_high": "Higher value — more insulin/greater effect",
       "effect_low": "Lower value — less insulin/reduced effect",
       "impact": "medium",
@@ -653,19 +701,23 @@
       "key": "boost_hr_stress_detection",
       "name": "ApsBoostHrStressDetection",
       "type": "Boolean",
-      "default": null,
+      "default": false,
       "min": null,
       "max": null,
       "used_in": [
         {
           "file": "OpenAPSBoostPlugin.kt",
           "function": "onStop"
+        },
+        {
+          "file": "OpenAPSBoostV5Plugin.kt",
+          "function": "getPreferenceScreenContent"
         }
       ],
       "orphaned": false,
       "negative_gate_key": null,
       "negative_gate_note": null,
-      "logic_summary": "When ON: elevated HR above resting → stress detection → increases ISF (less insulin needed during stress).",
+      "logic_summary": "Detect physical stress from elevated HR and adjust targets/dosing to prevent over-correction during stress.",
       "effect_high": "Feature is ON — associated functionality runs",
       "effect_low": "Feature is OFF — associated functionality is disabled",
       "impact": "high",
@@ -690,7 +742,7 @@
       "orphaned": false,
       "negative_gate_key": null,
       "negative_gate_note": null,
-      "logic_summary": "Lookback window for HR stress averaging (minutes).",
+      "logic_summary": "Rolling time window over which HR data is averaged for sleep/wake and stress detection.",
       "effect_high": "Higher value — more insulin/greater effect",
       "effect_low": "Lower value — less insulin/reduced effect",
       "impact": "medium",
@@ -710,12 +762,16 @@
         {
           "file": "OpenAPSBoostPlugin.kt",
           "function": "onStop"
+        },
+        {
+          "file": "OpenAPSBoostV5Plugin.kt",
+          "function": "getPreferenceScreenContent"
         }
       ],
       "orphaned": false,
       "negative_gate_key": null,
       "negative_gate_note": null,
-      "logic_summary": "Used in Boost algorithm for boost_inpct.",
+      "logic_summary": "Profile percentage to use when inactivity is detected (low steps); >100 means increase basal during sedentary periods.",
       "effect_high": "More ISF during activity = less insulin = safer",
       "effect_low": "Less ISF during activity = more insulin = hypo risk",
       "impact": "high",
@@ -740,7 +796,7 @@
       "orphaned": false,
       "negative_gate_key": null,
       "negative_gate_note": null,
-      "logic_summary": "Used in Boost algorithm for boost_insteps.",
+      "logic_summary": "60-minute step count threshold below which the user is classified as inactive; profile % shifts up by inactivity_pct.",
       "effect_high": "Higher value — more insulin/greater effect",
       "effect_low": "Lower value — less insulin/reduced effect",
       "impact": "medium",
@@ -760,12 +816,16 @@
         {
           "file": "OpenAPSBoostPlugin.kt",
           "function": "onStop"
+        },
+        {
+          "file": "OpenAPSBoostV5Plugin.kt",
+          "function": "getPreferenceScreenContent"
         }
       ],
       "orphaned": false,
       "negative_gate_key": null,
       "negative_gate_note": null,
-      "logic_summary": "Insulin requirement scaling (%). Above 100% = Boost delivers more insulin. Below 100% = Boost is more conservative. Primary aggressiveness control.",
+      "logic_summary": "Percentage of the calculated insulin requirement that Boost actually delivers — lower values make Boost more conservative, 100% means full delivery.",
       "effect_high": "Boost delivers MORE insulin — reduces hypers faster, higher hypo risk",
       "effect_low": "Boost is MORE conservative — safer but slower hyper correction",
       "impact": "critical",
@@ -835,12 +895,20 @@
         {
           "file": "OpenAPSBoostPlugin.kt",
           "function": "onStop"
+        },
+        {
+          "file": "OpenAPSBoostV5Plugin.kt",
+          "function": "getPreferenceScreenContent"
+        },
+        {
+          "file": "BoostV5AutoConfigApply.kt",
+          "function": "factoryDefaults"
         }
       ],
       "orphaned": false,
       "negative_gate_key": null,
       "negative_gate_note": null,
-      "logic_summary": "Maximum IOB for Boost dosing. Replaces standard max IOB in Boost mode.",
+      "logic_summary": "Hard ceiling on insulin-on-board (IOB) that Boost is allowed to maintain when dosing aggressively.",
       "effect_high": "More IOB allowed — more aggressive corrections",
       "effect_low": "IOB capped lower — safer, less stacking",
       "impact": "critical",
@@ -911,7 +979,7 @@
       "key": "boost_night_mode_auto_by_sleep",
       "name": "ApsBoostNightModeAutoBySleep",
       "type": "Boolean",
-      "default": null,
+      "default": false,
       "min": null,
       "max": null,
       "used_in": [
@@ -923,7 +991,7 @@
       "orphaned": false,
       "negative_gate_key": null,
       "negative_gate_note": null,
-      "logic_summary": "When ON: night mode auto-activates based on sleep detection instead of fixed start/end times.",
+      "logic_summary": "Let the HR/steps sleep detector automatically engage night mode instead of relying only on the fixed time window.",
       "effect_high": "Feature is ON — associated functionality runs",
       "effect_low": "Feature is OFF — associated functionality is disabled",
       "impact": "high",
@@ -943,12 +1011,16 @@
         {
           "file": "OpenAPSBoostPlugin.kt",
           "function": "isNightModeActiveImpl"
+        },
+        {
+          "file": "OpenAPSBoostV5Plugin.kt",
+          "function": "getPreferenceScreenContent"
         }
       ],
       "orphaned": false,
       "negative_gate_key": null,
       "negative_gate_note": null,
-      "logic_summary": "BG offset during night mode (mg/dL). Lowers target for tighter control.",
+      "logic_summary": "BG target increase during night mode; e.g. 27 adds 27 mg/dL to the normal target when sleep is detected.",
       "effect_high": "Stronger night-time insulin reduction",
       "effect_low": "Weaker night-time reduction = tighter control, hypo risk",
       "impact": "high",
@@ -961,19 +1033,23 @@
       "key": "boost_night_mode_disable_with_cob",
       "name": "ApsBoostNightModeDisableWithCob",
       "type": "Boolean",
-      "default": null,
+      "default": false,
       "min": null,
       "max": null,
       "used_in": [
         {
           "file": "OpenAPSBoostPlugin.kt",
           "function": "isNightModeActiveImpl"
+        },
+        {
+          "file": "OpenAPSBoostV5Plugin.kt",
+          "function": "getPreferenceScreenContent"
         }
       ],
       "orphaned": false,
       "negative_gate_key": null,
       "negative_gate_note": null,
-      "logic_summary": "Disables night mode when carbs-on-board > 0.",
+      "logic_summary": "Exit night mode when carbs-on-board is present, treating the COB as a signal that the user is awake and eating.",
       "effect_high": "Feature is ON — associated functionality runs",
       "effect_low": "Feature is OFF — associated functionality is disabled",
       "impact": "high",
@@ -986,7 +1062,7 @@
       "key": "boost_night_mode_disable_with_low_tt",
       "name": "ApsBoostNightModeDisableWithLowTt",
       "type": "Boolean",
-      "default": null,
+      "default": false,
       "min": null,
       "max": null,
       "used_in": [
@@ -998,7 +1074,7 @@
       "orphaned": false,
       "negative_gate_key": null,
       "negative_gate_note": null,
-      "logic_summary": "Disables night mode when low temp target is active.",
+      "logic_summary": "Exit night mode when a low temporary target is set, treating it as a signal that the user is awake and managing.",
       "effect_high": "Feature is ON — associated functionality runs",
       "effect_low": "Feature is OFF — associated functionality is disabled",
       "impact": "high",
@@ -1011,19 +1087,23 @@
       "key": "boost_night_mode_enabled",
       "name": "ApsBoostNightModeEnabled",
       "type": "Boolean",
-      "default": null,
+      "default": false,
       "min": null,
       "max": null,
       "used_in": [
         {
           "file": "OpenAPSBoostPlugin.kt",
           "function": "getPreferenceScreenContent"
+        },
+        {
+          "file": "OpenAPSBoostV5Plugin.kt",
+          "function": "getPreferenceScreenContent"
         }
       ],
       "orphaned": false,
       "negative_gate_key": null,
       "negative_gate_note": null,
-      "logic_summary": "Enables reduced insulin during configured night window.",
+      "logic_summary": "Apply a night-mode BG target offset to reduce insulin delivery during the configured night window.",
       "effect_high": "Feature is ON — associated functionality runs",
       "effect_low": "Feature is OFF — associated functionality is disabled",
       "impact": "high",
@@ -1093,12 +1173,16 @@
         {
           "file": "OpenAPSBoostPlugin.kt",
           "function": "onStop"
+        },
+        {
+          "file": "OpenAPSBoostV5Plugin.kt",
+          "function": "getPreferenceScreenContent"
         }
       ],
       "orphaned": false,
       "negative_gate_key": null,
       "negative_gate_note": null,
-      "logic_summary": "Global ISF scaling percentage. 100% = neutral. >100% = more ISF = less aggressive. <100% = less ISF = more aggressive.",
+      "logic_summary": "Percent ISF scaling factor applied during confirmed-meal PERCENT_SCALE tier; 200 means double ISF (half the dose).",
       "effect_high": "Higher ISF = less insulin for same BG = more conservative",
       "effect_low": "Lower ISF = more insulin for same BG = more aggressive",
       "impact": "high",
@@ -1123,7 +1207,7 @@
       "orphaned": false,
       "negative_gate_key": null,
       "negative_gate_note": null,
-      "logic_summary": "Minimum exercise duration (min) to trigger recovery mode.",
+      "logic_summary": "Minimum exercise duration in minutes before the post-exercise recovery window is triggered.",
       "effect_high": "Higher value — more insulin/greater effect",
       "effect_low": "Lower value — less insulin/reduced effect",
       "impact": "high",
@@ -1136,19 +1220,23 @@
       "key": "boost_post_exercise_recovery_enabled",
       "name": "ApsBoostPostExerciseRecoveryEnabled",
       "type": "Boolean",
-      "default": null,
+      "default": false,
       "min": null,
       "max": null,
       "used_in": [
         {
           "file": "OpenAPSBoostPlugin.kt",
           "function": "onStop"
+        },
+        {
+          "file": "OpenAPSBoostV5Plugin.kt",
+          "function": "getPreferenceScreenContent"
         }
       ],
       "orphaned": false,
       "negative_gate_key": null,
       "negative_gate_note": null,
-      "logic_summary": "Enables reduced insulin for hours after exercise ends.",
+      "logic_summary": "Apply a post-exercise recovery window with adjusted targets and SMB scaling after detected exercise ends.",
       "effect_high": "Feature is ON — associated functionality runs",
       "effect_low": "Feature is OFF — associated functionality is disabled",
       "impact": "high",
@@ -1168,12 +1256,16 @@
         {
           "file": "OpenAPSBoostPlugin.kt",
           "function": "onStop"
+        },
+        {
+          "file": "OpenAPSBoostV5Plugin.kt",
+          "function": "getPreferenceScreenContent"
         }
       ],
       "orphaned": false,
       "negative_gate_key": null,
       "negative_gate_note": null,
-      "logic_summary": "Recovery duration (hours). ISF stays elevated this long post-exercise.",
+      "logic_summary": "Duration of the post-exercise recovery window where targets are raised and SMBs are scaled down.",
       "effect_high": "Higher value — more insulin/greater effect",
       "effect_low": "Lower value — less insulin/reduced effect",
       "impact": "high",
@@ -1193,12 +1285,16 @@
         {
           "file": "OpenAPSBoostPlugin.kt",
           "function": "onStop"
+        },
+        {
+          "file": "OpenAPSBoostV5Plugin.kt",
+          "function": "getPreferenceScreenContent"
         }
       ],
       "orphaned": false,
       "negative_gate_key": null,
       "negative_gate_note": null,
-      "logic_summary": "Scale factor for recovery (0.0-1.0). Lower = stronger ISF boost = less insulin. 1.0 = no recovery adjustment.",
+      "logic_summary": "SMB scaling factor during post-exercise recovery; 0.5 = half the normal SMB dose during the recovery window.",
       "effect_high": "Higher ISF = less insulin for same BG = more conservative",
       "effect_low": "Lower ISF = more insulin for same BG = more aggressive",
       "impact": "high",
@@ -1218,12 +1314,16 @@
         {
           "file": "OpenAPSBoostPlugin.kt",
           "function": "onStop"
+        },
+        {
+          "file": "OpenAPSBoostV5Plugin.kt",
+          "function": "getPreferenceScreenContent"
         }
       ],
       "orphaned": false,
       "negative_gate_key": null,
       "negative_gate_note": null,
-      "logic_summary": "Target BG during post-exercise recovery (mg/dL).",
+      "logic_summary": "BG target (mg/dL) to aim for during the post-exercise recovery window; typically raised to prevent hypos.",
       "effect_high": "Higher value — more insulin/greater effect",
       "effect_low": "Lower value — less insulin/reduced effect",
       "impact": "high",
@@ -1248,7 +1348,7 @@
       "orphaned": false,
       "negative_gate_key": null,
       "negative_gate_note": null,
-      "logic_summary": "Minutes before detected sleep onset to start pre-sleep insulin reduction.",
+      "logic_summary": "Minutes before the night-mode start time that Boost begins tapering insulin delivery.",
       "effect_high": "Higher value — more insulin/greater effect",
       "effect_low": "Lower value — less insulin/reduced effect",
       "impact": "high",
@@ -1268,12 +1368,16 @@
         {
           "file": "OpenAPSBoostPlugin.kt",
           "function": "onStop"
+        },
+        {
+          "file": "OpenAPSBoostV5Plugin.kt",
+          "function": "getPreferenceScreenContent"
         }
       ],
       "orphaned": false,
       "negative_gate_key": null,
       "negative_gate_note": null,
-      "logic_summary": "Global ISF scale factor. 1.0 = neutral. Direct multiplier on ISF.",
+      "logic_summary": "Sensitivity scale applied multiplicatively to the ISF — values above 1.0 make the patient appear more insulin-sensitive.",
       "effect_high": "Higher ISF = less insulin for same BG = more conservative",
       "effect_low": "Lower ISF = more insulin for same BG = more aggressive",
       "impact": "high",
@@ -1323,7 +1427,7 @@
       "orphaned": false,
       "negative_gate_key": null,
       "negative_gate_note": null,
-      "logic_summary": "Minutes of sustained low activity before sleep state confirmed.",
+      "logic_summary": "Minutes of sustained low-HR/low-steps conditions before the sleep detector transitions to SLEEPING state.",
       "effect_high": "Higher value — more insulin/greater effect",
       "effect_low": "Lower value — less insulin/reduced effect",
       "impact": "high",
@@ -1343,12 +1447,16 @@
         {
           "file": "OpenAPSBoostPlugin.kt",
           "function": "onStop"
+        },
+        {
+          "file": "OpenAPSBoostV5Plugin.kt",
+          "function": "getPreferenceScreenContent"
         }
       ],
       "orphaned": false,
       "negative_gate_key": null,
       "negative_gate_note": null,
-      "logic_summary": "Used in Boost algorithm for boost_sleep_in_hrs.",
+      "logic_summary": "Hours after night-mode end during which near-zero steps trigger the lie-in failsafe (disabling Boost).",
       "effect_high": "Higher value — more insulin/greater effect",
       "effect_low": "Lower value — less insulin/reduced effect",
       "impact": "high",
@@ -1368,12 +1476,16 @@
         {
           "file": "OpenAPSBoostPlugin.kt",
           "function": "onStop"
+        },
+        {
+          "file": "OpenAPSBoostV5Plugin.kt",
+          "function": "getPreferenceScreenContent"
         }
       ],
       "orphaned": false,
       "negative_gate_key": null,
       "negative_gate_note": null,
-      "logic_summary": "Maximum step count during sleep-in window. Default 50.",
+      "logic_summary": "60-minute step count threshold below which the lie-in failsafe engages within the sleep-in window.",
       "effect_high": "Higher value — more insulin/greater effect",
       "effect_low": "Lower value — less insulin/reduced effect",
       "impact": "high",
@@ -1408,42 +1520,26 @@
       "settings_gate": null
     },
     {
-      "key": "boost_start_time",
-      "name": "ApsBoostStartTime",
-      "type": "String",
-      "default": null,
-      "min": null,
-      "max": null,
-      "used_in": [],
-      "orphaned": true,
-      "negative_gate_key": null,
-      "negative_gate_note": null,
-      "logic_summary": "Stored state or configuration string for boost_start_time.",
-      "effect_high": "Higher value — more insulin/greater effect",
-      "effect_low": "Lower value — less insulin/reduced effect",
-      "impact": "medium",
-      "feature_group": "shared_aaps",
-      "is_gate": false,
-      "settings_path": null,
-      "settings_gate": null
-    },
-    {
       "key": "boost_use_tdd",
       "name": "ApsBoostUseTdd",
       "type": "Boolean",
-      "default": null,
+      "default": false,
       "min": null,
       "max": null,
       "used_in": [
         {
           "file": "OpenAPSBoostPlugin.kt",
           "function": "getPreferenceScreenContent"
+        },
+        {
+          "file": "OpenAPSBoostV5Plugin.kt",
+          "function": "getPreferenceScreenContent"
         }
       ],
       "orphaned": false,
       "negative_gate_key": null,
       "negative_gate_note": null,
-      "logic_summary": "Main gate: enables TDD-based dynamic ISF instead of static profile ISF.",
+      "logic_summary": "Compute dynamic ISF from 24 h total daily dose instead of the profile sensitivity value only.",
       "effect_high": "Feature is ON — associated functionality runs",
       "effect_low": "Feature is OFF — associated functionality is disabled",
       "impact": "high",
@@ -1456,14 +1552,14 @@
       "key": "boost_v5_active_dosing",
       "name": "ApsBoostV5ActiveDosing",
       "type": "Boolean",
-      "default": null,
+      "default": false,
       "min": null,
       "max": null,
       "used_in": [],
       "orphaned": false,
       "negative_gate_key": null,
       "negative_gate_note": null,
-      "logic_summary": "Boolean switch for boost_v5_active_dosing.",
+      "logic_summary": "Use V5 meal-hypothesis dosing to control SMB amounts; when OFF, V5 shadows only without affecting actual delivery.",
       "effect_high": "Feature is ON — associated functionality runs",
       "effect_low": "Feature is OFF — associated functionality is disabled",
       "impact": "high",
@@ -1483,12 +1579,20 @@
         {
           "file": "OpenAPSBoostPlugin.kt",
           "function": "getPreferenceScreenContent"
+        },
+        {
+          "file": "OpenAPSBoostV5Plugin.kt",
+          "function": "getPreferenceScreenContent"
+        },
+        {
+          "file": "BoostV5AutoConfigApply.kt",
+          "function": "factoryDefaults"
         }
       ],
       "orphaned": false,
       "negative_gate_key": null,
       "negative_gate_note": null,
-      "logic_summary": "V5 meal model aggression (1.0 = neutral). Higher = more insulin during meals.",
+      "logic_summary": "User-facing multiplier for CONFIRMED-state dosing; 1.0 = standard, 1.6 = aggressive, 0.7 = cautious.",
       "effect_high": "Higher value — more insulin/greater effect",
       "effect_low": "Lower value — less insulin/reduced effect",
       "impact": "high",
@@ -1501,14 +1605,23 @@
       "key": "boost_v5_aggressive_early_confirm",
       "name": "ApsBoostV5AggressiveEarlyConfirm",
       "type": "Boolean",
-      "default": null,
+      "default": false,
       "min": null,
       "max": null,
-      "used_in": [],
-      "orphaned": true,
+      "used_in": [
+        {
+          "file": "OpenAPSBoostV5Plugin.kt",
+          "function": "getPreferenceScreenContent"
+        },
+        {
+          "file": "MealHypothesis.kt",
+          "function": "unknown"
+        }
+      ],
+      "orphaned": false,
       "negative_gate_key": null,
       "negative_gate_note": null,
-      "logic_summary": "Boolean switch for boost_v5_aggressive_early_confirm.",
+      "logic_summary": "Confirm meal hypotheses more aggressively — shortens the OBSERVING phase to speed up dosing escalation.",
       "effect_high": "Feature is ON — associated functionality runs",
       "effect_low": "Feature is OFF — associated functionality is disabled",
       "impact": "high",
@@ -1521,11 +1634,16 @@
       "key": "boost_v5_autoconfig_done",
       "name": "ApsBoostV5AutoConfigDone",
       "type": "Boolean",
-      "default": null,
+      "default": false,
       "min": null,
       "max": null,
-      "used_in": [],
-      "orphaned": true,
+      "used_in": [
+        {
+          "file": "OpenAPSBoostV5Plugin.kt",
+          "function": "maybeAutoConfigure"
+        }
+      ],
+      "orphaned": false,
       "negative_gate_key": null,
       "negative_gate_note": null,
       "logic_summary": "Boolean switch for boost_v5_autoconfig_done.",
@@ -1548,12 +1666,24 @@
         {
           "file": "OpenAPSBoostPlugin.kt",
           "function": "runEngine"
+        },
+        {
+          "file": "OpenAPSBoostV5Plugin.kt",
+          "function": "getPreferenceScreenContent"
+        },
+        {
+          "file": "BoostV5AutoConfigApply.kt",
+          "function": "unknown"
+        },
+        {
+          "file": "MealHypothesis.kt",
+          "function": "unknown"
         }
       ],
       "orphaned": false,
       "negative_gate_key": null,
       "negative_gate_note": null,
-      "logic_summary": "V5 max bolus for COMMITTED meals (units). Cap for confirmed meal dosing.",
+      "logic_summary": "Hard ceiling on a single SMB dose during the COMMITTED meal-hypothesis state (sustained meal dosing).",
       "effect_high": "Higher value — more insulin/greater effect",
       "effect_low": "Lower value — less insulin/reduced effect",
       "impact": "high",
@@ -1566,19 +1696,27 @@
       "key": "boost_v5_composed_floor_active",
       "name": "ApsBoostV5ComposedFloorActive",
       "type": "Boolean",
-      "default": null,
+      "default": false,
       "min": null,
       "max": null,
       "used_in": [
         {
           "file": "OpenAPSBoostPlugin.kt",
           "function": "runEngine"
+        },
+        {
+          "file": "OpenAPSBoostV5Plugin.kt",
+          "function": "getPreferenceScreenContent"
+        },
+        {
+          "file": "DetermineBasalBoostV5.kt",
+          "function": "unknown"
         }
       ],
       "orphaned": false,
       "negative_gate_key": null,
       "negative_gate_note": null,
-      "logic_summary": "Boolean switch for boost_v5_composed_floor_active.",
+      "logic_summary": "Apply a composed safety floor to meal dosing: never dose below what a hypo-corrected basal would add.",
       "effect_high": "Feature is ON — associated functionality runs",
       "effect_low": "Feature is OFF — associated functionality is disabled",
       "impact": "high",
@@ -1598,12 +1736,24 @@
         {
           "file": "OpenAPSBoostPlugin.kt",
           "function": "runEngine"
+        },
+        {
+          "file": "OpenAPSBoostV5Plugin.kt",
+          "function": "getPreferenceScreenContent"
+        },
+        {
+          "file": "DetermineBasalBoostV5.kt",
+          "function": "decide"
+        },
+        {
+          "file": "BoostV5AutoConfigApply.kt",
+          "function": "unknown"
         }
       ],
       "orphaned": false,
       "negative_gate_key": null,
       "negative_gate_note": null,
-      "logic_summary": "V5 max bolus for CONFIRMED meals (units). Lower cap for less-certain meals.",
+      "logic_summary": "Hard ceiling on a single SMB dose during the CONFIRMED meal-hypothesis state (catch-up bolus).",
       "effect_high": "Higher value — more insulin/greater effect",
       "effect_low": "Lower value — less insulin/reduced effect",
       "impact": "high",
@@ -1616,14 +1766,19 @@
       "key": "boost_v5_fast_carb_confirm",
       "name": "ApsBoostV5FastCarbConfirm",
       "type": "Boolean",
-      "default": null,
+      "default": true,
       "min": null,
       "max": null,
-      "used_in": [],
-      "orphaned": true,
+      "used_in": [
+        {
+          "file": "OpenAPSBoostV5Plugin.kt",
+          "function": "getPreferenceScreenContent"
+        }
+      ],
+      "orphaned": false,
       "negative_gate_key": null,
       "negative_gate_note": null,
-      "logic_summary": "Boolean switch for boost_v5_fast_carb_confirm.",
+      "logic_summary": "Permit a CONFIRMED meal hypothesis immediately (skip OBSERVING) when COB is present or velocity is very high.",
       "effect_high": "Feature is ON — associated functionality runs",
       "effect_low": "Feature is OFF — associated functionality is disabled",
       "impact": "high",
@@ -1643,12 +1798,20 @@
         {
           "file": "OpenAPSBoostPlugin.kt",
           "function": "getPreferenceScreenContent"
+        },
+        {
+          "file": "OpenAPSBoostV5Plugin.kt",
+          "function": "getPreferenceScreenContent"
+        },
+        {
+          "file": "BoostV5AutoConfigApply.kt",
+          "function": "factoryDefaults"
         }
       ],
       "orphaned": false,
       "negative_gate_key": null,
       "negative_gate_note": null,
-      "logic_summary": "V5 hypo caution (1.0 = neutral). Higher = more conservative near hypo thresholds.",
+      "logic_summary": "Multiplier that increases the BG target floor for V5 dosing when BG is low or falling; 2.0 = double the floor.",
       "effect_high": "Higher value — more insulin/greater effect",
       "effect_low": "Lower value — less insulin/reduced effect",
       "impact": "critical",
@@ -1661,10 +1824,15 @@
       "key": "boost_v5_primer_bolus_mode",
       "name": "ApsBoostV5PrimerBolusMode",
       "type": "Boolean",
-      "default": null,
+      "default": false,
       "min": null,
       "max": null,
-      "used_in": [],
+      "used_in": [
+        {
+          "file": "OpenAPSBoostV5Plugin.kt",
+          "function": "getPreferenceScreenContent"
+        }
+      ],
       "orphaned": false,
       "negative_gate_key": null,
       "negative_gate_note": null,
@@ -1684,11 +1852,20 @@
       "default": 0.0,
       "min": 0.0,
       "max": 1.0,
-      "used_in": [],
-      "orphaned": true,
+      "used_in": [
+        {
+          "file": "OpenAPSBoostV5Plugin.kt",
+          "function": "getPreferenceScreenContent"
+        },
+        {
+          "file": "BoostV5AutoConfigApply.kt",
+          "function": "factoryDefaults"
+        }
+      ],
+      "orphaned": false,
       "negative_gate_key": null,
       "negative_gate_note": null,
-      "logic_summary": "Used in Boost algorithm for boost_v5_primer_cap_u.",
+      "logic_summary": "V5 early primer cap (U) during OBSERVING. 0 = primer OFF. Fires once per meal session on delta_accl > 10 before CONFIRMED, reclaiming V1's ~15-min-earlier acceleration response. PrimerTbrFallback / PrimerBolusMode only choose the delivery method — the cap value is what turns the primer on.",
       "effect_high": "Higher value — more insulin/greater effect",
       "effect_low": "Lower value — less insulin/reduced effect",
       "impact": "high",
@@ -1701,10 +1878,15 @@
       "key": "boost_v5_primer_tbr_fallback",
       "name": "ApsBoostV5PrimerTbrFallback",
       "type": "Boolean",
-      "default": null,
+      "default": false,
       "min": null,
       "max": null,
-      "used_in": [],
+      "used_in": [
+        {
+          "file": "OpenAPSBoostV5Plugin.kt",
+          "function": "getPreferenceScreenContent"
+        }
+      ],
       "orphaned": false,
       "negative_gate_key": null,
       "negative_gate_note": null,
@@ -1724,11 +1906,16 @@
       "default": 1.0,
       "min": 0.8,
       "max": 1.2,
-      "used_in": [],
-      "orphaned": true,
+      "used_in": [
+        {
+          "file": "OpenAPSBoostV5Plugin.kt",
+          "function": "getPreferenceScreenContent"
+        }
+      ],
+      "orphaned": false,
       "negative_gate_key": null,
       "negative_gate_note": null,
-      "logic_summary": "Used in Boost algorithm for boost_v5_sensitivity.",
+      "logic_summary": "Global V5 sensitivity tuning factor; values above 1.0 make the algorithm more conservative across all states.",
       "effect_high": "Higher value — more insulin/greater effect",
       "effect_low": "Lower value — less insulin/reduced effect",
       "impact": "high",
@@ -1744,8 +1931,13 @@
       "default": null,
       "min": null,
       "max": null,
-      "used_in": [],
-      "orphaned": true,
+      "used_in": [
+        {
+          "file": "V5StateStore.kt",
+          "function": "unknown"
+        }
+      ],
+      "orphaned": false,
       "negative_gate_key": null,
       "negative_gate_note": null,
       "logic_summary": "Stored state or configuration string for boost_v5_state.",
@@ -1761,19 +1953,27 @@
       "key": "boost_v5_velocity_budget_active",
       "name": "ApsBoostV5VelocityBudgetActive",
       "type": "Boolean",
-      "default": null,
+      "default": false,
       "min": null,
       "max": null,
       "used_in": [
         {
           "file": "OpenAPSBoostPlugin.kt",
           "function": "runEngine"
+        },
+        {
+          "file": "OpenAPSBoostV5Plugin.kt",
+          "function": "getPreferenceScreenContent"
+        },
+        {
+          "file": "DetermineBasalBoostV5.kt",
+          "function": "unknown"
         }
       ],
       "orphaned": false,
       "negative_gate_key": null,
       "negative_gate_note": null,
-      "logic_summary": "Boolean switch for boost_v5_velocity_budget_active.",
+      "logic_summary": "Allocate additional aggression budget when BG velocity is high, letting V5 dose more during fast rises.",
       "effect_high": "Feature is ON — associated functionality runs",
       "effect_low": "Feature is OFF — associated functionality is disabled",
       "impact": "high",
@@ -1793,12 +1993,16 @@
         {
           "file": "OpenAPSBoostPlugin.kt",
           "function": "getPreferenceScreenContent"
+        },
+        {
+          "file": "OpenAPSBoostV5Plugin.kt",
+          "function": "getPreferenceScreenContent"
         }
       ],
       "orphaned": false,
       "negative_gate_key": null,
       "negative_gate_note": null,
-      "logic_summary": "Minutes before detected meal to start pre-meal dosing.",
+      "logic_summary": "Minutes before a predicted meal arrival that V6 starts lowering the target to pre-load insulin.",
       "effect_high": "Higher value — more insulin/greater effect",
       "effect_low": "Lower value — less insulin/reduced effect",
       "impact": "high",
@@ -1811,19 +2015,23 @@
       "key": "boost_v6_pre_meal_target",
       "name": "ApsBoostV6PreMealTarget",
       "type": "Boolean",
-      "default": null,
+      "default": false,
       "min": null,
       "max": null,
       "used_in": [
         {
           "file": "OpenAPSBoostPlugin.kt",
           "function": "getPreferenceScreenContent"
+        },
+        {
+          "file": "OpenAPSBoostV5Plugin.kt",
+          "function": "getPreferenceScreenContent"
         }
       ],
       "orphaned": false,
       "negative_gate_key": null,
       "negative_gate_note": null,
-      "logic_summary": "Target BG for pre-meal window (mg/dL). Lower = more aggressive before meals.",
+      "logic_summary": "Lower the BG target before an anticipated meal (detected by the meal-hypothesis engine) to pre-load insulin.",
       "effect_high": "Feature is ON — associated functionality runs",
       "effect_low": "Feature is OFF — associated functionality is disabled",
       "impact": "high",
@@ -1843,12 +2051,16 @@
         {
           "file": "OpenAPSBoostPlugin.kt",
           "function": "getPreferenceScreenContent"
+        },
+        {
+          "file": "OpenAPSBoostV5Plugin.kt",
+          "function": "getPreferenceScreenContent"
         }
       ],
       "orphaned": false,
       "negative_gate_key": null,
       "negative_gate_note": null,
-      "logic_summary": "Target BG for pre-meal window (mg/dL). Lower = more aggressive before meals.",
+      "logic_summary": "BG target (mg/dL) that V6 aims for during the pre-meal lead-in window before a predicted meal.",
       "effect_high": "Higher value — more insulin/greater effect",
       "effect_low": "Lower value — less insulin/reduced effect",
       "impact": "high",
@@ -1868,6 +2080,10 @@
         {
           "file": "OpenAPSBoostPlugin.kt",
           "function": "onStop"
+        },
+        {
+          "file": "V7Shadow.kt",
+          "function": "unknown"
         }
       ],
       "orphaned": false,
@@ -1898,7 +2114,7 @@
       "orphaned": false,
       "negative_gate_key": null,
       "negative_gate_note": null,
-      "logic_summary": "Minutes of sustained HR elevation before wake confirmed.",
+      "logic_summary": "Minutes of sustained elevated HR before the sleep detector transitions from SLEEPING to AWAKE.",
       "effect_high": "Higher value — more insulin/greater effect",
       "effect_low": "Lower value — less insulin/reduced effect",
       "impact": "medium",
@@ -1923,7 +2139,7 @@
       "orphaned": false,
       "negative_gate_key": null,
       "negative_gate_note": null,
-      "logic_summary": "Used in Boost algorithm for carbsReqThreshold.",
+      "logic_summary": "Minimum grams of carbs to display a carbs suggestion alert. Carbs suggestions below this number will not trigger a notification.",
       "effect_high": "Higher value — more insulin/greater effect",
       "effect_low": "Lower value — less insulin/reduced effect",
       "impact": "medium",
@@ -1936,19 +2152,23 @@
       "key": "enableBoostPercentScale",
       "name": "ApsBoostEnablePercentScale",
       "type": "Boolean",
-      "default": null,
+      "default": false,
       "min": null,
       "max": null,
       "used_in": [
         {
           "file": "OpenAPSBoostPlugin.kt",
           "function": "onStop"
+        },
+        {
+          "file": "OpenAPSBoostV5Plugin.kt",
+          "function": "getPreferenceScreenContent"
         }
       ],
       "orphaned": false,
       "negative_gate_key": null,
       "negative_gate_note": null,
-      "logic_summary": "Global ISF scale factor. 1.0 = neutral. Direct multiplier on ISF.",
+      "logic_summary": "Scale ISF by the percentage factor below during confirmed meals to appear more insulin-sensitive and reduce dosing.",
       "effect_high": "Feature is ON — associated functionality runs",
       "effect_low": "Feature is OFF — associated functionality is disabled",
       "impact": "high",
@@ -1961,19 +2181,23 @@
       "key": "enableBoost_with_high_temptarget",
       "name": "ApsBoostAllowWithHighTt",
       "type": "Boolean",
-      "default": null,
+      "default": false,
       "min": null,
       "max": null,
       "used_in": [
         {
           "file": "OpenAPSBoostPlugin.kt",
           "function": "onStop"
+        },
+        {
+          "file": "OpenAPSBoostV5Plugin.kt",
+          "function": "getPreferenceScreenContent"
         }
       ],
       "orphaned": false,
       "negative_gate_key": null,
       "negative_gate_note": null,
-      "logic_summary": "Enables/disables enableBoost_with_high_temptarget. Gate flag for Boost feature.",
+      "logic_summary": "Keep Boost active even when a high temporary target is set (e.g. exercise mode); otherwise Boost disables on high TT.",
       "effect_high": "Feature is ON — associated functionality runs",
       "effect_low": "Feature is OFF — associated functionality is disabled",
       "impact": "medium",
@@ -1986,19 +2210,23 @@
       "key": "enableCircadianISF",
       "name": "ApsBoostEnableCircadianIsf",
       "type": "Boolean",
-      "default": null,
+      "default": false,
       "min": null,
       "max": null,
       "used_in": [
         {
           "file": "OpenAPSBoostPlugin.kt",
           "function": "onStop"
+        },
+        {
+          "file": "OpenAPSBoostV5Plugin.kt",
+          "function": "getPreferenceScreenContent"
         }
       ],
       "orphaned": false,
       "negative_gate_key": null,
       "negative_gate_note": null,
-      "logic_summary": "Enables/disables enableCircadianISF. Gate flag for Boost feature.",
+      "logic_summary": "Apply a time-of-day sine-model ISF adjustment to reflect natural insulin sensitivity variation across 24 hours.",
       "effect_high": "Feature is ON — associated functionality runs",
       "effect_low": "Feature is OFF — associated functionality is disabled",
       "impact": "medium",
@@ -2011,12 +2239,16 @@
       "key": "enableSMB_after_carbs",
       "name": "ApsUseSmbAfterCarbs",
       "type": "Boolean",
-      "default": null,
+      "default": true,
       "min": null,
       "max": null,
       "used_in": [
         {
           "file": "OpenAPSBoostPlugin.kt",
+          "function": "getPreferenceScreenContent"
+        },
+        {
+          "file": "OpenAPSBoostV5Plugin.kt",
           "function": "getPreferenceScreenContent"
         }
       ],
@@ -2036,12 +2268,16 @@
       "key": "enableSMB_always",
       "name": "ApsUseSmbAlways",
       "type": "Boolean",
-      "default": null,
+      "default": true,
       "min": null,
       "max": null,
       "used_in": [
         {
           "file": "OpenAPSBoostPlugin.kt",
+          "function": "getPreferenceScreenContent"
+        },
+        {
+          "file": "OpenAPSBoostV5Plugin.kt",
           "function": "getPreferenceScreenContent"
         }
       ],
@@ -2061,12 +2297,16 @@
       "key": "enableSMB_with_COB",
       "name": "ApsUseSmbWithCob",
       "type": "Boolean",
-      "default": null,
+      "default": true,
       "min": null,
       "max": null,
       "used_in": [
         {
           "file": "OpenAPSBoostPlugin.kt",
+          "function": "getPreferenceScreenContent"
+        },
+        {
+          "file": "OpenAPSBoostV5Plugin.kt",
           "function": "getPreferenceScreenContent"
         }
       ],
@@ -2086,7 +2326,7 @@
       "key": "enableSMB_with_high_temptarget",
       "name": "ApsUseSmbWithHighTt",
       "type": "Boolean",
-      "default": null,
+      "default": false,
       "min": null,
       "max": null,
       "used_in": [
@@ -2111,7 +2351,7 @@
       "key": "enableSMB_with_temptarget",
       "name": "ApsUseSmbWithLowTt",
       "type": "Boolean",
-      "default": null,
+      "default": true,
       "min": null,
       "max": null,
       "used_in": [
@@ -2136,7 +2376,7 @@
       "key": "high_temptarget_raises_sensitivity",
       "name": "ApsAutoIsfHighTtRaisesSens",
       "type": "Boolean",
-      "default": null,
+      "default": false,
       "min": null,
       "max": null,
       "used_in": [
@@ -2168,12 +2408,16 @@
         {
           "file": "OpenAPSBoostPlugin.kt",
           "function": "runEngine"
+        },
+        {
+          "file": "OpenAPSBoostV5Plugin.kt",
+          "function": "getPreferenceScreenContent"
         }
       ],
       "orphaned": false,
       "negative_gate_key": null,
       "negative_gate_note": null,
-      "logic_summary": "Parameter for lgsThreshold.",
+      "logic_summary": "BG value below which insulin is suspended. Default value uses standard target model. User can set value between 60mg/dl (3.3mmol/l) and 100mg/dl(5.5mmol/l). Values below 65/3.6 result in use of default model",
       "effect_high": "Higher value — more insulin/greater effect",
       "effect_low": "Lower value — less insulin/reduced effect",
       "impact": "medium",
@@ -2186,7 +2430,7 @@
       "key": "low_temptarget_lowers_sensitivity",
       "name": "ApsAutoIsfLowTtLowersSens",
       "type": "Boolean",
-      "default": null,
+      "default": false,
       "min": null,
       "max": null,
       "used_in": [
@@ -2214,11 +2458,24 @@
       "default": 24,
       "min": 4,
       "max": 24,
-      "used_in": [],
-      "orphaned": true,
+      "used_in": [
+        {
+          "file": "SensitivityWeightedAveragePlugin.kt",
+          "function": "detectSensitivity"
+        },
+        {
+          "file": "SensitivityAAPSPlugin.kt",
+          "function": "detectSensitivity"
+        },
+        {
+          "file": "IobCobCalculatorPlugin.kt",
+          "function": "onStart"
+        }
+      ],
+      "orphaned": false,
       "negative_gate_key": null,
       "negative_gate_note": null,
-      "logic_summary": "Used in Boost algorithm for autosens_period.",
+      "logic_summary": "Amount of hours in the past for sensitivity detection (carbs absorption time is excluded)",
       "effect_high": "Higher value — more insulin/greater effect",
       "effect_low": "Lower value — less insulin/reduced effect",
       "impact": "high",
@@ -2238,12 +2495,16 @@
         {
           "file": "OpenAPSBoostPlugin.kt",
           "function": "getPreferenceScreenContent"
+        },
+        {
+          "file": "OpenAPSBoostV5Plugin.kt",
+          "function": "getPreferenceScreenContent"
         }
       ],
       "orphaned": false,
       "negative_gate_key": null,
       "negative_gate_note": null,
-      "logic_summary": "Used in Boost algorithm for current_basal_safety_multiplier.",
+      "logic_summary": "Default value: 4 This is the other half of the key OpenAPS safety caps, and the other half of “3x max daily; 4x current” of the safety caps. This means your basal, regardless of max basal set on your pump, cannot be any higher than this number times the current level of your basal. This is to prevent people from getting into dangerous territory by setting excessively high max basals before understanding how the algorithm works. Again, the default is 4x; most people will never need to adjust this and are instead more likely to need to adjust other settings if they feel like they are “running into” this safety cap.",
       "effect_high": "Higher value — more insulin/greater effect",
       "effect_low": "Lower value — less insulin/reduced effect",
       "impact": "critical",
@@ -2263,118 +2524,22 @@
         {
           "file": "OpenAPSBoostPlugin.kt",
           "function": "getPreferenceScreenContent"
+        },
+        {
+          "file": "OpenAPSBoostV5Plugin.kt",
+          "function": "getPreferenceScreenContent"
         }
       ],
       "orphaned": false,
       "negative_gate_key": null,
       "negative_gate_note": null,
-      "logic_summary": "Used in Boost algorithm for max_daily_safety_multiplier.",
+      "logic_summary": "Default value: 3 This is a key OpenAPS safety cap. What this does is limit your basals to be 3x (in this people) your biggest basal rate. You likely will not need to change this, but you should be aware that’s what is discussed about “3x max daily; 4x current” for safety caps.",
       "effect_high": "Higher daily multiplier = allows more total daily insulin",
       "effect_low": "Lower = safety limit",
       "impact": "critical",
       "feature_group": "shared_aaps",
       "is_gate": false,
       "settings_path": "OpenAPS BOOST V6 → Advanced Settings",
-      "settings_gate": null
-    },
-    {
-      "key": "openapsama_smb_delivery_ratio",
-      "name": "ApsAutoIsfSmbDeliveryRatio",
-      "type": "Double",
-      "default": 0.5,
-      "min": 0.1,
-      "max": 1.0,
-      "used_in": [],
-      "orphaned": true,
-      "negative_gate_key": null,
-      "negative_gate_note": null,
-      "logic_summary": "Used in Boost algorithm for smb_delivery_ratio.",
-      "effect_high": "Higher value — more insulin/greater effect",
-      "effect_low": "Lower value — less insulin/reduced effect",
-      "impact": "medium",
-      "feature_group": "smb_delivery",
-      "is_gate": false,
-      "settings_path": null,
-      "settings_gate": null
-    },
-    {
-      "key": "openapsama_smb_delivery_ratio_bg_range",
-      "name": "ApsAutoIsfSmbDeliveryRatioBgRange",
-      "type": "Double",
-      "default": 0.0,
-      "min": 0.0,
-      "max": 100.0,
-      "used_in": [],
-      "orphaned": true,
-      "negative_gate_key": null,
-      "negative_gate_note": null,
-      "logic_summary": "Used in Boost algorithm for smb_delivery_ratio_bg_range.",
-      "effect_high": "Higher value — more insulin/greater effect",
-      "effect_low": "Lower value — less insulin/reduced effect",
-      "impact": "medium",
-      "feature_group": "smb_delivery",
-      "is_gate": false,
-      "settings_path": null,
-      "settings_gate": null
-    },
-    {
-      "key": "openapsama_smb_delivery_ratio_max",
-      "name": "ApsAutoIsfSmbDeliveryRatioMax",
-      "type": "Double",
-      "default": 0.5,
-      "min": 0.5,
-      "max": 1.0,
-      "used_in": [],
-      "orphaned": true,
-      "negative_gate_key": null,
-      "negative_gate_note": null,
-      "logic_summary": "Used in Boost algorithm for smb_delivery_ratio_max.",
-      "effect_high": "Higher value — more insulin/greater effect",
-      "effect_low": "Lower value — less insulin/reduced effect",
-      "impact": "medium",
-      "feature_group": "smb_delivery",
-      "is_gate": false,
-      "settings_path": null,
-      "settings_gate": null
-    },
-    {
-      "key": "openapsama_smb_delivery_ratio_min",
-      "name": "ApsAutoIsfSmbDeliveryRatioMin",
-      "type": "Double",
-      "default": 0.5,
-      "min": 0.1,
-      "max": 1.0,
-      "used_in": [],
-      "orphaned": true,
-      "negative_gate_key": null,
-      "negative_gate_note": null,
-      "logic_summary": "Used in Boost algorithm for smb_delivery_ratio_min.",
-      "effect_high": "Higher value — more insulin/greater effect",
-      "effect_low": "Lower value — less insulin/reduced effect",
-      "impact": "medium",
-      "feature_group": "smb_delivery",
-      "is_gate": false,
-      "settings_path": null,
-      "settings_gate": null
-    },
-    {
-      "key": "openapsama_smb_max_range_extension",
-      "name": "ApsAutoIsfSmbMaxRangeExtension",
-      "type": "Double",
-      "default": 1.0,
-      "min": 1.0,
-      "max": 5.0,
-      "used_in": [],
-      "orphaned": true,
-      "negative_gate_key": null,
-      "negative_gate_note": null,
-      "logic_summary": "Used in Boost algorithm for smb_max_range_extension.",
-      "effect_high": "Higher value — more insulin/greater effect",
-      "effect_low": "Lower value — less insulin/reduced effect",
-      "impact": "medium",
-      "feature_group": "smb_delivery",
-      "is_gate": false,
-      "settings_path": null,
       "settings_gate": null
     },
     {
@@ -2388,12 +2553,16 @@
         {
           "file": "OpenAPSBoostPlugin.kt",
           "function": "getPreferenceScreenContent"
+        },
+        {
+          "file": "OpenAPSBoostV5Plugin.kt",
+          "function": "getPreferenceScreenContent"
         }
       ],
       "orphaned": false,
       "negative_gate_key": null,
       "negative_gate_note": null,
-      "logic_summary": "Maximum temporary basal rate (U/h). Shared with all OpenAPS plugins.",
+      "logic_summary": "This value is called max basal in OpenAPS context",
       "effect_high": "Higher max basal = more headroom for temporary basal increases",
       "effect_low": "Lower max basal = safety limit",
       "impact": "critical",
@@ -2413,12 +2582,16 @@
         {
           "file": "OpenAPSBoostPlugin.kt",
           "function": "getPreferenceScreenContent"
+        },
+        {
+          "file": "OpenAPSBoostV5Plugin.kt",
+          "function": "getPreferenceScreenContent"
         }
       ],
       "orphaned": false,
       "negative_gate_key": null,
       "negative_gate_note": null,
-      "logic_summary": "Maximum IOB for Boost dosing. Replaces standard max IOB in Boost mode.",
+      "logic_summary": "This value is called Max IOB in OpenAPS context\\nOpenAPS will not add more insulin if current IOB is greater than this value",
       "effect_high": "More IOB allowed — more aggressive corrections",
       "effect_low": "IOB capped lower — safer, less stacking",
       "impact": "critical",
@@ -2437,6 +2610,10 @@
       "used_in": [
         {
           "file": "OpenAPSBoostPlugin.kt",
+          "function": "getPreferenceScreenContent"
+        },
+        {
+          "file": "OpenAPSBoostV5Plugin.kt",
           "function": "getPreferenceScreenContent"
         }
       ],
@@ -2463,6 +2640,10 @@
         {
           "file": "OpenAPSBoostPlugin.kt",
           "function": "getPreferenceScreenContent"
+        },
+        {
+          "file": "OpenAPSBoostV5Plugin.kt",
+          "function": "getPreferenceScreenContent"
         }
       ],
       "orphaned": false,
@@ -2488,12 +2669,16 @@
         {
           "file": "OpenAPSBoostPlugin.kt",
           "function": "getPreferenceScreenContent"
+        },
+        {
+          "file": "OpenAPSBoostV5Plugin.kt",
+          "function": "getPreferenceScreenContent"
         }
       ],
       "orphaned": false,
       "negative_gate_key": null,
       "negative_gate_note": null,
-      "logic_summary": "Used in Boost algorithm for uamsmbmaxminutes.",
+      "logic_summary": "UAM SMB max minutes",
       "effect_high": "Higher value — more insulin/greater effect",
       "effect_low": "Lower value — less insulin/reduced effect",
       "impact": "medium",
@@ -2506,12 +2691,16 @@
       "key": "use_dynamic_sensitivity",
       "name": "ApsUseDynamicSensitivity",
       "type": "Boolean",
-      "default": null,
+      "default": false,
       "min": null,
       "max": null,
       "used_in": [
         {
           "file": "OpenAPSBoostPlugin.kt",
+          "function": "getPreferenceScreenContent"
+        },
+        {
+          "file": "OpenAPSBoostV5Plugin.kt",
           "function": "getPreferenceScreenContent"
         }
       ],
@@ -2531,12 +2720,16 @@
       "key": "use_smb",
       "name": "ApsUseSmb",
       "type": "Boolean",
-      "default": null,
+      "default": true,
       "min": null,
       "max": null,
       "used_in": [
         {
           "file": "OpenAPSBoostPlugin.kt",
+          "function": "getPreferenceScreenContent"
+        },
+        {
+          "file": "OpenAPSBoostV5Plugin.kt",
           "function": "getPreferenceScreenContent"
         }
       ],
@@ -2556,12 +2749,16 @@
       "key": "use_uam",
       "name": "ApsUseUam",
       "type": "Boolean",
-      "default": null,
+      "default": true,
       "min": null,
       "max": null,
       "used_in": [
         {
           "file": "OpenAPSBoostPlugin.kt",
+          "function": "getPreferenceScreenContent"
+        },
+        {
+          "file": "OpenAPSBoostV5Plugin.kt",
           "function": "getPreferenceScreenContent"
         }
       ],
@@ -2709,7 +2906,7 @@
       "name": "SMB Delivery",
       "description": "Boost SMB delivery controls: cumulative 60-min cap, bolus size, max IOB, insulin requirement %. Interacts with standard SMB settings (frequency, basal-to-limit, UAM limits).",
       "gate_key": "openapsama_use_smb",
-      "param_count": 19,
+      "param_count": 14,
       "key_params": [
         "boost_bolus_cap",
         "boost_cumulative_smb_cap_60min",
@@ -2720,11 +2917,6 @@
         "enableSMB_with_COB",
         "enableSMB_with_high_temptarget",
         "enableSMB_with_temptarget",
-        "openapsama_smb_delivery_ratio",
-        "openapsama_smb_delivery_ratio_bg_range",
-        "openapsama_smb_delivery_ratio_max",
-        "openapsama_smb_delivery_ratio_min",
-        "openapsama_smb_max_range_extension",
         "openapsmb_max_iob",
         "smbinterval",
         "smbmaxminutes",
@@ -2757,18 +2949,15 @@
       "name": "Shared AAPS Settings",
       "description": "Standard OpenAPS settings that Boost's algorithm also reads: max basal, max IOB, SMB gates, autosens, dynamic sensitivity.",
       "gate_key": null,
-      "param_count": 22,
+      "param_count": 19,
       "key_params": [
         "DynISFAdjust",
         "autosens_max",
         "autosens_min",
         "boost_allow_all_bg_sources",
-        "boost_bypass_version_check",
         "boost_dynisf_bg_cap",
         "boost_dynisf_normal_target",
         "boost_dynisf_velocity",
-        "boost_end_time",
-        "boost_start_time",
         "carbsReqThreshold",
         "enableBoost_with_high_temptarget",
         "enableCircadianISF",
@@ -2778,7 +2967,9 @@
         "openapsama_autosens_period",
         "openapsama_current_basal_safety_multiplier",
         "openapsama_max_daily_safety_multiplier",
-        "openapsma_max_basal"
+        "openapsma_max_basal",
+        "use_dynamic_sensitivity",
+        "use_uam"
       ]
     },
     "safety": {

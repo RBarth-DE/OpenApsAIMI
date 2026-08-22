@@ -1,7 +1,7 @@
 {
   "version": "3.0",
-  "source_commit": "ac6e82a399e2063f47e9454d31af2e9ee56ec22e",
-  "generated_at": "2026-08-10T06:46:12.400495+00:00",
+  "source_commit": "8d49e0f40f2ac62872c92dd90d85eae85bb58792",
+  "generated_at": "2026-08-22T07:21:25.998784+00:00",
   "total": 306,
   "active": 257,
   "orphaned": 49,
@@ -3326,9 +3326,9 @@
       "key": "inactivity_scale_factor",
       "name": "InactivityScaleFactor",
       "type": "Double",
-      "default": 0.0,
+      "default": 1.0,
       "min": 0.0,
-      "max": 0.0,
+      "max": 1.5,
       "unit_type": "DOUBLE",
       "dependency": "ActivityMonitorDetection",
       "orphaned": true,
@@ -5470,7 +5470,7 @@
       "default": 30.0,
       "min": 0.0,
       "max": 90.0,
-      "unit_type": "NONE",
+      "unit_type": "MIN",
       "dependency": "OApsAIMIT3cCfrdMode",
       "used_in": [
         {
@@ -5529,7 +5529,7 @@
       "default": 95.0,
       "min": 70.0,
       "max": 95.0,
-      "unit_type": "NONE",
+      "unit_type": "MGDL",
       "dependency": "OApsAIMIT3cCfrdMode",
       "used_in": [
         {

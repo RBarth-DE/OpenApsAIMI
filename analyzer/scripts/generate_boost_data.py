@@ -28,10 +28,28 @@ _AUTO_ROOT  = _SCRIPT_DIR.parent.parent
 
 DEFAULT_SOURCE_ROOT = str(_AUTO_ROOT) if (_AUTO_ROOT / "plugins" / "aps").exists() else None
 
-DATA_DIR = Path(__file__).resolve().parent.parent / "data"
+DATA_DIR = _SCRIPT_DIR.parent / "data"
 
-# Boost source directory (relative to source root)
-BOOST_SRC = "plugins/aps/src/main/kotlin/app/aaps/plugins/aps/openAPSBoost"
+# Boost source directories (relative to source root). The V5 meal model lives in
+# openAPSBoostV5, a SIBLING of openAPSBoost — scanning only openAPSBoost silently drops
+# all V5/V6 logic context (state machine, composed floor, primer, caps). Scan the parent
+# and pick the openAPSBoost* siblings explicitly so unrelated aps packages don't leak in.
+BOOST_SRC = "plugins/aps/src/main/kotlin/app/aaps/plugins/aps"
+BOOST_SRC_DIRS = [
+    "openAPSBoost",
+    "openAPSBoostV5",
+    "openAPSBoostV7",
+    "openAPSBoostTing",
+    "openAPSBoostTwin",
+]
+# Other plugin sources shared keys are actually used in (not Boost-owned). Scanned for
+# usage detection only so shared keys like openapsama_autosens_period don't read as orphans.
+BOOST_SRC_EXTRA_DIRS = [
+    "plugins/sensitivity/src/main/kotlin/app/aaps/plugins/sensitivity",
+    "plugins/main/src/main/kotlin/app/aaps/plugins/main/iob/iobCobCalculator",
+    "plugins/sync/src/main/kotlin/app/aaps/plugins/sync/openhumans",
+    "plugins/configuration/src/main/kotlin/app/aaps/plugins/configuration/configBuilder",
+]
 
 # Key definition files (relative to source root)
 KEY_FILES = [
@@ -87,6 +105,24 @@ BOOST_ENUM_NAMES = {
     "ApsBoostDailyStepHistory", "ApsBoostIntradayStepBank",
 }
 
+# Keys that exist in core/keys but do NOT belong in the Boost knowledge base.
+# - The openapsama_smb_delivery_ratio* / openapsama_smb_max_range_extension family are
+#   AutoISF advisor settings (ApsAutoIsfSmbDeliveryRatio*), owned by the autoisf analyzer.
+#   The loose openapsama_ fallback in is_boost_key() used to drag them in as orphans.
+# - boost_bypass_version_check: no usage anywhere in the repo (dead key).
+# - boost_start_time / boost_end_time: retired 2026-07-02 — OpenAPSBoostPlugin comments
+#   say "ApsBoostStartTime/EndTime are no longer read" and "are retired".
+BOOST_EXCLUDE_KEYS = {
+    "openapsama_smb_delivery_ratio",
+    "openapsama_smb_delivery_ratio_min",
+    "openapsama_smb_delivery_ratio_max",
+    "openapsama_smb_delivery_ratio_bg_range",
+    "openapsama_smb_max_range_extension",
+    "boost_bypass_version_check",
+    "boost_start_time",
+    "boost_end_time",
+}
+
 # Additional shared keys that Boost's algorithm hard-references.
 # Enum entry name → key string. These are added regardless of the enum name filter.
 SHARED_BOOST_KEYS = {
@@ -112,6 +148,7 @@ SHARED_BOOST_KEYS = {
     "ApsAutoIsfHighTtRaisesSens":   "openapsama_autoisf_high_tt_raises_sens",
     "ApsAutoIsfLowTtLowersSens":    "openapsama_autoisf_low_tt_lowers_sens",
     "ApsLgsThreshold":         "openapsama_lgs_threshold",
+    "AutosensPeriod":          "openapsama_autosens_period",
 }
 
 # Boolean-like values that represent BOOST feature gates
@@ -150,6 +187,40 @@ GATE_KEYS = {
 
 # ─── Source Scanner ──────────────────────────────────────────────────────────
 
+# Cache of android string resource name → text, loaded from res/values/strings.xml
+# files. Lets logic summaries use the REAL human-written summaryResId text instead
+# of a generic fallback for every parameter.
+_android_strings_cache: Optional[Dict[str, str]] = None
+
+_ANDROID_STRING_RE = re.compile(
+    r'<string\s+name="([^"]+)"[^>]*>(.*?)</string>', re.DOTALL
+)
+
+
+def load_android_strings(source_root: Path) -> Dict[str, str]:
+    """Load string resources from all res/values/strings.xml files under source root."""
+    global _android_strings_cache
+    if _android_strings_cache is not None:
+        return _android_strings_cache
+    strings: Dict[str, str] = {}
+    for res_dir in source_root.rglob("values"):
+        strings_file = res_dir / "strings.xml"
+        if not strings_file.is_file():
+            continue
+        try:
+            content = strings_file.read_text(encoding="utf-8")
+        except OSError:
+            continue
+        for match in _ANDROID_STRING_RE.finditer(content):
+            name = match.group(1)
+            text = re.sub(r"<[^>]+>", " ", match.group(2))
+            text = re.sub(r"\s+", " ", text).strip()
+            if text:
+                strings[name] = text
+    _android_strings_cache = strings
+    return strings
+
+
 class BoostKeyScanner:
     """Parses Kotlin enum classes to extract key definitions for Boost."""
 
@@ -159,6 +230,8 @@ class BoostKeyScanner:
 
     def is_boost_key(self, key: str, enum_name: str = "") -> bool:
         """Check if a key or its enum entry is Boost-related."""
+        if key in BOOST_EXCLUDE_KEYS:
+            return False
         if enum_name in BOOST_ENUM_NAMES:
             return True
         if enum_name in SHARED_BOOST_KEYS:
@@ -288,6 +361,15 @@ class BoostKeyScanner:
         if ptype == "Boolean":
             if "defaultValue" in named_args:
                 entry["default"] = named_args["defaultValue"].strip().lower() == "true"
+            elif "defaultValue" in defaults:
+                entry["default"] = defaults["defaultValue"] is True
+            else:
+                # BooleanKey entries pass the default positionally: Name("key", false, ...)
+                # or Name("key", true, ...). Without this, every Boolean default shows
+                # as "None" in the generated context.
+                pos = [a.strip() for a in re.findall(r'([^,]+(?:\([^)]*\))?)', args)]
+                if len(pos) >= 2 and pos[1] in ("true", "false"):
+                    entry["default"] = pos[1] == "true"
 
         dep_match = re.search(r'dependency\s*=\s*(?:BooleanKey\.)?(\w+)', args)
         if dep_match:
@@ -340,16 +422,27 @@ class BoostSourceScanner:
 
     def __init__(self, source_root: str):
         self.source_root = Path(source_root)
-        self.boost_dir = self.source_root / BOOST_SRC
+        self.boost_base = self.source_root / BOOST_SRC
         self.files: Dict[str, str] = {}
 
     def scan_all(self):
-        if not self.boost_dir.exists():
-            print(f"WARNING: Boost source directory not found: {self.boost_dir}")
+        if not self.boost_base.exists():
+            print(f"WARNING: Boost source directory not found: {self.boost_base}")
             return
-        for kt_file in self.boost_dir.rglob("*.kt"):
-            relative = str(kt_file.relative_to(self.boost_dir))
-            self.files[relative] = kt_file.read_text(encoding="utf-8")
+        for dir_name in BOOST_SRC_DIRS:
+            boost_dir = self.boost_base / dir_name
+            if not boost_dir.exists():
+                continue
+            for kt_file in boost_dir.rglob("*.kt"):
+                relative = str(kt_file.relative_to(self.boost_base))
+                self.files[relative] = kt_file.read_text(encoding="utf-8")
+        for rel_dir in BOOST_SRC_EXTRA_DIRS:
+            extra_dir = self.source_root / rel_dir
+            if not extra_dir.exists():
+                continue
+            for kt_file in extra_dir.rglob("*.kt"):
+                relative = str(kt_file)
+                self.files[relative] = kt_file.read_text(encoding="utf-8")
 
     def find_usages(self, key: str, enum_name: str = "") -> List[dict]:
         usages = []
@@ -365,6 +458,10 @@ class BoostSourceScanner:
             patterns.append(f"preferences.getBoostDosing(BooleanKey.{enum_name}")
             patterns.append(f"preferences.getBoostDosing(DoubleKey.{enum_name}")
             patterns.append(f"preferences.getBoostDosing(IntKey.{enum_name}")
+            # preferences.get(...) / preferences.observe(...) used by shared keys outside
+            # the Boost packages (e.g. IntKey.AutosensPeriod in the sensitivity plugins)
+            patterns.append(f"preferences.get({enum_name}")
+            patterns.append(f"preferences.observe({enum_name}")
 
         for filepath, content in list(self.files.items()):
             matched = False
@@ -543,9 +640,20 @@ def _get_generated_path(key_str: str) -> str | None:
 
 # ─── Boost Logic Summary Generator ─────────────────────────────────────
 
-def generate_boost_logic_summary(key: str, info: dict) -> str:
-    """Generate an English logic summary from parameter name and type."""
+def generate_boost_logic_summary(key: str, info: dict, source_root: Optional[Path] = None) -> str:
+    """Generate an English logic summary from parameter name and type.
+
+    Resolution order: the real summaryResId text from strings.xml (human-written,
+    most accurate) → hand-written template for well-understood keys → generic fallback.
+    """
     ptype = info.get("type", "")
+
+    if source_root is not None:
+        android_strings = load_android_strings(source_root)
+        res_id = info.get("summary_res_id")
+        if res_id and res_id in android_strings:
+            return android_strings[res_id]
+
     name = key.replace("key_apsboost_", "").replace("key_boost_", "")\
               .replace("openapsama_", "").replace("openaps_", "")\
               .replace("ApsBoost", "").replace("activity_", "")
@@ -636,6 +744,40 @@ def generate_boost_logic_summary(key: str, info: dict) -> str:
         "v5_hypo_caution": "V5 hypo caution (1.0 = neutral). Higher = more conservative near hypo thresholds.",
         "v5_committed_cap": "V5 max bolus for COMMITTED meals (units). Cap for confirmed meal dosing.",
         "v5_confirmed_cap": "V5 max bolus for CONFIRMED meals (units). Lower cap for less-certain meals.",
+        "v5_primer_cap": (
+            "V5 early primer cap (U) during OBSERVING. 0 = primer OFF. Fires once per meal "
+            "session on delta_accl > 10 before CONFIRMED, reclaiming V1's ~15-min-earlier "
+            "acceleration response. PrimerTbrFallback / PrimerBolusMode only choose the delivery "
+            "method — the cap value is what turns the primer on."
+        ),
+        "v5_composed_floor": (
+            "Composed safety floor for meal dosing: never dose below what a hypo-corrected basal "
+            "would add. Fixes the multiplicative brake-stack defect (stateMult × velocityFactor × "
+            "iobHeadroomBrake × decelerationBrake, median ~0.037) that collapses mid-meal doses to "
+            "zero for 30+ minutes. Floors the dose at 25% of budget ONLY on meal-session high cycles "
+            "(BG > 160, eventualBG > target+20, awake, budget > 0). Insulin-ADDING only: gated by "
+            "trailing-14d TBR (below-63 < 2.0% AND below-70 < 3.5%) — fails closed if either is "
+            "missing or over the bar."
+        ),
+        "v5_fast_carb_confirm": (
+            "V5 fast-carb fast path: single-cycle IDLE/OBSERVING → CONFIRMED on a sharp, "
+            "accelerating, score-corroborated rise (delta ≥ 6 mg/dL/5min, delta_accl ≥ FAST_CONFIRM_ACCL, "
+            "score ≥ 0.65) while awake and not exercising. Default ON."
+        ),
+        "v5_aggressive_early_confirm": (
+            "V5 aggressive early confirm: opens the OBSERVING → CONFIRMED age gate 2 cycles early "
+            "(~10 min sooner) when the score has been ≥ CONFIRM_SCORE on consecutive cycles. "
+            "Opt-in, auto-config managed."
+        ),
+        "v5_velocity_budget": (
+            "V5 velocity-aware dose scaling: scales meal dose by the 30-min cumulative BG rise "
+            "(100% for rises ≥ 50 mg/dL, 40% for rises ≤ 25 mg/dL). Slow meals get smaller doses. "
+            "Toggle controls whether velocity scaling applies to the budget."
+        ),
+        "v5_active_dosing": (
+            "V5 master gate: when ON, V5 decides and delivers meal insulin. When OFF, V5 runs as "
+            "a shadow and only logs telemetry."
+        ),
         "use_tdd": "Main gate: enables TDD-based dynamic ISF instead of static profile ISF.",
         "max_basal": "Maximum temporary basal rate (U/h). Shared with all OpenAPS plugins.",
         "max_daily_multiplier": "Maximum daily insulin multiplier × profile. Safety limit.",
@@ -897,7 +1039,7 @@ def generate():
             "orphaned": is_orphaned,
             "negative_gate_key": None,
             "negative_gate_note": None,
-            "logic_summary": generate_boost_logic_summary(key_str, info),
+            "logic_summary": generate_boost_logic_summary(key_str, info, Path(source_root)),
             "effect_high": generate_boost_effect(key_str, info, "high"),
             "effect_low": generate_boost_effect(key_str, info, "low"),
             "impact": classify_boost_impact(key_str, info.get("type", "")),
@@ -992,7 +1134,13 @@ def generate():
             "1. Start with boost_use_tdd=ON and boost_insulin_req_pct=100 (neutral). "
             "2. If TIR < 70% and mean BG > 160: increase insulinReqPct to 105-115%. "
             "3. If timeBelow70 > 3%: decrease insulinReqPct to 85-95% or raise maxIob. "
-            "4. If post-meal spikes > 250: adjust V6 pre-meal lead time up, increase bolus cap. "
+            "4. If post-meal spikes > 250: diagnose first. Raising caps (confirmed/committed) is a "
+            "CEILING change and does nothing when the dose collapses to zero — the common cause is "
+            "the multiplicative brake stack (stateMult × velocity × iobHeadroom × deceleration, "
+            "median ~0.037). That is what boost_v5_composed_floor_active fixes. Timing fixes: "
+            "boost_v5_aggressive_early_confirm, boost_v5_fast_carb_confirm, and a non-zero "
+            "boost_v5_primer_cap_u (0 = primer off). Announcing carbs raises baseInsulinReq "
+            "(the budget input) immediately, before any BG rise is visible. "
             "5. If overnight hypos: enable night mode, set start=22:00, end=07:00, try bgOffset=10. "
             "6. If exercise causes hypos: enable post-exercise recovery, set scale=0.5, hours=3. "
             "7. If too conservative overall: check ApsBoostPercentScale (try 110%) and dynIsfAdjustmentFactor. "
