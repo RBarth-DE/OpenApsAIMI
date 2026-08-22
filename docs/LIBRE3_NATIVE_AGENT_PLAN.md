@@ -739,11 +739,81 @@ Still **not user-confirmed**. One first pairing was attempted on a real Libre 3 
   "never activated" and anything else means "running", and the reference makes no finer claim
   either. The Libre 2 convention where `0x04` means "expired" is **not** what this parser assumes
   and is unverified here.
-- **There is no automatic retry, and this is a real gap.** `Libre3ReconnectPolicy.nextDelayMs` is
-  never called in production, and `RETRY_CACHED_RECONNECT` is logged as the next action while
-  nothing acts on it. The only production caller of `Libre3CgmDriverReal.connect` is the button in
-  `Libre3StatusActivity`. The two extra attempts in the 2026-08-22 log were two taps of that
-  button, ten seconds apart, serialised by the driver's single thread executor. Undecided.
+- **The two extra attempts in that log were two taps of the button**, ten seconds apart, serialised
+  by the driver's single thread executor. There was no automatic retry at the time:
+  `Libre3ReconnectPolicy.nextDelayMs` was never called and `RETRY_CACHED_RECONNECT` was logged while
+  nothing acted on it. A retry with a generation guard now exists in `Libre3CgmDriverReal`.
+
+### The second run, later on 2026-08-22: the link itself
+
+A second log, taken after a "forget this sensor" and a fresh NFC scan of the same sensor, never
+reached the handshake at all. `LIBRE3_NFC` shows `state=0x04`, `command=0xA8 answered`,
+`serialChanged=true`, so the sensor was stored again. Then:
+
+```
+09:19:31.110  connect() - device: XX:XX:XX:XX:1C:E8, auto: false
+09:19:41.116  onClientConnectionState() - status=147 connected=false     (+10.0 s)
+09:19:41.122  LIBRE3_RECONNECT: attempt 1 failed
+```
+
+`status=147` is `GATT_CONNECTION_TIMEOUT`: the sensor never answered the connection request. No
+`LIBRE3_PAIRING` line and no `LIBRE3_TRACE` line appear, so **this log says nothing about Phase 5**.
+The cause is one layer lower: a Libre 3 is only connectable while it advertises, and the driver
+fired a connect at a stored address without ever looking for the sensor on the air.
+
+Both references resolve the sensor before they connect. `LibreLoopPairingService` cannot do
+otherwise on iOS, and bounds the search: *"Final fallback: scan. Bounded so we don't burn the radio
+forever waiting for a sensor that might never show up."* It filters on **nothing** and matches the
+peripheral by identity.
+
+`Libre3GattClientAndroid.connect` now looks for the advertisement first and connects the device it
+saw, falling back to the stored address only after the search window. Two traps are worth keeping in
+mind here:
+
+- **Do not add the service UUID to the scan filter.** A Libre 3 often carries that UUID in the scan
+  response rather than the advertisement, so an address plus service filter can match nothing, in
+  silence. The address alone is unique. `scan/Libre3BleScannerAndroid` had that filter and it was
+  removed for the same reason; note that this class is not the one the driver uses.
+- **A build that has none of this on the phone will keep showing `status=147`.** The 09:19 log came
+  from `4.0.0.0-dev.AIMI.210826-e019fee`, which predates all of it.
+
+### The third run, 2026-08-22 10:01: the static scalar window
+
+The scan fix works. `LIBRE3_SCAN: seen 40:69:18:A0:1C:E8 rssi=-81`, then the link came up, the whole
+clock ran, and the trace shows every step. The failure moved back to Phase 5, and this time the
+trace names the cause:
+
+```
+10:01:49.836  LIBRE3_TRACE: pairing key derived +230ms
+10:01:49.907  LIBRE3_TRACE: sensor challenge read +2ms      (R1 and nonce)
+10:01:49.907  LIBRE3_TRACE: phase 5 built +0ms
+10:01:50.156  onClientConnectionState() status=19           (+249 ms, the sensor hung up)
+```
+
+**Hypothesis B is dead.** The whole gap between reading the challenge and sending Phase 5 is 0 ms:
+the key is derived long before, and the disk write costs 1 ms. The sensor is not refusing a late
+answer, it is refusing a wrong one. Do not spend time on the ordering of §10.0 again.
+
+**The cause was the static scalar window of the first pairing.** The reference does not always work
+that scalar out of the entry source. `PhoneCert.phase5StaticScalarWindowOverride` returns
+`FirstPairStaticScalarWindow.firstPairIndex1` for the **`03 03`** certificate family, and only a
+`03 00` certificate falls back to the entry source. This build ships `phone_cert_162b.bin`, which
+starts `03 03`, so every first pairing this port ever attempted used the fallback scalar, built a
+key the sensor could not know, and was refused at the only step where the sensor judges the key.
+
+No unit test could have caught it. Every test of the source path passes the window in as a
+parameter, and the 63 published vectors do the same, so all of them stayed green while production
+was wired to the wrong branch. `Libre3PhoneCertTest` now pins where the window comes from, and
+`Libre3BleSessionFirstPairTest` derives its expected key through the certificate, like the session.
+
+Two more things the reference header states plainly, both worth keeping in mind:
+
+- *"A random ephemeral does not pair."* The phone ephemeral and the Phase 5 source must come from
+  **one** draw of native entropy. This port already does that: `Libre3FirstPairEphemeral.make` uses
+  the accepted `entropy11A` for both the wire point and the source.
+- The reference calls the handshake with `maxEntropyAttempts: 1`, while this port allows 64 and
+  feeds the attempt count into the seed builder. When the first draw is accepted the two agree, so
+  this is not the failure seen here, but it is a difference and it is not settled.
 
 ### Traps already found and fixed. Do not reintroduce them
 
