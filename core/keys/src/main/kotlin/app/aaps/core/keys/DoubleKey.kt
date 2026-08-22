@@ -614,7 +614,7 @@ enum class DoubleKey(
         titleResId = R.string.pref_title_aimi_t3c_cfrd_lgs_floor,
         summaryResId = R.string.pref_summary_aimi_t3c_cfrd_lgs_floor,
         dependency = BooleanKey.OApsAIMIT3cCfrdMode,
-        unitType = UnitType.NONE,
+        unitType = UnitType.MGDL,
     ),
     /** CFRD mode: exocrine malabsorption COB delay (minutes).
      *  Shifts the COB absorption curve forward to account for delayed / irregular carbohydrate digestion. */
@@ -626,7 +626,7 @@ enum class DoubleKey(
         titleResId = R.string.pref_title_aimi_t3c_cfrd_cob_delay,
         summaryResId = R.string.pref_summary_aimi_t3c_cfrd_cob_delay,
         dependency = BooleanKey.OApsAIMIT3cCfrdMode,
-        unitType = UnitType.NONE,
+        unitType = UnitType.MIN,
     ),
     /** Undeclared-meal COB estimation: hard upper bound (grams) the estimator may inject into the
      *  prediction path. Conservative by default. Only active when [BooleanKey.OApsAIMIUndeclaredCobEnabled] is on. */
@@ -831,12 +831,14 @@ enum class DoubleKey(
         key= "activity_scale_factor",
         //titleResId = empty
         summaryResId = R.string.pref_activ_mon_sum_activity_scale_factor,
-        defaultValue = 1.0, min = 0.0, max = 1.5, unitType = UnitType.DOUBLE, defaultedBySM = true, dependency = BooleanKey.ActivityMonitorDetection),
-	    InactivityScaleFactor(
-	        "inactivity_scale_factor",
-	        //titleResId = empty,
-	        summaryResId = R.string.pref_activ_mon_sum_inactivity_scale_factor,
-	        defaultValue = 1.0, min = 0.0, max = 1.5, unitType = UnitType.DOUBLE, defaultedBySM = true, dependency = BooleanKey.ActivityMonitorDetection),
+        defaultValue = 1.0, min = 0.0, max = 1.5, unitType = UnitType.DOUBLE, defaultedBySM = true, dependency = BooleanKey.ActivityMonitorDetection
+    ),
+    InactivityScaleFactor(
+        key = "inactivity_scale_factor",
+        //titleResId = empty,
+        summaryResId = R.string.pref_activ_mon_sum_inactivity_scale_factor,
+        defaultValue = 1.0, min = 0.0, max = 1.5, unitType = UnitType.DOUBLE, defaultedBySM = true, dependency = BooleanKey.ActivityMonitorDetection
+    ),
 
     // ── BOOST algorithm keys ──
     ApsBoostBolus("boost_bolus_cap", 2.5, 0.1, 10.0, unitType = UnitType.INSULIN, summaryResId = R.string.pref_summary_boost_bolus_cap),
@@ -854,7 +856,7 @@ enum class DoubleKey(
     ApsBoostV5Aggression("boost_v5_aggression", 1.0, 0.7, 1.6, unitType = UnitType.DOUBLE_2, summaryResId = R.string.pref_summary_boost_v5_aggression),
     ApsBoostV5ConfirmedCapU("boost_v5_confirmed_cap_u", 2.5, 0.0, 7.5, unitType = UnitType.INSULIN, summaryResId = R.string.pref_summary_boost_v5_confirmed_cap),
     ApsBoostV5CommittedCapU("boost_v5_committed_cap_u", 0.5, 0.0, 2.5, unitType = UnitType.INSULIN, summaryResId = R.string.pref_summary_boost_v5_committed_cap),
-    ApsBoostV5PrimerCapU("boost_v5_primer_cap_u", 0.0, 0.0, 1.0, defaultedBySM = true,unitType = UnitType.DOUBLE,),
+    ApsBoostV5PrimerCapU("boost_v5_primer_cap_u", 0.0, 0.0, 1.0, defaultedBySM = true,unitType = UnitType.INSULIN,),
     ApsBoostV5HypoCaution("boost_v5_hypo_caution", 1.0, 1.0, 2.0, unitType = UnitType.DOUBLE, summaryResId = R.string.pref_summary_boost_v5_hypo_caution),
     ApsBoostV5Sensitivity("boost_v5_sensitivity", 1.0, 0.8, 1.2, unitType = UnitType.DOUBLE, summaryResId = R.string.pref_summary_boost_v5_sensitivity),
     ApsBoostV6PreMealTargetMgdl("boost_v6_pre_meal_target_mgdl", 72.0, 65.0, 90.0, unitType = UnitType.MGDL, summaryResId = R.string.pref_summary_boost_v6_pre_meal_target),

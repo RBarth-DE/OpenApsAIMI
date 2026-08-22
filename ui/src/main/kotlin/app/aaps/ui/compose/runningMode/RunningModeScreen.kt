@@ -375,6 +375,11 @@ private fun PumpDisconnectSection(
                     { onAction(PendingRunningModeAction(RM.Mode.DISCONNECTED_PUMP, Action.DISCONNECT, 180)) },
                     Modifier.weight(1f)
                 )
+                CompactButton(
+                    "5 Std.", RM.Mode.DISCONNECTED_PUMP,
+                    { onAction(PendingRunningModeAction(RM.Mode.DISCONNECTED_PUMP, Action.DISCONNECT, 300)) },
+                    Modifier.weight(1f)
+                )
             }
         }
     }
