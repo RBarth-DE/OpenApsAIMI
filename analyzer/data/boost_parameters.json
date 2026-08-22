@@ -1,8 +1,8 @@
 {
   "version": "1.0",
   "plugin": "boost",
-  "source_commit": "8d49e0f40f2ac62872c92dd90d85eae85bb58792",
-  "generated_at": "2026-08-22T07:21:27.207219+00:00",
+  "source_commit": "065988ed8abe4b1d475b774688aa9b00caef4f5d",
+  "generated_at": "2026-08-22T08:21:52.567093+00:00",
   "total": 98,
   "active": 98,
   "orphaned": 0,
@@ -33,7 +33,8 @@
       "feature_group": "shared_aaps",
       "is_gate": false,
       "settings_path": null,
-      "settings_gate": null
+      "settings_gate": null,
+      "ui_available": false
     },
     {
       "key": "autosens_max",
@@ -78,7 +79,8 @@
       "feature_group": "shared_aaps",
       "is_gate": false,
       "settings_path": "OpenAPS BOOST V6 → Advanced Settings",
-      "settings_gate": "ApsUseAutosens"
+      "settings_gate": "ApsUseAutosens",
+      "ui_available": true
     },
     {
       "key": "autosens_min",
@@ -123,7 +125,8 @@
       "feature_group": "shared_aaps",
       "is_gate": false,
       "settings_path": "OpenAPS BOOST V6 → Advanced Settings",
-      "settings_gate": "ApsUseAutosens"
+      "settings_gate": "ApsUseAutosens",
+      "ui_available": true
     },
     {
       "key": "boost_activity_pct",
@@ -152,7 +155,8 @@
       "feature_group": "activity",
       "is_gate": false,
       "settings_path": "OpenAPS BOOST V6 → OpenAPS BOOST V1 and up",
-      "settings_gate": null
+      "settings_gate": null,
+      "ui_available": true
     },
     {
       "key": "boost_activity_shadow_enabled",
@@ -185,7 +189,8 @@
       "feature_group": "activity",
       "is_gate": true,
       "settings_path": "OpenAPS BOOST V6 → OpenAPS BOOST V1 and up",
-      "settings_gate": null
+      "settings_gate": null,
+      "ui_available": true
     },
     {
       "key": "boost_activity_steps_15",
@@ -210,7 +215,8 @@
       "feature_group": "activity",
       "is_gate": false,
       "settings_path": null,
-      "settings_gate": null
+      "settings_gate": null,
+      "ui_available": false
     },
     {
       "key": "boost_activity_steps_30",
@@ -235,7 +241,8 @@
       "feature_group": "activity",
       "is_gate": false,
       "settings_path": null,
-      "settings_gate": null
+      "settings_gate": null,
+      "ui_available": false
     },
     {
       "key": "boost_activity_steps_5",
@@ -260,7 +267,8 @@
       "feature_group": "activity",
       "is_gate": false,
       "settings_path": null,
-      "settings_gate": null
+      "settings_gate": null,
+      "ui_available": false
     },
     {
       "key": "boost_activity_steps_60",
@@ -285,7 +293,8 @@
       "feature_group": "activity",
       "is_gate": false,
       "settings_path": null,
-      "settings_gate": null
+      "settings_gate": null,
+      "ui_available": false
     },
     {
       "key": "boost_adjust_sensitivity",
@@ -314,7 +323,8 @@
       "feature_group": "tdd_isf",
       "is_gate": true,
       "settings_path": "OpenAPS BOOST V6 → OpenAPS BOOST V1 and up",
-      "settings_gate": null
+      "settings_gate": null,
+      "ui_available": true
     },
     {
       "key": "boost_allow_all_bg_sources",
@@ -334,7 +344,8 @@
       "feature_group": "shared_aaps",
       "is_gate": true,
       "settings_path": null,
-      "settings_gate": null
+      "settings_gate": null,
+      "ui_available": false
     },
     {
       "key": "boost_anticip_history",
@@ -359,7 +370,8 @@
       "feature_group": "meal_model",
       "is_gate": false,
       "settings_path": null,
-      "settings_gate": null
+      "settings_gate": null,
+      "ui_available": false
     },
     {
       "key": "boost_autosens_when_no_tdd",
@@ -388,7 +400,8 @@
       "feature_group": "tdd_isf",
       "is_gate": true,
       "settings_path": "OpenAPS BOOST V6 → OpenAPS BOOST V1 and up",
-      "settings_gate": null
+      "settings_gate": null,
+      "ui_available": true
     },
     {
       "key": "boost_bolus_cap",
@@ -421,7 +434,8 @@
       "feature_group": "smb_delivery",
       "is_gate": false,
       "settings_path": "OpenAPS BOOST V6 → OpenAPS BOOST V1 and up",
-      "settings_gate": null
+      "settings_gate": null,
+      "ui_available": true
     },
     {
       "key": "boost_cumulative_smb_cap_60min",
@@ -454,7 +468,8 @@
       "feature_group": "smb_delivery",
       "is_gate": false,
       "settings_path": "OpenAPS BOOST V6 → OpenAPS BOOST V1 and up",
-      "settings_gate": null
+      "settings_gate": null,
+      "ui_available": true
     },
     {
       "key": "boost_daily_step_history",
@@ -479,7 +494,8 @@
       "feature_group": "activity",
       "is_gate": false,
       "settings_path": null,
-      "settings_gate": null
+      "settings_gate": null,
+      "ui_available": false
     },
     {
       "key": "boost_dynisf_bg_cap",
@@ -508,7 +524,8 @@
       "feature_group": "shared_aaps",
       "is_gate": false,
       "settings_path": "OpenAPS BOOST V6 → OpenAPS BOOST V1 and up",
-      "settings_gate": null
+      "settings_gate": null,
+      "ui_available": true
     },
     {
       "key": "boost_dynisf_normal_target",
@@ -537,7 +554,8 @@
       "feature_group": "shared_aaps",
       "is_gate": false,
       "settings_path": "OpenAPS BOOST V6 → OpenAPS BOOST V1 and up",
-      "settings_gate": null
+      "settings_gate": null,
+      "ui_available": true
     },
     {
       "key": "boost_dynisf_velocity",
@@ -566,7 +584,8 @@
       "feature_group": "shared_aaps",
       "is_gate": false,
       "settings_path": "OpenAPS BOOST V6 → OpenAPS BOOST V1 and up",
-      "settings_gate": null
+      "settings_gate": null,
+      "ui_available": true
     },
     {
       "key": "boost_health_connect_hr_enabled",
@@ -591,7 +610,8 @@
       "feature_group": "hr_stress",
       "is_gate": true,
       "settings_path": null,
-      "settings_gate": null
+      "settings_gate": null,
+      "ui_available": false
     },
     {
       "key": "boost_health_connect_poll_min",
@@ -616,7 +636,8 @@
       "feature_group": "hr_stress",
       "is_gate": false,
       "settings_path": null,
-      "settings_gate": null
+      "settings_gate": null,
+      "ui_available": false
     },
     {
       "key": "boost_hr_integration_enabled",
@@ -645,7 +666,8 @@
       "feature_group": "hr_stress",
       "is_gate": false,
       "settings_path": "OpenAPS BOOST V6 → OpenAPS BOOST V1 and up",
-      "settings_gate": null
+      "settings_gate": null,
+      "ui_available": true
     },
     {
       "key": "boost_hr_max_bpm",
@@ -670,7 +692,8 @@
       "feature_group": "hr_stress",
       "is_gate": false,
       "settings_path": null,
-      "settings_gate": null
+      "settings_gate": null,
+      "ui_available": false
     },
     {
       "key": "boost_hr_resting_bpm",
@@ -695,7 +718,8 @@
       "feature_group": "hr_stress",
       "is_gate": false,
       "settings_path": null,
-      "settings_gate": null
+      "settings_gate": null,
+      "ui_available": false
     },
     {
       "key": "boost_hr_stress_detection",
@@ -724,7 +748,8 @@
       "feature_group": "hr_stress",
       "is_gate": true,
       "settings_path": "OpenAPS BOOST V6 → OpenAPS BOOST V1 and up",
-      "settings_gate": null
+      "settings_gate": null,
+      "ui_available": true
     },
     {
       "key": "boost_hr_window_minutes",
@@ -749,7 +774,8 @@
       "feature_group": "hr_stress",
       "is_gate": false,
       "settings_path": null,
-      "settings_gate": null
+      "settings_gate": null,
+      "ui_available": false
     },
     {
       "key": "boost_inactivity_pct",
@@ -778,7 +804,8 @@
       "feature_group": "activity",
       "is_gate": false,
       "settings_path": "OpenAPS BOOST V6 → OpenAPS BOOST V1 and up",
-      "settings_gate": null
+      "settings_gate": null,
+      "ui_available": true
     },
     {
       "key": "boost_inactivity_steps",
@@ -803,7 +830,8 @@
       "feature_group": "activity",
       "is_gate": false,
       "settings_path": null,
-      "settings_gate": null
+      "settings_gate": null,
+      "ui_available": false
     },
     {
       "key": "boost_insulin_req_pct",
@@ -832,7 +860,8 @@
       "feature_group": "smb_delivery",
       "is_gate": false,
       "settings_path": "OpenAPS BOOST V6 → OpenAPS BOOST V1 and up",
-      "settings_gate": null
+      "settings_gate": null,
+      "ui_available": true
     },
     {
       "key": "boost_intraday_step_bank",
@@ -857,7 +886,8 @@
       "feature_group": "activity",
       "is_gate": false,
       "settings_path": null,
-      "settings_gate": null
+      "settings_gate": null,
+      "ui_available": false
     },
     {
       "key": "boost_isf_shadow_state",
@@ -882,7 +912,8 @@
       "feature_group": "isf_shadow",
       "is_gate": false,
       "settings_path": null,
-      "settings_gate": null
+      "settings_gate": null,
+      "ui_available": false
     },
     {
       "key": "boost_max_iob",
@@ -915,7 +946,8 @@
       "feature_group": "smb_delivery",
       "is_gate": false,
       "settings_path": "OpenAPS BOOST V6 → OpenAPS BOOST V1 and up",
-      "settings_gate": null
+      "settings_gate": null,
+      "ui_available": true
     },
     {
       "key": "boost_meal_time_history",
@@ -940,7 +972,8 @@
       "feature_group": "meal_model",
       "is_gate": false,
       "settings_path": null,
-      "settings_gate": null
+      "settings_gate": null,
+      "ui_available": false
     },
     {
       "key": "boost_ml_ring_buffer",
@@ -973,7 +1006,8 @@
       "feature_group": "ml_features",
       "is_gate": false,
       "settings_path": null,
-      "settings_gate": null
+      "settings_gate": null,
+      "ui_available": false
     },
     {
       "key": "boost_night_mode_auto_by_sleep",
@@ -998,7 +1032,8 @@
       "feature_group": "night_mode",
       "is_gate": true,
       "settings_path": null,
-      "settings_gate": null
+      "settings_gate": null,
+      "ui_available": false
     },
     {
       "key": "boost_night_mode_bg_offset",
@@ -1027,7 +1062,8 @@
       "feature_group": "night_mode",
       "is_gate": false,
       "settings_path": "OpenAPS BOOST V6 → OpenAPS BOOST V1 and up",
-      "settings_gate": null
+      "settings_gate": null,
+      "ui_available": true
     },
     {
       "key": "boost_night_mode_disable_with_cob",
@@ -1056,7 +1092,8 @@
       "feature_group": "night_mode",
       "is_gate": true,
       "settings_path": "OpenAPS BOOST V6 → OpenAPS BOOST V1 and up",
-      "settings_gate": null
+      "settings_gate": null,
+      "ui_available": true
     },
     {
       "key": "boost_night_mode_disable_with_low_tt",
@@ -1081,7 +1118,8 @@
       "feature_group": "night_mode",
       "is_gate": true,
       "settings_path": null,
-      "settings_gate": null
+      "settings_gate": null,
+      "ui_available": false
     },
     {
       "key": "boost_night_mode_enabled",
@@ -1110,7 +1148,8 @@
       "feature_group": "night_mode",
       "is_gate": true,
       "settings_path": "OpenAPS BOOST V6 → OpenAPS BOOST V1 and up",
-      "settings_gate": null
+      "settings_gate": null,
+      "ui_available": true
     },
     {
       "key": "boost_night_mode_end",
@@ -1135,7 +1174,8 @@
       "feature_group": "night_mode",
       "is_gate": false,
       "settings_path": "OpenAPS BOOST V6 → OpenAPS BOOST V1 and up",
-      "settings_gate": null
+      "settings_gate": null,
+      "ui_available": true
     },
     {
       "key": "boost_night_mode_start",
@@ -1160,7 +1200,8 @@
       "feature_group": "night_mode",
       "is_gate": false,
       "settings_path": "OpenAPS BOOST V6 → OpenAPS BOOST V1 and up",
-      "settings_gate": null
+      "settings_gate": null,
+      "ui_available": true
     },
     {
       "key": "boost_percent_scale_factor",
@@ -1189,7 +1230,8 @@
       "feature_group": "tdd_isf",
       "is_gate": false,
       "settings_path": "OpenAPS BOOST V6 → OpenAPS BOOST V1 and up",
-      "settings_gate": null
+      "settings_gate": null,
+      "ui_available": true
     },
     {
       "key": "boost_post_exercise_min_duration",
@@ -1214,7 +1256,8 @@
       "feature_group": "post_exercise",
       "is_gate": false,
       "settings_path": null,
-      "settings_gate": null
+      "settings_gate": null,
+      "ui_available": false
     },
     {
       "key": "boost_post_exercise_recovery_enabled",
@@ -1243,7 +1286,8 @@
       "feature_group": "post_exercise",
       "is_gate": true,
       "settings_path": "OpenAPS BOOST V6 → OpenAPS BOOST V1 and up",
-      "settings_gate": null
+      "settings_gate": null,
+      "ui_available": true
     },
     {
       "key": "boost_post_exercise_recovery_hours",
@@ -1272,7 +1316,8 @@
       "feature_group": "post_exercise",
       "is_gate": false,
       "settings_path": "OpenAPS BOOST V6 → OpenAPS BOOST V1 and up",
-      "settings_gate": null
+      "settings_gate": null,
+      "ui_available": true
     },
     {
       "key": "boost_post_exercise_recovery_scale",
@@ -1301,7 +1346,8 @@
       "feature_group": "post_exercise",
       "is_gate": false,
       "settings_path": "OpenAPS BOOST V6 → OpenAPS BOOST V1 and up",
-      "settings_gate": null
+      "settings_gate": null,
+      "ui_available": true
     },
     {
       "key": "boost_post_exercise_recovery_target",
@@ -1330,7 +1376,8 @@
       "feature_group": "post_exercise",
       "is_gate": false,
       "settings_path": "OpenAPS BOOST V6 → OpenAPS BOOST V1 and up",
-      "settings_gate": null
+      "settings_gate": null,
+      "ui_available": true
     },
     {
       "key": "boost_pre_sleep_lead_min",
@@ -1355,7 +1402,8 @@
       "feature_group": "sleep",
       "is_gate": false,
       "settings_path": null,
-      "settings_gate": null
+      "settings_gate": null,
+      "ui_available": false
     },
     {
       "key": "boost_scale_value",
@@ -1384,7 +1432,8 @@
       "feature_group": "tdd_isf",
       "is_gate": false,
       "settings_path": "OpenAPS BOOST V6 → OpenAPS BOOST V1 and up",
-      "settings_gate": null
+      "settings_gate": null,
+      "ui_available": true
     },
     {
       "key": "boost_sleep_history",
@@ -1409,7 +1458,8 @@
       "feature_group": "sleep",
       "is_gate": false,
       "settings_path": null,
-      "settings_gate": null
+      "settings_gate": null,
+      "ui_available": false
     },
     {
       "key": "boost_sleep_hysteresis_min",
@@ -1434,7 +1484,8 @@
       "feature_group": "sleep",
       "is_gate": false,
       "settings_path": null,
-      "settings_gate": null
+      "settings_gate": null,
+      "ui_available": false
     },
     {
       "key": "boost_sleep_in_hrs",
@@ -1463,7 +1514,8 @@
       "feature_group": "sleep",
       "is_gate": false,
       "settings_path": "OpenAPS BOOST V6 → OpenAPS BOOST V1 and up",
-      "settings_gate": null
+      "settings_gate": null,
+      "ui_available": true
     },
     {
       "key": "boost_sleep_in_steps",
@@ -1492,7 +1544,8 @@
       "feature_group": "activity",
       "is_gate": false,
       "settings_path": "OpenAPS BOOST V6 → OpenAPS BOOST V1 and up",
-      "settings_gate": null
+      "settings_gate": null,
+      "ui_available": true
     },
     {
       "key": "boost_sleep_state",
@@ -1517,7 +1570,8 @@
       "feature_group": "sleep",
       "is_gate": false,
       "settings_path": null,
-      "settings_gate": null
+      "settings_gate": null,
+      "ui_available": false
     },
     {
       "key": "boost_use_tdd",
@@ -1546,7 +1600,8 @@
       "feature_group": "tdd_isf",
       "is_gate": true,
       "settings_path": "OpenAPS BOOST V6 → OpenAPS BOOST V1 and up",
-      "settings_gate": null
+      "settings_gate": null,
+      "ui_available": true
     },
     {
       "key": "boost_v5_active_dosing",
@@ -1566,7 +1621,8 @@
       "feature_group": "meal_model",
       "is_gate": true,
       "settings_path": null,
-      "settings_gate": null
+      "settings_gate": null,
+      "ui_available": false
     },
     {
       "key": "boost_v5_aggression",
@@ -1599,7 +1655,8 @@
       "feature_group": "meal_model",
       "is_gate": false,
       "settings_path": "OpenAPS BOOST V6",
-      "settings_gate": null
+      "settings_gate": null,
+      "ui_available": true
     },
     {
       "key": "boost_v5_aggressive_early_confirm",
@@ -1628,7 +1685,8 @@
       "feature_group": "meal_model",
       "is_gate": false,
       "settings_path": "OpenAPS BOOST V6",
-      "settings_gate": null
+      "settings_gate": null,
+      "ui_available": true
     },
     {
       "key": "boost_v5_autoconfig_done",
@@ -1653,7 +1711,8 @@
       "feature_group": "meal_model",
       "is_gate": false,
       "settings_path": null,
-      "settings_gate": null
+      "settings_gate": null,
+      "ui_available": false
     },
     {
       "key": "boost_v5_committed_cap_u",
@@ -1690,7 +1749,8 @@
       "feature_group": "meal_model",
       "is_gate": false,
       "settings_path": "OpenAPS BOOST V6",
-      "settings_gate": null
+      "settings_gate": null,
+      "ui_available": true
     },
     {
       "key": "boost_v5_composed_floor_active",
@@ -1723,7 +1783,8 @@
       "feature_group": "meal_model",
       "is_gate": true,
       "settings_path": "OpenAPS BOOST V6",
-      "settings_gate": null
+      "settings_gate": null,
+      "ui_available": true
     },
     {
       "key": "boost_v5_confirmed_cap_u",
@@ -1760,7 +1821,8 @@
       "feature_group": "meal_model",
       "is_gate": false,
       "settings_path": "OpenAPS BOOST V6",
-      "settings_gate": null
+      "settings_gate": null,
+      "ui_available": true
     },
     {
       "key": "boost_v5_fast_carb_confirm",
@@ -1785,7 +1847,8 @@
       "feature_group": "meal_model",
       "is_gate": false,
       "settings_path": "OpenAPS BOOST V6",
-      "settings_gate": null
+      "settings_gate": null,
+      "ui_available": true
     },
     {
       "key": "boost_v5_hypo_caution",
@@ -1818,7 +1881,8 @@
       "feature_group": "meal_model",
       "is_gate": false,
       "settings_path": "OpenAPS BOOST V6",
-      "settings_gate": null
+      "settings_gate": null,
+      "ui_available": true
     },
     {
       "key": "boost_v5_primer_bolus_mode",
@@ -1843,7 +1907,8 @@
       "feature_group": "meal_model",
       "is_gate": true,
       "settings_path": "OpenAPS BOOST V6",
-      "settings_gate": null
+      "settings_gate": null,
+      "ui_available": true
     },
     {
       "key": "boost_v5_primer_cap_u",
@@ -1872,7 +1937,8 @@
       "feature_group": "meal_model",
       "is_gate": false,
       "settings_path": "OpenAPS BOOST V6",
-      "settings_gate": null
+      "settings_gate": null,
+      "ui_available": true
     },
     {
       "key": "boost_v5_primer_tbr_fallback",
@@ -1897,7 +1963,8 @@
       "feature_group": "meal_model",
       "is_gate": true,
       "settings_path": "OpenAPS BOOST V6",
-      "settings_gate": null
+      "settings_gate": null,
+      "ui_available": true
     },
     {
       "key": "boost_v5_sensitivity",
@@ -1922,7 +1989,8 @@
       "feature_group": "meal_model",
       "is_gate": false,
       "settings_path": "OpenAPS BOOST V6",
-      "settings_gate": null
+      "settings_gate": null,
+      "ui_available": true
     },
     {
       "key": "boost_v5_state",
@@ -1947,7 +2015,8 @@
       "feature_group": "meal_model",
       "is_gate": false,
       "settings_path": null,
-      "settings_gate": null
+      "settings_gate": null,
+      "ui_available": false
     },
     {
       "key": "boost_v5_velocity_budget_active",
@@ -1980,7 +2049,8 @@
       "feature_group": "meal_model",
       "is_gate": true,
       "settings_path": "OpenAPS BOOST V6",
-      "settings_gate": null
+      "settings_gate": null,
+      "ui_available": true
     },
     {
       "key": "boost_v6_pre_meal_lead_min",
@@ -2009,7 +2079,8 @@
       "feature_group": "meal_model",
       "is_gate": false,
       "settings_path": "OpenAPS BOOST V6",
-      "settings_gate": null
+      "settings_gate": null,
+      "ui_available": true
     },
     {
       "key": "boost_v6_pre_meal_target",
@@ -2038,7 +2109,8 @@
       "feature_group": "meal_model",
       "is_gate": true,
       "settings_path": "OpenAPS BOOST V6",
-      "settings_gate": null
+      "settings_gate": null,
+      "ui_available": true
     },
     {
       "key": "boost_v6_pre_meal_target_mgdl",
@@ -2067,7 +2139,8 @@
       "feature_group": "meal_model",
       "is_gate": false,
       "settings_path": "OpenAPS BOOST V6",
-      "settings_gate": null
+      "settings_gate": null,
+      "ui_available": true
     },
     {
       "key": "boost_v7_residual_pools",
@@ -2096,7 +2169,8 @@
       "feature_group": "meal_model",
       "is_gate": false,
       "settings_path": null,
-      "settings_gate": null
+      "settings_gate": null,
+      "ui_available": false
     },
     {
       "key": "boost_wake_hr_hysteresis_min",
@@ -2121,7 +2195,8 @@
       "feature_group": "sleep",
       "is_gate": false,
       "settings_path": null,
-      "settings_gate": null
+      "settings_gate": null,
+      "ui_available": false
     },
     {
       "key": "carbsReqThreshold",
@@ -2146,7 +2221,8 @@
       "feature_group": "shared_aaps",
       "is_gate": false,
       "settings_path": null,
-      "settings_gate": null
+      "settings_gate": null,
+      "ui_available": false
     },
     {
       "key": "enableBoostPercentScale",
@@ -2175,7 +2251,8 @@
       "feature_group": "tdd_isf",
       "is_gate": true,
       "settings_path": "OpenAPS BOOST V6 → OpenAPS BOOST V1 and up",
-      "settings_gate": null
+      "settings_gate": null,
+      "ui_available": true
     },
     {
       "key": "enableBoost_with_high_temptarget",
@@ -2204,7 +2281,8 @@
       "feature_group": "shared_aaps",
       "is_gate": true,
       "settings_path": "OpenAPS BOOST V6 → OpenAPS BOOST V1 and up",
-      "settings_gate": null
+      "settings_gate": null,
+      "ui_available": true
     },
     {
       "key": "enableCircadianISF",
@@ -2233,7 +2311,8 @@
       "feature_group": "shared_aaps",
       "is_gate": true,
       "settings_path": "OpenAPS BOOST V6 → OpenAPS BOOST V1 and up",
-      "settings_gate": null
+      "settings_gate": null,
+      "ui_available": true
     },
     {
       "key": "enableSMB_after_carbs",
@@ -2262,7 +2341,8 @@
       "feature_group": "smb_delivery",
       "is_gate": false,
       "settings_path": "OpenAPS BOOST V6 → Advanced Settings",
-      "settings_gate": "ApsUseSmb"
+      "settings_gate": "ApsUseSmb",
+      "ui_available": true
     },
     {
       "key": "enableSMB_always",
@@ -2291,7 +2371,8 @@
       "feature_group": "smb_delivery",
       "is_gate": false,
       "settings_path": "OpenAPS BOOST V6 → Advanced Settings",
-      "settings_gate": "ApsUseSmb"
+      "settings_gate": "ApsUseSmb",
+      "ui_available": true
     },
     {
       "key": "enableSMB_with_COB",
@@ -2320,7 +2401,8 @@
       "feature_group": "smb_delivery",
       "is_gate": false,
       "settings_path": "OpenAPS BOOST V6 → Advanced Settings",
-      "settings_gate": "ApsUseSmb"
+      "settings_gate": "ApsUseSmb",
+      "ui_available": true
     },
     {
       "key": "enableSMB_with_high_temptarget",
@@ -2345,7 +2427,8 @@
       "feature_group": "smb_delivery",
       "is_gate": false,
       "settings_path": null,
-      "settings_gate": "ApsUseSmb"
+      "settings_gate": "ApsUseSmb",
+      "ui_available": false
     },
     {
       "key": "enableSMB_with_temptarget",
@@ -2370,7 +2453,8 @@
       "feature_group": "smb_delivery",
       "is_gate": false,
       "settings_path": null,
-      "settings_gate": "ApsUseSmb"
+      "settings_gate": "ApsUseSmb",
+      "ui_available": false
     },
     {
       "key": "high_temptarget_raises_sensitivity",
@@ -2395,7 +2479,8 @@
       "feature_group": "shared_aaps",
       "is_gate": false,
       "settings_path": null,
-      "settings_gate": null
+      "settings_gate": null,
+      "ui_available": false
     },
     {
       "key": "lgsThreshold",
@@ -2424,7 +2509,8 @@
       "feature_group": "shared_aaps",
       "is_gate": false,
       "settings_path": "OpenAPS BOOST V6 → Advanced Settings",
-      "settings_gate": "ApsUseDynamicSensitivity"
+      "settings_gate": "ApsUseDynamicSensitivity",
+      "ui_available": true
     },
     {
       "key": "low_temptarget_lowers_sensitivity",
@@ -2449,7 +2535,8 @@
       "feature_group": "shared_aaps",
       "is_gate": false,
       "settings_path": null,
-      "settings_gate": null
+      "settings_gate": null,
+      "ui_available": false
     },
     {
       "key": "openapsama_autosens_period",
@@ -2482,7 +2569,8 @@
       "feature_group": "shared_aaps",
       "is_gate": false,
       "settings_path": null,
-      "settings_gate": null
+      "settings_gate": null,
+      "ui_available": false
     },
     {
       "key": "openapsama_current_basal_safety_multiplier",
@@ -2511,7 +2599,8 @@
       "feature_group": "shared_aaps",
       "is_gate": false,
       "settings_path": "OpenAPS BOOST V6 → Advanced Settings",
-      "settings_gate": null
+      "settings_gate": null,
+      "ui_available": true
     },
     {
       "key": "openapsama_max_daily_safety_multiplier",
@@ -2540,7 +2629,8 @@
       "feature_group": "shared_aaps",
       "is_gate": false,
       "settings_path": "OpenAPS BOOST V6 → Advanced Settings",
-      "settings_gate": null
+      "settings_gate": null,
+      "ui_available": true
     },
     {
       "key": "openapsma_max_basal",
@@ -2569,7 +2659,8 @@
       "feature_group": "shared_aaps",
       "is_gate": false,
       "settings_path": "OpenAPS BOOST V6 → Advanced Settings",
-      "settings_gate": null
+      "settings_gate": null,
+      "ui_available": true
     },
     {
       "key": "openapsmb_max_iob",
@@ -2598,7 +2689,8 @@
       "feature_group": "smb_delivery",
       "is_gate": false,
       "settings_path": "OpenAPS BOOST V6 → Advanced Settings",
-      "settings_gate": null
+      "settings_gate": null,
+      "ui_available": true
     },
     {
       "key": "smbinterval",
@@ -2627,7 +2719,8 @@
       "feature_group": "smb_delivery",
       "is_gate": false,
       "settings_path": "OpenAPS BOOST V6 → Advanced Settings",
-      "settings_gate": "ApsUseSmb"
+      "settings_gate": "ApsUseSmb",
+      "ui_available": true
     },
     {
       "key": "smbmaxminutes",
@@ -2656,7 +2749,8 @@
       "feature_group": "smb_delivery",
       "is_gate": false,
       "settings_path": "OpenAPS BOOST V6 → Advanced Settings",
-      "settings_gate": "ApsUseSmb"
+      "settings_gate": "ApsUseSmb",
+      "ui_available": true
     },
     {
       "key": "uamsmbmaxminutes",
@@ -2685,7 +2779,8 @@
       "feature_group": "smb_delivery",
       "is_gate": false,
       "settings_path": "OpenAPS BOOST V6 → Advanced Settings",
-      "settings_gate": "ApsUseSmb"
+      "settings_gate": "ApsUseSmb",
+      "ui_available": true
     },
     {
       "key": "use_dynamic_sensitivity",
@@ -2714,7 +2809,8 @@
       "feature_group": "shared_aaps",
       "is_gate": false,
       "settings_path": "OpenAPS BOOST V6 → Advanced Settings",
-      "settings_gate": null
+      "settings_gate": null,
+      "ui_available": true
     },
     {
       "key": "use_smb",
@@ -2743,7 +2839,8 @@
       "feature_group": "smb_delivery",
       "is_gate": false,
       "settings_path": "OpenAPS BOOST V6 → Advanced Settings",
-      "settings_gate": null
+      "settings_gate": null,
+      "ui_available": true
     },
     {
       "key": "use_uam",
@@ -2772,7 +2869,8 @@
       "feature_group": "shared_aaps",
       "is_gate": false,
       "settings_path": "OpenAPS BOOST V6 → Advanced Settings",
-      "settings_gate": null
+      "settings_gate": null,
+      "ui_available": true
     }
   ],
   "feature_groups": {

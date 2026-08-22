@@ -814,6 +814,7 @@ async def decrypt_export(file: UploadFile = File(...), password: str = Form(...)
             "min": param_def.get("min"), "max": param_def.get("max"),
             "is_default": str(v) == str(param_def.get("default")) if param_def.get("default") is not None else None,
             "settings_path": param_def.get("settings_path"),
+            "ui_available": param_def.get("ui_available", True),
             "has_definition": bool(param_def),
             "is_sensitive": is_sensitive(k),
             "orphaned": param_def.get("orphaned", not bool(param_def)),
@@ -1061,7 +1062,14 @@ async def ai_analysis(req: AIAnalysisRequest):
         gate_state = f" [GATE: {'ACTIVE' if eff_gate(gate_key) else 'INACTIVE — this parameter has NO effect in current mode'}]" if gate_key else ""
         path_line = f"\n    📍 {path}" if path else ""
         summary_line = f"\n    → {summary}" if summary else ""
-        return f"  [{p.get('impact','?').upper()}] {p.get('name',p.get('key'))}: {v} (default:{d}{rng}){delta}{gate_state}{path_line}{summary_line}"
+        # Keys without a settings path are algorithm-internal: no UI to change them.
+        # Mark them so the model never recommends changing one (auto-config may write
+        # them, the user can't). ui_available comes from the param lookup / parameters file.
+        ui_avail = p.get("ui_available")
+        if ui_avail is None:
+            ui_avail = ctx_info.get("ui_available", True)
+        off_screen = f" [⚠️ OFF-SCREEN — no settings UI, not user-changeable]" if not ui_avail else ""
+        return f"  [{p.get('impact','?').upper()}] {p.get('name',p.get('key'))}: {v} (default:{d}{rng}){delta}{gate_state}{off_screen}{path_line}{summary_line}"
 
     active_non_default = [p for p in req.current_params
         if p.get("is_default") is False and not p.get("is_sensitive")
@@ -1185,6 +1193,7 @@ async def ai_analysis(req: AIAnalysisRequest):
 - Activity settings (boost_activity_pct, boost_inactivity_pct) work together: activity reduces insulin, inactivity increases it.
 - Parameters marked [✅ CURRENTLY ACTIVE] are boolean features that are already enabled.
 - Parameters marked [❌ CURRENTLY INACTIVE] are boolean features that are currently off.
+- Parameters marked [⚠️ OFF-SCREEN] are algorithm-internal: they have NO settings UI and the user CANNOT change them. Never recommend changing one — instead note that the value is managed by the algorithm / auto-config. Only recommend keys that carry a 📍 settings path.
 """
     else:
         plugin_instructions = """## Parameters marked [✅ CURRENTLY ACTIVE] are boolean features that are already enabled.
@@ -1268,7 +1277,7 @@ if req.profile_data and not req.profile_data.get('error') else '(not available)'
 1. Evaluate metrics (3–4 sentences, specific)
 2. 3–8 optimizations — only for ACTIVE features:
    - Exact key (in backticks, e.g. `key_openapsaimi_max_smb`)
-   - Settings path: EVERY recommendation MUST include the 📍 path exactly as shown next to the parameter above. Copy it verbatim — do NOT invent, shorten, or translate. This is mandatory for all sections (critical, secondary, feature recommendations).
+   - Settings path: EVERY recommendation MUST include the 📍 path exactly as shown next to the parameter above. Copy it verbatim — do NOT invent, shorten, or translate. This is mandatory for all sections (critical, secondary, feature recommendations). NEVER recommend a parameter marked [⚠️ OFF-SCREEN] — it has no settings UI and the user cannot change it; if one is off-default, mention it as algorithm/auto-config managed instead.
    - Current → Recommendation (with value)
    - Value: SAME unit as the current value (percent stays percent, U stays U, mg/dL stays mg/dL) and inside the [min–max] range shown next to the parameter. Never mix units — do NOT propose U for a % parameter or % for a U parameter.
    - Reason

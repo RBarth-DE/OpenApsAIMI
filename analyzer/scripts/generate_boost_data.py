@@ -1047,6 +1047,12 @@ def generate():
             "is_gate": is_gate,
             "settings_path": BOOST_SETTINGS_PATH_OVERRIDES.get(key_str) or _get_generated_path(key_str),  # Override or from path generator
             "settings_gate": info.get("dependency"),
+            # True only when the key is reachable from a Boost preference screen. Keys with
+            # no path are algorithm-internal (read-only from the user's perspective, possibly
+            # auto-config managed) — analyzers must not recommend changing them.
+            "ui_available": bool(
+                BOOST_SETTINGS_PATH_OVERRIDES.get(key_str) or _get_generated_path(key_str)
+            ),
         }
         parameters.append(param)
 
@@ -1200,6 +1206,10 @@ def build_param_lookup(parameters: list) -> dict:
             "effect_high": p["effect_high"],
             "impact": p["impact"],
             "feature": p["feature_group"],
+            "settings_path": p.get("settings_path"),
+            # Algorithm-internal keys (no settings UI) must not be recommended as
+            # user-changeable. Auto-config may write them, but the user can't.
+            "ui_available": p.get("ui_available", False),
         }
         for p in parameters
         if not p.get("orphaned")

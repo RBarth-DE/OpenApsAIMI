@@ -3,588 +3,784 @@
     "summary": "Percentage factor for the global dynamic ISF strength; 100 = standard, higher = more dynamic adjustment.",
     "effect_high": "Higher value — more insulin/greater effect",
     "impact": "medium",
-    "feature": "shared_aaps"
+    "feature": "shared_aaps",
+    "settings_path": null,
+    "ui_available": false
   },
   "autosens_max": {
     "summary": "Default value: 1.2\\nThis is a multiplier cap for autosens (and deviation sensitivity) to set how high the sensitivity ratio can go, which determines how far ISF can be lowered during resistant periods.",
     "effect_high": "Allows larger autosens sensitivity ratio = less insulin when sensitive",
     "impact": "high",
-    "feature": "shared_aaps"
+    "feature": "shared_aaps",
+    "settings_path": "OpenAPS BOOST V6 → Advanced Settings",
+    "ui_available": true
   },
   "autosens_min": {
     "summary": "Default value: 0.7\\nThis is a floor for autosens (and deviation sensitivity) to set how low the sensitivity ratio can go, which determines how far ISF can be raised during sensitive periods.",
     "effect_high": "Lower minimum = allows stronger ISF reduction when resistant",
     "impact": "high",
-    "feature": "shared_aaps"
+    "feature": "shared_aaps",
+    "settings_path": "OpenAPS BOOST V6 → Advanced Settings",
+    "ui_available": true
   },
   "boost_activity_pct": {
     "summary": "Profile percentage to use when activity is detected (high steps); &lt;100 means reduce basal during exercise.",
     "effect_high": "More ISF during activity = less insulin = safer",
     "impact": "high",
-    "feature": "activity"
+    "feature": "activity",
+    "settings_path": "OpenAPS BOOST V6 → OpenAPS BOOST V1 and up",
+    "ui_available": true
   },
   "boost_activity_shadow_enabled": {
     "summary": "Run a parallel activity-load forecast (inactivity ISF penalty) without affecting dosing, for comparison.",
     "effect_high": "Feature is ON — associated functionality runs",
     "impact": "medium",
-    "feature": "activity"
+    "feature": "activity",
+    "settings_path": "OpenAPS BOOST V6 → OpenAPS BOOST V1 and up",
+    "ui_available": true
   },
   "boost_activity_steps_15": {
     "summary": "15-minute step count threshold for activity detection; exceeding it raises the activity state.",
     "effect_high": "Higher value — more insulin/greater effect",
     "impact": "medium",
-    "feature": "activity"
+    "feature": "activity",
+    "settings_path": null,
+    "ui_available": false
   },
   "boost_activity_steps_30": {
     "summary": "30-minute step count threshold for activity detection; exceeding it raises the activity state.",
     "effect_high": "Higher value — more insulin/greater effect",
     "impact": "medium",
-    "feature": "activity"
+    "feature": "activity",
+    "settings_path": null,
+    "ui_available": false
   },
   "boost_activity_steps_5": {
     "summary": "5-minute step count threshold for activity detection; exceeding it raises the activity state.",
     "effect_high": "Higher value — more insulin/greater effect",
     "impact": "medium",
-    "feature": "activity"
+    "feature": "activity",
+    "settings_path": null,
+    "ui_available": false
   },
   "boost_activity_steps_60": {
     "summary": "60-minute step count threshold for sustained activity detection; stepping above this for an hour switches to active mode.",
     "effect_high": "Higher value — more insulin/greater effect",
     "impact": "medium",
-    "feature": "activity"
+    "feature": "activity",
+    "settings_path": null,
+    "ui_available": false
   },
   "boost_adjust_sensitivity": {
     "summary": "Allow Boost to adjust the sensitivity ratio from UAM / COB feedback; turn off to freeze the ratio at 1.0 for troubleshooting.",
     "effect_high": "Feature is ON — associated functionality runs",
     "impact": "high",
-    "feature": "tdd_isf"
+    "feature": "tdd_isf",
+    "settings_path": "OpenAPS BOOST V6 → OpenAPS BOOST V1 and up",
+    "ui_available": true
   },
   "boost_allow_all_bg_sources": {
     "summary": "Use glucose values from any source (including xDrip) for Boost calculations, not only the configured primary CGM.",
     "effect_high": "Feature is ON — associated functionality runs",
     "impact": "medium",
-    "feature": "shared_aaps"
+    "feature": "shared_aaps",
+    "settings_path": null,
+    "ui_available": false
   },
   "boost_anticip_history": {
     "summary": "Serialized meal anticipation history for ML learning.",
     "effect_high": "Higher value — more insulin/greater effect",
     "impact": "low",
-    "feature": "meal_model"
+    "feature": "meal_model",
+    "settings_path": null,
+    "ui_available": false
   },
   "boost_autosens_when_no_tdd": {
     "summary": "Still apply autosens ratio even when TDD is unavailable, falling back to the profile sensitivity adjustment.",
     "effect_high": "Feature is ON — associated functionality runs",
     "impact": "high",
-    "feature": "tdd_isf"
+    "feature": "tdd_isf",
+    "settings_path": "OpenAPS BOOST V6 → OpenAPS BOOST V1 and up",
+    "ui_available": true
   },
   "boost_bolus_cap": {
     "summary": "Maximum single SMB bolus that Boost may deliver; acts as a safety ceiling on meal-amplified doses.",
     "effect_high": "Larger meal boluses allowed — faster post-meal correction",
     "impact": "critical",
-    "feature": "smb_delivery"
+    "feature": "smb_delivery",
+    "settings_path": "OpenAPS BOOST V6 → OpenAPS BOOST V1 and up",
+    "ui_available": true
   },
   "boost_cumulative_smb_cap_60min": {
     "summary": "Maximum total SMB insulin that Boost may deliver within a rolling 60-minute window; 0 disables the cap.",
     "effect_high": "Higher 60-min cap = more SMB stacking allowed",
     "impact": "critical",
-    "feature": "smb_delivery"
+    "feature": "smb_delivery",
+    "settings_path": "OpenAPS BOOST V6 → OpenAPS BOOST V1 and up",
+    "ui_available": true
   },
   "boost_daily_step_history": {
     "summary": "Serialized daily step history for activity trend analysis.",
     "effect_high": "Higher value — more insulin/greater effect",
     "impact": "low",
-    "feature": "activity"
+    "feature": "activity",
+    "settings_path": null,
+    "ui_available": false
   },
   "boost_dynisf_bg_cap": {
     "summary": "BG ceiling for dynamic ISF calculation; glucose values above this are progressively damped to prevent runaway ISF.",
     "effect_high": "Higher value — more insulin/greater effect",
     "impact": "medium",
-    "feature": "shared_aaps"
+    "feature": "shared_aaps",
+    "settings_path": "OpenAPS BOOST V6 → OpenAPS BOOST V1 and up",
+    "ui_available": true
   },
   "boost_dynisf_normal_target": {
     "summary": "Reference BG target used by dynamic ISF to compute the normalised sensitivity; typically your profile target.",
     "effect_high": "Higher value — more insulin/greater effect",
     "impact": "medium",
-    "feature": "shared_aaps"
+    "feature": "shared_aaps",
+    "settings_path": "OpenAPS BOOST V6 → OpenAPS BOOST V1 and up",
+    "ui_available": true
   },
   "boost_dynisf_velocity": {
     "summary": "How much weight BG velocity has on dynamic ISF; 100 = full velocity effect, 0 = no velocity effect.",
     "effect_high": "Higher value — more insulin/greater effect",
     "impact": "medium",
-    "feature": "shared_aaps"
+    "feature": "shared_aaps",
+    "settings_path": "OpenAPS BOOST V6 → OpenAPS BOOST V1 and up",
+    "ui_available": true
   },
   "boost_health_connect_hr_enabled": {
     "summary": "Pull heart rate data from Android Health Connect to supplement the live CIQ/watch HR feed.",
     "effect_high": "Feature is ON — associated functionality runs",
     "impact": "medium",
-    "feature": "hr_stress"
+    "feature": "hr_stress",
+    "settings_path": null,
+    "ui_available": false
   },
   "boost_health_connect_poll_min": {
     "summary": "Interval in minutes at which Health Connect HR data is polled; shorter = more responsive but higher battery use.",
     "effect_high": "Higher value — more insulin/greater effect",
     "impact": "medium",
-    "feature": "hr_stress"
+    "feature": "hr_stress",
+    "settings_path": null,
+    "ui_available": false
   },
   "boost_hr_integration_enabled": {
     "summary": "Incorporate heart-rate data into the Boost algorithm for sleep/wake and stress detection.",
     "effect_high": "Feature is ON — associated functionality runs",
     "impact": "medium",
-    "feature": "hr_stress"
+    "feature": "hr_stress",
+    "settings_path": "OpenAPS BOOST V6 → OpenAPS BOOST V1 and up",
+    "ui_available": true
   },
   "boost_hr_max_bpm": {
     "summary": "Maximum heart rate used to scale the HR-based activity classifier; values above this are treated as vigorous.",
     "effect_high": "Higher value — more insulin/greater effect",
     "impact": "medium",
-    "feature": "hr_stress"
+    "feature": "hr_stress",
+    "settings_path": null,
+    "ui_available": false
   },
   "boost_hr_resting_bpm": {
     "summary": "Resting heart rate baseline; the HR classifier uses this as the floor for light/no activity.",
     "effect_high": "Higher value — more insulin/greater effect",
     "impact": "medium",
-    "feature": "hr_stress"
+    "feature": "hr_stress",
+    "settings_path": null,
+    "ui_available": false
   },
   "boost_hr_stress_detection": {
     "summary": "Detect physical stress from elevated HR and adjust targets/dosing to prevent over-correction during stress.",
     "effect_high": "Feature is ON — associated functionality runs",
     "impact": "high",
-    "feature": "hr_stress"
+    "feature": "hr_stress",
+    "settings_path": "OpenAPS BOOST V6 → OpenAPS BOOST V1 and up",
+    "ui_available": true
   },
   "boost_hr_window_minutes": {
     "summary": "Rolling time window over which HR data is averaged for sleep/wake and stress detection.",
     "effect_high": "Higher value — more insulin/greater effect",
     "impact": "medium",
-    "feature": "hr_stress"
+    "feature": "hr_stress",
+    "settings_path": null,
+    "ui_available": false
   },
   "boost_inactivity_pct": {
     "summary": "Profile percentage to use when inactivity is detected (low steps); >100 means increase basal during sedentary periods.",
     "effect_high": "More ISF during activity = less insulin = safer",
     "impact": "high",
-    "feature": "activity"
+    "feature": "activity",
+    "settings_path": "OpenAPS BOOST V6 → OpenAPS BOOST V1 and up",
+    "ui_available": true
   },
   "boost_inactivity_steps": {
     "summary": "60-minute step count threshold below which the user is classified as inactive; profile % shifts up by inactivity_pct.",
     "effect_high": "Higher value — more insulin/greater effect",
     "impact": "medium",
-    "feature": "activity"
+    "feature": "activity",
+    "settings_path": null,
+    "ui_available": false
   },
   "boost_insulin_req_pct": {
     "summary": "Percentage of the calculated insulin requirement that Boost actually delivers — lower values make Boost more conservative, 100% means full delivery.",
     "effect_high": "Boost delivers MORE insulin — reduces hypers faster, higher hypo risk",
     "impact": "critical",
-    "feature": "smb_delivery"
+    "feature": "smb_delivery",
+    "settings_path": "OpenAPS BOOST V6 → OpenAPS BOOST V1 and up",
+    "ui_available": true
   },
   "boost_intraday_step_bank": {
     "summary": "Serialized intraday step bank for short-term activity tracking.",
     "effect_high": "Higher value — more insulin/greater effect",
     "impact": "medium",
-    "feature": "activity"
+    "feature": "activity",
+    "settings_path": null,
+    "ui_available": false
   },
   "boost_isf_shadow_state": {
     "summary": "Serialized ISF shadow state (V4.4.2 EMA diagnostic).",
     "effect_high": "Higher value — more insulin/greater effect",
     "impact": "low",
-    "feature": "isf_shadow"
+    "feature": "isf_shadow",
+    "settings_path": null,
+    "ui_available": false
   },
   "boost_max_iob": {
     "summary": "Hard ceiling on insulin-on-board (IOB) that Boost is allowed to maintain when dosing aggressively.",
     "effect_high": "More IOB allowed — more aggressive corrections",
     "impact": "critical",
-    "feature": "smb_delivery"
+    "feature": "smb_delivery",
+    "settings_path": "OpenAPS BOOST V6 → OpenAPS BOOST V1 and up",
+    "ui_available": true
   },
   "boost_meal_time_history": {
     "summary": "Serialized meal time history for meal pattern learning.",
     "effect_high": "Higher value — more insulin/greater effect",
     "impact": "low",
-    "feature": "meal_model"
+    "feature": "meal_model",
+    "settings_path": null,
+    "ui_available": false
   },
   "boost_ml_ring_buffer": {
     "summary": "Serialized ML feature ring buffer (6-position lookback).",
     "effect_high": "Higher value — more insulin/greater effect",
     "impact": "medium",
-    "feature": "ml_features"
+    "feature": "ml_features",
+    "settings_path": null,
+    "ui_available": false
   },
   "boost_night_mode_auto_by_sleep": {
     "summary": "Let the HR/steps sleep detector automatically engage night mode instead of relying only on the fixed time window.",
     "effect_high": "Feature is ON — associated functionality runs",
     "impact": "high",
-    "feature": "night_mode"
+    "feature": "night_mode",
+    "settings_path": null,
+    "ui_available": false
   },
   "boost_night_mode_bg_offset": {
     "summary": "BG target increase during night mode; e.g. 27 adds 27 mg/dL to the normal target when sleep is detected.",
     "effect_high": "Stronger night-time insulin reduction",
     "impact": "high",
-    "feature": "night_mode"
+    "feature": "night_mode",
+    "settings_path": "OpenAPS BOOST V6 → OpenAPS BOOST V1 and up",
+    "ui_available": true
   },
   "boost_night_mode_disable_with_cob": {
     "summary": "Exit night mode when carbs-on-board is present, treating the COB as a signal that the user is awake and eating.",
     "effect_high": "Feature is ON — associated functionality runs",
     "impact": "high",
-    "feature": "night_mode"
+    "feature": "night_mode",
+    "settings_path": "OpenAPS BOOST V6 → OpenAPS BOOST V1 and up",
+    "ui_available": true
   },
   "boost_night_mode_disable_with_low_tt": {
     "summary": "Exit night mode when a low temporary target is set, treating it as a signal that the user is awake and managing.",
     "effect_high": "Feature is ON — associated functionality runs",
     "impact": "high",
-    "feature": "night_mode"
+    "feature": "night_mode",
+    "settings_path": null,
+    "ui_available": false
   },
   "boost_night_mode_enabled": {
     "summary": "Apply a night-mode BG target offset to reduce insulin delivery during the configured night window.",
     "effect_high": "Feature is ON — associated functionality runs",
     "impact": "high",
-    "feature": "night_mode"
+    "feature": "night_mode",
+    "settings_path": "OpenAPS BOOST V6 → OpenAPS BOOST V1 and up",
+    "ui_available": true
   },
   "boost_night_mode_end": {
     "summary": "Night mode end time (HH:MM). Default 07:00.",
     "effect_high": "Stronger night-time insulin reduction",
     "impact": "high",
-    "feature": "night_mode"
+    "feature": "night_mode",
+    "settings_path": "OpenAPS BOOST V6 → OpenAPS BOOST V1 and up",
+    "ui_available": true
   },
   "boost_night_mode_start": {
     "summary": "Night mode start time (HH:MM). Default 22:00.",
     "effect_high": "Stronger night-time insulin reduction",
     "impact": "high",
-    "feature": "night_mode"
+    "feature": "night_mode",
+    "settings_path": "OpenAPS BOOST V6 → OpenAPS BOOST V1 and up",
+    "ui_available": true
   },
   "boost_percent_scale_factor": {
     "summary": "Percent ISF scaling factor applied during confirmed-meal PERCENT_SCALE tier; 200 means double ISF (half the dose).",
     "effect_high": "Higher ISF = less insulin for same BG = more conservative",
     "impact": "high",
-    "feature": "tdd_isf"
+    "feature": "tdd_isf",
+    "settings_path": "OpenAPS BOOST V6 → OpenAPS BOOST V1 and up",
+    "ui_available": true
   },
   "boost_post_exercise_min_duration": {
     "summary": "Minimum exercise duration in minutes before the post-exercise recovery window is triggered.",
     "effect_high": "Higher value — more insulin/greater effect",
     "impact": "high",
-    "feature": "post_exercise"
+    "feature": "post_exercise",
+    "settings_path": null,
+    "ui_available": false
   },
   "boost_post_exercise_recovery_enabled": {
     "summary": "Apply a post-exercise recovery window with adjusted targets and SMB scaling after detected exercise ends.",
     "effect_high": "Feature is ON — associated functionality runs",
     "impact": "high",
-    "feature": "post_exercise"
+    "feature": "post_exercise",
+    "settings_path": "OpenAPS BOOST V6 → OpenAPS BOOST V1 and up",
+    "ui_available": true
   },
   "boost_post_exercise_recovery_hours": {
     "summary": "Duration of the post-exercise recovery window where targets are raised and SMBs are scaled down.",
     "effect_high": "Higher value — more insulin/greater effect",
     "impact": "high",
-    "feature": "post_exercise"
+    "feature": "post_exercise",
+    "settings_path": "OpenAPS BOOST V6 → OpenAPS BOOST V1 and up",
+    "ui_available": true
   },
   "boost_post_exercise_recovery_scale": {
     "summary": "SMB scaling factor during post-exercise recovery; 0.5 = half the normal SMB dose during the recovery window.",
     "effect_high": "Higher ISF = less insulin for same BG = more conservative",
     "impact": "high",
-    "feature": "post_exercise"
+    "feature": "post_exercise",
+    "settings_path": "OpenAPS BOOST V6 → OpenAPS BOOST V1 and up",
+    "ui_available": true
   },
   "boost_post_exercise_recovery_target": {
     "summary": "BG target (mg/dL) to aim for during the post-exercise recovery window; typically raised to prevent hypos.",
     "effect_high": "Higher value — more insulin/greater effect",
     "impact": "high",
-    "feature": "post_exercise"
+    "feature": "post_exercise",
+    "settings_path": "OpenAPS BOOST V6 → OpenAPS BOOST V1 and up",
+    "ui_available": true
   },
   "boost_pre_sleep_lead_min": {
     "summary": "Minutes before the night-mode start time that Boost begins tapering insulin delivery.",
     "effect_high": "Higher value — more insulin/greater effect",
     "impact": "high",
-    "feature": "sleep"
+    "feature": "sleep",
+    "settings_path": null,
+    "ui_available": false
   },
   "boost_scale_value": {
     "summary": "Sensitivity scale applied multiplicatively to the ISF — values above 1.0 make the patient appear more insulin-sensitive.",
     "effect_high": "Higher ISF = less insulin for same BG = more conservative",
     "impact": "high",
-    "feature": "tdd_isf"
+    "feature": "tdd_isf",
+    "settings_path": "OpenAPS BOOST V6 → OpenAPS BOOST V1 and up",
+    "ui_available": true
   },
   "boost_sleep_history": {
     "summary": "Serialized sleep history for sleep pattern learning.",
     "effect_high": "Higher value — more insulin/greater effect",
     "impact": "high",
-    "feature": "sleep"
+    "feature": "sleep",
+    "settings_path": null,
+    "ui_available": false
   },
   "boost_sleep_hysteresis_min": {
     "summary": "Minutes of sustained low-HR/low-steps conditions before the sleep detector transitions to SLEEPING state.",
     "effect_high": "Higher value — more insulin/greater effect",
     "impact": "high",
-    "feature": "sleep"
+    "feature": "sleep",
+    "settings_path": null,
+    "ui_available": false
   },
   "boost_sleep_in_hrs": {
     "summary": "Hours after night-mode end during which near-zero steps trigger the lie-in failsafe (disabling Boost).",
     "effect_high": "Higher value — more insulin/greater effect",
     "impact": "high",
-    "feature": "sleep"
+    "feature": "sleep",
+    "settings_path": "OpenAPS BOOST V6 → OpenAPS BOOST V1 and up",
+    "ui_available": true
   },
   "boost_sleep_in_steps": {
     "summary": "60-minute step count threshold below which the lie-in failsafe engages within the sleep-in window.",
     "effect_high": "Higher value — more insulin/greater effect",
     "impact": "high",
-    "feature": "activity"
+    "feature": "activity",
+    "settings_path": "OpenAPS BOOST V6 → OpenAPS BOOST V1 and up",
+    "ui_available": true
   },
   "boost_sleep_state": {
     "summary": "Current sleep state (detected/not detected).",
     "effect_high": "Higher value — more insulin/greater effect",
     "impact": "high",
-    "feature": "sleep"
+    "feature": "sleep",
+    "settings_path": null,
+    "ui_available": false
   },
   "boost_use_tdd": {
     "summary": "Compute dynamic ISF from 24 h total daily dose instead of the profile sensitivity value only.",
     "effect_high": "Feature is ON — associated functionality runs",
     "impact": "high",
-    "feature": "tdd_isf"
+    "feature": "tdd_isf",
+    "settings_path": "OpenAPS BOOST V6 → OpenAPS BOOST V1 and up",
+    "ui_available": true
   },
   "boost_v5_active_dosing": {
     "summary": "Use V5 meal-hypothesis dosing to control SMB amounts; when OFF, V5 shadows only without affecting actual delivery.",
     "effect_high": "Feature is ON — associated functionality runs",
     "impact": "high",
-    "feature": "meal_model"
+    "feature": "meal_model",
+    "settings_path": null,
+    "ui_available": false
   },
   "boost_v5_aggression": {
     "summary": "User-facing multiplier for CONFIRMED-state dosing; 1.0 = standard, 1.6 = aggressive, 0.7 = cautious.",
     "effect_high": "Higher value — more insulin/greater effect",
     "impact": "high",
-    "feature": "meal_model"
+    "feature": "meal_model",
+    "settings_path": "OpenAPS BOOST V6",
+    "ui_available": true
   },
   "boost_v5_aggressive_early_confirm": {
     "summary": "Confirm meal hypotheses more aggressively — shortens the OBSERVING phase to speed up dosing escalation.",
     "effect_high": "Feature is ON — associated functionality runs",
     "impact": "high",
-    "feature": "meal_model"
+    "feature": "meal_model",
+    "settings_path": "OpenAPS BOOST V6",
+    "ui_available": true
   },
   "boost_v5_autoconfig_done": {
     "summary": "Boolean switch for boost_v5_autoconfig_done.",
     "effect_high": "Feature is ON — associated functionality runs",
     "impact": "high",
-    "feature": "meal_model"
+    "feature": "meal_model",
+    "settings_path": null,
+    "ui_available": false
   },
   "boost_v5_committed_cap_u": {
     "summary": "Hard ceiling on a single SMB dose during the COMMITTED meal-hypothesis state (sustained meal dosing).",
     "effect_high": "Higher value — more insulin/greater effect",
     "impact": "high",
-    "feature": "meal_model"
+    "feature": "meal_model",
+    "settings_path": "OpenAPS BOOST V6",
+    "ui_available": true
   },
   "boost_v5_composed_floor_active": {
     "summary": "Apply a composed safety floor to meal dosing: never dose below what a hypo-corrected basal would add.",
     "effect_high": "Feature is ON — associated functionality runs",
     "impact": "high",
-    "feature": "meal_model"
+    "feature": "meal_model",
+    "settings_path": "OpenAPS BOOST V6",
+    "ui_available": true
   },
   "boost_v5_confirmed_cap_u": {
     "summary": "Hard ceiling on a single SMB dose during the CONFIRMED meal-hypothesis state (catch-up bolus).",
     "effect_high": "Higher value — more insulin/greater effect",
     "impact": "high",
-    "feature": "meal_model"
+    "feature": "meal_model",
+    "settings_path": "OpenAPS BOOST V6",
+    "ui_available": true
   },
   "boost_v5_fast_carb_confirm": {
     "summary": "Permit a CONFIRMED meal hypothesis immediately (skip OBSERVING) when COB is present or velocity is very high.",
     "effect_high": "Feature is ON — associated functionality runs",
     "impact": "high",
-    "feature": "meal_model"
+    "feature": "meal_model",
+    "settings_path": "OpenAPS BOOST V6",
+    "ui_available": true
   },
   "boost_v5_hypo_caution": {
     "summary": "Multiplier that increases the BG target floor for V5 dosing when BG is low or falling; 2.0 = double the floor.",
     "effect_high": "Higher value — more insulin/greater effect",
     "impact": "critical",
-    "feature": "meal_model"
+    "feature": "meal_model",
+    "settings_path": "OpenAPS BOOST V6",
+    "ui_available": true
   },
   "boost_v5_primer_bolus_mode": {
     "summary": "Boost meal bolus size (units). Cap for meal-related SMB delivery.",
     "effect_high": "Feature is ON — associated functionality runs",
     "impact": "critical",
-    "feature": "meal_model"
+    "feature": "meal_model",
+    "settings_path": "OpenAPS BOOST V6",
+    "ui_available": true
   },
   "boost_v5_primer_cap_u": {
     "summary": "V5 early primer cap (U) during OBSERVING. 0 = primer OFF. Fires once per meal session on delta_accl > 10 before CONFIRMED, reclaiming V1's ~15-min-earlier acceleration response. PrimerTbrFallback / PrimerBolusMode only choose the delivery method — the cap value is what turns the primer on.",
     "effect_high": "Higher value — more insulin/greater effect",
     "impact": "high",
-    "feature": "meal_model"
+    "feature": "meal_model",
+    "settings_path": "OpenAPS BOOST V6",
+    "ui_available": true
   },
   "boost_v5_primer_tbr_fallback": {
     "summary": "Boolean switch for boost_v5_primer_tbr_fallback.",
     "effect_high": "Feature is ON — associated functionality runs",
     "impact": "high",
-    "feature": "meal_model"
+    "feature": "meal_model",
+    "settings_path": "OpenAPS BOOST V6",
+    "ui_available": true
   },
   "boost_v5_sensitivity": {
     "summary": "Global V5 sensitivity tuning factor; values above 1.0 make the algorithm more conservative across all states.",
     "effect_high": "Higher value — more insulin/greater effect",
     "impact": "high",
-    "feature": "meal_model"
+    "feature": "meal_model",
+    "settings_path": "OpenAPS BOOST V6",
+    "ui_available": true
   },
   "boost_v5_state": {
     "summary": "Stored state or configuration string for boost_v5_state.",
     "effect_high": "Higher value — more insulin/greater effect",
     "impact": "high",
-    "feature": "meal_model"
+    "feature": "meal_model",
+    "settings_path": null,
+    "ui_available": false
   },
   "boost_v5_velocity_budget_active": {
     "summary": "Allocate additional aggression budget when BG velocity is high, letting V5 dose more during fast rises.",
     "effect_high": "Feature is ON — associated functionality runs",
     "impact": "high",
-    "feature": "meal_model"
+    "feature": "meal_model",
+    "settings_path": "OpenAPS BOOST V6",
+    "ui_available": true
   },
   "boost_v6_pre_meal_lead_min": {
     "summary": "Minutes before a predicted meal arrival that V6 starts lowering the target to pre-load insulin.",
     "effect_high": "Higher value — more insulin/greater effect",
     "impact": "high",
-    "feature": "meal_model"
+    "feature": "meal_model",
+    "settings_path": "OpenAPS BOOST V6",
+    "ui_available": true
   },
   "boost_v6_pre_meal_target": {
     "summary": "Lower the BG target before an anticipated meal (detected by the meal-hypothesis engine) to pre-load insulin.",
     "effect_high": "Feature is ON — associated functionality runs",
     "impact": "high",
-    "feature": "meal_model"
+    "feature": "meal_model",
+    "settings_path": "OpenAPS BOOST V6",
+    "ui_available": true
   },
   "boost_v6_pre_meal_target_mgdl": {
     "summary": "BG target (mg/dL) that V6 aims for during the pre-meal lead-in window before a predicted meal.",
     "effect_high": "Higher value — more insulin/greater effect",
     "impact": "high",
-    "feature": "meal_model"
+    "feature": "meal_model",
+    "settings_path": "OpenAPS BOOST V6",
+    "ui_available": true
   },
   "boost_v7_residual_pools": {
     "summary": "Stored state or configuration string for boost_v7_residual_pools.",
     "effect_high": "Higher value — more insulin/greater effect",
     "impact": "high",
-    "feature": "meal_model"
+    "feature": "meal_model",
+    "settings_path": null,
+    "ui_available": false
   },
   "boost_wake_hr_hysteresis_min": {
     "summary": "Minutes of sustained elevated HR before the sleep detector transitions from SLEEPING to AWAKE.",
     "effect_high": "Higher value — more insulin/greater effect",
     "impact": "medium",
-    "feature": "sleep"
+    "feature": "sleep",
+    "settings_path": null,
+    "ui_available": false
   },
   "carbsReqThreshold": {
     "summary": "Minimum grams of carbs to display a carbs suggestion alert. Carbs suggestions below this number will not trigger a notification.",
     "effect_high": "Higher value — more insulin/greater effect",
     "impact": "medium",
-    "feature": "shared_aaps"
+    "feature": "shared_aaps",
+    "settings_path": null,
+    "ui_available": false
   },
   "enableBoostPercentScale": {
     "summary": "Scale ISF by the percentage factor below during confirmed meals to appear more insulin-sensitive and reduce dosing.",
     "effect_high": "Feature is ON — associated functionality runs",
     "impact": "high",
-    "feature": "tdd_isf"
+    "feature": "tdd_isf",
+    "settings_path": "OpenAPS BOOST V6 → OpenAPS BOOST V1 and up",
+    "ui_available": true
   },
   "enableBoost_with_high_temptarget": {
     "summary": "Keep Boost active even when a high temporary target is set (e.g. exercise mode); otherwise Boost disables on high TT.",
     "effect_high": "Feature is ON — associated functionality runs",
     "impact": "medium",
-    "feature": "shared_aaps"
+    "feature": "shared_aaps",
+    "settings_path": "OpenAPS BOOST V6 → OpenAPS BOOST V1 and up",
+    "ui_available": true
   },
   "enableCircadianISF": {
     "summary": "Apply a time-of-day sine-model ISF adjustment to reflect natural insulin sensitivity variation across 24 hours.",
     "effect_high": "Feature is ON — associated functionality runs",
     "impact": "medium",
-    "feature": "shared_aaps"
+    "feature": "shared_aaps",
+    "settings_path": "OpenAPS BOOST V6 → OpenAPS BOOST V1 and up",
+    "ui_available": true
   },
   "enableSMB_after_carbs": {
     "summary": "Enables/disables enableSMB_after_carbs. Gate flag for Boost feature.",
     "effect_high": "Feature is ON — associated functionality runs",
     "impact": "medium",
-    "feature": "smb_delivery"
+    "feature": "smb_delivery",
+    "settings_path": "OpenAPS BOOST V6 → Advanced Settings",
+    "ui_available": true
   },
   "enableSMB_always": {
     "summary": "Enables/disables enableSMB_always. Gate flag for Boost feature.",
     "effect_high": "Feature is ON — associated functionality runs",
     "impact": "medium",
-    "feature": "smb_delivery"
+    "feature": "smb_delivery",
+    "settings_path": "OpenAPS BOOST V6 → Advanced Settings",
+    "ui_available": true
   },
   "enableSMB_with_COB": {
     "summary": "Enables/disables enableSMB_with_COB. Gate flag for Boost feature.",
     "effect_high": "Feature is ON — associated functionality runs",
     "impact": "medium",
-    "feature": "smb_delivery"
+    "feature": "smb_delivery",
+    "settings_path": "OpenAPS BOOST V6 → Advanced Settings",
+    "ui_available": true
   },
   "enableSMB_with_high_temptarget": {
     "summary": "Enables/disables enableSMB_with_high_temptarget. Gate flag for Boost feature.",
     "effect_high": "Feature is ON — associated functionality runs",
     "impact": "medium",
-    "feature": "smb_delivery"
+    "feature": "smb_delivery",
+    "settings_path": null,
+    "ui_available": false
   },
   "enableSMB_with_temptarget": {
     "summary": "Enables/disables enableSMB_with_temptarget. Gate flag for Boost feature.",
     "effect_high": "Feature is ON — associated functionality runs",
     "impact": "medium",
-    "feature": "smb_delivery"
+    "feature": "smb_delivery",
+    "settings_path": null,
+    "ui_available": false
   },
   "high_temptarget_raises_sensitivity": {
     "summary": "Boolean switch for high_temptarget_raises_sensitivity.",
     "effect_high": "Feature is ON — associated functionality runs",
     "impact": "medium",
-    "feature": "shared_aaps"
+    "feature": "shared_aaps",
+    "settings_path": null,
+    "ui_available": false
   },
   "lgsThreshold": {
     "summary": "BG value below which insulin is suspended. Default value uses standard target model. User can set value between 60mg/dl (3.3mmol/l) and 100mg/dl(5.5mmol/l). Values below 65/3.6 result in use of default model",
     "effect_high": "Higher value — more insulin/greater effect",
     "impact": "medium",
-    "feature": "shared_aaps"
+    "feature": "shared_aaps",
+    "settings_path": "OpenAPS BOOST V6 → Advanced Settings",
+    "ui_available": true
   },
   "low_temptarget_lowers_sensitivity": {
     "summary": "Boolean switch for low_temptarget_lowers_sensitivity.",
     "effect_high": "Feature is ON — associated functionality runs",
     "impact": "medium",
-    "feature": "shared_aaps"
+    "feature": "shared_aaps",
+    "settings_path": null,
+    "ui_available": false
   },
   "openapsama_autosens_period": {
     "summary": "Amount of hours in the past for sensitivity detection (carbs absorption time is excluded)",
     "effect_high": "Higher value — more insulin/greater effect",
     "impact": "high",
-    "feature": "shared_aaps"
+    "feature": "shared_aaps",
+    "settings_path": null,
+    "ui_available": false
   },
   "openapsama_current_basal_safety_multiplier": {
     "summary": "Default value: 4 This is the other half of the key OpenAPS safety caps, and the other half of “3x max daily; 4x current” of the safety caps. This means your basal, regardless of max basal set on your pump, cannot be any higher than this number times the current level of your basal. This is to prevent people from getting into dangerous territory by setting excessively high max basals before understanding how the algorithm works. Again, the default is 4x; most people will never need to adjust this and are instead more likely to need to adjust other settings if they feel like they are “running into” this safety cap.",
     "effect_high": "Higher value — more insulin/greater effect",
     "impact": "critical",
-    "feature": "shared_aaps"
+    "feature": "shared_aaps",
+    "settings_path": "OpenAPS BOOST V6 → Advanced Settings",
+    "ui_available": true
   },
   "openapsama_max_daily_safety_multiplier": {
     "summary": "Default value: 3 This is a key OpenAPS safety cap. What this does is limit your basals to be 3x (in this people) your biggest basal rate. You likely will not need to change this, but you should be aware that’s what is discussed about “3x max daily; 4x current” for safety caps.",
     "effect_high": "Higher daily multiplier = allows more total daily insulin",
     "impact": "critical",
-    "feature": "shared_aaps"
+    "feature": "shared_aaps",
+    "settings_path": "OpenAPS BOOST V6 → Advanced Settings",
+    "ui_available": true
   },
   "openapsma_max_basal": {
     "summary": "This value is called max basal in OpenAPS context",
     "effect_high": "Higher max basal = more headroom for temporary basal increases",
     "impact": "critical",
-    "feature": "shared_aaps"
+    "feature": "shared_aaps",
+    "settings_path": "OpenAPS BOOST V6 → Advanced Settings",
+    "ui_available": true
   },
   "openapsmb_max_iob": {
     "summary": "This value is called Max IOB in OpenAPS context\\nOpenAPS will not add more insulin if current IOB is greater than this value",
     "effect_high": "More IOB allowed — more aggressive corrections",
     "impact": "critical",
-    "feature": "smb_delivery"
+    "feature": "smb_delivery",
+    "settings_path": "OpenAPS BOOST V6 → Advanced Settings",
+    "ui_available": true
   },
   "smbinterval": {
     "summary": "Used in Boost algorithm for smbinterval.",
     "effect_high": "Higher value — more insulin/greater effect",
     "impact": "medium",
-    "feature": "smb_delivery"
+    "feature": "smb_delivery",
+    "settings_path": "OpenAPS BOOST V6 → Advanced Settings",
+    "ui_available": true
   },
   "smbmaxminutes": {
     "summary": "Used in Boost algorithm for smbmaxminutes.",
     "effect_high": "Higher value — more insulin/greater effect",
     "impact": "medium",
-    "feature": "smb_delivery"
+    "feature": "smb_delivery",
+    "settings_path": "OpenAPS BOOST V6 → Advanced Settings",
+    "ui_available": true
   },
   "uamsmbmaxminutes": {
     "summary": "UAM SMB max minutes",
     "effect_high": "Higher value — more insulin/greater effect",
     "impact": "medium",
-    "feature": "smb_delivery"
+    "feature": "smb_delivery",
+    "settings_path": "OpenAPS BOOST V6 → Advanced Settings",
+    "ui_available": true
   },
   "use_dynamic_sensitivity": {
     "summary": "Enables dynamic sensitivity (DynISF) engine.",
     "effect_high": "Feature is ON — associated functionality runs",
     "impact": "medium",
-    "feature": "shared_aaps"
+    "feature": "shared_aaps",
+    "settings_path": "OpenAPS BOOST V6 → Advanced Settings",
+    "ui_available": true
   },
   "use_smb": {
     "summary": "Master gate for SMB delivery. Must be ON for Boost SMBs.",
     "effect_high": "Feature is ON — associated functionality runs",
     "impact": "critical",
-    "feature": "smb_delivery"
+    "feature": "smb_delivery",
+    "settings_path": "OpenAPS BOOST V6 → Advanced Settings",
+    "ui_available": true
   },
   "use_uam": {
     "summary": "Enables unannounced meal detection for automatic SMB dosing.",
     "effect_high": "Feature is ON — associated functionality runs",
     "impact": "critical",
-    "feature": "shared_aaps"
+    "feature": "shared_aaps",
+    "settings_path": "OpenAPS BOOST V6 → Advanced Settings",
+    "ui_available": true
   }
 }

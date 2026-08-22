@@ -2790,7 +2790,7 @@
     "type": "Double",
     "feature_group": "core",
     "summary": "Maximum scaling of adaptive basal rate.",
-    "default": 1.0,
+    "default": 1.3,
     "min": 0.5,
     "max": 2.0,
     "unit_type": "DOUBLE",
@@ -2807,7 +2807,7 @@
       },
       {
         "file": "BasalNeuralLearner.kt",
-        "function": "getUniversalBasalMultiplier"
+        "function": "getUniversalBasalDecision"
       },
       {
         "file": "AimiBehaviorFamilyRegistry.kt",
@@ -3474,7 +3474,7 @@
     "feature_group": "governance",
     "summary": "Minimum basal rate as fraction of profile during hypo hold.",
     "default": 0.85,
-    "min": 0.65,
+    "min": 0.8,
     "max": 0.95,
     "unit_type": "DOUBLE_2",
     "dependency": "OApsAIMIT3cAdaptiveBasalEnabled",
@@ -3506,7 +3506,7 @@
     "feature_group": "governance",
     "summary": "Minimum basal rate as fraction of profile during hypo hold.",
     "default": 0.88,
-    "min": 0.7,
+    "min": 0.8,
     "max": 0.95,
     "unit_type": "DOUBLE_2",
     "dependency": "OApsAIMIT3cAdaptiveBasalEnabled",
@@ -4442,7 +4442,7 @@
       },
       {
         "file": "BasalNeuralLearner.kt",
-        "function": "getT3cAdaptiveFactor"
+        "function": "getT3cAdaptiveDecision"
       }
     ]
   },
@@ -6877,7 +6877,7 @@
       },
       {
         "file": "BasalNeuralLearner.kt",
-        "function": "getUniversalBasalMultiplier"
+        "function": "getUniversalBasalDecision"
       }
     ]
   },
