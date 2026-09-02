@@ -207,9 +207,13 @@ class EversensePlugin @Inject constructor(
             )
         } else {
             val secureState = getSecureState()
-            val credentialsChanged = secureState.username != username || secureState.password != password
+            val europeanRegion = preferences.get(BooleanKey.EversenseEuropeanRegion)
+            // The region picks which DMS host issued a cached token, so a region change has to
+            // clear the token cache exactly like a password change does.
+            val credentialsChanged = secureState.username != username || secureState.password != password || secureState.isEuropeanRegion != europeanRegion
             secureState.username = username
             secureState.password = password
+            secureState.isEuropeanRegion = europeanRegion
             saveSecureState(secureState)
             eversense.username = username
             eversense.password = password
@@ -265,7 +269,8 @@ class EversensePlugin @Inject constructor(
                 titleResId = R.string.eversense_credentials_title,
                 items = listOf(
                     EversenseStringKey.EversenseUsername,
-                    EversenseStringKey.EversensePassword
+                    EversenseStringKey.EversensePassword,
+                    BooleanKey.EversenseEuropeanRegion
                 )
             ),
             EversenseIntentKey.EversenseSignOut.withClick {
@@ -391,7 +396,8 @@ class EversensePlugin @Inject constructor(
             setBatteryLowDismissed()
             notificationManager.post(
                 NotificationId.EVERSENSE_ALARM,
-                "Eversense transmitter battery low: ${state.batteryPercentage}% — please charge your transmitter.",
+                R.string.eversense_battery_low,
+                state.batteryPercentage,
                 level = NotificationLevel.NORMAL
             )
         }
@@ -505,9 +511,13 @@ class EversensePlugin @Inject constructor(
                 val password = preferences.get(EversenseStringKey.EversensePassword)
                 if (username.isNotEmpty() && password.isNotEmpty()) {
                     val secureState = getSecureState()
-                    val credentialsChanged = secureState.username != username || secureState.password != password
+                    val europeanRegion = preferences.get(BooleanKey.EversenseEuropeanRegion)
+                    // Only clear the token cache when the credentials or the region really changed.
+                    // The region picks which DMS host issued a cached token.
+                    val credentialsChanged = secureState.username != username || secureState.password != password || secureState.isEuropeanRegion != europeanRegion
                     secureState.username = username
                     secureState.password = password
+                    secureState.isEuropeanRegion = europeanRegion
                     saveSecureState(secureState)
                     eversense.username = username
                     eversense.password = password

@@ -30,8 +30,6 @@ import app.aaps.plugins.eversense.packets.e3.GetInsertionDatePacket
 import app.aaps.plugins.eversense.packets.e3.GetInsertionTimePacket
 import app.aaps.plugins.eversense.packets.e3.GetLastCalibrationDatePacket
 import app.aaps.plugins.eversense.packets.e3.GetLastCalibrationTimePacket
-import app.aaps.plugins.eversense.packets.e3.GetNextCalibrationDatePacket
-import app.aaps.plugins.eversense.packets.e3.GetNextCalibrationTimePacket
 import app.aaps.plugins.eversense.packets.e3.GetSettingGlucoseHighEnabled
 import app.aaps.plugins.eversense.packets.e3.GetSettingGlucoseHighThresholdPacket
 import app.aaps.plugins.eversense.packets.e3.GetSettingGlucoseLowThresholdPacket
@@ -88,11 +86,6 @@ class EversenseE3Communicator {
                 val glucoseData = gatt.writePacket<GetCurrentGlucosePacket.Response>(GetCurrentGlucosePacket())
                 if (glucoseData.datetime <= state.recentGlucoseDatetime) {
                     EversenseLogger.warning(TAG, "Glucose data is still recent after reading - currentReading: ${glucoseData.datetime}, lastReading: ${state.recentGlucoseDatetime}")
-                    return
-                }
-
-                if (glucoseData.glucoseInMgDl > 1000) {
-                    EversenseLogger.error(TAG, "recentGlucose exceeds range - received: ${glucoseData.glucoseInMgDl}")
                     return
                 }
 
@@ -166,28 +159,14 @@ class EversenseE3Communicator {
                     gatt.writePacket<SetCurrentDatetimePacket.Response>(SetCurrentDatetimePacket())
                 }
 
-                // The E3 battery register returns an enum index (0-11) mapped to display percentages.
-                // Mapping sourced from official Eversense app BATTERY_LEVEL enum (fromStrength).
+                // The E3 battery register holds an index 0..11. GetBatteryPercentagePacket turns
+                // that index into a percentage (see BatteryLevel), so do not map it again here.
                 try {
                     EversenseLogger.debug(TAG, "Reading battery percentage...")
-                    val batteryRaw = gatt.writePacket<GetBatteryPercentagePacket.Response>(GetBatteryPercentagePacket())
-                    EversenseLogger.info(TAG, "Battery raw register value: ${batteryRaw.percentage}")
-                    state.batteryPercentage = when (batteryRaw.percentage) {
-                        0  -> 0
-                        1  -> 5
-                        2  -> 10
-                        3  -> 25
-                        4  -> 35
-                        5  -> 45
-                        6  -> 55
-                        7  -> 65
-                        8  -> 75
-                        9  -> 85
-                        10 -> 95
-                        11 -> 100
-                        else -> batteryRaw.percentage
-                    }
-                    EversenseLogger.info(TAG, "Battery percentage mapped: ${state.batteryPercentage}%")
+                    val battery = gatt.writePacket<GetBatteryPercentagePacket.Response>(GetBatteryPercentagePacket())
+                    EversenseLogger.info(TAG, "Battery raw register value: ${battery.rawLevel}")
+                    state.batteryPercentage = battery.percentage
+                    EversenseLogger.info(TAG, "Battery percentage: ${state.batteryPercentage}%")
                 } catch (e: Exception) {
                     EversenseLogger.warning(TAG, "Battery read failed (non-fatal): $e")
                 }
@@ -218,28 +197,26 @@ class EversenseE3Communicator {
                     EversenseLogger.debug(TAG, "Reading calibration info...")
                     val calibrationPhase = gatt.writePacket<GetCalibrationPhasePacket.Response>(GetCalibrationPhasePacket())
                     val calibrationReadiness = gatt.writePacket<GetCalibrationReadinessPacket.Response>(GetCalibrationReadinessPacket())
-                    val nextCalibrationDate = gatt.writePacket<GetNextCalibrationDatePacket.Response>(GetNextCalibrationDatePacket())
-                    val nextCalibrationTime = gatt.writePacket<GetNextCalibrationTimePacket.Response>(GetNextCalibrationTimePacket())
                     val lastCalibrationDate = gatt.writePacket<GetLastCalibrationDatePacket.Response>(GetLastCalibrationDatePacket())
                     val lastCalibrationTime = gatt.writePacket<GetLastCalibrationTimePacket.Response>(GetLastCalibrationTimePacket())
                     state.calibrationPhase = calibrationPhase.phase
                     state.calibrationReadiness = calibrationReadiness.readiness
                     val minCalDate = 1577836800000L  // 2020-01-01
                     val maxCalDate = 1893456000000L  // 2030-01-01
-                    val newNextCal = nextCalibrationDate.date + nextCalibrationTime.time
                     val newLastCal = lastCalibrationDate.date + lastCalibrationTime.time
-                    if (newNextCal in minCalDate..maxCalDate) {
-                        state.nextCalibrationDate = newNextCal
-                        EversenseLogger.info(TAG, "nextCalibrationDate accepted: $newNextCal")
-                    } else {
-                        EversenseLogger.warning(TAG, "nextCalibrationDate out of plausible range, ignoring: $newNextCal")
-                    }
                     if (newLastCal in minCalDate..maxCalDate) {
                         if (newLastCal != prevLastCalibrationDate && prevLastCalibrationDate != 0L) {
                             EversenseLogger.info(TAG, "Calibration detected from external source: lastCalibrationDate changed from $prevLastCalibrationDate to $newLastCal")
                         }
                         state.lastCalibrationDate = newLastCal
-                        EversenseLogger.info(TAG, "lastCalibrationDate accepted: $newLastCal")
+                        // The E3 asks for a calibration once every 24 hours, so work the next time out
+                        // from the last one instead of reading it from the transmitter. The device's own
+                        // "next calibration" registers proved unreliable, and a wrong-but-plausible value
+                        // slips straight through the range check above. This also matches what
+                        // EversenseCGMPlugin already writes after a calibration done inside AAPS, so a
+                        // full sync no longer overwrites our own value with a different one.
+                        state.nextCalibrationDate = newLastCal + TimeUnit.HOURS.toMillis(24)
+                        EversenseLogger.info(TAG, "lastCalibrationDate accepted: $newLastCal, nextCalibrationDate derived: ${state.nextCalibrationDate}")
                     } else {
                         EversenseLogger.warning(TAG, "lastCalibrationDate out of plausible range, ignoring: $newLastCal")
                     }

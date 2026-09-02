@@ -7,7 +7,6 @@ import android.util.LongSparseArray
 import androidx.annotation.ArrayRes
 import androidx.core.util.forEach
 import app.aaps.plugins.aps.openAPSAIMI.steps.UnifiedActivityProviderMTR
-import app.aaps.plugins.aps.afrezza.AfrezzaMaxBasalConstraints
 import app.aaps.core.data.aps.SMBDefaults
 import app.aaps.core.data.model.GlucoseUnit
 import app.aaps.core.data.model.ICfg
@@ -118,6 +117,7 @@ import app.aaps.plugins.aps.openAPSAIMI.pkpd.InsulinActivityStage
 import app.aaps.plugins.aps.openAPSAIMI.pkpd.InsulinKineticsAuthority
 import app.aaps.plugins.aps.openAPSAIMI.pkpd.PkpdLearningDiagnostics
 import app.aaps.plugins.aps.openAPSAIMI.pkpd.PkPdIntegration
+import app.aaps.plugins.aps.openAPSAIMI.pkpd.PkPdLearnedState
 import app.aaps.plugins.aps.openAPSAIMI.pkpd.PkPdCsvLogger
 import app.aaps.plugins.aps.openAPSAIMI.pkpd.PkPdRuntime
 import app.aaps.plugins.aps.openAPSAIMI.pkpd.PkpdSmbTailDamping
@@ -185,6 +185,7 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
     private val iobCobCalculator: IobCobCalculator,
     private val hardLimits: HardLimits,
     preferences: Preferences,
+    private val pkPdLearnedState: PkPdLearnedState,
     private val sp: SP,
     protected val dateUtil: DateUtil,
     private val processedTbrEbData: ProcessedTbrEbData,
@@ -415,7 +416,7 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
     override var lastAPSResult: APSResult? = null
     override fun usingDynamicIsf(): Boolean = preferences.get(BooleanKey.ApsUseDynamicSensitivity)
     override fun offersDynamicSensitivity(): Boolean = true
-    private val pkpdIntegration = PkPdIntegration(preferences)
+    private val pkpdIntegration = PkPdIntegration(preferences, pkPdLearnedState)
     private var lastPkpdScale: Double = 1.0
     // Dans votre classe principale (ou plugin), vous pouvez d?clarer :
     private val kalmanISFCalculator = KalmanISFCalculator(tddCalculator, preferences, aapsLogger)
@@ -836,7 +837,16 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
         val profileIsf = profileFunction.getProfile()?.getProfileIsfMgdl() ?: 20.0
         val tddIsf = tddIsf24hOr(profileIsf)
         val fusedSlowIsf = fusedSlowIsfOverride?.takeIf { it.isFinite() && it > 0.0 }
-            ?: isfFusion().fused(profileIsf, tddIsf, pkpdScaleForTick)
+            // isfFusion() builds a throwaway instance, so its slew limiter is inert anyway:
+            // there is no anchor to carry over between ticks. Downstream smoothing is done by
+            // isfBlender.
+            ?: isfFusion().fused(
+                profileIsf = profileIsf,
+                tddIsf = tddIsf,
+                pkpdScale = pkpdScaleForTick,
+                nowMs = timestamp,
+                authoritative = true
+            )
         aapsLogger.debug(LTag.APS, "Fused slow ISF: $fusedSlowIsf (profile=$profileIsf, tddIsf=$tddIsf, pkpdScale=$pkpdScaleForTick)")
 
         // 5) EMA TDD (stabilise l?ajustement AF)
@@ -1112,7 +1122,13 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
                 tdd24h = tdd24Hrs,
                 combinedDelta = currentDelta ?: 0.0,
                 uamConfidence = AimiUamHandler.confidenceOrZero(),
-                allowLearning = !preferences.get(BooleanKey.OApsAIMIIntelligenceSingleLearnPath),
+                // Read-only by design: signal-prep is the only learning path per tick. This call
+                // passes a fixed window and no bolus samples, so letting it learn would pollute the
+                // shared learned state.
+                allowLearning = false,
+                // Distinct PkPdIntegration instance: this is its ONLY fused() call per tick, so it must
+                // own the slew anchor or the limiter stays inert.
+                isfRateLimitAuthority = true,
             )
             lastPkpdScale = pkpdRuntimeForActivity?.pkpdScale ?: 1.0
 
@@ -1728,15 +1744,6 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
                     rh.gs(R.string.max_daily_basal_multiplier)
                 ),
                 this
-            )
-
-            AfrezzaMaxBasalConstraints.apply(
-                absoluteRate = absoluteRate,
-                from = this,
-                iobCobCalculator = iobCobCalculator,
-                persistenceLayer = persistenceLayer,
-                preferences = preferences,
-                aapsLogger = aapsLogger,
             )
         }
 

@@ -23,5 +23,12 @@ enum class LongNonKey(
     NsClientControlPairedAt("nsclient_control_paired_at", 0L, exportable = false),
     LastVacuumRun("last_vacuum_run", 0L),
     ApsBoostHealthConnectLastSyncMs("boost_health_connect_last_sync_ms", 0L),
+
+    // Bumped whenever the PK/PD learned state (aimi_pkpd_state_dia_h / _peak_min) is written from
+    // outside the loop (reset button, insulin preset). Long-lived PkPdIntegration instances cache
+    // that state in memory; they compare this counter on each tick to know they must re-seed from
+    // prefs. Any change is a signal, up or down. So an overflow or a restore from backup are
+    // both safe.
+    OApsAIMIPkpdLearnedStateGeneration("aimi_pkpd_learned_state_generation", 0L),
 }
 

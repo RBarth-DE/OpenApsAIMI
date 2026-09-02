@@ -394,8 +394,6 @@
     <string name="pref_title_fill_button_3">Fill button 3</string>
     <string name="pref_title_max_bolus">Maximum bolus</string>
     <string name="pref_title_max_basal">Maximum basal rate</string>
-    <string name="pref_title_afrezza_max_basal_rate">Afrezza max basal rate</string>
-    <string name="pref_summary_afrezza_max_basal_rate">Minimum basal rate enforced after Afrezza dosing (U/h)</string>
     <string name="openapsma_max_basal_summary">This value is called max basal in OpenAPS context</string>
     <string name="pref_title_smb_max_iob">Max IOB for SMB</string>
     <string name="openapssmb_max_iob_summary">This value is called Max IOB in OpenAPS context\nOpenAPS will not add more insulin if current IOB is greater than this value. Value is affected by patient type too.</string>
@@ -801,6 +799,8 @@
     <string name="aimi_summary_aps_use_dynamic_sensitivity">Controls aps use dynamic sensitivity.</string>
     <string name="aimi_summary_aps_use_smb">Controls aps use smb.</string>
     <string name="aimi_summary_aps_use_uam">Controls aps use uam.</string>
+    <string name="eversense_european_region">Eversense 365: use European servers</string>
+    <string name="eversense_european_region_summary">Turn this on if your Eversense account and 365 transmitter are European. AAPS will then sign in and sync with the European Eversense servers instead of the ones in the United States. Leave it off for a United States account. If this is set wrong, the transmitter cannot finish pairing and you will get no readings.</string>
     <string name="pref_title_aimi_basal_slew_limit">Basal anti-whiplash (slew limit)</string>
     <string name="pref_summary_aimi_basal_slew_limit">Limit how fast the basal rate can rise each cycle to smooth out over-corrections. Basal cuts stay instant for hypo safety; meal and forced-boost paths are exempt.</string>
     <string name="pref_title_aimi_pkpd_endo_reversion">Prediction: endogenous reversion</string>

@@ -2,6 +2,8 @@ package app.aaps.plugins.dexcomoneplus
 
 import android.content.Context
 import android.os.SystemClock
+import app.aaps.core.interfaces.ble.BleRadioPriority
+import app.aaps.plugins.dexcomoneplus.gatt.OnePlusGattClient
 import app.aaps.plugins.dexcomoneplus.gatt.OnePlusGattClientAndroid
 import app.aaps.plugins.dexcomoneplus.identity.OnePlusSensorIdentity
 import app.aaps.plugins.dexcomoneplus.identity.OnePlusSensorStore
@@ -11,9 +13,11 @@ import app.aaps.plugins.dexcomoneplus.oem.OemDeviceProfile
 import app.aaps.plugins.dexcomoneplus.scan.OnePlusBleScanner
 import app.aaps.plugins.dexcomoneplus.scan.OnePlusBleScannerAndroid
 import app.aaps.plugins.dexcomoneplus.scan.OnePlusBleScannerStub
+import app.aaps.plugins.dexcomoneplus.scan.OnePlusScanBudget
 import app.aaps.plugins.dexcomoneplus.scan.OnePlusScanListener
 import app.aaps.plugins.dexcomoneplus.scan.OnePlusScanResult
 import app.aaps.plugins.dexcomoneplus.session.OnePlusBleSession
+import app.aaps.plugins.dexcomoneplus.session.OnePlusMacArbiter
 import app.aaps.plugins.dexcomoneplus.session.OnePlusBleSessionSkeleton
 import app.aaps.plugins.dexcomoneplus.session.OnePlusConnectPrep
 import app.aaps.plugins.dexcomoneplus.session.OnePlusSessionAuthKeks
@@ -82,6 +86,17 @@ class OnePlusCgmDriverReal(private val storeNamespace: String? = null) : OnePlus
     @Volatile
     private var pendingAdvSightingElapsedMs: Long = 0L
 
+    /**
+     * The link of the running session, kept only so its connection interval can be changed while
+     * the session itself is busy. Never used to send anything.
+     */
+    @Volatile
+    private var currentGatt: OnePlusGattClient? = null
+
+    /** True while another job on the same radio must not be disturbed. See [setRadioBackOff]. */
+    @Volatile
+    private var radioBackOff = false
+
     override fun setContext(context: Context) {
         val app = context.applicationContext
         this.context = app
@@ -120,6 +135,15 @@ class OnePlusCgmDriverReal(private val storeNamespace: String? = null) : OnePlus
         OnePlusLog.i(
             "${OnePlusLogMarkers.SESSION}: [$slot] connect requested (Real GATT+KEKS+EGV)",
         )
+        // The transmitter has one owner — see OnePlusMacArbiter. Refused means the other slot is on
+        // this sensor, and opening a second session would corrupt both KEKS handshakes. Nothing is
+        // written to the store on a refusal: the slot must stay exactly as it was.
+        if (!OnePlusMacArbiter.claim(deviceAddress, slot)) {
+            watchers.forEach {
+                it.onError("ONEPLUS_SESSION: sensor already in use by the other slot", false)
+            }
+            return
+        }
         scanner.stopScan()
         // Stop any in-flight reconnect loop (may still be targeting a previous MAC).
         val previousSession: OnePlusBleSession?
@@ -200,6 +224,14 @@ class OnePlusCgmDriverReal(private val storeNamespace: String? = null) : OnePlus
             return false
         }
         val deviceAddress = stored?.lastMac ?: return false
+        // The path that reproduced the collision on every plugin start for an install whose two
+        // stores already held the same MAC. Claim before queueing anything.
+        if (!OnePlusMacArbiter.claim(deviceAddress, slot)) {
+            OnePlusLog.w(
+                "${OnePlusLogMarkers.SESSION}: [$slot] auto-resume skipped — the other slot owns this sensor",
+            )
+            return false
+        }
         val pairingCode = stored.identity.pin
         val generation: Long
         val executor: ExecutorService
@@ -294,6 +326,7 @@ class OnePlusCgmDriverReal(private val storeNamespace: String? = null) : OnePlus
             session.also { session = null }
         }
         previousSession?.stop("disconnect")
+        OnePlusMacArbiter.release(slot)
     }
 
     override fun shutdown() {
@@ -317,7 +350,28 @@ class OnePlusCgmDriverReal(private val storeNamespace: String? = null) : OnePlus
         }
         watchers.clear()
         previousExecutor.shutdownNow()
+        OnePlusMacArbiter.release(slot)
         OnePlusLog.i("${OnePlusLogMarkers.SESSION}: [$slot] shutdown")
+    }
+
+    /**
+     * ⚠️ ASYNC IMPACT: called from the thread that watches the lease, not from the BLE executor. It
+     * sets a flag, asks for an interval and books a hold on the scan budget, none of which waits,
+     * so it does not have to queue behind a running session.
+     */
+    override fun setRadioBackOff(backOff: Boolean) {
+        if (radioBackOff == backOff) return
+        radioBackOff = backOff
+        OnePlusLog.i("${OnePlusLogMarkers.SESSION}: [$slot] radio back off = $backOff")
+        currentGatt?.setLowPower(backOff)
+        // A scan is the greedy part, so it is the part that has to wait. The budget already knows
+        // how to hold every start back; the hold is sized to the longest a lease can live and it is
+        // lifted as soon as the lease really ends.
+        if (backOff) {
+            OnePlusScanBudget.lendRadioOut(SystemClock.elapsedRealtime(), BleRadioPriority.MAX_HOLD_MS)
+        } else {
+            OnePlusScanBudget.takeRadioBack()
+        }
     }
 
     override fun warmupState(): OnePlusWarmupState =
@@ -331,6 +385,9 @@ class OnePlusCgmDriverReal(private val storeNamespace: String? = null) : OnePlus
     ): OnePlusBleSession {
         val ctx = context ?: error("ONEPLUS_SESSION: setContext required")
         val gatt = OnePlusGattClientAndroid(ctx, profile)
+        currentGatt = gatt
+        // The lease may have been taken while this session was being built.
+        if (radioBackOff) gatt.setLowPower(true)
         val auth = OnePlusSessionAuthKeks(gatt)
         val store = sensorStore
         val created = OnePlusBleSessionSkeleton(
@@ -431,7 +488,13 @@ class OnePlusCgmDriverReal(private val storeNamespace: String? = null) : OnePlus
         val scanMs = scanMsOverride ?: profile.preConnectScanMs
         if (scanMs <= 0L) return OnePlusConnectPrep(advFresh = false)
         // UI Connect just selected this ADV → don't hard-fail if re-scan misses briefly.
-        val uiJustSelected = !pendingDeviceName.isNullOrBlank()
+        //
+        // A name alone is not enough. The start screen may pre-select a sensor it has only ever read
+        // from the store, and that entry carries the stored ADV name with no sighting behind it. Such
+        // an entry used to claim "the UI just selected this", which switched off
+        // [OemDeviceProfile.requireAdvBeforeConnect] — the one guard that stops a blind connect. The
+        // timestamp is what separates a real sighting from a remembered name.
+        val uiJustSelected = !pendingDeviceName.isNullOrBlank() && pendingAdvSightingElapsedMs > 0L
         val hardRequireAdv =
             profile.requireAdvBeforeConnect && attempt == 0 && !uiJustSelected
         OnePlusLog.i(

@@ -68,6 +68,7 @@ import app.aaps.plugins.aps.openAPSAIMI.model.PumpCaps
 import app.aaps.plugins.aps.openAPSAIMI.pkpd.PkPdCsvLogger
 import app.aaps.plugins.aps.openAPSAIMI.pkpd.MealAggressionContext
 import app.aaps.plugins.aps.openAPSAIMI.pkpd.PkPdIntegration
+import app.aaps.plugins.aps.openAPSAIMI.pkpd.PkPdLearnedState
 import app.aaps.plugins.aps.openAPSAIMI.pkpd.PkpdBolusSample
 import app.aaps.plugins.aps.openAPSAIMI.pkpd.PkPdLogRow
 import app.aaps.plugins.aps.openAPSAIMI.pkpd.IsfTddProvider
@@ -1277,6 +1278,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
     private val profileUtil: ProfileUtil,
     private val fabricPrivacy: FabricPrivacy,
     private val preferences: Preferences,
+    private val pkPdLearnedState: PkPdLearnedState,
     private val gestationalAutopilot: app.aaps.plugins.aps.openAPSAIMI.advisor.gestation.GestationalAutopilot,
     private val auditorOrchestrator: app.aaps.plugins.aps.openAPSAIMI.advisor.auditor.AuditorOrchestrator,
     private val uiInteraction: UiInteraction,
@@ -2347,7 +2349,6 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             predictedBgMgdl = glucoseStatus.glucose,
             targetBgMgdl = ctx.profile.target_bg,
         )
-        val singleLearnPath = preferences.get(BooleanKey.OApsAIMIIntelligenceSingleLearnPath)
         this.cachedPkpdRuntime = try {
             pkpdIntegration.setRecentBolusSamples(
                 buildRecentPkpdBolusSamples(
@@ -2374,7 +2375,13 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                 estimatedRaMgdlPerMin = continuousStateEstimator.getLastRa().takeIf { it.isFinite() && it > 0.0 },
                 causalStatePosterior = lastPatientState?.causalPosterior,
                 patientEventMemory = lastPatientState?.eventMemory,
-                allowLearning = !singleLearnPath,
+                // Read-only by design: signal-prep is the only learning path per tick. This early
+                // call uses a substitute TDD (max basal x 24), so letting it learn would pollute the
+                // shared learned state.
+                allowLearning = false,
+                // Substitute TDD (max basal x 24): read-only for the slew limiter too, otherwise
+                // this call would pin the whole tick on a lower-quality input.
+                isfRateLimitAuthority = false,
             )
         } catch (e: Exception) {
             consoleError.add("❌ Early PKPD Runtime init failed: ${e.message}")
@@ -9029,7 +9036,10 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         val physioMults = lastFusedPhysioMultipliers ?: lastBasePhysioMultipliers
         val learningDiagnostics = PkpdLearningDiagnostics.from(
             causalStatePosterior = lastPatientState?.causalPosterior,
-            allowLearning = preferences.get(BooleanKey.OApsAIMIIntelligenceSingleLearnPath),
+            // Signal-prep is the one learning path of the tick and it always learns, so the
+            // snapshot must say so. Reading the preference here reported "read_only_path" while
+            // learning was in fact running.
+            allowLearning = true,
             exerciseFlag = sportTime,
             iobU = ctx.iobDataArray.firstOrNull()?.iob ?: 0.0,
             carbsActiveG = ctx.mealData.mealCOB,
@@ -9832,6 +9842,8 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                 estimatedRaMgdlPerMin = continuousStateEstimator.getLastRa().takeIf { it.isFinite() && it > 0.0 },
                 causalStatePosterior = lastPatientState?.causalPosterior,
                 patientEventMemory = lastPatientState?.eventMemory,
+                // Signal-prep is the one dosing call per tick: it owns both learning and the ISF
+                // slew anchor (isfRateLimitAuthority defaults to allowLearning).
                 allowLearning = true,
             )
         } catch (e: Exception) {
@@ -10347,7 +10359,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             .getOrNull()
     }
     private var csvPrimaryStorageDeniedLogged = false
-    private val pkpdIntegration = PkPdIntegration(preferences)
+    private val pkpdIntegration = PkPdIntegration(preferences, pkPdLearnedState)
     //private val tempFile = File(externalDir, "temp.csv")
     private var bgacc = 0.0
     private var predictedSMB = 0.0f
