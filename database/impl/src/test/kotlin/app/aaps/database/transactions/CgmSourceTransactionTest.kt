@@ -192,6 +192,82 @@ class CgmSourceTransactionTest {
         assertThat(result.all()).hasSize(2)
     }
 
+    @Test
+    fun `keeps local value when NS data arrives for a fresh local reading`() = runTest {
+        val timestamp = NOW - 5 * 60 * 1000L
+        val gv = createGlucoseValue(timestamp = timestamp, value = 77.0, nsId = "ns-123")
+        val existing = createGlucoseValue(timestamp = timestamp, value = 71.0, nsId = null)
+
+        whenever(glucoseValueDao.findByTimestampAndSensor(timestamp, GlucoseValue.SourceSensor.DEXCOM_G6_NATIVE)).thenReturn(existing)
+
+        val transaction = CgmSourceTransaction(listOf(gv), emptyList(), null, now = NOW, nsClientData = true)
+        transaction.database = database
+        val result = transaction.run()
+
+        assertThat(result.updated).isEmpty()
+        assertThat(result.updatedNsId).hasSize(1)
+        assertThat(existing.value).isEqualTo(71.0)
+        assertThat(existing.interfaceIDs.nightscoutId).isEqualTo("ns-123")
+
+        verify(glucoseValueDao).updateExistingEntry(existing)
+    }
+
+    @Test
+    fun `keeps local value when NS data arrives for a fresh local reading with same content`() = runTest {
+        val timestamp = NOW - 5 * 60 * 1000L
+        val gv = createGlucoseValue(timestamp = timestamp, value = 71.0, nsId = "ns-123")
+        val existing = createGlucoseValue(timestamp = timestamp, value = 71.0, nsId = null)
+
+        whenever(glucoseValueDao.findByTimestampAndSensor(timestamp, GlucoseValue.SourceSensor.DEXCOM_G6_NATIVE)).thenReturn(existing)
+
+        val transaction = CgmSourceTransaction(listOf(gv), emptyList(), null, now = NOW, nsClientData = true)
+        transaction.database = database
+        val result = transaction.run()
+
+        assertThat(result.updated).isEmpty()
+        assertThat(result.updatedNsId).hasSize(1)
+        assertThat(existing.interfaceIDs.nightscoutId).isEqualTo("ns-123")
+
+        verify(glucoseValueDao).updateExistingEntry(existing)
+    }
+
+    @Test
+    fun `updates value when NS data arrives for an old local reading`() = runTest {
+        val timestamp = NOW - 20 * 60 * 1000L
+        val gv = createGlucoseValue(timestamp = timestamp, value = 77.0, nsId = "ns-123")
+        val existing = createGlucoseValue(timestamp = timestamp, value = 71.0, nsId = null)
+
+        whenever(glucoseValueDao.findByTimestampAndSensor(timestamp, GlucoseValue.SourceSensor.DEXCOM_G6_NATIVE)).thenReturn(existing)
+
+        val transaction = CgmSourceTransaction(listOf(gv), emptyList(), null, now = NOW, nsClientData = true)
+        transaction.database = database
+        val result = transaction.run()
+
+        assertThat(result.updated).hasSize(1)
+        assertThat(result.updatedNsId).isEmpty()
+        assertThat(gv.id).isEqualTo(existing.id)
+
+        verify(glucoseValueDao).updateExistingEntry(gv)
+    }
+
+    @Test
+    fun `updates value when local data arrives for a fresh local reading`() = runTest {
+        val timestamp = NOW - 5 * 60 * 1000L
+        val gv = createGlucoseValue(timestamp = timestamp, value = 77.0, nsId = null)
+        val existing = createGlucoseValue(timestamp = timestamp, value = 71.0, nsId = null)
+
+        whenever(glucoseValueDao.findByTimestampAndSensor(timestamp, GlucoseValue.SourceSensor.DEXCOM_G6_NATIVE)).thenReturn(existing)
+
+        val transaction = CgmSourceTransaction(listOf(gv), emptyList(), null, now = NOW, nsClientData = false)
+        transaction.database = database
+        val result = transaction.run()
+
+        assertThat(result.updated).hasSize(1)
+        assertThat(result.updatedNsId).isEmpty()
+
+        verify(glucoseValueDao).updateExistingEntry(gv)
+    }
+
     private fun createGlucoseValue(
         timestamp: Long,
         value: Double,
@@ -217,4 +293,9 @@ class CgmSourceTransactionTest {
         glucoseUnit = GlucoseUnit.MGDL,
         interfaceIDs_backing = InterfaceIDs()
     )
+
+    companion object {
+
+        private const val NOW = 1_788_400_000_000L
+    }
 }
