@@ -138,15 +138,23 @@ open class OpenAPSBoostPlugin @Inject constructor(
     PluginDescription()
         .mainType(PluginType.APS)
         .composeContent { plugin -> app.aaps.plugins.aps.compose.OpenAPSComposeContent(apsPlugin = plugin as APS, loop = loopProvider.get(), rxBus = rxBus, rh = rh, dateUtil = dateUtil) }
-
-
         .pluginName(R.string.openaps_boost)
         .shortName(R.string.boost_shortname)
-                .preferencesVisibleInSimpleMode(false)
+        .preferencesVisibleInSimpleMode(false)
         .showInList { config.APS }
         .description(R.string.description_boost),
     aapsLogger, rh
 ), APS, PluginConstraints {
+
+    /** The volume-weighted dose shadow, held on preferences as the other shadows are. It logs
+     *  an alternative blend and reaches nothing on the dose path. */
+    private val vwaTddShadow by lazy {
+        BoostVwaTddShadow(
+            loadState = { preferences.getBoostDosing(StringKey.ApsBoostVwaTddShadowState) },
+            saveState = { preferences.put(StringKey.ApsBoostVwaTddShadowState, it) },
+            logInfo = { aapsLogger.debug(LTag.APS, it) },
+        )
+    }
 
     companion object {
         /**
@@ -476,6 +484,7 @@ open class OpenAPSBoostPlugin @Inject constructor(
         var ratio = 1.0
         // ISF shadow accumulator — populated when V4.4.2-style EMA ratio is computed below.
         var isfShadowResult: BoostIsfShadow.TddSensShadowResult? = null
+        var vwaShadowResult: BoostVwaTddShadow.Result? = null
         var tdd = 0.0
         val bgCurrent = if (glucoseValue > bgCap) bgCap + ((glucoseValue - bgCap) / 3.0) else glucoseValue
 
@@ -546,6 +555,26 @@ open class OpenAPSBoostPlugin @Inject constructor(
                     )
                     if (isfShadowResult != null) {
                         debug.append("\n${isfShadowResult.debugLine}")
+                    }
+
+                    // Volume-weighted dose shadow. Computes an alternative blend from the
+                    // insulin delivered so far today against the participant's own delivery
+                    // curve, and logs it. It does not touch tdd, sensNormalTarget or anything
+                    // downstream: the candidate failed one of the four pre-registered targets
+                    // it was judged on, and the only route from here to dosing is a
+                    // pre-registered within-person trial.
+                    val nowForVwa = System.currentTimeMillis()
+                    val sinceAnchorH = ((nowForVwa - vwaTddShadow.dayAnchorMs(nowForVwa))
+                        / 3_600_000L).coerceIn(0L, 24L)
+                    val deliveredToday = if (sinceAnchorH > 0L)
+                        tddCalculator.calculateDaily(-sinceAnchorH, 0L)?.totalAmount else 0.0
+                    vwaShadowResult = vwaTddShadow.compute(
+                        nowMs = nowForVwa,
+                        deliveredSinceDayStart = deliveredToday,
+                        tdd7D = tdd7D
+                    )
+                    if (vwaShadowResult != null) {
+                        debug.append("\n${vwaShadowResult.debugLine}")
                     }
                 } else {
                     debug.append("\n⚠ TDD calculation produced invalid values (tdd=$tdd, logTerm=$logTerm) — using profile ISF")
