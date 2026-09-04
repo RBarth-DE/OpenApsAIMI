@@ -51,6 +51,7 @@ import app.aaps.plugins.aps.openAPSAIMI.basal.T3cAutodriveBasalBridge
 import app.aaps.plugins.aps.openAPSAIMI.basal.T3cTrajectoryContext
 import app.aaps.plugins.aps.openAPSAIMI.autodrive.models.AutoDriveState
 import app.aaps.plugins.aps.openAPSAIMI.carbs.CarbsAdvisor
+import app.aaps.plugins.aps.openAPSAIMI.ISF.ObservedSensitivityMeter
 import app.aaps.plugins.aps.openAPSAIMI.ISF.SensitivityRatioEstimator
 import app.aaps.core.interfaces.ui.UiInteraction
 import app.aaps.plugins.aps.openAPSAIMI.context.ContextSnapshot
@@ -333,6 +334,54 @@ internal data class AimiDecisionContext(
         val isf_calc_path: String? = null,
         /** How many samples the dynamic ISF store held at the end of that pass. */
         val isf_cache_size: Int? = null,
+        /**
+         * Sensitivity the **outcomes** imply, in mg/dL per U, measured as `-dBG / insulin absorbed`
+         * over clean falls. See `ObservedSensitivityMeter`.
+         *
+         * A fall is counted only when it lasts 30 to 120 minutes, drops at least 25 mg/dL, has no
+         * carbs on board and no meal in the 30 minutes before it, shows a mean rate of glucose
+         * appearance below 0.30 mg/dL/min, and cost at least 0.8 U. The insulin credited is the fall
+         * in IOB, plus the basal above the profile rate, plus the SMBs decided inside the window.
+         *
+         * The median is `null` below three windows, never `0.0`: zero would read as a real
+         * sensitivity of zero. [isf_obs_window_count] says how far the instrument is from being able
+         * to answer.
+         *
+         * These fields are **strictly passive**. Nothing in the dosing chain reads them. They exist
+         * for one purpose: to be compared with [command_isf_mgdl], so that the question "does the ISF
+         * chain estimate the right quantity" can finally be answered from exported data.
+         *
+         * `var`, and written after this object is built, like the fields below.
+         */
+        var isf_obs_median_mgdl: Double? = null,
+        /** Same measure, night windows only (local hour 0 to 8). */
+        var isf_obs_night_median_mgdl: Double? = null,
+        /** Same measure, day windows only. */
+        var isf_obs_day_median_mgdl: Double? = null,
+        /** How many windows the look-back holds. Reported even when the median is `null`. */
+        var isf_obs_window_count: Int? = null,
+        /** How many of them are night windows. */
+        var isf_obs_night_count: Int? = null,
+        /** How many of them are day windows. */
+        var isf_obs_day_count: Int? = null,
+        /** End time of the most recent window, so a reading can be aged. */
+        var isf_obs_last_window_end_ms: Long? = null,
+        /** Sensitivity of that most recent window alone. */
+        var isf_obs_last_window_mgdl: Double? = null,
+        /** Fall of that window, mg/dL. */
+        var isf_obs_last_window_drop_mgdl: Double? = null,
+        /** Insulin credited to that window, U. */
+        var isf_obs_last_window_absorbed_u: Double? = null,
+        /**
+         * Shadow late fat damping window: the late part of an absorption episode while a large
+         * insulin stack is already working. Strictly passive — nothing in the dosing chain reads it.
+         * It exists to be compared with [late_fat_rise_flag] before any wiring is decided.
+         */
+        var late_fat_damping_window: Boolean? = null,
+        /** The old `isLateFatProteinRise` predicate for the same tick, to measure the divergence. */
+        var late_fat_rise_flag: Boolean? = null,
+        /** Minutes since the absorption episode started, `null` when there is no episode. */
+        var late_fat_onset_age_min: Int? = null,
         /** Fast estimator 1: Kalman-filtered raw ISF. */
         val isf_kalman_fast_mgdl: Double? = null,
         /** Fast estimator 2: IsfAdjustmentEngine output. */
@@ -701,6 +750,19 @@ internal data class AimiDecisionContext(
             base.put("isf_cache_glucose_mgdl", baseline_state.isf_cache_glucose_mgdl ?: org.json.JSONObject.NULL)
             base.put("isf_calc_path", baseline_state.isf_calc_path ?: org.json.JSONObject.NULL)
             base.put("isf_cache_size", baseline_state.isf_cache_size ?: org.json.JSONObject.NULL)
+            base.put("isf_obs_median_mgdl", baseline_state.isf_obs_median_mgdl ?: org.json.JSONObject.NULL)
+            base.put("isf_obs_night_median_mgdl", baseline_state.isf_obs_night_median_mgdl ?: org.json.JSONObject.NULL)
+            base.put("isf_obs_day_median_mgdl", baseline_state.isf_obs_day_median_mgdl ?: org.json.JSONObject.NULL)
+            base.put("isf_obs_window_count", baseline_state.isf_obs_window_count ?: org.json.JSONObject.NULL)
+            base.put("isf_obs_night_count", baseline_state.isf_obs_night_count ?: org.json.JSONObject.NULL)
+            base.put("isf_obs_day_count", baseline_state.isf_obs_day_count ?: org.json.JSONObject.NULL)
+            base.put("isf_obs_last_window_end_ms", baseline_state.isf_obs_last_window_end_ms ?: org.json.JSONObject.NULL)
+            base.put("isf_obs_last_window_mgdl", baseline_state.isf_obs_last_window_mgdl ?: org.json.JSONObject.NULL)
+            base.put("isf_obs_last_window_drop_mgdl", baseline_state.isf_obs_last_window_drop_mgdl ?: org.json.JSONObject.NULL)
+            base.put("isf_obs_last_window_absorbed_u", baseline_state.isf_obs_last_window_absorbed_u ?: org.json.JSONObject.NULL)
+            base.put("late_fat_damping_window", baseline_state.late_fat_damping_window ?: org.json.JSONObject.NULL)
+            base.put("late_fat_rise_flag", baseline_state.late_fat_rise_flag ?: org.json.JSONObject.NULL)
+            base.put("late_fat_onset_age_min", baseline_state.late_fat_onset_age_min ?: org.json.JSONObject.NULL)
             base.put("isf_kalman_fast_mgdl", baseline_state.isf_kalman_fast_mgdl ?: org.json.JSONObject.NULL)
             base.put("isf_adj_engine_mgdl", baseline_state.isf_adj_engine_mgdl ?: org.json.JSONObject.NULL)
             base.put("isf_fused_slow_mgdl", baseline_state.isf_fused_slow_mgdl ?: org.json.JSONObject.NULL)
@@ -1334,6 +1396,13 @@ class DetermineBasalaimiSMB2 @Inject constructor(
     @Inject lateinit var contextInfluenceEngine: app.aaps.plugins.aps.openAPSAIMI.context.ContextInfluenceEngine  // 🎯 Context Influence
     @Inject lateinit var physioAdapter: app.aaps.plugins.aps.openAPSAIMI.physio.AIMIInsulinDecisionAdapterMTR  // 🏥 Physiological Modulation
     @Inject lateinit var straightLineTubeAdvisor: StraightLineTubeAdvisor  // 📐 MPC-lite hypo tube + SMB-cap smoothing
+    /**
+     * Passive reference instrument. It measures the sensitivity the outcomes imply and writes it to
+     * `baseline_state` only. It is a plain private field on purpose: not @Inject, not @Singleton, so
+     * nothing else can reach it. Any new call site is a bug. See `ObservedSensitivityMeter`.
+     */
+    private val observedSensitivityMeter = ObservedSensitivityMeter()
+
     @Inject lateinit var sensitivityRatioEstimator: SensitivityRatioEstimator
     @Inject lateinit var continuousStateEstimator: app.aaps.plugins.aps.openAPSAIMI.autodrive.estimator.ContinuousStateEstimator
     @Inject lateinit var tpoOrchestrator: TpoOrchestrator
@@ -1821,6 +1890,12 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         }
     }
     private var lateFatRiseFlag: Boolean = false
+
+    /**
+     * Last value the `isLateFatProteinRise` predicate produced this tick, kept only so the export
+     * can compare it with the shadow damping window. Never read by the dosing chain.
+     */
+    private var lateFatRiseFlagForExport: Boolean = false
     // — Hystérèse anti-pompage —
     private val HYPO_RELEASE_MARGIN   = 5.0      // mg/dL au-dessus du seuil
     private val HYPO_RELEASE_HOLD_MIN = 5        // minutes à rester > seuil+margin
@@ -9125,6 +9200,58 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             )
         }
 
+        // Reference measurement, strictly passive. It rebuilds the sensitivity the outcomes imply,
+        // -dBG / absorbed insulin over clean falls, outside the ISF chain. No dosing decision reads
+        // it: it only reaches baseline_state, next to command_isf_mgdl, so the two can be compared.
+        runCatching {
+            val tickCalendar = Calendar.getInstance()
+            tickCalendar.timeInMillis = decisionCtx.timestamp
+            val runningTempForMeter = ctx.currentTemp
+            observedSensitivityMeter.observe(
+                ObservedSensitivityMeter.Sample(
+                    timestampMs = decisionCtx.timestamp,
+                    localHourOfDay = tickCalendar.get(Calendar.HOUR_OF_DAY),
+                    bgMgdl = decisionCtx.baseline_state.current_bg_mgdl,
+                    // Net of the profile basal: it goes negative when the loop cuts the basal for a
+                    // long time, which is why the basal integral below is needed.
+                    iobU = decisionCtx.baseline_state.iob_u,
+                    cobG = decisionCtx.baseline_state.cob_g,
+                    smbU = finalResult.units ?: 0.0,
+                    // The basal that ran is the temp in progress, not the rate this tick asks for.
+                    deliveredBasalUph =
+                        if (runningTempForMeter.duration > 0) runningTempForMeter.rate else profile.current_basal,
+                    profileBasalUph = profile.current_basal,
+                    // Previous tick's value. A one-tick lag does not matter for a threshold filter
+                    // over a 30 to 120 minute window. Do not swap this for the "used" field: it is
+                    // only set on the engaged Autodrive branch, so it would be null most of the time
+                    // and the fail-closed rule would reject every window.
+                    raMgdlPerMin = decisionCtx.baseline_state.estimated_ra_mgdl_per_min,
+                    lastBolusMs = ctx.iobDataArray.firstOrNull()?.lastBolusTime ?: 0L,
+                ),
+            )
+            val observed = observedSensitivityMeter.read(decisionCtx.timestamp)
+            decisionCtx.baseline_state.isf_obs_median_mgdl = observed.medianMgdlPerU
+            decisionCtx.baseline_state.isf_obs_night_median_mgdl = observed.nightMedianMgdlPerU
+            decisionCtx.baseline_state.isf_obs_day_median_mgdl = observed.dayMedianMgdlPerU
+            decisionCtx.baseline_state.isf_obs_window_count = observed.windowCount
+            decisionCtx.baseline_state.isf_obs_night_count = observed.nightCount
+            decisionCtx.baseline_state.isf_obs_day_count = observed.dayCount
+            decisionCtx.baseline_state.isf_obs_last_window_end_ms = observed.lastWindow?.endMs
+            decisionCtx.baseline_state.isf_obs_last_window_mgdl = observed.lastWindow?.isfMgdlPerU
+            decisionCtx.baseline_state.isf_obs_last_window_drop_mgdl = observed.lastWindow?.dropMgdl
+            decisionCtx.baseline_state.isf_obs_last_window_absorbed_u = observed.lastWindow?.absorbedU
+        }
+
+        // Shadow only — measurement of the late fat damping window against the old rise predicate.
+        // Nothing downstream reads these three fields; they exist to size the divergence on a real
+        // support package before any wiring is decided.
+        runCatching {
+            decisionCtx.baseline_state.late_fat_damping_window = isLateFatDampingWindow(decisionCtx.timestamp)
+            decisionCtx.baseline_state.late_fat_rise_flag = lateFatRiseFlagForExport
+            decisionCtx.baseline_state.late_fat_onset_age_min =
+                MealAbsorptionMemory.onsetAgeMin(decisionCtx.timestamp)?.roundToInt()
+        }
+
         decisionCtx.adjustments.dynamic_isf = AimiDecisionContext.DynamicIsf(
             final_value_mgdl = snapshotFusedIsf,
             modifiers = mutableListOf<AimiDecisionContext.Modifier>().apply {
@@ -9794,6 +9921,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             lastBolusTimeMs = lastBolusTimeMs,
             mealFlags = mealFlags
         )
+        lateFatRiseFlagForExport = lateFatRiseFlag
         val tdd24hStateForPkpd = determineBasalInvocationCaches.getTdd24hTotalAmountState(tddCalculator)
         logInvocationCacheState("TDD24H_PKPD", tdd24hStateForPkpd)
         var tdd24Hrs = tdd24hStateForPkpd.valueOrNull()?.toFloat() ?: 0.0f
@@ -15078,6 +15206,30 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         val noMeal  = !(mealFlags.mealTime || mealFlags.bfastTime || mealFlags.lunchTime
             || mealFlags.dinnerTime || mealFlags.highCarbTime)
         return noMeal && hoursSinceBolus in 2.0..7.0 && rising && highish && lowIOB && cob <= 1.0
+    }
+
+    /**
+     * Damping-only sibling of `isLateFatProteinRise`. SHADOW for now: computed and exported, not
+     * wired into any dose. It is deliberately NOT fed to the meal absorption phase engine nor to any
+     * belief layer, because that predicate also drives an SMB floor whose IOB requirement is the
+     * opposite of this one.
+     *
+     * It looks for the late part of an absorption episode while a large insulin stack is already
+     * working, which is where extra SMB overshoots.
+     */
+    private fun isLateFatDampingWindow(nowMs: Long = dateUtil.now()): Boolean {
+        val ageMin = MealAbsorptionMemory.onsetAgeMin(nowMs) ?: return false
+        if (ageMin !in 120.0..420.0) return false
+        if (cob > 1.0f) return false
+        if (mealTime || bfastTime || lunchTime || dinnerTime || highCarbTime) return false
+        val rising = delta >= 1.0f && (shortAvgDelta >= 0.5f || longAvgDelta >= 0.3f)
+        val highish = bg > 130.0 || predictedBg > 140.0f
+        // The stack floor is a STOCK, homogeneous with IOB. maxSMB is a per bolus cap and was the
+        // wrong scale: during the incident IOB was 6 to 10 U against a maxSMB of 0.05 to 1.5.
+        // There is no 24h TDD field on this class, only the hourly rate, so rebuild the stock.
+        val tdd24hU = tdd24HrsPerHour.toDouble() * 24.0
+        val stackFloorU = maxOf(2.0 * basalaimi.toDouble(), 0.15 * tdd24hU, 1.0)
+        return rising && highish && iob >= stackFloorU
     }
 
 
