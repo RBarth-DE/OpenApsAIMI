@@ -591,6 +591,14 @@
     "settings_path": null,
     "ui_available": false
   },
+  "boost_vwa_tdd_shadow_state": {
+    "summary": "Stored state or configuration string for boost_vwa_tdd_shadow_state.",
+    "effect_high": "Higher value — more insulin/greater effect",
+    "impact": "low",
+    "feature": "shared_aaps",
+    "settings_path": null,
+    "ui_available": false
+  },
   "boost_wake_hr_hysteresis_min": {
     "summary": "Minutes of sustained elevated HR before the sleep detector transitions from SLEEPING to AWAKE.",
     "effect_high": "Higher value — more insulin/greater effect",

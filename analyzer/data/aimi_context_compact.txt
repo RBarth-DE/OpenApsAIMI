@@ -1,4 +1,4 @@
-# AIMI Algorithm Context (commit: 065988ed)
+# AIMI Algorithm Context (commit: 40dbca84)
 
 ## Overview
 The AIMI algorithm runs a 46-stage decision pipeline per 5-minute tick.

@@ -741,6 +741,7 @@ async function loadFeatureGroups(){
 }
 
 async function init(){
+  migrateSnaps();
   applySavedConfig();
   try{await loadParameters();}catch(e){console.error('Init failed:',e);}
   try{featureGroups=await loadFeatureGroups();}catch(e){}
@@ -1167,23 +1168,51 @@ function applyImport(){let c=0;importedParams.forEach(p=>{if(p.value!=null&&!p.i
 function exportImpJSON(){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify({parameters:importedParams},null,2)],{type:'application/json'}));a.download='aimi_current_params.json';a.click();}
 
 // ── SNAPSHOTS ──
+const SNAP_MAX=5;
+const SNAP_PARAM_FIELDS=['key','value','name','feature_group','feature_name','gate_key','always_active','impact','type','default','min','max','orphaned','gate_active'];
+function slimParams(params){return (params||[]).map(p=>{const o={};SNAP_PARAM_FIELDS.forEach(f=>{if(p&&p[f]!==undefined)o[f]=p[f];});return o;});}
+function slimSnap(s){
+  return {
+    id:s.id,label:s.label,tir:s.tir,hypo:s.hypo,cv:s.cv,params:s.params,
+    importedParams:slimParams(s.importedParams),cgm:s.cgm||{},treatments:s.treatments||{},
+    timestamp:s.timestamp||s.id,metadata:s.metadata||{},
+  };
+}
 function getSnaps(){try{return JSON.parse(localStorage.getItem('aimi_snapshots')||'[]');}catch{return[];}}
-function saveSnapshot(data){
+function setSnaps(snaps){
+  let list=snaps.slice(0,SNAP_MAX);
+  try{localStorage.setItem('aimi_snapshots',JSON.stringify(list));return;}
+  catch{}
+  // Storage is full — drop the oldest snapshot and try again
+  while(list.length>1){
+    list=list.slice(0,list.length-1);
+    try{localStorage.setItem('aimi_snapshots',JSON.stringify(list));return;}
+    catch{}
+  }
+  alert('Could not save snapshot: browser storage is full. Delete some old snapshots.');
+}
+function migrateSnaps(){
+  // Old snapshots stored the full analysis data — slim them once on load
   const snaps=getSnaps();
+  if(!snaps.some(s=>s&&('data' in s))&&snaps.length<=SNAP_MAX) return;
+  setSnaps(snaps.map(slimSnap));
+}
+function saveSnapshot(data){
+  const snaps=getSnaps().map(slimSnap);
   const snap={
     id:Date.now(),
     label:`${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}`,
     tir:data.cgm?.tir_pct,hypo:data.cgm?.hypo_l1_pct,cv:data.cgm?.cv,
-    params:data.recommendations?.length||0,
-    importedParams:[...importedParams],
+    params:data.recommendations?.length||data.params||0,
+    importedParams:slimParams(importedParams),
     cgm:data.cgm||{},treatments:data.treatments||{},
-    data,
+    timestamp:Date.now(),
   };
   snaps.unshift(snap);
-  localStorage.setItem('aimi_snapshots',JSON.stringify(snaps.slice(0,10)));
+  setSnaps(snaps);
   refreshSnaps();
 }
-function deleteSnap(id){localStorage.setItem('aimi_snapshots',JSON.stringify(getSnaps().filter(s=>s.id!=id)));refreshSnaps();}
+function deleteSnap(id){setSnaps(getSnaps().filter(s=>s.id!=id));refreshSnaps();}
 function refreshSnaps(){
   const snaps=getSnaps();
   const list=document.getElementById('snap-list');

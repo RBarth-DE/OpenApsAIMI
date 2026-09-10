@@ -1,7 +1,7 @@
 {
   "version": "3.0",
-  "source_commit": "065988ed8abe4b1d475b774688aa9b00caef4f5d",
-  "generated_at": "2026-08-22T08:21:50.786906+00:00",
+  "source_commit": "40dbca84e4dd08307859fbc3fd0c6836f9585897",
+  "generated_at": "2026-09-10T06:34:03.550591+00:00",
   "total": 306,
   "active": 257,
   "orphaned": 49,
@@ -4608,12 +4608,8 @@
       "type": "Boolean",
       "used_in": [
         {
-          "file": "OpenAPSAIMIPlugin.kt",
-          "function": "invoke"
-        },
-        {
           "file": "DetermineBasalAIMI2.kt",
-          "function": "runT9PhysioEarlyPkpdAndTubeBootstrap"
+          "function": "runSignalPreparationPkpdRuntimePhase"
         }
       ],
       "orphaned": false,

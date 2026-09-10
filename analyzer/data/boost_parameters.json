@@ -1,12 +1,12 @@
 {
   "version": "1.0",
   "plugin": "boost",
-  "source_commit": "065988ed8abe4b1d475b774688aa9b00caef4f5d",
-  "generated_at": "2026-08-22T08:21:52.567093+00:00",
-  "total": 98,
-  "active": 98,
+  "source_commit": "40dbca84e4dd08307859fbc3fd0c6836f9585897",
+  "generated_at": "2026-09-10T06:34:05.512571+00:00",
+  "total": 99,
+  "active": 99,
   "orphaned": 0,
-  "with_used_in": 96,
+  "with_used_in": 97,
   "with_negative_gate": 0,
   "with_settings_path": 60,
   "parameters": [
@@ -2173,6 +2173,32 @@
       "ui_available": false
     },
     {
+      "key": "boost_vwa_tdd_shadow_state",
+      "name": "ApsBoostVwaTddShadowState",
+      "type": "String",
+      "default": null,
+      "min": null,
+      "max": null,
+      "used_in": [
+        {
+          "file": "OpenAPSBoostPlugin.kt",
+          "function": "unknown"
+        }
+      ],
+      "orphaned": false,
+      "negative_gate_key": null,
+      "negative_gate_note": null,
+      "logic_summary": "Stored state or configuration string for boost_vwa_tdd_shadow_state.",
+      "effect_high": "Higher value — more insulin/greater effect",
+      "effect_low": "Lower value — less insulin/reduced effect",
+      "impact": "low",
+      "feature_group": "shared_aaps",
+      "is_gate": false,
+      "settings_path": null,
+      "settings_gate": null,
+      "ui_available": false
+    },
+    {
       "key": "boost_wake_hr_hysteresis_min",
       "name": "ApsBoostWakeHrHysteresisMin",
       "type": "Int",
@@ -3047,7 +3073,7 @@
       "name": "Shared AAPS Settings",
       "description": "Standard OpenAPS settings that Boost's algorithm also reads: max basal, max IOB, SMB gates, autosens, dynamic sensitivity.",
       "gate_key": null,
-      "param_count": 19,
+      "param_count": 20,
       "key_params": [
         "DynISFAdjust",
         "autosens_max",
@@ -3056,6 +3082,7 @@
         "boost_dynisf_bg_cap",
         "boost_dynisf_normal_target",
         "boost_dynisf_velocity",
+        "boost_vwa_tdd_shadow_state",
         "carbsReqThreshold",
         "enableBoost_with_high_temptarget",
         "enableCircadianISF",

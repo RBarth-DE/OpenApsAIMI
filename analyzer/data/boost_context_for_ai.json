@@ -175,7 +175,7 @@
       "name": "Shared AAPS Settings",
       "description": "Standard OpenAPS settings that Boost's algorithm also reads: max basal, max IOB, SMB gates, autosens, dynamic sensitivity.",
       "gate_key": null,
-      "param_count": 19,
+      "param_count": 20,
       "key_params": [
         "DynISFAdjust",
         "autosens_max",
@@ -184,6 +184,7 @@
         "boost_dynisf_bg_cap",
         "boost_dynisf_normal_target",
         "boost_dynisf_velocity",
+        "boost_vwa_tdd_shadow_state",
         "carbsReqThreshold",
         "enableBoost_with_high_temptarget",
         "enableCircadianISF",
@@ -797,6 +798,14 @@
       "effect_high": "Higher value — more insulin/greater effect",
       "impact": "high",
       "feature": "meal_model",
+      "settings_path": null,
+      "ui_available": false
+    },
+    "boost_vwa_tdd_shadow_state": {
+      "summary": "Stored state or configuration string for boost_vwa_tdd_shadow_state.",
+      "effect_high": "Higher value — more insulin/greater effect",
+      "impact": "low",
+      "feature": "shared_aaps",
       "settings_path": null,
       "ui_available": false
     },

@@ -3833,12 +3833,8 @@
     "effect_low": "Feature is inactive — associated functionality is disabled",
     "used_in": [
       {
-        "file": "OpenAPSAIMIPlugin.kt",
-        "function": "invoke"
-      },
-      {
         "file": "DetermineBasalAIMI2.kt",
-        "function": "runT9PhysioEarlyPkpdAndTubeBootstrap"
+        "function": "runSignalPreparationPkpdRuntimePhase"
       }
     ]
   },

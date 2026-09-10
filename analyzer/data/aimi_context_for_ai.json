@@ -1,6 +1,6 @@
 {
   "version": "2.2",
-  "generated_at": "2026-08-22T08:21:50.841852+00:00",
+  "generated_at": "2026-09-10T06:34:03.628336+00:00",
   "algorithm_overview": {
     "name": "AIMI (AI-powered Modular Insulin)",
     "base": "OpenAPS oref1 with extensive extensions",
@@ -438,7 +438,7 @@
       "workaround": "None — parameters are ineffective."
     }
   ],
-  "source_commit": "065988ed8abe4b1d475b774688aa9b00caef4f5d",
+  "source_commit": "40dbca84e4dd08307859fbc3fd0c6836f9585897",
   "parameter_knowledge": [
     {
       "key": "AIMI_UAM_CONFIDENCE",
@@ -1936,7 +1936,7 @@
       "impact": "medium",
       "settings_path": "AIMI → Preferences user → Core",
       "usage_type": "",
-      "function": "invoke"
+      "function": "runSignalPreparationPkpdRuntimePhase"
     },
     {
       "key": "key_aimi_intelligence_snapshot_export",

@@ -1,7 +1,7 @@
 # AIMI Algorithm Context
 Version: 2.2
-Source commit: 065988ed8abe4b1d475b774688aa9b00caef4f5d
-Generated: 2026-08-22T08:21:50.841852+00:00
+Source commit: 40dbca84e4dd08307859fbc3fd0c6836f9585897
+Generated: 2026-09-10T06:34:03.628336+00:00
 
 ## Algorithm Overview
 AIMI (AI-powered Modular Insulin)

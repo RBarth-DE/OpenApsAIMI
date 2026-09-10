@@ -45,7 +45,7 @@ Key parameters: boost_isf_shadow_state
 
 ### Shared AAPS Settings (gate: None)
 Standard OpenAPS settings that Boost's algorithm also reads: max basal, max IOB, SMB gates, autosens, dynamic sensitivity.
-Key parameters: DynISFAdjust, autosens_max, autosens_min, boost_allow_all_bg_sources, boost_dynisf_bg_cap, boost_dynisf_normal_target, boost_dynisf_velocity, carbsReqThreshold, enableBoost_with_high_temptarget, enableCircadianISF
+Key parameters: DynISFAdjust, autosens_max, autosens_min, boost_allow_all_bg_sources, boost_dynisf_bg_cap, boost_dynisf_normal_target, boost_dynisf_velocity, boost_vwa_tdd_shadow_state, carbsReqThreshold, enableBoost_with_high_temptarget
 
 ### Safety (gate: None)
 Ketoacidosis protection, force limits, half-basal exercise target.
@@ -592,6 +592,13 @@ Summary: Stored state or configuration string for boost_v7_residual_pools.
 High: Higher value — more insulin/greater effect
 Low: Lower value — less insulin/reduced effect
 Impact: high | Feature: meal_model
+
+### boost_vwa_tdd_shadow_state
+Type: String, Default: None
+Summary: Stored state or configuration string for boost_vwa_tdd_shadow_state.
+High: Higher value — more insulin/greater effect
+Low: Lower value — less insulin/reduced effect
+Impact: low | Feature: shared_aaps
 
 ### boost_wake_hr_hysteresis_min
 Type: Int, Default: 5
