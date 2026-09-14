@@ -1295,6 +1295,7 @@ class ComposeMainActivity : AppCompatActivity() {
             }
 
             ElementType.PUMP                    -> handlePluginClick(activePlugin.activePumpInternal as PluginBase)
+            ElementType.BGSOURCE                -> handlePluginClick(activePlugin.activeBgSource as PluginBase)
 
             // Non-searchable types — listed explicitly so the compiler catches new enum values
             ElementType.QUICK_WIZARD,

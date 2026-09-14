@@ -902,6 +902,8 @@
     <string name="aimi_adv_apply_btn">APPLY</string>
     <string name="aimi_adv_apply_dialog_title">Confirmation of Adjustments</string>
     <string name="aimi_adv_apply_dialog_prefix">The Advisor suggests the following adjustments:</string>
+    <string name="aimi_adv_not_enough_data">Not enough glucose data for this period. No score and no settings advice.</string>
+    <string name="aimi_adv_value_no_data">No data</string>
     <string name="aimi_adv_success_msg">%1$d changements appliqués !</string>
     <string name="aimi_adv_no_change_msg">No compatible changes have been applied.</string>
     <string name="aimi_adv_section_obs">OBSERVATIONS</string>

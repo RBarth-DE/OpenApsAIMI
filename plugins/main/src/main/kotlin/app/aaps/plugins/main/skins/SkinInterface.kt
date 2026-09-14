@@ -22,6 +22,9 @@ interface SkinInterface {
      */
     val prefersDashboardHome: Boolean get() = false
 
+    /** Home renderer selected by this skin in the Compose main shell. */
+    val dashboardHomeVariant: DashboardHomeVariant get() = DashboardHomeVariant.OVERVIEW
+
     fun preProcessLandscapeOverviewLayout(binding: OverviewFragmentBinding, isLandscape: Boolean, isTablet: Boolean, isSmallHeight: Boolean) {
         if (isLandscape) {
             val iobLayout = binding.infoLayout.iobLayout

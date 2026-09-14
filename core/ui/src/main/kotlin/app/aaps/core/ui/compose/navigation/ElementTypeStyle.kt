@@ -28,6 +28,7 @@ import app.aaps.core.ui.compose.icons.IcCarbs
 import app.aaps.core.ui.compose.icons.IcCgmInsert
 import app.aaps.core.ui.compose.icons.IcClinicalNotes
 import app.aaps.core.ui.compose.icons.IcExtendedBolus
+import app.aaps.core.ui.compose.icons.IcGenericCgm
 import app.aaps.core.ui.compose.icons.IcHistory
 import app.aaps.core.ui.compose.icons.IcLoopClosed
 import app.aaps.core.ui.compose.icons.IcNote
@@ -98,6 +99,7 @@ fun ElementType.color(): Color = when (this) {
     ElementType.AUTOMATION_MANAGEMENT   -> AapsTheme.elementColors.automation
 
     ElementType.PUMP                    -> AapsTheme.elementColors.pump
+    ElementType.BGSOURCE                -> AapsTheme.elementColors.deviceMaintenance
     ElementType.SETTINGS,
     ElementType.QUICK_LAUNCH_CONFIG     -> AapsTheme.elementColors.settings
 
@@ -166,6 +168,7 @@ fun ElementType.icon(): ImageVector = when (this) {
     ElementType.AUTOMATION_MANAGEMENT   -> IcPluginAutomation
 
     ElementType.PUMP                    -> Pump
+    ElementType.BGSOURCE                -> IcGenericCgm
     ElementType.SETTINGS                -> Icons.Default.Settings
     ElementType.QUICK_LAUNCH_CONFIG     -> Icons.Default.Settings
     ElementType.TREATMENTS              -> IcClinicalNotes
@@ -236,6 +239,7 @@ fun ElementType.labelResId(): Int = when (this) {
     ElementType.AUTOMATION              -> 0 // dynamic label
     ElementType.AUTOMATION_MANAGEMENT   -> R.string.automation
     ElementType.PUMP                    -> R.string.pump
+    ElementType.BGSOURCE                -> R.string.cgm
     ElementType.SETTINGS                -> R.string.settings
     ElementType.QUICK_LAUNCH_CONFIG     -> R.string.quick_launch_configure
     ElementType.TREATMENTS              -> R.string.treatments_history
@@ -309,6 +313,7 @@ fun ElementType.descriptionResId(): Int = when (this) {
     ElementType.RUNNING_MODE,
     ElementType.AUTOMATION,
     ElementType.PUMP,
+    ElementType.BGSOURCE,
     ElementType.SETTINGS,
     ElementType.COB,
     ElementType.SENSITIVITY,
