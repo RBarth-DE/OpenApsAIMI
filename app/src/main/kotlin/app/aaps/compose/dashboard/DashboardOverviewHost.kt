@@ -10,7 +10,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -30,8 +30,6 @@ import app.aaps.core.interfaces.rx.events.EventPreferenceChange
 import app.aaps.core.keys.BooleanKey
 import app.aaps.core.ui.compose.LocalPreferences
 import app.aaps.plugins.main.general.dashboard.AimiDashboardComposeRootView
-import dagger.hilt.android.EntryPointAccessors
-import io.reactivex.rxjava3.disposables.Disposable
 
 private const val TAG = "DashboardOverviewHost"
 
@@ -39,6 +37,7 @@ private const val TAG = "DashboardOverviewHost"
 fun DashboardOverviewHost(
     paddingValues: PaddingValues,
     fabBottomOffset: Dp,
+    rxBus: RxBus,
     modifier: Modifier = Modifier,
 ) {
     val preferences = LocalPreferences.current
@@ -46,21 +45,16 @@ fun DashboardOverviewHost(
     var useBoostOverview by remember { mutableStateOf(preferences.get(BooleanKey.OverviewUseBoostOverview)) }
     var recomposeTick by remember { mutableIntStateOf(0) }
 
-    DisposableEffect(context) {
+    LaunchedEffect(rxBus) {
         Log.d(TAG, "Subscribing to EventPreferenceChange for boost overview toggle")
-        val entryPoint = EntryPointAccessors.fromApplication(
-            context.applicationContext, RxBusEntryPoint::class.java)
-        val disp: Disposable = entryPoint.rxBus()
-            .toObservable(EventPreferenceChange::class.java)
-            .subscribe { event ->
-                if (event.isChanged(BooleanKey.OverviewUseBoostOverview.key)) {
-                    val newVal = preferences.get(BooleanKey.OverviewUseBoostOverview)
-                    Log.d(TAG, "Boost overview changed to: $newVal")
-                    useBoostOverview = newVal
-                    recomposeTick++
-                }
+        rxBus.toFlow(EventPreferenceChange::class).collect { event ->
+            if (event.isChanged(BooleanKey.OverviewUseBoostOverview.key)) {
+                val newVal = preferences.get(BooleanKey.OverviewUseBoostOverview)
+                Log.d(TAG, "Boost overview changed to: $newVal")
+                useBoostOverview = newVal
+                recomposeTick++
             }
-        onDispose { disp.dispose() }
+        }
     }
 
     Log.d(TAG, "Rendering: useBoostOverview=$useBoostOverview tick=$recomposeTick")
@@ -83,8 +77,3 @@ fun DashboardOverviewHost(
     }
 }
 
-@dagger.hilt.EntryPoint
-@dagger.hilt.InstallIn(dagger.hilt.components.SingletonComponent::class)
-interface RxBusEntryPoint {
-    fun rxBus(): RxBus
-}

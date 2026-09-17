@@ -26,7 +26,7 @@ User guide: [DEXCOM_ONEPLUS_USER_GUIDE.md](DEXCOM_ONEPLUS_USER_GUIDE.md)
 | KEKS / J-PAKE | `plugins/libkeks/**` + `NOTICE` | GPL-3 vendored xDrip pin; dep of dexcom_oneplus |
 | Module Gradle | `plugins/dexcom_oneplus/build.gradle.kts` | Keep `implementation(project(":plugins:libkeks"))` |
 | BgSource plugin | `plugins/source/.../DexcomOnePlusPlugin.kt` | Watcher → PersistenceLayer |
-| DI | `SourcePluginsListModule` `@IntKey(446)` → `bindDexcomOnePlusPlugin` | After Eversense 445, before Aidex 450 |
+| DI | `@ContributesIntoMap(AppScope::class, binding = binding<PluginBase>())` + `@IntKey(446)` on `DexcomOnePlusPlugin` (since the 2026-09-14 Metro merge; the old `SourcePluginsListModule` is gone) | After Eversense 445, before Aidex 450 |
 | Source dep | `plugins/source/build.gradle.kts` → `implementation(project(":plugins:dexcom_oneplus"))` | |
 | Enum | `core/data/.../SourceSensor.kt` → `DEXCOM_ONEPLUS_NATIVE("AAPS-DexcomOnePlus")` | |
 | Advanced filtering | `core/data/.../SourceSensorExtensions.kt` includes `DEXCOM_ONEPLUS_NATIVE` | |
@@ -72,7 +72,7 @@ Keep these mappings (sensor text must match enum `"AAPS-DexcomOnePlus"`):
 ## Conflict resolution rules
 
 1. Prefer **combine**: keep upstream BG-source changes **and** One+ registration/module.
-2. Never resolve `settings.gradle` / `SourcePluginsListModule` by dropping `:plugins:dexcom_oneplus` or `@IntKey(446)`.
+2. Never resolve `settings.gradle` or the DI registration by dropping `:plugins:dexcom_oneplus` or `@IntKey(446)`.
 3. If upstream renumbers IntKeys, re-pick a free key (not 440/445) and update this doc + user guide.
 4. NOTICE / THIRD_PARTY for xDrip Direct port (GPL) must stay once A1/A6 land.
 
@@ -96,3 +96,4 @@ Keep these mappings (sensor text must match enum `"AAPS-DexcomOnePlus"`):
 | 2026-08-03 | Merge `dev` @ `fa2d2c78a5`: no upstream change on ONE+ paths (`settings.gradle`, `SourceSensor`, `SourcePluginsListModule` `@IntKey(446)`, notification-reader remaps all untouched). Constraint satisfied without re-application — verified by invariant-baseline diff. Log: [MERGE_DEV_2026-08-03.md](MERGE_DEV_2026-08-03.md). |
 | 2026-08-08 | Merge `dev` @ `7fc8205e9a` → `dev_OAPSAIMI`: no upstream change on ONE+ paths; invariant-baseline diff byte-identical. One test-only adaptation in `:plugins:source`: the new upstream `NotificationCollectorServiceTest` was adapted to the fork's value-aware `GlucoseDeduplicator.process(packageName, now, glucoseMgdl)` — the fork's 3-argument dedup (which protects against CLOSED_LOOP_LGS on Dexcom transition glitches) was **kept**. Log: [MERGE_DEV_2026-08-08.md](MERGE_DEV_2026-08-08.md). |
 | 2026-09-06 | Merge `dev` @ `283a184f60`: dependency-bump-only upstream diff (6 files), no ONE+ path touched. `@IntKey(446)`, `SourceSensor.DEXCOM_ONEPLUS_NATIVE` and notification-reader remaps verified by invariant baseline. Log: [MERGE_DEV_2026-09-06.md](MERGE_DEV_2026-09-06.md). |
+| 2026-09-14 | Merge `dev` @ `343f9f7673` → `dev_OAPSAIMI_RB` (KMP layout + Hilt→Metro). ONE+ preserved: `:plugins:dexcom_oneplus` still `include`d, the native module keeps its classic `src/main` layout, `SourceSensor.DEXCOM_ONEPLUS_NATIVE`, its DB converters and the `com.dexcom.d1plus` / `com.dexcom.dexcomone` notification-reader remaps are untouched. `@IntKey(446)` moved from `SourcePluginsListModule` onto `DexcomOnePlusPlugin` as `@ContributesIntoMap` + `IntKey(446)`. Build green; invariant-baseline diff clean. Log: [MERGE_DEV_2026-09-14.md](MERGE_DEV_2026-09-14.md). |

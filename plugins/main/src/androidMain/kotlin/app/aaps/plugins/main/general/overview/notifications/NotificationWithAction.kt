@@ -1,0 +1,78 @@
+package app.aaps.plugins.main.general.overview.notifications
+
+import app.aaps.core.data.time.T
+import app.aaps.core.interfaces.logging.AAPSLogger
+import app.aaps.core.interfaces.logging.LTag
+import app.aaps.core.interfaces.sync.NsClient
+import app.aaps.core.interfaces.notifications.Notification
+import app.aaps.core.interfaces.nsclient.NSAlarm
+import app.aaps.core.interfaces.plugin.ActivePlugin
+import app.aaps.core.interfaces.resources.ResourceHelper
+import app.aaps.core.keys.IntKey
+import app.aaps.core.keys.LongComposedKey
+import app.aaps.core.keys.interfaces.Preferences
+import app.aaps.plugins.main.R
+import dev.zacsweers.metro.Inject
+
+@Suppress("SpellCheckingInspection")
+class NotificationWithAction(
+    private val aapsLogger: AAPSLogger,
+    private val rh: ResourceHelper,
+    private val preferences: Preferences,
+    private val activePlugin: ActivePlugin
+) : Notification() {
+
+    var validityCheck: (() -> Boolean)? = null
+
+    constructor(aapsLogger: AAPSLogger, rh: ResourceHelper, preferences: Preferences, activePlugin: ActivePlugin,
+                id: Int, text: String, level: Int, validityCheck: (() -> Boolean)?) : this(aapsLogger, rh, preferences, activePlugin) {
+        this.id = id
+        date = System.currentTimeMillis()
+        this.text = text
+        this.level = level
+        this.validityCheck = validityCheck
+    }
+
+    constructor(aapsLogger: AAPSLogger, rh: ResourceHelper, preferences: Preferences, activePlugin: ActivePlugin,
+                nsAlarm: NSAlarm) : this(aapsLogger, rh, preferences, activePlugin) {
+        date = System.currentTimeMillis()
+        when (nsAlarm.level) {
+            0 -> {
+                id = Notification.NS_ANNOUNCEMENT
+                level = Notification.ANNOUNCEMENT
+                text = nsAlarm.message
+                validTo = System.currentTimeMillis() + T.mins(60).msecs()
+            }
+
+            1 -> {
+                id = Notification.NS_ALARM
+                level = Notification.NORMAL
+                text = nsAlarm.title
+                soundId = app.aaps.core.ui.R.raw.alarm
+            }
+
+            2 -> {
+                id = Notification.NS_URGENT_ALARM
+                level = Notification.URGENT
+                text = nsAlarm.title
+                soundId = app.aaps.core.ui.R.raw.urgentalarm
+            }
+        }
+        buttonText = app.aaps.core.ui.R.string.snooze
+        action = Runnable {
+            (activePlugin.firstActiveSync as? NsClient)?.handleClearAlarm(nsAlarm, 60 * 60 * 1000L)
+            // Adding current time to snooze if we got staleData
+            aapsLogger.debug(LTag.NOTIFICATION, "Notification text is: $text")
+            val msToSnooze = preferences.get(IntKey.NsClientAlarmStaleData) * 60 * 1000L
+            aapsLogger.debug(LTag.NOTIFICATION, "snooze nsalarm_staledatavalue in minutes is ${T.msecs(msToSnooze).mins()} currentTimeMillis is: ${System.currentTimeMillis()}")
+            preferences.put(LongComposedKey.NotificationSnoozedTo, nsAlarm.level.toString(), value = System.currentTimeMillis() + msToSnooze)
+        }
+    }
+
+    fun action(buttonText: Int, action: Runnable): NotificationWithAction {
+        this.buttonText = buttonText
+        this.action = action
+        return this
+    }
+
+}

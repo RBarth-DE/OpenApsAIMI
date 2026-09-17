@@ -4,7 +4,7 @@ Purpose: enforce repeatable quality gates to prevent freezes and functional regr
 
 Use this file for every merge from `dev` and every release candidate.
 
-**Latest merge log:** [MERGE_DEV_2026-09-06.md](MERGE_DEV_2026-09-06.md) (`dev` @ `283a184f60` → `dev_OAPSAIMI`). Previous: [MERGE_DEV_2026-08-08.md](MERGE_DEV_2026-08-08.md) (`dev` @ `7fc8205e9a`), [MERGE_DEV_2026-08-03.md](MERGE_DEV_2026-08-03.md).
+**Latest merge log:** [MERGE_DEV_2026-09-14.md](MERGE_DEV_2026-09-14.md) (`dev` @ `343f9f7673` → `dev_OAPSAIMI_RB`; KMP layout + Hilt→Metro, 1115 conflicted files). Previous: [MERGE_DEV_2026-09-06.md](MERGE_DEV_2026-09-06.md) (`dev` @ `283a184f60`), [MERGE_DEV_2026-08-08.md](MERGE_DEV_2026-08-08.md) (`dev` @ `7fc8205e9a`), [MERGE_DEV_2026-08-03.md](MERGE_DEV_2026-08-03.md).
 
 ---
 
@@ -22,7 +22,14 @@ Use this file for every merge from `dev` and every release candidate.
       includes, `SourceSensor`, `@IntKey` registrations, AIMI file count, `calibratedOrValue`,
       `dashboardOverview` / `SkinDescriptionProvider`, manifest ML/physio permissions, `patient_story`,
       `runVacuum = false`, `drain()`, notification-reader mappings). Any diff other than line-number shifts
-      must be explained.
+      must be explained. Use `scripts/merge_invariants.sh <rev|post>` — it prints **values, not paths**,
+      because a Kotlin Multiplatform flip moves nearly every file and a path-based diff would report the
+      whole tree as changed:
+      ```bash
+      scripts/merge_invariants.sh premerge-dev-<date> > /tmp/inv_pre.txt
+      scripts/merge_invariants.sh post                   > /tmp/inv_post.txt
+      git diff --no-index /tmp/inv_pre.txt /tmp/inv_post.txt
+      ```
 - [ ] **Failing tests attributed before being accepted.** A red test is only "pre-existing" once the *same*
       task has been run on the pre-merge tag in a separate worktree (`git worktree add --detach <dir>
       premerge-dev-<date>`, copy `local.properties`, `./gradlew -p <dir> <task>`) and shows the identical
@@ -46,6 +53,18 @@ Use this file for every merge from `dev` and every release candidate.
       `:app:assemble<Variant>` **and `:wear:assemble<Variant>`**. `:app:compileFullDebugKotlin` alone never
       exercises `:wear` resource merging or manifest merging, so it can pass while CI fails. Minimum
       post-merge gate: `./gradlew :app:assembleFullDebug :wear:assembleFullDebug`.
+
+- [ ] **A conflict-resolved method body keeps upstream's setup lines.** When a fork feature added lines to a
+      framework callback (`onCreate`, `onStart`, a service's `onCreate`), the conflict can keep the fork's lines
+      and quietly drop upstream's - an `injectMetroMembers(this)`, a `registerReceiver`, a `super` call. It
+      compiles, the APK builds, and the loss only shows at runtime (or as a whole test class failing because the
+      app cannot start). Found once already: the 2026-09-14 merge dropped `injectMetroMembers(this)` from
+      `WearApp.onCreate`. Sweep the upstream side for such a call per file touched this way:
+      ```bash
+      git grep -l "injectMetroMembers" upstream/dev -- '*.kt' | while read -r p; do
+        [ -f "$p" ] && { grep -q injectMetroMembers "$p" || echo "LOST: $p"; }
+      done
+      ```
 
 Notes:
 - No opportunistic refactor during merge conflict resolution.

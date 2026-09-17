@@ -110,8 +110,6 @@ val excludedFiles = mutableSetOf(
     "**/*\$Lambda\$*.*",
     "**/*Companion*.*",
     "**/*Module*.*",
-    "**/*Dagger*.*",
-    "**/*Hilt*.*",
     "**/*MembersInjector*.*",
     "**/*_MembersInjector.class",
     "**/*_Factory*.*",

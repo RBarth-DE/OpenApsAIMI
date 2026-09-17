@@ -11,19 +11,22 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import javax.inject.Inject
-import javax.inject.Singleton
+import dev.zacsweers.metro.AppScope
+import dev.zacsweers.metro.ContributesBinding
+import dev.zacsweers.metro.Inject
+import dev.zacsweers.metro.SingleIn
 
 /**
  * The one radio lease of the process.
  *
- * `@Singleton` and not `@Reusable`: a second copy would hand the same radio to two owners at once,
+ * `@SingleIn(AppScope::class)` and not `@Reusable`: a second copy would hand the same radio to two owners at once,
  * which is the whole thing this class exists to stop.
  *
  * ⚠️ ASYNC IMPACT: [acquire] and [release] are synchronized and do not block. The self release runs
  * on the application scope, so it still fires while the screen that took the lease is long gone.
  */
-@Singleton
+@ContributesBinding(AppScope::class)
+@SingleIn(AppScope::class)
 class BleRadioPriorityImpl @Inject constructor(
     private val aapsLogger: AAPSLogger,
     @ApplicationScope private val scope: CoroutineScope

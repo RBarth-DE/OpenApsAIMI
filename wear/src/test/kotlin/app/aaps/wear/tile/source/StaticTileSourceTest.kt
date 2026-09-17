@@ -35,11 +35,6 @@ class StaticTileSourceTest {
 
     private lateinit var source: ActionSource
 
-    // The settingNames produced by ActionSource.getActions(), in order.
-    private val orderedSettingNames = listOf(
-        "wizard", "treatment", "bolus", "carbs", "ecarbs", "temp_target", "profile_switch"
-    )
-
     @BeforeEach
     fun setup() {
         whenever(context.resources).thenReturn(resources)
@@ -50,6 +45,8 @@ class StaticTileSourceTest {
         whenever(resources.getString(R.string.menu_treatment_short)).thenReturn("treat")
         whenever(resources.getString(R.string.menu_treatment)).thenReturn("Treatment")
         whenever(resources.getString(R.string.action_insulin)).thenReturn("Insulin")
+        whenever(resources.getString(R.string.action_afrezza_short)).thenReturn("Afrezza")
+        whenever(resources.getString(R.string.action_afrezza)).thenReturn("Afrezza label")
         whenever(resources.getString(R.string.action_carbs)).thenReturn("Carbs")
         whenever(resources.getString(R.string.action_ecarbs)).thenReturn("eCarbs")
         whenever(resources.getString(R.string.menu_tempt)).thenReturn("TT")
@@ -99,7 +96,7 @@ class StaticTileSourceTest {
 
         assertThat(actions).hasSize(4)
         // getActions().take(4) => first four settingNames in declaration order.
-        assertThat(actions.map { it.buttonText }).containsExactly("wizard", "treat", "Insulin", "Carbs").inOrder()
+        assertThat(actions.map { it.buttonText }).containsExactly("wizard", "treat", "Insulin", "Afrezza").inOrder()
     }
 
     /** The default config is written exactly once, only when the first default key is absent. */

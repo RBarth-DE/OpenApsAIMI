@@ -63,14 +63,13 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
-import dagger.hilt.android.lifecycle.withCreationCallback
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import app.aaps.compose.navigation.AppRoute
-import app.aaps.compose.navigation.appNavGraph
+import app.aaps.appshell.navigation.AppRoute
+import app.aaps.appshell.navigation.appNavGraph
 import app.aaps.core.data.ue.Sources
 import app.aaps.core.interfaces.bgQualityCheck.BgQualityCheck
 import app.aaps.core.interfaces.clientcontrol.ActionProgress
@@ -84,12 +83,14 @@ import app.aaps.core.interfaces.logging.AAPSLogger
 import app.aaps.core.interfaces.logging.LTag
 import app.aaps.core.interfaces.maintenance.FileListProvider
 import app.aaps.core.interfaces.navigation.ElementType
+import app.aaps.core.interfaces.notifications.AlarmSound
 import app.aaps.core.interfaces.notifications.NotificationId
 import app.aaps.core.interfaces.notifications.NotificationLevel
 import app.aaps.core.interfaces.notifications.NotificationManager
 import app.aaps.core.interfaces.overview.graph.OverviewDataCache
 import app.aaps.core.interfaces.plugin.ActivePlugin
 import app.aaps.core.interfaces.plugin.PluginBase
+import app.aaps.core.interfaces.plugin.PluginPermissions
 import app.aaps.core.interfaces.profile.ProfileUtil
 import app.aaps.core.interfaces.protection.ExportPasswordDataStore
 import app.aaps.core.interfaces.protection.PasswordCheck
@@ -104,8 +105,10 @@ import app.aaps.core.interfaces.rx.events.EventUpdateOverviewIobCob
 import app.aaps.core.interfaces.rx.events.EventShowDialog
 import app.aaps.core.interfaces.source.DexcomBoyda
 import app.aaps.core.interfaces.sync.NsClient
+import app.aaps.core.interfaces.ui.IconsProvider
 import app.aaps.core.interfaces.ui.UiInteraction
 import app.aaps.core.interfaces.utils.DateUtil
+import app.aaps.core.interfaces.utils.DecimalFormatter
 import app.aaps.core.interfaces.utils.fabric.FabricPrivacy
 import app.aaps.core.keys.BooleanKey
 import app.aaps.core.keys.BooleanNonKey
@@ -114,13 +117,17 @@ import app.aaps.core.keys.interfaces.Preferences
 import app.aaps.core.keys.interfaces.VisibilityContext
 import app.aaps.core.objects.crypto.CryptoUtil
 import app.aaps.core.ui.compose.AapsTheme
+import app.aaps.core.ui.compose.AppBrandIcon
+import app.aaps.core.ui.compose.LocalAppIcon
 import app.aaps.core.ui.compose.LocalConfig
 import app.aaps.core.ui.compose.LocalDateUtil
+import app.aaps.core.ui.compose.LocalDecimalFormatter
 import app.aaps.core.ui.compose.LocalMasterControlAllowed
 import app.aaps.core.ui.compose.LocalMasterReachable
 import app.aaps.core.ui.compose.LocalPreferences
 import app.aaps.core.ui.compose.LocalProfileUtil
 import app.aaps.core.ui.compose.LocalSnackbarHostState
+import app.aaps.core.ui.compose.MetroAppCompatActivity
 import app.aaps.core.ui.compose.ProtectionHost
 import app.aaps.core.ui.compose.ScreenMode
 import app.aaps.core.ui.compose.dialogs.GlobalDialogHost
@@ -131,14 +138,13 @@ import app.aaps.core.ui.compose.preference.LocalCheckPassword
 import app.aaps.core.ui.compose.preference.LocalClearExportPasswordStore
 import app.aaps.core.ui.compose.preference.LocalHashPassword
 import app.aaps.core.ui.compose.preference.LocalVisibilityContext
-import app.aaps.core.ui.compose.preference.PreferenceSubScreenDef
 import app.aaps.plugins.aps.openAPSAIMI.orchestration.AimiLoopRuntimeGuard
 import app.aaps.core.ui.compose.pump.PumpActivityDialog
 import app.aaps.core.ui.compose.pump.PumpCommunicationStatus
 import app.aaps.core.ui.locale.LocaleHelper
 import app.aaps.core.ui.search.SearchableItem
 import app.aaps.core.utils.isRunningRealPumpTest
-import app.aaps.implementation.plugin.PluginStore
+import app.aaps.implementation.plugin.PluginPermissionsImpl
 import app.aaps.implementation.protection.BiometricCheck
 import app.aaps.plugins.automation.AutomationRuntime
 import app.aaps.plugins.configuration.setupwizard.SWDefinition
@@ -184,15 +190,13 @@ import app.aaps.plugins.aps.openAPSAIMI.utils.AimiStorageHelper
 import app.aaps.plugins.main.skins.SkinDashboardPreferenceSync
 import app.aaps.plugins.main.skins.SkinProvider
 import com.google.firebase.crashlytics.FirebaseCrashlytics
-import dagger.hilt.android.AndroidEntryPoint
 import io.reactivex.rxjava3.disposables.CompositeDisposable
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.launch
-import javax.inject.Inject
+import dev.zacsweers.metro.Inject
 
 
-@AndroidEntryPoint
-class ComposeMainActivity : AppCompatActivity() {
+class ComposeMainActivity : MetroAppCompatActivity() {
 
     companion object {
         const val EXTRA_NAVIGATE_ROUTE = "extra_navigate_route"
@@ -209,6 +213,7 @@ class ComposeMainActivity : AppCompatActivity() {
     @Inject lateinit var cryptoUtil: CryptoUtil
     @Inject lateinit var exportPasswordDataStore: ExportPasswordDataStore
     @Inject lateinit var activePlugin: ActivePlugin
+    @Inject lateinit var pluginPermissions: PluginPermissions
     @Inject lateinit var nsClient: NsClient
     @Inject lateinit var clientControlActionDispatcher: ClientControlActionDispatcher
     @Inject lateinit var automationRuntime: AutomationRuntime
@@ -222,6 +227,8 @@ class ComposeMainActivity : AppCompatActivity() {
     @Inject lateinit var prefFileList: FileListProvider
     @Inject lateinit var notificationManager: NotificationManager
     @Inject lateinit var dateUtil: DateUtil
+    @Inject lateinit var decimalFormatter: DecimalFormatter
+    @Inject lateinit var iconsProvider: IconsProvider
     @Inject lateinit var builtInSearchables: BuiltInSearchables
     @Inject lateinit var bolusProgressData: BolusProgressData
     @Inject lateinit var commandQueue: CommandQueue
@@ -231,13 +238,15 @@ class ComposeMainActivity : AppCompatActivity() {
     @Inject lateinit var bgQualityCheck: BgQualityCheck
     @Inject lateinit var objectives: Objectives
     @Inject lateinit var chipsViewModelFactory: ChipsViewModel.Factory
+    @Inject lateinit var graphViewModelFactory: GraphViewModel.Factory
     @Inject lateinit var overviewDataCache: OverviewDataCache
 
     private var accessTree: ActivityResultLauncher<Uri?>? = null
     private var requestMultiplePermissions: ActivityResultLauncher<Array<String>>? = null
     private var onPermissionResultDenied: ((List<String>) -> Unit)? = null
 
-    // ViewModels (Hilt-provided via @HiltViewModel)
+    // ViewModels (Metro-provided: each class carries @ContributesIntoMap + @ViewModelKey, and the
+    // plain `by viewModels()` finds them through MetroAppCompatActivity's default factory).
     private val mainViewModel: MainViewModel by viewModels()
     private val manageViewModel: ManageViewModel by viewModels()
     private val maintenanceViewModel: MaintenanceViewModel by viewModels()
@@ -245,13 +254,11 @@ class ComposeMainActivity : AppCompatActivity() {
     private val treatmentViewModel: TreatmentViewModel by viewModels()
     private val scenesViewModel: ScenesViewModel by viewModels()
     private val loopActionViewModel: LoopActionViewModel by viewModels()
-    private val graphViewModel: GraphViewModel by viewModels(
-        extrasProducer = {
-            defaultViewModelCreationExtras.withCreationCallback<GraphViewModel.Factory> { factory ->
-                factory.create(overviewDataCache)
-            }
-        }
-    )
+    private val graphViewModel: GraphViewModel by viewModels {
+        // Same shape as chipsViewModel below. This used to go through Hilt's
+        // `withCreationCallback`, which does not exist now that the graph is Metro's.
+        viewModelFactory { initializer { graphViewModelFactory.create(overviewDataCache, fullWindow = false) } }
+    }
     private val chipsViewModel: ChipsViewModel by viewModels {
         viewModelFactory { initializer { chipsViewModelFactory.create(overviewDataCache) } }
     }
@@ -271,7 +278,9 @@ class ComposeMainActivity : AppCompatActivity() {
     private val siteRotationManagementViewModel: SiteRotationManagementViewModel by viewModels()
 
     private val pumpCommunicationStatus by lazy {
-        PumpCommunicationStatus(rxBus, commandQueue, this, lifecycleScope)
+        // The activity goes in nowhere here any more: the third parameter is a TextResolver now,
+        // where it used to be a Context that this class could hand over as `this`.
+        PumpCommunicationStatus(rxBus, commandQueue, rh, lifecycleScope)
     }
     private var navController: NavHostController? = null
     private val _autoShowNotifications = mutableStateOf(false)
@@ -373,13 +382,17 @@ class ComposeMainActivity : AppCompatActivity() {
         CompositionLocalProvider(
             LocalPreferences provides preferences,
             LocalDateUtil provides dateUtil,
+            LocalDecimalFormatter provides decimalFormatter,
+            // This build's own launcher icon, so the drawer and the About dialog show what the home
+            // screen shows. The client flavours each have their own owl, and IconsProvider picks it.
+            LocalAppIcon provides { modifier -> AppBrandIcon(iconResId = iconsProvider.getIcon(), modifier = modifier) },
             LocalConfig provides config,
             LocalMasterReachable provides masterReachable,
             LocalMasterControlAllowed provides masterControlAllowed,
             LocalProfileUtil provides profileUtil,
             LocalCheckPassword provides cryptoUtil::checkPassword,
             LocalHashPassword provides cryptoUtil::hashPassword,
-            LocalClearExportPasswordStore provides { exportPasswordDataStore.clearPasswordDataStore(this@ComposeMainActivity) },
+            LocalClearExportPasswordStore provides { exportPasswordDataStore.clearPasswordDataStore() },
             LocalVisibilityContext provides visibilityContext
         ) {
             AapsTheme {
@@ -545,10 +558,12 @@ class ComposeMainActivity : AppCompatActivity() {
             protectionCheck = protectionCheck,
             preferences = preferences,
             checkPassword = cryptoUtil::checkPassword,
-            showBiometric = { activity, titleRes, onGranted, onCancelled, onDenied ->
+            // Neither lambda takes the Activity any more: the host is shared code now, so it has no
+            // Activity to hand over. This screen is the Activity, so it fills that in itself.
+            showBiometric = { title, onGranted, onCancelled, onDenied ->
                 BiometricCheck.biometricPrompt(
-                    activity = activity,
-                    title = titleRes,
+                    activity = this@ComposeMainActivity,
+                    title = title,
                     rxBus = rxBus,
                     ok = Runnable { onGranted() },
                     cancel = Runnable { onCancelled() },
@@ -556,10 +571,10 @@ class ComposeMainActivity : AppCompatActivity() {
                     passwordCheck = passwordCheck
                 )
             },
-            showBiometricSimple = { activity, titleRes, onSuccess, onFallback, onCancel ->
+            showBiometricSimple = { title, onSuccess, onFallback, onCancel ->
                 BiometricCheck.biometricPromptSimple(
-                    activity = activity,
-                    title = titleRes,
+                    activity = this@ComposeMainActivity,
+                    title = title,
                     rxBus = rxBus,
                     onSuccess = Runnable { onSuccess() },
                     onFallback = Runnable { onFallback() },
@@ -592,7 +607,7 @@ class ComposeMainActivity : AppCompatActivity() {
                                     snackbarHostState.showSnackbar(getString(app.aaps.plugins.configuration.R.string.alert_dialog_permission_battery_optimization_failed))
                                 }
 
-                            effect.group.permissions.contains(PluginStore.PERMISSION_SELECT_DIRECTORY)                  ->
+                            effect.group.permissions.contains(PluginPermissionsImpl.PERMISSION_SELECT_DIRECTORY)                  ->
                                 try {
                                     accessTree?.launch(null)
                                 } catch (_: Exception) {
@@ -616,7 +631,7 @@ class ComposeMainActivity : AppCompatActivity() {
                                     }
                                 )
 
-                            effect.group.permissions.contains(PluginStore.PERMISSION_NOTIFICATION_LISTENER)             ->
+                            effect.group.permissions.contains(PluginPermissionsImpl.PERMISSION_NOTIFICATION_LISTENER)             ->
                                 startActivity(Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS))
 
                             effect.group.permissions.contains(Manifest.permission.ACCESS_NOTIFICATION_POLICY)          ->
@@ -715,7 +730,7 @@ class ComposeMainActivity : AppCompatActivity() {
                     isSimpleMode = state.isSimpleMode,
                     onNavigate = { request -> handleNavigationRequest(request, navController) },
                     onActionsError = { comment, title ->
-                        uiInteraction.runAlarm(comment, title, app.aaps.core.ui.R.raw.boluserror)
+                        uiInteraction.runAlarm(comment, title, AlarmSound.BOLUS_ERROR)
                     },
                 )
 
@@ -770,6 +785,7 @@ class ComposeMainActivity : AppCompatActivity() {
                     onNavigate = { request -> handleNavigationRequest(request, navController) },
                     onDrawerClosed = { mainViewModel.closeDrawer() },
                     onAboutDialogDismiss = { mainViewModel.setShowAboutDialog(false) },
+                    onOpenBatteryHelp = if (mainViewModel.showBatteryHelp) ({ mainViewModel.openBatteryHelp() }) else null,
                     onMaintenanceSheetDismiss = { mainViewModel.setShowMaintenanceSheet(false) },
                     onDirectoryClick = {
                         try {
@@ -867,6 +883,7 @@ class ComposeMainActivity : AppCompatActivity() {
                 swDefinition = swDefinition,
                 rxBus = rxBus,
                 activePlugin = activePlugin,
+                pluginPermissions = pluginPermissions,
                 automationRuntime = automationRuntime,
                 preferences = preferences,
                 rh = rh,
@@ -876,8 +893,8 @@ class ComposeMainActivity : AppCompatActivity() {
                 persistenceLayer = persistenceLayer,
                 visibilityContext = visibilityContext,
                 onNavigationRequest = { request, nc -> handleNavigationRequest(request, nc) },
-                onShowDeliveryError = { comment, titleResId ->
-                    uiInteraction.runAlarm(comment, rh.gs(titleResId), app.aaps.core.ui.R.raw.boluserror)
+                onShowDeliveryError = { comment, title ->
+                    uiInteraction.runAlarm(comment, rh.gs(title), AlarmSound.BOLUS_ERROR)
                 },
                 withProtection = { protection, action -> withProtection(protection, action) },
                 requestEditModeAuthorization = { onGranted ->
@@ -894,7 +911,6 @@ class ComposeMainActivity : AppCompatActivity() {
                     }
                 },
                 onRequestPermission = { group -> permissionsViewModel.requestPermission(group) },
-                findScreenDef = { key -> findScreenDef(key) },
                 onOpenLegacyXmlPreferences = { pluginSimpleName ->
                     withProtection(ProtectionCheck.Protection.PREFERENCES) {
                         val route = if (pluginSimpleName == null) AppRoute.Preferences.route
@@ -929,42 +945,6 @@ class ComposeMainActivity : AppCompatActivity() {
                 )
             }
         }
-    }
-
-    private val pluginScreenDefsCache: List<PreferenceSubScreenDef> by lazy {
-        activePlugin.getPluginsList().mapNotNull { it.getPreferenceScreenContent() as? PreferenceSubScreenDef }
-    }
-
-    private fun findScreenDef(key: String): PreferenceSubScreenDef? {
-        // Check built-in screens from BuiltInSearchables (including nested subscreens)
-        builtInSearchables.getSearchableItems().forEach { item ->
-            if (item is SearchableItem.Category) {
-                if (item.screenDef.key == key) return item.screenDef
-                val nested = findNestedScreen(item.screenDef, key)
-                if (nested != null) return nested
-            }
-        }
-        // Check plugin screens (including nested subscreens) — cached to avoid walking all plugins on every lookup
-        for (content in pluginScreenDefsCache) {
-            if (content.key == key) return content
-            val nested = findNestedScreen(content, key)
-            if (nested != null) return nested
-        }
-        return null
-    }
-
-    private fun findNestedScreen(
-        screen: PreferenceSubScreenDef,
-        key: String
-    ): PreferenceSubScreenDef? {
-        for (item in screen.items) {
-            if (item is PreferenceSubScreenDef) {
-                if (item.key == key) return item
-                val nested = findNestedScreen(item, key)
-                if (nested != null) return nested
-            }
-        }
-        return null
     }
 
     private var isProtectionCheckActive = false

@@ -1,5 +1,7 @@
 package app.aaps.wear.complications
 
+import dev.zacsweers.metro.HasMemberInjections
+
 import android.app.PendingIntent
 import android.content.ComponentName
 import android.content.Context
@@ -45,6 +47,7 @@ import app.aaps.wear.data.ComplicationData as ComplicationStore
  * changes when the system asks for an update, and the user's own complication slots are not part of
  * it, because complication data only ever reaches the watch face the system has bound.
  */
+@HasMemberInjections
 abstract class CwfBlockComplication : ModernBaseComplicationProviderService() {
 
     companion object {

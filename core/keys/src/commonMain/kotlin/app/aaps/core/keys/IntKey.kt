@@ -1,0 +1,478 @@
+package app.aaps.core.keys
+
+import app.aaps.core.keys.interfaces.BooleanPreferenceKey
+import app.aaps.core.keys.interfaces.ElementVisibility
+import app.aaps.core.keys.interfaces.IntPreferenceKey
+import app.aaps.core.keys.interfaces.PreferenceEnabledCondition
+import app.aaps.core.keys.interfaces.SyncChannel
+import app.aaps.core.keys.interfaces.SyncDirection
+import app.aaps.core.keys.interfaces.SyncSpec
+import app.aaps.core.keys.interfaces.TextRef
+
+enum class IntKey(
+    override val key: String,
+    override val defaultValue: Int,
+    override val min: Int,
+    override val max: Int,
+    override val title: TextRef,
+    override val summary: TextRef? = null,
+    override val preferenceType: PreferenceType = PreferenceType.TEXT_FIELD,
+    private val entriesRefs: Map<Int, TextRef> = emptyMap(),
+    override val defaultedBySM: Boolean = false,
+    override val calculatedDefaultValue: Boolean = false,
+    override val dependency: BooleanPreferenceKey? = null,
+    override val engineeringModeOnly: Boolean = false,
+    override val visibility: ElementVisibility = ElementVisibility.ALWAYS,
+    override val enabledCondition: PreferenceEnabledCondition = PreferenceEnabledCondition.ALWAYS,
+    override val unitType: UnitType = UnitType.NONE,
+    override val sync: SyncSpec? = null
+) : IntPreferenceKey {
+
+    OverviewCarbsButtonIncrement1(
+        key = "carbs_button_increment_1",
+        defaultValue = 5,
+        min = -50,
+        max = 50,
+        title = KeysStrings.pref_title_carbs_button_increment_1,
+        summary = KeysStrings.carb_increment_button_message,
+        defaultedBySM = true,
+        dependency = BooleanKey.OverviewShowCarbsButton,
+        unitType = UnitType.GRAMS,
+        sync = SyncSpec(SyncChannel.Cold, SyncDirection.Bidirectional)
+    ),
+    OverviewCarbsButtonIncrement2(
+        key = "carbs_button_increment_2",
+        defaultValue = 10,
+        min = -50,
+        max = 50,
+        title = KeysStrings.pref_title_carbs_button_increment_2,
+        summary = KeysStrings.carb_increment_button_message,
+        defaultedBySM = true,
+        dependency = BooleanKey.OverviewShowCarbsButton,
+        unitType = UnitType.GRAMS,
+        sync = SyncSpec(SyncChannel.Cold, SyncDirection.Bidirectional)
+    ),
+    OverviewCarbsButtonIncrement3(
+        key = "carbs_button_increment_3",
+        defaultValue = 20,
+        min = -50,
+        max = 50,
+        title = KeysStrings.pref_title_carbs_button_increment_3,
+        summary = KeysStrings.carb_increment_button_message,
+        defaultedBySM = true,
+        dependency = BooleanKey.OverviewShowCarbsButton,
+        unitType = UnitType.GRAMS,
+        sync = SyncSpec(SyncChannel.Cold, SyncDirection.Bidirectional)
+    ),
+    OverviewHypoDuration( "hypo_duration", 60, 15, 180, title = TextRef.Literal(""), defaultedBySM = true),
+    ActivityMonitorIdleEnd( key = "inactivity_idle_end", defaultValue = 6, min = 0, max = 23, title = TextRef.Literal(""), summary = KeysStrings.pref_activ_mon_sum_inactivity_idle_end, defaultedBySM=true, dependency = BooleanKey.ActivityMonitorOvernight),
+    ActivityMonitorIdleStart( key = "inactivity_idle_start", defaultValue = 22, min = 0, max = 23, title = TextRef.Literal(""), summary = KeysStrings.pref_activ_mon_sum_inactivity_idle_start, defaultedBySM=true, dependency = BooleanKey.ActivityMonitorOvernight),
+
+    OverviewCageWarning(
+        key = "statuslights_cage_warning",
+        defaultValue = 48,
+        min = 24,
+        max = 240,
+        title = KeysStrings.pref_title_cage_warning,
+        defaultedBySM = true,
+        unitType = UnitType.HOURS,
+        sync = SyncSpec(SyncChannel.Cold, SyncDirection.Bidirectional)
+    ),
+    OverviewCageCritical(
+        key = "statuslights_cage_critical",
+        defaultValue = 72,
+        min = 24,
+        max = 240,
+        title = KeysStrings.pref_title_cage_critical,
+        defaultedBySM = true,
+        unitType = UnitType.HOURS,
+        sync = SyncSpec(SyncChannel.Cold, SyncDirection.Bidirectional)
+    ),
+    OverviewIageWarning( key = "statuslights_iage_warning", defaultValue = 72, min = 24, max = 240, title = KeysStrings.pref_title_iage_warning, defaultedBySM = true, unitType = UnitType.HOURS, sync = SyncSpec(SyncChannel.Cold, SyncDirection.Bidirectional)),
+    OverviewIageCritical( key = "statuslights_iage_critical", defaultValue = 144, min = 24, max = 240, title = KeysStrings.pref_title_iage_critical, defaultedBySM = true, unitType = UnitType.HOURS, sync = SyncSpec(SyncChannel.Cold, SyncDirection.Bidirectional)),
+    OverviewSageWarning(
+        key = "statuslights_sage_warning",
+        defaultValue = 216,
+        min = 24,
+        max = 720,
+        title = KeysStrings.pref_title_sage_warning,
+        defaultedBySM = true,
+        unitType = UnitType.HOURS,
+        sync = SyncSpec(SyncChannel.Cold, SyncDirection.Bidirectional)
+    ),
+    OverviewSageCritical(
+        key = "statuslights_sage_critical",
+        defaultValue = 240,
+        min = 24,
+        max = 720,
+        title = KeysStrings.pref_title_sage_critical,
+        defaultedBySM = true,
+        unitType = UnitType.HOURS,
+        sync = SyncSpec(SyncChannel.Cold, SyncDirection.Bidirectional)
+    ),
+    OverviewSbatWarning(
+        key = "statuslights_sbat_warning",
+        defaultValue = 25,
+        min = 0,
+        max = 100,
+        title = KeysStrings.pref_title_sbat_warning,
+        defaultedBySM = true,
+        unitType = UnitType.PERCENT,
+        sync = SyncSpec(SyncChannel.Cold, SyncDirection.Bidirectional)
+    ),
+    OverviewSbatCritical(
+        key = "statuslights_sbat_critical",
+        defaultValue = 5,
+        min = 0,
+        max = 100,
+        title = KeysStrings.pref_title_sbat_critical,
+        defaultedBySM = true,
+        unitType = UnitType.PERCENT,
+        sync = SyncSpec(SyncChannel.Cold, SyncDirection.Bidirectional)
+    ),
+    OverviewBageWarning(
+        key = "statuslights_bage_warning",
+        defaultValue = 216,
+        min = 24,
+        max = 1000,
+        title = KeysStrings.pref_title_bage_warning,
+        defaultedBySM = true,
+        unitType = UnitType.HOURS,
+        sync = SyncSpec(SyncChannel.Cold, SyncDirection.Bidirectional)
+    ),
+    OverviewBageCritical(
+        key = "statuslights_bage_critical",
+        defaultValue = 240,
+        min = 24,
+        max = 1000,
+        title = KeysStrings.pref_title_bage_critical,
+        defaultedBySM = true,
+        unitType = UnitType.HOURS,
+        sync = SyncSpec(SyncChannel.Cold, SyncDirection.Bidirectional)
+    ),
+    OverviewResWarning(
+        key = "statuslights_res_warning",
+        defaultValue = 80,
+        min = 0,
+        max = 300,
+        title = KeysStrings.pref_title_res_warning,
+        defaultedBySM = true,
+        unitType = UnitType.INSULIN_INT,
+        sync = SyncSpec(SyncChannel.Cold, SyncDirection.Bidirectional)
+    ),
+    OverviewResCritical(
+        key = "statuslights_res_critical",
+        defaultValue = 10,
+        min = 0,
+        max = 300,
+        title = KeysStrings.pref_title_res_critical,
+        defaultedBySM = true,
+        unitType = UnitType.INSULIN_INT,
+        sync = SyncSpec(SyncChannel.Cold, SyncDirection.Bidirectional)
+    ),
+    OverviewBattWarning(
+        key = "statuslights_bat_warning",
+        defaultValue = 51,
+        min = 0,
+        max = 100,
+        title = KeysStrings.pref_title_batt_warning,
+        defaultedBySM = true,
+        unitType = UnitType.PERCENT,
+        sync = SyncSpec(SyncChannel.Cold, SyncDirection.Bidirectional)
+    ),
+    OverviewBattCritical(
+        key = "statuslights_bat_critical",
+        defaultValue = 26,
+        min = 0,
+        max = 100,
+        title = KeysStrings.pref_title_batt_critical,
+        defaultedBySM = true,
+        unitType = UnitType.PERCENT,
+        sync = SyncSpec(SyncChannel.Cold, SyncDirection.Bidirectional)
+    ),
+    OverviewBolusPercentage(
+        key = "boluswizard_percentage",
+        defaultValue = 100,
+        min = 10,
+        max = 100,
+        title = KeysStrings.pref_title_bolus_percentage,
+        summary = KeysStrings.deliverpartofboluswizard,
+        unitType = UnitType.PERCENT,
+        sync = SyncSpec(SyncChannel.Cold, SyncDirection.Bidirectional)
+    ),
+    OverviewResetBolusPercentageTime( key = "key_reset_boluswizard_percentage_time", defaultValue = 16, min = 6, max = 120, title = KeysStrings.pref_title_reset_bolus_percentage_time, summary = KeysStrings.deliver_part_of_boluswizard_reset_time, defaultedBySM = true, unitType = UnitType.MIN, sync = SyncSpec(SyncChannel.Cold, SyncDirection.Bidirectional)),
+    ProtectionTimeout(
+        key = "protection_timeout",
+        defaultValue = 1,
+        min = 0,
+        max = 180,
+        title = KeysStrings.pref_title_protection_timeout,
+        defaultedBySM = true,
+        unitType = UnitType.SEC,
+        visibility = ElementVisibility.stringNotEmpty { StringKey.ProtectionMasterPassword }
+    ),
+
+    // Protection types sorted by level: 0 (Application) → 1 (Bolus) → 2 (Settings)
+    // Application is independent; Bolus requires Settings to be set
+    ProtectionTypeApplication(
+        key = "application_protection",
+        defaultValue = ProtectionType.NONE.ordinal,
+        min = ProtectionType.NONE.ordinal,
+        max = ProtectionType.CUSTOM_PIN.ordinal,
+        title = KeysStrings.pref_title_protection_type_application,
+        summary = KeysStrings.pref_summary_protection_type_application,
+        preferenceType = PreferenceType.LIST,
+        entriesRefs = mapOf(
+            ProtectionType.NONE.ordinal to KeysStrings.noprotection,
+            ProtectionType.BIOMETRIC.ordinal to KeysStrings.biometric,
+            ProtectionType.MASTER_PASSWORD.ordinal to KeysStrings.master_password,
+            ProtectionType.CUSTOM_PASSWORD.ordinal to KeysStrings.custom_password,
+            ProtectionType.CUSTOM_PIN.ordinal to KeysStrings.custom_pin
+        ),
+        visibility = ElementVisibility.stringNotEmpty { StringKey.ProtectionMasterPassword }
+    ),
+    ProtectionTypeBolus(
+        key = "bolus_protection",
+        defaultValue = ProtectionType.NONE.ordinal,
+        min = ProtectionType.NONE.ordinal,
+        max = ProtectionType.CUSTOM_PIN.ordinal,
+        title = KeysStrings.pref_title_protection_type_bolus,
+        summary = KeysStrings.pref_summary_protection_type_bolus,
+        preferenceType = PreferenceType.LIST,
+        entriesRefs = mapOf(
+            ProtectionType.NONE.ordinal to KeysStrings.noprotection,
+            ProtectionType.BIOMETRIC.ordinal to KeysStrings.biometric,
+            ProtectionType.MASTER_PASSWORD.ordinal to KeysStrings.master_password,
+            ProtectionType.CUSTOM_PASSWORD.ordinal to KeysStrings.custom_password,
+            ProtectionType.CUSTOM_PIN.ordinal to KeysStrings.custom_pin
+        ),
+        visibility = ElementVisibility.stringNotEmpty { StringKey.ProtectionMasterPassword },
+        enabledCondition = PreferenceEnabledCondition { ctx ->
+            ctx.preferences.get(ProtectionTypeSettings) != ProtectionType.NONE.ordinal
+        }
+    ),
+    ProtectionTypeSettings(
+        key = "settings_protection",
+        defaultValue = ProtectionType.NONE.ordinal,
+        min = ProtectionType.NONE.ordinal,
+        max = ProtectionType.CUSTOM_PIN.ordinal,
+        title = KeysStrings.pref_title_protection_type_settings,
+        summary = KeysStrings.pref_summary_protection_type_settings,
+        preferenceType = PreferenceType.LIST,
+        entriesRefs = mapOf(
+            ProtectionType.NONE.ordinal to KeysStrings.noprotection,
+            ProtectionType.BIOMETRIC.ordinal to KeysStrings.biometric,
+            ProtectionType.MASTER_PASSWORD.ordinal to KeysStrings.master_password,
+            ProtectionType.CUSTOM_PASSWORD.ordinal to KeysStrings.custom_password,
+            ProtectionType.CUSTOM_PIN.ordinal to KeysStrings.custom_pin
+        ),
+        visibility = ElementVisibility.stringNotEmpty { StringKey.ProtectionMasterPassword }
+    ),
+    SafetyMaxCarbs(key = "treatmentssafety_maxcarbs", defaultValue = 48, min = 1, max = 200, title = KeysStrings.pref_title_max_carbs, unitType = UnitType.GRAMS, sync = SyncSpec(SyncChannel.Cold, SyncDirection.Bidirectional)),
+    LoopOpenModeMinChange(
+        key = "loop_openmode_min_change",
+        defaultValue = 30,
+        min = 0,
+        max = 50,
+        title = KeysStrings.pref_title_open_mode_min_change,
+        summary = KeysStrings.loop_open_mode_min_change_summary,
+        defaultedBySM = true,
+        unitType = UnitType.PERCENT
+    ),
+    ApsMaxSmbFrequency(
+        key = "smbinterval",
+        defaultValue = 3,
+        min = 1,
+        max = 10,
+        title = KeysStrings.pref_title_smb_frequency,
+        defaultedBySM = true,
+        dependency = BooleanKey.ApsUseSmb,
+        unitType = UnitType.MIN,
+        sync = SyncSpec(SyncChannel.Cold, SyncDirection.Bidirectional)
+    ),
+    ApsMaxMinutesOfBasalToLimitSmb(
+        key = "smbmaxminutes",
+        defaultValue = 30,
+        min = 15,
+        max = 120,
+        title = KeysStrings.pref_title_smb_max_minutes,
+        defaultedBySM = true,
+        dependency = BooleanKey.ApsUseSmb,
+        unitType = UnitType.MIN,
+        sync = SyncSpec(SyncChannel.Cold, SyncDirection.Bidirectional)
+    ),
+    ApsUamMaxMinutesOfBasalToLimitSmb( key = "uamsmbmaxminutes", defaultValue = 30, min = 15, max = 120, title = KeysStrings.pref_title_uam_smb_max_minutes, summary = KeysStrings.uam_smb_max_minutes, defaultedBySM = true, dependency = BooleanKey.ApsUseSmb, unitType = UnitType.MIN, sync = SyncSpec(SyncChannel.Cold, SyncDirection.Bidirectional)),
+    ApsCarbsRequestThreshold(
+        key = "carbsReqThreshold",
+        defaultValue = 1,
+        min = 1,
+        max = 100,
+        title = KeysStrings.pref_title_carbs_request_threshold,
+        summary = KeysStrings.carbs_req_threshold_summary,
+        defaultedBySM = true,
+        unitType = UnitType.GRAMS,
+        sync = SyncSpec(SyncChannel.Cold, SyncDirection.Bidirectional)
+    ),
+    ApsAutoIsfHalfBasalExerciseTarget(
+        key = "half_basal_exercise_target",
+        defaultValue = 160,
+        min = 120,
+        max = 200,
+        title = KeysStrings.pref_title_half_basal_exercise_target,
+        summary = KeysStrings.half_basal_exercise_target_summary,
+        defaultedBySM = true,
+        unitType = UnitType.MGDL,
+        sync = SyncSpec(SyncChannel.Cold, SyncDirection.Bidirectional)
+    ),
+    ApsAutoIsfIobThPercent(
+        key = "iob_threshold_percent",
+        defaultValue = 100,
+        min = 10,
+        max = 100,
+        title = KeysStrings.pref_title_iob_threshold_percent,
+        summary = KeysStrings.openapsama_iob_threshold_percent_summary,
+        defaultedBySM = true,
+        unitType = UnitType.PERCENT,
+        sync = SyncSpec(SyncChannel.Cold, SyncDirection.Bidirectional)
+    ),
+    FslCalibrationDuration( key = "Calibration_Duration", defaultValue =  20, min = 120, max = 20, title = TextRef.Literal(""), defaultedBySM = true),
+    FslMaxSmoothGap( key = "Exp1SmoothGap", defaultValue = 20, min = 110, max = 60, title = TextRef.Literal(""), defaultedBySM = true),
+    FslMinFitMinutes( key = "fslMinMinutes", defaultValue = 20, min = 13, max = 20, title = TextRef.Literal(""), defaultedBySM = true),
+    ApsDynIsfAdjustmentFactor(
+        key = "DynISFAdjust",
+        defaultValue = 100,
+        min = 1,
+        max = 300,
+        title = KeysStrings.pref_title_dynisf_adjustment_factor,
+        summary = KeysStrings.dyn_isf_adjust_summary,
+        dependency = BooleanKey.ApsUseDynamicSensitivity,
+        unitType = UnitType.PERCENT,
+        sync = SyncSpec(SyncChannel.Cold, SyncDirection.Bidirectional)
+    ),
+    AutosensPeriod( key = "openapsama_autosens_period", defaultValue = 24, min = 4, max = 24, title = KeysStrings.pref_title_autosens_period, summary = KeysStrings.openapsama_autosens_period_summary, unitType = UnitType.HOURS, sync = SyncSpec(SyncChannel.Cold, SyncDirection.Bidirectional)),
+    MaintenanceLogsAmount(key = "maintenance_logs_amount", defaultValue = 2, min = 1, max = 10, title = KeysStrings.pref_title_logs_amount, defaultedBySM = true),
+    AlertsStaleDataThreshold(
+        key = "missed_bg_readings_threshold",
+        defaultValue = 30,
+        min = 15,
+        max = 10000,
+        title = KeysStrings.pref_title_stale_data_threshold,
+        defaultedBySM = true,
+        dependency = BooleanKey.AlertMissedBgReading,
+        unitType = UnitType.MIN
+    ),
+    AlertsPumpUnreachableThreshold(
+        key = "pump_unreachable_threshold",
+        defaultValue = 30,
+        min = 30,
+        max = 300,
+        title = KeysStrings.pref_title_pump_unreachable_threshold,
+        defaultedBySM = true,
+        dependency = BooleanKey.AlertPumpUnreachable,
+        unitType = UnitType.MIN
+    ),
+    AlertRapidFallWindow(
+        key = "alert_rapid_fall_window",
+        defaultValue = 15,
+        min = 5,
+        max = 30,
+        title = KeysStrings.pref_title_alert_rapid_fall_window,
+        dependency = BooleanKey.AlertRapidFall,
+        unitType = UnitType.MIN
+    ),
+
+    AutotuneDefaultTuneDays(key = "autotune_default_tune_days", defaultValue = 5, min = 1, max = 30, title = KeysStrings.pref_title_autotune_days, summary = KeysStrings.autotune_default_tune_days_summary, unitType = UnitType.DAYS),
+
+    SmsRemoteBolusDistance(
+        key = "smscommunicator_remotebolusmindistance",
+        defaultValue = 15,
+        min = 3,
+        max = 60,
+        title = KeysStrings.pref_title_sms_remote_bolus_distance,
+        unitType = UnitType.MIN,
+        // Enabled only when multiple phone numbers are configured (2FA requirement)
+        enabledCondition = PreferenceEnabledCondition { ctx ->
+            val allowedNumbers = ctx.preferences.get(StringKey.SmsAllowedNumbers)
+            allowedNumbers.split(";").filter { it.trim().isNotEmpty() }.size >= 2
+        }
+    ),
+
+    BgSourceRandomInterval(key = "randombg_interval_min", defaultValue = 5, min = 1, max = 15, title = KeysStrings.pref_title_random_bg_interval, defaultedBySM = true, unitType = UnitType.MIN),
+    NsClientAlarmStaleData(key = "ns_alarm_stale_data_value", defaultValue = 16, min = 15, max = 120, title = KeysStrings.pref_title_alarm_stale_data, unitType = UnitType.MIN),
+    NsClientUrgentAlarmStaleData(key = "ns_alarm_urgent_stale_data_value", defaultValue = 31, min = 30, max = 180, title = KeysStrings.pref_title_urgent_alarm_stale_data, unitType = UnitType.MIN),
+
+    SiteRotationUserProfile( key = "site_rotation_user_profile", defaultValue = 0, min = 0, max = 2, title = KeysStrings.pref_title_site_rotation_profile, preferenceType = PreferenceType.LIST, sync = SyncSpec(SyncChannel.Cold, SyncDirection.Bidirectional)),
+    ApsBoostPostExerciseMinDuration( "boost_post_exercise_min_duration", 10, 1, 120, title = TextRef.Literal(""), summary = KeysStrings.pref_summary_boost_post_exercise_min, defaultedBySM = true),
+    ApsBoostHealthConnectPollMin( "boost_health_connect_poll_min", 5, 1, 30, title = TextRef.Literal(""), summary = KeysStrings.pref_summary_boost_health_connect_poll, defaultedBySM = true),
+    ApsBoostWakeHrHysteresisMin( "boost_wake_hr_hysteresis_min", 5, 2, 15, title = TextRef.Literal(""), summary = KeysStrings.pref_summary_boost_wake_hr_hysteresis, defaultedBySM = true),
+    ApsBoostSleepHysteresisMin( "boost_sleep_hysteresis_min", 10, 5, 30, title = TextRef.Literal(""), summary = KeysStrings.pref_summary_boost_sleep_hysteresis, defaultedBySM = true),
+    ApsBoostPreSleepLeadMin( "boost_pre_sleep_lead_min", 60, 0, 180, title = TextRef.Literal(""), summary = KeysStrings.pref_summary_boost_pre_sleep_lead, defaultedBySM = true),
+    ApsBoostHrWindowMinutes( "boost_hr_window_minutes", 15, 5, 60, title = TextRef.Literal(""), summary = KeysStrings.pref_summary_boost_hr_window_minutes, defaultedBySM = true),
+    ApsBoostHrRestingBpm( "boost_hr_resting_bpm", 60, 30, 100, title = TextRef.Literal(""), summary = KeysStrings.pref_summary_boost_hr_resting, defaultedBySM = true),
+    ApsBoostHrMaxBpm( "boost_hr_max_bpm", 180, 150, 220, title = TextRef.Literal(""), summary = KeysStrings.pref_summary_boost_hr_max, defaultedBySM = true),
+    ApsBoostDynIsfAdjustmentFactor( "DynISFAdjust", 100, 1, 300, title = TextRef.Literal(""), summary = KeysStrings.pref_summary_boost_dynisf_adjust),
+    ApsBoostActivitySteps60( "boost_activity_steps_60", 1800, 0, 10000, title = KeysStrings.boost_activity_steps_60_title, summary = KeysStrings.pref_summary_boost_activity_steps_60, defaultedBySM = true),
+    ApsBoostActivitySteps30( "boost_activity_steps_30", 1200, 0, 10000, title = KeysStrings.boost_activity_steps_30_title, summary = KeysStrings.pref_summary_boost_activity_steps_30, defaultedBySM = true),
+    ApsBoostActivitySteps15( "boost_activity_steps_15", 800, 0, 10000, title = KeysStrings.boost_activity_steps_15_title, summary = KeysStrings.pref_summary_boost_activity_steps_15, defaultedBySM = true),
+    ApsBoostActivitySteps5( "boost_activity_steps_5", 420, 0, 5000, title = KeysStrings.boost_activity_steps_5_title, summary = KeysStrings.pref_summary_boost_activity_steps_5, defaultedBySM = true),
+    ApsBoostSleepInSteps( "boost_sleep_in_steps", 250, 0, 1000, title = KeysStrings.boost_sleep_in_steps_title, summary = KeysStrings.pref_summary_boost_sleep_in_steps, defaultedBySM = true),
+    ApsBoostInactivitySteps( "boost_inactivity_steps", 500, 0, 1000, title = KeysStrings.boost_inactivity_steps_title, summary = KeysStrings.pref_summary_boost_inactivity_steps, defaultedBySM = true),
+    AimiEmergencySosStaleThreshold(
+        key = "aimi_emergency_sos_stale_threshold",
+        defaultValue = 30,
+        min = 15,
+        max = 120,
+        title = KeysStrings.pref_title_aimi_sos_stale_threshold,
+        summary = KeysStrings.pref_summary_aimi_sos_stale_threshold,
+        dependency = BooleanKey.AimiEmergencySosEnable,
+        unitType = UnitType.MIN),
+    AimiEmergencySosImmediateThreshold(
+        key = "aimi_emergency_sos_immediate_threshold",
+        defaultValue = 55,
+        min = 40,
+        max = 200,
+        title = KeysStrings.pref_title_aimi_sos_immediate_threshold,
+        summary = KeysStrings.pref_summary_aimi_sos_immediate_threshold,
+        dependency = BooleanKey.AimiEmergencySosEnable,
+        unitType = UnitType.MGDL),
+    AimiEmergencySosThreshold(
+        key = "aimi_emergency_sos_threshold",
+        defaultValue = 70,
+        min = 55,
+        max = 200,
+        title = KeysStrings.pref_title_aimi_sos_threshold,
+        summary = KeysStrings.pref_summary_aimi_sos_threshold,
+        dependency = BooleanKey.AimiEmergencySosEnable,
+        unitType = UnitType.MGDL),
+    AimiCosineGateMaxPeakShift( "aimi_cosine_gate_max_shift", 15, 0, 60, title = TextRef.Literal("")),
+    ApsKetoacidosisProtectionBasal( key = "ketoacidosis_protection_basal", defaultValue = 20, min = 10, max = 40, title = KeysStrings.ketoacidosis_protection_basal_title, summary = KeysStrings.ketoacidosis_protection_basal_summary, defaultedBySM = true),
+    AimiEndometriosisFlareDuration( "aimi_endo_flare_duration", 4, 1, 24, title = TextRef.Literal("")),
+    AimiAuditorMinConfidence( "aimi_auditor_min_confidence", 65, 50, 95, title = KeysStrings.aimi_auditor_min_confidence_title),
+    AimiAuditorTimeoutSeconds( "aimi_auditor_timeout_seconds", 120, 30, 300, title = TextRef.Literal("")),  // API timeout (seconds)
+    AimiAuditorMaxPerHour( "aimi_auditor_max_per_hour", 12, 1, 30, title = TextRef.Literal("")),
+    OApsAIMIIntratickStallSeconds( "key_aimi_intratick_stall_seconds", 180, 60, 600, title = TextRef.Literal("")),
+    OApsAIMIZeroResumeMax( key = "OApsAIMIZeroResumeMax", defaultValue = 30, min = 10, max = 60, title = TextRef.Literal("")),
+    OApsAIMIZeroResumeMin( key = "OApsAIMIZeroResumeMin", defaultValue = 10, min = 5, max = 30, title = TextRef.Literal("")),  // délai avant micro-reprise (minutes à 0)
+    OApsAIMIKickerMaxMin( key = "OApsAIMIKickerMaxMin", defaultValue = 30, min = 10, max = 60, title = TextRef.Literal("")),  // durée max du “kick” plateau (min)
+    OApsAIMIKickerStartMin( key = "OApsAIMIKickerStartMin", defaultValue = 10, min = 5, max = 30, title = TextRef.Literal("")),  // durée initiale du “kick” plateau (min)
+    OApsAIMIlogsize( "key_oaps_aimi_logsize", 25, 1, 50, title = TextRef.Literal("")),
+    OApsAIMINightGrowthDecayMinutes( "key_oaps_aimi_ngr_decay_minutes", 20, 0, 120, title = TextRef.Literal("")),
+    OApsAIMINightGrowthMinEventualOverTarget( "key_oaps_aimi_ngr_min_eventual_over_target", 15, 0, 120, title = TextRef.Literal("")),
+    OApsAIMINightGrowthMinDurationMin( "key_oaps_aimi_ngr_min_duration", 30, 5, 240, title = TextRef.Literal("")),
+    OApsAIMINightGrowthAgeYears( "key_oaps_aimi_ngr_age_years", 14, 1, 25, title = TextRef.Literal("")),
+    OApsAIMIWCycleAvgLength( "key_wcycle_avg_length", 28, 20, 90, title = TextRef.Literal("")),
+    OApsAIMIAutodriveBG( "key_oaps_aimi_autodriveBG", 90, 1, 160, title = TextRef.Literal("")),
+    OApsAIMIAutodriveTarget( "key_oaps_aimi_autodriveTarget", 70, 1, 160, title = TextRef.Literal("")),
+    OApsAIMISleepinterval( "key_oaps_aimi_sleep_interval", 3, 1, 20, title = TextRef.Literal(""), defaultedBySM = true),
+    OApsAIMIBFinterval( "key_oaps_aimi_BF_interval", 3, 1, 20, title = TextRef.Literal(""), defaultedBySM = true),
+    OApsAIMISnackinterval( "key_oaps_aimi_snack_interval", 3, 1, 20, title = TextRef.Literal(""), defaultedBySM = true),
+    OApsAIMIHCinterval( "key_oaps_aimi_HC_interval", 3, 1, 20, title = TextRef.Literal(""), defaultedBySM = true),
+    OApsAIMIDinnerinterval( "key_oaps_aimi_dinner_interval", 3, 1, 20, title = TextRef.Literal(""), defaultedBySM = true),
+    OApsAIMILunchinterval( "key_oaps_aimi_lunch_interval", 3, 1, 20, title = TextRef.Literal(""), defaultedBySM = true),
+    OApsAIMImealinterval( "key_oaps_aimi_meal_interval", 3, 1, 20, title = TextRef.Literal(""), defaultedBySM = true),
+    OApsAIMIHighBGinterval( "key_oaps_aimi_highBG_interval", 3, 1, 20, title = TextRef.Literal(""), defaultedBySM = true),
+    GarminLocalHttpPort( "communication_http_port", 28891, 1001, 65535, title = TextRef.Literal(""), defaultedBySM = true),
+    ;
+
+    override val entries: Map<Int, TextRef> = entriesRefs
+}

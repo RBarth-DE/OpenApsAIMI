@@ -95,9 +95,9 @@ class ApexPumpPlugin @Inject constructor(
 ), Pump, PluginConstraints {
 
     init {
-        preferences.registerPreferences(ApexBooleanKey::class.java)
-        preferences.registerPreferences(ApexDoubleKey::class.java)
-        preferences.registerPreferences(ApexStringKey::class.java)
+        preferences.registerPreferences(ApexBooleanKey.entries)
+        preferences.registerPreferences(ApexDoubleKey.entries)
+        preferences.registerPreferences(ApexStringKey.entries)
     }
 
     private val disposable = CompositeDisposable()

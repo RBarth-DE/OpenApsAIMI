@@ -1,37 +1,35 @@
-
-import org.gradle.kotlin.dsl.debugImplementation
 import java.text.SimpleDateFormat
 import java.util.Date
-import org.gradle.kotlin.dsl.dependencies
-import org.gradle.kotlin.dsl.project
-
-// Fixes errors in KSP task dependency
-import org.gradle.api.GradleException
 
 plugins {
-    alias(libs.plugins.ksp)
     alias(libs.plugins.compose.compiler)
-    alias(libs.plugins.hilt)
     id("com.android.application")
-    // kotlin("android")
-    // kotlin("kapt")
-    //alias(libs.plugins.ksp)
     id("com.google.gms.google-services")
     id("com.google.firebase.crashlytics")
     id("android-app-dependencies")
     id("test-app-dependencies")
     id("jacoco-app-dependencies")
+    // Metro must be applied here too: createGraphFactory is a compiler intrinsic, not a library call, so
+    // the module that CREATES a graph needs the plugin. Koin needed no such thing (koinApplication is
+    // an ordinary function) and kotlin-inject only needed the generated create() on the classpath.
+    // It must come AFTER the plugin that registers the kotlin extension, or it fails to apply.
+    alias(libs.plugins.metro)
 }
 
 repositories {
     mavenCentral()
-    google()
     maven("https://jitpack.io")
+    google()
 }
 
+// `--exclude=ios-testflight-*`, because such a tag names one past iOS submission rather than this
+// build. `git describe` takes the nearest annotated tag whatever the distance, so a single TestFlight
+// tag made every later build announce itself as "ios-testflight-20260906-085036-44-g45d9d88" - in the
+// About dialog and in every log line. All four shells exclude it, iOS included: 53 commits past that
+// submission, calling yourself by its name is wrong there too.
 fun generateGitBuild(): String {
     try {
-        val processBuilder = ProcessBuilder("git", "describe", "--always", "--abbrev=7")
+        val processBuilder = ProcessBuilder("git", "describe", "--always", "--abbrev=7", "--exclude=ios-testflight-*")
         val output = File.createTempFile("git-build", "")
         processBuilder.redirectOutput(output)
         val process = processBuilder.start()
@@ -42,57 +40,95 @@ fun generateGitBuild(): String {
     }
 }
 
-fun DependencyHandler.`kapt`(dependencyNotation: Any): Dependency? =
-    add("kapt", dependencyNotation)
-
-// -----------------------------------------------------------------------------
-// Fonctions personnalisées
-// -----------------------------------------------------------------------------
-// ─── Git providers — configuration cache compatible ───────────────────────────
-fun gitExec(vararg args: String): Provider<String> =
-    providers.exec {
-        commandLine("git", *args)
-        isIgnoreExitValue = true          // don't throw on non-zero exit
-    }.standardOutput.asText.map { it.trim() }
-
-val gitDescribeProvider  = gitExec("describe", "--always")
-val gitRemoteProvider    = gitExec("remote", "get-url", "origin")
-val gitAvailableProvider = gitExec("--version").map { it.isNotEmpty() }
-val gitStatusProvider    = gitExec("status", "-s").map { output ->
-    output
-        .replace(Regex("""(?m)^\s*(M|A|D|\?\?)\s*.*?\.idea\/codeStyles\/.*?\s*$"""), "")
-        .replace(Regex("""(?m)^\s*(\?\?)\s*.*?\s*$"""), "")
-        .trim().isEmpty()
+fun generateGitRemote(): String {
+    try {
+        val processBuilder = ProcessBuilder("git", "remote", "get-url", "origin")
+        val output = File.createTempFile("git-remote", "")
+        processBuilder.redirectOutput(output)
+        val process = processBuilder.start()
+        process.waitFor()
+        return output.readText().trim()
+    } catch (_: Exception) {
+        return "NoGitSystemAvailable"
+    }
 }
 
 fun generateDate(): String {
-    return SimpleDateFormat("yyyy.MM.dd HH:mm").format(Date())
+    val stringBuilder: StringBuilder = StringBuilder()
+    // showing only date prevents app to rebuild everytime
+    stringBuilder.append(SimpleDateFormat("yyyy.MM.dd").format(Date()))
+    return stringBuilder.toString()
 }
 
 fun isMaster(): Boolean = !Versions.appVersion.contains("-")
 
-// ─────────────────────────────────────────────────────────────────────────────
+fun gitAvailable(): Boolean {
+    try {
+        val processBuilder = ProcessBuilder("git", "--version")
+        val output = File.createTempFile("git-version", "")
+        processBuilder.redirectOutput(output)
+        val process = processBuilder.start()
+        process.waitFor()
+        return output.readText().isNotEmpty()
+    } catch (_: Exception) {
+        return false
+    }
+}
 
-// -----------------------------------------------------------------------------
-// Configuration Android
-// -----------------------------------------------------------------------------
+fun allCommitted(): Boolean {
+    try {
+        val processBuilder = ProcessBuilder("git", "status", "-s")
+        val output = File.createTempFile("git-comited", "")
+        processBuilder.redirectOutput(output)
+        val process = processBuilder.start()
+        process.waitFor()
+        return output.readText().replace(Regex("""(?m)^\s*(M|A|D|\?\?)\s*.*?\.idea\/codeStyles\/.*?\s*$"""), "")
+            // ignore all files added to project dir but not staged/known to GIT
+            .replace(Regex("""(?m)^\s*(\?\?)\s*.*?\s*$"""), "").trim().isEmpty()
+    } catch (_: Exception) {
+        return false
+    }
+}
+
+
+/**
+ * Which module owns which string names, generated rather than hand written.
+ *
+ * Android resolves through AAPT, so this registers the `R.string` id maps and every translation
+ * keeps working. The list is `StringOwnerModules.ALL`, shared with the desktop and iOS shells, so a
+ * module cannot be registered on one platform and forgotten on another.
+ */
+val generateAppStringOwners = tasks.register<GenerateStringOwnerRegistryTask>("generateAppStringOwners") {
+    owners.set(StringOwnerModules.ALL)
+    packageName.set("app.aaps.di")
+    objectName.set("GeneratedStringOwners")
+    useResourceIds.set(true)
+    outputDir.set(layout.buildDirectory.dir("generated/stringOwners"))
+}
+
+// AGP will not take a Provider through the SourceSet API, so the directory is attached per variant.
+// addGeneratedSourceDirectory also wires the task dependency, which a bare srcDir would not.
+androidComponents {
+    onVariants { variant ->
+        variant.sources.kotlin?.addGeneratedSourceDirectory(generateAppStringOwners, GenerateStringOwnerRegistryTask::outputDir)
+    }
+}
 android {
-    compileSdk = Versions.compileSdk
 
     namespace = "app.aaps"
 
     defaultConfig {
-        minSdk    = Versions.minSdk
+        minSdk = Versions.minSdk
         targetSdk = Versions.targetSdk
 
-        buildConfigField("String", "VERSION",      "\"$version\"")
-        buildConfigField("String", "BUILDVERSION", "\"${gitDescribeProvider.getOrElse("NoGitSystemAvailable")}-${generateDate()}\"")
-        buildConfigField("String", "REMOTE",       "\"${gitRemoteProvider.getOrElse("NoGitSystemAvailable")}\"")
-        buildConfigField("String", "HEAD",         "\"${gitDescribeProvider.getOrElse("NoGitSystemAvailable")}\"")
-        buildConfigField("String", "COMMITTED",    "\"${gitStatusProvider.getOrElse(false)}\"")
+        buildConfigField("String", "VERSION", "\"$version\"")
+        buildConfigField("String", "BUILDVERSION", "\"${generateGitBuild()}-${generateDate()}\"")
+        buildConfigField("String", "REMOTE", "\"${generateGitRemote()}\"")
+        buildConfigField("String", "HEAD", "\"${generateGitBuild()}\"")
+        buildConfigField("String", "COMMITTED", "\"${allCommitted()}\"")
 
-        // For Hilt injected instrumentation tests in app module
-        testInstrumentationRunner = "app.aaps.runners.HiltTestRunner"
+        // Runner for instrumentation tests in this module.
+        testInstrumentationRunner = "app.aaps.runners.AapsTestRunner"
     }
 
     flavorDimensions += "standard"
@@ -140,38 +176,6 @@ android {
         }
     }
 
-    // -------------------------------------------------------------------------
-    // Configuration de signature (release)
-    // -------------------------------------------------------------------------
-    signingConfigs {
-        // On peut l'appeler "release" ou un autre nom
-        create("release") {
-            // Seule storeFile attend un File
-            storeFile = file(System.getenv("KEYSTORE_FILE") ?: "dummy.jks")
-            // Les autres sont des Strings
-            storePassword = System.getenv("KEYSTORE_PASSWORD") ?: "dummy"
-            keyAlias = System.getenv("KEY_ALIAS") ?: "dummy"
-            keyPassword = System.getenv("KEY_PASSWORD") ?: "dummy"
-        }
-    }
-
-    // -------------------------------------------------------------------------
-    // Build Types
-    // -------------------------------------------------------------------------
-    buildTypes {
-        getByName("release") {
-            // Active ou non le minify
-            // minifyEnabled true
-            // shrinkResources true
-
-            // Associe la config "release"
-            signingConfig = signingConfigs.getByName("release")
-        }
-        getByName("debug") {
-            // config debug
-        }
-    }
-
     useLibrary("org.apache.http.legacy")
 
     buildFeatures {
@@ -180,47 +184,6 @@ android {
         resValues = true
     }
 
-    // ---- Gradle Managed Devices (DRAFT — not yet wired into .circleci/config.yml) -----------------
-    // Splits the app module's androidTest suite across emulators WITHOUT hand-rolling coverage or
-    // result collection: AGP owns the emulator lifecycle and merges each shard's JaCoCo .ec files and
-    // JUnit XMLs through the normal pipeline, so jacocoAllDebugReport / Codecov keep working. The
-    // system image mirrors the hand-launched CI emulator (android-31, google_apis_playstore, x86_64);
-    // adopting this replaces the `emulator -avd citest` + taskset launch in the CI config, so it is a
-    // real change to that file — kept here as a reviewable draft.
-    //
-    // Two ways to drive it (choose in the CI config):
-    //   1. AUTO-shard by test COUNT across N instances of `emu` — annotations unused, a new test
-    //      distributes itself, zero maintenance, but balance is approximate (count, not time):
-    //        ./gradlew :app:emuFullDebugAndroidTest \
-    //          -Pandroid.experimental.androidTest.numManagedDeviceShards=2
-    //   2. EXPLICIT time-balance via the @ShardA annotation (the ~278s/277s split we measured) —
-    //      run each shard as its own task, filtered, on its own device:
-    //        :app:emuAFullDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.annotation=app.aaps.testcategories.ShardA
-    //        :app:emuBFullDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.notAnnotation=app.aaps.testcategories.ShardA
-    //      Caveat: two Gradle invocations of the same module collide on build outputs, so option 2
-    //      needs them serialised or in separate checkouts. Option 1 is the simpler parallel path;
-    //      option 2 buys guaranteed balance for this lopsided suite at the cost of that orchestration.
-    testOptions {
-        managedDevices {
-            localDevices {
-                create("emu") {   // for option 1 (auto-shard: numManagedDeviceShards=2 spins up 2 instances)
-                    device = "Pixel 6"
-                    apiLevel = 31
-                    systemImageSource = "google_apis_playstore"
-                }
-                create("emuA") {  // for option 2 (explicit @ShardA balance across two devices)
-                    device = "Pixel 6"
-                    apiLevel = 31
-                    systemImageSource = "google_apis_playstore"
-                }
-                create("emuB") {
-                    device = "Pixel 6"
-                    apiLevel = 31
-                    systemImageSource = "google_apis_playstore"
-                }
-            }
-        }
-    }
 
     sourceSets {
         getByName("full") { kotlin.directories.add("src/withPumps/kotlin") }
@@ -230,35 +193,24 @@ android {
     }
 }
 
-// -----------------------------------------------------------------------------
-// allprojects / repositories
-// -----------------------------------------------------------------------------
 allprojects {
     repositories {
-        mavenCentral()
-        google()
     }
 }
 
-// -----------------------------------------------------------------------------
-// Dependencies
-// -----------------------------------------------------------------------------
 dependencies {
     implementation(project(":shared:impl"))
     implementation(project(":core:data"))
     implementation(project(":core:objects"))
-    implementation(project(":core:graph"))
     implementation(project(":core:interfaces"))
     implementation(project(":core:keys"))
     implementation(project(":core:nssdk"))
     implementation(project(":core:utils"))
     implementation(project(":core:ui"))
     implementation(project(":ui"))
-    // Feature plugins self-register into the Hilt plugin map (see e.g. :plugins:smoothing SmoothingModule).
-    // Adding/removing a plugin is therefore just an include in settings.gradle — no edit needed here.
-    rootProject.subprojects
-        .filter { it.path.startsWith(":plugins:") && it.buildFile.exists() }
-        .forEach { implementation(project(it.path)) }
+    // The shell carries the navigation graph and, with it, the feature plugins - as `api`, so the DI
+    // graph built here still sees every plugin that self-registers into the plugin map.
+    implementation(project(":appshell"))
     implementation(project(":implementation"))
     implementation(project(":database:impl"))
     implementation(project(":database:persistence"))
@@ -271,8 +223,7 @@ dependencies {
     //  - :pump:combov2:comboctl is a support lib pulled in transitively by :pump:combov2
     // buildFile.exists() skips the phantom :pump:omnipod container Gradle auto-creates from the
     // nested :pump:omnipod:* includes (it has no build script / no consumable variant).
-    //  - :pump:apex is fork WIP (in settings.gradle but was never wired into app dependencies)
-    val pumpExclusions = setOf(":pump:virtual", ":pump:combov2:comboctl", ":pump:apex")
+    val pumpExclusions = setOf(":pump:virtual", ":pump:combov2:comboctl")
     rootProject.subprojects
         .filter { it.path.startsWith(":pump:") && it.path !in pumpExclusions && it.buildFile.exists() }
         .forEach {
@@ -286,14 +237,12 @@ dependencies {
     androidTestImplementation(project(":shared:tests"))
     androidTestImplementation(libs.androidx.test.rules)
     // UiAutomator for the in-process E2E UI test (app/src/androidTest/.../e2e). Drives the real
-    // Compose UI (booted under the Hilt test app) via the accessibility bridge.
+    // Compose UI via the accessibility bridge.
     androidTestImplementation(libs.androidx.test.uiautomator)
     // Initializes WorkManager for instrumented tests (BaseTestApp), since the production
-    // Configuration.Provider/manifest initializer don't apply under the Hilt test application.
+    // Configuration.Provider/manifest initializer do not apply under the test application.
     androidTestImplementation(libs.androidx.work.testing)
-    androidTestImplementation(libs.org.skyscreamer.jsonassert) {
-        exclude(group = "org.json", module = "json")
-    }
+    androidTestImplementation(libs.org.skyscreamer.jsonassert)
     androidTestImplementation(libs.kotlinx.coroutines.test)
     // Rhino is needed by the openAPS adapter test fixtures under app/src/androidTest
     // (these files reference org.mozilla.javascript.* classes directly).
@@ -301,30 +250,12 @@ dependencies {
 
     debugImplementation(libs.com.squareup.leakcanary.android)
 
-    /* Dagger2 - We are going to use dagger.android which includes
-     * support for Activity and fragment injection so we need to include
-     * the following dependencies */
-    ksp(libs.com.google.dagger.android.processor)
-    ksp(libs.com.google.dagger.compiler)
-    implementation(libs.com.google.dagger.hilt.android)
-    ksp(libs.com.google.dagger.hilt.compiler)
-    // Hilt WorkManager integration: HiltWorkerFactory + @HiltWorker assisted-injection glue.
-    // androidx.hilt:hilt-compiler is a SEPARATE annotation processor from the dagger hilt-compiler above.
-    implementation(libs.androidx.hilt.work)
-    ksp(libs.androidx.hilt.compiler)
-    // Hilt instrumentation testing: lets androidTest reuse the production @InstallIn graph
-    // (single source of truth) with @TestInstallIn overrides instead of a hand-maintained component.
-    androidTestImplementation(libs.com.google.dagger.hilt.android.testing)
-    // KSP no longer inherits main-config processors into androidTest (KSP 2.3.10+), so the Hilt
-    // test-app (@CustomTestApplication → HiltTestApplication_Application) and @HiltAndroidTest
-    // graph must be generated by registering the processors on the androidTest config explicitly.
-    kspAndroidTest(libs.com.google.dagger.hilt.compiler)
-    kspAndroidTest(libs.com.google.dagger.compiler)
-    kspAndroidTest(libs.com.google.dagger.android.processor)
+
+
 
     // MainApp
-    api(libs.com.uber.rxdogtag2.rxdogtag)
-    // MPAndroidChart for comparator
+    implementation(libs.com.uber.rxdogtag2.rxdogtag)
+    // Fork dashboard graphs (MPAndroidChart via jitpack)
     implementation("com.github.PhilJay:MPAndroidChart:v3.1.0")
     // Remote config
     api(libs.com.google.firebase.config)
@@ -332,22 +263,16 @@ dependencies {
     api(libs.androidx.compose.navigation)
 }
 
-// -----------------------------------------------------------------------------
-// Dernières lignes (messages console)
-// -----------------------------------------------------------------------------
-println("-------------------")
-println("isMaster: ${isMaster()}")   // fine — only reads Versions.appVersion, no git
-println("gitAvailable: ${gitAvailableProvider.getOrElse(false)}")
-println("allCommitted: ${gitStatusProvider.getOrElse(false)}")
-println("-------------------")
 
-if (!gitAvailableProvider.getOrElse(false)) {
-    throw GradleException(
-        "GIT system is not available. On Windows try to run Android Studio as an Administrator. " +
-            "Check if GIT is installed and Studio have permissions to use it"
-    )
+println("-------------------")
+println("isMaster: ${isMaster()}")
+println("gitAvailable: ${gitAvailable()}")
+println("allCommitted: ${allCommitted()}")
+println("-------------------")
+if (!gitAvailable()) {
+    throw GradleException("GIT system is not available. On Windows try to run Android Studio as an Administrator. Check if GIT is installed and Studio have permissions to use it")
+}
+if (isMaster() && !allCommitted()) {
+    throw GradleException("There are uncommitted changes. Clone sources again as described in wiki and do not allow gradle update")
 }
 
-/*if (isMaster() && !allCommitted()) {
-    throw GradleException("There are uncommitted changes.")
-}*/

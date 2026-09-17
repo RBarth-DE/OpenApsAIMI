@@ -9,6 +9,7 @@ import androidx.wear.watchface.complications.datasource.ComplicationDataSourceUp
 import app.aaps.core.interfaces.logging.AAPSLogger
 import app.aaps.core.interfaces.logging.LTag
 import app.aaps.core.interfaces.rx.bus.RxBus
+import app.aaps.core.interfaces.rx.collectResilient
 import app.aaps.wear.data.ComplicationDataRepository
 import app.aaps.wear.events.EventWearPreferenceChange
 import kotlinx.coroutines.CoroutineScope
@@ -22,8 +23,9 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import java.util.concurrent.atomic.AtomicLong
 import java.util.concurrent.atomic.AtomicReference
-import javax.inject.Inject
-import javax.inject.Singleton
+import dev.zacsweers.metro.Inject
+import dev.zacsweers.metro.SingleIn
+import dev.zacsweers.metro.AppScope
 
 /**
  * Asks the system to refresh the Custom watch face image complications when the picture has actually
@@ -44,7 +46,7 @@ import javax.inject.Singleton
  * Lives for the life of the process rather than of a service: a data source is bound only for as
  * long as it takes to answer one request, so nothing inside one can drive a schedule.
  */
-@Singleton
+@SingleIn(AppScope::class)
 class CwfComplicationUpdater @Inject constructor(
     private val context: Context,
     private val rxBus: RxBus,
@@ -239,8 +241,8 @@ class CwfComplicationUpdater @Inject constructor(
 
     fun start() {
         // A preference can change the layout itself, and the user is watching when they change one
-        rxBus.toObservable(EventWearPreferenceChange::class.java)
-            .subscribe({ requestRefresh("preference changed", COALESCE_MS) }, { aapsLogger.error(LTag.WEAR, "CwfComplicationUpdater: preference stream failed", it) })
+        rxBus.toFlow(EventWearPreferenceChange::class)
+            .collectResilient(scope, aapsLogger, LTag.WEAR) { requestRefresh("preference changed", COALESCE_MS) }
 
         // New data from the phone, or a newly sent watch face. drop(1) skips the value the flow
         // replays on subscription, which is not a change and would refresh for nothing at startup.

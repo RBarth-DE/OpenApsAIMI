@@ -44,13 +44,13 @@ import app.aaps.core.interfaces.rx.bus.RxBus
 import app.aaps.core.interfaces.rx.events.EventWearToMobile
 import app.aaps.core.interfaces.rx.weardata.EventData.ActionAfrezzaPreCheck
 import app.aaps.wear.R
-import dagger.android.support.DaggerAppCompatActivity
-import javax.inject.Inject
+import app.aaps.wear.di.WearMetroActivity
+import dev.zacsweers.metro.Inject
 
 private val AfrezzaTeal = Color(0xFF26A69A)
 private val AfrezzaTealDark = Color(0xFF00695C)
 
-class AfrezzaActivity : DaggerAppCompatActivity() {
+class AfrezzaActivity : WearMetroActivity() {
 
     @Inject lateinit var rxBus: RxBus
 

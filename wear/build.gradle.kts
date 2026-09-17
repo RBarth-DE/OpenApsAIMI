@@ -2,13 +2,12 @@ import com.android.build.api.variant.ApplicationAndroidComponentsExtension
 import java.io.ByteArrayOutputStream
 import java.text.SimpleDateFormat
 import java.util.Date
-import javax.inject.Inject
 
 plugins {
-    alias(libs.plugins.ksp)
     alias(libs.plugins.compose.compiler)
     id("com.android.application")
     kotlin("plugin.serialization")
+    alias(libs.plugins.metro)
     id("android-app-dependencies")
     id("test-app-dependencies")
     id("jacoco-app-dependencies")
@@ -19,13 +18,27 @@ repositories {
     google()
 }
 
-val gitDescribeProvider = providers.exec {
-    commandLine("git", "describe", "--always")
-    isIgnoreExitValue = true
-}.standardOutput.asText.map { it.trim() }
+// `--exclude=ios-testflight-*` for the same reason as in `:app` - the tag names one past iOS
+// submission, and `git describe` would otherwise report it however far away it is.
+fun generateGitBuild(): String {
+    try {
+        val processBuilder = ProcessBuilder("git", "describe", "--always", "--exclude=ios-testflight-*")
+        val output = File.createTempFile("git-build", "")
+        processBuilder.redirectOutput(output)
+        val process = processBuilder.start()
+        process.waitFor()
+        return output.readText().trim()
+    } catch (_: Exception) {
+        return "NoGitSystemAvailable"
+    }
+}
 
-fun generateDate(): String =
-    SimpleDateFormat("yyyy.MM.dd").format(Date())
+fun generateDate(): String {
+    val stringBuilder: StringBuilder = StringBuilder()
+    // showing only date prevents app to rebuild everytime
+    stringBuilder.append(SimpleDateFormat("yyyy.MM.dd").format(Date()))
+    return stringBuilder.toString()
+}
 
 
 android {
@@ -35,10 +48,7 @@ android {
         minSdk = Versions.wearMinSdk
         targetSdk = Versions.wearTargetSdk
 
-        buildConfigField(
-            "String", "BUILDVERSION",
-            "\"${gitDescribeProvider.getOrElse("NoGitSystemAvailable")}-${generateDate()}\""
-        )
+        buildConfigField("String", "BUILDVERSION", "\"${generateGitBuild()}-${generateDate()}\"")
     }
 
     buildTypes {
@@ -119,7 +129,7 @@ allprojects {
  * every face build — never hardcoded.
  */
 abstract class EmbedWatchFaceTask @Inject constructor(
-    private val execOperations: org.gradle.process.ExecOperations
+    private val execOperations: ExecOperations
 ) : DefaultTask() {
 
     /** Resolved artifact of :wear:watchfacepush — the variant's APK output directory */
@@ -193,6 +203,7 @@ extensions.configure<ApplicationAndroidComponentsExtension>("androidComponents")
 
 
 dependencies {
+    implementation(files("${rootDir}/wear/libs/hellocharts-library-1.5.8.aar"))
     watchFacePushValidator(libs.com.google.watchface.validator.push.cli)
 
     implementation(project(":shared:impl"))
@@ -230,10 +241,8 @@ dependencies {
     implementation(libs.androidx.wear.compose.foundation)
 
     implementation(libs.com.google.android.gms.playservices.wearable)
-    implementation(files("${rootDir}/wear/libs/hellocharts-library-1.5.8.aar"))
 
-    ksp(libs.com.google.dagger.android.processor)
-    ksp(libs.com.google.dagger.compiler)
+    // Declared here rather than inherited: :shared:impl used to export it, and stopped when it became
 
     // Robolectric lets a few Android-coupled unit tests (Intent/Build) run on the JVM. It is a JUnit4
     // runner, so the vintage engine bridges those tests onto the JUnit Platform alongside the Jupiter tests.

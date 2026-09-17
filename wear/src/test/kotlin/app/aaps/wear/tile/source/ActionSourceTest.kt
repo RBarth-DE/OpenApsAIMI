@@ -5,6 +5,7 @@ import android.content.res.Resources
 import app.aaps.core.interfaces.sharedPreferences.SP
 import app.aaps.wear.AAPSLoggerTest
 import app.aaps.wear.R
+import app.aaps.wear.interaction.actions.AfrezzaActivity
 import app.aaps.wear.interaction.actions.BackgroundActionActivity
 import app.aaps.wear.interaction.actions.BolusActivity
 import app.aaps.wear.interaction.actions.CarbActivity
@@ -49,6 +50,8 @@ internal class ActionSourceTest {
         whenever(resources.getString(R.string.menu_treatment_short)).thenReturn("Treat")
         whenever(resources.getString(R.string.menu_treatment)).thenReturn("Treatment label")
         whenever(resources.getString(R.string.action_insulin)).thenReturn("Insulin")
+        whenever(resources.getString(R.string.action_afrezza_short)).thenReturn("Afrezza")
+        whenever(resources.getString(R.string.action_afrezza)).thenReturn("Afrezza label")
         whenever(resources.getString(R.string.action_carbs)).thenReturn("Carbs")
         whenever(resources.getString(R.string.action_ecarbs)).thenReturn("eCarbs")
         whenever(resources.getString(R.string.menu_tempt)).thenReturn("TT")
@@ -78,12 +81,12 @@ internal class ActionSourceTest {
     }
 
     @Test
-    fun getActionsReturnsSevenActionsWithExpectedSettingNames() {
+    fun getActionsReturnsEightActionsWithExpectedSettingNames() {
         val actions = actionSource.getActions(resources)
 
-        assertThat(actions).hasSize(7)
+        assertThat(actions).hasSize(8)
         assertThat(actions.map { it.settingName })
-            .containsExactly("wizard", "treatment", "bolus", "carbs", "ecarbs", "temp_target", "profile_switch")
+            .containsExactly("wizard", "treatment", "bolus", "afrezza", "carbs", "ecarbs", "temp_target", "profile_switch")
             .inOrder()
     }
 
@@ -99,6 +102,9 @@ internal class ActionSourceTest {
 
         assertThat(byName.getValue("bolus").iconRes).isEqualTo(R.drawable.ic_bolus)
         assertThat(byName.getValue("bolus").activityClass).isEqualTo(BolusActivity::class.java.name)
+
+        assertThat(byName.getValue("afrezza").iconRes).isEqualTo(R.drawable.ic_afrezza)
+        assertThat(byName.getValue("afrezza").activityClass).isEqualTo(AfrezzaActivity::class.java.name)
 
         assertThat(byName.getValue("carbs").iconRes).isEqualTo(R.drawable.ic_carbs_orange)
         assertThat(byName.getValue("carbs").activityClass).isEqualTo(CarbActivity::class.java.name)
@@ -178,7 +184,7 @@ internal class ActionSourceTest {
         // Empty result path -> fall back to getActions().take(4)
         assertThat(selected).hasSize(4)
         assertThat((selected as List<StaticAction>).map { it.settingName })
-            .containsExactly("wizard", "treatment", "bolus", "carbs")
+            .containsExactly("wizard", "treatment", "bolus", "afrezza")
             .inOrder()
     }
 
@@ -191,6 +197,7 @@ internal class ActionSourceTest {
                 R.drawable.ic_calculator,
                 R.drawable.ic_bolus_carbs,
                 R.drawable.ic_bolus,
+                R.drawable.ic_afrezza,
                 R.drawable.ic_carbs_orange,
                 R.drawable.ic_carbs_orange,
                 R.drawable.ic_temptarget_flat,

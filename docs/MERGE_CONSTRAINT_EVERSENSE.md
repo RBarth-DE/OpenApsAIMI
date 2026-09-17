@@ -8,6 +8,27 @@ Upstream reference repository: [CAPTCG/AndroidAPS-Eversense-](https://github.com
 
 The **CAPTCG patch series 0001–0005** was applied on `dev_OAPSAIMI` (with resolutions below). After this point, merges from Nightscout `dev` must **keep** `plugins:eversense`, DI registrations, `SourceSensor` **EVERSENSE_E3** / **EVERSENSE_365**, DB converters, `EversensePlugin`, and the Eversense preference strings in `core/keys`.
 
+> **Reading the dated entries below.** They were written against the Hilt DI of the time. The
+> 2026-09-14 merge (`dev` @ `343f9f7673`) moved the fork to Metro and to a Kotlin Multiplatform
+> layout, which **removed** `SourceModule`, `PluginsListModule` and the other `*Module` /
+> `*PluginsListModule` files, and moved sources from `src/main` to `src/commonMain` /
+> `src/androidMain`. Names like `SourceModule` or `SourcePluginsListModule` in a dated entry
+> describe that day, not the current tree — use the "High-risk conflict zones" table below for
+> where things live now.
+
+### Merge `dev` → `dev_OAPSAIMI_RB` (2026-09-14)
+
+- Upstream Nightscout `dev` at `343f9f7673`: **Kotlin Multiplatform layout + Hilt/Dagger → Metro**.
+  1115 conflicted files. Log: [MERGE_DEV_2026-09-14.md](MERGE_DEV_2026-09-14.md).
+- **Eversense preserved:** `:plugins:eversense` still `include`d in `settings.gradle`; the native
+  module keeps its classic `src/main` layout (its `AndroidManifest.xml`, `kotlin/` and its
+  `resources` are untouched by the flip). `SourceSensor.EVERSENSE` / `_E3` / `_365` and the DB
+  converters survive; `@IntKey(445)` moved from `SourcePluginsListModule` onto `EversensePlugin`
+  as `@ContributesIntoMap` + `MetroIntKey(445)` (aliased, because that file also imports
+  `core.keys.IntKey`).
+- **Build:** `:app:assembleFullDebug :wear:assembleFullDebug` green. Invariant baseline diff clean —
+  no Eversense marker lost.
+
 ### Merge `dev` → `dev_OAPSAIMI_mergeDEV` (2026-05-20)
 
 - Upstream Nightscout `dev` at `d1e22496f4` (AutoISF settings PR #4882, HiltWorker migration, DB `useWriterConnection`, scene UI).
@@ -18,7 +39,7 @@ The **CAPTCG patch series 0001–0005** was applied on `dev_OAPSAIMI` (with reso
   - **NS AIMI context:** `NSClientAddUpdateWorker` — `@HiltWorker` + `ContextManager` inject from NS.
   - **Wear:** `WearPlugin.kt` — `collectResilient` + kept `throttleFirst` on loop/autosens resend.
   - **DB:** `AppRepository.cleanupDatabase` — dev PRAGMA API + fork `runVacuum` → `vacuumDatabase()`.
-  - **Eversense:** `SourceModule.kt` — Eversense DI activities kept; BG workers = Hilt only (no duplicate `ContributesAndroidInjector`).
+  - **Eversense:** `SourceModule` — Eversense DI activities kept; BG workers = Hilt only (no duplicate `ContributesAndroidInjector`).
 - **Fork preserved:** `Versions.appVersion` AIMI suffix, ML model copy paths in `MainApp`, hormonitor export in `DetermineBasalAIMI2`, adaptive smoothing `calibratedOrValue`, `:plugins:eversense` in `settings.gradle`.
 - **Post-merge verify (user):** smoke per [NON_REGRESSION_CHECKLIST.md](NON_REGRESSION_CHECKLIST.md) §4.
 
@@ -161,7 +182,7 @@ Reference: [CAPTCG/AndroidAPS-Eversense-](https://github.com/CAPTCG/AndroidAPS-E
 ### Merge `dev` → `dev_OAPSAIMI_mergeDEV` (2026-07-10)
 
 - Upstream Nightscout `dev` at `d389d5e1c2` (7 commits: **Plugin self registration**, automation
-  timer alarm from background, locs, test threading). **1 conflict** in `PluginsListModule.kt`.
+  timer alarm from background, locs, test threading). **1 conflict** in `PluginsListModule`.
 - **Plugin registration (combine, not theirs-only):** upstream Multibinds-only central module kept;
   fork plugins re-bound in `*PluginsListModule`: AIMI @225, Eversense @445, Ottai @475,
   AdaptiveSmoothing @615, OverviewPlugin @20 (skin switch), RemoteControl @315.
@@ -342,7 +363,7 @@ If a patch fails: resolve conflicts **without dropping** Eversense-specific regi
 | Area | Why it conflicts | Preserve |
 |------|------------------|----------|
 | `settings.gradle` / `plugins/settings.gradle` | upstream adds/removes modules | Gradle must keep including the Eversense module (path name as on branch) |
-| `PluginsListModule` / plugin DI graph | upstream plugin list churn | Per-module `*PluginsListModule` (e.g. `SourcePluginsListModule` @445 for Eversense); central `app/.../PluginsListModule` is Multibinds-only — do not re-add central `@Binds` |
+| plugin DI graph | upstream plugin list churn | Since the 2026-09-14 Metro merge there is no `PluginsListModule`. Fork plugins self-register: `@ContributesIntoMap(AppScope::class, binding = binding<PluginBase>())` + `@IntKey(N)` on the class (`EversensePlugin.kt` @445, `DexcomOnePlusPlugin.kt` @446, `Libre3NativePlugin.kt` @447, `OttaiPlugin.kt` @475). Activity/widget member injectors live in `SourceMemberInjectors.kt` / `MainMemberInjectors.kt`. Do not re-add a central `@Binds` module |
 | `core/data/.../SourceSensor.kt` (and DB converters) | upstream CGM enum changes | **EVERSENSE**, **EVERSENSE_E3**, **EVERSENSE_365** (or exact names your branch uses) + DB round-trip |
 | `database/impl/.../GlucoseValue.kt`, converters | new sensors | Eversense source values must persist in DB layer |
 | `plugins/main/.../Overview*` / dashboard skins | fork-specific overview | Patch 0004-style UI (TIR label, transmitter battery) must be **re-applied** or merged manually if fork diverged |
@@ -498,7 +519,7 @@ the 2026-08-31 sync. Watch that branch, not only `master`. A new orphan `docs` b
 | E3 glucose ceiling 600 → 450 | `packets/e3/GetCurrentGlucosePacket.kt` | Completes the tightening we did on the 365 side on 2026-08-31. Reuses `GetGlucoseDataPacket.GLUCOSE_CEILING_MG_DL`. **Deliberate divergence: CAPTCG uses `> 450`, we use `>= 450`** to match our own 365 path — do not "fix" this back on a future sync |
 | Alarm cleanup (one unit) | `enums/EversenseAlarm.kt`, `EversenseGattCallback.kt`, `packets/Eversense365Communicator.kt` | Removed `TX_DOCKED` (68) / `TX_UNDOCKED` (69), which are not real device codes, AND added UNKNOWN filtering at both entry points. **Never split these two**: removing 68/69 alone makes them fall through to UNKNOWN and surface as "Unknown Error" instead of "Transmitter Inactive" |
 | EU / OUS region for the 365 | `core/keys/BooleanKey.kt` + strings, `models/EversenseSecureState.kt`, `util/EversenseHttp365Util.kt`, `EversenseGattCallback.kt`, `plugins/source/EversensePlugin.kt` | New `BooleanKey.EversenseEuropeanRegion`, default **false**. Per-call host selection for token / upload / care / vault. Token cache is cleared on a region flip in both credential-sync sites |
-| E3 `nextCalibrationDate` derived | `packets/EversenseE3Communicator.kt`, **deletes** `packets/e3/GetNextCalibrationDatePacket.kt` + `GetNextCalibrationTimePacket.kt` | Now `lastCalibrationDate + 24 h` instead of two transmitter registers whose values proved unreliable and could be subtly wrong yet inside the plausibility guard. This agrees with what our own `EversenseCGMPlugin` already writes after a local calibration, and it **removes two reads of the deferred registers** |
+| E3 `nextCalibrationDate` derived | `packets/EversenseE3Communicator.kt`, **deletes** the two E3 next-calibration packet classes (`GetNextCalibrationDatePacket`, `GetNextCalibrationTimePacket`) | Now `lastCalibrationDate + 24 h` instead of two transmitter registers whose values proved unreliable and could be subtly wrong yet inside the plausibility guard. This agrees with what our own `EversenseCGMPlugin` already writes after a local calibration, and it **removes two reads of the deferred registers** |
 
 **EU host matrix (365).** Never introduce `ousiamapi` — that was CAPTCG's own wrong guess in
 `572805bfed`, reverted three commits later; a real EU user got a bare IIS 404 from it.

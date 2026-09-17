@@ -15,6 +15,7 @@ import app.aaps.plugins.source.AidexPlugin
 import app.aaps.plugins.source.DexcomInbox
 import app.aaps.plugins.source.GlimpPlugin
 import app.aaps.plugins.source.MM640gPlugin
+import app.aaps.plugins.source.OttaiWorker
 import app.aaps.plugins.source.PatchedSiAppPlugin
 import app.aaps.plugins.source.PatchedSinoAppPlugin
 import app.aaps.plugins.source.PoctechPlugin
@@ -150,8 +151,10 @@ class DataReceiverTest : TestBase() {
             Arguments.of(Intents.GLIMP_BG, GlimpPlugin.GlimpWorker::class.java),
             Arguments.of(Intents.TOMATO_BG, TomatoPlugin.TomatoWorker::class.java),
             Arguments.of(Intents.NS_EMULATOR, MM640gPlugin.MM640gWorker::class.java),
-            Arguments.of(Intents.OTTAI_APP, SyaiPlugin.SyaiWorker::class.java),
-            Arguments.of(Intents.OTTAI_APP_CN, SyaiPlugin.SyaiWorker::class.java),
+            // FORK: the Ottai app has its own worker and does not share SyaiWorker, even though the two
+            // apps send on the same channels. See DataReceiver's OTTAI_APP branch.
+            Arguments.of(Intents.OTTAI_APP, OttaiWorker::class.java),
+            Arguments.of(Intents.OTTAI_APP_CN, OttaiWorker::class.java),
             Arguments.of(Intents.SYAI_APP, SyaiPlugin.SyaiWorker::class.java),
             Arguments.of(Intents.SI_APP, PatchedSiAppPlugin.PatchedSiAppWorker::class.java),
             Arguments.of(Intents.SINO_APP, PatchedSinoAppPlugin.PatchedSinoAppWorker::class.java),

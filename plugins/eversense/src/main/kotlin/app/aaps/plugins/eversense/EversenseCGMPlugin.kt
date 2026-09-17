@@ -59,7 +59,10 @@ class EversenseCGMPlugin {
         EversenseLogger.instance.enableLogging(loggingEnabled)
 
         val preference = context.applicationContext.getSharedPreferences(TAG, Context.MODE_PRIVATE)
-        bluetoothManager = context.applicationContext.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
+        // Safe cast, not a hard one. `getSystemService` can return null on a device without Bluetooth,
+        // and a plain JVM test gets the stub Android jar, where it returns something that is not a
+        // BluetoothManager - a hard cast would throw. Every reader below already handles a null here.
+        bluetoothManager = context.applicationContext.getSystemService(Context.BLUETOOTH_SERVICE) as? BluetoothManager
         preferences = preference
         gattCallback = EversenseGattCallback(this, preference)
     }

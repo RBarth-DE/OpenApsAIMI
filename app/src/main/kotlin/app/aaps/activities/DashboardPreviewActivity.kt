@@ -2,7 +2,6 @@ package app.aaps.activities
 
 import android.os.Bundle
 import android.view.MenuItem
-import androidx.fragment.app.commit
 import app.aaps.R
 import app.aaps.plugins.configuration.activities.DaggerAppCompatActivityWithResult
 import app.aaps.plugins.main.general.dashboard.DashboardFragment
@@ -17,9 +16,12 @@ class DashboardPreviewActivity : DaggerAppCompatActivityWithResult() {
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
         supportActionBar?.setDisplayShowHomeEnabled(true)
         if (savedInstanceState == null) {
-            supportFragmentManager.commit {
-                replace(R.id.dashboard_container, DashboardFragment())
-            }
+            // The plain transaction API rather than the `commit { }` extension: that one lives in
+            // fragment-ktx, which this module does not depend on, and one call is not worth a
+            // dependency.
+            supportFragmentManager.beginTransaction()
+                .replace(R.id.dashboard_container, DashboardFragment())
+                .commit()
         }
     }
 

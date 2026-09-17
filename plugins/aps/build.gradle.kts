@@ -1,68 +1,143 @@
 plugins {
-    alias(libs.plugins.android.library)
-    alias(libs.plugins.ksp)
+    id("kmp-test-defaults")
+    kotlin("multiplatform")
+    // NOT com.android.library. AGP 9 refuses that plugin together with the multiplatform plugin.
+    // Same reason as the :core modules and the other converted plugins.
+    alias(libs.plugins.android.kmp.library)
     alias(libs.plugins.compose.compiler)
-    id("android-module-dependencies")
-    id("test-module-dependencies")
-    id("compose-test-module-dependencies")
-    id("jacoco-module-dependencies")
-    //alias(libs.plugins.dokka)
+    alias(libs.plugins.compose.multiplatform)
+    // Metro, so this module can wire its own Android entry points.
+    alias(libs.plugins.metro)
 }
 
-android {
-    namespace = "app.aaps.plugins.aps"
+// Same generator as the other converted plugins, pointed at this module's strings.
+val generateApsStrings = tasks.register<GenerateKeyStringsTask>("generateApsStrings") {
+    resDir.set(layout.projectDirectory.dir("src/androidMain/res"))
+    packageName.set("app.aaps.plugins.aps")
+    owner.set("aps")
+    objectName.set("ApsStrings")
+    idsObjectName.set("ApsStringIds")
+    reportFile.set(layout.buildDirectory.file("reports/apsStrings/translations.txt"))
+    // Set explicitly: addGeneratedSourceDirectory derives its convention from the task name, so both
+    // properties would land on one directory and the second file written would delete the first.
+    commonOutputDir.set(layout.buildDirectory.dir("generated/apsStrings/common"))
+    androidOutputDir.set(layout.buildDirectory.dir("generated/apsStrings/android"))
 }
 
-dependencies {
-    implementation(project(":core:data"))
-    implementation(project(":core:interfaces"))
-    implementation(project(":core:keys"))
-    implementation(project(":core:nssdk"))
-    implementation(project(":core:objects"))
-    implementation(project(":core:utils"))
-    implementation(project(":core:graph"))
-    implementation(project(":core:ui"))
+kotlin {
+    android {
+        namespace = "app.aaps.plugins.aps"
+        compileSdk = Versions.compileSdk
+        minSdk = Versions.minSdk
+        androidResources { enable = true }
+        // isIncludeAndroidResources is what makes Robolectric work - see :core:ui for the detail.
+        withHostTest {
+            isIncludeAndroidResources = true
+            isReturnDefaultValues = true
+        }
+        compilerOptions { jvmTarget.set(Versions.jvmTarget) }
 
-    implementation(libs.androidx.compose.ui.tooling.preview)
-    debugImplementation(libs.androidx.compose.ui.tooling)
-    implementation("org.tensorflow:tensorflow-lite:2.4.0")
-    // GPU delegate not currently used (AimiModelHandler uses only the base Interpreter API).
-    // Keeping the support + metadata stubs — they are referenced nowhere but were part of the
-    // original TFLite set; upgrade them together if the core runtime is ever bumped.
-    implementation("org.tensorflow:tensorflow-lite-support:0.1.0")
-    implementation("org.tensorflow:tensorflow-lite-metadata:0.1.0")
-    implementation("androidx.core:core-i18n:1.0.0-alpha01")
-    implementation("androidx.preference:preference-ktx:1.2.1")
+        lint {
+            checkReleaseBuilds = false
+            disable += "MissingTranslation"
+            disable += "ExtraTranslation"
+        }
+    }
 
-    // Health Connect — steps integration (Android 14+); stable line for IDE + runtime alignment
-    implementation("androidx.health.connect:connect-client:1.1.0")
+    iosArm64()
+    iosSimulatorArm64()
 
-    testImplementation(project(":pump:virtual"))
-    testImplementation(project(":shared:tests"))
+    // Desktop (Windows/macOS/Linux). Compose Multiplatform resolves its `desktop` variant from a
+    // plain jvm() target, so no special target name is needed.
+    jvm()
 
-    api(kotlin("reflect"))
+    sourceSets {
+        commonMain {
+            kotlin.srcDir(generateApsStrings.flatMap { it.commonOutputDir })
+            dependencies {
+                implementation(project(":core:data"))
+                implementation(project(":core:interfaces"))
+                implementation(project(":core:keys"))
+                implementation(project(":core:nssdk"))
+                implementation(project(":core:objects"))
+                implementation(project(":core:utils"))
+                implementation(project(":core:ui"))
 
-    // APS (it should be androidTestImplementation but it doesn't work)
-    runtimeOnly(libs.org.mozilla.rhino)
+                implementation(libs.androidx.collection)
+                implementation(libs.kotlinx.coroutines.core)
+                implementation(libs.cmp.runtime)
+                api(kotlin("reflect"))
+            }
+        }
 
-    //Logger
-    implementation(libs.org.slf4j.api)
+        androidMain {
+            // Android only: the string name to R.string id map.
+            kotlin.srcDir(generateApsStrings.flatMap { it.androidOutputDir })
+            dependencies {
+                implementation(project(":core:graph"))
+                implementation(libs.androidx.compose.ui.tooling.preview)
+                implementation(libs.androidx.work.runtime)
+                implementation(libs.org.slf4j.api)
+                // APS (it should be androidTestImplementation but it doesn't work)
+                runtimeOnly(libs.org.mozilla.rhino)
+                // Fork AIMI ML runtime (Android-only)
+                implementation("org.tensorflow:tensorflow-lite:2.4.0")
+                implementation("org.tensorflow:tensorflow-lite-support:0.1.0")
+                // OREF Advisor: optional on-device LightGBM via ONNX (place models under assets/oref/).
+                // The dependency was dropped when this build file was rewritten for KMP; the code that
+                // needs it (OrefOnnxScorer) is still here, so it is restored in the same block as the
+                // other Android-only ML runtime.
+                implementation("com.microsoft.onnxruntime:onnxruntime-android:1.20.0")
+                // Health Connect - steps and heart rate. Android only, so it lives here and not in
+                // commonMain. Dropped by the same build-file rewrite as the ONNX runtime above.
+                implementation("androidx.health.connect:connect-client:1.1.0")
+                // The Boost plugins build their settings screens from AndroidX Preference widgets.
+                implementation(libs.androidx.preference)
+            }
+        }
 
-    // Hilt WorkManager integration for @HiltWorker workers (factory glue generated by androidx hilt-compiler)
-    implementation(libs.androidx.hilt.work)
+        // Hand written rather than taken from test-module-dependencies, which applies
+        // com.android.library and so cannot be used here. Same approach as :plugins:main.
+        // Tests of commonMain classes belong here, not in androidHostTest: that source set runs on the
+        // JVM only, so code that ships to iOS would be verified on Android alone. Mockito is JVM
+        // only, so anything moved here uses hand written fakes instead.
+        getByName("commonTest") {
+            dependencies {
+                implementation(kotlin("test"))
+                implementation(libs.kotlinx.coroutines.test)
+            }
+        }
 
-    ksp(libs.com.google.dagger.compiler)
-    ksp(libs.com.google.dagger.hilt.compiler)
-    testImplementation("io.mockk:mockk:1.13.8")
-    ksp(libs.com.google.dagger.android.processor)
-    ksp(libs.androidx.hilt.compiler)
-
-    // Quality & Performance (Truth & JMH)
-    testImplementation(libs.com.google.truth)
-
-    // 📺 Jitsi Screen Share: no SDK needed — handled via Android Intent deep-link
-    // The app opens meet.jit.si room via browser or the Jitsi Meet app if installed.
-
-    // OREF Advisor: optional on-device LightGBM via ONNX (place models under assets/oref/).
-    implementation("com.microsoft.onnxruntime:onnxruntime-android:1.20.0")
+        getByName("androidHostTest") {
+            dependencies {
+                implementation(project(":shared:tests"))
+                implementation(project(":pump:virtual"))
+                implementation(libs.org.junit.jupiter)
+                implementation(libs.org.junit.jupiter.api)
+                implementation(libs.org.mockito.junit.jupiter)
+                implementation(libs.org.mockito.kotlin)
+                // The AIMI and Boost tests use mockk, not Mockito. They were written when this module
+                // was a plain Android module (their old home, src/test, is not a source set in a
+                // Kotlin Multiplatform build, so they did not run at all until the merge moved them
+                // here). mockk runs on the JVM only, so it belongs in this source set and not in
+                // commonTest. Same coordinate the module used before the merge.
+                implementation("io.mockk:mockk:1.13.8")
+                implementation(libs.com.google.truth)
+                implementation(libs.kotlinx.coroutines.test)
+                // Compose UI tests (AutotuneScreenTest). Restated from compose-test-module-dependencies,
+                // which applies com.android.library and so cannot be used here.
+                implementation(project.dependencies.platform(libs.androidx.compose.bom))
+                implementation(libs.androidx.compose.ui.test.junit4)
+                implementation(libs.androidx.compose.ui.test.manifest)
+                implementation(libs.org.robolectric)
+                // The real org.json: isReturnDefaultValues makes the platform stub answer null rather
+                // than throwing, which NPEs the shared profile fixtures.
+                implementation(libs.org.json.android)
+                runtimeOnly(libs.org.mozilla.rhino)
+                runtimeOnly(libs.org.junit.vintage.engine)
+                runtimeOnly(libs.org.junit.platform.launcher)
+            }
+        }
+    }
 }
+

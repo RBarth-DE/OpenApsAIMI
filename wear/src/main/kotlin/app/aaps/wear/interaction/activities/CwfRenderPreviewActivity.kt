@@ -27,8 +27,8 @@ import androidx.wear.compose.material3.Text
 import app.aaps.core.interfaces.logging.AAPSLogger
 import app.aaps.core.interfaces.logging.LTag
 import app.aaps.wear.watchfaces.CustomWatchface
-import dagger.android.AndroidInjection
-import javax.inject.Inject
+import app.aaps.core.interfaces.di.injectMetroMembers
+import dev.zacsweers.metro.Inject
 
 /**
  * Proof of concept, not a user-facing screen.
@@ -57,7 +57,7 @@ class CwfRenderPreviewActivity : AppCompatActivity() {
     @Inject lateinit var aapsLogger: AAPSLogger
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        AndroidInjection.inject(this)
+        injectMetroMembers(this)
         super.onCreate(savedInstanceState)
         setContent { MaterialTheme { CwfRenderPreviewScreen(::render) } }
     }

@@ -44,7 +44,7 @@ User guide: [LIBRE3_NATIVE_USER_GUIDE.md](LIBRE3_NATIVE_USER_GUIDE.md)
 | Module Gradle | `plugins/libre3/build.gradle.kts` | `implementation(project(":core:interfaces"))` + `api(libs.androidx.core)` only |
 | Manifest | `plugins/libre3/src/main/AndroidManifest.xml` | BLE permissions + `NFC` permission + `android.hardware.nfc` with `required=false` |
 | BgSource plugin | `plugins/source/.../Libre3NativePlugin.kt` | Watcher to `PersistenceLayer` (lot A3) |
-| DI | `SourcePluginsListModule` `@IntKey(447)` | After ONE+ 446, before Aidex 450 (lot A3) |
+| DI | `@ContributesIntoMap(AppScope::class, binding = binding<PluginBase>())` + `@IntKey(447)` on `Libre3NativePlugin` (since the 2026-09-14 Metro merge; the old `SourcePluginsListModule` is gone) | After ONE+ 446, before Aidex 450 (lot A3) |
 | Source dependency | `plugins/source/build.gradle.kts` → `implementation(project(":plugins:libre3"))` | The only extra module dependency that is allowed |
 | Enum | `core/data/.../SourceSensor.kt` → `LIBRE_3_NATIVE("AAPS-Libre3")` | Do not touch `LIBRE_2`, `LIBRE_2_NATIVE`, `LIBRE_3` |
 | Advanced filtering | `core/data/.../SourceSensorExtensions.kt` includes `LIBRE_3_NATIVE` | |
@@ -84,7 +84,7 @@ These are safety rules, not style. A merge that loses them is a broken merge.
 ## Conflict resolution rules
 
 1. Prefer **combine**: keep upstream BG source changes **and** the Libre 3 registration and module.
-2. Never resolve `settings.gradle` or `SourcePluginsListModule` by dropping `:plugins:libre3` or
+2. Never resolve `settings.gradle` or the DI registration by dropping `:plugins:libre3` or
    `@IntKey(447)`.
 3. If upstream renumbers IntKeys, pick a new free key (not 400 / 440 / 445 / 446) and update this
    file and the user guide.
@@ -117,3 +117,4 @@ These are safety rules, not style. A merge that loses them is a broken merge.
 | 2026-08-20 | Lot A9: one AIMI log line. Libre 3 native is a fast sensor and takes no G6 lead. |
 | 2026-08-20 | Lot A11: this file frozen, checklist wired, user guide written. Not user-confirmed. |
 | 2026-08-20 | Committed in ten structural commits on `dev_OAPSAIMI_Libre3`. Two of the three crypto ports are done and vector proven; the first pairing ephemeral is the only piece left. See section 10.0 of the plan. |
+| 2026-09-14 | Merge `dev` @ `343f9f7673` → `dev_OAPSAIMI_RB` (KMP layout + Hilt→Metro). Libre 3 preserved: `:plugins:libre3` still `include`d, the native module keeps its classic `src/main` layout (manifest, `kotlin/`, and the 34 MIT runtime tables under `src/main/resources/libre3/` all untouched). `SourceSensor.LIBRE_3_NATIVE`, its DB converters, `Sources.Libre3Native`, `Libre3BooleanKey.UseRealSkeleton` default off, and `LIBRE3_DIR_ACCESS_LOST` **still the last** `NotificationId` entry — all verified by invariant baseline. `@IntKey(447)` moved from `SourcePluginsListModule` onto `Libre3NativePlugin` as `@ContributesIntoMap` + `IntKey(447)`. Build green. Log: [MERGE_DEV_2026-09-14.md](MERGE_DEV_2026-09-14.md). |

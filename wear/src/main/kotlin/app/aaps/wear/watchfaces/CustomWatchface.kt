@@ -39,6 +39,7 @@ import androidx.wear.watchface.complications.ComplicationSlotBounds
 import androidx.wear.watchface.complications.data.ComplicationType
 import androidx.wear.watchface.style.CurrentUserStyleRepository
 import androidx.wear.watchface.style.UserStyleSchema
+import app.aaps.core.interfaces.InterfacesStringIds
 import app.aaps.core.interfaces.logging.LTag
 import app.aaps.core.interfaces.rx.events.EventUpdateSelectedWatchface
 import app.aaps.core.interfaces.rx.weardata.CUSTOM_VERSION
@@ -50,7 +51,7 @@ import app.aaps.core.interfaces.rx.weardata.EventData
 import app.aaps.core.interfaces.rx.weardata.ResData
 import app.aaps.core.interfaces.rx.weardata.ResFormat
 import app.aaps.core.interfaces.rx.weardata.isEquals
-import app.aaps.wear.utils.toVisibility
+import app.aaps.core.keys.interfaces.TextRef
 import app.aaps.shared.impl.weardata.JsonKeyValues
 import app.aaps.shared.impl.weardata.JsonKeys
 import app.aaps.shared.impl.weardata.ResFileMap
@@ -60,6 +61,7 @@ import app.aaps.shared.impl.weardata.toDrawable
 import app.aaps.shared.impl.weardata.toTypeface
 import app.aaps.wear.R
 import app.aaps.wear.databinding.ActivityCustomBinding
+import app.aaps.wear.utils.toVisibility
 import app.aaps.wear.watchfaces.utils.BaseWatchFace
 import app.aaps.wear.watchfaces.utils.ComplicationImageFit
 import app.aaps.wear.watchfaces.utils.ComplicationRender
@@ -74,12 +76,11 @@ import app.aaps.wear.watchfaces.utils.WatchfaceViewAdapter.Companion.SelectedWat
 import kotlinx.coroutines.runBlocking
 import org.json.JSONException
 import org.json.JSONObject
+import dev.zacsweers.metro.Inject
 import java.io.ByteArrayOutputStream
 import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.temporal.WeekFields
-import javax.inject.Inject
-import kotlin.collections.get
 import kotlin.math.floor
 
 @SuppressLint("Deprecated")
@@ -1721,7 +1722,19 @@ class CustomWatchface : BaseWatchFace() {
          * from [metadataKey] wherever there is one, so a preference is labelled by the same string the
          * phone shows for it. See `CustomWatchfaceConfigurationFragment`, which builds the screen.
          */
-        @get:StringRes val title: Int? get() = metadataKey?.label ?: localTitle
+        @get:StringRes val title: Int? get() = metadataLabelId ?: localTitle
+
+        /**
+         * [metadataKey]'s label as an Android string id, or null when it has no metadata entry.
+         *
+         * [CwfMetadataKey.label] is a [TextRef] because that enum is shared code, and shared code
+         * cannot hold resource ids. The rows here are `androidx.preference` rows and do need one, so
+         * the name is looked up in the id map generated into `:core:interfaces` - the same map
+         * `ResourceHelper` resolves names with the `interfaces` owner through. A name that is not in
+         * the map gives null, and the row then falls back to [localTitle].
+         */
+        private val metadataLabelId: Int?
+            get() = (metadataKey?.label as? TextRef.Named)?.let { InterfacesStringIds.idOf(it.name) }
 
         var value: String = ""
 

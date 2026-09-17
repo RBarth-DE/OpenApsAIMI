@@ -1,26 +1,23 @@
 package app.aaps
 
+import app.aaps.di.GeneratedStringOwners
 import android.app.Application
-import android.annotation.SuppressLint
-import android.app.Activity
-import android.app.AlertDialog
 import android.bluetooth.BluetoothDevice
-import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
-import android.hardware.Sensor
-import android.hardware.SensorManager
 import android.net.ConnectivityManager
-import android.net.Uri
 import android.net.wifi.WifiManager
 import android.os.Build
-import android.os.Environment
-import android.os.Bundle
 import android.os.Handler
 import android.os.HandlerThread
-import androidx.hilt.work.HiltWorkerFactory
 import androidx.lifecycle.Lifecycle
+import android.content.Context
+import android.hardware.Sensor
+import android.hardware.SensorManager
+import android.os.Environment
 import android.util.Log
+import app.aaps.plugins.aps.openAPSAIMI.StepService
+import app.aaps.plugins.aps.openAPSAIMI.utils.AimiStorageHelper
 import androidx.lifecycle.ProcessLifecycleOwner
 import androidx.work.Configuration
 import app.aaps.core.data.configuration.Constants
@@ -34,42 +31,22 @@ import app.aaps.core.data.time.T
 import app.aaps.core.data.ue.Action
 import app.aaps.core.data.ue.Sources
 import app.aaps.core.data.ue.ValueWithUnit
-import app.aaps.core.interfaces.alerts.LocalAlertUtils
-import app.aaps.core.interfaces.aps.Loop
-import app.aaps.core.interfaces.configuration.Config
 import app.aaps.core.interfaces.configuration.ConfigBuilder
 import app.aaps.core.interfaces.configuration.ExternalOptions
-import app.aaps.core.interfaces.constraints.ConstraintsChecker
-import app.aaps.core.interfaces.db.PersistenceLayer
-import app.aaps.core.interfaces.di.ApplicationScope
-import app.aaps.core.interfaces.insulin.InsulinManager
+import app.aaps.core.interfaces.di.MetroMemberInjector
 import app.aaps.core.interfaces.insulin.InsulinType
-import app.aaps.core.interfaces.logging.AAPSLogger
 import app.aaps.core.interfaces.logging.LTag
-import app.aaps.core.interfaces.logging.UserEntryLogger
-import app.aaps.core.interfaces.maintenance.FileListProvider
 import app.aaps.core.interfaces.notifications.NotificationAction
 import app.aaps.core.interfaces.notifications.NotificationId
 import app.aaps.core.interfaces.notifications.NotificationLevel
-import app.aaps.core.interfaces.notifications.NotificationManager
-import app.aaps.core.interfaces.plugin.ActivePlugin
-import app.aaps.core.interfaces.plugin.PluginBase
 import app.aaps.core.interfaces.profile.ProfileFunction
 import app.aaps.core.interfaces.profile.ProfileRepository
-import app.aaps.core.interfaces.profile.ProfileUtil
-import app.aaps.core.interfaces.protection.ExportPasswordDataStore
 import app.aaps.core.interfaces.resources.ResourceHelper
-import app.aaps.core.interfaces.rx.bus.RxBus
 import app.aaps.core.interfaces.rx.events.EventAppInitialized
-import app.aaps.core.interfaces.sharedPreferences.SP
+import app.aaps.core.interfaces.rx.events.EventShowSnackbar
 import app.aaps.core.interfaces.tempTargets.toJson
-import app.aaps.core.interfaces.ui.UiInteraction
-import app.aaps.core.interfaces.utils.DateUtil
-import app.aaps.core.interfaces.utils.HardLimits
 import app.aaps.core.interfaces.utils.SafeParse
 import app.aaps.core.interfaces.utils.fabric.FabricPrivacy
-import app.aaps.core.interfaces.versionChecker.VersionCheckerUtils
-import app.aaps.core.interfaces.widget.WidgetUpdater
 import app.aaps.core.keys.BooleanComposedKey
 import app.aaps.core.keys.BooleanKey
 import app.aaps.core.keys.BooleanNonKey
@@ -81,27 +58,20 @@ import app.aaps.core.keys.ProfileComposedStringKey
 import app.aaps.core.keys.StringKey
 import app.aaps.core.keys.StringNonKey
 import app.aaps.core.keys.UnitDoubleKey
-import app.aaps.core.keys.interfaces.Preferences
-import app.aaps.core.objects.crypto.CryptoUtil
+import app.aaps.core.keys.interfaces.TextRef
 import app.aaps.core.objects.profile.ProfileSealed
+import app.aaps.core.ui.compose.MetroViewModelFactoryOwner
 import app.aaps.core.ui.locale.LocaleHelper
-import app.aaps.core.utils.JsonHelper
-import app.aaps.database.AppRepository
-import app.aaps.implementation.lifecycle.ProcessLifecycleListener
-import app.aaps.implementation.plugin.PluginStore
-import app.aaps.implementation.profile.ProfileSwitchExpiryScheduler
+import app.aaps.di.metro.MetroGraphs
+import app.aaps.database.di.DatabaseConfig
+import app.aaps.di.ExternalOptionsOverride
+import app.aaps.di.metro.MetroWorkerFactory
 import app.aaps.implementation.receivers.BTReceiver
 import app.aaps.implementation.receivers.ChargingStateReceiver
 import app.aaps.implementation.receivers.KeepAliveWorker
 import app.aaps.implementation.receivers.NetworkChangeReceiver
 import app.aaps.implementation.receivers.TimeDateOrTZChangeReceiver
-import app.aaps.plugins.aps.loop.runningMode.RunningModeExpiryScheduler
-import app.aaps.plugins.aps.loop.runningMode.RunningModeReconciler
-import app.aaps.plugins.automation.AutomationRuntime
 import app.aaps.plugins.constraints.objectives.keys.ObjectivesLongComposedKey
-import app.aaps.plugins.aps.openAPSAIMI.StepService
-import app.aaps.plugins.aps.openAPSAIMI.utils.AimiStorageHelper
-import app.aaps.plugins.constraints.signatureVerifier.SignatureVerifierPlugin
 import app.aaps.ui.activityMonitor.ActivityMonitor
 import app.aaps.utils.configureLeakCanary
 import com.google.firebase.Firebase
@@ -109,10 +79,7 @@ import com.google.firebase.FirebaseApp
 import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.google.firebase.remoteconfig.FirebaseRemoteConfigSettings
 import com.google.firebase.remoteconfig.remoteConfig
-import dagger.android.AndroidInjector
-import dagger.android.DispatchingAndroidInjector
-import dagger.android.HasAndroidInjector
-import dagger.hilt.android.HiltAndroidApp
+import dev.zacsweers.metrox.viewmodel.MetroViewModelFactory
 import io.reactivex.rxjava3.exceptions.UndeliverableException
 import io.reactivex.rxjava3.plugins.RxJavaPlugins
 import kotlinx.coroutines.CoroutineScope
@@ -122,73 +89,90 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeout
 import kotlinx.coroutines.withTimeoutOrNull
-import org.json.JSONObject
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.jsonObject
 import rxdogtag2.RxDogTag
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
 import java.util.Locale
-import javax.inject.Inject
-import javax.inject.Provider
 import kotlin.reflect.KMutableProperty
 import kotlin.reflect.full.declaredMemberProperties
-import android.provider.Settings
 import kotlin.time.Duration.Companion.milliseconds
 
-@HiltAndroidApp
-class MainApp : Application(), HasAndroidInjector, Configuration.Provider {
+class MainApp : Application(), MetroMemberInjector, MetroViewModelFactoryOwner, Configuration.Provider {
 
-    @Inject lateinit var androidInjector: DispatchingAndroidInjector<Any>
-    override fun androidInjector(): AndroidInjector<Any> = androidInjector
+    override fun injectMembers(target: Any): Boolean = metroGraphs.injectMembers(target)
 
-    // WorkManager on-demand initialization. HiltWorkerFactory constructs @HiltWorker workers via
-    // assisted injection; workers not yet migrated return null from it and fall back to WorkManager's
-    // default reflective factory (which self-injects through HasAndroidInjector). The default
-    // androidx.startup WorkManagerInitializer is removed in AndroidManifest.xml so this config wins.
-    @Inject lateinit var hiltWorkerFactory: HiltWorkerFactory
+    override val metroViewModelFactory: MetroViewModelFactory get() = metroGraphs.viewModelFactory
+
+    /**
+     * `by lazy` so nothing is resolved before `onCreate` runs - the graph reaches Android services, and
+     * an Application field initialiser runs before the framework is ready for that.
+     * The last two arguments are the only things an instrumented test does differently; see
+     * `AppRootGraph.Factory`. Production wants the real database and no forced options.
+     */
+    private val metroGraphs by lazy {
+        MetroGraphs(
+            context = this,
+            memberInjector = this,
+            databaseConfig = DatabaseConfig.PRODUCTION,
+            externalOptionsOverride = ExternalOptionsOverride.NONE
+        )
+    }
+    // WorkManager on-demand initialization. `MetroWorkerFactory` builds every worker in the app; what
+    // it does not know returns null and falls back to WorkManager's default reflective factory, which
+    // is what builds WorkManager's own internal workers. The default androidx.startup
+    // WorkManagerInitializer is removed in AndroidManifest.xml so this config wins.
     override val workManagerConfiguration: Configuration
         get() = Configuration.Builder()
-            .setWorkerFactory(hiltWorkerFactory)
+            .setWorkerFactory(MetroWorkerFactory(metroGraphs))
             .build()
 
-    @Inject lateinit var pluginStore: PluginStore
-    @Inject lateinit var aapsLogger: AAPSLogger
-    @Inject lateinit var activityMonitor: ActivityMonitor
-    @Inject lateinit var versionCheckersUtils: VersionCheckerUtils
-    @Inject lateinit var sp: SP
-    @Inject lateinit var preferences: Preferences
-    @Inject lateinit var config: Config
-    @Inject lateinit var configBuilder: ConfigBuilder
-    @Inject lateinit var plugins: List<@JvmSuppressWildcards PluginBase>
-    @Inject lateinit var persistenceLayer: PersistenceLayer
-    @Inject lateinit var dateUtil: DateUtil
-    @Inject lateinit var uiInteraction: UiInteraction
-    @Inject lateinit var processLifecycleListener: Provider<ProcessLifecycleListener>
-    @Inject lateinit var localAlertUtils: LocalAlertUtils
-    @Inject lateinit var notificationManager: NotificationManager
-    @Inject lateinit var rh: Provider<ResourceHelper>
-    @Inject lateinit var loop: Loop
-    @Inject lateinit var profileFunction: ProfileFunction
-    @Inject lateinit var profileUtil: ProfileUtil
-    @Inject lateinit var fabricPrivacy: FabricPrivacy
-    @Inject lateinit var rxBus: RxBus
-    @Inject lateinit var repository: AppRepository
-    @Inject lateinit var hardLimits: HardLimits
-    @Inject lateinit var activePlugin: ActivePlugin
-    @Inject lateinit var profileRepository: ProfileRepository
-    @Inject lateinit var localInsulinManager: InsulinManager
-    @Inject lateinit var constraintChecker: ConstraintsChecker
-    @Inject lateinit var signatureVerifierPlugin: SignatureVerifierPlugin
-    @Inject lateinit var fileListProvider: FileListProvider
-    @Inject lateinit var cryptoUtil: CryptoUtil
-    @Inject lateinit var exportPasswordDataStore: ExportPasswordDataStore
-    @Inject lateinit var widgetUpdater: WidgetUpdater
-    @Inject lateinit var runningModeReconciler: RunningModeReconciler
-    @Inject lateinit var runningModeExpiryScheduler: RunningModeExpiryScheduler
-    @Inject lateinit var storageHelper: AimiStorageHelper
-    @Inject lateinit var profileSwitchExpiryScheduler: ProfileSwitchExpiryScheduler
-    @Inject lateinit var automationRuntime: AutomationRuntime
-    @Inject @ApplicationScope lateinit var appScope: CoroutineScope
+    private val pluginStore get() = metroGraphs.pluginStore
+    private val aapsLogger get() = metroGraphs.aapsLogger
+    private val activityMonitor get() = metroGraphs.activityMonitor
+    private val versionCheckersUtils get() = metroGraphs.versionCheckerUtils
+    private val sp get() = metroGraphs.sp
+    private val preferences get() = metroGraphs.preferences
+    private val config get() = metroGraphs.config
+    private val configBuilder get() = metroGraphs.configBuilder
+    private val plugins get() = metroGraphs.allPlugins(aapsLogger)
+    private val persistenceLayer get() = metroGraphs.persistenceLayer
+    private val dateUtil get() = metroGraphs.dateUtil
+    private val uiInteraction get() = metroGraphs.uiInteraction
+    private val processLifecycleListener get() = metroGraphs.processLifecycleListener
+    private val localAlertUtils get() = metroGraphs.localAlertUtils
+    private val notificationManager get() = metroGraphs.notificationManager
+    private val rh get() = metroGraphs.resourceHelper
+    private val loop get() = metroGraphs.loop
+    private val profileFunction get() = metroGraphs.profileFunction
+    private val profileUtil get() = metroGraphs.profileUtil
+    private val fabricPrivacy get() = metroGraphs.fabricPrivacy
+    // The concrete types, only so their start() can be called below. Both are @Singleton, so these are
+    // the same objects the interface bindings hand out. `rh` is a Provider already - kept that way here
+    // rather than risking the cycle that shape exists to avoid.
+    private val resourceHelperImpl get() = metroGraphs.resourceHelperImpl
+    private val fabricPrivacyImpl get() = metroGraphs.fabricPrivacyImpl
+    private val rxBus get() = metroGraphs.rxBus
+    private val repository get() = metroGraphs.appRepository
+    private val hardLimits get() = metroGraphs.hardLimits
+    private val activePlugin get() = metroGraphs.activePlugin
+    private val profileRepository get() = metroGraphs.profileRepository
+    private val localInsulinManager get() = metroGraphs.insulinManager
+    private val constraintChecker get() = metroGraphs.constraintsChecker
+    private val signatureVerifierPlugin get() = metroGraphs.signatureVerifier
+    private val storageHelper get() = metroGraphs.storageHelper
+    private val fileListProvider get() = metroGraphs.fileListProvider
+    private val cryptoUtil get() = metroGraphs.cryptoUtil
+    private val exportPasswordDataStore get() = metroGraphs.exportPasswordDataStore
+    private val widgetUpdater get() = metroGraphs.widgetUpdater
+    private val runningModeReconciler get() = metroGraphs.runningModeReconciler
+    private val runningModeExpiryScheduler get() = metroGraphs.runningModeExpiryScheduler
+    private val profileSwitchExpiryScheduler get() = metroGraphs.profileSwitchExpiryScheduler
+    private val automationRuntime get() = metroGraphs.automationRuntime
+    private val appScope get() = metroGraphs.applicationScope
 
     private lateinit var insulinLabel: String
     private var insulinPeakTime: Long = 0L
@@ -200,13 +184,45 @@ class MainApp : Application(), HasAndroidInjector, Configuration.Provider {
 
     override fun onCreate() {
         super.onCreate()
+        copyModelToInternalStorage(this)
+
+        GeneratedStringOwners.registerAll()
+        resourceHelperImpl.start()
+        // Applies the analytics opt-out. Must come before configureLeakCanary below, which reports
+        // through fabricPrivacy.
+        fabricPrivacyImpl.start()
 
         // Here should be everything injected
         aapsLogger.debug("onCreate")
-        aapsLogger.debug("onCreate - début")
-        copyModelToInternalStorage(this)
-        aapsLogger.debug("onCreate - après copyModelToFileSystem")
-        ProcessLifecycleOwner.get().lifecycle.addObserver(processLifecycleListener.get())
+        ProcessLifecycleOwner.get().lifecycle.addObserver(processLifecycleListener)
+
+        // Background fallback for EventShowSnackbar: when no activity is STARTED
+        // (app in background / process alive but UI offscreen), promote the
+        // snackbar to a system Notification so the message is not lost.
+        // Visible activities host their own GlobalSnackbarHost that also
+        // subscribes; those win while UI is present.
+        appScope.launch {
+            rxBus.toFlow(EventShowSnackbar::class).collect { event ->
+                val uiVisible = ProcessLifecycleOwner.get().lifecycle.currentState
+                    .isAtLeast(Lifecycle.State.STARTED)
+                if (!uiVisible) {
+                    notificationManager.post(
+                        id = NotificationId.SNACKBAR_FALLBACK,
+                        text = event.message,
+                        // URGENT is reserved for pump/loop alarms that play alarm-stream
+                        // sounds and wake users. Generic snackbar errors — "failed to save
+                        // preference", etc. — route through NORMAL instead.
+                        level = when (event.type) {
+                            EventShowSnackbar.Type.Error   -> NotificationLevel.NORMAL
+                            EventShowSnackbar.Type.Warning -> NotificationLevel.NORMAL
+                            EventShowSnackbar.Type.Success -> NotificationLevel.INFO
+                            EventShowSnackbar.Type.Info    -> NotificationLevel.INFO
+                        },
+                        validMinutes = 30
+                    )
+                }
+            }
+        }
         // Configure LeakCanary with Firebase reporting
         // Memory leaks will be uploaded to Firebase Crashlytics via FabricPrivacy.logException
         configureLeakCanary(
@@ -227,11 +243,8 @@ class MainApp : Application(), HasAndroidInjector, Configuration.Provider {
                 // the next start (and the profile-to-JSON conversion with it).
                 profileRepository.reset()
 
-                // Defragment the DB while it is quiescent: plugins, loop, sync and UI all start
-                // later, so the (memory heavy) VACUUM has the DB to itself. Runs at most monthly.
-                vacuumDatabaseIfDue()
-
-                // Light DB maintenance while quiescent (no startup VACUUM — see maintainDatabaseIfDue).
+                // Fork: monthly startup maintenance WITHOUT VACUUM (SQLITE_NOMEM gate). Runs
+                // PRAGMA optimize + WAL checkpoint only; full VACUUM stays manual (runVacuum=true).
                 maintainDatabaseIfDue()
 
                 // Register and initialize plugins
@@ -263,93 +276,11 @@ class MainApp : Application(), HasAndroidInjector, Configuration.Provider {
             }
         }
     }
-    // Monthly startup maintenance: PRAGMA optimize + WAL checkpoint only (no VACUUM). Full VACUUM
-    // remains available from Maintenance / NS cleanup (runVacuum=true) but caused SQLITE_NOMEM and
-    // startup crashes on large AIMI databases when run automatically at launch (May 2026).
-    private suspend fun maintainDatabaseIfDue() {
-        val lastRun = preferences.get(LongNonKey.LastVacuumRun)
-        if (lastRun < dateUtil.now() - T.days(30).msecs()) {
-            config.updateInitProgress(getString(R.string.optimizing_database))
-            try {
-                withTimeout(T.mins(2).msecs()) {
-                    persistenceLayer.maintainDatabaseAtStartup()
-                }
-                preferences.put(LongNonKey.LastVacuumRun, dateUtil.now())
-                aapsLogger.debug(LTag.CORE, "Startup DB maintenance done (no VACUUM)")
-            } catch (e: Throwable) {
-                // DB maintenance must never abort app initialization (includes OOM / timeout).
-                aapsLogger.error(LTag.CORE, "Startup DB maintenance failed", e)
-            }
-        }
-    }
-
 
     // Perform a full VACUUM at most once a month. VACUUM defragments the DB file and reclaims
     // space, restoring query performance that degrades after long use. It is heavy and memory
     // intensive, so it runs only here at startup while nothing else touches the DB (this avoids
     // the SQLITE_NOMEM crash seen when VACUUM overlapped live DB activity).
-    private suspend fun vacuumDatabaseIfDue() {
-        val lastRun = preferences.get(LongNonKey.LastVacuumRun)
-        if (lastRun >= dateUtil.now() - T.days(30).msecs()) return
-
-        // Crash-loop guard. VACUUM can die below the JVM (native SQLite abort / OOM) in a way no
-        // try/catch can intercept — the process just vanishes, leaving no log. If that happened last
-        // time, the committed flag below is still set (the finally never ran). Detect it, skip
-        // VACUUM so the app can boot, and back off a month instead of re-crashing on every launch.
-        if (preferences.get(BooleanNonKey.VacuumInProgress)) {
-            aapsLogger.error(LTag.CORE, "Previous startup VACUUM did not finish (likely native crash) — skipping for 30 days")
-            // Report to Firebase so we get a fleet-wide count of users hit by a crashing startup VACUUM.
-            fabricPrivacy.logCustom("db_vacuum_crash_recovered", Bundle())
-            preferences.put(BooleanNonKey.VacuumInProgress, false)
-            preferences.put(LongNonKey.LastVacuumRun, dateUtil.now())
-            return
-        }
-
-        config.updateInitProgress(getString(R.string.optimizing_database))
-        try {
-            // Log size + per-table counts (total / older-than-retention backlog / tracked changes)
-            // before VACUUM, so a crash report tells us whether the DB is the problem. 6*31 mirrors
-            // KeepAliveWorker.databaseCleanup's retention so "deletable" reflects the real backlog.
-            val info = persistenceLayer.databaseMaintenanceInfo(retentionDays = 6L * 31)
-            aapsLogger.info(LTag.CORE, "Startup DB maintenance, pre-VACUUM diagnostics:\n${info.report}")
-            // Crashlytics breadcrumb: attaches the diagnostics to any exception logged below.
-            fabricPrivacy.logMessage("Pre-VACUUM: ${info.report}")
-            val dbMb = info.dbSizeBytes / 1_048_576
-            // VACUUM rebuilds the whole DB into a temporary copy, so it needs roughly the DB size
-            // again in free space. Skip (and retry next launch) if there isn't enough, to avoid a
-            // SQLITE_FULL failure mid-rebuild.
-            if (info.availableBytes in 0 until info.dbSizeBytes * 2) {
-                val freeMb = info.availableBytes / 1_048_576
-                aapsLogger.warn(LTag.CORE, "Skipping startup VACUUM: free $freeMb MB < 2x DB $dbMb MB")
-                fabricPrivacy.logCustom("db_vacuum_skip_space", Bundle().apply {
-                    putLong("db_mb", dbMb)
-                    putLong("free_mb", freeMb)
-                })
-                return
-            }
-            // Commit the marker synchronously BEFORE running: a plain put() uses apply() and may not
-            // reach disk before an early native abort (e.g. during the wal_checkpoint VACUUM starts with).
-            sp.edit(commit = true) { putBoolean(BooleanNonKey.VacuumInProgress.key, true) }
-            persistenceLayer.vacuumDatabase()
-            // Only advance the timestamp on success, so a transient failure (e.g. DB busy because a
-            // persisted worker is running) is retried on a future launch instead of suppressed for a month.
-            preferences.put(LongNonKey.LastVacuumRun, dateUtil.now())
-            aapsLogger.debug(LTag.CORE, "Startup VACUUM done")
-            // Fleet overview of DB size / cleanup backlog / change-row volume across users.
-            fabricPrivacy.logCustom("db_vacuum_ok", Bundle().apply {
-                putLong("db_mb", dbMb)
-                putLong("deletable", info.deletableRows)
-                putLong("changes", info.changeRows)
-            })
-        } catch (e: Throwable) {
-            // Throwable, not just Exception: a JVM OutOfMemoryError here must not abort app init.
-            aapsLogger.error(LTag.CORE, "Startup VACUUM failed", e)
-            // Catchable failures (SQLiteException, OOM) → Crashlytics non-fatal for the overview.
-            fabricPrivacy.logException(e)
-        } finally {
-            preferences.put(BooleanNonKey.VacuumInProgress, false)
-        }
-    }
 
     private suspend fun doInit() {
         aapsLogger.debug("doInit")
@@ -388,7 +319,7 @@ class MainApp : Application(), HasAndroidInjector, Configuration.Provider {
                             therapyEvent = TE(
                                 timestamp = dateUtil.now(),
                                 type = TE.Type.NOTE,
-                                note = rh.get().gs(app.aaps.core.ui.R.string.androidaps_start) + " - " + Build.MANUFACTURER + " " + Build.MODEL,
+                                note = rh.gs(app.aaps.core.ui.R.string.androidaps_start) + " - " + Build.MANUFACTURER + " " + Build.MODEL,
                                 glucoseUnit = GlucoseUnit.MGDL
                             ),
                             action = Action.START_AAPS,
@@ -405,20 +336,11 @@ class MainApp : Application(), HasAndroidInjector, Configuration.Provider {
         //  schedule widget update
         refreshWidget = Runnable {
             handler.postDelayed(refreshWidget, 60000)
-            widgetUpdater.update("ScheduleEveryMin")
-        }
-        handler.postDelayed(refreshWidget, 5000)
-        setUserStats()
-        passwordResetCheck()
-        exportPasswordResetCheck()
-        config.initCompleted()
-        rxBus.send(EventAppInitialized())
-        handler.postDelayed(refreshWidget, 60000)
         val sensorManager = getSystemService(Context.SENSOR_SERVICE) as SensorManager
         try {
             val stepSensor = sensorManager.getDefaultSensor(Sensor.TYPE_STEP_COUNTER)
             if (stepSensor != null) {
-                // 🛡️ CRITICAL FIX: Check Permission before Registering (Prevents Crash on Fresh Install)
+                // CRITICAL FIX: Check Permission before Registering (Prevents Crash on Fresh Install)
                 val hasPermission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                     androidx.core.content.ContextCompat.checkSelfPermission(
                         this,
@@ -438,6 +360,14 @@ class MainApp : Application(), HasAndroidInjector, Configuration.Provider {
         } catch (e: Exception) {
             aapsLogger.error("StepService registration failed", e)
         }
+            widgetUpdater.update("ScheduleEveryMin")
+        }
+        handler.postDelayed(refreshWidget, 5000)
+        setUserStats()
+        passwordResetCheck()
+        exportPasswordResetCheck()
+        config.initCompleted()
+        rxBus.send(EventAppInitialized())
         aapsLogger.debug("doInit end")
     }
 
@@ -486,7 +416,7 @@ class MainApp : Application(), HasAndroidInjector, Configuration.Provider {
             if (serialNumber != null) {
                 preferences.put(StringKey.ProtectionMasterPassword, cryptoUtil.hashPassword(serialNumber))
                 fh.delete()
-                exportPasswordDataStore.clearPasswordDataStore(this@MainApp)
+                exportPasswordDataStore.clearPasswordDataStore()
                 config.showInitSnackbar(getString(app.aaps.core.ui.R.string.password_set))
             } else {
                 aapsLogger.warn(LTag.CORE, "Password reset timed out waiting for pump serial number")
@@ -497,7 +427,7 @@ class MainApp : Application(), HasAndroidInjector, Configuration.Provider {
     private fun exportPasswordResetCheck() {
         val fh = fileListProvider.ensureExtraDirExists()?.findFile("ExportPasswordReset")
         if (fh?.exists() == true) {
-            exportPasswordDataStore.clearPasswordDataStore(this@MainApp)
+            exportPasswordDataStore.clearPasswordDataStore()
             fh.delete()
             config.showInitSnackbar(getString(app.aaps.core.ui.R.string.datastore_password_cleared))
         }
@@ -508,85 +438,29 @@ class MainApp : Application(), HasAndroidInjector, Configuration.Provider {
         if (config.isDev() && preferences.get(StringKey.MaintenanceIdentification).isBlank())
             notificationManager.post(
                 id = NotificationId.IDENTIFICATION_NOT_SET,
-                R.string.identification_not_set,
+                TextRef.AndroidRes(R.string.identification_not_set),
                 level = NotificationLevel.INFO,
-                actions = listOf(NotificationAction(R.string.set) {}),
+                actions = listOf(NotificationAction(TextRef.AndroidRes(R.string.set)) {}),
                 validityCheck = { config.isDev() && preferences.get(StringKey.MaintenanceIdentification).isBlank() }
             )
         // Master password not set
         if (preferences.get(StringKey.ProtectionMasterPassword) == "")
             notificationManager.post(
                 id = NotificationId.MASTER_PASSWORD_NOT_SET,
-                app.aaps.core.ui.R.string.master_password_not_set,
+                TextRef.AndroidRes(app.aaps.core.ui.R.string.master_password_not_set),
                 level = NotificationLevel.NORMAL,
-                actions = listOf(NotificationAction(R.string.set) {}),
+                actions = listOf(NotificationAction(TextRef.AndroidRes(R.string.set)) {}),
                 validityCheck = { preferences.get(StringKey.ProtectionMasterPassword) == "" }
             )
         // AAPS directory not selected
         if (preferences.getIfExists(StringKey.AapsDirectoryUri).isNullOrEmpty())
             notificationManager.post(
                 id = NotificationId.AAPS_DIR_NOT_SELECTED,
-                app.aaps.core.ui.R.string.aaps_directory_not_selected,
+                TextRef.AndroidRes(app.aaps.core.ui.R.string.aaps_directory_not_selected),
                 level = NotificationLevel.LOW,
-                actions = listOf(NotificationAction(R.string.select) {}),
+                actions = listOf(NotificationAction(TextRef.AndroidRes(R.string.select)) {}),
                 validityCheck = { preferences.getIfExists(StringKey.AapsDirectoryUri).isNullOrEmpty() }
             )
-    }
-
-    private fun copyModelToInternalStorage(context: Context) {
-        aapsLogger.debug("copyModelToInternalStorage - début")
-        try {
-            val assetManager = context.assets
-            aapsLogger.debug("copyModelToInternalStorage - assetManager : $assetManager")
-
-            // Définition du répertoire cible dans le stockage externe
-            val externalDir = File(Environment.getExternalStorageDirectory().absolutePath + "/Documents/AAPS/ml")
-            if (!externalDir.exists() && !externalDir.mkdirs()) {
-                Log.e("ModelCopyError", "Impossible de créer le répertoire : ${externalDir.absolutePath}")
-                return
-            }
-
-            // Fonction générique pour copier les fichiers
-            fun copyAssetToFile(assetName: String, destinationFile: File) {
-                try {
-                    aapsLogger.debug("copyModelToInternalStorage - Copie de $assetName vers ${destinationFile.absolutePath}")
-                    assetManager.open(assetName).use { inputStream ->
-                        FileOutputStream(destinationFile).use { outputStream ->
-                            inputStream.copyTo(outputStream)
-                        }
-                    }
-                    Log.d("ModelCopy", "Fichier '$assetName' copié dans ${destinationFile.absolutePath}")
-                } catch (e: Exception) {
-                    Log.e("ModelCopyError", "Erreur lors de la copie de $assetName : ${e.message}")
-                }
-            }
-
-            // Copie des fichiers nécessaires
-            copyAssetToFile("model.tflite", File(externalDir, "model.tflite"))
-            copyAssetToFile("modelUAM.tflite", File(externalDir, "modelUAM.tflite"))
-
-            // Vérification si les fichiers existent après copie
-            val modelFilePath = "${externalDir.absolutePath}/model.tflite"
-            val modelFile = File(modelFilePath)
-            if (modelFile.exists()) {
-                Log.d("FileCheck", "Le fichier existe à l'emplacement $modelFilePath")
-            } else {
-                Log.e("FileCheck", "Le fichier n'existe pas à l'emplacement $modelFilePath")
-            }
-
-            val uamFilePath = "${externalDir.absolutePath}/modelUAM.tflite"
-            val uamFile = File(uamFilePath)
-            if (uamFile.exists()) {
-                Log.d("FileCheck", "Le fichier existe à l'emplacement $uamFilePath")
-            } else {
-                Log.e("FileCheck", "Le fichier n'existe pas à l'emplacement $uamFilePath")
-            }
-
-            aapsLogger.debug("copyModelToInternalStorage - Copie terminée")
-
-        } catch (e: Exception) {
-            Log.e("ModelCopyError", "Erreur globale lors de la copie: ${e.message}")
-        }
     }
 
     private fun setRxErrorHandler() {
@@ -643,18 +517,6 @@ class MainApp : Application(), HasAndroidInjector, Configuration.Provider {
         }
         // Clear SmsOtpPassword if wrongly replaced
         if (preferences.get(StringKey.SmsOtpPassword).length > 10) preferences.put(StringKey.SmsOtpPassword, "")
-        // Raise sensor battery thresholds from old defaults (25/5) to new defaults (40/20)
-        if (preferences.get(IntKey.OverviewSbatWarning) == 25) preferences.put(IntKey.OverviewSbatWarning, 40)
-        if (preferences.get(IntKey.OverviewSbatCritical) == 5) preferences.put(IntKey.OverviewSbatCritical, 20)
-
-        // AIMI Lot A: Stability/HYPO_GUARD writeback used to force adaptive basal OFF. One-shot re-enable
-        // on upgrade so the product default (true) is restored; user can disable again afterward.
-        if (!config.AAPSCLIENT && !preferences.get(BooleanNonKey.AimiAdaptiveBasalReenabledOnUpgrade)) {
-            if (!preferences.get(BooleanKey.OApsAIMIT3cAdaptiveBasalEnabled)) {
-                preferences.put(BooleanKey.OApsAIMIT3cAdaptiveBasalEnabled, true)
-            }
-            preferences.put(BooleanNonKey.AimiAdaptiveBasalReenabledOnUpgrade, true)
-        }
 
         val keys: Map<String, *> = sp.getAll()
         // Migrate ActivityMonitor
@@ -816,7 +678,7 @@ class MainApp : Application(), HasAndroidInjector, Configuration.Provider {
         migrateTempTargetPresets()
 
         // Get Insulin plugin information for database migration
-        insulinLabel = rh.get().gs(
+        insulinLabel = rh.gs(
             when {
                 sp.getBoolean("ConfigBuilder_Enabled_INSULIN_InsulinOrefRapidActingPlugin", false)      -> InsulinType.OREF_RAPID_ACTING.label
                 sp.getBoolean("ConfigBuilder_Enabled_INSULIN_InsulinOrefUltraRapidActingPlugin", false) -> InsulinType.OREF_ULTRA_RAPID_ACTING.label
@@ -972,13 +834,13 @@ class MainApp : Application(), HasAndroidInjector, Configuration.Provider {
         val peak = runningICfg.insulinPeakTime
         val conc = runningICfg.concentration
 
-        config.updateInitProgress(rh.get().gs(R.string.migrating_profile_switches))
+        config.updateInitProgress(rh.gs(R.string.migrating_profile_switches))
         val migratedPs = repository.bulkMigrateProfileSwitchInsulinConfig(label, end, peak, conc)
 
-        config.updateInitProgress(rh.get().gs(R.string.migrating_effective_profile_switches))
+        config.updateInitProgress(rh.gs(R.string.migrating_effective_profile_switches))
         val migratedEps = repository.bulkMigrateEffectiveProfileSwitchInsulinConfig(label, end, peak, conc)
 
-        config.updateInitProgress(rh.get().gs(R.string.migrating_boluses))
+        config.updateInitProgress(rh.gs(R.string.migrating_boluses))
         val migratedBoluses = repository.bulkMigrateBolusInsulinConfig(label, end, peak, conc)
 
         val totalMigrated = migratedPs + migratedEps + migratedBoluses
@@ -1004,7 +866,6 @@ class MainApp : Application(), HasAndroidInjector, Configuration.Provider {
      * Insulin config stamped onto legacy records when neither legacy preferences nor a running profile
      * can tell us what was actually used: no active profile switch at first start, or — the case that
      * matters — a running profile whose own row still carries the v33 sentinel.
-     *
      * That second case is why this must not read the running profile unguarded. The SQL step of the
      * migration stamps `insulinEndTime = -1` onto every pre-ICfg row *including the active one*, so
      * reading it back yields a DIA of 0.0 and writes the sentinel straight back over itself. The rows stay
@@ -1012,17 +873,16 @@ class MainApp : Application(), HasAndroidInjector, Configuration.Provider {
      * cycle. [app.aaps.core.interfaces.profile.ProfileFunction.getRunningOrRequestedICfg] rejects an
      * unusable [ICfg] so that path lands here instead — and because the repair re-runs on every start and
      * still matches the sentinel rows, an install already broken this way heals on its next launch.
-     *
      * Ultra-rapid: an 8h DIA is the same across every [InsulinType] template, so the only real choice is
      * the peak. Concentration is 1.0 by construction, which is not a guess — these records predate
      * concentration entirely, so 1.0 is the identity that leaves historical doses unscaled.
      */
     private fun substituteICfgForMigration(): ICfg =
-        InsulinType.OREF_ULTRA_RAPID_ACTING.getICfg(rh.get()).also {
+        InsulinType.OREF_ULTRA_RAPID_ACTING.getICfg(rh).also {
             aapsLogger.warn(LTag.CORE, "Migration to DB 33: no profile and no legacy DIA, substituting ${it.insulinLabel}")
             notificationManager.post(
                 id = NotificationId.INSULIN_MIGRATION_DEFAULT_USED,
-                rh.get().gs(R.string.insulin_migration_default_used, it.insulinLabel),
+                rh.gs(R.string.insulin_migration_default_used, it.insulinLabel),
                 level = NotificationLevel.IMPORTANT
             )
         }
@@ -1080,8 +940,15 @@ class MainApp : Application(), HasAndroidInjector, Configuration.Provider {
                         @Suppress("UNCHECKED_CAST")
                         (versionCheckersUtils::class.declaredMemberProperties.find { it.name == "definition" } as KMutableProperty<Any>?)
                             ?.let {
-                                val merged = JsonHelper.merge(it.getter.call(versionCheckersUtils) as JSONObject, JSONObject(firebaseRemoteConfig.getString("defs")))
-                                it.setter.call(versionCheckersUtils, merged)
+                                // `definition` is read through reflection, so the cast below is unchecked and the
+                                // compiler cannot see it. It said JSONObject long after the property became a
+                                // kotlinx JsonObject, and the app crashed on start as soon as a remote config
+                                // fetch actually succeeded - which needs network and Play Services, so no test or
+                                // CI build ever reached it. Keep the two types here in step by hand.
+                                val current = it.getter.call(versionCheckersUtils) as JsonObject
+                                val remote = Json.parseToJsonElement(firebaseRemoteConfig.getString("defs")).jsonObject
+                                // Plus on the maps is a shallow merge with the remote keys winning.
+                                it.setter.call(versionCheckersUtils, JsonObject(current + remote))
                             }
                     } else aapsLogger.error("RemoteConfig fetch failed")
                 }
@@ -1096,5 +963,92 @@ class MainApp : Application(), HasAndroidInjector, Configuration.Provider {
         unregisterActivityLifecycleCallbacks(activityMonitor)
         uiInteraction.stopAlarm("onTerminate")
         super.onTerminate()
+    }
+
+    /**
+     * Teaches the resolvers which module owns which string names.
+     * A `TextRef.Named` carries an owner and a name, and both the Compose and the ResourceHelper
+     * paths need a way to turn that into an `R.string` id. `:core:keys`, `:core:interfaces` and
+     * `:core:ui` are resolved directly because `:core:ui` sits above them, but a plugin or pump
+     * module sits ABOVE `:core:ui`, so it can only be reached from here - `:app` is the one place
+     * that depends on all of them.
+     * Without this the lookup answers null and the raw name is drawn: `virtual_pump_shortname`
+     * instead of "Virtual Pump".
+     */
+
+    // Fork: monthly startup maintenance: PRAGMA optimize + WAL checkpoint only (no VACUUM). Full VACUUM
+    // remains available from Maintenance / NS cleanup (runVacuum=true) but caused SQLITE_NOMEM and
+    // startup crashes on large AIMI databases when run automatically at launch (May 2026).
+    private fun copyModelToInternalStorage(context: Context) {
+        aapsLogger.debug("copyModelToInternalStorage - début")
+        try {
+            val assetManager = context.assets
+            aapsLogger.debug("copyModelToInternalStorage - assetManager : $assetManager")
+
+            // Définition du répertoire cible dans le stockage externe
+            val externalDir = File(Environment.getExternalStorageDirectory().absolutePath + "/Documents/AAPS/ml")
+            if (!externalDir.exists() && !externalDir.mkdirs()) {
+                Log.e("ModelCopyError", "Impossible de créer le répertoire : ${externalDir.absolutePath}")
+                return
+            }
+
+            // Fonction générique pour copier les fichiers
+            fun copyAssetToFile(assetName: String, destinationFile: File) {
+                try {
+                    aapsLogger.debug("copyModelToInternalStorage - Copie de $assetName vers ${destinationFile.absolutePath}")
+                    assetManager.open(assetName).use { inputStream ->
+                        FileOutputStream(destinationFile).use { outputStream ->
+                            inputStream.copyTo(outputStream)
+                        }
+                    }
+                    Log.d("ModelCopy", "Fichier '$assetName' copié dans ${destinationFile.absolutePath}")
+                } catch (e: Exception) {
+                    Log.e("ModelCopyError", "Erreur lors de la copie de $assetName : ${e.message}")
+                }
+            }
+
+            // Copie des fichiers nécessaires
+            copyAssetToFile("model.tflite", File(externalDir, "model.tflite"))
+            copyAssetToFile("modelUAM.tflite", File(externalDir, "modelUAM.tflite"))
+
+            // Vérification si les fichiers existent après copie
+            val modelFilePath = "${externalDir.absolutePath}/model.tflite"
+            val modelFile = File(modelFilePath)
+            if (modelFile.exists()) {
+                Log.d("FileCheck", "Le fichier existe à l'emplacement $modelFilePath")
+            } else {
+                Log.e("FileCheck", "Le fichier n'existe pas à l'emplacement $modelFilePath")
+            }
+
+            val uamFilePath = "${externalDir.absolutePath}/modelUAM.tflite"
+            val uamFile = File(uamFilePath)
+            if (uamFile.exists()) {
+                Log.d("FileCheck", "Le fichier existe à l'emplacement $uamFilePath")
+            } else {
+                Log.e("FileCheck", "Le fichier n'existe pas à l'emplacement $uamFilePath")
+            }
+
+            aapsLogger.debug("copyModelToInternalStorage - Copie terminée")
+
+        } catch (e: Exception) {
+            Log.e("ModelCopyError", "Erreur globale lors de la copie: ${e.message}")
+        }
+    }
+
+    private suspend fun maintainDatabaseIfDue() {
+        val lastRun = preferences.get(LongNonKey.LastVacuumRun)
+        if (lastRun < dateUtil.now() - T.days(30).msecs()) {
+            config.updateInitProgress(getString(R.string.optimizing_database))
+            try {
+                withTimeout(T.mins(2).msecs()) {
+                    persistenceLayer.maintainDatabaseAtStartup()
+                }
+                preferences.put(LongNonKey.LastVacuumRun, dateUtil.now())
+                aapsLogger.debug(LTag.CORE, "Startup DB maintenance done (no VACUUM)")
+            } catch (e: Throwable) {
+                // DB maintenance must never abort app initialization (includes OOM / timeout).
+                aapsLogger.error(LTag.CORE, "Startup DB maintenance failed", e)
+            }
+        }
     }
 }

@@ -3,8 +3,9 @@ package app.aaps.pump.medtrum.util
 import android.bluetooth.BluetoothGatt
 import app.aaps.core.interfaces.logging.AAPSLogger
 import app.aaps.core.interfaces.logging.LTag
-import javax.inject.Inject
-import javax.inject.Singleton
+import dev.zacsweers.metro.AppScope
+import dev.zacsweers.metro.Inject
+import dev.zacsweers.metro.SingleIn
 
 /**
  * Utility class for diagnosing and logging BLE connection states.
@@ -15,7 +16,7 @@ import javax.inject.Singleton
  * - Call checkForZombieState() periodically to detect stuck connections
  * - Review logs with tag PUMPBTCOMM to diagnose issues
  */
-@Singleton
+@SingleIn(AppScope::class)
 class BLEDiagnostics @Inject constructor(
     private val aapsLogger: AAPSLogger
 ) {
