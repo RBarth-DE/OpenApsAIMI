@@ -1567,6 +1567,77 @@ system's thumbnail current on its own: call `Renderer.sendPreviewImageNeedsUpdat
 appearance actually changes. Whether any given OEM system acts on it is not knowable from these
 sources — the KDoc explicitly permits doing nothing — so it needs confirming on device per platform.
 
+### What a watch face document can say to the editor - the complete list
+
+Enumerated from the validator's own schemas (`watch_face_format_validation/docs.zip` inside
+`validator-push-cli-1.1.0-alpha01.jar`, version 5), because "can the editor's preview be hidden?"
+kept coming back:
+
+- `UserConfigurations` entries take exactly six attributes, from `AbstractConfigurationType`
+  (`5/userConfiguration/abstractConfigurationType.xsd`): `id`, `displayName`, `icon`,
+  `screenReaderText`, `defaultValue`, `highlight`. Both `displayName` and `defaultValue` are
+  required.
+- `watch_face_info.xml` takes `Preview`, `MultipleInstancesAllowed`, `FlavorsSupported`, `Editable`.
+- `Metadata` honours three keys: `PREVIEW_TIME`, `CLOCK_TYPE`, `STEP_GOAL` (any other key/value pair
+  is accepted and ignored).
+- `Variant` has exactly one `mode`: **`AMBIENT`** (`5/common/variant/variantElements.xsd`). There is
+  no editor or preview mode, so a document cannot draw itself differently while being edited.
+
+**Nothing in that list hides or dims the preview the editor draws.** `highlight` is the closest, and
+its own documentation says the opposite - the image *"will be laid on the watch face preview"*. The
+layout is the OEM editor's: on a Wear 6 emulator two `BooleanConfiguration`s render as two toggle
+rows with full-length labels over a dimmed face, while the Samsung editor on a Galaxy Watch 4 shows
+one setting per page with the title on one line at the top, where a long title loses both ends to the
+bezel. Short titles are therefore the only fix available for that truncation; the full sentence goes
+in `screenReaderText`, which has no such limit.
+
+Untested lever, worth trying before concluding: `icon` is documented as *"used as an item of option
+list in the configuration activity"*. "Option list" suggests an editor may present a list rather than
+one page per setting when the configurations carry icons.
+
+### `displayName` must be a string resource
+
+A literal is silently ignored: the editor showed "1st setting" instead of the text. `@string/...`
+works.
+
+### `BATTERY_CHARGING_STATUS` - measured
+
+Established on a Wear 6 emulator by printing the raw value on the face and guarding a marker with
+each candidate expression:
+
+- the value prints as **`true`** / **`false`** (lower case);
+- **both** `[BATTERY_CHARGING_STATUS] == "true"` and the bare `[BATTERY_CHARGING_STATUS]` work inside
+  a `Condition`, and both are false while discharging;
+- it is **true while the battery status is `FULL`**, not only while `CHARGING`, and it follows the
+  battery *status* rather than the presence of a charger (`dumpsys battery unplug` + `set status 2`
+  is enough to make it true). That matches `SimpleUi.isCharging` in the wear app, which counts
+  `BATTERY_STATUS_CHARGING || BATTERY_STATUS_FULL` - so the two watch faces agree on what "on the
+  charger" means.
+
+The operator list the schema documents (`5/common/simpleTypes/arithmeticExpressionType.xsd`) has no
+`!=`, `<` or `<=`: use `!(a == b)` and reverse the operands.
+
+### A pushed watch face reaches the picker through "Add new", and activation is a small quota
+
+Both learned while trying to get a re-pushed face back on screen:
+
+- After the face package is removed and pushed again, the face is **not** in the watch face carousel.
+  It is in the gallery behind **"Add new"**, and picking it there puts it back in the carousel. The
+  slot being occupied (`listWatchFaces` reporting `slots used=1`) says nothing about whether the
+  picker offers it.
+- `WatchFacePushManager.setWatchFaceAsActive` fails with *"The maximum number of attempts to set the
+  watch face as active has been reached"* once its allowance is used. That limit is **not** the
+  permission: it still failed after `pm grant com.google.wear.permission
+  .SET_PUSHED_WATCH_FACE_AS_ACTIVE`, and it survived an emulator cold boot. So activation is a
+  one-off courtesy, not a mechanism to lean on for every update - the wearer selects the face.
+
+### `syncOnStartup` does re-push a changed document
+
+The validation token the validator prints **is** content-dependent: two documents differing only in
+their `UserConfigurations` produced different tokens, and the app pushed the new one by itself on the
+next start ("face updated"), with no menu tap and no permission prompt. An earlier note here claiming
+otherwise was wrong - it came from missing the first push in the log.
+
 ## Engine lifecycle — when slots and schema are built (watchface 1.2.1, `WatchFaceService.kt`)
 
 Searched for every call site, because "can the app make its slots be rebuilt?" comes up whenever
@@ -1860,6 +1931,15 @@ WatchFacePush: slots used=1 remaining=0 packages=<app>.watchfacepush.aapsv4
 So the quota is **one face per app**. An app that already pushed a face has no room for a second;
 it can only `updateWatchFace()` the slot it holds, or `removeWatchFace()` to free it.
 
+That is how AAPS ships two faces anyway. `updateWatchFace()` accepts "a completely different watch
+face" (its KDoc), so the wear app embeds both faces (`wfs`, the Watch Face Studio layout of
+complications, and `cwf`, the picture of the Custom watchface) and fills its one slot with the face
+chosen in the phone's wear settings (`StringKey.WearPushedWatchface`). The two faces have different
+package suffixes on purpose: the runtime never re-applies `DefaultProviderPolicy` to a slot id it has
+already bound, and the faces use overlapping slot ids with different providers. The KDoc also says
+the face's own user configuration is reset when the package name changes, so a switch and back
+loses the complication choices made in the face editor.
+
 Note `installedWatchFaceDetails` lists only faces added by the calling app, so this count is
 per-app, not device-wide.
 
@@ -2087,3 +2167,71 @@ document rather than a state the app has to detect, render and push. The app is 
 watch dozes on a charger, so anything that depends on us refreshing would be stale; a condition
 evaluated by the runtime is not.
 
+## Pushing a document to the face that is currently active leaves stale state
+
+Measured on a Wear OS 6 emulator: calling `updateWatchFace` while that face is the **active** one
+left the runtime showing both the old and the new scene's alphas at once. The ambient layer - clock,
+glucose and status text, all declared `alpha="0"` outside ambient - was ghosted **over** the normal
+face for minutes, in `ambient [ false ]`, long after any transition.
+
+It is not a fault in the document. After the runtime reloaded the face, normal mode was clean and
+ambient correct again. So treat it as an artefact of the hot swap:
+
+- **When a pushed document changes, reload the face before judging what you see.** Re-selecting it in
+  the picker is enough.
+- Do **not** `am force-stop com.google.wear.watchface.runtime` to force that reload - the system falls
+  back to `DefaultWatchFace` and the pushed face has to be selected again by hand.
+
+Worth remembering during development, where the document changes on nearly every build: a "the
+ambient layer is visible in normal mode" report after a push is most likely this, not the XML.
+
+## Watch Face Format: what the validator checks, and what it does not
+
+The validator runs **inside the build**, in the `embed<Variant>WatchFace` task, so a bad document
+fails `:wear:assembleFullDebug` with a `SEVERE: Could not validate xml:` line naming the element. No
+separate jar is needed - an earlier note suggesting one is only useful for checking a document
+outside a build.
+
+**A `ComplicationSlot` may not sit inside a `Condition`.** The validator says so plainly:
+
+```
+Invalid content was found starting with element 'ComplicationSlot'.
+One of '{Group, PartText, PartImage, PartAnimatedImage, PartDraw, Condition, AnalogClock, DigitalClock}' is expected.
+```
+
+A `Condition` *may* sit inside the content a complication draws, which is the way to make a slot's
+appearance depend on a setting: declare the slot unconditionally, and put the condition around the
+`PartImage` inside its `<Complication>`.
+
+**The validator checks the schema, not the meaning.** A document can pass every check and still draw
+nothing. `UserConfigurations` with a `BooleanConfiguration`, referenced as
+`[CONFIGURATION.id] == 0` and `[CONFIGURATION.id] == 1`, validated and then produced a **completely
+black watch face** on a Galaxy Watch 4 - no clock, no image, no ambient readouts, and no settings
+offered on long press. Every drawable element had been wrapped in one of those two conditions, so if
+the expression yields neither 0 nor 1, everything disappears at once.
+
+What a `BooleanConfiguration` actually yields in an expression is therefore **still unknown**, and
+worth establishing with an additive test before it is relied on.
+
+**The rule that follows, and it is not optional.** A change to the document must be additive and safe
+by construction: the existing, working rendering must never be made to depend on a new expression.
+Add the conditional element on top instead. Then a wrong expression can only fail to add something -
+it can never blank the watch, which is what happened here on a watch somebody was wearing.
+
+### What a `BooleanConfiguration` is worth in an expression - measured, not assumed
+
+Established on a Wear 6 emulator by printing the value on the face itself, after an assumption about
+it had blanked a watch:
+
+- `[CONFIGURATION.<id>]` of a `BooleanConfiguration` yields the string **`TRUE`** - **not** `1`.
+- `<Expression name="x">[CONFIGURATION.&lt;id&gt;] == "TRUE"</Expression>` inside a `Condition`
+  works: the guarded element renders when the setting is on.
+
+Comparing such a value to `0` and to `1` therefore makes **both** branches false. A document that
+wrapped the clock, the face image and the ambient readouts in those two branches validated cleanly
+and drew a **completely black watch face**, with no settings offered either. The validator cannot
+catch this: it checks the schema, not whether an expression means what its author thought.
+
+**How to find out cheaply, without risking the face**: add one `PartText` whose `Template` prints the
+raw value, change nothing else, and read it on the watch. Then add one guarded element and see
+whether it appears. Both are purely additive - a wrong expression can only fail to add something.

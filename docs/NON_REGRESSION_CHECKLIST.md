@@ -4,7 +4,7 @@ Purpose: enforce repeatable quality gates to prevent freezes and functional regr
 
 Use this file for every merge from `dev` and every release candidate.
 
-**Latest merge log:** [MERGE_DEV_2026-09-18.md](MERGE_DEV_2026-09-18.md) (`dev` @ `aaa069fab385` → `dev_OAPSAIMI_RB`; CareLevo pump, pump modules into folders, 10 conflicted files). Previous: [MERGE_DEV_2026-09-14.md](MERGE_DEV_2026-09-14.md) (`dev` @ `343f9f7673`; KMP layout + Hilt→Metro, 1115 conflicted files), [MERGE_DEV_2026-09-06.md](MERGE_DEV_2026-09-06.md) (`dev` @ `283a184f60`), [MERGE_DEV_2026-08-08.md](MERGE_DEV_2026-08-08.md) (`dev` @ `7fc8205e9a`), [MERGE_DEV_2026-08-03.md](MERGE_DEV_2026-08-03.md).
+**Latest merge log:** [MERGE_DEV_2026-09-18_CWF.md](MERGE_DEV_2026-09-18_CWF.md) (`dev` @ `025c4163b7` → `dev_OAPSAIMI_RB`; the finished Wear CWF / Watch Face Format work, 25 conflicted files). Previous: [MERGE_DEV_2026-09-18.md](MERGE_DEV_2026-09-18.md) (`dev` @ `aaa069fab385`; CareLevo pump, pump modules into folders, 10 conflicted files), [MERGE_DEV_2026-09-14.md](MERGE_DEV_2026-09-14.md) (`dev` @ `343f9f7673`; KMP layout + Hilt→Metro, 1115 conflicted files), [MERGE_DEV_2026-09-06.md](MERGE_DEV_2026-09-06.md) (`dev` @ `283a184f60`), [MERGE_DEV_2026-08-08.md](MERGE_DEV_2026-08-08.md) (`dev` @ `7fc8205e9a`), [MERGE_DEV_2026-08-03.md](MERGE_DEV_2026-08-03.md).
 
 ---
 
@@ -65,6 +65,39 @@ Use this file for every merge from `dev` and every release candidate.
         [ -f "$p" ] && { grep -q injectMetroMembers "$p" || echo "LOST: $p"; }
       done
       ```
+
+- [ ] **The version catalog is not a file to take from one side.** `gradle/libs.versions.toml`
+      conflicts look harmless and are easy to resolve as "theirs", but upstream drops aliases when it
+      drops a library (Compose migrations), and the fork's build files may still use them. Gradle only
+      reports the loss when it configures the module that uses the alias, and that failure stops the
+      build before any compilation, with a message that points at the build file, not at the catalog:
+      `e: plugins/main/build.gradle.kts:92:46: Unresolved reference 'fragment'`. After resolving this
+      file, compare both sides: every alias read from the catalog (`[libraries]` is `libs.x`,
+      `[plugins]` is `libs.plugins.x`, `[versions]` is `libs.versions.x`) must exist for every `libs.`
+      reference in the `*.gradle.kts` files. Hit in the 2026-09-18 CWF merge (five aliases lost -
+      Fragment, GridLayout, runtime-livedata, flexbox, security-crypto).
+- [ ] **A file that moves in a merge can silently eat upstream's version.** When upstream moves a
+      path (a template, a resource) and the fork had edited the file at the old path, git applies the
+      fork's edit at the new path and discards upstream's file. The result looks clean. Check the
+      moved paths by hand: `git diff HEAD MERGE_HEAD --stat` for the file, then
+      `git checkout MERGE_HEAD -- <new path>` when the fork's copy is the stale one. Hit in the
+      2026-09-18 CWF merge (`wear/watchfacepush/template/watchface.xml` →
+      `src/wfs/template/watchface.xml`).
+- [ ] **When both sides changed the same line, one side replaces the other - never keep both.** The
+      two-sided conflict markers invite a "combine" resolution, but a line the fork changed against
+      the merge base and a line upstream changed in the same place are alternatives. Keeping both
+      compiles, builds and passes every resource gate; it fails only where a test covers the
+      behaviour. Read the resolved file **against upstream**, not only against the fork:
+      ```bash
+      # what the merged file has that upstream does not (fork lines kept),
+      # and what upstream has that the merged file lacks (upstream lines dropped)
+      git diff MERGE_HEAD -- <conflict file>
+      ```
+      Every line the merged file adds over upstream must be a named fork feature. Hit in the
+      2026-09-18 CWF merge (`AutomationRuntime.processActions` kept the fork's
+      `synchronized(btConnects) { btConnects.clear() }` under upstream's new
+      `btConnectsLock.withLock { btConnects.subList(0, seenBtConnects).clear() }`, which throws away
+      a BT connect that arrives during a run - `AutomationRuntimeProcessingTest` caught it).
 
 Notes:
 - No opportunistic refactor during merge conflict resolution.

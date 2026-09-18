@@ -7,6 +7,7 @@ import androidx.wear.watchface.complications.data.PlainComplicationText
 import androidx.wear.watchface.complications.data.ShortTextComplicationData
 import app.aaps.core.interfaces.logging.LTag
 import app.aaps.wear.R
+import app.aaps.wear.complications.cwf.CwfFaceComplication
 import app.aaps.wear.data.ComplicationData as ComplicationStore
 
 /**
@@ -54,6 +55,19 @@ class CwfAmbientStatusComplication : ModernBaseComplicationProviderService() {
             }
         }
     }
+
+    /**
+     * Not tappable at all - same reason as [CwfAmbientBgComplication].
+     *
+     * The readout only appears in ambient, but the slot answers taps wherever it is drawn, so with a
+     * tap action a tap on a sleeping watch opened AAPS instead of waking it. With no action the tap
+     * falls through to the system and wakes the screen.
+     */
+    /**
+     * Opens the AAPS menu while the watch is awake, and does nothing while it dozes - see
+     * [readoutTapAction], which holds the rule and the two faults that shaped it.
+     */
+    override fun getComplicationAction(): ComplicationAction = readoutTapAction(CwfFaceComplication.isAmbient(this))
 
     override fun getProviderCanonicalName(): String = CwfAmbientStatusComplication::class.java.canonicalName!!
 }

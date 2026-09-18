@@ -3,6 +3,7 @@
     <string name="label_watchface_circle">AAPS(Circle)</string>
     <string name="label_watchface_digital_style">AAPS(DigitalStyle)</string>
     <string name="label_watchface_custom">AAPS(Custom)</string>
+    <string name="label_watchface_custom_ambient" comment="Name of the data source that draws the Custom watch face without seconds, for the always-on display. Shown in the watch's complication list.">AAPS(Custom) always-on</string>
     <string name="label_actions_tile">Actions</string>
     <string name="label_temp_target_tile">Temp Target</string>
     <string name="label_quick_wizard_tile">Quick Wizard</string>

@@ -13,7 +13,7 @@ import app.aaps.core.interfaces.rx.bus.RxBus
 import app.aaps.wear.comm.DataHandlerWear
 import app.aaps.wear.comm.DataLayerListenerServiceWear
 import app.aaps.wear.comm.ExceptionHandlerWear
-import app.aaps.wear.complications.CwfComplicationUpdater
+import app.aaps.wear.complications.cwf.CwfComplicationUpdater
 import app.aaps.wear.di.WearGraph
 import app.aaps.wear.events.EventWearPreferenceChange
 import app.aaps.wear.watchfaces.WatchFacePushHelper
@@ -25,6 +25,19 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 class WearApp : Application(), MetroMemberInjector {
+
+    /** Built once, on first use, because Android constructs this class before anything can be injected. */
+    private val graph: WearGraph by lazy { createGraphFactory<WearGraph.Factory>().create(this) }
+
+    @Suppress("UNCHECKED_CAST")
+    override fun injectMembers(target: Any): Boolean {
+        val injector = graph.memberInjectors[target::class] ?: return false
+        (injector as MembersInjector<Any>).injectMembers(target)
+        return true
+    }
+
+    @Inject lateinit var aapsLogger: AAPSLogger
+    @Inject lateinit var rxBus: RxBus
 
     @Suppress("unused")
     @Inject lateinit var dataHandlerWear: DataHandlerWear // instantiate only
@@ -47,20 +60,9 @@ class WearApp : Application(), MetroMemberInjector {
         LocalBroadcastManager.getInstance(this).sendBroadcast(Intent(DataLayerListenerServiceWear.INTENT_NEW_DATA))
         rxBus.send(EventWearPreferenceChange(key))
     }
-    @Suppress("UNCHECKED_CAST")
-    override fun injectMembers(target: Any): Boolean {
-        val injector = graph.memberInjectors[target::class] ?: return false
-        (injector as MembersInjector<Any>).injectMembers(target)
-        return true
-    }
-
-    @Inject lateinit var aapsLogger: AAPSLogger
-    @Inject lateinit var rxBus: RxBus
 
     override fun onCreate() {
         super.onCreate()
-        // Nothing else fills this object's @Inject fields: Android builds the Application itself, so
-        // it has to ask for them here, before the first one is read.
         injectMetroMembers(this)
         exceptionHandlerWear.register()
         aapsLogger.debug(LTag.WEAR, "onCreate")
@@ -72,6 +74,4 @@ class WearApp : Application(), MetroMemberInjector {
         PreferenceManager.getDefaultSharedPreferences(this).registerOnSharedPreferenceChangeListener(preferenceChangeListener)
         startForegroundService(Intent(this, DataLayerListenerServiceWear::class.java))
     }
-
-    private val graph: WearGraph by lazy { createGraphFactory<WearGraph.Factory>().create(this) }
 }

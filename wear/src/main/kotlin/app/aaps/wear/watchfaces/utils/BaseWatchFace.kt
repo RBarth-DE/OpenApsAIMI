@@ -17,36 +17,37 @@ import android.view.WindowInsets
 import android.view.WindowManager
 import androidx.core.graphics.createBitmap
 import androidx.viewbinding.ViewBinding
+import app.aaps.core.interfaces.di.injectMetroMembers
 import app.aaps.core.interfaces.logging.AAPSLogger
 import app.aaps.core.interfaces.logging.LTag
 import app.aaps.core.interfaces.rx.bus.RxBus
+import app.aaps.core.interfaces.rx.collectResilient
 import app.aaps.core.interfaces.rx.events.EventWearToMobile
 import app.aaps.core.interfaces.rx.weardata.EventData.ActionResendData
 import app.aaps.core.interfaces.sharedPreferences.SP
 import app.aaps.core.interfaces.utils.DateUtil
-import app.aaps.wear.utils.toVisibility
-import app.aaps.wear.utils.toVisibilityKeepSpace
 import app.aaps.wear.R
 import app.aaps.wear.data.ComplicationData
 import app.aaps.wear.data.ComplicationDataRepository
 import app.aaps.wear.data.bgDataArray
 import app.aaps.wear.data.statusDataArray
+import app.aaps.wear.di.WearMetroService
 import app.aaps.wear.events.EventWearPreferenceChange
 import app.aaps.wear.interaction.menus.MainMenuActivity
-import app.aaps.core.interfaces.di.injectMetroMembers
-import app.aaps.core.interfaces.rx.collectResilient
-import app.aaps.wear.di.WearMetroService
-import kotlinx.coroutines.CoroutineStart
+import app.aaps.wear.utils.toVisibility
+import app.aaps.wear.utils.toVisibilityKeepSpace
+import dev.zacsweers.metro.HasMemberInjections
+import dev.zacsweers.metro.Inject
+import io.reactivex.rxjava3.disposables.CompositeDisposable
+import kotlin.math.floor
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import dev.zacsweers.metro.HasMemberInjections
-import dev.zacsweers.metro.Inject
-import kotlin.math.floor
 
 @SuppressLint("Deprecated")
 @HasMemberInjections
@@ -161,7 +162,15 @@ abstract class BaseWatchFace : WatchFace() {
     var dayNameFormat = "E"
     var monthFormat = "MMM"
     val showSecond: Boolean
-        get() = enableSecond && currentWatchMode == WatchMode.INTERACTIVE
+        get() = showSeconds(enableSecond, currentWatchMode == WatchMode.INTERACTIVE, renderSecondsOverride)
+
+    /**
+     * Render-only: forces the seconds off for the frame being built. Null follows the watch mode.
+     *
+     * Only [setRenderSeconds] writes it, and that refuses unless this instance exists purely to draw
+     * into a bitmap - so on the watch face people wear it stays null and [showSecond] is unchanged.
+     */
+    private var renderSecondsOverride: Boolean? = null
 
     // Tapping times
     private var sgvTapTime: Long = 0
@@ -183,7 +192,7 @@ abstract class BaseWatchFace : WatchFace() {
     // True only once injection has returned, via onCreate below or via ensureInjected() for instances
     // that never get an onCreate. Checked instead of catching UninitializedPropertyAccessException,
     // which would also mask unrelated bugs.
-    protected var daggerInjectionComplete = false
+    protected var injectionComplete = false
 
     /**
      * Injects this instance if [onCreate] never ran, so `@Inject` fields are usable anyway.
@@ -195,20 +204,18 @@ abstract class BaseWatchFace : WatchFace() {
      * `UninitializedPropertyAccessException` - which during a headless release kills the binder and
      * makes the system drop the editing session, losing the configuration just chosen.
      *
-     * Works because `attachBaseContext` has run, so `applicationContext` resolves to `WearApp`,
-     * which implements `MetroMemberInjector` and holds the graph. Safe to call repeatedly - it
-     * no-ops once injection has happened by either route.
+     * Works because `attachBaseContext` has run, so the graph can be reached. Safe to call
+     * repeatedly - it no-ops once injection has happened by either route.
      */
     protected fun ensureInjected() {
-        if (daggerInjectionComplete) return
+        if (injectionComplete) return
         injectMetroMembers(this)
-        daggerInjectionComplete = true
+        injectionComplete = true
     }
 
     override fun onCreate() {
-        // Not derived from DaggerService, do injection here
-        injectMetroMembers(this)
-        daggerInjectionComplete = true
+        // Not derived from WearMetroService, do injection here
+        ensureInjected()
         super.onCreate()
         simpleUi.onCreate(::forceUpdate)
         val windowManager = getSystemService(WINDOW_SERVICE) as WindowManager
@@ -398,7 +405,19 @@ abstract class BaseWatchFace : WatchFace() {
             performViewSetup()
         }
 
-        if (simpleUi.isEnabled(currentWatchMode)) {
+        // A render never takes the simple UI branch. Two reasons, either sufficient.
+        //
+        // It crashes: SimpleUi builds its paints in BaseWatchFace.onCreate(), which a render-only
+        // instance never calls, so drawing through it throws UninitializedPropertyAccessException on
+        // mSvgPaint. Seen on a real Galaxy Watch 4 whose owner had "simplified view" switched on -
+        // every render failed, no image was ever produced, and the face looked like it was
+        // refreshing erratically with halves missing.
+        //
+        // And it would be wrong even if it worked: for the Watch Face Format face the **document**
+        // decides what ambient and charging look like (§8.1), and it can only choose between things
+        // it has. Our job is to hand it the full face; a simplified picture would leave it with
+        // nothing to switch to.
+        if (!isRenderOnly && simpleUi.isEnabled(currentWatchMode)) {
             simpleUi.onDraw(canvas, singleBg[0])
         } else {
             if (layoutSet) {
@@ -448,8 +467,21 @@ abstract class BaseWatchFace : WatchFace() {
      * Ignored unless this instance is render-only, so a live watch face keeps deciding its own mode
      * from the engine.
      */
-    fun setRenderAmbient(ambient: Boolean) {
+    open fun setRenderAmbient(ambient: Boolean) {
         if (isRenderOnly) isAmbient = ambient
+    }
+
+    /**
+     * Decides the seconds for the frame in hand, without touching the watch mode.
+     *
+     * The mode is deliberately left alone: it drives more than the seconds - `simpleUi` is chosen
+     * from it too - so switching the whole render to ambient late would draw an empty picture for
+     * anyone who has the simple always-on display switched on.
+     *
+     * @param show false to leave the seconds out of this frame, null to follow the mode again
+     */
+    open fun setRenderSeconds(show: Boolean?) {
+        if (isRenderOnly) renderSecondsOverride = show
     }
 
     private var lastRenderDataLoad = 0L
@@ -484,7 +516,7 @@ abstract class BaseWatchFace : WatchFace() {
      * no such subscription, so an instance kept warm across several renders must call this itself or
      * it would keep drawing the values it started with.
      */
-    fun refreshRenderData() {
+    open fun refreshRenderData() {
         // The halves of a split render are two separate requests, answered a few milliseconds apart.
         // Reloading for each of them would let a data change land between the two, and the picture
         // would then be assembled from two different moments - one half coloured for the old value

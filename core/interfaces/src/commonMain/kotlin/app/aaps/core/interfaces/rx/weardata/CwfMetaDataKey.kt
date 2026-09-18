@@ -37,6 +37,7 @@ enum class CwfMetadataKey(val key: String, val label: TextRef, val isPref: Boole
     CWF_PREF_WATCH_SHOW_COMPLICATION3("key_show_complication3", InterfacesStrings.pref_show_complication3, true),
     CWF_PREF_WATCH_SHOW_COMPLICATION4("key_show_complication4", InterfacesStrings.pref_show_complication4, true),
     CWF_PREF_WATCH_SHOW_COMPLICATION5("key_show_complication5", InterfacesStrings.pref_show_complication5, true);
+
     companion object {
 
         fun fromKey(key: String): CwfMetadataKey? =

@@ -18,13 +18,16 @@ import app.aaps.wear.preference.WearPreferenceActivity
 import app.aaps.wear.watchfaces.CircleWatchface
 import app.aaps.wear.watchfaces.CustomWatchface
 import app.aaps.wear.watchfaces.DigitalStyleWatchface
+import dev.zacsweers.metro.Inject
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import dev.zacsweers.metro.Inject
 
 class ConfigurationActivity : WearPreferenceActivity(), CustomWatchfaceSettingsHost {
+
+    /** This activity *is* the system's editor: it is launched by it and owns the `EditorSession`. */
+    override fun isSystemEditor(): Boolean = true
 
     @Inject lateinit var aapsLogger: AAPSLogger
     @Inject lateinit var complicationDataRepository: ComplicationDataRepository

@@ -6,6 +6,7 @@ import androidx.wear.watchface.complications.data.ComplicationType
 import androidx.wear.watchface.complications.data.PlainComplicationText
 import androidx.wear.watchface.complications.data.ShortTextComplicationData
 import app.aaps.wear.R
+import app.aaps.wear.complications.cwf.CwfFaceComplication
 import app.aaps.wear.data.ComplicationData as ComplicationStore
 
 /**
@@ -50,6 +51,19 @@ class CwfAmbientBgComplication : SgvComplication() {
         else
             super.buildComplicationData(type, data, complicationPendingIntent)
 
-    override fun getComplicationAction(): ComplicationAction = ComplicationAction.MENU
+    /**
+     * Not tappable at all.
+     *
+     * These readouts sit on top of the picture and only appear in ambient, but a slot answers taps
+     * wherever it is drawn. With a tap action, a tap on a sleeping watch was **consumed by the
+     * complication** - it opened AAPS instead of waking the watch, which is what a wearer expects a
+     * first tap to do. Reported twice on a Galaxy Watch 4. With no action the tap falls through to
+     * the system and simply wakes the screen; the AAPS menu is still one tap away once awake.
+     */
+    /**
+     * Opens the AAPS menu while the watch is awake, and does nothing while it dozes - see
+     * [readoutTapAction], which holds the rule and the two faults that shaped it.
+     */
+    override fun getComplicationAction(): ComplicationAction = readoutTapAction(CwfFaceComplication.isAmbient(this))
     override fun getProviderCanonicalName(): String = CwfAmbientBgComplication::class.java.canonicalName!!
 }

@@ -24,10 +24,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.wear.compose.material3.MaterialTheme
 import androidx.wear.compose.material3.Text
+import app.aaps.core.interfaces.di.injectMetroMembers
 import app.aaps.core.interfaces.logging.AAPSLogger
 import app.aaps.core.interfaces.logging.LTag
 import app.aaps.wear.watchfaces.CustomWatchface
-import app.aaps.core.interfaces.di.injectMetroMembers
+import dev.zacsweers.metro.HasMemberInjections
 import dev.zacsweers.metro.Inject
 
 /**
@@ -52,6 +53,7 @@ import dev.zacsweers.metro.Inject
  * Texts are English literals rather than string resources: this screen is a temporary POC and must
  * not add strings for translators.
  */
+@HasMemberInjections
 class CwfRenderPreviewActivity : AppCompatActivity() {
 
     @Inject lateinit var aapsLogger: AAPSLogger
@@ -72,10 +74,9 @@ class CwfRenderPreviewActivity : AppCompatActivity() {
     }
 
     /**
-     * Times a warm render of each block and returns the upper one, which is the interesting picture:
-     * it should be transparent everywhere its own views do not paint.
+     * Times a warm render of the whole face and of each layer, and returns the whole picture.
      *
-     * Data is refreshed before each render, as a real warm provider would have to - otherwise the
+     * Data is refreshed before the render, as a real warm provider would have to - otherwise the
      * measurement would flatter itself by skipping the repository read.
      */
     private fun render(): Result<Bitmap> = runCatching {
@@ -83,22 +84,19 @@ class CwfRenderPreviewActivity : AppCompatActivity() {
         val w = metrics.widthPixels
         val h = metrics.heightPixels
 
-        fun timed(block: CustomWatchface.RenderBlock): Pair<Bitmap, Long> {
-            warmWatchFace.refreshRenderData()
-            val started = System.currentTimeMillis()
-            val bitmap = warmWatchFace.renderBlock(w, h, block)
-            return bitmap to (System.currentTimeMillis() - started)
+        warmWatchFace.refreshRenderData()
+        val started = System.currentTimeMillis()
+        val whole = warmWatchFace.renderToBitmap(w, h)
+        val wholeMs = System.currentTimeMillis() - started
+
+        val perLayer = CustomWatchface.RenderLayer.entries.joinToString(" ") { layer ->
+            val layerStarted = System.currentTimeMillis()
+            warmWatchFace.renderLayer(w, h, layer).recycle()
+            "${layer.name}=${System.currentTimeMillis() - layerStarted}ms"
         }
 
-        val (_, allMs) = timed(CustomWatchface.RenderBlock.ALL)
-        val (_, lowerMs) = timed(CustomWatchface.RenderBlock.LOWER)
-        val (upper, upperMs) = timed(CustomWatchface.RenderBlock.UPPER)
-
-        aapsLogger.debug(
-            LTag.WEAR,
-            "CwfRenderPreview: warm ${w}x$h ALL=${allMs}ms LOWER=${lowerMs}ms UPPER=${upperMs}ms"
-        )
-        upper
+        aapsLogger.debug(LTag.WEAR, "CwfRenderPreview: warm ${w}x$h whole=${wholeMs}ms $perLayer")
+        whole
     }.onFailure { aapsLogger.error(LTag.WEAR, "CwfRenderPreview: render failed", it) }
 }
 
