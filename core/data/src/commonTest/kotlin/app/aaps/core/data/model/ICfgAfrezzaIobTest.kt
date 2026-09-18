@@ -1,10 +1,10 @@
 package app.aaps.core.data.model
 
 import app.aaps.core.data.iob.Iob
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertTrue
-import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Test
+import kotlin.test.BeforeTest
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 /**
  * Validate the oref bilinear IOB model with Afrezza (Technosphere inhaled insulin) parameters.
@@ -25,7 +25,7 @@ class ICfgAfrezzaIobTest {
     private lateinit var fiaspCfg: ICfg
     private lateinit var bolus1U: BS
 
-    @BeforeEach
+    @BeforeTest
     fun setup() {
         afrezzaCfg = ICfg(
             insulinLabel = "Afrezza (Inhaled)",
