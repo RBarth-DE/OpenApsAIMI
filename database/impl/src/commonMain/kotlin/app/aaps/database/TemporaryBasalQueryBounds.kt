@@ -1,6 +1,6 @@
 package app.aaps.database
 
-import java.util.concurrent.TimeUnit
+import kotlin.time.Duration.Companion.days
 
 /**
  * Bounds for [app.aaps.database.daos.TemporaryBasalDao.getTemporaryBasalActiveAt] so SQLite
@@ -9,10 +9,10 @@ import java.util.concurrent.TimeUnit
 object TemporaryBasalQueryBounds {
 
     /** How far back to search for an active TBR at [timestamp] (ms). */
-    val MAX_ACTIVE_LOOKBACK_MS: Long = TimeUnit.DAYS.toMillis(7)
+    val MAX_ACTIVE_LOOKBACK_MS: Long = 7.days.inWholeMilliseconds
 
     /** Ignore rows with corrupt/overlong duration (ms). */
-    val MAX_REASONABLE_DURATION_MS: Long = TimeUnit.DAYS.toMillis(7)
+    val MAX_REASONABLE_DURATION_MS: Long = 7.days.inWholeMilliseconds
 
     fun earliestTimestampForActiveAt(timestamp: Long): Long =
         (timestamp - MAX_ACTIVE_LOOKBACK_MS).coerceAtLeast(0L)

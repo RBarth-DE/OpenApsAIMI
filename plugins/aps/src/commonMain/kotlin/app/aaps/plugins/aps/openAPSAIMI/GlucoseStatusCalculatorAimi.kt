@@ -11,7 +11,9 @@ import app.aaps.core.keys.interfaces.Preferences
 import app.aaps.core.keys.DoubleKey
 import app.aaps.core.keys.IntKey
 import app.aaps.plugins.aps.openAPSAIMI.extensions.asRounded
+import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.Inject
+import dev.zacsweers.metro.SingleIn
 import kotlin.math.max
 import kotlin.math.min
 
@@ -31,6 +33,14 @@ data class AimiBgFeatures(
     val isNightGrowthCandidate: Boolean
 )
 
+/**
+ * One instance for the whole app: it caches its last result for `Defaults.CACHE_TTL_MS`.
+ *
+ * A second copy would be a second cache, and the loop and a screen could then disagree about the
+ * glucose status at the same moment. Callers that need a fresh value pass `allowOldData = false` and
+ * always recompute, so sharing the cache cannot make them stale.
+ */
+@SingleIn(AppScope::class)
 class GlucoseStatusCalculatorAimi @Inject constructor(
     private val log: AAPSLogger,
     private val iobCobCalculator: IobCobCalculator,

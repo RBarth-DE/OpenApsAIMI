@@ -1,5 +1,7 @@
 package app.aaps.database
 
+import kotlin.concurrent.Volatile
+
 /**
  * Tracks long-running SQLite maintenance (VACUUM / WAL checkpoint) so callers can avoid
  * piling on heavy reads while the DB is locked.

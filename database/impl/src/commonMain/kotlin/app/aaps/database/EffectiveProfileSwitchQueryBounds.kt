@@ -1,6 +1,6 @@
 package app.aaps.database
 
-import java.util.concurrent.TimeUnit
+import kotlin.time.Duration.Companion.days
 
 /**
  * Bounds for resolving the active [app.aaps.database.entities.EffectiveProfileSwitch] so SQLite
@@ -9,7 +9,7 @@ import java.util.concurrent.TimeUnit
 object EffectiveProfileSwitchQueryBounds {
 
     /** How far back to search before falling back to an id-only unbounded query (ms). */
-    val MAX_ACTIVE_LOOKBACK_MS: Long = TimeUnit.DAYS.toMillis(180)
+    val MAX_ACTIVE_LOOKBACK_MS: Long = 180.days.inWholeMilliseconds
 
     fun earliestTimestampForActiveAt(timestamp: Long): Long =
         (timestamp - MAX_ACTIVE_LOOKBACK_MS).coerceAtLeast(0L)

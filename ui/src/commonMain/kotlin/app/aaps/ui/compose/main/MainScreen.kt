@@ -4,8 +4,7 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.PaddingValues
@@ -34,6 +33,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.AnnotatedString
@@ -148,6 +148,11 @@ fun MainScreen(
     queueStatusText: AnnotatedString? = null,
     isPumpCommunicating: Boolean = false,
     onStopBolus: () -> Unit = {},
+    /** When non-null, replaces [OverviewScreen] with an embedded dashboard supplied by the app module. */
+    dashboardOverview: (@Composable (PaddingValues, Dp) -> Unit)? = null,
+    /** True only for the GLASS dashboard skin — swaps in [GlassNavigationBar] instead of the default
+     *  [MainNavigationBar]. Does not affect OVERVIEW, which keeps using MainNavigationBar. */
+    isGlassSkin: Boolean = false,
     modifier: Modifier = Modifier
 ) {
     LocalDateUtil.current
@@ -201,7 +206,6 @@ fun MainScreen(
             val previewMode = maxHeight < PREVIEW_MODE_MIN_HEIGHT
             var chromeVisible by remember { mutableStateOf(false) }
             val showChrome = !previewMode || chromeVisible
-            val interactionSource = remember { MutableInteractionSource() }
 
             // Measure actual bar heights for content padding in non-preview mode
             var topBarHeightPx by remember { mutableIntStateOf(0) }
@@ -220,7 +224,9 @@ fun MainScreen(
             }
 
             Scaffold { scaffoldPadding ->
-                val hasToolbar = quickLaunchItems.isNotEmpty()
+                // Glass has its own quick-shortcut pills and its own bottom nav, so the general-purpose
+                // Quick Launch toolbar would just float on top of them.
+                val hasToolbar = quickLaunchItems.isNotEmpty() && !isGlassSkin
 
                 // Content padding: in preview mode use only system bars;
                 // in normal mode add measured bar heights
@@ -241,9 +247,31 @@ fun MainScreen(
                 val masterOrPairedClient by mainViewModel.masterOrPairedClient.collectAsStateWithLifecycle()
                 // (Probe-while-offline is now global — see ComposeMainActivity. This screen still reads
                 // masterReachable for its own gating.)
-                Box(modifier = Modifier.fillMaxSize()) {
-                    // Main content
-                    OverviewScreen(
+                val fabBottomOffset = if (hasToolbar && showChrome) 56.dp else 0.dp
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .then(
+                            if (previewMode && !chromeVisible) {
+                                // A modifier on THIS ancestor Box, not a separate full-screen sibling Box
+                                // drawn on top of the content: a stacked sibling claimed the whole gesture
+                                // stream and blocked scrolling in the dashboard below it (in preview mode,
+                                // which any landscape phone triggers, since landscape height is routinely
+                                // under PREVIEW_MODE_MIN_HEIGHT). On the ancestor, detectTapGestures backs
+                                // off once a descendant scrollable consumes the drag, so scrolling still
+                                // works and only a stationary tap reveals the chrome.
+                                Modifier.pointerInput(previewMode, chromeVisible) {
+                                    detectTapGestures(onTap = { chromeVisible = true })
+                                }
+                            } else {
+                                Modifier
+                            }
+                        )
+                ) {
+                    // Main content — the embedded dashboard takes over when the selected skin asks for it
+                    if (dashboardOverview != null) {
+                        dashboardOverview(contentPadding, fabBottomOffset)
+                    } else OverviewScreen(
                         tempTargetText = uiState.tempTargetText,
                         tempTargetState = uiState.tempTargetState,
                         tempTargetProgress = uiState.tempTargetProgress,
@@ -276,7 +304,7 @@ fun MainScreen(
                         commandsAllowed = masterOrPairedClient,
                         formatDuration = mainViewModel::formatDuration,
                         paddingValues = contentPadding,
-                        fabBottomOffset = if (hasToolbar && showChrome) 56.dp else 0.dp,
+                        fabBottomOffset = fabBottomOffset,
                         bolusState = bolusState,
                         pumpStatusText = pumpStatusText,
                         queueStatusText = queueStatusText,
@@ -384,7 +412,26 @@ fun MainScreen(
                             .padding(bottom = scaffoldPadding.calculateBottomPadding())
                     ) {
                         val loopActionState = loopActionViewModel.uiState.collectAsStateWithLifecycle().value
-                        MainNavigationBar(
+                        if (isGlassSkin) {
+                            GlassNavigationBar(
+                                masterOrPairedClient = masterOrPairedClient,
+                                onTreatmentClick = {
+                                    treatmentViewModel.refreshState()
+                                    showTreatmentSheet = true
+                                },
+                                onScenariosClick = {
+                                    scenesViewModel.refreshState()
+                                    showAutomationSheet = true
+                                },
+                                onManagementClick = { manageSheetState.show() },
+                                onNavigate = onNavigate,
+                                loopActionAvailable = loopActionState.actionAvailable,
+                                onLoopActionClick = { showLoopActionSheet = true },
+                                modifier = Modifier.onSizeChanged {
+                                    if (it.height > 0 && it.height != bottomBarHeightPx) bottomBarHeightPx = it.height
+                                },
+                            )
+                        } else MainNavigationBar(
                             onManageClick = { manageSheetState.show() },
                             onTreatmentClick = {
                                 treatmentViewModel.refreshState()
@@ -438,17 +485,6 @@ fun MainScreen(
                         )
                     }
 
-                    // Tap overlay to restore chrome in preview mode (only when hidden)
-                    if (previewMode && !chromeVisible) {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .clickable(
-                                    interactionSource = interactionSource,
-                                    indication = null
-                                ) { chromeVisible = true }
-                        )
-                    }
                 }
             }
         }

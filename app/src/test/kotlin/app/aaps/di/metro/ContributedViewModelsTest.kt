@@ -1,6 +1,7 @@
 package app.aaps.di.metro
 
 import app.aaps.plugins.constraints.objectives.compose.ObjectivesViewModel
+import app.aaps.plugins.main.general.dashboard.glass.GlassLoopDashboardViewModel
 import app.aaps.plugins.sync.nsclientV3.clientcontrol.compose.AuthorizedClientsViewModel
 import app.aaps.plugins.sync.nsclientV3.clientcontrol.compose.PairWithMasterViewModel
 import app.aaps.plugins.sync.nsclientV3.compose.NSClientViewModel
@@ -64,6 +65,14 @@ class ContributedViewModelsTest {
             SceneWizardViewModel::class,
             WizardDialogViewModel::class
         )
+    }
+
+    @Test
+    fun `the glass dashboard view model is contributed to the root graph`() {
+        // Opened with a plain `by viewModels()` from the activity, so nothing else may supply it: if
+        // the annotation above the class is missing, the screen throws "Unknown model class" instead
+        // of opening.
+        assertThat(testRoot().viewModelProviders.keys).contains(GlassLoopDashboardViewModel::class)
     }
 
     @Test

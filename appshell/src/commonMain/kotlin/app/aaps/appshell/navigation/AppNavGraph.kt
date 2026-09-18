@@ -95,6 +95,7 @@ import app.aaps.ui.compose.maintenance.ImportSettingsScreen
 import app.aaps.ui.compose.maintenance.ImportSource
 import app.aaps.ui.compose.maintenance.ImportViewModel
 import app.aaps.ui.compose.overview.chips.ChipsViewModel
+import app.aaps.ui.compose.overview.graphs.GraphViewModel
 import app.aaps.ui.compose.preferences.AllPreferencesScreen
 import app.aaps.ui.compose.preferences.PreferenceScreenView
 import app.aaps.ui.compose.profileHelper.ProfileHelperScreen
@@ -156,7 +157,7 @@ fun NavGraphBuilder.appNavGraph(
     treatmentsViewModel: TreatmentsViewModel,
     statsViewModel: StatsViewModel,
     siteRotationManagementViewModel: SiteRotationManagementViewModel,
-    graphViewModel: app.aaps.ui.compose.overview.graphs.GraphViewModel,
+    graphViewModel: GraphViewModel,
     chipsViewModel: ChipsViewModel,
     // Dependencies
     swDefinition: SWDefinition,
@@ -202,7 +203,17 @@ fun NavGraphBuilder.appNavGraph(
      * Null leaves `AppRoute.Main` unregistered, which is what a caller that has no overview to show
      * should get - an unresolved route rather than a blank screen.
      */
-    overview: (@Composable () -> Unit)? = null,) {
+    overview: (@Composable () -> Unit)? = null,
+    /**
+     * The routes of the "Glass" skin's detail screens, when this platform has them.
+     *
+     * Those composables live in the `androidMain` part of `:plugins:main`, so this shared graph
+     * cannot name them - it is also compiled for iOS and the desktop. Android passes a builder that
+     * registers them (see `glassRoutes` in `:app`); the other platforms pass nothing, and the routes
+     * are then not registered at all.
+     */
+    glassRoutes: (NavGraphBuilder.() -> Unit)? = null,
+) {
     // Walked once, here, rather than on every navigation: this builder runs once when the graph is
     // assembled, which is where the Android implementation's `by lazy` field effectively put it.
     val pluginScreenDefs = activePlugin.getPluginsList()
@@ -216,6 +227,9 @@ fun NavGraphBuilder.appNavGraph(
     overview?.let { content ->
         composable(AppRoute.Main.route) { content() }
     }
+
+    // The Glass skin's detail screens, on the platforms that have them (Android only).
+    glassRoutes?.invoke(this)
 
     composable(
         AppRoute.InsulinManagement.route,

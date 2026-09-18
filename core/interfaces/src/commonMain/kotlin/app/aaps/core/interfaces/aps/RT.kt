@@ -1,6 +1,5 @@
 package app.aaps.core.interfaces.aps
 
-import android.annotation.SuppressLint
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
@@ -17,7 +16,6 @@ import kotlinx.datetime.format.char
 import kotlinx.datetime.toLocalDateTime
 import kotlin.time.Instant
 
-@SuppressLint("UnsafeOptInUsageError")
 @Serializable
 data class RT(
     var algorithm: APSResult.Algorithm = APSResult.Algorithm.UNKNOWN,

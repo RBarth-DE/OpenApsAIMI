@@ -33,11 +33,20 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.util.Calendar
+import dev.zacsweers.metro.AppScope
+import dev.zacsweers.metro.ContributesIntoMap
 import dev.zacsweers.metro.Inject
+import dev.zacsweers.metro.binding
+import dev.zacsweers.metrox.viewmodel.ViewModelKey
+import java.util.Calendar
 import kotlin.math.roundToInt
 
-class GlassLoopDashboardViewModel @Inject constructor(
+// Registers itself: @ViewModelKey infers the key from the class. No graph entry, and deliberately
+// unscoped so each screen gets its own.
+@ContributesIntoMap(AppScope::class, binding = binding<ViewModel>())
+@ViewModelKey
+@Inject
+class GlassLoopDashboardViewModel(
     private val activePlugin: ActivePlugin,
     private val glucoseStatusProvider: GlucoseStatusProvider,
     private val tddCalculator: TddCalculator,
@@ -156,8 +165,11 @@ class GlassLoopDashboardViewModel @Inject constructor(
                 val trainingCoordinator = BasalMlTrainingCoordinator.instance
                 val hasMlTraining = trainingCoordinator != null
                 val lastTrainedMs = trainingCoordinator?.lastTrainedAtMs() ?: 0L
+                // minAgoShort is a compact countdown badge format ("(+15)"/"(-5)"), not an "ago" phrase, and
+                // returns "" past ~7 days old — wrapped in the "%1$s ago" template that produced a bare
+                // " ago". minAgoLong already returns a complete "N minutes ago" phrase; use it directly.
                 val mlLastTrainedText = if (lastTrainedMs > 0L)
-                    resourceHelper.gs(R.string.dashboard_glass_loop_ml_last_trained_value, dateUtil.minAgoShort(lastTrainedMs))
+                    dateUtil.minAgoLong(resourceHelper, lastTrainedMs)
                 else
                     resourceHelper.gs(R.string.dashboard_glass_loop_ml_never_trained)
                 val mlSampleCountText = basalNeuralLearner.getGovernanceSnapshot().sampleCount.toString()

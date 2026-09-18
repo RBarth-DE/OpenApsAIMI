@@ -1,6 +1,6 @@
 package app.aaps.core.data.model
 
-import java.util.TimeZone
+import app.aaps.core.data.time.systemUtcOffsetAt
 
 /** AutoISF key values for plotting in subgraph. */
 data class AIV(
@@ -15,7 +15,7 @@ data class AIV(
     var duraIsf: Double,
     var finalIsf: Double,
     var iobThEffective: Double,
-    var utcOffset: Long = TimeZone.getDefault().getOffset(timestamp).toLong(),
+    var utcOffset: Long = systemUtcOffsetAt(timestamp),
     override var version: Int = 0,
     override var dateCreated: Long = -1,
     override var isValid: Boolean = true,

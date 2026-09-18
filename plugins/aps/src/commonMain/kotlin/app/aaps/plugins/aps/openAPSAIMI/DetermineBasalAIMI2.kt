@@ -45,12 +45,14 @@ import app.aaps.plugins.aps.openAPSAIMI.basal.BasalChannelSafetyGuards
 import app.aaps.plugins.aps.openAPSAIMI.basal.BasalDecisionEngine
 import app.aaps.plugins.aps.openAPSAIMI.basal.BasalHistoryUtils
 import app.aaps.plugins.aps.openAPSAIMI.basal.BasalTerminalInvariants
+import app.aaps.plugins.aps.openAPSAIMI.basal.AnticipationBasalFloor
 import app.aaps.plugins.aps.openAPSAIMI.basal.DynamicBasalController
 import app.aaps.plugins.aps.openAPSAIMI.basal.T3cAnticipation
 import app.aaps.plugins.aps.openAPSAIMI.basal.T3cAutodriveBasalBridge
 import app.aaps.plugins.aps.openAPSAIMI.basal.T3cTrajectoryContext
 import app.aaps.plugins.aps.openAPSAIMI.autodrive.models.AutoDriveState
 import app.aaps.plugins.aps.openAPSAIMI.carbs.CarbsAdvisor
+import app.aaps.plugins.aps.openAPSAIMI.ISF.HeartRateTrendIsf
 import app.aaps.plugins.aps.openAPSAIMI.ISF.CommandedIsf
 import app.aaps.plugins.aps.openAPSAIMI.ISF.ObservedSensitivityMeter
 import app.aaps.plugins.aps.openAPSAIMI.ISF.SensitivityRatioEstimator
@@ -69,6 +71,7 @@ import app.aaps.plugins.aps.openAPSAIMI.ml.TrainingCsvHeader
 import app.aaps.plugins.aps.openAPSAIMI.advisor.auditor.AuditorJsonlExport
 import app.aaps.plugins.aps.openAPSAIMI.advisor.auditor.AuditorVerdict
 import app.aaps.plugins.aps.openAPSAIMI.smb.SmbIntervalPolicy
+import app.aaps.plugins.aps.openAPSAIMI.smb.RiseCeilingGuard
 import app.aaps.plugins.aps.openAPSAIMI.advisor.oref.OrefPredictionReasonSuffix
 import app.aaps.plugins.aps.openAPSAIMI.trajectory.TrajectoryType
 import app.aaps.plugins.aps.openAPSAIMI.model.PumpCaps
@@ -130,6 +133,7 @@ import app.aaps.plugins.aps.openAPSAIMI.risk.AimiRiskEnvelope
 import app.aaps.plugins.aps.openAPSAIMI.risk.AimiRiskEnvelopeBuilder
 import app.aaps.plugins.aps.openAPSAIMI.risk.DecisionPredictionAuthority
 import app.aaps.plugins.aps.openAPSAIMI.risk.DecisionPredictionAuthorityResolver
+import app.aaps.plugins.aps.openAPSAIMI.risk.MealConfirmedEarlyReleaseLatch
 import app.aaps.plugins.aps.openAPSAIMI.risk.IobConsensus
 import app.aaps.plugins.aps.openAPSAIMI.risk.IobDecisionSource
 import app.aaps.plugins.aps.openAPSAIMI.risk.PredictionPathBounds
@@ -566,6 +570,27 @@ internal data class AimiDecisionContext(
          */
         var descent_redose_guard_withheld_u: Double? = null,
         /**
+
+         * Shadow measurement of the rise ceiling guard (`RiseCeilingGuard`).
+         *
+         * Written on every tick that reaches the universal SMB exit, whether
+         * [app.aaps.core.keys.BooleanKey.OApsAIMIRiseCeilingGuard] is on or off. That is the whole
+         * point: the thresholds were chosen after seeing the data, so they need a measurement made
+         * in advance before the gesture is armed.
+         */
+        var rise_ceiling_guard_would_block: Boolean? = null,
+        /** Reason token plus its live numbers (ticks in a row at the ceiling, rise). */
+        var rise_ceiling_guard_reason: String? = null,
+        /** How many ticks in a row the bolus has come out at a ceiling, this tick included. */
+        var rise_ceiling_guard_repeats: Int? = null,
+        /**
+         * Bolus the guard would have refused, U.
+         *
+         * Set only when the verdict is "block", so a tick that did not block leaves the field absent
+         * instead of reporting a zero that means nothing.
+         */
+        var rise_ceiling_guard_withheld_u: Double? = null,
+        /**
          * Effort SMB reduction, as actually applied at the universal SMB exit.
          *
          * `_requested` is what the effort belief asked for, `_applied` is what was used after the
@@ -577,8 +602,15 @@ internal data class AimiDecisionContext(
         var effort_smb_factor_applied: Double? = null,
         var effort_smb_before_u: Double? = null,
         var effort_smb_after_u: Double? = null,
-        /** True when the confirmed-meal floor raised the multiplier this tick. */
+        /** True when the confirmed-meal floor raised the multiplier this tick. Null when disarmed. */
         var effort_smb_floored_by_meal: Boolean? = null,
+        /**
+         * True when the effort protection was allowed to change the dose this tick. When it is false,
+         * `_requested` still carries what the belief asked for but `_applied` is 1.0 and no insulin was
+         * withheld. Without this flag a disarmed tick and an armed tick that asked for nothing look the
+         * same in the export.
+         */
+        var effort_smb_armed: Boolean? = null,
         /**
          * Aggressive-rise floor budget state. The episode budget is out of the dose path, but its
          * accounting still runs, and its absence from the export is why the 2026-08-10 diagnosis
@@ -931,11 +963,17 @@ internal data class AimiDecisionContext(
             base.put("descent_redose_guard_would_block", baseline_state.descent_redose_guard_would_block ?: org.json.JSONObject.NULL)
             base.put("descent_redose_guard_reason", baseline_state.descent_redose_guard_reason ?: org.json.JSONObject.NULL)
             base.put("descent_redose_guard_withheld_u", baseline_state.descent_redose_guard_withheld_u ?: org.json.JSONObject.NULL)
+
+            base.put("rise_ceiling_guard_would_block", baseline_state.rise_ceiling_guard_would_block ?: org.json.JSONObject.NULL)
+            base.put("rise_ceiling_guard_reason", baseline_state.rise_ceiling_guard_reason ?: org.json.JSONObject.NULL)
+            base.put("rise_ceiling_guard_repeats", baseline_state.rise_ceiling_guard_repeats ?: org.json.JSONObject.NULL)
+            base.put("rise_ceiling_guard_withheld_u", baseline_state.rise_ceiling_guard_withheld_u ?: org.json.JSONObject.NULL)
             base.put("effort_smb_factor_requested", baseline_state.effort_smb_factor_requested ?: org.json.JSONObject.NULL)
             base.put("effort_smb_factor_applied", baseline_state.effort_smb_factor_applied ?: org.json.JSONObject.NULL)
             base.put("effort_smb_before_u", baseline_state.effort_smb_before_u ?: org.json.JSONObject.NULL)
             base.put("effort_smb_after_u", baseline_state.effort_smb_after_u ?: org.json.JSONObject.NULL)
             base.put("effort_smb_floored_by_meal", baseline_state.effort_smb_floored_by_meal ?: org.json.JSONObject.NULL)
+            base.put("effort_smb_armed", baseline_state.effort_smb_armed ?: org.json.JSONObject.NULL)
             base.put("rise_floor_spent_u", baseline_state.rise_floor_spent_u ?: org.json.JSONObject.NULL)
             base.put("variable_sens_mgdl", baseline_state.variable_sens_mgdl ?: org.json.JSONObject.NULL)
             base.put(
@@ -2237,6 +2275,9 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         lastMealAbsorptionOutput = null
         lastPhysioLatentState = null
         lastEffortAssessment = null // per-tick computed; memory (lastEffortMemory) persists across ticks
+        lastEffortAssessmentShadow = null
+        lastEffortSmbArmed = false
+        lastEffortSmbFlooredByMeal = null
         lastUamHypothesisState = null
         lastContextSnapshot = null
         lastPatientState = null
@@ -2985,12 +3026,14 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         this.lowCarbTime = therapy.lowCarbTime
         this.highCarbTime = therapy.highCarbTime
         this.mealTime = therapy.mealTime
+        this.anticipTime = therapy.anticipTime
         this.bfastTime = therapy.bfastTime
         this.lunchTime = therapy.lunchTime
         this.dinnerTime = therapy.dinnerTime
         this.fastingTime = therapy.fastingTime
         this.stopTime = therapy.stopTime
         this.mealruntime = therapy.getTimeElapsedSinceLastEvent("meal")
+        this.anticipruntime = therapy.getTimeElapsedSinceLastEvent("anticip")
         this.bfastruntime = therapy.getTimeElapsedSinceLastEvent("bfast")
         this.lunchruntime = therapy.getTimeElapsedSinceLastEvent("lunch")
         this.dinnerruntime = therapy.getTimeElapsedSinceLastEvent("dinner")
@@ -5319,9 +5362,8 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                 b.effort_smb_factor_applied = lastEffortSmbFactorApplied
                 b.effort_smb_before_u = lastEffortSmbBeforeU
                 b.effort_smb_after_u = lastEffortSmbAfterU
-                b.effort_smb_floored_by_meal = lastEffortSmbFactorRaw?.let { raw ->
-                    lastEffortSmbFactorApplied?.let { applied -> applied > raw + 1e-9 }
-                }
+                b.effort_smb_floored_by_meal = lastEffortSmbFlooredByMeal
+                b.effort_smb_armed = lastEffortSmbArmed
                 b.variable_sens_mgdl = variableSensitivity.toDouble().takeIf { it.isFinite() && it > 0.0 }
                 b.rise_floor_spent_u = riseFloorSpentU
                 b.rise_floor_minutes_since_contribution =
@@ -6166,6 +6208,10 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             }
 
             val hr60List = getRateForWindow(60 * 60 * 1000)
+            // The 80.0 below is a substitute, not a measurement. It stays because other readers
+            // (ActivityManager's avgHrResting) depend on a non-zero number, but anything that
+            // STRENGTHENS a dose must know the difference — see [HeartRateTrendIsf].
+            this.heartRateBaselineIsReal = hr60List.isNotEmpty()
             this.averageBeatsPerMinute60 = if (hr60List.isNotEmpty()) {
                 hr60List.map { it.beatsPerMinute.toInt() }.average()
             } else {
@@ -6184,11 +6230,28 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             averageBeatsPerMinute10 = 80.0
             averageBeatsPerMinute60 = 80.0
             averageBeatsPerMinute180 = 80.0
+            heartRateBaselineIsReal = false
         }
-        val heartRateTrend = averageBeatsPerMinute10 / averageBeatsPerMinute60
-        if (recentSteps10Minutes < 100 && heartRateTrend > 1.1 && bg > 110) {
-            this.variableSensitivity *= 0.9f
-            consoleLog.add("ISF reduced by 10% (abnormal HR trend).")
+        // 💓 Heart-rate trend — the ONE heart-rate path that strengthens a dose. It now stands down
+        // during a fast rise, where an elevated heart rate is a consequence of the rise rather than
+        // information about its cause, and on a baseline that was substituted rather than measured.
+        // See [HeartRateTrendIsf].
+        val heartRateTrendMultiplier = HeartRateTrendIsf.multiplier(
+            steps10m = recentSteps10Minutes,
+            avgBpm10 = averageBeatsPerMinute10,
+            avgBpm60 = averageBeatsPerMinute60,
+            baselineIsReal = heartRateBaselineIsReal,
+            bgMgdl = bg.toDouble(),
+            deltaMgdl5m = delta.toDouble(),
+        )
+        if (heartRateTrendMultiplier < 1.0) {
+            this.variableSensitivity *= heartRateTrendMultiplier.toFloat()
+            consoleLog.add(
+                "💓 HR_TREND_ISF x%.2f (hr10 %.0f / hr60 %.0f, steps10 %d)".format(
+                    Locale.US, heartRateTrendMultiplier,
+                    averageBeatsPerMinute10, averageBeatsPerMinute60, recentSteps10Minutes,
+                )
+            )
         }
 
         return AimiPostBasalBootstrapActivityVitals(
@@ -9012,6 +9075,36 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             }
         }
 
+        // 🍽️ Declared-meal anticipation — see [AnticipationBasalFloor].
+        // Applied last, after the slew limiter, because a floor that the limiter can clamp away is
+        // not a floor. It only ever RAISES the rate (max of the two), and only while the note window
+        // is open, the opt-in key is on and the declaration still looks true; the gesture stands down
+        // on its own under 80 mg/dL or on a fall, and deleting the note ends it at once.
+        if (preferences.get(BooleanKey.OApsAIMIAnticipBasalFloor) && anticipTime) {
+            AnticipationBasalFloor.floorRateUph(
+                budgetU = preferences.get(DoubleKey.OApsAIMIAnticipBudgetU),
+                elapsedMinutes = anticipruntime.toDouble(),
+                profileBasalUph = b.profile.current_basal,
+                // Same ceiling the declared meal modes use, so a declaration cannot reach higher
+                // than a meal mode already can.
+                maxBasalUph = maxOf(b.profile.max_basal, preferences.get(DoubleKey.meal_modes_MaxBasal)),
+                bgMgdl = bg.toDouble(),
+                deltaMgdl5m = delta.toDouble(),
+            )?.let { floorUph ->
+                if (floorUph > finalProposedRate) {
+                    consoleLog.add(
+                        "🍽️ ANTICIP_BASAL_FLOOR: %.2f→%.2f U/h (budget %.2f U over %.0f min, elapsed %d min)".format(
+                            Locale.US, finalProposedRate, floorUph,
+                            preferences.get(DoubleKey.OApsAIMIAnticipBudgetU),
+                            AnticipationBasalFloor.WINDOW_MINUTES, anticipruntime,
+                        )
+                    )
+                    b.rT.reason.append("; 🍽️anticip ${"%.2f".format(Locale.US, floorUph)}U/h")
+                    finalProposedRate = floorUph
+                }
+            }
+        }
+
         val finalResult = setTempBasal(
             _rate = finalProposedRate,
             duration = finalDuration,
@@ -10746,6 +10839,12 @@ class DetermineBasalaimiSMB2 @Inject constructor(
     private var averageBeatsPerMinute = 0.0
     private var averageBeatsPerMinute10 = 0.0
     private var averageBeatsPerMinute60 = 0.0
+
+    /**
+     * True when [averageBeatsPerMinute60] came from real records rather than the 80 bpm substitute.
+     * Read only by [HeartRateTrendIsf], which is the one gesture that can strengthen a dose.
+     */
+    private var heartRateBaselineIsReal = false
     private var averageBeatsPerMinute180 = 0.0
     private var eventualBG = 0.0
     private var now = System.currentTimeMillis()
@@ -11035,10 +11134,25 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             mealCertainty = lastMealCertainty,
             trunkGlobalState = lastPhysiologicalTreeSnapshot?.trunk?.globalState,
             mealConfirmedEarlyReleaseEnabled = preferences.get(BooleanKey.OApsAIMIMealConfirmedEarlyRelease),
-            combinedDeltaMgdl5m = delta.toDouble(),
+            // The smoothed combined delta, not the raw 5-minute one. The parameter has always been
+            // named for the combined signal; passing the raw delta let a single sensor step of +24
+            // satisfy the "rising" test and clear the "falling" breaker on the same tick.
+            combinedDeltaMgdl5m = tickCombinedDelta.toDouble(),
             targetBgMgdl = targetBgMgdl,
             iobU = iob.toDouble(),
             maxIobU = maxIob,
+            mcerTailLatched = mcerTailLatch.latched,
+            declaredMeal = anticipTime && preferences.get(BooleanKey.OApsAIMIAnticipMealEvidence),
+        )
+        // Carry the latch to the next tick. Done after the call because the resolver is stateless and
+        // reports the trip; it can only keep an opt-in escalation off, never raise a dose.
+        mcerTailLatch = MealConfirmedEarlyReleaseLatch.next(
+            previous = mcerTailLatch,
+            armedThisTick = decisionPrediction.mcerArmed,
+            tailTripped = decisionPrediction.mcerTailTripped,
+            bgMgdl = bg.toDouble(),
+            targetBgMgdl = targetBgMgdl,
+            iobU = iob.toDouble(),
         )
         lastDecisionPredictionAuthority = decisionPrediction
         consoleLog.add(
@@ -11238,6 +11352,12 @@ class DetermineBasalaimiSMB2 @Inject constructor(
     private var lowCarbTime = false
     private var highCarbTime = false
     private var mealTime = false
+
+    /** A meal the person declared with an "anticip" note; carries no prebolus. See [AnticipationBasalFloor]. */
+    private var anticipTime = false
+
+    /** Minutes since that declaration. Same type as [mealruntime], which this mirrors. */
+    private var anticipruntime: Long = 0
     private var bfastTime = false
     private var lunchTime = false
     private var dinnerTime = false
@@ -11430,6 +11550,29 @@ class DetermineBasalaimiSMB2 @Inject constructor(
 
     /** SMB leaving the effort reduction, in units. Per tick. */
     private var lastEffortSmbAfterU: Double? = null
+
+    /** True when the effort protection was allowed to change the dose this tick. Per tick. */
+    private var lastEffortSmbArmed: Boolean = false
+
+    /** True when the confirmed-meal floor raised the multiplier this tick. Null when disarmed. Per tick. */
+    private var lastEffortSmbFlooredByMeal: Boolean? = null
+
+    /**
+     * Ticks in a row where the bolus came out exactly at a configured ceiling. Cross-tick on purpose
+     * — the whole point of [RiseCeilingGuard] is what happens across several ticks, so this must NOT
+     * be reset per tick.
+     */
+    private var ceilingRepeatCount: Int = 0
+
+    /** Clock of the last tick counted in [ceilingRepeatCount]; a hole restarts the count. */
+    private var ceilingRepeatLastMs: Long = 0L
+
+    /**
+     * Holds the meal-confirmed early release off after a post-peak tail. Cross-tick on purpose — the
+     * whole point of [MealConfirmedEarlyReleaseLatch] is that one noisy tick must not undo the
+     * breaker, so this must NOT be reset per tick.
+     */
+    private var mcerTailLatch = MealConfirmedEarlyReleaseLatch.State()
     private var mealAdvisorOneShotThisTick: Boolean = false
     private var lastTubeAdvisorSmbCapScale: Double? = null
 
@@ -11470,6 +11613,20 @@ class DetermineBasalaimiSMB2 @Inject constructor(
     /** Cross-tick effort-load memory for [EffortActivityBelief]; intentionally NOT reset per tick. */
     private var lastEffortMemory = EffortActivityBelief.Memory()
     private var lastEffortAssessment: EffortActivityBelief.Assessment? = null
+
+    /**
+     * Same belief as [lastEffortAssessment], but computed on every tick even when the opt-in key is
+     * off. Read only by the export, never by a dosing path, so a disarmed tick stays bit-identical.
+     * It exists because the disarmed export used to write a multiplier of 1.0, which reads as "the
+     * belief asked for nothing" when in fact the belief had not run at all.
+     */
+    private var lastEffortAssessmentShadow: EffortActivityBelief.Assessment? = null
+
+    /**
+     * Cross-tick effort-load memory for the shadow belief. Kept apart from [lastEffortMemory] so that
+     * computing the shadow can never move the state the armed path reads.
+     */
+    private var lastEffortMemoryShadow = EffortActivityBelief.Memory()
     /** Absolute context SMB ceiling (SlowCarbMeal); enforced robustly at [finalizeAndCapSMB]. Per-tick. */
     private var lastContextSmbCeilingU: Double? = null
     /** Hard context SMB-off (HypoRecovery); enforced robustly at [finalizeAndCapSMB]. Per-tick. */
@@ -14116,8 +14273,12 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         val rawEffortFactor = lastEffortAssessment?.smbFactor ?: 1.0
         val confirmedMeal = lastMealCertainty?.level == MealCertaintyLevel.HIGH
         val effortFactor = MealCertaintyBuilder.effortSmbFactorFor(lastMealCertainty, rawEffortFactor)
-        lastEffortSmbFactorRaw = rawEffortFactor
+        // What the belief asked for is read from the shadow, which runs armed or not, so a disarmed
+        // tick no longer reports 1.0 as if the belief had asked for nothing. What was APPLIED still
+        // comes from the armed path, so the dose is unchanged when the key is off.
+        lastEffortSmbFactorRaw = lastEffortAssessmentShadow?.smbFactor ?: 1.0
         lastEffortSmbFactorApplied = effortFactor
+        lastEffortSmbFlooredByMeal = if (lastEffortSmbArmed) confirmedMeal && effortFactor > rawEffortFactor + 1e-9 else null
         lastEffortSmbBeforeU = finalUnits
         lastEffortSmbAfterU = finalUnits
         if (effortFactor < 1.0 && !isExplicitUserAction && finalUnits > 0.0) {
@@ -14125,7 +14286,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             finalUnits = (finalUnits * effortFactor).coerceAtLeast(0.0)
             lastEffortSmbBeforeU = beforeEffort
             lastEffortSmbAfterU = finalUnits
-            val floored = confirmedMeal && effortFactor > rawEffortFactor + 1e-9
+            val floored = lastEffortSmbFlooredByMeal == true
             consoleLog.add(
                 "🏃 EFFORT_PROTECT_SMB ×${"%.2f".format(Locale.US, effortFactor)} " +
                     "${"%.2f".format(Locale.US, beforeEffort)}→${"%.2f".format(Locale.US, finalUnits)}U " +
@@ -14156,6 +14317,53 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                 "🛑 DESCENT_REDOSE_GUARD: ${"%.2f".format(Locale.US, finalUnits)}→0.00U (${descentGuardVerdict.reason})",
             )
             rT.reason.append("🛑descent re-dose ")
+            finalUnits = 0.0
+        }
+
+        // 🧱 Rise ceiling guard — see [app.aaps.plugins.aps.openAPSAIMI.smb.RiseCeilingGuard].
+        // The verdict is ALWAYS computed and exported, so the gesture can be measured in production
+        // before it is armed. It changes the dose only when the opt-in key is on; with the key off
+        // nothing here writes to finalUnits, the console or the reason, so the tick stays
+        // bit-identical to what it was before this block existed.
+        //
+        // The count is taken on the bolus BEFORE this block refuses anything. Counting the refused
+        // value would drop the run back to zero on every second tick, and the gesture would then
+        // hold back only one tick in three instead of the whole repeat that was measured.
+        val ceilingTickMs = dateUtil.now()
+        val atSmbCeiling = RiseCeilingGuard.isAtCeiling(
+            units = finalUnits,
+            ceilingU = baseLimit,
+            highGlucoseCeilingU = maxSMBHB,
+        )
+        ceilingRepeatCount = RiseCeilingGuard.nextRepeatCount(
+            previous = ceilingRepeatCount,
+            previousMs = ceilingRepeatLastMs,
+            nowMs = ceilingTickMs,
+            atCeiling = atSmbCeiling,
+        )
+        if (atSmbCeiling) ceilingRepeatLastMs = ceilingTickMs
+        val riseCeilingVerdict = RiseCeilingGuard.evaluate(
+            atCeiling = atSmbCeiling,
+            repeats = ceilingRepeatCount,
+            deltaMgdl5m = this.delta.toDouble(),
+        )
+        pendingDecisionCtxForExport?.baseline_state?.let { baseline ->
+            baseline.rise_ceiling_guard_would_block = riseCeilingVerdict.block
+            baseline.rise_ceiling_guard_reason = riseCeilingVerdict.reason
+            baseline.rise_ceiling_guard_repeats = riseCeilingVerdict.repeats
+            if (riseCeilingVerdict.block) baseline.rise_ceiling_guard_withheld_u = finalUnits
+        }
+        if (RiseCeilingGuard.shouldWithhold(
+                verdict = riseCeilingVerdict,
+                armed = preferences.get(BooleanKey.OApsAIMIRiseCeilingGuard),
+                isExplicitUserAction = isExplicitUserAction,
+                proposedUnits = finalUnits,
+            )
+        ) {
+            consoleLog.add(
+                "🧱 RISE_CEILING_GUARD: ${"%.2f".format(Locale.US, finalUnits)}→0.00U (${riseCeilingVerdict.reason})",
+            )
+            rT.reason.append("🧱rise ceiling ")
             finalUnits = 0.0
         }
 
@@ -16964,30 +17172,41 @@ class DetermineBasalaimiSMB2 @Inject constructor(
 
     private fun refreshEffortActivityBelief() {
         lastEffortAssessment = null
+        lastEffortAssessmentShadow = null
         // Dependency: under T3C, activity awareness is required for the physio-informed basal (workstream C).
         // Effort protection is reduce-only, so this never adds insulin.
-        if (!preferences.get(BooleanKey.OApsAIMIEffortActivityProtection) && !t3cModeEnabled()) return
+        val armed = preferences.get(BooleanKey.OApsAIMIEffortActivityProtection) || t3cModeEnabled()
+        lastEffortSmbArmed = armed
         val snap = try {
             physioAdapter.getLatestSnapshot()
         } catch (_: Exception) {
             return
         }
         if (!snap.isValid) return // no/stale wearable data → fail open (no reduction)
-        val (assessment, memory) = EffortActivityBelief.assess(
-            EffortActivityBelief.Inputs(
-                nowMs = dateUtil.now(),
-                stepsLast5m = snap.stepsLast5m,
-                stepsLast15m = snap.stepsLast15m,
-                stepsLast60m = snap.stepsLast60m,
-                hrAvg15mBpm = snap.hrAvg15m,
-                hrRestingBpm = snap.rhrResting,
-                hrvDeviationZ = null, // HRV plumbing is a follow-up; steps + HR drive v1
-                stressResistanceProb = lastPhysioLatentState?.transientResistanceProb ?: 0.0,
-            ),
-            lastEffortMemory,
+        val inputs = EffortActivityBelief.Inputs(
+            nowMs = dateUtil.now(),
+            stepsLast5m = snap.stepsLast5m,
+            stepsLast15m = snap.stepsLast15m,
+            stepsLast60m = snap.stepsLast60m,
+            hrAvg15mBpm = snap.hrAvg15m,
+            hrRestingBpm = snap.rhrResting,
+            hrvDeviationZ = null, // HRV plumbing is a follow-up; steps + HR drive v1
+            stressResistanceProb = lastPhysioLatentState?.transientResistanceProb ?: 0.0,
         )
+        // The belief is computed on every tick, armed or not, so the export can show what it would
+        // have asked for. Only the armed branch touches the state a dosing path reads. The shadow
+        // keeps its own memory, so running it can never move the armed memory.
+        if (!armed) {
+            val (shadowAssessment, shadowMemory) = EffortActivityBelief.assess(inputs, lastEffortMemoryShadow)
+            lastEffortMemoryShadow = shadowMemory
+            lastEffortAssessmentShadow = shadowAssessment
+            return
+        }
+        val (assessment, memory) = EffortActivityBelief.assess(inputs, lastEffortMemory)
         lastEffortMemory = memory
+        lastEffortMemoryShadow = memory // keep the shadow memory in step so disarming later starts warm
         lastEffortAssessment = assessment
+        lastEffortAssessmentShadow = assessment
         if (assessment.smbFactor < 1.0) {
             consoleLog.add(
                 "🏃 EFFORT_BELIEF[${assessment.state.name}/${assessment.posture.name}] " +

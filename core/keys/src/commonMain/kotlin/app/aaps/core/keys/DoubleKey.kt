@@ -555,6 +555,11 @@ enum class DoubleKey(
         summary = KeysStrings.aimi_summary_o_aps_a_i_m_iautodrive_prebolus,
         dependency = BooleanKey.OApsAIMIautoDriveActive,
         unitType = UnitType.INSULIN),
+    /**
+     * Insulin spent above profile over the declared-meal window, in units. 0 disarms the gesture even
+     * when its key is on. Min is 0 on purpose, unlike the prebolus keys whose min is 0.1.
+     */
+    OApsAIMIAnticipBudgetU("key_aimi_anticip_budget_u", 2.0, 0.0, 10.0, title = TextRef.Literal(""), unitType = UnitType.INSULIN),
     OApsAIMIMealPrebolus( "key_prebolus_meal_mode", 2.0, 0.1, 20.0, title = TextRef.Literal(""), unitType = UnitType.INSULIN),
     OApsAIMIsleepFactor( "key_oaps_aimi_sleep_factor", 60.0, 1.0, 150.0, title = TextRef.Literal(""), unitType = UnitType.PERCENT),
     OApsAIMISnackFactor( "key_oaps_aimi_snack_factor", 50.0, 1.0, 150.0, title = TextRef.Literal(""), unitType = UnitType.PERCENT),

@@ -59,6 +59,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat
 import androidx.core.net.toUri
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewmodel.initializer
@@ -70,6 +71,8 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import app.aaps.appshell.navigation.AppRoute
 import app.aaps.appshell.navigation.appNavGraph
+import app.aaps.compose.dashboard.DashboardOverviewHost
+import app.aaps.compose.navigation.glassRoutes
 import app.aaps.core.data.ue.Sources
 import app.aaps.core.interfaces.bgQualityCheck.BgQualityCheck
 import app.aaps.core.interfaces.clientcontrol.ActionProgress
@@ -139,6 +142,10 @@ import app.aaps.core.ui.compose.preference.LocalClearExportPasswordStore
 import app.aaps.core.ui.compose.preference.LocalHashPassword
 import app.aaps.core.ui.compose.preference.LocalVisibilityContext
 import app.aaps.plugins.aps.openAPSAIMI.orchestration.AimiLoopRuntimeGuard
+import app.aaps.plugins.aps.openAPSAIMI.advisor.AimiProfileAdvisorActivity
+import app.aaps.plugins.aps.openAPSAIMI.advisor.auditor.ui.AuditorReportActivity
+import app.aaps.plugins.aps.openAPSAIMI.advisor.meal.MealAdvisorActivity
+import app.aaps.plugins.aps.openAPSAIMI.context.ui.ContextActivity
 import app.aaps.core.ui.compose.pump.PumpActivityDialog
 import app.aaps.core.ui.compose.pump.PumpCommunicationStatus
 import app.aaps.core.ui.locale.LocaleHelper
@@ -148,7 +155,13 @@ import app.aaps.implementation.plugin.PluginPermissionsImpl
 import app.aaps.implementation.protection.BiometricCheck
 import app.aaps.plugins.automation.AutomationRuntime
 import app.aaps.plugins.configuration.setupwizard.SWDefinition
+import app.aaps.plugins.main.general.dashboard.DashboardV2ToolAction
+import app.aaps.plugins.main.general.dashboard.DashboardV2ToolDestination
+import app.aaps.plugins.main.general.dashboard.glass.GlassLoopDashboardViewModel
+import app.aaps.plugins.main.general.dashboard.viewmodel.OverviewViewModel
 import app.aaps.plugins.main.general.manual.UserManualActivity
+import app.aaps.plugins.main.skins.DashboardHomeVariant
+import app.aaps.plugins.main.skins.DashboardHomeVariantResolver
 import app.aaps.plugins.source.DexcomPlugin
 import app.aaps.plugins.source.activities.RequestDexcomPermissionActivity
 import app.aaps.ui.compose.scenesSheet.ScenesViewModel
@@ -239,6 +252,7 @@ class ComposeMainActivity : MetroAppCompatActivity() {
     @Inject lateinit var objectives: Objectives
     @Inject lateinit var chipsViewModelFactory: ChipsViewModel.Factory
     @Inject lateinit var graphViewModelFactory: GraphViewModel.Factory
+    @Inject lateinit var overviewViewModelFactory: OverviewViewModel.Factory
     @Inject lateinit var overviewDataCache: OverviewDataCache
 
     private var accessTree: ActivityResultLauncher<Uri?>? = null
@@ -262,7 +276,15 @@ class ComposeMainActivity : MetroAppCompatActivity() {
     private val chipsViewModel: ChipsViewModel by viewModels {
         viewModelFactory { initializer { chipsViewModelFactory.create(overviewDataCache) } }
     }
+    // Keyed the same as AimiDashboardComposeRootView.VIEW_MODEL_KEY ("AimiDashboardCompose") so this is
+    // the SAME instance the dashboard's own DashboardShellController.start()s and keeps refreshed — a
+    // default-keyed `by viewModels()` here would create a second, never-started instance whose
+    // statusCardState LiveData is never populated.
+    private val overviewViewModel: OverviewViewModel by lazy {
+        ViewModelProvider(this, overviewViewModelFactory)["AimiDashboardCompose", OverviewViewModel::class.java]
+    }
     private val treatmentsViewModel: TreatmentsViewModel by viewModels()
+    private val glassLoopDashboardViewModel: GlassLoopDashboardViewModel by viewModels()
     private val insulinManagementViewModel: InsulinManagementViewModel by viewModels()
     private val tempTargetManagementViewModel: TempTargetManagementViewModel by viewModels()
     private val quickWizardManagementViewModel: QuickWizardManagementViewModel by viewModels()
@@ -679,7 +701,12 @@ class ComposeMainActivity : MetroAppCompatActivity() {
         // Keep skin collector alive for the whole shell (not only when Main is composed),
         // so changes made from Preferences still update flows before returning home.
         val generalSkin by preferences.observe(StringKey.GeneralSkin).collectAsStateWithLifecycle()
-        val showHybridDashboard = storedSkinPrefersDashboardHome(generalSkin)
+        val dashboardHomeVariant = DashboardHomeVariantResolver.resolve(
+            storedSkinName = generalSkin,
+            availableSkins = skinProvider.list,
+            fallbackSkin = skinProvider.activeSkin(),
+        )
+        val showDashboardHome = dashboardHomeVariant != DashboardHomeVariant.OVERVIEW
 
         NavHost(
             navController = navController,
@@ -690,6 +717,11 @@ class ComposeMainActivity : MetroAppCompatActivity() {
                 val calcProgress by mainViewModel.calcProgressFlow.collectAsStateWithLifecycle()
                 val notifications by notificationManager.notifications.collectAsStateWithLifecycle()
                 val quickLaunchItems by mainViewModel.quickLaunchItems.collectAsStateWithLifecycle()
+                val availablePluginClassNames = activePlugin.getPluginsList()
+                    .asSequence()
+                    .filter(PluginBase::hasComposeContent)
+                    .map { it.javaClass.simpleName }
+                    .toSet()
 
                 // Pump setup button in bottom bar
                 val pumpPlugin = activePlugin.activePumpInternal as PluginBase
@@ -748,7 +780,7 @@ class ComposeMainActivity : MetroAppCompatActivity() {
 
                 val pumpRefresh by pumpCommunicationStatus.refreshTrigger.collectAsStateWithLifecycle()
 
-                key(showHybridDashboard, generalSkin) {
+                key(dashboardHomeVariant, generalSkin) {
                     MainScreen(
                     mainViewModel = mainViewModel,
                     uiState = state,
@@ -859,7 +891,37 @@ class ComposeMainActivity : MetroAppCompatActivity() {
                         } else {
                             commandQueue.cancelAllBoluses(null)
                         }
-                    }
+                    },
+                    dashboardOverview = if (showDashboardHome) {
+                        { pad, fab ->
+                            DashboardOverviewHost(
+                                paddingValues = pad,
+                                fabBottomOffset = fab,
+                                rxBus = rxBus,
+                                dashboardHomeVariant = dashboardHomeVariant,
+                                availablePluginClassNames = availablePluginClassNames,
+                                onToolAction = { action ->
+                                    when (val destination = action.destination) {
+                                        DashboardV2ToolDestination.Actions -> manageSheetState.show()
+                                        is DashboardV2ToolDestination.Element -> handleNavigationRequest(
+                                            NavigationRequest.Element(destination.type),
+                                            navController,
+                                        )
+
+                                        is DashboardV2ToolDestination.Plugin -> handleNavigationRequest(
+                                            NavigationRequest.Plugin(destination.className),
+                                            navController,
+                                        )
+
+                                        is DashboardV2ToolDestination.AimiActivity -> launchDashboardV2Aimi(action)
+                                    }
+                                },
+                            )
+                        }
+                    } else {
+                        null
+                    },
+                    isGlassSkin = dashboardHomeVariant == DashboardHomeVariant.GLASS,
                 )
                 }
             }
@@ -918,6 +980,24 @@ class ComposeMainActivity : MetroAppCompatActivity() {
                         navController.navigate(route) { launchSingleTop = true }
                     }
                 },
+                // The Glass skin's detail routes. They are built here and not in :appshell,
+                // because their screens live in the androidMain part of :plugins:main.
+                glassRoutes = {
+                    glassRoutes(
+                        navController = navController,
+                        graphViewModel = graphViewModel,
+                        chipsViewModel = chipsViewModel,
+                        overviewViewModel = overviewViewModel,
+                        glassLoopDashboardViewModel = glassLoopDashboardViewModel,
+                        tempTargetManagementViewModel = tempTargetManagementViewModel,
+                        runningModeManagementViewModel = runningModeManagementViewModel,
+                        builtInSearchables = builtInSearchables,
+                        onShowDeliveryError = { comment, title ->
+                            uiInteraction.runAlarm(comment, rh.gs(title), AlarmSound.BOLUS_ERROR)
+                        },
+                        onOpenAimiContext = { launchDashboardV2Aimi(DashboardV2ToolAction.AIMI_CONTEXT) },
+                    )
+                },
             )
         }
 
@@ -974,7 +1054,12 @@ class ComposeMainActivity : MetroAppCompatActivity() {
         val deferMs = AimiLoopRuntimeGuard.overviewRefreshDeferMs()
         window.decorView.postDelayed({
             if (isDestroyed) return@postDelayed
-            if (storedSkinPrefersDashboardHome(preferences.get(StringKey.GeneralSkin))) {
+            val dashboardHomeVariant = DashboardHomeVariantResolver.resolve(
+                storedSkinName = preferences.get(StringKey.GeneralSkin),
+                availableSkins = skinProvider.list,
+                fallbackSkin = skinProvider.activeSkin(),
+            )
+            if (dashboardHomeVariant != DashboardHomeVariant.OVERVIEW) {
                 rxBus.send(EventRefreshOverview("ComposeMainActivity.afterChildFragmentsResume", now = true))
                 try {
                     activePlugin.activeOverview.overviewBus.send(
@@ -985,14 +1070,6 @@ class ComposeMainActivity : MetroAppCompatActivity() {
                 }
             }
         }, deferMs)
-    }
-
-    private fun storedSkinPrefersDashboardHome(storedGeneralSkin: String): Boolean {
-        val skins = skinProvider.list
-        val skin = skins.firstOrNull { it.javaClass.name == storedGeneralSkin }
-            ?: skins.firstOrNull { it.javaClass.simpleName == storedGeneralSkin }
-            ?: skinProvider.activeSkin()
-        return skin.prefersDashboardHome
     }
 
     override fun onStart() {
@@ -1296,5 +1373,22 @@ class ComposeMainActivity : MetroAppCompatActivity() {
             navController?.navigate(AppRoute.PluginContent.createRoute(pluginIndex))
         }
     }
-}
 
+    private fun launchDashboardV2Aimi(action: DashboardV2ToolAction) {
+        val destination = action.destination as? DashboardV2ToolDestination.AimiActivity ?: return
+        withProtection(destination.protection) {
+            try {
+                val activityClass = when (action) {
+                    DashboardV2ToolAction.ADVISOR        -> AimiProfileAdvisorActivity::class.java
+                    DashboardV2ToolAction.MEAL_ADVISOR   -> MealAdvisorActivity::class.java
+                    DashboardV2ToolAction.AIMI_CONTEXT   -> ContextActivity::class.java
+                    DashboardV2ToolAction.AUDITOR_REPORT -> AuditorReportActivity::class.java
+                    else                                 -> return@withProtection
+                }
+                startActivity(Intent(this, activityClass))
+            } catch (error: Exception) {
+                aapsLogger.error(LTag.CORE, "Failed to launch DASHBOARD_V2 ${action.name}: ${error.message}")
+            }
+        }
+    }
+}

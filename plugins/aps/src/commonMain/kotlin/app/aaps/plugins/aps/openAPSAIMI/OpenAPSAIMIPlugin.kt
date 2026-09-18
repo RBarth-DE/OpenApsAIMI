@@ -678,7 +678,7 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
             return null
         }
         val sensitivity = dynIsfCache.averageSince(timestamp - T.hours(24).msecs(), timestamp)
-        aapsLogger.debug(LTag.APS, "getAverageIsfMgdl() $sensitivity over 24 h ${dateUtil.dateAndTimeAndSecondsString(timestamp)} $caller")
+        //aapsLogger.debug(LTag.APS, "getAverageIsfMgdl() $sensitivity over 24 h ${dateUtil.dateAndTimeAndSecondsString(timestamp)} $caller")
         return sensitivity
     }
 
@@ -1525,6 +1525,9 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
                 lastEvaluatedMs = stressIsfLastEvalMs,
                 wasActive = stressIsfWasActive,
                 breakStartedMs = stressIsfBreakStartedMs,
+                // The heart rate may not take this protection away during a fast rise — see
+                // [StressIsfFloor.REASON_RISE_HOLD].
+                deltaMgdl5m = gs.delta,
             )
             stressIsfSignatureSinceMs = stressVerdict.signatureSinceMs
             stressIsfLastEvalMs = stressVerdict.lastEvaluatedMs
@@ -2542,6 +2545,11 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
                 add(BooleanKey.OApsAIMIStressIsfFloor)
                 add(BooleanKey.OApsAIMIEffortActivityProtection)
                 add(BooleanKey.OApsAIMIDescentRedoseGuard)
+
+                add(BooleanKey.OApsAIMIRiseCeilingGuard)
+                add(BooleanKey.OApsAIMIAnticipBasalFloor)
+                add(DoubleKey.OApsAIMIAnticipBudgetU)
+                add(BooleanKey.OApsAIMIAnticipMealEvidence)
                 add(DoubleKey.OApsAIMIautodrivesmallPrebolus)
                 add(DoubleKey.OApsAIMIautodrivePrebolus)
                 add(
@@ -2614,6 +2622,9 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
                                 rh = rh,
                                 unifiedReactivityLearner = unifiedReactivityLearner,
                                 tddCalculator = tddCalculator,
+                                // Without this the advisor has no glucose source and must stay silent.
+                                tirCalculator = tirCalculator,
+                                aapsLogger = aapsLogger,
                             ).pkpdRecommendationsForSettings(7)
                         }
                     },

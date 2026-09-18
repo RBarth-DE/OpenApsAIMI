@@ -30,6 +30,8 @@ import app.aaps.core.interfaces.rx.events.EventPreferenceChange
 import app.aaps.core.keys.BooleanKey
 import app.aaps.core.ui.compose.LocalPreferences
 import app.aaps.plugins.main.general.dashboard.AimiDashboardComposeRootView
+import app.aaps.plugins.main.general.dashboard.DashboardV2ToolAction
+import app.aaps.plugins.main.skins.DashboardHomeVariant
 
 private const val TAG = "DashboardOverviewHost"
 
@@ -38,6 +40,9 @@ fun DashboardOverviewHost(
     paddingValues: PaddingValues,
     fabBottomOffset: Dp,
     rxBus: RxBus,
+    dashboardHomeVariant: DashboardHomeVariant,
+    availablePluginClassNames: Set<String>,
+    onToolAction: (DashboardV2ToolAction) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val preferences = LocalPreferences.current
@@ -70,8 +75,19 @@ fun DashboardOverviewHost(
         }
     } else {
         AndroidView(
-            modifier = modifier.fillMaxSize().padding(paddingValues).padding(bottom = fabBottomOffset),
-            factory = { a -> AimiDashboardComposeRootView(a as FragmentActivity) },
+            modifier = modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+                .padding(bottom = fabBottomOffset),
+            factory = { ctx ->
+                require(ctx is FragmentActivity) { "DashboardOverviewHost requires FragmentActivity context" }
+                AimiDashboardComposeRootView(
+                    context = ctx,
+                    dashboardHomeVariant = dashboardHomeVariant,
+                    availablePluginClassNames = availablePluginClassNames,
+                    onToolAction = onToolAction,
+                )
+            },
             update = { },
         )
     }
