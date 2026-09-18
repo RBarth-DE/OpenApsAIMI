@@ -68,7 +68,7 @@ kotlin {
 
                 implementation(libs.androidx.collection)
                 implementation(libs.kotlinx.coroutines.core)
-                implementation(libs.cmp.runtime)
+                implementation(libs.jetbrains.compose.runtime)
             }
         }
 

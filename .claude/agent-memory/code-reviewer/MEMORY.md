@@ -71,8 +71,6 @@
   escape hatch (no `navigateProtected`/`withProtection`); checklist for verifying new
   one-tap shortcuts to CARBS/BOLUS_WIZARD/QUICK_WIZARD_MANAGEMENT/TEMP_TARGET_MANAGEMENT
   (all default `protection = BOLUS`) go through the protected path, not this one.
-
-
 - `equil-migration.md` — detailed Equil Compose migration review (2026-03-09)
 - Earlier migration reviews (NSClient, Tidepool, Wear, SMS, Preferences, EOPatch2): see conversation
   history from 2026-03-01 and 2026-03-02.

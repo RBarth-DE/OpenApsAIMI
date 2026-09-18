@@ -109,6 +109,7 @@ import app.aaps.core.interfaces.rx.events.EventShowDialog
 import app.aaps.core.interfaces.source.DexcomBoyda
 import app.aaps.core.interfaces.sync.NsClient
 import app.aaps.core.interfaces.ui.IconsProvider
+import app.aaps.core.interfaces.ui.SnackbarHostPresence
 import app.aaps.core.interfaces.ui.UiInteraction
 import app.aaps.core.interfaces.utils.DateUtil
 import app.aaps.core.interfaces.utils.DecimalFormatter
@@ -136,6 +137,8 @@ import app.aaps.core.ui.compose.ScreenMode
 import app.aaps.core.ui.compose.dialogs.GlobalDialogHost
 import app.aaps.core.ui.compose.dialogs.GlobalSnackbarHost
 import app.aaps.core.ui.compose.dialogs.OkDialog
+import app.aaps.core.ui.compose.FallbackViewModelFactory
+import app.aaps.core.ui.compose.MetroViewModelFactoryOwner
 import app.aaps.core.ui.compose.navigation.NavigationRequest
 import app.aaps.core.ui.compose.preference.LocalCheckPassword
 import app.aaps.core.ui.compose.preference.LocalClearExportPasswordStore
@@ -216,6 +219,7 @@ class ComposeMainActivity : MetroAppCompatActivity() {
     }
 
     @Inject lateinit var rxBus: RxBus
+    @Inject lateinit var snackbarHostPresence: SnackbarHostPresence
     @Inject lateinit var rh: ResourceHelper
     @Inject lateinit var aapsLogger: AAPSLogger
     @Inject lateinit var preferences: Preferences
@@ -259,8 +263,20 @@ class ComposeMainActivity : MetroAppCompatActivity() {
     private var requestMultiplePermissions: ActivityResultLauncher<Array<String>>? = null
     private var onPermissionResultDenied: ((List<String>) -> Unit)? = null
 
-    // ViewModels (Metro-provided: each class carries @ContributesIntoMap + @ViewModelKey, and the
-    // plain `by viewModels()` finds them through MetroAppCompatActivity's default factory).
+    /**
+     * The factory `by viewModels()` uses.
+     */
+    override val defaultViewModelProviderFactory: ViewModelProvider.Factory
+        get() = FallbackViewModelFactory(
+            primary = (applicationContext as MetroViewModelFactoryOwner).metroViewModelFactory,
+            // Anything the graph does not contribute still has to be buildable. AndroidX creates its
+            // own view models through this activity - BiometricPrompt makes a BiometricViewModel -
+            // and handing out the Metro factory alone made that throw, taking the biometric prompt
+            // down and with it the Configuration screen and profile editing.
+            fallback = super.defaultViewModelProviderFactory
+        )
+
+    // View models, built by Metro - each carries @ContributesIntoMap and @ViewModelKey.
     private val mainViewModel: MainViewModel by viewModels()
     private val manageViewModel: ManageViewModel by viewModels()
     private val maintenanceViewModel: MaintenanceViewModel by viewModels()
@@ -447,6 +463,7 @@ class ComposeMainActivity : MetroAppCompatActivity() {
                         // and is the single visible SnackbarHost across every screen.
                         GlobalSnackbarHost(
                             rxBus = rxBus,
+                            snackbarHostPresence = snackbarHostPresence,
                             hostState = rootSnackbarHostState,
                             modifier = Modifier.align(Alignment.BottomCenter)
                         )

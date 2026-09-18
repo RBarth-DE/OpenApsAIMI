@@ -4,7 +4,7 @@ Purpose: enforce repeatable quality gates to prevent freezes and functional regr
 
 Use this file for every merge from `dev` and every release candidate.
 
-**Latest merge log:** [MERGE_DEV_2026-09-14.md](MERGE_DEV_2026-09-14.md) (`dev` @ `343f9f7673` → `dev_OAPSAIMI_RB`; KMP layout + Hilt→Metro, 1115 conflicted files). Previous: [MERGE_DEV_2026-09-06.md](MERGE_DEV_2026-09-06.md) (`dev` @ `283a184f60`), [MERGE_DEV_2026-08-08.md](MERGE_DEV_2026-08-08.md) (`dev` @ `7fc8205e9a`), [MERGE_DEV_2026-08-03.md](MERGE_DEV_2026-08-03.md).
+**Latest merge log:** [MERGE_DEV_2026-09-18.md](MERGE_DEV_2026-09-18.md) (`dev` @ `aaa069fab385` → `dev_OAPSAIMI_RB`; CareLevo pump, pump modules into folders, 10 conflicted files). Previous: [MERGE_DEV_2026-09-14.md](MERGE_DEV_2026-09-14.md) (`dev` @ `343f9f7673`; KMP layout + Hilt→Metro, 1115 conflicted files), [MERGE_DEV_2026-09-06.md](MERGE_DEV_2026-09-06.md) (`dev` @ `283a184f60`), [MERGE_DEV_2026-08-08.md](MERGE_DEV_2026-08-08.md) (`dev` @ `7fc8205e9a`), [MERGE_DEV_2026-08-03.md](MERGE_DEV_2026-08-03.md).
 
 ---
 
