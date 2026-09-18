@@ -5,6 +5,7 @@ import app.aaps.core.data.time.T
 import app.aaps.core.interfaces.aps.APSResult
 import app.aaps.core.interfaces.nsclient.NSSettingsStatus
 import app.aaps.core.interfaces.nsclient.ProcessedDeviceStatusData
+import app.aaps.core.interfaces.nsclient.ProcessedDeviceStatusDataAndroid
 import app.aaps.core.interfaces.resources.ResourceHelper
 import app.aaps.core.interfaces.utils.DateUtil
 import app.aaps.core.interfaces.utils.Round
@@ -15,8 +16,12 @@ import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
+import dev.zacsweers.metro.binding
 
-@ContributesBinding(AppScope::class)
+// Bound twice: `ProcessedDeviceStatusData` is what common code injects, `ProcessedDeviceStatusDataAndroid`
+// is the same instance seen through the status texts, which are built as HTML for the old overview screen.
+@ContributesBinding(AppScope::class, binding = binding<ProcessedDeviceStatusData>())
+@ContributesBinding(AppScope::class, binding = binding<ProcessedDeviceStatusDataAndroid>())
 @SingleIn(AppScope::class)
 @Inject
 class ProcessedDeviceStatusDataImpl(
@@ -24,7 +29,7 @@ class ProcessedDeviceStatusDataImpl(
     private val dateUtil: DateUtil,
     private val preferences: Preferences,
     private val apsResultProvider: () -> APSResult
-) : ProcessedDeviceStatusData {
+) : ProcessedDeviceStatusDataAndroid {
 
     override var pumpData: ProcessedDeviceStatusData.PumpData? = null
 

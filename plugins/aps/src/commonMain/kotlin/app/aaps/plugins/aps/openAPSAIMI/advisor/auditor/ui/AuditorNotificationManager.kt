@@ -15,6 +15,7 @@ import app.aaps.core.interfaces.notifications.NotificationId
 import app.aaps.core.interfaces.notifications.NotificationLevel
 import app.aaps.core.interfaces.notifications.NotificationManager as AapsNotificationManager
 import app.aaps.core.interfaces.ui.UiInteraction
+import app.aaps.core.interfaces.ui.UiInteractionAndroid
 import app.aaps.core.ui.R as CoreUiR
 import app.aaps.plugins.aps.ApsStrings
 import app.aaps.plugins.aps.R
@@ -72,7 +73,10 @@ class AuditorNotificationManager @Inject constructor(
     auditorStatusLiveData.markAsRead()
     cancelNotification()
     val (message, _) = AuditorReportFormatter.buildFullReportMessageWithFallback(context)
-    uiInteraction.showOkDialog(
+    // The dialog belongs to the calling (translucent) activity window. The global dialog host lives
+    // in the main activity, which is below this window, so its dialog could not be tapped. The
+    // injected UiInteraction is the Android one, so the cast always succeeds.
+    (uiInteraction as UiInteractionAndroid).showOkDialog(
       hostContext,
       context.getString(R.string.aimi_auditor_report_dialog_title),
       message,

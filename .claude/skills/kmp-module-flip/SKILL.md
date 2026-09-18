@@ -318,6 +318,32 @@ Two traps when such a screen is reachable from commonMain code:
   the interface on iOS or desktop now has no binding. Check who injects the interface before
   calling the move done.
 
+### Android-only members of a common interface: sub-interface in androidMain
+
+When upstream's version of a commonMain interface has no room for the fork's Android-only members
+(`UiInteraction.showOkDialog`, `Overview.setVersionView`, `BgQualityCheck.icon`), do not widen the
+common interface back and do not delete the members. Add a sub-interface in **androidMain**, in the
+same package:
+
+    interface UiInteractionAndroid : UiInteraction { fun showOkDialog(...) }
+
+`@ContributesBinding` is `@Repeatable` and takes `binding = binding<T>()`, so one Android
+implementation binds to both types in one place:
+
+    @ContributesBinding(AppScope::class, binding = binding<UiInteraction>())
+    @ContributesBinding(AppScope::class, binding = binding<UiInteractionAndroid>())
+    class UiInteractionImpl(...) : UiInteractionAndroid
+
+A caller that needs the Android members injects the `...Android` type; everyone else keeps injecting
+the common type. This is far smaller than casting at every call site. A cast (`x as XxxAndroid`) is
+only needed where the object is created outside the graph and handed out through the common type -
+`OverviewPlugin` and `BgQualityCheckPlugin` have a `@Provides` for exactly that.
+
+The common interface itself goes back to upstream's version: `git diff upstream/dev -- <path>`
+printing nothing is the goal. Also check the generated factory to confirm what the graph resolves:
+`javap -p -c <module>/build/classes/kotlin/android/main/<pkg>/XxxMetroFactory.class` shows the
+provider's type and any leftover `checkcast`.
+
 ### An `Int` in an interface is a hard stop
 
 `PumpEnactResult.comment(Int)` and `HardLimits.verifyHardLimits(..., valueName: Int, ...)` take a

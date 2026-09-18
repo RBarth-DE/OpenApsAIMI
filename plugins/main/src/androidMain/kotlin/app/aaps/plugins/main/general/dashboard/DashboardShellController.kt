@@ -39,7 +39,6 @@ import app.aaps.core.interfaces.rx.collectResilient
 import app.aaps.core.interfaces.rx.events.EventPreferenceChange
 import app.aaps.core.interfaces.rx.events.EventRefreshOverview
 import app.aaps.core.interfaces.rx.events.EventUpdateOverviewIobCob
-import app.aaps.core.interfaces.ui.UiInteraction
 import app.aaps.core.interfaces.utils.DateUtil
 import app.aaps.core.keys.BooleanKey
 import app.aaps.core.keys.BooleanNonKey
@@ -96,9 +95,7 @@ internal class DashboardShellController(
     private val activePlugin get() = deps.activePlugin
     private val decimalFormatter get() = deps.decimalFormatter
     private val rxBus get() = deps.rxBus
-    private val overviewData: OverviewDataImpl
-        get() = deps.overviewData as? OverviewDataImpl
-            ?: error("DashboardShellController requires OverviewDataImpl")
+    private val overviewData: OverviewDataImpl get() = deps.overviewData
     private val overviewMenus get() = deps.overviewMenus
     private val graphDataProvider: () -> GraphData get() = deps.graphDataProvider
     private val config: Config get() = deps.config

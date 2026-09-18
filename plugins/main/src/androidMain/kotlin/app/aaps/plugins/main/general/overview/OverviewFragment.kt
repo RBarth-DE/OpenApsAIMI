@@ -42,7 +42,7 @@ import app.aaps.core.graph.data.GraphViewWithCleanup
 import app.aaps.core.interfaces.aps.IobTotal
 import app.aaps.core.interfaces.aps.Loop
 import app.aaps.core.interfaces.automation.Automation
-import app.aaps.core.interfaces.bgQualityCheck.BgQualityCheck
+import app.aaps.core.interfaces.bgQualityCheck.BgQualityCheckAndroid
 import app.aaps.core.interfaces.configuration.Config
 import app.aaps.core.interfaces.configuration.ExternalOptions
 import app.aaps.core.interfaces.constraints.ConstraintsChecker
@@ -55,10 +55,9 @@ import app.aaps.core.interfaces.logging.UserEntryLogger
 import app.aaps.core.interfaces.notifications.AapsNotification
 import app.aaps.core.interfaces.notifications.NotificationLevel
 import app.aaps.core.interfaces.nsclient.NSSettingsStatus
-import app.aaps.core.interfaces.nsclient.ProcessedDeviceStatusData
+import app.aaps.core.interfaces.nsclient.ProcessedDeviceStatusDataAndroid
 import app.aaps.core.interfaces.overview.LastBgData
-import app.aaps.core.interfaces.overview.Overview
-import app.aaps.core.interfaces.overview.OverviewData
+import app.aaps.core.interfaces.overview.OverviewAndroid
 import app.aaps.core.interfaces.overview.OverviewMenus
 import app.aaps.core.interfaces.plugin.ActivePlugin
 import app.aaps.core.interfaces.plugin.PluginBase
@@ -84,7 +83,7 @@ import app.aaps.core.interfaces.rx.events.EventUpdateOverviewSensitivity
 import app.aaps.core.interfaces.rx.events.EventWearUpdateTiles
 import app.aaps.core.interfaces.rx.collectResilient
 import app.aaps.core.interfaces.rx.weardata.EventData
-import app.aaps.core.interfaces.ui.UiInteraction
+import app.aaps.core.interfaces.ui.UiInteractionAndroid
 import app.aaps.core.interfaces.utils.DateUtil
 import app.aaps.core.interfaces.utils.DecimalFormatter
 import app.aaps.core.interfaces.utils.TrendCalculator
@@ -106,6 +105,7 @@ import app.aaps.core.ui.extensions.runOnUiThread
 import app.aaps.core.ui.extensions.toVisibility
 import app.aaps.core.ui.extensions.toVisibilityKeepSpace
 import app.aaps.plugins.main.R
+import app.aaps.plugins.main.general.overview.OverviewDataImpl
 import app.aaps.plugins.main.general.overview.graphData.GraphData
 import app.aaps.plugins.main.general.overview.graphData.viewportShouldFollowLiveRange
 import app.aaps.plugins.main.general.overview.notifications.NotificationUiBinder
@@ -147,7 +147,7 @@ class OverviewFragment : Fragment(), View.OnClickListener, View.OnLongClickListe
     @Inject lateinit var profileUtil: ProfileUtil
     @Inject lateinit var constraintChecker: ConstraintsChecker
     @Inject lateinit var statusLightHandler: StatusLightHandler
-    @Inject lateinit var processedDeviceStatusData: ProcessedDeviceStatusData
+    @Inject lateinit var processedDeviceStatusData: ProcessedDeviceStatusDataAndroid
     @Inject lateinit var nsSettingsStatus: NSSettingsStatus
     @Inject lateinit var loop: Loop
     @Inject lateinit var activePlugin: ActivePlugin
@@ -161,12 +161,12 @@ class OverviewFragment : Fragment(), View.OnClickListener, View.OnLongClickListe
     @Inject lateinit var uel: UserEntryLogger
     @Inject lateinit var persistenceLayer: PersistenceLayer
     @Inject lateinit var glucoseStatusProvider: GlucoseStatusProvider
-    @Inject lateinit var overviewData: OverviewData
-    @Inject lateinit var overview: Overview
+    @Inject lateinit var overviewData: OverviewDataImpl
+    @Inject lateinit var overview: OverviewAndroid
     @Inject lateinit var lastBgData: LastBgData
     @Inject lateinit var automation: Automation
-    @Inject lateinit var bgQualityCheck: BgQualityCheck
-    @Inject lateinit var uiInteraction: UiInteraction
+    @Inject lateinit var bgQualityCheck: BgQualityCheckAndroid
+    @Inject lateinit var uiInteraction: UiInteractionAndroid
     @Inject lateinit var decimalFormatter: DecimalFormatter
     @Inject lateinit var graphDataProvider: () -> GraphData
     @Inject lateinit var commandQueue: CommandQueue

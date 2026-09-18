@@ -61,12 +61,12 @@ class OverviewDataImpl @Inject constructor(
     private val processedTbrEbData: ProcessedTbrEbData
 ) : OverviewData {
 
-    override var rangeToDisplay = 6 // for graph
+    var rangeToDisplay = 6 // for graph
     override var toTime: Long = 0
     override var fromTime: Long = 0
     override var endTime: Long = 0
 
-    override fun reset() {
+    fun reset() {
         pumpStatus = ""
         calcProgressPct = 100
         bgReadingsArray = ArrayList()
@@ -134,7 +134,7 @@ class OverviewDataImpl @Inject constructor(
         finalIsfSeries = LineGraphSeries<ScaledDataPoint>()
     }
 
-    override fun initRange() {
+    fun initRange() {
         rangeToDisplay = preferences.get(IntNonKey.RangeToDisplay)
 
         val tz = TimeZone.currentSystemDefault()
@@ -152,19 +152,19 @@ class OverviewDataImpl @Inject constructor(
      * PUMP STATUS
      */
 
-    override var pumpStatus: String = ""
+    var pumpStatus: String = ""
 
     /*
      * CALC PROGRESS
      */
 
-    override var calcProgressPct: Int = 100
+    var calcProgressPct: Int = 100
 
     /*
     * TEMPORARY BASAL
     */
 
-    override fun temporaryBasalText(): String =
+    fun temporaryBasalText(): String =
         runBlocking {
             profileFunction.getProfile()?.let { profile ->
                 var temporaryBasal = processedTbrEbData.getTempBasalIncludingConvertedExtended(dateUtil.now())
@@ -174,7 +174,7 @@ class OverviewDataImpl @Inject constructor(
             } ?: rh.gs(app.aaps.core.ui.R.string.value_unavailable_short)
         }
 
-    override fun temporaryBasalDialogText(): String =
+    fun temporaryBasalDialogText(): String =
         runBlocking {
             profileFunction.getProfile()?.let { profile ->
                 processedTbrEbData.getTempBasalIncludingConvertedExtended(dateUtil.now())?.let { temporaryBasal ->
@@ -185,7 +185,7 @@ class OverviewDataImpl @Inject constructor(
             } ?: rh.gs(app.aaps.core.ui.R.string.value_unavailable_short)
         }
 
-    @DrawableRes override fun temporaryBasalIcon(): Int =
+    @DrawableRes fun temporaryBasalIcon(): Int =
         runBlocking {
             profileFunction.getProfile()?.let { profile ->
                 processedTbrEbData.getTempBasalIncludingConvertedExtended(dateUtil.now())?.let { temporaryBasal ->
@@ -199,7 +199,7 @@ class OverviewDataImpl @Inject constructor(
             } ?: R.drawable.ic_cp_basal_no_tbr
         }
 
-    @AttrRes override fun temporaryBasalColor(context: Context?): Int =
+    @AttrRes fun temporaryBasalColor(context: Context?): Int =
         runBlocking {
             processedTbrEbData.getTempBasalIncludingConvertedExtended(dateUtil.now())?.let {
                 rh.gac(context, app.aaps.core.ui.R.attr.basal)
@@ -210,119 +210,119 @@ class OverviewDataImpl @Inject constructor(
      * EXTENDED BOLUS
     */
 
-    override fun extendedBolusText(): String =
+    fun extendedBolusText(): String =
         runBlocking { persistenceLayer.getExtendedBolusActiveAt(dateUtil.now()) }?.let { extendedBolus ->
             if (!extendedBolus.isInProgress(dateUtil)) ""
             else if (!activePlugin.activePump.isFakingTempsByExtendedBoluses) rh.gs(app.aaps.core.ui.R.string.pump_base_basal_rate, extendedBolus.rate)
             else ""
         } ?: ""
 
-    override fun extendedBolusDialogText(): String =
+    fun extendedBolusDialogText(): String =
         runBlocking { persistenceLayer.getExtendedBolusActiveAt(dateUtil.now()) }?.toStringFull(dateUtil, rh) ?: ""
 
     /*
      * Graphs
      */
 
-    override var bgReadingsArray: List<GV> = ArrayList()
-    override var maxBgValue = Double.MIN_VALUE
-    override var bucketedGraphSeries: SeriesData = PointsWithLabelGraphSeries<DataPointWithLabelInterface>()
-    override var bgReadingGraphSeries: SeriesData = PointsWithLabelGraphSeries<DataPointWithLabelInterface>()
-    override var predictionsGraphSeries: SeriesData = PointsWithLabelGraphSeries<DataPointWithLabelInterface>()
+    var bgReadingsArray: List<GV> = ArrayList()
+    var maxBgValue = Double.MIN_VALUE
+    var bucketedGraphSeries: SeriesData = PointsWithLabelGraphSeries<DataPointWithLabelInterface>()
+    var bgReadingGraphSeries: SeriesData = PointsWithLabelGraphSeries<DataPointWithLabelInterface>()
+    var predictionsGraphSeries: SeriesData = PointsWithLabelGraphSeries<DataPointWithLabelInterface>()
 
-    override val basalScale = Scale()
-    override var baseBasalGraphSeries: SeriesData = LineGraphSeries<ScaledDataPoint>()
-    override var tempBasalGraphSeries: SeriesData = LineGraphSeries<ScaledDataPoint>()
-    override var basalLineGraphSeries: SeriesData = LineGraphSeries<ScaledDataPoint>()
-    override var absoluteBasalGraphSeries: SeriesData = LineGraphSeries<ScaledDataPoint>()
+    val basalScale = Scale()
+    var baseBasalGraphSeries: SeriesData = LineGraphSeries<ScaledDataPoint>()
+    var tempBasalGraphSeries: SeriesData = LineGraphSeries<ScaledDataPoint>()
+    var basalLineGraphSeries: SeriesData = LineGraphSeries<ScaledDataPoint>()
+    var absoluteBasalGraphSeries: SeriesData = LineGraphSeries<ScaledDataPoint>()
 
-    override var temporaryTargetSeries: SeriesData = LineGraphSeries<DataPoint>()
-    override var runningModesSeries: SeriesData = PointsWithLabelGraphSeries<RunningModeDataPoint>()
-    override var maxIAValue = 0.0
-    override val actScale = Scale()
-    override var activitySeries: SeriesData = FixedLineGraphSeries<ScaledDataPoint>()
-    override var activityPredictionSeries: SeriesData = FixedLineGraphSeries<ScaledDataPoint>()
+    var temporaryTargetSeries: SeriesData = LineGraphSeries<DataPoint>()
+    var runningModesSeries: SeriesData = PointsWithLabelGraphSeries<RunningModeDataPoint>()
+    var maxIAValue = 0.0
+    val actScale = Scale()
+    var activitySeries: SeriesData = FixedLineGraphSeries<ScaledDataPoint>()
+    var activityPredictionSeries: SeriesData = FixedLineGraphSeries<ScaledDataPoint>()
 
-    override var maxEpsValue = 0.0
-    override val epsScale = Scale()
-    override var epsSeries: SeriesData = PointsWithLabelGraphSeries<DataPointWithLabelInterface>()
-    override var maxTreatmentsValue = 0.0
-    override var treatmentsSeries: SeriesData = PointsWithLabelGraphSeries<DataPointWithLabelInterface>()
-    override var maxTherapyEventValue = 0.0
-    override var therapyEventSeries: SeriesData = PointsWithLabelGraphSeries<DataPointWithLabelInterface>()
+    var maxEpsValue = 0.0
+    val epsScale = Scale()
+    var epsSeries: SeriesData = PointsWithLabelGraphSeries<DataPointWithLabelInterface>()
+    var maxTreatmentsValue = 0.0
+    var treatmentsSeries: SeriesData = PointsWithLabelGraphSeries<DataPointWithLabelInterface>()
+    var maxTherapyEventValue = 0.0
+    var therapyEventSeries: SeriesData = PointsWithLabelGraphSeries<DataPointWithLabelInterface>()
 
-    override var maxIobValueFound = Double.MIN_VALUE
-    override val iobScale = Scale()
-    override var iobSeries: SeriesData = FixedLineGraphSeries<ScaledDataPoint>()
-    override var absIobSeries: SeriesData = FixedLineGraphSeries<ScaledDataPoint>()
-    override var iobPredictions1Series: SeriesData = PointsWithLabelGraphSeries<DataPointWithLabelInterface>()
+    var maxIobValueFound = Double.MIN_VALUE
+    val iobScale = Scale()
+    var iobSeries: SeriesData = FixedLineGraphSeries<ScaledDataPoint>()
+    var absIobSeries: SeriesData = FixedLineGraphSeries<ScaledDataPoint>()
+    var iobPredictions1Series: SeriesData = PointsWithLabelGraphSeries<DataPointWithLabelInterface>()
 
-    override var maxBGIValue = Double.MIN_VALUE
-    override val bgiScale = Scale()
-    override var minusBgiSeries: SeriesData = FixedLineGraphSeries<ScaledDataPoint>()
-    override var minusBgiHistSeries: SeriesData = FixedLineGraphSeries<ScaledDataPoint>()
+    var maxBGIValue = Double.MIN_VALUE
+    val bgiScale = Scale()
+    var minusBgiSeries: SeriesData = FixedLineGraphSeries<ScaledDataPoint>()
+    var minusBgiHistSeries: SeriesData = FixedLineGraphSeries<ScaledDataPoint>()
 
-    override var maxCobValueFound = Double.MIN_VALUE
-    override val cobScale = Scale()
-    override var cobSeries: SeriesData = FixedLineGraphSeries<ScaledDataPoint>()
-    override var cobMinFailOverSeries: SeriesData = PointsWithLabelGraphSeries<DataPointWithLabelInterface>()
+    var maxCobValueFound = Double.MIN_VALUE
+    val cobScale = Scale()
+    var cobSeries: SeriesData = FixedLineGraphSeries<ScaledDataPoint>()
+    var cobMinFailOverSeries: SeriesData = PointsWithLabelGraphSeries<DataPointWithLabelInterface>()
 
-    override var maxDevValueFound = Double.MIN_VALUE
-    override val devScale = Scale()
-    override var deviationsSeries: SeriesData = BarGraphSeries<DeviationDataPointLegacy>()
+    var maxDevValueFound = Double.MIN_VALUE
+    val devScale = Scale()
+    var deviationsSeries: SeriesData = BarGraphSeries<DeviationDataPointLegacy>()
 
-    override var maxRatioValueFound = 5.0
-    override var minRatioValueFound = -maxRatioValueFound
-    override val ratioScale = Scale()
-    override var ratioSeries: SeriesData = LineGraphSeries<ScaledDataPoint>()
+    var maxRatioValueFound = 5.0
+    var minRatioValueFound = -maxRatioValueFound
+    val ratioScale = Scale()
+    var ratioSeries: SeriesData = LineGraphSeries<ScaledDataPoint>()
 
-    override var maxFromMaxValueFound = Double.MIN_VALUE
-    override var maxFromMinValueFound = Double.MIN_VALUE
-    override val dsMaxScale = Scale()
-    override val dsMinScale = Scale()
-    override var dsMaxSeries: SeriesData = LineGraphSeries<ScaledDataPoint>()
-    override var dsMinSeries: SeriesData = LineGraphSeries<ScaledDataPoint>()
-    override var heartRateScale = Scale()
-    override var heartRateGraphSeries: SeriesData = PointsWithLabelGraphSeries<DataPointWithLabelInterface>()
-    override var stepsForScale = Scale()
-    override var stepsCountGraphSeries: SeriesData = PointsWithLabelGraphSeries<StepsDataPoint>()
+    var maxFromMaxValueFound = Double.MIN_VALUE
+    var maxFromMinValueFound = Double.MIN_VALUE
+    val dsMaxScale = Scale()
+    val dsMinScale = Scale()
+    var dsMaxSeries: SeriesData = LineGraphSeries<ScaledDataPoint>()
+    var dsMinSeries: SeriesData = LineGraphSeries<ScaledDataPoint>()
+    var heartRateScale = Scale()
+    var heartRateGraphSeries: SeriesData = PointsWithLabelGraphSeries<DataPointWithLabelInterface>()
+    var stepsForScale = Scale()
+    var stepsCountGraphSeries: SeriesData = PointsWithLabelGraphSeries<StepsDataPoint>()
 
-    override var maxVarSensValueFound = 200.0
-    override var minVarSensValueFound = 50.0
-    override val varSensScale = Scale()
-    override var varSensSeries: SeriesData = LineGraphSeries<ScaledDataPoint>()
+    var maxVarSensValueFound = 200.0
+    var minVarSensValueFound = 50.0
+    val varSensScale = Scale()
+    var varSensSeries: SeriesData = LineGraphSeries<ScaledDataPoint>()
 
     // AutoISF interim results
-    override var maxIobThValueFound = Double.MIN_VALUE
-    override var minIobThValueFound = 0.0
-    override var iobThSeries: SeriesData = LineGraphSeries<ScaledDataPoint>()
+    var maxIobThValueFound = Double.MIN_VALUE
+    var minIobThValueFound = 0.0
+    var iobThSeries: SeriesData = LineGraphSeries<ScaledDataPoint>()
 
-    override var maxAcceIsfValueFound = 1.5
-    override var minAcceIsfValueFound = 0.5
-    override val acceIsfScale = Scale()
-    override var acceIsfSeries: SeriesData = LineGraphSeries<ScaledDataPoint>()
+    var maxAcceIsfValueFound = 1.5
+    var minAcceIsfValueFound = 0.5
+    val acceIsfScale = Scale()
+    var acceIsfSeries: SeriesData = LineGraphSeries<ScaledDataPoint>()
 
-    override var maxBgIsfValueFound = 1.5
-    override var minBgIsfValueFound = 0.5
-    override val bgIsfScale = Scale()
-    override var bgIsfSeries: SeriesData = LineGraphSeries<ScaledDataPoint>()
+    var maxBgIsfValueFound = 1.5
+    var minBgIsfValueFound = 0.5
+    val bgIsfScale = Scale()
+    var bgIsfSeries: SeriesData = LineGraphSeries<ScaledDataPoint>()
 
-    override var maxPpIsfValueFound = 1.5
-    override var minPpIsfValueFound = 0.5
-    override val ppIsfScale = Scale()
-    override var ppIsfSeries: SeriesData = LineGraphSeries<ScaledDataPoint>()
+    var maxPpIsfValueFound = 1.5
+    var minPpIsfValueFound = 0.5
+    val ppIsfScale = Scale()
+    var ppIsfSeries: SeriesData = LineGraphSeries<ScaledDataPoint>()
 
-    override var maxDuraIsfValueFound = 1.5
-    override var minDuraIsfValueFound = 0.5
-    override val duraIsfScale = Scale()
-    override var duraIsfSeries: SeriesData = LineGraphSeries<ScaledDataPoint>()
+    var maxDuraIsfValueFound = 1.5
+    var minDuraIsfValueFound = 0.5
+    val duraIsfScale = Scale()
+    var duraIsfSeries: SeriesData = LineGraphSeries<ScaledDataPoint>()
 
-    override var maxFinalIsfValueFound = 1.5
-    override var minFinalIsfValueFound = 0.5
-    override val finalIsfScale = Scale()
-    override var finalIsfSeries: SeriesData = LineGraphSeries<ScaledDataPoint>()
+    var maxFinalIsfValueFound = 1.5
+    var minFinalIsfValueFound = 0.5
+    val finalIsfScale = Scale()
+    var finalIsfSeries: SeriesData = LineGraphSeries<ScaledDataPoint>()
 
-    override fun replacePredictionGraphSeriesFromWorker(points: List<BgDataPoint>) {
+    fun replacePredictionGraphSeriesFromWorker(points: List<BgDataPoint>) {
         if (points.isEmpty()) {
             predictionsGraphSeries = PointsWithLabelGraphSeries<DataPointWithLabelInterface>()
             return

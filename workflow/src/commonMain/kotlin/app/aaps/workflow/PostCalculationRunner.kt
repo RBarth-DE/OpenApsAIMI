@@ -140,7 +140,6 @@ class PostCalculationRunner(
             ?: emptyList()
 
         data.cache.updatePredictions(predictionDataPoints)
-        data.overviewData.replacePredictionGraphSeriesFromWorker(predictionDataPoints)
 
         // Extend cached time range to include prediction horizon
         data.cache.timeRangeFlow.value?.let { current ->

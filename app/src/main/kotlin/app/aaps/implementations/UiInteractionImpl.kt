@@ -25,6 +25,7 @@ import app.aaps.core.interfaces.notifications.AlarmSoundPlayer
 import app.aaps.core.interfaces.notifications.NotificationManager
 import app.aaps.core.interfaces.rx.bus.RxBus
 import app.aaps.core.interfaces.ui.UiInteraction
+import app.aaps.core.interfaces.ui.UiInteractionAndroid
 import app.aaps.core.keys.interfaces.Preferences
 import app.aaps.core.objects.extensions.asAnnouncement
 import app.aaps.core.ui.alarmSoundFor
@@ -36,11 +37,16 @@ import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
+import dev.zacsweers.metro.binding
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import kotlin.reflect.KClass
 
-@ContributesBinding(AppScope::class)
+// Bound twice on purpose: `UiInteraction` is what common code injects, and `UiInteractionAndroid`
+// is the same instance seen through the Android-only members. Code that needs the dialogs or the
+// navigation helpers injects the Android type directly instead of casting at every call site.
+@ContributesBinding(AppScope::class, binding = binding<UiInteraction>())
+@ContributesBinding(AppScope::class, binding = binding<UiInteractionAndroid>())
 @SingleIn(AppScope::class)
 @Inject
 class UiInteractionImpl(
@@ -54,15 +60,12 @@ class UiInteractionImpl(
     private val persistenceLayer: PersistenceLayer,
     private val config: Config,
     @ApplicationScope private val appScope: CoroutineScope
-) : UiInteraction {
+) : UiInteractionAndroid {
 
     private val alertDialogs: AlertDialogs = AlertDialogs(preferences, rxBus)
 
     override val mainActivity: KClass<*> = ComposeMainActivity::class
     override val errorHelperActivity: KClass<*> = ErrorActivity::class
-
-    override val unitsEntries = arrayOf<CharSequence>("mg/dL", "mmol/L")
-    override val unitsValues = arrayOf<CharSequence>("mg/dl", "mmol")
 
     override fun runAlarm(status: String, title: String, sound: AlarmSound?) {
         // Persist the error as an announcement at fire time — gated by the NS-announcement
@@ -169,18 +172,6 @@ class UiInteractionImpl(
         alertDialogs.showOkCancelDialog(context, title, message, secondMessage, ok, cancel, icon)
     }
 
-    override fun showYesNoCancel(context: Context, title: Int, message: Int, yes: (() -> Unit)?, no: (() -> Unit)?) {
-        alertDialogs.showYesNoCancel(context, title, message, yes, no)
-    }
-
-    override fun showYesNoCancel(context: Context, title: String, message: String, yes: (() -> Unit)?, no: (() -> Unit)?) {
-        alertDialogs.showYesNoCancel(context, title, message, yes, no)
-    }
-
-    override fun showError(context: Context, title: String, message: String, positiveButton: Int?, ok: (() -> Unit)?, cancel: (() -> Unit)?) {
-        alertDialogs.showError(context, title, message, positiveButton, ok, cancel)
-    }
-
     override fun openRunningModeScreen(activity: FragmentActivity) {
         activity.startActivity(Intent(activity, ComposeMainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
@@ -214,10 +205,6 @@ class UiInteractionImpl(
             flags = Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
             putExtra(ComposeMainActivity.EXTRA_NAVIGATE_ROUTE, AppRoute.ProfileActivation.createRoute(profileIndex))
         })
-    }
-
-    override fun runPreferencesForPlugin(activity: FragmentActivity, pluginSimpleName: String) {
-        openComposeMainAtRoute(activity, AppRoute.PluginPreferences.createRoute(pluginSimpleName))
     }
 
     override fun openComposeMainAtRoute(context: Context, navRoute: String) {

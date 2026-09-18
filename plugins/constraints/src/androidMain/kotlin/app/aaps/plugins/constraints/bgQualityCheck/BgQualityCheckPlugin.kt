@@ -4,6 +4,7 @@ import app.aaps.plugins.constraints.ConstraintsStrings
 import app.aaps.core.data.plugin.PluginType
 import app.aaps.core.data.time.T
 import app.aaps.core.interfaces.bgQualityCheck.BgQualityCheck
+import app.aaps.core.interfaces.bgQualityCheck.BgQualityCheckAndroid
 import app.aaps.core.interfaces.constraints.Constraint
 import app.aaps.core.interfaces.constraints.PluginConstraints
 import app.aaps.core.interfaces.iob.IobCobCalculator
@@ -57,7 +58,7 @@ class BgQualityCheckPlugin(
         .showInList { false }
         .pluginName(ConstraintsStrings.bg_quality),
     aapsLogger, rh
-), PluginConstraints, BgQualityCheck {
+), PluginConstraints, BgQualityCheckAndroid {
 
     private var scope: CoroutineScope? = null
 

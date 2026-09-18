@@ -13,8 +13,7 @@ import app.aaps.core.interfaces.logging.LTag
 import app.aaps.core.interfaces.logging.UserEntryLogger
 import app.aaps.core.interfaces.notifications.NotificationManager
 import app.aaps.core.interfaces.nsclient.NSSettingsStatus
-import app.aaps.core.interfaces.overview.Overview
-import app.aaps.core.interfaces.overview.OverviewData
+import app.aaps.core.interfaces.overview.OverviewAndroid
 import app.aaps.core.interfaces.overview.OverviewMenus
 import app.aaps.core.interfaces.plugin.ActivePlugin
 import app.aaps.core.interfaces.plugin.PluginBase
@@ -27,7 +26,7 @@ import app.aaps.core.interfaces.rx.events.EventIobCalculationProgress
 import app.aaps.core.interfaces.rx.events.EventPreferenceChange
 import app.aaps.core.interfaces.rx.events.EventPumpStatusChanged
 import app.aaps.core.interfaces.rx.events.EventUpdateOverviewCalcProgress
-import app.aaps.core.interfaces.ui.UiInteraction
+import app.aaps.core.interfaces.ui.UiInteractionAndroid
 import app.aaps.core.keys.BooleanKey
 import app.aaps.core.keys.BooleanNonKey
 import app.aaps.core.keys.DoubleKey
@@ -43,6 +42,7 @@ import app.aaps.core.objects.extensions.store
 import app.aaps.core.ui.compose.icons.library.unused.IcPluginOverview
 import app.aaps.core.ui.compose.preference.PreferenceSubScreenDef
 import app.aaps.plugins.main.R
+import app.aaps.plugins.main.general.overview.OverviewDataImpl
 import app.aaps.plugins.main.general.overview.OverviewEntryFragment
 import app.aaps.plugins.main.general.overview.boost.BoostOverviewFragment
 import app.aaps.plugins.main.general.overview.boost.BoostOverviewV2Fragment
@@ -69,11 +69,11 @@ class OverviewPlugin @Inject constructor(
     override val rh: ResourceHelper,
     preferences: Preferences,
     private val rxBus: RxBus,
-    private val overviewData: OverviewData,
+    private val overviewData: OverviewDataImpl,
     private val overviewMenus: OverviewMenus,
     private val context: Context,
     private val constraintsChecker: ConstraintsChecker,
-    private val uiInteraction: UiInteraction,
+    private val uiInteraction: UiInteractionAndroid,
     private val nsSettingStatus: NSSettingsStatus,
     private val config: Config,
     private val activePlugin: ActivePlugin,
@@ -92,7 +92,7 @@ class OverviewPlugin @Inject constructor(
         .description(TextRef.AndroidRes(R.string.description_overview)),
     ownPreferences = OverviewStringKey.entries,
     aapsLogger, rh, preferences
-), Overview {
+), OverviewAndroid {
 
     /** Runs the bus subscriptions. [onStop] cancels them, [onStart] can subscribe again. */
     private val subscriptionScope = CoroutineScope(Dispatchers.Default + SupervisorJob())

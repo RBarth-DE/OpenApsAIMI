@@ -10,7 +10,7 @@ import app.aaps.core.interfaces.iob.IobCobCalculator
 import app.aaps.core.interfaces.logging.AAPSLogger
 import app.aaps.core.interfaces.overview.LastBgData
 import app.aaps.core.interfaces.overview.Overview
-import app.aaps.core.interfaces.overview.OverviewData
+import app.aaps.core.interfaces.overview.OverviewAndroid
 import app.aaps.core.interfaces.overview.OverviewMenus
 import app.aaps.core.interfaces.overview.graph.OverviewDataCache
 import app.aaps.core.interfaces.plugin.ActivePlugin
@@ -22,7 +22,7 @@ import app.aaps.core.interfaces.rx.AapsSchedulers
 import app.aaps.core.interfaces.rx.bus.RxBus
 import app.aaps.core.interfaces.source.DexcomBoyda
 import app.aaps.core.interfaces.source.XDripSource
-import app.aaps.core.interfaces.ui.UiInteraction
+import app.aaps.core.interfaces.ui.UiInteractionAndroid
 import app.aaps.core.interfaces.utils.DateUtil
 import app.aaps.core.interfaces.utils.DecimalFormatter
 import app.aaps.core.interfaces.utils.TrendCalculator
@@ -36,6 +36,7 @@ import app.aaps.plugins.aps.openAPSAIMI.trajectory.TrajectoryGuard
 import app.aaps.plugins.main.general.dashboard.DashboardShellDeps
 import app.aaps.plugins.main.general.dashboard.viewmodel.AimiAdaptationStatusViewModel
 import app.aaps.plugins.main.general.dashboard.viewmodel.OverviewViewModel
+import app.aaps.plugins.main.general.overview.OverviewDataImpl
 import app.aaps.plugins.main.general.overview.OverviewMenusImpl
 import app.aaps.plugins.main.general.overview.OverviewPlugin
 import app.aaps.plugins.main.general.overview.graphData.GraphData
@@ -49,8 +50,9 @@ import dev.zacsweers.metro.binding
 
 /**
  * Fork dashboard providers, migrated from the Hilt OverviewModule.
- * OverviewData is bound by [app.aaps.implementation.overview.OverviewDataImpl]'s @ContributesBinding;
- * activity/fragment injection moved to [MainMemberInjectors].
+ * The dashboard and the old overview screen take the concrete [OverviewDataImpl] of this module,
+ * because they need the graph series; the `OverviewData` interface only carries the time window.
+ * Activity/fragment injection moved to [MainMemberInjectors].
  */
 @ContributesTo(AppScope::class)
 @BindingContainer
@@ -83,7 +85,7 @@ object OverviewModule {
         aapsSchedulers: AapsSchedulers,
         fabricPrivacy: FabricPrivacy,
         preferences: Preferences,
-        overviewData: OverviewData,
+        overviewData: OverviewDataImpl,
         trajectoryGuard: TrajectoryGuard,
         autodriveEngine: AutodriveEngine,
         aimiPhysioDataRepository: AIMIPhysioDataRepositoryMTR,
@@ -132,12 +134,12 @@ object OverviewModule {
         rxBus: RxBus,
         aapsSchedulers: AapsSchedulers,
         fabricPrivacy: FabricPrivacy,
-        overviewData: OverviewData,
+        overviewData: OverviewDataImpl,
         overviewMenus: OverviewMenus,
         graphDataProvider: () -> GraphData,
         config: Config,
         protectionCheck: ProtectionCheck,
-        uiInteraction: UiInteraction,
+        uiInteraction: UiInteractionAndroid,
         aapsLogger: AAPSLogger,
         xDripSource: XDripSource,
         dexcomBoyda: DexcomBoyda,
@@ -178,4 +180,8 @@ object OverviewModule {
 
     @Provides
     fun bindOverview(overviewPlugin: OverviewPlugin): Overview = overviewPlugin
+
+    /** Same instance, seen through the Android half - the old overview screen sets the title view. */
+    @Provides
+    fun bindOverviewAndroid(overviewPlugin: OverviewPlugin): OverviewAndroid = overviewPlugin
 }

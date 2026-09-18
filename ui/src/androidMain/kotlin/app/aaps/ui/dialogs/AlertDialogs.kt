@@ -23,10 +23,8 @@ import app.aaps.core.keys.interfaces.Preferences
 import app.aaps.core.ui.R
 import app.aaps.core.ui.compose.AapsTheme
 import app.aaps.core.ui.compose.LocalPreferences
-import app.aaps.core.ui.compose.dialogs.ErrorDialog
 import app.aaps.core.ui.compose.dialogs.OkCancelDialog
 import app.aaps.core.ui.compose.dialogs.OkDialog
-import app.aaps.core.ui.compose.dialogs.YesNoCancelDialog
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -77,18 +75,6 @@ class AlertDialogs(
         showOkCancelComposeDialog(context, title, message, secondMessage, ok, cancel, icon)
     }
 
-    fun showYesNoCancel(context: Context, @StringRes title: Int, @StringRes message: Int, yes: (() -> Unit)?, no: (() -> Unit)? = null) {
-        showYesNoCancelComposeDialog(context, context.getString(title), context.getString(message), yes, no)
-    }
-
-    fun showYesNoCancel(context: Context, title: String, message: String, yes: (() -> Unit)?, no: (() -> Unit)? = null) {
-        showYesNoCancelComposeDialog(context, title, message, yes, no)
-    }
-
-    fun showError(context: Context, title: String, message: String, @StringRes positiveButton: Int?, ok: (() -> Unit)? = null, cancel: (() -> Unit)? = null) {
-        showErrorComposeDialog(context, title, message, positiveButton, ok, cancel)
-    }
-
     private fun showOkComposeDialog(context: Context, title: String, message: String, onFinish: (() -> Unit)?) {
         val dialog = Dialog(context)
         val owner = ComposeDialogOwner()
@@ -117,86 +103,6 @@ class AlertDialogs(
         }
         dialog.setContentView(composeView)
         dialog.setCanceledOnTouchOutside(false)
-        dialog.setOnDismissListener { owner.destroy() }
-        dialog.show()
-    }
-
-    private fun showYesNoCancelComposeDialog(context: Context, title: String, message: String, yes: (() -> Unit)?, no: (() -> Unit)?) {
-        val dialog = Dialog(context)
-        val owner = ComposeDialogOwner()
-        val composeView = ComposeView(context).apply {
-            setViewTreeLifecycleOwner(owner)
-            setViewTreeViewModelStoreOwner(owner)
-            setViewTreeSavedStateRegistryOwner(owner)
-            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnLifecycleDestroyed(owner))
-            setContent {
-                CompositionLocalProvider(LocalPreferences provides preferences) {
-                    AapsTheme {
-                        YesNoCancelDialog(
-                            title = title,
-                            message = message,
-                            onYes = {
-                                dialog.dismiss()
-                                CoroutineScope(Dispatchers.Main).launch {
-                                    delay(100)
-                                    yes?.invoke()
-                                }
-                            },
-                            onNo = {
-                                dialog.dismiss()
-                                CoroutineScope(Dispatchers.Main).launch {
-                                    delay(100)
-                                    no?.invoke()
-                                }
-                            },
-                            onCancel = { dialog.dismiss() }
-                        )
-                    }
-                }
-            }
-        }
-        dialog.setContentView(composeView)
-        dialog.setCanceledOnTouchOutside(false)
-        dialog.setOnDismissListener { owner.destroy() }
-        dialog.show()
-    }
-
-    private fun showErrorComposeDialog(context: Context, title: String, message: String, @StringRes positiveButton: Int?, ok: (() -> Unit)?, cancel: (() -> Unit)?) {
-        val dialog = Dialog(context)
-        val owner = ComposeDialogOwner()
-        val composeView = ComposeView(context).apply {
-            setViewTreeLifecycleOwner(owner)
-            setViewTreeViewModelStoreOwner(owner)
-            setViewTreeSavedStateRegistryOwner(owner)
-            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnLifecycleDestroyed(owner))
-            setContent {
-                CompositionLocalProvider(LocalPreferences provides preferences) {
-                    AapsTheme {
-                        ErrorDialog(
-                            title = title,
-                            message = message,
-                            positiveButton = positiveButton?.let { context.getString(it) },
-                            onDismiss = {
-                                dialog.dismiss()
-                                CoroutineScope(Dispatchers.Main).launch {
-                                    delay(100)
-                                    cancel?.invoke()
-                                }
-                            },
-                            onPositive = {
-                                dialog.dismiss()
-                                CoroutineScope(Dispatchers.Main).launch {
-                                    delay(100)
-                                    ok?.invoke()
-                                }
-                            }
-                        )
-                    }
-                }
-            }
-        }
-        dialog.setContentView(composeView)
-        dialog.setCanceledOnTouchOutside(true)
         dialog.setOnDismissListener { owner.destroy() }
         dialog.show()
     }

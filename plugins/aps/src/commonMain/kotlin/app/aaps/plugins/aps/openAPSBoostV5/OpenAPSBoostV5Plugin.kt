@@ -28,7 +28,6 @@ import app.aaps.core.data.model.BS
 import app.aaps.core.interfaces.constraints.ConstraintsChecker
 import app.aaps.core.ui.compose.icons.IcPluginOpenAPS
 import app.aaps.core.interfaces.db.PersistenceLayer
-import app.aaps.core.interfaces.notifications.Notification
 import app.aaps.core.interfaces.stats.TddCalculator
 import app.aaps.core.interfaces.ui.UiInteraction
 import app.aaps.core.interfaces.utils.DateUtil

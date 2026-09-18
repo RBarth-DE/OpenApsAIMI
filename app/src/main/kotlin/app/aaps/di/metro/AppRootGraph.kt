@@ -10,6 +10,7 @@ import app.aaps.core.interfaces.aps.Loop
 import app.aaps.core.interfaces.automation.Automation
 import app.aaps.core.interfaces.autotune.Autotune
 import app.aaps.core.interfaces.bgQualityCheck.BgQualityCheck
+import app.aaps.core.interfaces.bgQualityCheck.BgQualityCheckAndroid
 import app.aaps.core.interfaces.bolus.BatchExecutor
 import app.aaps.core.interfaces.bolus.WizardBolusExecutor
 import app.aaps.core.interfaces.bolus.WizardExecutor
@@ -516,6 +517,9 @@ interface AppRootGraph : MetroViewModelMultibindings {
      */
     /** Metro already builds the plugin; the openAPS plugins ask for the interface. */
     @Provides fun bgQualityCheck(plugin: BgQualityCheckPlugin): BgQualityCheck = plugin
+
+    /** Same instance, seen through the Android half - the old overview screen asks for the icon. */
+    @Provides fun bgQualityCheckAndroid(plugin: BgQualityCheckPlugin): BgQualityCheckAndroid = plugin
 
     @DependencyGraph.Factory
     fun interface Factory {

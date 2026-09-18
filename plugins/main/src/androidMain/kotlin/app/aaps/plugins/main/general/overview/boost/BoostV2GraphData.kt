@@ -18,7 +18,7 @@ import app.aaps.core.graph.data.LineGraphSeries
 import app.aaps.core.graph.data.PointsWithLabelGraphSeries
 import app.aaps.core.graph.data.ScaledDataPoint
 import app.aaps.core.graph.data.TimeAsXAxisLabelFormatter
-import app.aaps.core.interfaces.overview.OverviewData
+import app.aaps.plugins.main.general.overview.OverviewDataImpl
 import app.aaps.core.interfaces.profile.ProfileFunction
 import app.aaps.core.interfaces.profile.ProfileUtil
 import app.aaps.core.interfaces.resources.ResourceHelper
@@ -115,9 +115,9 @@ class BoostV2GraphData @Inject constructor(
     private val series: MutableList<Series<*>> = ArrayList()
 
     private lateinit var graph: GraphView
-    private lateinit var overviewData: OverviewData
+    private lateinit var overviewData: OverviewDataImpl
 
-    suspend fun with(graph: GraphView, overviewData: OverviewData): BoostV2GraphData = this.also {
+    suspend fun with(graph: GraphView, overviewData: OverviewDataImpl): BoostV2GraphData = this.also {
         it.graph = graph
         it.overviewData = overviewData
     }
@@ -369,7 +369,7 @@ class BoostV2GraphData @Inject constructor(
      * profile default target — makes overrides (exercise 150, lowered targets) visible
      * at a glance. Green tint when the target is raised, red tint when lowered.
      *
-     * Interval source: [OverviewData.temporaryTargetSeries] is a step line built by
+     * Interval source: [OverviewDataImpl.temporaryTargetSeries] is a step line built by
      * PrepareTemporaryTargetDataWorker at 5-min resolution — consecutive points with the
      * same y form horizontal intervals of constant active target. We iterate those points
      * directly and compare against the profile default target, mirroring the worker's

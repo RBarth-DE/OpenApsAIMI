@@ -20,7 +20,7 @@ import app.aaps.core.interfaces.notifications.NotificationHolder
 import app.aaps.core.interfaces.plugin.ActivePlugin
 import app.aaps.core.interfaces.resources.ResourceHelper
 import app.aaps.core.interfaces.ui.IconsProvider
-import app.aaps.core.interfaces.ui.UiInteraction
+import app.aaps.core.interfaces.ui.UiInteractionAndroid
 import app.aaps.core.interfaces.utils.DateUtil
 import app.aaps.core.keys.BooleanKey
 import app.aaps.core.keys.interfaces.Preferences
@@ -40,7 +40,7 @@ class NotificationStore @Inject constructor(
     private val rh: ResourceHelper,
     private val context: Context,
     private val iconsProvider: IconsProvider,
-    private val uiInteraction: UiInteraction,
+    private val uiInteraction: UiInteractionAndroid,
     private val dateUtil: DateUtil,
     private val notificationHolder: NotificationHolder,
     private val activePlugin: ActivePlugin
