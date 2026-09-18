@@ -453,6 +453,14 @@ Neither is a blocker, but both look like the obvious idiom and both fail:
 `@Synchronized`, `org.json`, `java.util.Calendar`, and `System.currentTimeMillis()` - the last is
 just `Clock.System.now().toEpochMilliseconds()`.
 
+`java.util.concurrent.ConcurrentHashMap` is easy to miss: it looks like ordinary Kotlin, but it is a
+JVM type. It resolves for the Android and JVM targets, so an Android build stays green, and then the
+module's iOS compile or its `compileCommonMainKotlinMetadata` fails. A shared map that has to be
+thread safe becomes a plain `mutableMapOf` guarded by `AapsLock`
+(`app.aaps.core.interfaces.concurrent`), with every access inside `withLock` - the pattern
+`ProfileFunctionImpl` uses for the same reason. This is easiest to miss when a merge or a port brings
+in a map: a compile per target catches it, an Android-only build does not.
+
 `Provider<T>` is deprecated: the compiler says *"Using the desugared `Provider<T>` type is
 discouraged. Prefer the function syntax form `() -> T`."* Write `() -> T` in new code. Call sites are
 identical - `provider()` either way - so only the type and the import change.
