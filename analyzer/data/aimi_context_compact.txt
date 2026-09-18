@@ -1,4 +1,4 @@
-# AIMI Algorithm Context (commit: 40dbca84)
+# AIMI Algorithm Context (commit: a9d66da6)
 
 ## Overview
 The AIMI algorithm runs a 46-stage decision pipeline per 5-minute tick.
@@ -236,7 +236,7 @@ Gate: key_use_Aimi_wcycle
   - key_aimi_context_enabled
   - key_aimi_context_llm_enabled
 
-### core (101 params)
+### core (106 params)
   - OApsAIMIDeltaPosRelease [default: 1.0]
   - OApsAIMIHighBg [default: 180.0]
   - OApsAIMI_Enable_night
@@ -257,7 +257,7 @@ Gate: key_use_Aimi_wcycle
   - autoISF_min [default: 1.0]
   - autosens_adjust_targets
   - autosens_max [default: 1.2]
-  ... and 81 more
+  ... and 86 more
 
 ### cosine_gate (6 params)
   - aimi_cosine_gate_alpha [default: 2.0]
@@ -326,9 +326,10 @@ Gate: key_use_Aimi_wcycle
   - OApsAIMILastEstimatedCarbTime [default: 0.0]
   - OApsAIMILastEstimatedCarbs [default: 0.0]
 
-### meal_modes (25 params)
+### meal_modes (26 params)
   - aimi_meal_advisor_trigger
   - aimi_physio_sleep_enable
+  - key_aimi_anticip_meal_evidence [default: False]
   - key_aimi_meal_confirmed_early_release [default: False]
   - key_aimi_meal_hyper_bypass_enabled
   - key_aimi_tree_meal_rise_frontload [default: False]
@@ -346,8 +347,7 @@ Gate: key_use_Aimi_wcycle
   - key_prebolus2_dinner_mode [default: 2.0]
   - key_prebolus2_lunch_mode [default: 2.0]
   - key_prebolus_BF_mode [default: 2.5]
-  - key_prebolus_dinner_mode [default: 2.5]
-  ... and 5 more
+  ... and 6 more
 
 ### ngr (11 params)
   - key_oaps_aimi_ngr_age_years [default: 14]

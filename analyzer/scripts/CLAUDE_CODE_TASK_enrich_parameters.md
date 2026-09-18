@@ -29,24 +29,26 @@ Claude must actually read and understand the Kotlin code.
 
 Primary:
 ```
-plugins/aps/src/main/kotlin/app/aaps/plugins/aps/openAPSAIMI/DetermineBasalAIMI2.kt
+plugins/aps/src/commonMain/kotlin/app/aaps/plugins/aps/openAPSAIMI/DetermineBasalAIMI2.kt
 ```
 
 Secondary modules (also scan these):
 ```
-plugins/aps/src/main/kotlin/app/aaps/plugins/aps/openAPSAIMI/BasalNeuralLearner.kt
-plugins/aps/src/main/kotlin/app/aaps/plugins/aps/openAPSAIMI/PkpdSettingsSupport.kt
-plugins/aps/src/main/kotlin/app/aaps/plugins/aps/openAPSAIMI/ml/
-plugins/aps/src/main/kotlin/app/aaps/plugins/aps/openAPSAIMI/trajectory/
-plugins/aps/src/main/kotlin/app/aaps/plugins/aps/openAPSAIMI/physio/
+plugins/aps/src/commonMain/kotlin/app/aaps/plugins/aps/openAPSAIMI/BasalNeuralLearner.kt
+plugins/aps/src/commonMain/kotlin/app/aaps/plugins/aps/openAPSAIMI/PkpdSettingsSupport.kt
+plugins/aps/src/commonMain/kotlin/app/aaps/plugins/aps/openAPSAIMI/ml/
+plugins/aps/src/commonMain/kotlin/app/aaps/plugins/aps/openAPSAIMI/trajectory/
+plugins/aps/src/commonMain/kotlin/app/aaps/plugins/aps/openAPSAIMI/physio/
 ```
 
-Key definitions (to find which key maps to which variable):
+Key definitions (to find which key maps to which variable). The AIMI keys were merged into the
+shared key files, so the declarations live here now:
 ```
-app/src/main/kotlin/app/aaps/app/aimi/keys/AimiDoubleKey.kt
-app/src/main/kotlin/app/aaps/app/aimi/keys/AimiBooleanKey.kt
-app/src/main/kotlin/app/aaps/app/aimi/keys/AimiIntKey.kt
-app/src/main/kotlin/app/aaps/app/aimi/keys/AimiStringKey.kt
+core/keys/src/commonMain/kotlin/app/aaps/core/keys/DoubleKey.kt
+core/keys/src/commonMain/kotlin/app/aaps/core/keys/BooleanKey.kt
+core/keys/src/commonMain/kotlin/app/aaps/core/keys/IntKey.kt
+core/keys/src/commonMain/kotlin/app/aaps/core/keys/StringKey.kt
+plugins/aps/src/commonMain/kotlin/app/aaps/plugins/aps/openAPSAIMI/keys/AimiStringKey.kt
 ```
 
 ---
@@ -77,7 +79,7 @@ For each parameter key (e.g. `key_openapsaimi_max_smb`):
 ```bash
 # Example search:
 grep -n "OApsAIMIMaxSMB\|key_openapsaimi_max_smb" \
-  plugins/aps/src/main/kotlin/app/aaps/plugins/aps/openAPSAIMI/DetermineBasalAIMI2.kt
+  plugins/aps/src/commonMain/kotlin/app/aaps/plugins/aps/openAPSAIMI/DetermineBasalAIMI2.kt
 ```
 
 ### Step 3: Determine impact
@@ -206,12 +208,12 @@ For each major feature gate, look for early-return or bypass patterns in the cod
 ```bash
 # Example: find where T3c Brittle bypasses normal flow
 grep -n "t3cBrittle\|T3cBrittle\|brittle_mode\|executeT3c" \
-  plugins/aps/src/main/kotlin/app/aaps/plugins/aps/openAPSAIMI/DetermineBasalAIMI2.kt \
+  plugins/aps/src/commonMain/kotlin/app/aaps/plugins/aps/openAPSAIMI/DetermineBasalAIMI2.kt \
   | head -20
 
 # Example: find where Autodrive V3 overrides normal SMB calculation
 grep -n "autoDriveActive\|AutoDriveGater\|autoDrive.*return\|return.*autoDrive" \
-  plugins/aps/src/main/kotlin/app/aaps/plugins/aps/openAPSAIMI/DetermineBasalAIMI2.kt \
+  plugins/aps/src/commonMain/kotlin/app/aaps/plugins/aps/openAPSAIMI/DetermineBasalAIMI2.kt \
   | head -20
 ```
 

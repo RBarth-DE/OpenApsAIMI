@@ -1,6 +1,6 @@
 {
   "version": "2.2",
-  "generated_at": "2026-09-10T06:34:03.628336+00:00",
+  "generated_at": "2026-09-18T08:17:01.888104+00:00",
   "algorithm_overview": {
     "name": "AIMI (AI-powered Modular Insulin)",
     "base": "OpenAPS oref1 with extensive extensions",
@@ -438,7 +438,7 @@
       "workaround": "None — parameters are ineffective."
     }
   ],
-  "source_commit": "40dbca84e4dd08307859fbc3fd0c6836f9585897",
+  "source_commit": "a9d66da6140ce72f0f00141157606c25d28c7d94",
   "parameter_knowledge": [
     {
       "key": "AIMI_UAM_CONFIDENCE",
@@ -1531,6 +1531,42 @@
       "function": "aimiComposeUserPreferenceItems"
     },
     {
+      "key": "key_aimi_anticip_basal_floor",
+      "name": "OApsAIMIAnticipBasalFloor",
+      "logic_summary": "Boolean switch for anticip_basal_floor.",
+      "effect_high": "Feature is active — associated functionality runs",
+      "effect_low": "Feature is inactive — associated functionality is disabled",
+      "feature_group": "core",
+      "impact": "medium",
+      "settings_path": "AIMI → Preferences user → Autodrive",
+      "usage_type": "",
+      "function": "aimiComposeAutodriveSubScreen"
+    },
+    {
+      "key": "key_aimi_anticip_budget_u",
+      "name": "OApsAIMIAnticipBudgetU",
+      "logic_summary": "Used in AIMI internal calculations for anticip_budget_u.",
+      "effect_high": "Higher value — more insulin/greater effect",
+      "effect_low": "Lower value — less insulin/reduced effect",
+      "feature_group": "core",
+      "impact": "medium",
+      "settings_path": "AIMI → Preferences user → Autodrive",
+      "usage_type": "",
+      "function": "aimiComposeAutodriveSubScreen"
+    },
+    {
+      "key": "key_aimi_anticip_meal_evidence",
+      "name": "OApsAIMIAnticipMealEvidence",
+      "logic_summary": "Boolean switch for anticip_meal_evidence.",
+      "effect_high": "Feature is active — associated functionality runs",
+      "effect_low": "Feature is inactive — associated functionality is disabled",
+      "feature_group": "meal_modes",
+      "impact": "high",
+      "settings_path": "AIMI → Preferences user → Autodrive",
+      "usage_type": "",
+      "function": "aimiComposeAutodriveSubScreen"
+    },
+    {
       "key": "key_aimi_autodrive_aggressive_smb_floor",
       "name": "OApsAIMIautodriveAggressiveSmbFloor",
       "logic_summary": "Boolean switch for autodrive_aggressive_smb_floor.",
@@ -1625,6 +1661,18 @@
       "settings_path": "AIMI → Preferences user → Context Llm",
       "usage_type": "",
       "function": "shouldUseLLM"
+    },
+    {
+      "key": "key_aimi_descent_redose_guard",
+      "name": "OApsAIMIDescentRedoseGuard",
+      "logic_summary": "Boolean switch for descent_redose_guard.",
+      "effect_high": "Feature is active — associated functionality runs",
+      "effect_low": "Feature is inactive — associated functionality is disabled",
+      "feature_group": "core",
+      "impact": "medium",
+      "settings_path": "AIMI → Preferences user → Autodrive",
+      "usage_type": "",
+      "function": "aimiComposeAutodriveSubScreen"
     },
     {
       "key": "key_aimi_dia_governor_enabled",
@@ -2179,6 +2227,18 @@
       "function": "aimiComposeAutodriveSubScreen"
     },
     {
+      "key": "key_aimi_rise_ceiling_guard",
+      "name": "OApsAIMIRiseCeilingGuard",
+      "logic_summary": "Boolean switch for rise_ceiling_guard.",
+      "effect_high": "Feature is active — associated functionality runs",
+      "effect_low": "Feature is inactive — associated functionality is disabled",
+      "feature_group": "core",
+      "impact": "medium",
+      "settings_path": "AIMI → Preferences user → Autodrive",
+      "usage_type": "",
+      "function": "aimiComposeAutodriveSubScreen"
+    },
+    {
       "key": "key_aimi_sensor_confidence_cgm_first",
       "name": "OApsAIMISensorConfidenceCgmFirst",
       "logic_summary": "Boolean switch for sensor_confidence_cgm_first.",
@@ -2213,6 +2273,18 @@
       "settings_path": "AIMI → Preferences user → Trajectory Guard",
       "usage_type": "",
       "function": "aimiComposeTrajectorySubScreen"
+    },
+    {
+      "key": "key_aimi_stress_isf_floor",
+      "name": "OApsAIMIStressIsfFloor",
+      "logic_summary": "Boolean switch for stress_isf_floor.",
+      "effect_high": "Feature is active — associated functionality runs",
+      "effect_low": "Feature is inactive — associated functionality is disabled",
+      "feature_group": "core",
+      "impact": "high",
+      "settings_path": "AIMI → Preferences user → Autodrive",
+      "usage_type": "",
+      "function": "invoke"
     },
     {
       "key": "key_aimi_t3c_activation_threshold",
@@ -2988,7 +3060,7 @@
       "effect_low": "Lower value — less insulin/reduced effect",
       "feature_group": "wcycle",
       "impact": "medium",
-      "settings_path": "AIMI → Preferences user → Patient context and body declarations → wcycle_preferences",
+      "settings_path": "AIMI → Preferences user → Patient context and body declarations → Women Cycle",
       "usage_type": "",
       "function": "aimiComposeWomenCycleSubScreen"
     },
@@ -3012,7 +3084,7 @@
       "effect_low": "Lower value — less insulin/reduced effect",
       "feature_group": "wcycle",
       "impact": "medium",
-      "settings_path": "AIMI → Preferences user → Patient context and body declarations → wcycle_preferences",
+      "settings_path": "AIMI → Preferences user → Patient context and body declarations → Women Cycle",
       "usage_type": "",
       "function": "aimiComposeWomenCycleSubScreen"
     },
@@ -3226,7 +3298,7 @@
       "effect_low": "Feature is inactive — associated functionality is disabled",
       "feature_group": "core",
       "impact": "medium",
-      "settings_path": "AIMI → Preferences user → Patient context and body declarations → wcycle_preferences",
+      "settings_path": "AIMI → Preferences user → Patient context and body declarations → Women Cycle",
       "usage_type": "",
       "function": "aimiComposePatientContextSubScreen"
     },
@@ -3250,7 +3322,7 @@
       "effect_low": "Feature is inactive — associated functionality is disabled",
       "feature_group": "wcycle",
       "impact": "medium",
-      "settings_path": "AIMI → Preferences user → Patient context and body declarations → wcycle_preferences",
+      "settings_path": "AIMI → Preferences user → Patient context and body declarations → Women Cycle",
       "usage_type": "",
       "function": "aimiComposeWomenCycleSubScreen"
     },
@@ -3262,7 +3334,7 @@
       "effect_low": "Feature is inactive — associated functionality is disabled",
       "feature_group": "wcycle",
       "impact": "medium",
-      "settings_path": "AIMI → Preferences user → Patient context and body declarations → wcycle_preferences",
+      "settings_path": "AIMI → Preferences user → Patient context and body declarations → Women Cycle",
       "usage_type": "",
       "function": "aimiComposeWomenCycleSubScreen"
     },
@@ -3274,7 +3346,7 @@
       "effect_low": "Feature is inactive — associated functionality is disabled",
       "feature_group": "wcycle",
       "impact": "medium",
-      "settings_path": "AIMI → Preferences user → Patient context and body declarations → wcycle_preferences",
+      "settings_path": "AIMI → Preferences user → Patient context and body declarations → Women Cycle",
       "usage_type": "",
       "function": "aimiComposeWomenCycleSubScreen"
     },
@@ -3334,7 +3406,7 @@
       "effect_low": "Lower value — less insulin/reduced effect",
       "feature_group": "wcycle",
       "impact": "medium",
-      "settings_path": "AIMI → Preferences user → Patient context and body declarations → wcycle_preferences",
+      "settings_path": "AIMI → Preferences user → Patient context and body declarations → Women Cycle",
       "usage_type": "",
       "function": "aimiComposeWomenCycleSubScreen"
     },
@@ -3346,7 +3418,7 @@
       "effect_low": "Lower value — less insulin/reduced effect",
       "feature_group": "wcycle",
       "impact": "medium",
-      "settings_path": "AIMI → Preferences user → Patient context and body declarations → wcycle_preferences",
+      "settings_path": "AIMI → Preferences user → Patient context and body declarations → Women Cycle",
       "usage_type": "",
       "function": "aimiComposeWomenCycleSubScreen"
     },
@@ -3358,7 +3430,7 @@
       "effect_low": "Lower value — less insulin/reduced effect",
       "feature_group": "wcycle",
       "impact": "medium",
-      "settings_path": "AIMI → Preferences user → Patient context and body declarations → wcycle_preferences",
+      "settings_path": "AIMI → Preferences user → Patient context and body declarations → Women Cycle",
       "usage_type": "",
       "function": "aimiComposeWomenCycleSubScreen"
     },
@@ -3370,7 +3442,7 @@
       "effect_low": "Lower value — less insulin/reduced effect",
       "feature_group": "wcycle",
       "impact": "medium",
-      "settings_path": "AIMI → Preferences user → Patient context and body declarations → wcycle_preferences",
+      "settings_path": "AIMI → Preferences user → Patient context and body declarations → Women Cycle",
       "usage_type": "",
       "function": "aimiComposeWomenCycleSubScreen"
     },

@@ -45,20 +45,13 @@ Key parameters: boost_isf_shadow_state
 
 ### Shared AAPS Settings (gate: None)
 Standard OpenAPS settings that Boost's algorithm also reads: max basal, max IOB, SMB gates, autosens, dynamic sensitivity.
-Key parameters: DynISFAdjust, autosens_max, autosens_min, boost_allow_all_bg_sources, boost_dynisf_bg_cap, boost_dynisf_normal_target, boost_dynisf_velocity, boost_vwa_tdd_shadow_state, carbsReqThreshold, enableBoost_with_high_temptarget
+Key parameters: autosens_max, autosens_min, boost_allow_all_bg_sources, boost_dynisf_bg_cap, boost_dynisf_normal_target, boost_dynisf_velocity, boost_vwa_tdd_shadow_state, carbsReqThreshold, enableBoost_with_high_temptarget, enableCircadianISF
 
 ### Safety (gate: None)
 Ketoacidosis protection, force limits, half-basal exercise target.
 
 
 ## Key Parameters
-
-### DynISFAdjust
-Type: Int, Default: 100
-Summary: Percentage factor for the global dynamic ISF strength; 100 = standard, higher = more dynamic adjustment.
-High: Higher value — more insulin/greater effect
-Low: Lower value — less insulin/reduced effect
-Impact: medium | Feature: shared_aaps
 
 ### autosens_max
 Type: Double, Default: 1.2

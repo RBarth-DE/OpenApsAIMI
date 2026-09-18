@@ -31,26 +31,65 @@ if not (PROJECT_ROOT / "plugins" / "aps").exists():
     print(f"   Tried: {PROJECT_ROOT}")
     sys.exit(1)
 
-PLUGIN_FILE = PROJECT_ROOT / "plugins/aps/src/main/kotlin/app/aaps/plugins/aps/openAPSBoost/OpenAPSBoostPlugin.kt"
-PLUGIN_FILE_V5 = PROJECT_ROOT / "plugins/aps/src/main/kotlin/app/aaps/plugins/aps/openAPSBoostV5/OpenAPSBoostV5Plugin.kt"
+PLUGIN_FILE = PROJECT_ROOT / "plugins/aps/src/commonMain/kotlin/app/aaps/plugins/aps/openAPSBoost/OpenAPSBoostPlugin.kt"
+PLUGIN_FILE_V5 = PROJECT_ROOT / "plugins/aps/src/commonMain/kotlin/app/aaps/plugins/aps/openAPSBoostV5/OpenAPSBoostV5Plugin.kt"
 STRINGS_XML_PATHS = [
-    PROJECT_ROOT / "plugins/aps/src/main/res/values/strings.xml",
-    PROJECT_ROOT / "core/keys/src/main/res/values/strings.xml",
-    PROJECT_ROOT / "core/ui/src/main/res/values/strings.xml",
+    PROJECT_ROOT / "plugins/aps/src/androidMain/res/values",
+    PROJECT_ROOT / "core/keys/src/androidMain/res/values",
+    PROJECT_ROOT / "core/ui/src/androidMain/res/values",
 ]
 OUTPUT_FILE = _SCRIPT_DIR.parent / "data" / "boost_settings_paths.json"
 
 KEY_FILES = {
-    "DoubleKey": PROJECT_ROOT / "core/keys/src/main/kotlin/app/aaps/core/keys/DoubleKey.kt",
-    "BooleanKey": PROJECT_ROOT / "core/keys/src/main/kotlin/app/aaps/core/keys/BooleanKey.kt",
-    "IntKey": PROJECT_ROOT / "core/keys/src/main/kotlin/app/aaps/core/keys/IntKey.kt",
-    "UnitDoubleKey": PROJECT_ROOT / "core/keys/src/main/kotlin/app/aaps/core/keys/UnitDoubleKey.kt",
-    "LongKey": PROJECT_ROOT / "core/keys/src/main/kotlin/app/aaps/core/keys/LongKey.kt",
-    "StringKey": PROJECT_ROOT / "core/keys/src/main/kotlin/app/aaps/core/keys/StringKey.kt",
+    "DoubleKey": PROJECT_ROOT / "core/keys/src/commonMain/kotlin/app/aaps/core/keys/DoubleKey.kt",
+    "BooleanKey": PROJECT_ROOT / "core/keys/src/commonMain/kotlin/app/aaps/core/keys/BooleanKey.kt",
+    "IntKey": PROJECT_ROOT / "core/keys/src/commonMain/kotlin/app/aaps/core/keys/IntKey.kt",
+    "UnitDoubleKey": PROJECT_ROOT / "core/keys/src/commonMain/kotlin/app/aaps/core/keys/UnitDoubleKey.kt",
+    "LongKey": PROJECT_ROOT / "core/keys/src/commonMain/kotlin/app/aaps/core/keys/LongKey.kt",
+    "StringKey": PROJECT_ROOT / "core/keys/src/commonMain/kotlin/app/aaps/core/keys/StringKey.kt",
 }
 
 # Build lookup: key_class.entry_name → key_string (e.g., "DoubleKey.ApsBoostBolus" → "boost_bolus_cap")
 _key_lookup_cache: dict[str, str] = {}
+
+
+def _iter_key_entries(content: str):
+    """Yield (entry_name, key_string) for every enum entry in a key file.
+
+    An entry's key string can sit anywhere in the argument list and the argument
+    list can span several lines, so each entry is read as a balanced block:
+        Foo("key_string", 1.0, 0.0, 10.0)
+        Foo(title = KeysStrings.foo_title, key = "key_string", defaultValue = 1.0)
+    """
+    for match in re.finditer(r'^\s+([A-Z]\w*)\s*\(', content, re.MULTILINE):
+        entry_name = match.group(1)
+        if entry_name in ('BooleanKey', 'DoubleKey', 'IntKey', 'UnitDoubleKey',
+                          'LongKey', 'StringKey', 'override'):
+            continue
+
+        # Walk to the matching close paren of this entry.
+        depth = 0
+        start = match.end() - 1
+        i = start
+        while i < len(content):
+            char = content[i]
+            if char == '(':
+                depth += 1
+            elif char == ')':
+                depth -= 1
+                if depth == 0:
+                    break
+            i += 1
+        args = content[start + 1:i]
+
+        key_match = re.search(r'key\s*=\s*"([^"]+)"', args)
+        if key_match:
+            yield entry_name, key_match.group(1)
+            continue
+        # Older entries pass the key as the first positional argument.
+        first_string = re.search(r'"([^"]+)"', args)
+        if first_string:
+            yield entry_name, first_string.group(1)
 
 
 def _build_key_lookup():
@@ -63,12 +102,7 @@ def _build_key_lookup():
         if not filepath.exists():
             continue
         content = filepath.read_text(encoding="utf-8")
-        for match in re.finditer(r'(\w+)\s*\(\s*(?:key\s*=\s*)?\"([^\"]+)\"', content):
-            entry_name = match.group(1)
-            if entry_name in ('BooleanKey', 'DoubleKey', 'IntKey', 'UnitDoubleKey',
-                              'LongKey', 'StringKey', 'override'):
-                continue
-            key_str = match.group(2)
+        for entry_name, key_str in _iter_key_entries(content):
             _key_lookup_cache[f"{key_class}.{entry_name}"] = key_str
 
 
@@ -78,12 +112,23 @@ def resolve_key_str(key_class: str, key_name: str) -> str | None:
 
 
 def load_string_resources(paths: list[Path]) -> dict[str, str]:
-    resources: dict[str, str] = {}
+    """Load string resources from the given res/values directories.
+
+    Every XML file there is read, not only strings.xml: some screens take their
+    title from a separate file (wcycle_strings.xml, strings_scene_wizard.xml),
+    and a title that is not found shows up as a raw resource name in the path.
+    """
+    xml_files: list[Path] = []
     for path in paths:
-        if not path.exists():
-            continue
+        if path.is_dir():
+            xml_files.extend(sorted(path.glob("*.xml")))
+        elif path.is_file():
+            xml_files.append(path)
+
+    resources: dict[str, str] = {}
+    for path in xml_files:
         content = path.read_text(encoding="utf-8")
-        for m in re.finditer(r'<string name="(\w+)">(.*?)</string>', content, re.DOTALL):
+        for m in re.finditer(r'<string\s+name="(\w+)"[^>]*>(.*?)</string>', content, re.DOTALL):
             name = m.group(1)
             text = m.group(2).strip()
             if text.startswith("<![CDATA[") and text.endswith("]]>"):

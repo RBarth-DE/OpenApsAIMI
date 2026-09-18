@@ -32,17 +32,22 @@ DEFAULT_SOURCE_ROOT = str(_AUTO_ROOT) if (_AUTO_ROOT / "plugins" / "aps").exists
 
 DATA_DIR = Path(__file__).resolve().parent.parent / "data"
 
-# AIMI source directory (relative to source root)
-AIMI_SRC = "plugins/aps/src/main/kotlin/app/aaps/plugins/aps/openAPSAIMI"
+# AIMI source directories (relative to source root). The plugin moved to commonMain in the
+# multiplatform split. Three Android-only files (the context UI) stayed in androidMain, and
+# reading only commonMain would make every key they touch look unused.
+AIMI_SRC = [
+    "plugins/aps/src/commonMain/kotlin/app/aaps/plugins/aps/openAPSAIMI",
+    "plugins/aps/src/androidMain/kotlin/app/aaps/plugins/aps/openAPSAIMI",
+]
 
 # Key definition files (relative to source root)
 KEY_FILES = [
-    "core/keys/src/main/kotlin/app/aaps/core/keys/DoubleKey.kt",
-    "core/keys/src/main/kotlin/app/aaps/core/keys/BooleanKey.kt",
-    "core/keys/src/main/kotlin/app/aaps/core/keys/IntKey.kt",
-    "core/keys/src/main/kotlin/app/aaps/core/keys/UnitDoubleKey.kt",
-    "core/keys/src/main/kotlin/app/aaps/core/keys/LongKey.kt",
-    "core/keys/src/main/kotlin/app/aaps/core/keys/StringKey.kt",
+    "core/keys/src/commonMain/kotlin/app/aaps/core/keys/DoubleKey.kt",
+    "core/keys/src/commonMain/kotlin/app/aaps/core/keys/BooleanKey.kt",
+    "core/keys/src/commonMain/kotlin/app/aaps/core/keys/IntKey.kt",
+    "core/keys/src/commonMain/kotlin/app/aaps/core/keys/UnitDoubleKey.kt",
+    "core/keys/src/commonMain/kotlin/app/aaps/core/keys/LongKey.kt",
+    "core/keys/src/commonMain/kotlin/app/aaps/core/keys/StringKey.kt",
 ]
 
 # AIMI key prefixes for filtering
@@ -203,6 +208,25 @@ NO_SETTINGS_PATH_KEYS = {
 
 
 # ─── Utility Functions ────────────────────────────────────────────────────────
+
+def extract_text_resource(args: str, field: str) -> Optional[str]:
+    """Return the string-resource name behind a title/summary argument, or None.
+
+    Two forms are in use in the key files:
+        titleResId = R.string.foo     (older keys)
+        title = KeysStrings.foo       (newer keys, or ApsStrings.foo in the aps module)
+    A generated Strings property is named after the strings.xml entry it is
+    generated from, so the resource name is the same in both forms. A
+    TextRef.Literal has no resource behind it and returns None.
+    """
+    match = re.search(rf'{field}ResId\s*=\s*(?:[\w.]+\.)?R\.string\.(\w+)', args)
+    if match:
+        return match.group(1)
+    match = re.search(rf'\b{field}\s*=\s*\w*Strings\.(\w+)', args)
+    if match:
+        return match.group(1)
+    return None
+
 
 def is_aimi_key(key: str) -> bool:
     """Check if a key is AIMI-related."""
@@ -397,13 +421,13 @@ class KotlinEnumParser:
         entry["show_in_ns_client_mode"] = "showInNsClientMode = false" not in args
 
         # Extract title/summary resource IDs
-        title_match = re.search(r'titleResId\s*=\s*R\.string\.(\w+)', args)
-        if title_match:
-            entry["title_res_id"] = title_match.group(1)
+        title_res = extract_text_resource(args, "title")
+        if title_res:
+            entry["title_res_id"] = title_res
 
-        summary_match = re.search(r'summaryResId\s*=\s*R\.string\.(\w+)', args)
-        if summary_match:
-            entry["summary_res_id"] = summary_match.group(1)
+        summary_res = extract_text_resource(args, "summary")
+        if summary_res:
+            entry["summary_res_id"] = summary_res
 
         # Extract preference type
         pref_match = re.search(r'preferenceType\s*=\s*PreferenceType\.(\w+)', args)
@@ -431,18 +455,19 @@ class SourceScanner:
 
     def __init__(self, source_root: str):
         self.source_root = Path(source_root)
-        self.aimi_dir = self.source_root / AIMI_SRC
+        self.aimi_dirs = [self.source_root / d for d in AIMI_SRC]
         # Cache all file contents
         self.files: Dict[str, str] = {}
 
     def scan_all(self):
         """Scan all AIMI source files and cache contents."""
-        if not self.aimi_dir.exists():
-            print(f"WARNING: AIMI source directory not found: {self.aimi_dir}")
-            return
-        for kt_file in self.aimi_dir.rglob("*.kt"):
-            relative = str(kt_file.relative_to(self.aimi_dir))
-            self.files[relative] = kt_file.read_text(encoding="utf-8")
+        for aimi_dir in self.aimi_dirs:
+            if not aimi_dir.exists():
+                print(f"WARNING: AIMI source directory not found: {aimi_dir}")
+                continue
+            for kt_file in aimi_dir.rglob("*.kt"):
+                relative = str(kt_file.relative_to(aimi_dir))
+                self.files[relative] = kt_file.read_text(encoding="utf-8")
 
     def find_usages(self, key: str, enum_name: str = "") -> List[dict]:
         """Find all usages of a key in the AIMI source code.

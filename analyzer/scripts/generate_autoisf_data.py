@@ -22,15 +22,15 @@ _AUTO_ROOT = _SCRIPT_DIR.parent.parent
 DEFAULT_SOURCE_ROOT = str(_AUTO_ROOT) if (_AUTO_ROOT / "plugins" / "aps").exists() else None
 DATA_DIR = _SCRIPT_DIR.parent / "data"
 
-AUTOISF_SRC = "plugins/aps/src/main/kotlin/app/aaps/plugins/aps/openAPSAutoISF"
+AUTOISF_SRC = "plugins/aps/src/commonMain/kotlin/app/aaps/plugins/aps/openAPSAutoISF"
 
 KEY_FILES = [
-    "core/keys/src/main/kotlin/app/aaps/core/keys/DoubleKey.kt",
-    "core/keys/src/main/kotlin/app/aaps/core/keys/BooleanKey.kt",
-    "core/keys/src/main/kotlin/app/aaps/core/keys/IntKey.kt",
-    "core/keys/src/main/kotlin/app/aaps/core/keys/UnitDoubleKey.kt",
-    "core/keys/src/main/kotlin/app/aaps/core/keys/LongKey.kt",
-    "core/keys/src/main/kotlin/app/aaps/core/keys/StringKey.kt",
+    "core/keys/src/commonMain/kotlin/app/aaps/core/keys/DoubleKey.kt",
+    "core/keys/src/commonMain/kotlin/app/aaps/core/keys/BooleanKey.kt",
+    "core/keys/src/commonMain/kotlin/app/aaps/core/keys/IntKey.kt",
+    "core/keys/src/commonMain/kotlin/app/aaps/core/keys/UnitDoubleKey.kt",
+    "core/keys/src/commonMain/kotlin/app/aaps/core/keys/LongKey.kt",
+    "core/keys/src/commonMain/kotlin/app/aaps/core/keys/StringKey.kt",
 ]
 
 # Enum entry names that are AutoISF-specific
@@ -382,6 +382,33 @@ def get_commit(root: str) -> str:
     except: return "unknown"
 
 
+def merge_settings_paths(params: List[dict]) -> int:
+    """Fill settings_path for each parameter from autoisf_settings_paths.json.
+
+    That file is written by generate_autoisf_settings_paths.py, which walks the
+    plugin's Compose preference tree, so it must run before this script.
+    """
+    paths_file = DATA_DIR / "autoisf_settings_paths.json"
+    if not paths_file.exists():
+        print(f"   WARNING: {paths_file.name} not found — run generate_autoisf_settings_paths.py first")
+        return 0
+
+    try:
+        paths_map = json.loads(paths_file.read_text(encoding="utf-8")).get("paths", {})
+    except Exception as exc:
+        print(f"   WARNING: could not read {paths_file.name}: {exc}")
+        return 0
+
+    merged = 0
+    for p in params:
+        info = paths_map.get(p["key"])
+        if info:
+            p["settings_path"] = info.get("path") if isinstance(info, dict) else str(info)
+            merged += 1
+    print(f"   settings_path: {merged} of {len(params)} parameters")
+    return merged
+
+
 def generate():
     print("=== AutoISF Parameter Analyzer - Data Generator ===\n")
     import argparse
@@ -431,6 +458,8 @@ def generate():
             "settings_path": None, "settings_gate": info.get("dependency"),
         })
 
+    with_path = merge_settings_paths(params)
+
     active = len(params) - orphaned
     with_used = sum(1 for p in params if p["used_in"])
     gates = sum(1 for p in params if p["is_gate"])
@@ -447,7 +476,7 @@ def generate():
         "version": "1.0", "plugin": "autoisf",
         "source_commit": commit, "generated_at": datetime.now(timezone.utc).isoformat(),
         "total": len(params), "active": active, "orphaned": orphaned,
-        "with_used_in": with_used, "with_negative_gate": 0, "with_settings_path": 0,
+        "with_used_in": with_used, "with_negative_gate": 0, "with_settings_path": with_path,
         "parameters": params,
         "feature_groups": {f["id"]: f for f in fg_list},
     }

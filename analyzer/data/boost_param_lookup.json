@@ -1,12 +1,4 @@
 {
-  "DynISFAdjust": {
-    "summary": "Percentage factor for the global dynamic ISF strength; 100 = standard, higher = more dynamic adjustment.",
-    "effect_high": "Higher value — more insulin/greater effect",
-    "impact": "medium",
-    "feature": "shared_aaps",
-    "settings_path": null,
-    "ui_available": false
-  },
   "autosens_max": {
     "summary": "Default value: 1.2\\nThis is a multiplier cap for autosens (and deviation sensitivity) to set how high the sensitivity ratio can go, which determines how far ISF can be lowered during resistant periods.",
     "effect_high": "Allows larger autosens sensitivity ratio = less insulin when sensitive",

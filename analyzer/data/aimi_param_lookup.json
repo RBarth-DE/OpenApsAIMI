@@ -90,6 +90,8 @@
     "feature_group": "adaptive_basal",
     "summary": "Used in AIMI internal calculations for KickerMaxMin.",
     "default": 30,
+    "min": 10,
+    "max": 60,
     "orphaned": true,
     "is_gate": false,
     "negative_gate_key": null,
@@ -121,6 +123,8 @@
     "feature_group": "adaptive_basal",
     "summary": "Used in AIMI internal calculations for KickerStartMin.",
     "default": 10,
+    "min": 5,
+    "max": 30,
     "orphaned": true,
     "is_gate": false,
     "negative_gate_key": null,
@@ -153,6 +157,7 @@
     "summary": "Used in AIMI internal calculations for LastEstimatedCarbTime.",
     "default": 0.0,
     "min": 0.0,
+    "max": 20000000000000.0,
     "orphaned": false,
     "is_gate": false,
     "negative_gate_key": null,
@@ -282,6 +287,8 @@
     "feature_group": "adaptive_basal",
     "summary": "Used in AIMI internal calculations for ZeroResumeMax.",
     "default": 30,
+    "min": 10,
+    "max": 60,
     "orphaned": true,
     "is_gate": false,
     "negative_gate_key": null,
@@ -296,6 +303,8 @@
     "feature_group": "adaptive_basal",
     "summary": "Used in AIMI internal calculations for ZeroResumeMin.",
     "default": 10,
+    "min": 5,
+    "max": 30,
     "orphaned": true,
     "is_gate": false,
     "negative_gate_key": null,
@@ -2025,6 +2034,7 @@
     "summary": "Stored PKPD state — read and written by the learning algorithm.",
     "default": 75.0,
     "min": 35.0,
+    "max": 300.0,
     "orphaned": false,
     "is_gate": false,
     "negative_gate_key": null,
@@ -2050,6 +2060,7 @@
     "summary": "Stored PKPD state — read and written by the learning algorithm.",
     "default": 0.0,
     "min": 0.0,
+    "max": 4000000000000.0,
     "orphaned": false,
     "is_gate": false,
     "negative_gate_key": null,
@@ -2102,6 +2113,7 @@
     "summary": "Stored PKPD state — read and written by the learning algorithm.",
     "default": 0.0,
     "min": -100.0,
+    "max": 100.0,
     "orphaned": false,
     "is_gate": false,
     "negative_gate_key": null,
@@ -2127,6 +2139,7 @@
     "summary": "Stored PKPD state — read and written by the learning algorithm.",
     "default": 75.0,
     "min": 0.0,
+    "max": 300.0,
     "orphaned": false,
     "is_gate": false,
     "negative_gate_key": null,
@@ -2152,6 +2165,7 @@
     "summary": "Stored PKPD state — read and written by the learning algorithm.",
     "default": 0.0,
     "min": -100.0,
+    "max": 100.0,
     "orphaned": false,
     "is_gate": false,
     "negative_gate_key": null,
@@ -2177,6 +2191,7 @@
     "summary": "Stored PKPD state — read and written by the learning algorithm.",
     "default": 0.0,
     "min": -100.0,
+    "max": 100.0,
     "orphaned": false,
     "is_gate": false,
     "negative_gate_key": null,
@@ -2495,7 +2510,6 @@
     "min": 0.5,
     "max": 3.0,
     "unit_type": "DOUBLE",
-    "dependency": "ApsUseAutosens",
     "orphaned": false,
     "is_gate": false,
     "negative_gate_key": null,
@@ -2519,7 +2533,6 @@
     "min": 0.1,
     "max": 1.0,
     "unit_type": "DOUBLE",
-    "dependency": "ApsUseAutosens",
     "orphaned": true,
     "is_gate": false,
     "negative_gate_key": null,
@@ -2861,6 +2874,85 @@
       }
     ]
   },
+  "key_aimi_anticip_basal_floor": {
+    "key": "key_aimi_anticip_basal_floor",
+    "name": "OApsAIMIAnticipBasalFloor",
+    "type": "Boolean",
+    "feature_group": "core",
+    "summary": "Boolean switch for anticip_basal_floor.",
+    "default": false,
+    "orphaned": false,
+    "is_gate": false,
+    "negative_gate_key": null,
+    "impact": "medium",
+    "effect_high": "Feature is active — associated functionality runs",
+    "effect_low": "Feature is inactive — associated functionality is disabled",
+    "used_in": [
+      {
+        "file": "OpenAPSAIMIPlugin.kt",
+        "function": "aimiComposeAutodriveSubScreen"
+      },
+      {
+        "file": "DetermineBasalAIMI2.kt",
+        "function": "runPostBasalEngineLearnersRtInstrumentationAndAuditorStage"
+      }
+    ]
+  },
+  "key_aimi_anticip_budget_u": {
+    "key": "key_aimi_anticip_budget_u",
+    "name": "OApsAIMIAnticipBudgetU",
+    "type": "Double",
+    "feature_group": "core",
+    "summary": "Used in AIMI internal calculations for anticip_budget_u.",
+    "default": 2.0,
+    "min": 0.0,
+    "max": 10.0,
+    "unit_type": "INSULIN",
+    "orphaned": false,
+    "is_gate": false,
+    "negative_gate_key": null,
+    "impact": "medium",
+    "effect_high": "Higher value — more insulin/greater effect",
+    "effect_low": "Lower value — less insulin/reduced effect",
+    "used_in": [
+      {
+        "file": "OpenAPSAIMIPlugin.kt",
+        "function": "aimiComposeAutodriveSubScreen"
+      },
+      {
+        "file": "DetermineBasalAIMI2.kt",
+        "function": "runPostBasalEngineLearnersRtInstrumentationAndAuditorStage"
+      }
+    ]
+  },
+  "key_aimi_anticip_meal_evidence": {
+    "key": "key_aimi_anticip_meal_evidence",
+    "name": "OApsAIMIAnticipMealEvidence",
+    "type": "Boolean",
+    "feature_group": "meal_modes",
+    "summary": "Boolean switch for anticip_meal_evidence.",
+    "default": false,
+    "orphaned": false,
+    "is_gate": false,
+    "negative_gate_key": null,
+    "impact": "high",
+    "effect_high": "Feature is active — associated functionality runs",
+    "effect_low": "Feature is inactive — associated functionality is disabled",
+    "used_in": [
+      {
+        "file": "OpenAPSAIMIPlugin.kt",
+        "function": "aimiComposeAutodriveSubScreen"
+      },
+      {
+        "file": "DetermineBasalAIMI2.kt",
+        "function": "publishDoseTerminalAuthorityAndSnapshot"
+      },
+      {
+        "file": "DecisionPredictionAuthority.kt",
+        "function": "resolve"
+      }
+    ]
+  },
   "key_aimi_autodrive_aggressive_smb_floor": {
     "key": "key_aimi_autodrive_aggressive_smb_floor",
     "name": "OApsAIMIautodriveAggressiveSmbFloor",
@@ -3074,6 +3166,30 @@
       {
         "file": "TpoLlmValidator.kt",
         "function": "validate"
+      }
+    ]
+  },
+  "key_aimi_descent_redose_guard": {
+    "key": "key_aimi_descent_redose_guard",
+    "name": "OApsAIMIDescentRedoseGuard",
+    "type": "Boolean",
+    "feature_group": "core",
+    "summary": "Boolean switch for descent_redose_guard.",
+    "default": false,
+    "orphaned": false,
+    "is_gate": false,
+    "negative_gate_key": null,
+    "impact": "medium",
+    "effect_high": "Feature is active — associated functionality runs",
+    "effect_low": "Feature is inactive — associated functionality is disabled",
+    "used_in": [
+      {
+        "file": "OpenAPSAIMIPlugin.kt",
+        "function": "aimiComposeAutodriveSubScreen"
+      },
+      {
+        "file": "DetermineBasalAIMI2.kt",
+        "function": "unknown"
       }
     ]
   },
@@ -4313,6 +4429,30 @@
       }
     ]
   },
+  "key_aimi_rise_ceiling_guard": {
+    "key": "key_aimi_rise_ceiling_guard",
+    "name": "OApsAIMIRiseCeilingGuard",
+    "type": "Boolean",
+    "feature_group": "core",
+    "summary": "Boolean switch for rise_ceiling_guard.",
+    "default": false,
+    "orphaned": false,
+    "is_gate": false,
+    "negative_gate_key": null,
+    "impact": "medium",
+    "effect_high": "Feature is active — associated functionality runs",
+    "effect_low": "Feature is inactive — associated functionality is disabled",
+    "used_in": [
+      {
+        "file": "OpenAPSAIMIPlugin.kt",
+        "function": "aimiComposeAutodriveSubScreen"
+      },
+      {
+        "file": "DetermineBasalAIMI2.kt",
+        "function": "unknown"
+      }
+    ]
+  },
   "key_aimi_sensor_confidence_cgm_first": {
     "key": "key_aimi_sensor_confidence_cgm_first",
     "name": "OApsAIMISensorConfidenceCgmFirst",
@@ -4380,6 +4520,30 @@
       },
       {
         "file": "AimiBehaviorFamilyRegistry.kt",
+        "function": "unknown"
+      }
+    ]
+  },
+  "key_aimi_stress_isf_floor": {
+    "key": "key_aimi_stress_isf_floor",
+    "name": "OApsAIMIStressIsfFloor",
+    "type": "Boolean",
+    "feature_group": "core",
+    "summary": "Boolean switch for stress_isf_floor.",
+    "default": false,
+    "orphaned": false,
+    "is_gate": false,
+    "negative_gate_key": null,
+    "impact": "high",
+    "effect_high": "Feature is active — associated functionality runs",
+    "effect_low": "Feature is inactive — associated functionality is disabled",
+    "used_in": [
+      {
+        "file": "OpenAPSAIMIPlugin.kt",
+        "function": "invoke"
+      },
+      {
+        "file": "DetermineBasalAIMI2.kt",
         "function": "unknown"
       }
     ]
@@ -4833,6 +4997,10 @@
       {
         "file": "TpoOrchestrator.kt",
         "function": "isTpoEnabled"
+      },
+      {
+        "file": "AimiDiagnosticsManager.kt",
+        "function": "appendTpoState"
       }
     ]
   },
@@ -6963,6 +7131,7 @@
     "summary": "Enables Women's Cycle detection for ISF adjustment.",
     "default": 1.0,
     "min": 1.0,
+    "max": 31.0,
     "orphaned": false,
     "is_gate": false,
     "negative_gate_key": null,

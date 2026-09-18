@@ -34,7 +34,7 @@ DATA_DIR = _SCRIPT_DIR.parent / "data"
 # openAPSBoostV5, a SIBLING of openAPSBoost — scanning only openAPSBoost silently drops
 # all V5/V6 logic context (state machine, composed floor, primer, caps). Scan the parent
 # and pick the openAPSBoost* siblings explicitly so unrelated aps packages don't leak in.
-BOOST_SRC = "plugins/aps/src/main/kotlin/app/aaps/plugins/aps"
+BOOST_SRC = "plugins/aps/src/commonMain/kotlin/app/aaps/plugins/aps"
 BOOST_SRC_DIRS = [
     "openAPSBoost",
     "openAPSBoostV5",
@@ -45,20 +45,20 @@ BOOST_SRC_DIRS = [
 # Other plugin sources shared keys are actually used in (not Boost-owned). Scanned for
 # usage detection only so shared keys like openapsama_autosens_period don't read as orphans.
 BOOST_SRC_EXTRA_DIRS = [
-    "plugins/sensitivity/src/main/kotlin/app/aaps/plugins/sensitivity",
-    "plugins/main/src/main/kotlin/app/aaps/plugins/main/iob/iobCobCalculator",
-    "plugins/sync/src/main/kotlin/app/aaps/plugins/sync/openhumans",
-    "plugins/configuration/src/main/kotlin/app/aaps/plugins/configuration/configBuilder",
+    "plugins/sensitivity/src/commonMain/kotlin/app/aaps/plugins/sensitivity",
+    "plugins/main/src/commonMain/kotlin/app/aaps/plugins/main/iob/iobCobCalculator",
+    "plugins/sync/src/androidMain/kotlin/app/aaps/plugins/sync/openhumans",
+    "plugins/configuration/src/commonMain/kotlin/app/aaps/plugins/configuration/configBuilder",
 ]
 
 # Key definition files (relative to source root)
 KEY_FILES = [
-    "core/keys/src/main/kotlin/app/aaps/core/keys/DoubleKey.kt",
-    "core/keys/src/main/kotlin/app/aaps/core/keys/BooleanKey.kt",
-    "core/keys/src/main/kotlin/app/aaps/core/keys/IntKey.kt",
-    "core/keys/src/main/kotlin/app/aaps/core/keys/UnitDoubleKey.kt",
-    "core/keys/src/main/kotlin/app/aaps/core/keys/LongKey.kt",
-    "core/keys/src/main/kotlin/app/aaps/core/keys/StringKey.kt",
+    "core/keys/src/commonMain/kotlin/app/aaps/core/keys/DoubleKey.kt",
+    "core/keys/src/commonMain/kotlin/app/aaps/core/keys/BooleanKey.kt",
+    "core/keys/src/commonMain/kotlin/app/aaps/core/keys/IntKey.kt",
+    "core/keys/src/commonMain/kotlin/app/aaps/core/keys/UnitDoubleKey.kt",
+    "core/keys/src/commonMain/kotlin/app/aaps/core/keys/LongKey.kt",
+    "core/keys/src/commonMain/kotlin/app/aaps/core/keys/StringKey.kt",
 ]
 
 # Enum entry names that are Boost-specific (starts with ApsBoost)
@@ -90,7 +90,7 @@ BOOST_ENUM_NAMES = {
     "ApsBoostInactivitySteps", "ApsBoostSleepInSteps",
     "ApsBoostActivitySteps5", "ApsBoostActivitySteps15",
     "ApsBoostActivitySteps30", "ApsBoostActivitySteps60",
-    "ApsBoostDynIsfAdjustmentFactor", "ApsBoostHrMaxBpm", "ApsBoostHrRestingBpm",
+    "ApsBoostHrMaxBpm", "ApsBoostHrRestingBpm",
     "ApsBoostHrWindowMinutes", "ApsBoostPreSleepLeadMin",
     "ApsBoostSleepHysteresisMin", "ApsBoostWakeHrHysteresisMin",
     "ApsBoostHealthConnectPollMin", "ApsBoostPostExerciseMinDuration",
@@ -198,27 +198,49 @@ _ANDROID_STRING_RE = re.compile(
 
 
 def load_android_strings(source_root: Path) -> Dict[str, str]:
-    """Load string resources from all res/values/strings.xml files under source root."""
+    """Load string resources from every XML file in res/values under source root.
+
+    Not only strings.xml: some strings live in their own file
+    (wcycle_strings.xml, strings_scene_wizard.xml), and a summary that is not
+    found falls back to a generic template.
+    """
     global _android_strings_cache
     if _android_strings_cache is not None:
         return _android_strings_cache
     strings: Dict[str, str] = {}
     for res_dir in source_root.rglob("values"):
-        strings_file = res_dir / "strings.xml"
-        if not strings_file.is_file():
-            continue
-        try:
-            content = strings_file.read_text(encoding="utf-8")
-        except OSError:
-            continue
-        for match in _ANDROID_STRING_RE.finditer(content):
-            name = match.group(1)
-            text = re.sub(r"<[^>]+>", " ", match.group(2))
-            text = re.sub(r"\s+", " ", text).strip()
-            if text:
-                strings[name] = text
+        for strings_file in sorted(res_dir.glob("*.xml")):
+            try:
+                content = strings_file.read_text(encoding="utf-8")
+            except OSError:
+                continue
+            for match in _ANDROID_STRING_RE.finditer(content):
+                name = match.group(1)
+                text = re.sub(r"<[^>]+>", " ", match.group(2))
+                text = re.sub(r"\s+", " ", text).strip()
+                if text:
+                    strings[name] = text
     _android_strings_cache = strings
     return strings
+
+
+def extract_text_resource(args: str, field: str) -> Optional[str]:
+    """Return the string-resource name behind a title/summary argument, or None.
+
+    Two forms are in use in the key files:
+        titleResId = R.string.foo     (older keys)
+        title = KeysStrings.foo       (newer keys, or ApsStrings.foo in the aps module)
+    A generated Strings property is named after the strings.xml entry it is
+    generated from, so the resource name is the same in both forms. A
+    TextRef.Literal has no resource behind it and returns None.
+    """
+    match = re.search(rf'{field}ResId\s*=\s*(?:[\w.]+\.)?R\.string\.(\w+)', args)
+    if match:
+        return match.group(1)
+    match = re.search(rf'\b{field}\s*=\s*\w*Strings\.(\w+)', args)
+    if match:
+        return match.group(1)
+    return None
 
 
 class BoostKeyScanner:
@@ -392,13 +414,13 @@ class BoostKeyScanner:
         entry["defaulted_by_sm"] = "defaultedBySM = true" in args
         entry["calculated_by_sm"] = "calculatedBySM = true" in args
 
-        title_match = re.search(r'titleResId\s*=\s*R\.string\.(\w+)', args)
-        if title_match:
-            entry["title_res_id"] = title_match.group(1)
+        title_res = extract_text_resource(args, "title")
+        if title_res:
+            entry["title_res_id"] = title_res
 
-        summary_match = re.search(r'summaryResId\s*=\s*R\.string\.(\w+)', args)
-        if summary_match:
-            entry["summary_res_id"] = summary_match.group(1)
+        summary_res = extract_text_resource(args, "summary")
+        if summary_res:
+            entry["summary_res_id"] = summary_res
 
         pref_match = re.search(r'preferenceType\s*=\s*PreferenceType\.(\w+)', args)
         if pref_match:

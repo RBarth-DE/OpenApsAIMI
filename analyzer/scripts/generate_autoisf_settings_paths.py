@@ -8,41 +8,83 @@ from pathlib import Path
 _SCRIPT_DIR = Path(__file__).resolve().parent
 _AUTO_ROOT = _SCRIPT_DIR.parent.parent
 PROJECT_ROOT = _AUTO_ROOT if (_AUTO_ROOT / "plugins" / "aps").exists() else _SCRIPT_DIR
-PLUGIN_FILE = PROJECT_ROOT / "plugins/aps/src/main/kotlin/app/aaps/plugins/aps/openAPSAutoISF/OpenAPSAutoISFPlugin.kt"
+PLUGIN_FILE = PROJECT_ROOT / "plugins/aps/src/commonMain/kotlin/app/aaps/plugins/aps/openAPSAutoISF/OpenAPSAutoISFPlugin.kt"
 STRINGS_XML_PATHS = [
-    PROJECT_ROOT / "plugins/aps/src/main/res/values/strings.xml",
-    PROJECT_ROOT / "core/keys/src/main/res/values/strings.xml",
-    PROJECT_ROOT / "core/ui/src/main/res/values/strings.xml",
+    PROJECT_ROOT / "plugins/aps/src/androidMain/res/values",
+    PROJECT_ROOT / "core/keys/src/androidMain/res/values",
+    PROJECT_ROOT / "core/ui/src/androidMain/res/values",
 ]
 OUTPUT_FILE = _SCRIPT_DIR.parent / "data" / "autoisf_settings_paths.json"
 KEY_FILES = {
-    "DoubleKey": PROJECT_ROOT / "core/keys/src/main/kotlin/app/aaps/core/keys/DoubleKey.kt",
-    "BooleanKey": PROJECT_ROOT / "core/keys/src/main/kotlin/app/aaps/core/keys/BooleanKey.kt",
-    "IntKey": PROJECT_ROOT / "core/keys/src/main/kotlin/app/aaps/core/keys/IntKey.kt",
-    "UnitDoubleKey": PROJECT_ROOT / "core/keys/src/main/kotlin/app/aaps/core/keys/UnitDoubleKey.kt",
-    "StringKey": PROJECT_ROOT / "core/keys/src/main/kotlin/app/aaps/core/keys/StringKey.kt",
+    "DoubleKey": PROJECT_ROOT / "core/keys/src/commonMain/kotlin/app/aaps/core/keys/DoubleKey.kt",
+    "BooleanKey": PROJECT_ROOT / "core/keys/src/commonMain/kotlin/app/aaps/core/keys/BooleanKey.kt",
+    "IntKey": PROJECT_ROOT / "core/keys/src/commonMain/kotlin/app/aaps/core/keys/IntKey.kt",
+    "UnitDoubleKey": PROJECT_ROOT / "core/keys/src/commonMain/kotlin/app/aaps/core/keys/UnitDoubleKey.kt",
+    "StringKey": PROJECT_ROOT / "core/keys/src/commonMain/kotlin/app/aaps/core/keys/StringKey.kt",
 }
 
 _key_lookup: dict[str, str] = {}
+
+def iter_key_entries(content: str):
+    """Yield (entry_name, key_string) for every enum entry in a key file.
+
+    An entry's key string can sit anywhere in the argument list and the argument
+    list can span several lines, so each entry is read as a balanced block:
+        Foo("key_string", 1.0, 0.0, 10.0)
+        Foo(title = KeysStrings.foo_title, key = "key_string", defaultValue = 1.0)
+    """
+    for m in re.finditer(r'^\s+([A-Z]\w*)\s*\(', content, re.MULTILINE):
+        ename = m.group(1)
+        if ename in ('BooleanKey','DoubleKey','IntKey','UnitDoubleKey','LongKey','StringKey','override'): continue
+
+        depth = 0
+        start = m.end() - 1
+        i = start
+        while i < len(content):
+            char = content[i]
+            if char == '(':
+                depth += 1
+            elif char == ')':
+                depth -= 1
+                if depth == 0: break
+            i += 1
+        args = content[start + 1:i]
+
+        km = re.search(r'key\s*=\s*"([^"]+)"', args)
+        if km:
+            yield ename, km.group(1)
+            continue
+        pos = re.search(r'"([^"]+)"', args)
+        if pos:
+            yield ename, pos.group(1)
+
 
 def build_key_lookup():
     global _key_lookup
     if _key_lookup: return
     for kcls, fp in KEY_FILES.items():
         if not fp.exists(): continue
-        for m in re.finditer(r'(\w+)\s*\(\s*(?:key\s*=\s*)?\"([^\"]+)\"', fp.read_text(encoding="utf-8")):
-            ename = m.group(1)
-            if ename in ('BooleanKey','DoubleKey','IntKey','UnitDoubleKey','LongKey','StringKey','override'): continue
-            _key_lookup[f"{kcls}.{ename}"] = m.group(2)
+        for ename, key_str in iter_key_entries(fp.read_text(encoding="utf-8")):
+            _key_lookup[f"{kcls}.{ename}"] = key_str
 
 def resolve_key(kcls: str, kname: str) -> str|None:
     return _key_lookup.get(f"{kcls}.{kname}")
 
 def load_strings(paths: list[Path]) -> dict[str, str]:
-    res = {}
+    """Load string resources from the given res/values directories.
+
+    Every XML file there is read, not only strings.xml: some screens take their
+    title from a separate file, and a title that is not found shows up as a raw
+    resource name in the path.
+    """
+    xml_files: list[Path] = []
     for p in paths:
-        if not p.exists(): continue
-        for m in re.finditer(r'<string name="(\w+)">(.*?)</string>', p.read_text(encoding="utf-8"), re.DOTALL):
+        if p.is_dir(): xml_files.extend(sorted(p.glob("*.xml")))
+        elif p.is_file(): xml_files.append(p)
+
+    res = {}
+    for p in xml_files:
+        for m in re.finditer(r'<string\s+name="(\w+)"[^>]*>(.*?)</string>', p.read_text(encoding="utf-8"), re.DOTALL):
             t = m.group(2).strip()
             if t.startswith("<![CDATA[") and t.endswith("]]>"): t = t[9:-3]
             t = re.sub(r'<[^>]+>', '', t)

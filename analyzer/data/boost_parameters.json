@@ -1,41 +1,15 @@
 {
   "version": "1.0",
   "plugin": "boost",
-  "source_commit": "40dbca84e4dd08307859fbc3fd0c6836f9585897",
-  "generated_at": "2026-09-10T06:34:05.512571+00:00",
-  "total": 99,
-  "active": 99,
+  "source_commit": "a9d66da6140ce72f0f00141157606c25d28c7d94",
+  "generated_at": "2026-09-18T08:17:04.900106+00:00",
+  "total": 98,
+  "active": 98,
   "orphaned": 0,
-  "with_used_in": 97,
+  "with_used_in": 96,
   "with_negative_gate": 0,
   "with_settings_path": 60,
   "parameters": [
-    {
-      "key": "DynISFAdjust",
-      "name": "ApsBoostDynIsfAdjustmentFactor",
-      "type": "Int",
-      "default": 100,
-      "min": null,
-      "max": null,
-      "used_in": [
-        {
-          "file": "OpenAPSBoostPlugin.kt",
-          "function": "calculateBoostIsf"
-        }
-      ],
-      "orphaned": false,
-      "negative_gate_key": null,
-      "negative_gate_note": null,
-      "logic_summary": "Percentage factor for the global dynamic ISF strength; 100 = standard, higher = more dynamic adjustment.",
-      "effect_high": "Higher value — more insulin/greater effect",
-      "effect_low": "Lower value — less insulin/reduced effect",
-      "impact": "medium",
-      "feature_group": "shared_aaps",
-      "is_gate": false,
-      "settings_path": null,
-      "settings_gate": null,
-      "ui_available": false
-    },
     {
       "key": "autosens_max",
       "name": "AutosensMax",
@@ -79,7 +53,7 @@
       "feature_group": "shared_aaps",
       "is_gate": false,
       "settings_path": "OpenAPS BOOST V6 → Advanced Settings",
-      "settings_gate": "ApsUseAutosens",
+      "settings_gate": null,
       "ui_available": true
     },
     {
@@ -125,7 +99,7 @@
       "feature_group": "shared_aaps",
       "is_gate": false,
       "settings_path": "OpenAPS BOOST V6 → Advanced Settings",
-      "settings_gate": "ApsUseAutosens",
+      "settings_gate": null,
       "ui_available": true
     },
     {
@@ -3073,9 +3047,8 @@
       "name": "Shared AAPS Settings",
       "description": "Standard OpenAPS settings that Boost's algorithm also reads: max basal, max IOB, SMB gates, autosens, dynamic sensitivity.",
       "gate_key": null,
-      "param_count": 20,
+      "param_count": 19,
       "key_params": [
-        "DynISFAdjust",
         "autosens_max",
         "autosens_min",
         "boost_allow_all_bg_sources",

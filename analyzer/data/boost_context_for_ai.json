@@ -175,9 +175,8 @@
       "name": "Shared AAPS Settings",
       "description": "Standard OpenAPS settings that Boost's algorithm also reads: max basal, max IOB, SMB gates, autosens, dynamic sensitivity.",
       "gate_key": null,
-      "param_count": 20,
+      "param_count": 19,
       "key_params": [
-        "DynISFAdjust",
         "autosens_max",
         "autosens_min",
         "boost_allow_all_bg_sources",
@@ -209,14 +208,6 @@
     }
   },
   "parameter_summaries": {
-    "DynISFAdjust": {
-      "summary": "Percentage factor for the global dynamic ISF strength; 100 = standard, higher = more dynamic adjustment.",
-      "effect_high": "Higher value — more insulin/greater effect",
-      "impact": "medium",
-      "feature": "shared_aaps",
-      "settings_path": null,
-      "ui_available": false
-    },
     "autosens_max": {
       "summary": "Default value: 1.2\\nThis is a multiplier cap for autosens (and deviation sensitivity) to set how high the sensitivity ratio can go, which determines how far ISF can be lowered during resistant periods.",
       "effect_high": "Allows larger autosens sensitivity ratio = less insulin when sensitive",

@@ -21,7 +21,8 @@ blendedTDD = W8H×0.33 + 7D×0.34 + 1D×0.33
 W8H = (1.4×4H_TDD + 0.6×8-4H_TDD) × 3
 If W8H < 75% of 7D: pull 7D down, then blend
 sensitivity = 1800 / (blendedTDD × ln(normalTarget/insulinDivisor + 1))
-Adjustment factor (ApsBoostDynIsfAdjustmentFactor%) scales TDD further.
+Adjustment factor (ApsDynIsfAdjustmentFactor%) scales TDD further. The factor is the
+shared DynamicISF adjustment setting of OpenAPS SMB / AIMI; Boost has no separate key.
 ```
 
 ## Feature Groups

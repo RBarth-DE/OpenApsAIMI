@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-09-10T06:34:03.812659+00:00",
-  "source_commit": "40dbca84e4dd08307859fbc3fd0c6836f9585897",
+  "generated_at": "2026-09-18T08:17:02.033618+00:00",
+  "source_commit": "a9d66da6140ce72f0f00141157606c25d28c7d94",
   "paths": {
     "openapsma_max_basal": {
       "path": "AIMI → Advanced Settings",
@@ -33,6 +33,14 @@
         "Advanced Settings"
       ],
       "gate_key": null
+    },
+    "DynISFAdjust": {
+      "path": "AIMI → Advanced Settings",
+      "screen_titles": [
+        "AIMI",
+        "Advanced Settings"
+      ],
+      "gate_key": "use_dynamic_sensitivity"
     },
     "lgsThreshold": {
       "path": "AIMI → Advanced Settings",
@@ -409,15 +417,6 @@
       ],
       "gate_key": "aimi_emergency_sos_enable"
     },
-    "aimi_sos_permissions_compose": {
-      "path": "AIMI → Preferences user → 🚨 Emergency SOS (Hypo)",
-      "screen_titles": [
-        "AIMI",
-        "Preferences user",
-        "🚨 Emergency SOS (Hypo)"
-      ],
-      "gate_key": null
-    },
     "meal_modes_max_basal": {
       "path": "AIMI → Preferences user → Manual Mode",
       "screen_titles": [
@@ -607,15 +606,6 @@
       "gate_key": null
     },
     "aimi_physio_pattern_catalog_info": {
-      "path": "AIMI → Preferences user → 🏥 Physiological Assistant",
-      "screen_titles": [
-        "AIMI",
-        "Preferences user",
-        "🏥 Physiological Assistant"
-      ],
-      "gate_key": null
-    },
-    "aimi_physio_hc_permissions_compose": {
       "path": "AIMI → Preferences user → 🏥 Physiological Assistant",
       "screen_titles": [
         "AIMI",
@@ -1128,7 +1118,61 @@
       ],
       "gate_key": null
     },
+    "key_aimi_stress_isf_floor": {
+      "path": "AIMI → Preferences user → Autodrive",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "Autodrive"
+      ],
+      "gate_key": null
+    },
     "key_aimi_effort_activity_protection": {
+      "path": "AIMI → Preferences user → Autodrive",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "Autodrive"
+      ],
+      "gate_key": null
+    },
+    "key_aimi_descent_redose_guard": {
+      "path": "AIMI → Preferences user → Autodrive",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "Autodrive"
+      ],
+      "gate_key": null
+    },
+    "key_aimi_rise_ceiling_guard": {
+      "path": "AIMI → Preferences user → Autodrive",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "Autodrive"
+      ],
+      "gate_key": null
+    },
+    "key_aimi_anticip_basal_floor": {
+      "path": "AIMI → Preferences user → Autodrive",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "Autodrive"
+      ],
+      "gate_key": null
+    },
+    "key_aimi_anticip_budget_u": {
+      "path": "AIMI → Preferences user → Autodrive",
+      "screen_titles": [
+        "AIMI",
+        "Preferences user",
+        "Autodrive"
+      ],
+      "gate_key": null
+    },
+    "key_aimi_anticip_meal_evidence": {
       "path": "AIMI → Preferences user → Autodrive",
       "screen_titles": [
         "AIMI",
@@ -1596,22 +1640,22 @@
       "gate_key": null
     },
     "key_use_AimiPregnancy": {
-      "path": "AIMI → Preferences user → Patient context and body declarations → wcycle_preferences",
+      "path": "AIMI → Preferences user → Patient context and body declarations → Women Cycle",
       "screen_titles": [
         "AIMI",
         "Preferences user",
         "Patient context and body declarations",
-        "wcycle_preferences"
+        "Women Cycle"
       ],
       "gate_key": null
     },
     "aimi_pregnancy_due_date_string": {
-      "path": "AIMI → Preferences user → Patient context and body declarations → wcycle_preferences",
+      "path": "AIMI → Preferences user → Patient context and body declarations → Women Cycle",
       "screen_titles": [
         "AIMI",
         "Preferences user",
         "Patient context and body declarations",
-        "wcycle_preferences"
+        "Women Cycle"
       ],
       "gate_key": null
     },
@@ -1636,92 +1680,92 @@
       "gate_key": null
     },
     "key_use_Aimi_wcycle": {
-      "path": "AIMI → Preferences user → Patient context and body declarations → wcycle_preferences",
+      "path": "AIMI → Preferences user → Patient context and body declarations → Women Cycle",
       "screen_titles": [
         "AIMI",
         "Preferences user",
         "Patient context and body declarations",
-        "wcycle_preferences"
+        "Women Cycle"
       ],
       "gate_key": null
     },
     "key_oaps_aimi_wcycle_tracking_mode": {
-      "path": "AIMI → Preferences user → Patient context and body declarations → wcycle_preferences",
+      "path": "AIMI → Preferences user → Patient context and body declarations → Women Cycle",
       "screen_titles": [
         "AIMI",
         "Preferences user",
         "Patient context and body declarations",
-        "wcycle_preferences"
+        "Women Cycle"
       ],
       "gate_key": null
     },
     "key_oaps_aimi_wcycle_contraceptive": {
-      "path": "AIMI → Preferences user → Patient context and body declarations → wcycle_preferences",
+      "path": "AIMI → Preferences user → Patient context and body declarations → Women Cycle",
       "screen_titles": [
         "AIMI",
         "Preferences user",
         "Patient context and body declarations",
-        "wcycle_preferences"
+        "Women Cycle"
       ],
       "gate_key": null
     },
     "key_wcycledateday": {
-      "path": "AIMI → Preferences user → Patient context and body declarations → wcycle_preferences",
+      "path": "AIMI → Preferences user → Patient context and body declarations → Women Cycle",
       "screen_titles": [
         "AIMI",
         "Preferences user",
         "Patient context and body declarations",
-        "wcycle_preferences"
+        "Women Cycle"
       ],
       "gate_key": null
     },
     "key_wcycle_avg_length": {
-      "path": "AIMI → Preferences user → Patient context and body declarations → wcycle_preferences",
+      "path": "AIMI → Preferences user → Patient context and body declarations → Women Cycle",
       "screen_titles": [
         "AIMI",
         "Preferences user",
         "Patient context and body declarations",
-        "wcycle_preferences"
+        "Women Cycle"
       ],
       "gate_key": null
     },
     "key_use_Aimi_wcycle_shadow": {
-      "path": "AIMI → Preferences user → Patient context and body declarations → wcycle_preferences",
+      "path": "AIMI → Preferences user → Patient context and body declarations → Women Cycle",
       "screen_titles": [
         "AIMI",
         "Preferences user",
         "Patient context and body declarations",
-        "wcycle_preferences"
+        "Women Cycle"
       ],
       "gate_key": null
     },
     "key_use_Aimi_wcycle_require_confirm": {
-      "path": "AIMI → Preferences user → Patient context and body declarations → wcycle_preferences",
+      "path": "AIMI → Preferences user → Patient context and body declarations → Women Cycle",
       "screen_titles": [
         "AIMI",
         "Preferences user",
         "Patient context and body declarations",
-        "wcycle_preferences"
+        "Women Cycle"
       ],
       "gate_key": null
     },
     "key_wcycle_clamp_min": {
-      "path": "AIMI → Preferences user → Patient context and body declarations → wcycle_preferences",
+      "path": "AIMI → Preferences user → Patient context and body declarations → Women Cycle",
       "screen_titles": [
         "AIMI",
         "Preferences user",
         "Patient context and body declarations",
-        "wcycle_preferences"
+        "Women Cycle"
       ],
       "gate_key": null
     },
     "key_wcycle_clamp_max": {
-      "path": "AIMI → Preferences user → Patient context and body declarations → wcycle_preferences",
+      "path": "AIMI → Preferences user → Patient context and body declarations → Women Cycle",
       "screen_titles": [
         "AIMI",
         "Preferences user",
         "Patient context and body declarations",
-        "wcycle_preferences"
+        "Women Cycle"
       ],
       "gate_key": null
     },

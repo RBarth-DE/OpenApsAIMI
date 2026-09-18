@@ -38,20 +38,20 @@ if not (PROJECT_ROOT / "plugins" / "aps").exists():
     print(f"   Tried: {PROJECT_ROOT}")
     print("   Run this script from inside the repo or place it at <repo>/analyzer/")
     sys.exit(1)
-PLUGIN_FILE = PROJECT_ROOT / "plugins/aps/src/main/kotlin/app/aaps/plugins/aps/openAPSAIMI/OpenAPSAIMIPlugin.kt"
+PLUGIN_FILE = PROJECT_ROOT / "plugins/aps/src/commonMain/kotlin/app/aaps/plugins/aps/openAPSAIMI/OpenAPSAIMIPlugin.kt"
 STRINGS_XML_PATHS = [
-    PROJECT_ROOT / "plugins/aps/src/main/res/values/strings.xml",
-    PROJECT_ROOT / "core/keys/src/main/res/values/strings.xml",
-    PROJECT_ROOT / "core/ui/src/main/res/values/strings.xml",
+    PROJECT_ROOT / "plugins/aps/src/androidMain/res/values",
+    PROJECT_ROOT / "core/keys/src/androidMain/res/values",
+    PROJECT_ROOT / "core/ui/src/androidMain/res/values",
 ]
 KEY_FILES = {
-    "BooleanKey": PROJECT_ROOT / "core/keys/src/main/kotlin/app/aaps/core/keys/BooleanKey.kt",
-    "DoubleKey": PROJECT_ROOT / "core/keys/src/main/kotlin/app/aaps/core/keys/DoubleKey.kt",
-    "IntKey": PROJECT_ROOT / "core/keys/src/main/kotlin/app/aaps/core/keys/IntKey.kt",
-    "StringKey": PROJECT_ROOT / "core/keys/src/main/kotlin/app/aaps/core/keys/StringKey.kt",
-    "UnitDoubleKey": PROJECT_ROOT / "core/keys/src/main/kotlin/app/aaps/core/keys/UnitDoubleKey.kt",
-    "AimiStringKey": PROJECT_ROOT / "plugins/aps/src/main/kotlin/app/aaps/plugins/aps/openAPSAIMI/keys/AimiStringKey.kt",
-    "ApsIntentKey": PROJECT_ROOT / "plugins/aps/src/main/kotlin/app/aaps/plugins/aps/keys/ApsIntentKey.kt",
+    "BooleanKey": PROJECT_ROOT / "core/keys/src/commonMain/kotlin/app/aaps/core/keys/BooleanKey.kt",
+    "DoubleKey": PROJECT_ROOT / "core/keys/src/commonMain/kotlin/app/aaps/core/keys/DoubleKey.kt",
+    "IntKey": PROJECT_ROOT / "core/keys/src/commonMain/kotlin/app/aaps/core/keys/IntKey.kt",
+    "StringKey": PROJECT_ROOT / "core/keys/src/commonMain/kotlin/app/aaps/core/keys/StringKey.kt",
+    "UnitDoubleKey": PROJECT_ROOT / "core/keys/src/commonMain/kotlin/app/aaps/core/keys/UnitDoubleKey.kt",
+    "AimiStringKey": PROJECT_ROOT / "plugins/aps/src/commonMain/kotlin/app/aaps/plugins/aps/openAPSAIMI/keys/AimiStringKey.kt",
+    "ApsIntentKey": PROJECT_ROOT / "plugins/aps/src/commonMain/kotlin/app/aaps/plugins/aps/keys/ApsIntentKey.kt",
 }
 OUTPUT_FILE = _SCRIPT_DIR.parent / "data" / "aimi_settings_paths.json"
 KNOWN_KEY_CLASSES = set(KEY_FILES.keys())
@@ -61,12 +61,23 @@ KNOWN_KEY_CLASSES = set(KEY_FILES.keys())
 # 1. Load string resources: R.string.xxx_name -> "Actual Title Text"
 # ---------------------------------------------------------------------------
 def load_string_resources(paths: list[Path]) -> dict[str, str]:
-    resources: dict[str, str] = {}
+    """Load string resources from the given res/values directories.
+
+    Every XML file there is read, not only strings.xml: some screens take their
+    title from a separate file (wcycle_strings.xml, strings_scene_wizard.xml),
+    and a title that is not found shows up as a raw resource name in the path.
+    """
+    xml_files: list[Path] = []
     for path in paths:
-        if not path.exists():
-            continue
+        if path.is_dir():
+            xml_files.extend(sorted(path.glob("*.xml")))
+        elif path.is_file():
+            xml_files.append(path)
+
+    resources: dict[str, str] = {}
+    for path in xml_files:
         content = path.read_text(encoding="utf-8")
-        for m in re.finditer(r'<string name="(\w+)">(.*?)</string>', content, re.DOTALL):
+        for m in re.finditer(r'<string\s+name="(\w+)"[^>]*>(.*?)</string>', content, re.DOTALL):
             name = m.group(1)
             text = m.group(2).strip()
             # Handle CDATA

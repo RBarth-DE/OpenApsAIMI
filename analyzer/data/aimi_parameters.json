@@ -1,13 +1,13 @@
 {
   "version": "3.0",
-  "source_commit": "40dbca84e4dd08307859fbc3fd0c6836f9585897",
-  "generated_at": "2026-09-10T06:34:03.550591+00:00",
-  "total": 306,
-  "active": 257,
+  "source_commit": "a9d66da6140ce72f0f00141157606c25d28c7d94",
+  "generated_at": "2026-09-18T08:17:01.833658+00:00",
+  "total": 312,
+  "active": 263,
   "orphaned": 49,
-  "with_used_in": 242,
+  "with_used_in": 248,
   "with_negative_gate": 9,
-  "with_settings_path": 178,
+  "with_settings_path": 184,
   "parameters": [
     {
       "key": "AIMI_UAM_CONFIDENCE",
@@ -110,6 +110,8 @@
       "name": "OApsAIMIKickerMaxMin",
       "type": "Int",
       "default": 30,
+      "min": 10,
+      "max": 60,
       "orphaned": true,
       "negative_gate_key": null,
       "negative_gate_note": null,
@@ -147,6 +149,8 @@
       "name": "OApsAIMIKickerStartMin",
       "type": "Int",
       "default": 10,
+      "min": 5,
+      "max": 30,
       "orphaned": true,
       "negative_gate_key": null,
       "negative_gate_note": null,
@@ -185,6 +189,7 @@
       "type": "Double",
       "default": 0.0,
       "min": 0.0,
+      "max": 20000000000000.0,
       "used_in": [
         {
           "file": "DetermineBasalAIMI2.kt",
@@ -332,6 +337,8 @@
       "name": "OApsAIMIZeroResumeMax",
       "type": "Int",
       "default": 30,
+      "min": 10,
+      "max": 60,
       "orphaned": true,
       "negative_gate_key": null,
       "negative_gate_note": null,
@@ -349,6 +356,8 @@
       "name": "OApsAIMIZeroResumeMin",
       "type": "Int",
       "default": 10,
+      "min": 5,
+      "max": 30,
       "orphaned": true,
       "negative_gate_key": null,
       "negative_gate_note": null,
@@ -2473,6 +2482,7 @@
       "type": "Double",
       "default": 75.0,
       "min": 35.0,
+      "max": 300.0,
       "used_in": [
         {
           "file": "OpenAPSAIMIPlugin.kt",
@@ -2501,6 +2511,7 @@
       "type": "Double",
       "default": 0.0,
       "min": 0.0,
+      "max": 4000000000000.0,
       "used_in": [
         {
           "file": "PkPdIntegration.kt",
@@ -2559,6 +2570,7 @@
       "type": "Double",
       "default": 0.0,
       "min": -100.0,
+      "max": 100.0,
       "used_in": [
         {
           "file": "OpenAPSAIMIPlugin.kt",
@@ -2587,6 +2599,7 @@
       "type": "Double",
       "default": 75.0,
       "min": 0.0,
+      "max": 300.0,
       "used_in": [
         {
           "file": "OpenAPSAIMIPlugin.kt",
@@ -2615,6 +2628,7 @@
       "type": "Double",
       "default": 0.0,
       "min": -100.0,
+      "max": 100.0,
       "used_in": [
         {
           "file": "OpenAPSAIMIPlugin.kt",
@@ -2643,6 +2657,7 @@
       "type": "Double",
       "default": 0.0,
       "min": -100.0,
+      "max": 100.0,
       "used_in": [
         {
           "file": "OpenAPSAIMIPlugin.kt",
@@ -3053,7 +3068,6 @@
       "min": 0.5,
       "max": 3.0,
       "unit_type": "DOUBLE",
-      "dependency": "ApsUseAutosens",
       "used_in": [
         {
           "file": "OpenAPSAIMIPlugin.kt",
@@ -3080,7 +3094,6 @@
       "min": 0.1,
       "max": 1.0,
       "unit_type": "DOUBLE",
-      "dependency": "ApsUseAutosens",
       "orphaned": true,
       "negative_gate_key": null,
       "negative_gate_note": null,
@@ -3482,6 +3495,94 @@
       "settings_gate": null
     },
     {
+      "key": "key_aimi_anticip_basal_floor",
+      "name": "OApsAIMIAnticipBasalFloor",
+      "type": "Boolean",
+      "default": false,
+      "used_in": [
+        {
+          "file": "OpenAPSAIMIPlugin.kt",
+          "function": "aimiComposeAutodriveSubScreen"
+        },
+        {
+          "file": "DetermineBasalAIMI2.kt",
+          "function": "runPostBasalEngineLearnersRtInstrumentationAndAuditorStage"
+        }
+      ],
+      "orphaned": false,
+      "negative_gate_key": null,
+      "negative_gate_note": null,
+      "logic_summary": "Boolean switch for anticip_basal_floor.",
+      "effect_high": "Feature is active — associated functionality runs",
+      "effect_low": "Feature is inactive — associated functionality is disabled",
+      "impact": "medium",
+      "feature_group": "core",
+      "is_gate": false,
+      "settings_path": "AIMI → Preferences user → Autodrive",
+      "settings_gate": null
+    },
+    {
+      "key": "key_aimi_anticip_budget_u",
+      "name": "OApsAIMIAnticipBudgetU",
+      "type": "Double",
+      "default": 2.0,
+      "min": 0.0,
+      "max": 10.0,
+      "unit_type": "INSULIN",
+      "used_in": [
+        {
+          "file": "OpenAPSAIMIPlugin.kt",
+          "function": "aimiComposeAutodriveSubScreen"
+        },
+        {
+          "file": "DetermineBasalAIMI2.kt",
+          "function": "runPostBasalEngineLearnersRtInstrumentationAndAuditorStage"
+        }
+      ],
+      "orphaned": false,
+      "negative_gate_key": null,
+      "negative_gate_note": null,
+      "logic_summary": "Used in AIMI internal calculations for anticip_budget_u.",
+      "effect_high": "Higher value — more insulin/greater effect",
+      "effect_low": "Lower value — less insulin/reduced effect",
+      "impact": "medium",
+      "feature_group": "core",
+      "is_gate": false,
+      "settings_path": "AIMI → Preferences user → Autodrive",
+      "settings_gate": null
+    },
+    {
+      "key": "key_aimi_anticip_meal_evidence",
+      "name": "OApsAIMIAnticipMealEvidence",
+      "type": "Boolean",
+      "default": false,
+      "used_in": [
+        {
+          "file": "OpenAPSAIMIPlugin.kt",
+          "function": "aimiComposeAutodriveSubScreen"
+        },
+        {
+          "file": "DetermineBasalAIMI2.kt",
+          "function": "publishDoseTerminalAuthorityAndSnapshot"
+        },
+        {
+          "file": "DecisionPredictionAuthority.kt",
+          "function": "resolve"
+        }
+      ],
+      "orphaned": false,
+      "negative_gate_key": null,
+      "negative_gate_note": null,
+      "logic_summary": "Boolean switch for anticip_meal_evidence.",
+      "effect_high": "Feature is active — associated functionality runs",
+      "effect_low": "Feature is inactive — associated functionality is disabled",
+      "impact": "high",
+      "feature_group": "meal_modes",
+      "is_gate": false,
+      "settings_path": "AIMI → Preferences user → Autodrive",
+      "settings_gate": null
+    },
+    {
       "key": "key_aimi_autodrive_aggressive_smb_floor",
       "name": "OApsAIMIautodriveAggressiveSmbFloor",
       "type": "Boolean",
@@ -3691,12 +3792,12 @@
           "function": "unknown"
         },
         {
-          "file": "ContextActivity.kt",
-          "function": "setupUI"
-        },
-        {
           "file": "ContextViewModel.kt",
           "function": "refreshSettings"
+        },
+        {
+          "file": "ContextActivity.kt",
+          "function": "setupUI"
         }
       ],
       "orphaned": false,
@@ -3729,12 +3830,12 @@
           "function": "validate"
         },
         {
-          "file": "ContextActivity.kt",
-          "function": "setupUI"
-        },
-        {
           "file": "ContextViewModel.kt",
           "function": "refreshSettings"
+        },
+        {
+          "file": "ContextActivity.kt",
+          "function": "setupUI"
         }
       ],
       "orphaned": false,
@@ -3747,6 +3848,33 @@
       "feature_group": "context_llm",
       "is_gate": true,
       "settings_path": "AIMI → Preferences user → Context Llm",
+      "settings_gate": null
+    },
+    {
+      "key": "key_aimi_descent_redose_guard",
+      "name": "OApsAIMIDescentRedoseGuard",
+      "type": "Boolean",
+      "default": false,
+      "used_in": [
+        {
+          "file": "OpenAPSAIMIPlugin.kt",
+          "function": "aimiComposeAutodriveSubScreen"
+        },
+        {
+          "file": "DetermineBasalAIMI2.kt",
+          "function": "unknown"
+        }
+      ],
+      "orphaned": false,
+      "negative_gate_key": null,
+      "negative_gate_note": null,
+      "logic_summary": "Boolean switch for descent_redose_guard.",
+      "effect_high": "Feature is active — associated functionality runs",
+      "effect_low": "Feature is inactive — associated functionality is disabled",
+      "impact": "medium",
+      "feature_group": "core",
+      "is_gate": false,
+      "settings_path": "AIMI → Preferences user → Autodrive",
       "settings_gate": null
     },
     {
@@ -5212,6 +5340,33 @@
       "settings_gate": null
     },
     {
+      "key": "key_aimi_rise_ceiling_guard",
+      "name": "OApsAIMIRiseCeilingGuard",
+      "type": "Boolean",
+      "default": false,
+      "used_in": [
+        {
+          "file": "OpenAPSAIMIPlugin.kt",
+          "function": "aimiComposeAutodriveSubScreen"
+        },
+        {
+          "file": "DetermineBasalAIMI2.kt",
+          "function": "unknown"
+        }
+      ],
+      "orphaned": false,
+      "negative_gate_key": null,
+      "negative_gate_note": null,
+      "logic_summary": "Boolean switch for rise_ceiling_guard.",
+      "effect_high": "Feature is active — associated functionality runs",
+      "effect_low": "Feature is inactive — associated functionality is disabled",
+      "impact": "medium",
+      "feature_group": "core",
+      "is_gate": false,
+      "settings_path": "AIMI → Preferences user → Autodrive",
+      "settings_gate": null
+    },
+    {
       "key": "key_aimi_sensor_confidence_cgm_first",
       "name": "OApsAIMISensorConfidenceCgmFirst",
       "type": "Boolean",
@@ -5297,6 +5452,33 @@
       "feature_group": "tube_advisor",
       "is_gate": true,
       "settings_path": "AIMI → Preferences user → Trajectory Guard",
+      "settings_gate": null
+    },
+    {
+      "key": "key_aimi_stress_isf_floor",
+      "name": "OApsAIMIStressIsfFloor",
+      "type": "Boolean",
+      "default": false,
+      "used_in": [
+        {
+          "file": "OpenAPSAIMIPlugin.kt",
+          "function": "invoke"
+        },
+        {
+          "file": "DetermineBasalAIMI2.kt",
+          "function": "unknown"
+        }
+      ],
+      "orphaned": false,
+      "negative_gate_key": null,
+      "negative_gate_note": null,
+      "logic_summary": "Boolean switch for stress_isf_floor.",
+      "effect_high": "Feature is active — associated functionality runs",
+      "effect_low": "Feature is inactive — associated functionality is disabled",
+      "impact": "high",
+      "feature_group": "core",
+      "is_gate": false,
+      "settings_path": "AIMI → Preferences user → Autodrive",
       "settings_gate": null
     },
     {
@@ -5799,6 +5981,10 @@
         {
           "file": "TpoOrchestrator.kt",
           "function": "isTpoEnabled"
+        },
+        {
+          "file": "AimiDiagnosticsManager.kt",
+          "function": "appendTpoState"
         }
       ],
       "orphaned": false,
@@ -7294,7 +7480,7 @@
       "impact": "medium",
       "feature_group": "wcycle",
       "is_gate": false,
-      "settings_path": "AIMI → Preferences user → Patient context and body declarations → wcycle_preferences",
+      "settings_path": "AIMI → Preferences user → Patient context and body declarations → Women Cycle",
       "settings_gate": null
     },
     {
@@ -7346,7 +7532,7 @@
       "impact": "medium",
       "feature_group": "wcycle",
       "is_gate": false,
-      "settings_path": "AIMI → Preferences user → Patient context and body declarations → wcycle_preferences",
+      "settings_path": "AIMI → Preferences user → Patient context and body declarations → Women Cycle",
       "settings_gate": null
     },
     {
@@ -7978,7 +8164,7 @@
       "impact": "medium",
       "feature_group": "core",
       "is_gate": true,
-      "settings_path": "AIMI → Preferences user → Patient context and body declarations → wcycle_preferences",
+      "settings_path": "AIMI → Preferences user → Patient context and body declarations → Women Cycle",
       "settings_gate": null
     },
     {
@@ -8043,7 +8229,7 @@
       "impact": "medium",
       "feature_group": "wcycle",
       "is_gate": true,
-      "settings_path": "AIMI → Preferences user → Patient context and body declarations → wcycle_preferences",
+      "settings_path": "AIMI → Preferences user → Patient context and body declarations → Women Cycle",
       "settings_gate": null
     },
     {
@@ -8069,7 +8255,7 @@
       "impact": "medium",
       "feature_group": "wcycle",
       "is_gate": true,
-      "settings_path": "AIMI → Preferences user → Patient context and body declarations → wcycle_preferences",
+      "settings_path": "AIMI → Preferences user → Patient context and body declarations → Women Cycle",
       "settings_gate": null
     },
     {
@@ -8095,7 +8281,7 @@
       "impact": "medium",
       "feature_group": "wcycle",
       "is_gate": true,
-      "settings_path": "AIMI → Preferences user → Patient context and body declarations → wcycle_preferences",
+      "settings_path": "AIMI → Preferences user → Patient context and body declarations → Women Cycle",
       "settings_gate": null
     },
     {
@@ -8244,7 +8430,7 @@
       "impact": "medium",
       "feature_group": "wcycle",
       "is_gate": false,
-      "settings_path": "AIMI → Preferences user → Patient context and body declarations → wcycle_preferences",
+      "settings_path": "AIMI → Preferences user → Patient context and body declarations → Women Cycle",
       "settings_gate": null
     },
     {
@@ -8274,7 +8460,7 @@
       "impact": "medium",
       "feature_group": "wcycle",
       "is_gate": false,
-      "settings_path": "AIMI → Preferences user → Patient context and body declarations → wcycle_preferences",
+      "settings_path": "AIMI → Preferences user → Patient context and body declarations → Women Cycle",
       "settings_gate": null
     },
     {
@@ -8304,7 +8490,7 @@
       "impact": "medium",
       "feature_group": "wcycle",
       "is_gate": false,
-      "settings_path": "AIMI → Preferences user → Patient context and body declarations → wcycle_preferences",
+      "settings_path": "AIMI → Preferences user → Patient context and body declarations → Women Cycle",
       "settings_gate": null
     },
     {
@@ -8313,6 +8499,7 @@
       "type": "Double",
       "default": 1.0,
       "min": 1.0,
+      "max": 31.0,
       "used_in": [
         {
           "file": "OpenAPSAIMIPlugin.kt",
@@ -8332,7 +8519,7 @@
       "impact": "medium",
       "feature_group": "wcycle",
       "is_gate": false,
-      "settings_path": "AIMI → Preferences user → Patient context and body declarations → wcycle_preferences",
+      "settings_path": "AIMI → Preferences user → Patient context and body declarations → Women Cycle",
       "settings_gate": null
     },
     {

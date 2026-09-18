@@ -1,8 +1,8 @@
 {
   "version": "1.0",
   "plugin": "autoisf",
-  "source_commit": "40dbca84e4dd08307859fbc3fd0c6836f9585897",
-  "generated_at": "2026-09-10T06:34:05.734967+00:00",
+  "source_commit": "a9d66da6140ce72f0f00141157606c25d28c7d94",
+  "generated_at": "2026-09-18T08:17:05.082931+00:00",
   "total": 39,
   "active": 37,
   "orphaned": 2,
@@ -181,7 +181,7 @@
       "feature_group": "shared_aaps",
       "is_gate": false,
       "settings_path": null,
-      "settings_gate": "ApsUseAutosens"
+      "settings_gate": null
     },
     {
       "key": "autosens_min",
@@ -201,7 +201,7 @@
       "feature_group": "shared_aaps",
       "is_gate": false,
       "settings_path": null,
-      "settings_gate": "ApsUseAutosens"
+      "settings_gate": null
     },
     {
       "key": "bgAccel_ISF_weight",

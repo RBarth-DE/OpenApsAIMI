@@ -1,7 +1,7 @@
 # AIMI Algorithm Context
 Version: 2.2
-Source commit: 40dbca84e4dd08307859fbc3fd0c6836f9585897
-Generated: 2026-09-10T06:34:03.628336+00:00
+Source commit: a9d66da6140ce72f0f00141157606c25d28c7d94
+Generated: 2026-09-18T08:17:01.888104+00:00
 
 ## Algorithm Overview
 AIMI (AI-powered Modular Insulin)
@@ -510,7 +510,7 @@ Key parameters (11):
 - `key_aimi_context_enabled`
 - `key_aimi_context_llm_enabled`
 
-### core (101 params)
+### core (106 params)
 - `OApsAIMIDeltaPosRelease` [default: 1.0]
 - `OApsAIMIHighBg` [default: 180.0]
 - `OApsAIMI_Enable_night`
@@ -581,9 +581,10 @@ Key parameters (11):
 - `OApsAIMILastEstimatedCarbTime` [default: 0.0]
 - `OApsAIMILastEstimatedCarbs` [default: 0.0]
 
-### meal_modes (25 params)
+### meal_modes (26 params)
 - `aimi_meal_advisor_trigger`
 - `aimi_physio_sleep_enable`
+- `key_aimi_anticip_meal_evidence` [default: False]
 - `key_aimi_meal_confirmed_early_release` [default: False]
 - `key_aimi_meal_hyper_bypass_enabled`
 - `key_aimi_tree_meal_rise_frontload` [default: False]
@@ -591,7 +592,6 @@ Key parameters (11):
 - `key_oaps_aimi_dinner_interval` [default: 3]
 - `key_oaps_aimi_lunch_factor` [default: 50.0]
 - `key_oaps_aimi_lunch_interval` [default: 3]
-- `key_oaps_aimi_meal_factor` [default: 50.0]
 
 ### ngr (11 params)
 - `key_oaps_aimi_ngr_age_years` [default: 14]
