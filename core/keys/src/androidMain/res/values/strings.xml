@@ -881,7 +881,6 @@
     <string name="pref_summary_boost_activity_steps_15">15-minute step count threshold for activity detection; exceeding it raises the activity state.</string>
     <string name="pref_summary_boost_activity_steps_30">30-minute step count threshold for activity detection; exceeding it raises the activity state.</string>
     <string name="pref_summary_boost_activity_steps_60">60-minute step count threshold for sustained activity detection; stepping above this for an hour switches to active mode.</string>
-    <string name="pref_summary_boost_dynisf_adjust">Percentage factor for the global dynamic ISF strength; 100 = standard, higher = more dynamic adjustment.</string>
     <string name="pref_summary_boost_hr_max">Maximum heart rate used to scale the HR-based activity classifier; values above this are treated as vigorous.</string>
     <string name="pref_summary_boost_hr_resting">Resting heart rate baseline; the HR classifier uses this as the floor for light/no activity.</string>
     <string name="pref_summary_boost_hr_window_minutes">Rolling time window over which HR data is averaged for sleep/wake and stress detection.</string>

@@ -108,8 +108,6 @@
     <string name="boost_dynisf_velocity_summary">Controls how much your current blood glucose level affects ISF. At 100%%, ISF is fully adjusted by BG (higher BG = stronger ISF). At 50%%, only half the BG-driven adjustment is applied. At 0%%, BG has no effect and ISF stays at the target-level value regardless of current BG. Default: 100</string>
     <string name="boost_dynisf_bg_cap_title">DynISF BG cap</string>
     <string name="boost_dynisf_bg_cap_summary">BG above this value is softened to reduce ISF aggressiveness at very high BG. Default: 210</string>
-    <string name="boost_dynisf_adjust_factor_title">TDD adjustment factor (%)</string>
-    <string name="boost_dynisf_adjust_factor_summary">Scale the calculated TDD by this percentage. Default: 100</string>
 
     <!-- Boost Preference Screen Sections -->
     <string name="boost_settings_default_aaps">Default AAPS Settings</string>

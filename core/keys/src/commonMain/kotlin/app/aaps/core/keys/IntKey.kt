@@ -410,7 +410,6 @@ enum class IntKey(
     ApsBoostHrWindowMinutes( "boost_hr_window_minutes", 15, 5, 60, title = TextRef.Literal(""), summary = KeysStrings.pref_summary_boost_hr_window_minutes, defaultedBySM = true),
     ApsBoostHrRestingBpm( "boost_hr_resting_bpm", 60, 30, 100, title = TextRef.Literal(""), summary = KeysStrings.pref_summary_boost_hr_resting, defaultedBySM = true),
     ApsBoostHrMaxBpm( "boost_hr_max_bpm", 180, 150, 220, title = TextRef.Literal(""), summary = KeysStrings.pref_summary_boost_hr_max, defaultedBySM = true),
-    ApsBoostDynIsfAdjustmentFactor( "DynISFAdjust", 100, 1, 300, title = TextRef.Literal(""), summary = KeysStrings.pref_summary_boost_dynisf_adjust),
     ApsBoostActivitySteps60( "boost_activity_steps_60", 1800, 0, 10000, title = KeysStrings.boost_activity_steps_60_title, summary = KeysStrings.pref_summary_boost_activity_steps_60, defaultedBySM = true),
     ApsBoostActivitySteps30( "boost_activity_steps_30", 1200, 0, 10000, title = KeysStrings.boost_activity_steps_30_title, summary = KeysStrings.pref_summary_boost_activity_steps_30, defaultedBySM = true),
     ApsBoostActivitySteps15( "boost_activity_steps_15", 800, 0, 10000, title = KeysStrings.boost_activity_steps_15_title, summary = KeysStrings.pref_summary_boost_activity_steps_15, defaultedBySM = true),

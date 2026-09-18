@@ -531,8 +531,9 @@ open class OpenAPSBoostPlugin @Inject constructor(
                 }
                 debug.append("\nBlended TDD=${Round.roundTo(tdd, 0.1)}")
 
-                // Adjustment factor from Boost DynISF preferences (default 100%)
-                val dynIsfAdjust = preferences.get(IntKey.ApsBoostDynIsfAdjustmentFactor).toDouble().coerceIn(1.0, 300.0)
+                // Dynamic ISF adjustment factor (default 100%). This is the shared setting shown on
+                // the OpenAPS SMB / AIMI preference screens; Boost has no separate factor.
+                val dynIsfAdjust = preferences.get(IntKey.ApsDynIsfAdjustmentFactor).toDouble().coerceIn(1.0, 300.0)
                 tdd *= dynIsfAdjust / 100.0
                 debug.append("\nFinal TDD=${Round.roundTo(tdd, 0.1)} (adj factor ${dynIsfAdjust.toInt()}%)")
 
