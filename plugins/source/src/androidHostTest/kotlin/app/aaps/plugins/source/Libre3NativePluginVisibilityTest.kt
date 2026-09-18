@@ -4,8 +4,10 @@ import android.content.Context
 import androidx.documentfile.provider.DocumentFile
 import app.aaps.core.data.plugin.PluginType
 import app.aaps.core.interfaces.ble.BleRadioPriority
+import app.aaps.core.interfaces.calibration.Calibration
 import app.aaps.core.interfaces.configuration.Config
 import app.aaps.core.interfaces.db.PersistenceLayer
+import app.aaps.core.interfaces.plugin.ActivePlugin
 import app.aaps.core.interfaces.maintenance.FileListProvider
 import app.aaps.core.interfaces.notifications.NotificationManager
 import app.aaps.core.interfaces.resources.ResourceHelper
@@ -42,6 +44,10 @@ class Libre3NativePluginVisibilityTest : TestBase() {
     private val markerFile: DocumentFile = mock()
     private val bleRadioPriority: BleRadioPriority = mock()
 
+    /** Promotion tells the active calibration plugin to drop the retired sensor's fingersticks. */
+    private val activeCalibration: Calibration = mock()
+    private val activePlugin: ActivePlugin = mock<ActivePlugin>().also { whenever(it.activeCalibration).thenReturn(activeCalibration) }
+
     private lateinit var plugin: Libre3NativePlugin
 
     @BeforeEach
@@ -54,7 +60,7 @@ class Libre3NativePluginVisibilityTest : TestBase() {
         // The provider takes a plain provider lambda now, so no dagger.Lazy wrapper is needed.
         val availabilityProvider =
             Libre3AvailabilityProvider(aapsLogger, { fileListProvider }, preferences, notificationManager, dateUtil)
-        plugin = Libre3NativePlugin(rh, aapsLogger, preferences, config, context, persistenceLayer, availabilityProvider, bleRadioPriority)
+        plugin = Libre3NativePlugin(rh, aapsLogger, preferences, config, context, persistenceLayer, availabilityProvider, bleRadioPriority, activePlugin)
     }
 
     @Test

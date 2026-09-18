@@ -4526,6 +4526,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                     lastUamHypothesisState?.suppressMealInterpretation != true,
             endogenousCounterRegulatory = endogenousCounterRegulatory,
             mealAbsorptionPhase = lastMealAbsorptionOutput?.phase ?: MealAbsorptionPhase.NONE,
+            mealModeActive = mealTime || bfastTime || lunchTime || dinnerTime || snackTime || highCarbTime,
         )
         lastInsulinStackingEvaluation = stackingEval
         ensureWCycleInfo()
@@ -7133,6 +7134,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             mealPriorityContext = isAggressivePriorityContext,
             endogenousCounterRegulatory = lastPhysiologicalPhaseOutput?.phase == PhysiologicalPhase.ENDOGENOUS_COUNTER_REGULATORY,
             mealAbsorptionPhase = lastMealAbsorptionOutput?.phase ?: MealAbsorptionPhase.NONE,
+            mealModeActive = mealTime || bfastTime || lunchTime || dinnerTime || snackTime || highCarbTime,
         )
         val suppressRedCarpetRestoreV3 = stackingEvalV3.suppressRedCarpetRestore
 
@@ -11283,6 +11285,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
                     lastUamHypothesisState?.suppressMealInterpretation != true,
             endogenousCounterRegulatory = endogenousCounterRegulatory,
             mealAbsorptionPhase = lastMealAbsorptionOutput?.phase ?: MealAbsorptionPhase.NONE,
+            mealModeActive = mealTime || bfastTime || lunchTime || dinnerTime || snackTime || highCarbTime,
         )
         lastInsulinStackingEvaluation = stackingEval
         val refreshed = mergeRbtHyperTrajectoryRelease(
@@ -13878,6 +13881,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
             mealPriorityContext = smbDeliveryPriorityContext,
             endogenousCounterRegulatory = endogenousCounterRegulatory,
             mealAbsorptionPhase = mealAbsorption?.phase ?: MealAbsorptionPhase.NONE,
+            mealModeActive = mealTime || bfastTime || lunchTime || dinnerTime || snackTime || highCarbTime,
         )
         var iobSurveillanceSuppressRedCarpet = stackingEval.suppressRedCarpetRestore
 
