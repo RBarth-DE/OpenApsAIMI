@@ -116,9 +116,9 @@ jobs:
       # The part that only exists here. commonTest runs through Kotlin/Native against the real
       # NSNumberFormatter and NSTimeZone, which is what no other host can do.
       #
-      # Only :core:data has commonTest today, so it is the one module asserted below. The other two
-      # are still run: if either grows shared tests later they start executing here with no change to
-      # this file, and until then they are simply NO-SOURCE.
+      # Only the modules that have shared tests are asserted below. The rest are still run: if one
+      # grows shared tests later it starts executing here with no change to this file, and until then
+      # it is simply NO-SOURCE.
       - name: Run the shared tests on the iOS simulator
         # GitHub's macOS runners are UTC, and at UTC every assertion in SystemTimeZoneTest passes
         # trivially - the offset is zero whatever unit it is in, so a seconds-instead-of-milliseconds
@@ -161,6 +161,7 @@ jobs:
               "$dir"/build/test-results/iosSimulatorArm64Test/TEST-*.xml || true
           }
           check ":core:data" core/data
+          check ":core:nssdk" core/nssdk
           check ":core:interfaces" core/interfaces
           check ":implementation" implementation
           check ":ios:shell" ios/shell
