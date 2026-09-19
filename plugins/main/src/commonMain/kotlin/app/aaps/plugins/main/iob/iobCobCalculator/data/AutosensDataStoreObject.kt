@@ -13,7 +13,6 @@ import app.aaps.core.interfaces.logging.AAPSLogger
 import app.aaps.core.interfaces.logging.LTag
 import app.aaps.core.interfaces.utils.DateUtil
 import app.aaps.core.objects.extensions.fromGv
-import java.util.concurrent.locks.ReentrantLock
 import kotlin.math.abs
 import kotlin.math.min
 import kotlin.math.roundToLong
@@ -219,7 +218,10 @@ class AutosensDataStoreObject : AutosensDataStore {
             }
         }
     }*/
-    private val lock = ReentrantLock()
+    // A second, narrower lock than [dataLock] on purpose: it guards only the read-modify-write of the
+    // stored result, and widening it to [dataLock] would change how long that lock is held. Same
+    // contract as the java.util.concurrent lock it replaces (reentrant, blocking).
+    private val lock = AapsLock()
 
     // The three fallbacks all go through `freshStoredResult` rather than reading the field directly:
     // a stored result that has itself aged out is not a safe answer, so the caller gets null. An

@@ -218,7 +218,7 @@ class CommandExecutor(
                 }
                 if (pump.isHandshakeInProgress()) {
                     // Medtrum auth chain can exceed PUMP_MAX_CONNECTION_TIME; extend budget while handshake active
-                    connectionStartTime = System.currentTimeMillis()
+                    connectionStartTime = Clock.System.now().toEpochMilliseconds()
                     aapsLogger.debug(LTag.PUMPQUEUE, "handshaking $secondsElapsed")
                     rxBus.send(EventPumpStatusChanged(EventPumpStatusChanged.Status.HANDSHAKING, secondsElapsed.toInt()))
                     delay(100)
@@ -237,7 +237,7 @@ class CommandExecutor(
                     delay(1000)
                     continue
                 }
-                connectionStartTime = System.currentTimeMillis()
+                connectionStartTime = Clock.System.now().toEpochMilliseconds()
                 if (pump.isBusy()) {
                     aapsLogger.debug(LTag.PUMPQUEUE, "busy")
                     rxBus.send(EventPumpStatusChanged(EventPumpStatusChanged.Status.CONNECTING, secondsElapsed.toInt()))

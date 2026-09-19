@@ -7,10 +7,9 @@ import app.aaps.core.interfaces.maintenance.CloudDirectoryManager
 import app.aaps.core.interfaces.resources.TextResolver
 import app.aaps.core.keys.BooleanNonKey
 import app.aaps.core.keys.interfaces.Preferences
-import app.aaps.core.interfaces.sharedPreferences.SP
+import app.aaps.core.interfaces.sharedPreferences.KeyValueStore
 import app.aaps.core.ui.compose.icons.IcGoogleDrive
 import app.aaps.implementation.ImplementationStrings
-import app.aaps.implementation.R
 import app.aaps.implementation.maintenance.ExportPrefKeys
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesBinding
@@ -24,7 +23,7 @@ class CloudDirectoryManagerImpl(
     private val aapsLogger: AAPSLogger,
     private val rh: TextResolver,
     private val preferences: Preferences,
-    private val sp: SP,
+    private val sp: KeyValueStore,
     private val cloudStorageManager: CloudStorageManager
 ) : CloudDirectoryManager {
 

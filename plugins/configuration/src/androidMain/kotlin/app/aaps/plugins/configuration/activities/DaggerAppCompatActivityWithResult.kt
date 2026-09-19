@@ -17,7 +17,8 @@ import dev.zacsweers.metro.HasMemberInjections
 import dev.zacsweers.metro.Inject
 
 /**
- * Base activity for [app.aaps.plugins.configuration.setupwizard.SetupWizardActivity].
+ * Base activity for the activities that need an activity-result launcher, `DashboardPreviewActivity`
+ * and `ComparatorActivity` in `:app` for example.
  * Registers activity-result launchers used by [app.aaps.plugins.configuration.AndroidPermissionImpl]
  * (multi-permission + battery optimization). Cloud/setup flows live in the main Compose host.
  */

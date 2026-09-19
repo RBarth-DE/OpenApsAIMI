@@ -1,8 +1,5 @@
 package app.aaps.database.persistence
 
-import android.database.CursorWindowAllocationException
-import android.database.sqlite.SQLiteOutOfMemoryException
-
 import app.aaps.core.data.model.AIV
 import app.aaps.core.data.model.BCR
 import app.aaps.core.data.model.BS
@@ -2661,16 +2658,4 @@ class PersistenceLayerImpl(
             throw e
         }
     }
-}
-
-private fun Throwable.isSqliteMemoryError(): Boolean {
-    var current: Throwable? = this
-    while (current != null) {
-        when (current) {
-            is SQLiteOutOfMemoryException,
-            is CursorWindowAllocationException -> return true
-        }
-        current = current.cause
-    }
-    return false
 }

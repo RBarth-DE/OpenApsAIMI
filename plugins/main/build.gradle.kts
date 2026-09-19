@@ -65,6 +65,11 @@ kotlin {
                 implementation(project(":core:objects"))
                 implementation(project(":core:ui"))
                 implementation(project(":core:utils"))
+                // The fork's AIMI loop guard, read by IobCobCalculatorPlugin (commonMain) and by the
+                // dashboard refresh gate (androidMain). It was declared for androidMain only, which
+                // made the commonMain import fail on every target but Android. :plugins:aps does not
+                // depend on :plugins:main, so this is not a cycle.
+                implementation(project(":plugins:aps"))
 
                 implementation(libs.androidx.collection)
                 implementation(libs.kotlinx.coroutines.core)
@@ -76,8 +81,6 @@ kotlin {
             // Android only: the string name to R.string id map.
             kotlin.srcDir(generateMainStrings.flatMap { it.androidOutputDir })
             dependencies {
-                // Fork AIMI Auditor UI components
-                implementation(project(":plugins:aps"))
                 // The compose overview lives in :ui (GraphViewModel, BgGraphCompose and the glass
                 // detail screens use it). Present in the pre-KMP build file, dropped by the rewrite.
                 implementation(project(":ui"))
