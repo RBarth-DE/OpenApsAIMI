@@ -132,6 +132,7 @@ jobs:
           echo "Running with TZ=$TZ"
           ./gradlew --console=plain --no-daemon \
             :core:data:iosSimulatorArm64Test :core:nssdk:iosSimulatorArm64Test :core:keys:iosSimulatorArm64Test \
+            :core:interfaces:iosSimulatorArm64Test \
             :implementation:iosSimulatorArm64Test :ios:shell:iosSimulatorArm64Test \
             | tee test.log
 
@@ -160,6 +161,7 @@ jobs:
               "$dir"/build/test-results/iosSimulatorArm64Test/TEST-*.xml || true
           }
           check ":core:data" core/data
+          check ":core:interfaces" core/interfaces
           check ":implementation" implementation
           check ":ios:shell" ios/shell
           exit $fail

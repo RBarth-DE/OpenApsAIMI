@@ -4,7 +4,6 @@ import app.aaps.core.ui.CoreUiStrings
 import app.aaps.plugins.constraints.ConstraintsStrings
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Shield
-import android.os.Looper
 import app.aaps.core.data.model.advancedFilteringSupported
 import app.aaps.core.data.plugin.PluginType
 import app.aaps.core.data.pump.defs.PumpDescription
@@ -14,7 +13,6 @@ import app.aaps.core.interfaces.constraints.ConstraintsChecker
 import app.aaps.core.interfaces.constraints.PluginConstraints
 import app.aaps.core.interfaces.constraints.Safety
 import app.aaps.core.interfaces.db.PersistenceLayer
-import app.aaps.core.interfaces.iob.IobCobCalculator
 import app.aaps.core.interfaces.logging.AAPSLogger
 import app.aaps.core.interfaces.notifications.NotificationId
 import app.aaps.core.interfaces.notifications.NotificationLevel
@@ -37,13 +35,6 @@ import app.aaps.core.keys.interfaces.TextRef
 import app.aaps.core.keys.interfaces.withEntries
 import app.aaps.core.objects.constraints.ConstraintObject
 import app.aaps.core.ui.compose.preference.PreferenceSubScreenDef
-import app.aaps.plugins.constraints.R
-import kotlinx.serialization.json.JsonObject
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import dev.zacsweers.metro.SingleIn
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesIntoMap
@@ -64,7 +55,6 @@ class SafetyPlugin(
     private val hardLimits: HardLimits,
     private val config: Config,
     private val persistenceLayer: PersistenceLayer,
-    private val iobCobCalculator: IobCobCalculator,
     private val dateUtil: DateUtil,
     private val notificationManager: NotificationManager,
     private val decimalFormatter: DecimalFormatter
@@ -77,33 +67,6 @@ class SafetyPlugin(
         .icon(Icons.Default.Shield),
     aapsLogger, rh
 ), PluginConstraints, Safety {
-    private val ioScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
-    @Volatile private var hasActiveExtendedBolusCache: Boolean = false
-    @Volatile private var extendedBolusCacheTimeMs: Long = 0L
-
-    private fun refreshExtendedBolusCacheAsync(now: Long) {
-        ioScope.launch {
-            val active = runCatching { persistenceLayer.getExtendedBolusActiveAt(now) != null }.getOrDefault(false)
-            hasActiveExtendedBolusCache = active
-            extendedBolusCacheTimeMs = now
-        }
-    }
-
-    private fun hasActiveExtendedBolus(now: Long): Boolean {
-        val cacheIsFresh = now - extendedBolusCacheTimeMs <= EXTENDED_BOLUS_CACHE_TTL_MS
-        if (!cacheIsFresh) {
-            refreshExtendedBolusCacheAsync(now)
-        }
-        if (Looper.myLooper() == Looper.getMainLooper()) {
-            // Never block Compose/UI thread while constraints are being read.
-            return hasActiveExtendedBolusCache
-        }
-        val active = runCatching { runBlocking(Dispatchers.IO) { persistenceLayer.getExtendedBolusActiveAt(now) != null } }.getOrDefault(hasActiveExtendedBolusCache)
-        hasActiveExtendedBolusCache = active
-        extendedBolusCacheTimeMs = now
-        return active
-    }
-
 
     /**
      * Constraints interface
@@ -234,8 +197,4 @@ class SafetyPlugin(
         ),
         icon = pluginDescription.icon
     )
-
-    private companion object {
-        private const val EXTENDED_BOLUS_CACHE_TTL_MS = 15_000L
-    }
 }
