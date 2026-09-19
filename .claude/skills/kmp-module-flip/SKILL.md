@@ -136,8 +136,25 @@ get nulls and no warning.
 `src/main` → `src/androidMain`, `src/test` → `src/androidHostTest`,
 `src/androidTest` → `src/androidDeviceTest`.
 
+**`git mv` fails if the destination directory does not exist yet** - "No such file or directory",
+which reads like a git problem and is not one. `mkdir -p` the destination first, in a separate call
+(`cd &&` and `&&` between commands are both blocked by this repo's rules).
+
 **Grep the moved tests for the literal strings `src/test/` and `src/main/`.** A hard-coded path
 compiles fine and fails only at runtime.
+
+**A file that changes source set can leave the Android compiler with a stale view of it.** The
+symptom is an `Unresolved reference` in `compileAndroidMain` for a symbol that is plainly there, in
+the same package, in the same source set as the file that cannot see it - and it survives re-running
+the task. Do not go looking for the missing declaration and do not clean the build. Delete that one
+task's incremental state and compile again:
+
+    rm -rf core/graph/build/kotlin/compileAndroidMain
+
+In `:core:graph` a move of `DoubleDataPoint` from commonMain to androidMain left
+`AreaGraphSeries.kt` unable to resolve it, while the three iOS compiles, the JVM and the common
+metadata compiles were all clean. That split - one target red, every other target green, symbol
+present on disk - is the signature.
 
 Task names change with the layout, and a wrong name **runs no tests and still exits 0**:
 
@@ -248,6 +265,158 @@ an oracle while they are stale: `ContributedPluginsTest` still asserts a key lis
 AIMI, Boost and BoostV5 (225, 231, 239) were registered. Compare the list against
 `ApsPluginRegistrations.kt` before trusting a failure from it.
 
+## Moving a whole feature tree to androidMain
+
+The other direction. When a module is mostly shared but a feature inside it is not - a fork's own
+plugins, a screen built on activities, anything that exists on one platform only - the answer is
+usually to move that feature's **whole tree** down to androidMain, not to rewrite it file by file.
+
+Do this when the feature is not yours to redesign. An estimate that says "318 files, 14 409 errors,
+most of them mechanical" is still 318 files of somebody else's algorithm, and a rewrite means
+re-reading all of it. A move means the feature keeps working exactly as it did on the platform it
+was written for, and the others simply do not get it - `:plugins:source` is the precedent: about 20
+CGM plugins sit in its androidMain with `@ContributesIntoMap`, and nothing else changed.
+
+### Decide first: does any other module's commonMain name it?
+
+**A file stays in commonMain if another module's commonMain imports it.** That is the whole rule.
+androidMain can see commonMain, so a moving file may keep using shared code; it is the reverse that
+breaks. Grep every consumer before you start:
+
+    grep -rln "app\.aaps\.plugins\.aps\.openAPS" --include=*.kt --exclude-dir=build . \
+      | grep "/commonMain/" | grep -v "^./plugins/aps/"
+
+Two kinds of hit look the same and are not:
+
+- A **real** import (`import app.aaps.plugins.aps.openAPSAIMI.orchestration.AimiLoopRuntimeGuard`)
+  pins that one file to commonMain.
+- A **string** naming a class - `screenOpener.open("app.aaps.plugins.aps.openAPSAIMI.advisor.…Activity")`
+  in `:ui`'s commonMain - is not a compile-time dependency at all. Those activities move freely, and
+  the "visibly absent" outcome is exactly right: the button opens nothing on iOS.
+
+In `:plugins:aps`, 318 of 323 failing files moved and **one** stayed (`AimiLoopRuntimeGuard`), because
+`:plugins:main`'s calculator reads it on every target. Finding that one before the move is much
+cheaper than finding it in a failed iOS build afterwards.
+
+### The move itself: per file, never per directory
+
+`git mv` of a whole directory is wrong when the destination already holds part of the tree -
+`openAPSAIMI/context/` existed in androidMain, so moving `openAPSAIMI/` on top of it nests instead of
+merging. Move file by file, and **pre-check for collisions** (a source path that is also a
+destination path would silently overwrite):
+
+    find "$SRC" -name '*.kt' | while IFS= read -r f; do
+      rel="${f#$SRC/}"; mkdir -p "$DST/$(dirname "$rel")"; mv "$f" "$DST/$rel"
+    done
+
+Check for `expect`/`actual` inside the trees first (they must not be split), and check `commonTest`
+too - a test of a moved class has to move with it.
+
+### When one Android-only signature drags a shared read-surface down
+
+The hard case: the file that must stay in commonMain is *almost* free of platform types, but it reads
+state that only an Android-only class can write - and that class is blocked by something worse (in
+`:plugins:aps`, `AimiLoopTelemetry` took `AimiHormonitorStudyExporterMTR`, 391 errors by itself).
+
+Do not move the writer back, and do not stub the reader. Put the **state** in its own tiny commonMain
+object and let both sides talk to it:
+
+    object AimiLoopTickState {
+        @Volatile var activeTickId: Long = 0L
+            private set
+        @Volatile private var activeTickStartedWallMs: Long = 0L
+        fun beginTick(tickId: Long, wallClockMs: Long): Long { … }   // returns the previous id
+        fun endTick(previousTickId: Long) { … }
+    }
+
+The shared reader (`AimiLoopRuntimeGuard`) then has no dependency on the Android class at all, and the
+Android writer keeps its own heavy imports. Two `@Volatile Long`s is the entire cost.
+
+### A seam the other platform has to answer for
+
+Where shared code genuinely needs the Android feature - not just its state - the seam is an interface
+in `core/interfaces` commonMain, implemented in `androidMain`:
+
+    @Inject @SingleIn(AppScope::class)
+    @ContributesBinding(AppScope::class, binding = binding<AimiContextIntentInjector>())
+    class AimiContextIntentInjectorImpl(private val contextManager: ContextManager, …) : AimiContextIntentInjector
+
+Make it a `fun interface` when the "not here" answer is trivial: the client graphs can then bind a
+lambda that logs and returns `false`, with no new class. On iOS and desktop the Nightscout note is
+logged and dropped, and BOOST's meal-hypothesis history is permanently empty - the "visibly absent"
+outcome, **spelled out in the binding's KDoc** rather than hidden behind a stub that pretends to work.
+
+That binding lives in `:shared:clientbindings`, which only the two client shells include, so it cannot
+collide with the Android one. If you instead had to add it to a container both share, you would get
+two bindings of one interface - a graph error, not a warning.
+
+### The answer belongs in one of two packages in `ios/shell`
+
+Which one is not a style choice - it is a claim about the code, and each package has its own log level:
+
+| package | means | logs |
+|---|---|---|
+| `ios/shell/missing/` | work not done yet; delete the file when the thing is ported | `aapsLogger.notOnIosYet(...)` - **error** (`failNotOnIosYet` logs and throws) |
+| `ios/shell/platform/` | an answer about what an iOS client *is*; the file stays, or is deleted if the platform ever grows the feature | `aapsLogger.notOnThisPlatform(...)` - **debug** |
+
+A method that returns `false` because iOS has no Android broadcast channel is `platform/`. A method
+that returns `IDLE` because the algorithm it reads is still Android-only is `missing/`. Writing the
+first into `missing/` claims porting work that will never be done; writing the second into `platform/`
+hides real remaining work behind a story about the platform.
+
+Each one carries a KDoc saying which it is and what would delete it - `IosAuditorStateProvider` names
+the view model that forces its existence, `IosSkinDescriptionProvider` says a skin is a `LinearLayout`
+swap and that "if an iOS skin system is ever built, this file is deleted rather than edited".
+
+Answer the *entry* question and stay quiet on the cheap dependent getters: `IosEversenseCalibrationSource.isEnabled()`
+logs, `isConnected()`/`readinessMessage()` do not.
+
+**Missing bindings surface one at a time, at the end of the chain.** Metro reports
+`[Metro/MissingBinding] X` against the `@DependencyGraph` interface line, not the accessor. Fix the one
+it names and compile again for the next - do not try to guess the full list in one pass, and do not
+read the report as "only one is missing".
+
+### Android calls and what replaces them in commonMain
+
+| Android | commonMain |
+|---|---|
+| `SystemClock.elapsedRealtime()` | `TimeSource.Monotonic.markNow()` held in a field, `.elapsedNow().inWholeMilliseconds` |
+| `System.currentTimeMillis()` | `dateUtil.now()`. **Not** `Clock.System.now()` - see the trap below |
+| `assert(x)` | `devAssert(x)` (`app.aaps.core.data.model`, actuals for every target) |
+| `synchronized(lock) { }` / `@Synchronized` | `AapsLock()` + `lock.withLock { }` |
+| `android.os.Handler` as a timer | `appScope.launch { delay(ms); while (isActive) { …; delay(ms) } }`, job kept in a field and cancelled in `onStop()` |
+| `handler.postDelayed(r, ms)` | `appScope.launch { delay(ms); … }`; for the "cancel and re-arm" idiom, `job?.cancel(); job = appScope.launch { … }` |
+| `Build.MANUFACTURER + " " + Build.MODEL` | `config.deviceModelForUpload` (same string, and it is already the transmitted format) |
+| `Handler` + `Runnable` field | a `Job?` field. Check the old field is not read from outside the file before making it private |
+| `@SuppressLint("CheckResult")` | delete it - the lint it silences does not exist off Android |
+
+`kotlin.concurrent.Volatile` and `kotlin.concurrent.atomics.AtomicLong` are the multiplatform forms of
+the `@Volatile` annotation and `java.util.concurrent.atomic`.
+
+### The `Clock` import that resolves and still fails
+
+`import kotlinx.datetime.Clock` compiles far enough to resolve `Clock`, then fails with
+**`Unresolved reference 'System'`** on `Clock.System.now()` - `kotlinx.datetime.Clock` is a deprecated
+alias for the type, without the companion. The repo's convention, and the one that works, is:
+
+    import kotlin.time.Clock
+
+No `@OptIn` is needed. The error names `System`, not `Clock`, which is what makes it confusing: the
+unresolved reference is the *member* of a type that resolved to something subtly different.
+
+### Keep the plugin map keys where they were
+
+When a feature's plugins move to androidMain, their registration moves with them - and the `@IntKey`
+values must be **the same numbers**. Split the container rather than the map: keep the cross-target
+plugins in the commonMain `*Registrations.kt` and give the moved ones a sibling
+`*ForkPluginRegistrations.kt` in androidMain, in the same `@ContributesTo(AppScope::class)
+@BindingContainer` style. Metro generates the hints from androidMain, so on iOS the plugins simply are
+not in the map - which is the intent, and is why the unqualified bucket (`@AllConfigs` semantics)
+still merges cleanly in `:app`.
+
+Then re-grep **every** `@IntKey` in the working tree for a duplicate. A key that appears twice is
+silent: one plugin replaces the other, and no build fails.
+
 ## Moving code to commonMain
 
 Counting files with no `android`/`androidx`/`java` import over-estimates badly: a
@@ -318,6 +487,95 @@ Two traps when such a screen is reachable from commonMain code:
   the interface on iOS or desktop now has no binding. Check who injects the interface before
   calling the move done.
 
+### A drawable becomes an `ImageVector`, path by path
+
+`painterResource(R.drawable.x)` is Android-only. When the screen moves to commonMain, the drawable
+becomes an `ImageVector` in `:core:ui`'s `compose/icons` package - copy `IcSmb.kt`.
+
+**Transcribe the SVG paths literally. Do not loop over paths that look almost the same.** Three
+"identical" waves in `ic_dashboard_wave` differed in the second decimal (`0.42` vs `0.43`, `1.95` vs
+`1.93`), and the top one ended with an absolute `V9.49` where the other two used a relative `v-1.95`.
+A `forEach` over near-identical values renders something that looks almost right, which is the worst
+way to be wrong. The same care applies to `fillType="evenOdd"` → `pathFillType = PathFillType.EvenOdd`
+and to `<group translateX/Y>` → `group(translationX =, translationY =)`.
+
+Then the call site takes `icon: ImageVector` and `Icon(imageVector = icon, ...)`, and the
+`@DrawableRes` annotation goes with the `Int` parameter.
+
+The XML drawable stays where it is - `:core:ui`'s `androidMain` still needs it for the Android views
+that read it, and other flavours may reference it by name.
+
+### A port only one target can implement: composition local with a safe default
+
+Some shared code has to do something that only Android can do at all - open another screen by class
+name, show the app's launcher icon. There is no Android implementation to inject into an iOS graph,
+and the KMP rules here say the feature must then be **visibly absent**, not present and dead.
+
+The shape to copy is `LocalAppIcon` in `core/ui/.../compose/AapsTheme.kt`:
+
+1. a small interface in commonMain, with an `Unavailable` object that reports `isAvailable = false`
+   and does nothing (`ScreenOpener.kt`);
+2. `val LocalScreenOpener = compositionLocalOf<ScreenOpener> { ScreenOpener.Unavailable }` - the
+   default is the safe one, so a host that says nothing gets the absent behaviour;
+3. the real implementation in the same module's **androidMain** (`AndroidScreenOpener`, which keeps
+   the caller's old `try/catch` around `startActivity`);
+4. one `provides` line in each host that can honour it - `ComposeMainActivity` for Android. The iOS
+   and desktop hosts simply do not provide it.
+
+Call sites then read `LocalScreenOpener.current` and gate the control on `isAvailable` next to the
+condition that already decided whether the control belongs there:
+
+    if (isAIMIActive && screenOpener.isAvailable) { AuditorIconButton(...) }
+
+This is also what keeps the graph clean: an Android-only `@ContributesBinding` for such a port would
+leave every non-Android root graph without a binding, which is the trap named above. Decide per call
+site what "absent" means - a button that only opens the other screen is hidden, while a card that
+shows data of its own stays and only loses its tap action.
+
+### `androidx.compose.ui.res.stringResource` is Android-only
+
+It resolves for the Android and JVM targets, so a commonMain file that imports it compiles and then
+fails the iOS compile with `Unresolved reference 'res'`. Importing it *next to*
+`app.aaps.core.ui.compose.stringResource` is legal - Kotlin picks by parameter type, `Int` vs
+`TextRef` - so a file can carry both and only the Android build notices. Grep commonMain for it when
+a `:ui`-style module fails on `res`; delete it where every call passes a `TextRef`.
+
+**Unless the whole file is fork UI, and then it moves instead.** Converting it costs a `XxxStrings`
+entry per label, in a screen iOS will never show. When every consumer is Android - an activity, an
+Android-only plugin module, a test - the file belongs in androidMain with its `R.string` ids intact.
+`:plugins:source` is where that was decided: ten fork CGM files under `compose/` moved as one set,
+while upstream's three `BgSource*` files stayed in commonMain on `SourceStrings`.
+
+Move the set, not the failing files. A file that compiles today still has to go if it reads a class
+declared in one that must move: `CgmWarmupRing.kt` took `CgmUiState` from `CgmStateChip.kt`, so it
+was Android-only in fact while the compiler still accepted it in commonMain.
+
+### The `String.format` family in a shared screen
+
+Each of these has one replacement in this repo:
+
+| Android/JVM | commonMain |
+|---|---|
+| `System.currentTimeMillis()` | `dateUtil.now()`, or `Clock.System.now().toEpochMilliseconds()` where no `DateUtil` is in reach |
+| `"...".format(...)`, `String.format(...)` | `formatTemplate(template, listOf(...))` (`app.aaps.core.interfaces.resources`) |
+| `SimpleDateFormat("HH:mm")` | `dateUtil.timeString(ms)` - and drop the `remember` that held the formatter |
+| `Dispatchers.IO` | `aapsIoDispatcher` (`app.aaps.core.interfaces.concurrent`) |
+| `ResourceHelper` as a constructor type | `TextResolver` - every `rh.gs(...)` call site stays the same |
+
+A Composable gets `dateUtil` from `LocalDateUtil.current`. That local has **no default** - it
+`error()`s - so check that a host renders the screen inside the provider before using it.
+`AapsAppRoot` (iOS, desktop) and `ComposeMainActivity` (Android) both provide it.
+
+`formatTemplate` is not only a compile fix: it routes numbers through the repo's `NumberFormat`, so
+decimal separators stay consistent with the rest of the app.
+
+### A `remember` block that reads a theme value needs that value as a key
+
+Moving a colour from `ContextCompat.getColor(...)` to an `AapsTheme` token is not finished when it
+compiles. If the colour is read inside `remember(a, b, c) { ... }`, a light/dark switch does not
+re-run the block and the screen keeps the old palette. Read the colours into `val`s above the block
+and add them to the key list.
+
 ### Android-only members of a common interface: sub-interface in androidMain
 
 When upstream's version of a commonMain interface has no room for the fork's Android-only members
@@ -338,6 +596,15 @@ A caller that needs the Android members injects the `...Android` type; everyone 
 the common type. This is far smaller than casting at every call site. A cast (`x as XxxAndroid`) is
 only needed where the object is created outside the graph and handed out through the common type -
 `OverviewPlugin` and `BgQualityCheckPlugin` have a `@Provides` for exactly that.
+
+**If the common interface holds state, the Android class must be a decorator, not a second
+implementation.** `ProcessedDeviceStatusData` is the worked example: upstream's class stays in
+commonMain and owns the values, and `ProcessedDeviceStatusDataAndroidImpl` injects it and forwards
+every lean member (`get() = delegate.pumpData`, `set(v) { delegate.pumpData = v }`), adding only the
+`Spanned`/HTML members. Two independent implementations would mean the sync writing one object while
+the screen reads the other - the screen would quietly stop updating, with nothing failing to build.
+Give the decorator its own binding (`binding = binding<ProcessedDeviceStatusDataAndroid>()`) so both
+types resolve from the one object.
 
 The common interface itself goes back to upstream's version: `git diff upstream/dev -- <path>`
 printing nothing is the goal. Also check the generated factory to confirm what the graph resolves:
@@ -451,7 +718,43 @@ Neither is a blocker, but both look like the obvious idiom and both fail:
 
 `javax.inject` (swap to `dev.zacsweers.metro.Inject` only for a class Metro already builds),
 `@Synchronized`, `org.json`, `java.util.Calendar`, and `System.currentTimeMillis()` - the last is
-just `Clock.System.now().toEpochMilliseconds()`.
+just `Clock.System.now().toEpochMilliseconds()`, with **`import kotlin.time.Clock`**. There is a
+`kotlinx.datetime.Clock` too and it is the wrong one here: the import line itself compiles, and the
+use then fails with `Unresolved reference 'System'`, which reads as if the call were wrong rather
+than the import. Kotlin's stdlib `Clock` is what the rest of the tree uses.
+`System.nanoTime()` is monotonic, so it is **not** interchangeable with `Clock`: the shared stand-in
+is `TimeSource.Monotonic.markNow()` / `elapsedNow()` (`LoopPlugin` keeps its uptime that way). A
+source set that only builds for the JVM - `jvmSharedMain`, `androidMain`, a host test - can keep
+`System.nanoTime()`; only commonMain has to change.
+
+The date and locale family is worth naming together, because each one is an innocent-looking import
+and none of them fails an Android build: `java.util.Locale`, `java.text.SimpleDateFormat`,
+`java.time.Instant`, `java.io.File`. **The grep for them over-reports badly**, so count before you
+plan: a file whose only users are in androidMain is *moved*, not rewritten. In `:core:graph` 5 files
+carried 27 errors and all 5 moved as they were.
+
+`java.util.Locale` usually appears for one reason only - `String.lowercase(Locale.ROOT)` or
+`Char.titlecase(Locale.getDefault())` - and the locale-free overload (`lowercase()`, `titlecase()`)
+is already right for identifier text, which is what such a call almost always is. Deleting the
+argument is the whole fix.
+
+`androidx.activity.compose.BackHandler` is Android only, and `compileCommonMainKotlinMetadata` will
+not tell you - it is a Compose import like any other. The multiplatform replacement is already on the
+classpath (`libs.jetbrains.androidx.navigationevent.compose`):
+
+    import androidx.navigationevent.NavigationEventInfo
+    import androidx.navigationevent.compose.NavigationBackHandler
+    import androidx.navigationevent.compose.rememberNavigationEventState
+
+    NavigationBackHandler(
+        state = rememberNavigationEventState(NavigationEventInfo.None),
+        isBackEnabled = true,
+        onBackCompleted = { onBackClick() }
+    )
+
+One handler per condition, each with its own `rememberNavigationEventState`. A screen that must also
+never fall through to the nav stack adds one more with `isBackEnabled = true` and the screen's own
+`onBackClick`; `PreferenceSubScreenHost` keeps that one first and the state handlers after it.
 
 `java.util.concurrent.ConcurrentHashMap` is easy to miss: it looks like ordinary Kotlin, but it is a
 JVM type. It resolves for the Android and JVM targets, so an Android build stays green, and then the

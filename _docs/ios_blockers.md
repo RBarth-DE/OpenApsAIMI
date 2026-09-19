@@ -13,6 +13,45 @@ please write it here, so both sessions look in the same place.
 The pattern behind almost every entry: a class can only move to `commonMain` after it is off Android
 types. The move is usually small once it is.
 
+## Ready for iOS: the compile chain is green (2026-09-19, Windows/Linux side)
+
+`:ios:shell` now compiles for both Apple targets. The module-by-module frontier this file tracked is
+cleared - the last four blockers were `:plugins:smoothing`, `:plugins:source`, `:appshell` and
+`:ios:shell` itself.
+
+What was run, and what it produced:
+
+| task | result |
+|---|---|
+| `:ios:shell:compileKotlinIosSimulatorArm64` | BUILD SUCCESSFUL - klib `native_targets=ios_simulator_arm64` |
+| `:ios:shell:compileKotlinIosArm64` | BUILD SUCCESSFUL - klib `native_targets=ios_arm64` |
+| `:ios:shell:linkDebugFrameworkIosSimulatorArm64` | **SKIPPED on this host** - linking an Apple framework needs the Mac |
+| `:app:assembleFullDebug`, `:wear:assembleFullDebug` | BUILD SUCCESSFUL |
+
+**Linking is the one thing still unproven anywhere.** Gradle skips the link task on Linux without a
+word, so a green run here says nothing about it. That step is yours, and it is the first thing worth
+running on the Mac.
+
+The last blockers and how they were answered:
+
+- `:plugins:smoothing` - `AdaptiveSmoothingPlugin.kt` (fork-only, `@MetroIntKey(615)`) moved to
+  androidMain.
+- `:plugins:source` - ten fork CGM Compose files under `compose/` moved to androidMain as one set.
+  They use `androidx.compose.ui.res.stringResource` and the module's `R.string`, and no iOS screen
+  would ever show them. Upstream's three `BgSource*` files stayed in commonMain on `SourceStrings`.
+- `:appshell` - `AppNavGraph` asked for `plugin.javaClass.simpleName`; now `plugin::class.simpleName.orEmpty()`.
+- `:ios:shell` - three more answers added, one in each of the two packages this shell keeps:
+
+| file | package | what it says |
+|---|---|---|
+| `IosAuditorStateProvider.kt` | `missing/` | the AIMI auditor is Android-only by decision, so the flow stays `IDLE` |
+| `IosBgSourceIntegrations.kt` (+ `IosEversenseCalibrationSource`) | `platform/` | iOS has no Android broadcast channel and no Eversense driver, so these report themselves disabled |
+| `IosSkinDescriptionProvider.kt` | `platform/` | a skin is a `LinearLayout` swap; there is no View tree here to swap |
+
+The two packages are a claim about the code, not a folder preference: `missing/` means "port not done
+yet" and logs at error, `platform/` means "this is what an iOS client is" and logs at debug. If you
+add one, pick by which sentence is true, not by which file is nearest.
+
 ## How to find the next one
 
 Do not guess. Ask Metro:
