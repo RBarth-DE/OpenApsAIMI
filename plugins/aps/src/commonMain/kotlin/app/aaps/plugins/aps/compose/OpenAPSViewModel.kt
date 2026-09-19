@@ -13,6 +13,7 @@ import app.aaps.core.interfaces.aps.OapsProfileAutoIsf
 import app.aaps.core.interfaces.aps.OapsProfileBoost
 import app.aaps.core.interfaces.aps.RT
 import app.aaps.core.interfaces.resources.TextResolver
+import app.aaps.core.interfaces.resources.formatTemplate
 import app.aaps.core.interfaces.rx.bus.RxBus
 import app.aaps.core.interfaces.utils.DateUtil
 import app.aaps.core.keys.interfaces.TextRef
@@ -241,7 +242,7 @@ class OpenAPSViewModel(
                 BoostChipData(
                     label = raw.boostV5_state ?: "IDLE",
                     color = v5StateColor(raw.boostV5_state),
-                    detail = raw.boostV5_actionMult?.let { "×%.2f".format(it) } ?: ""
+                    detail = raw.boostV5_actionMult?.let { formatTemplate("×%.2f", listOf(it)) } ?: ""
                 )
             } else if (raw is RT && raw.boostTier != null) {
                 // V1-only: show tier
@@ -467,25 +468,25 @@ class OpenAPSViewModel(
 
     private fun RT.toBoostDecisionRows(): List<KeyValueRow> = buildList {
         boostTier?.let { add(KeyValueRow("Tier", it)) }
-        dynamicISF?.let { add(KeyValueRow("DynISF", "%.1f".format(it))) }
-        tdd?.let { add(KeyValueRow("TDD", "%.1f".format(it))) }
-        tddRatio?.let { add(KeyValueRow("TDD Ratio", "%.3f".format(it))) }
-        insulinReqPctEffective?.let { add(KeyValueRow("Insulin Req %", "%.0f%%".format(it))) }
-        deltaAcceleration?.let { add(KeyValueRow("Delta Accl", "%.1f%%".format(it))) }
-        sensNormalTarget?.let { add(KeyValueRow("Sens@Target", "%.1f".format(it))) }
+        dynamicISF?.let { add(KeyValueRow("DynISF", formatTemplate("%.1f", listOf(it)))) }
+        tdd?.let { add(KeyValueRow("TDD", formatTemplate("%.1f", listOf(it)))) }
+        tddRatio?.let { add(KeyValueRow("TDD Ratio", formatTemplate("%.3f", listOf(it)))) }
+        insulinReqPctEffective?.let { add(KeyValueRow("Insulin Req %", formatTemplate("%.0f%%", listOf(it)))) }
+        deltaAcceleration?.let { add(KeyValueRow("Delta Accl", formatTemplate("%.1f%%", listOf(it)))) }
+        sensNormalTarget?.let { add(KeyValueRow("Sens@Target", formatTemplate("%.1f", listOf(it)))) }
         fastCarbProtection?.let {
             if (it) add(KeyValueRow("Fast-Carb Guard", "ACTIVE"))
         }
-        deviationSensRatio?.let { add(KeyValueRow("Dev Sens Ratio", "%.3f".format(it))) }
-        mlHypoRisk?.let { add(KeyValueRow("ML Hypo Risk", "%.2f".format(it))) }
-        mlMealLikely?.let { add(KeyValueRow("ML Meal Likely", "%.2f".format(it))) }
+        deviationSensRatio?.let { add(KeyValueRow("Dev Sens Ratio", formatTemplate("%.3f", listOf(it)))) }
+        mlHypoRisk?.let { add(KeyValueRow("ML Hypo Risk", formatTemplate("%.2f", listOf(it)))) }
+        mlMealLikely?.let { add(KeyValueRow("ML Meal Likely", formatTemplate("%.2f", listOf(it)))) }
         // V5 state machine telemetry
         boostV5_state?.let { add(KeyValueRow("V5 State", it)) }
-        boostV5_score?.let { add(KeyValueRow("V5 Score", "%.3f".format(it))) }
+        boostV5_score?.let { add(KeyValueRow("V5 Score", formatTemplate("%.3f", listOf(it)))) }
         boostV5_age?.let { add(KeyValueRow("V5 Age", "${it}c")) }
-        boostV5_budget?.let { add(KeyValueRow("V5 Budget", "%.3fU".format(it))) }
-        boostV5_actionMult?.let { add(KeyValueRow("V5 Action×", "%.2f".format(it))) }
-        boostV5_finalDose?.let { add(KeyValueRow("V5 Final Dose", "%.3fU".format(it))) }
+        boostV5_budget?.let { add(KeyValueRow("V5 Budget", formatTemplate("%.3fU", listOf(it)))) }
+        boostV5_actionMult?.let { add(KeyValueRow("V5 Action×", formatTemplate("%.2f", listOf(it)))) }
+        boostV5_finalDose?.let { add(KeyValueRow("V5 Final Dose", formatTemplate("%.3fU", listOf(it)))) }
         boostV5_gateReduction?.let { add(KeyValueRow("V5 Gate Reduction", it)) }
     }
 

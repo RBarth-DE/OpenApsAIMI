@@ -143,6 +143,7 @@ import app.aaps.plugins.aps.openAPSAIMI.risk.SafetyPredictionTerminals
 import app.aaps.plugins.aps.openAPSAIMI.risk.SafetyPredictionTerminalsResolver
 import app.aaps.plugins.aps.openAPSAIMI.orchestration.AimiLoopPhase
 import app.aaps.plugins.aps.openAPSAIMI.orchestration.AimiLoopTelemetry
+import app.aaps.plugins.aps.openAPSAIMI.orchestration.AimiLoopTickState
 import app.aaps.plugins.aps.openAPSAIMI.physio.AimiHormonitorStudyExporterMTR
 import app.aaps.plugins.aps.openAPSAIMI.physio.BehavioralRiskPolicy
 import app.aaps.plugins.aps.openAPSAIMI.physio.HormonalScenarioTerminalCap
@@ -2088,7 +2089,7 @@ class DetermineBasalaimiSMB2 @Inject constructor(
         consoleLog = mutableListOf()
         if (::aapsLogger.isInitialized) {
             try {
-                hormonitorStudyExporter?.recordLoopPulse(ctx.currentTime, AimiLoopTelemetry.activeTickId)
+                hormonitorStudyExporter?.recordLoopPulse(ctx.currentTime, AimiLoopTickState.activeTickId)
             } catch (_: Throwable) {
                 // Never break determine_basal on telemetry.
             }

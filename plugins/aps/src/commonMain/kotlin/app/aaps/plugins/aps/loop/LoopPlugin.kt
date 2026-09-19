@@ -1,10 +1,5 @@
 package app.aaps.plugins.aps.loop
 
-import android.annotation.SuppressLint
-import android.os.Build
-import android.os.Handler
-import android.os.HandlerThread
-import android.os.SystemClock
 import app.aaps.core.ui.CoreUiStrings
 import app.aaps.core.data.model.BS
 import app.aaps.core.data.model.DS
@@ -20,6 +15,8 @@ import app.aaps.core.data.ue.ValueWithUnit
 import app.aaps.core.interfaces.aps.APSResult
 import app.aaps.core.interfaces.aps.Loop
 import app.aaps.core.interfaces.aps.Loop.LastRun
+import app.aaps.core.interfaces.concurrent.AapsLock
+import app.aaps.core.interfaces.concurrent.withLock
 import app.aaps.core.interfaces.configuration.Config
 import app.aaps.core.interfaces.constraints.Constraint
 import app.aaps.core.interfaces.constraints.ConstraintsChecker
@@ -52,6 +49,7 @@ import app.aaps.core.interfaces.queue.Callback
 import app.aaps.core.interfaces.queue.CommandQueue
 import app.aaps.core.interfaces.receivers.ReceiverStatusStore
 import app.aaps.core.interfaces.resources.TextResolver
+import app.aaps.core.interfaces.resources.formatTemplate
 import app.aaps.core.interfaces.rx.bus.RxBus
 import app.aaps.core.interfaces.rx.events.EventAcceptOpenLoopChange
 import app.aaps.core.interfaces.rx.events.EventLoopUpdateGui
@@ -78,11 +76,10 @@ import app.aaps.core.objects.extensions.plannedRemainingMinutes
 import app.aaps.core.objects.extensions.with
 import app.aaps.core.ui.compose.icons.IcLoopClosed
 import app.aaps.core.ui.compose.preference.PreferenceSubScreenDef
-import app.aaps.plugins.aps.R
 import app.aaps.plugins.aps.ApsStrings
+import app.aaps.plugins.aps.loop.compose.LoopComposeContent
 import app.aaps.plugins.aps.loop.events.EventLoopSetLastRunGui
 import app.aaps.plugins.aps.loop.extensions.jsonObject
-import io.reactivex.rxjava3.disposables.CompositeDisposable
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
@@ -90,6 +87,8 @@ import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.sync.Mutex
@@ -105,7 +104,9 @@ import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.IntKey as MetroIntKey
 import dev.zacsweers.metro.SingleIn
 import dev.zacsweers.metro.binding
+import kotlin.concurrent.Volatile
 import kotlin.math.abs
+import kotlin.time.TimeSource
 
 @ContributesIntoMap(AppScope::class, binding = binding<PluginBase>())
 @MetroIntKey(200)
@@ -143,7 +144,7 @@ class LoopPlugin(
     PluginDescription()
         .mainType(PluginType.LOOP)
         .composeContent { plugin ->
-            app.aaps.plugins.aps.loop.compose.LoopComposeContent(
+            LoopComposeContent(
                 loop = plugin as Loop,
                 rxBus = rxBus,
                 rh = rh,
@@ -161,7 +162,6 @@ class LoopPlugin(
     aapsLogger, rh
 ), Loop, PluginConstraints {
 
-    private val disposable = CompositeDisposable()
     // Volatile: this is now the only gate against a second automatic loop run for the same BG. It is
     // written by the calculation worker thread and read by the next one, which may be a different one.
     @Volatile override var lastBgTriggeredRun: Long = 0
@@ -170,7 +170,7 @@ class LoopPlugin(
     override var lastRun: LastRun? = null
     override var closedLoopEnabled: Constraint<Boolean>? = null
     private val invokeMutex = Mutex()
-    private val invokeCoalescingLock = Any()
+    private val invokeCoalescingLock = AapsLock()
     private var invokeDrainActive: Boolean = false
     private var pendingInvokeRequest: LoopInvokeRequest? = null
 
@@ -181,7 +181,19 @@ class LoopPlugin(
         val requestedAtElapsedMs: Long
     )
 
-    private var handler: Handler? = null
+    // The periodic autodrive ticker. A coroutine rather than a Handler: `android.os.Handler` is not in
+    // shared code, and this was only ever a timer - the tick body already does its work in appScope.
+    private var periodicLoopJob: Job? = null
+
+    // The delayed device-status rebuild. Cancelled and re-scheduled on every request, which is what
+    // the Handler's removeCallbacks/postDelayed pair did.
+    private var deviceStatusJob: Job? = null
+
+    // Monotonic clock for measuring waits. `SystemClock.elapsedRealtime()` before, and only ever used
+    // for differences, so a process-relative mark gives the same numbers.
+    private val monotonicStart = TimeSource.Monotonic.markNow()
+
+    private fun elapsedRealtimeMs(): Long = monotonicStart.elapsedNow().inWholeMilliseconds
 
     /**
      * Wall-clock time of last successful [invoke] from the glucose worker (`Calculation for … cause=EventNewBG` / History).
@@ -198,7 +210,6 @@ class LoopPlugin(
     override suspend fun onStart() {
 
         super.onStart()
-        handler = Handler(HandlerThread(this::class.simpleName + "Handler").also { it.start() }.looper)
         // TempTarget changes
         persistenceLayer.observeChanges(TT::class)
             // Skip db change of ending previous TT
@@ -231,11 +242,20 @@ class LoopPlugin(
                 }
             }
             .launchIn(appScope)
+        // The fork's periodic autodrive ticker. This call was the last line of onStart() until an
+        // earlier merge dropped it; the function and the state it reads stayed behind, so this is the
+        // whole restoration.
+        startPeriodicLoop()
     }
 
     private fun startPeriodicLoop() {
-        val periodicRunnable = object : Runnable {
-            override fun run() {
+        // Cancel first: a second onStart() without an onStop() would otherwise leave two tickers
+        // running, and each one calls invoke() on its own period.
+        periodicLoopJob?.cancel()
+        val initialFreqMs = T.mins(preferences.get(IntKey.ApsMaxSmbFrequency).toLong()).msecs()
+        periodicLoopJob = appScope.launch {
+            delay(initialFreqMs)
+            while (isActive) {
                 val freqMs = T.mins(preferences.get(IntKey.ApsMaxSmbFrequency).toLong()).msecs()
                 val autodrive = preferences.get(BooleanKey.OApsAIMIautoDriveActive)
                 if (autodrive) {
@@ -260,11 +280,9 @@ class LoopPlugin(
                 } else {
                     aapsLogger.debug(LTag.APS, "Pas de loop périodique : autodrive=$autodrive.")
                 }
-                handler?.postDelayed(this, freqMs)
+                delay(freqMs)
             }
         }
-        val initialFreqMs = T.mins(preferences.get(IntKey.ApsMaxSmbFrequency).toLong()).msecs()
-        handler?.postDelayed(periodicRunnable, initialFreqMs)
     }
 
     /** Matches InvokeLoopWorker initiator: `Calculation for … (cause=EventNewBG)` etc. */
@@ -274,10 +292,9 @@ class LoopPlugin(
 
 
     override suspend fun onStop() {
-        disposable.clear()
-        handler?.removeCallbacksAndMessages(null)
-        handler?.looper?.quit()
-        handler = null
+        periodicLoopJob?.cancel()
+        periodicLoopJob = null
+        deviceStatusJob?.cancel()
         super.onStop()
     }
 
@@ -339,6 +356,25 @@ class LoopPlugin(
         return modes
     }
 
+    /**
+     * A precondition that is reported rather than enforced.
+     *
+     * These used to be `assert`, which is not one behaviour across platforms. The JVM checks
+     * assertions only under `-ea`, which Android never sets, so on a phone they have always done
+     * nothing. Kotlin/Native turns them on in a **debug** binary, so the very same lines threw
+     * `AssertionError` on iOS - out of the middle of a running mode change, failing a user action
+     * that Android completes without complaint. A precondition that is ignored on one platform and
+     * aborts on another is worse than one that only reports, especially where the failure lands on
+     * the insulin path.
+     *
+     * Logging is the behaviour worth keeping of the two. Every case below is a combination the UI is
+     * meant to prevent and the code that follows already copes with; what was missing was any way to
+     * learn that a caller had got it wrong, which `assert` never provided on Android either.
+     */
+    private inline fun expected(condition: Boolean, message: () -> String) {
+        if (!condition) aapsLogger.error(LTag.CORE, "Running mode precondition failed: ${message()}")
+    }
+
     override suspend fun handleRunningModeChange(newRM: RM.Mode, action: Action, source: Sources, listValues: List<ValueWithUnit>, durationInMinutes: Int, profile: Profile): Boolean {
         val now = dateUtil.now()
         val currentRM = runningModeRecord()
@@ -346,10 +382,10 @@ class LoopPlugin(
             if (newRM != RM.Mode.RESUME) return false
             return endPumpSuspendedRunningMode(currentRM, action, source, listValues)
         }
-        // Preconditions (hardcoded logic)
-        if (newRM.mustBeTemporary()) assert(durationInMinutes > 0)
-        if (newRM.isLoopRunning()) assert(durationInMinutes == 0)
-        if (newRM == RM.Mode.RESUME) assert(currentRM.isTemporary())
+        // Preconditions (hardcoded logic). Logged rather than asserted - see `expected`.
+        expected(!newRM.mustBeTemporary() || durationInMinutes > 0) { "$newRM must be temporary but duration is $durationInMinutes" }
+        expected(!newRM.isLoopRunning() || durationInMinutes == 0) { "$newRM is a running mode but carries duration $durationInMinutes" }
+        expected(newRM != RM.Mode.RESUME || currentRM.isTemporary()) { "RESUME from a permanent mode ${currentRM.mode}" }
 
         // Change running mode
         when (newRM) {
@@ -594,7 +630,7 @@ class LoopPlugin(
 
     @Suppress("SameParameterValue")
     private suspend fun treatmentTimeThreshold(durationMinutes: Int): Boolean {
-        val threshold = System.currentTimeMillis() + durationMinutes * 60 * 1000
+        val threshold = dateUtil.now() + durationMinutes * 60 * 1000
         var bool = false
         val lastBolusTime = persistenceLayer.getNewestBolus()?.timestamp ?: 0L
         val lastCarbsTime = persistenceLayer.getNewestCarbs()?.timestamp ?: 0L
@@ -634,10 +670,10 @@ class LoopPlugin(
             initiator = initiator,
             allowNotification = allowNotification,
             tempBasalFallback = tempBasalFallback,
-            requestedAtElapsedMs = SystemClock.elapsedRealtime()
+            requestedAtElapsedMs = elapsedRealtimeMs()
         )
 
-        val shouldDrain = synchronized(invokeCoalescingLock) {
+        val shouldDrain = invokeCoalescingLock.withLock {
             pendingInvokeRequest = mergeInvokeRequests(pendingInvokeRequest, incoming)
             if (invokeDrainActive) {
                 false
@@ -652,7 +688,7 @@ class LoopPlugin(
         }
 
         while (true) {
-            val next = synchronized(invokeCoalescingLock) {
+            val next = invokeCoalescingLock.withLock {
                 val req = pendingInvokeRequest
                 if (req == null) {
                     invokeDrainActive = false
@@ -663,17 +699,17 @@ class LoopPlugin(
                 }
             } ?: return
 
-            val waitStartedAt = SystemClock.elapsedRealtime()
+            val waitStartedAt = elapsedRealtimeMs()
             try {
                 invokeMutex.withLock {
-                    val waitedMs = SystemClock.elapsedRealtime() - waitStartedAt
+                    val waitedMs = elapsedRealtimeMs() - waitStartedAt
                     if (waitedMs >= 250L) {
                         aapsLogger.warn(
                             LTag.APS,
                             "Loop invoke contention: waited ${waitedMs}ms for initiator=${next.initiator}"
                         )
                     }
-                    val queuedForMs = SystemClock.elapsedRealtime() - next.requestedAtElapsedMs
+                    val queuedForMs = elapsedRealtimeMs() - next.requestedAtElapsedMs
                     if (queuedForMs >= 500L) {
                         aapsLogger.warn(
                             LTag.APS,
@@ -687,13 +723,13 @@ class LoopPlugin(
                     )
                 }
             } catch (e: CancellationException) {
-                synchronized(invokeCoalescingLock) {
+                invokeCoalescingLock.withLock {
                     invokeDrainActive = false
                 }
                 throw e
             } catch (e: Exception) {
                 aapsLogger.error(LTag.APS, "Loop invoke failed; resetting coalescing drain state", e)
-                synchronized(invokeCoalescingLock) {
+                invokeCoalescingLock.withLock {
                     invokeDrainActive = false
                 }
                 throw e
@@ -799,7 +835,7 @@ class LoopPlugin(
                 closedLoopEnabled = constraintChecker.isClosedLoopAllowed()
                 if (runningMode().isClosedLoopOrLgs()) {
                     if (allowNotification) {
-                        if (resultAfterConstraints.isCarbsRequired && carbsSuggestionsSuspendedUntil < System.currentTimeMillis() && !treatmentTimeThreshold(-15)
+                        if (resultAfterConstraints.isCarbsRequired && carbsSuggestionsSuspendedUntil < dateUtil.now() && !treatmentTimeThreshold(-15)
                         ) {
                             if (preferences.get(BooleanKey.AlertCarbsRequired) && !preferences.get(BooleanKey.AlertUrgentAsAndroidNotification)
                             ) {
@@ -890,11 +926,14 @@ class LoopPlugin(
                                     val smbResult = applySMBRequest(resultAfterConstraints)
                                     aapsLogger.debug(
                                         LTag.APS,
-                                        "SMB enact result: requested=%.2fU enacted=%s success=%s comment=%s".format(
-                                            resultAfterConstraints.smb,
-                                            smbResult.enacted,
-                                            smbResult.success,
-                                            smbResult.comment ?: ""
+                                        formatTemplate(
+                                            "SMB enact result: requested=%.2fU enacted=%s success=%s comment=%s",
+                                            listOf(
+                                                resultAfterConstraints.smb,
+                                                smbResult.enacted,
+                                                smbResult.success,
+                                                smbResult.comment ?: ""
+                                            )
                                         )
                                     )
                                     if (smbResult.enacted || smbResult.success) {
@@ -903,7 +942,10 @@ class LoopPlugin(
                                         lastRun.lastSMBEnact = dateUtil.now()
                                         scheduleBuildAndStoreDeviceStatus("applySMBRequest")
                                     } else {
-                                        handler?.postDelayed({ appScope.launch { invoke("tempBasalFallback", allowNotification, true) } }, 1000)
+                                        appScope.launch {
+                                            delay(1000)
+                                            invoke("tempBasalFallback", allowNotification, true)
+                                        }
                                     }
                                 } else {
                                     aapsLogger.debug(LTag.APS, "No SMB requested")
@@ -912,7 +954,7 @@ class LoopPlugin(
                             } else if (resultAfterConstraints.isBolusRequested) {
                                 // Diagnostic: SMB delivery is gated on the bundled TBR succeeding (above). When it does
                                 // not, the SMB is dropped here and only the AIMI carry-forward re-delivers it next tick.
-                                aapsLogger.debug(LTag.APS, "SMB skipped: TBR not enacted/success (smb=%.2fU comment=%s) — carry-forward will retry".format(resultAfterConstraints.smb, tbrResult.comment ?: ""))
+                                aapsLogger.debug(LTag.APS, formatTemplate("SMB skipped: TBR not enacted/success (smb=%.2fU comment=%s) — carry-forward will retry", listOf(resultAfterConstraints.smb, tbrResult.comment ?: "")))
                             }
                         }
                         rxBus.send(EventLoopUpdateGui())
@@ -920,7 +962,7 @@ class LoopPlugin(
                         // Diagnostic: a bolus already queued blocks the whole change block, so a requested SMB is
                         // dropped and only the AIMI carry-forward re-delivers it next tick.
                         if (resultAfterConstraints.isBolusRequested && commandQueue.bolusInQueue())
-                            aapsLogger.debug(LTag.APS, "SMB skipped: bolus already in queue (smb=%.2fU) — carry-forward will retry".format(resultAfterConstraints.smb))
+                            aapsLogger.debug(LTag.APS, formatTemplate("SMB skipped: bolus already in queue (smb=%.2fU) — carry-forward will retry", listOf(resultAfterConstraints.smb)))
                         lastRun.tbrSetByPump = null
                         lastRun.smbSetByPump = null
                     }
@@ -940,7 +982,7 @@ class LoopPlugin(
     }
 
     override fun disableCarbSuggestions(durationMinutes: Int) {
-        carbsSuggestionsSuspendedUntil = System.currentTimeMillis() + durationMinutes * 60 * 1000
+        carbsSuggestionsSuspendedUntil = dateUtil.now() + durationMinutes * 60 * 1000
         aapsLogger.debug(LTag.CORE, "CarbSuggestion disabled until ${dateUtil.dateAndTimeAndSecondsString(carbsSuggestionsSuspendedUntil)}")
         dismissSuggestion()
     }
@@ -1015,7 +1057,7 @@ class LoopPlugin(
             return pumpEnactResultProvider().comment(InterfacesStrings.pumpsuspended).enacted(false).success(false)
         }
         aapsLogger.debug(LTag.APS, "applyAPSRequest: $request")
-        val now = System.currentTimeMillis()
+        val now = dateUtil.now()
         val activeTemp = processedTbrEbData.getTempBasalIncludingConvertedExtended(now)
         if (request.rate == 0.0 && request.duration == 0 || abs(request.rate - ch.fromPump(pump.baseBasalRate)) < pump.pumpDescription.basalStep) {
             if (activeTemp != null) {
@@ -1092,11 +1134,14 @@ class LoopPlugin(
         if (lastBolusTime != 0L && lastBolusTime + T.mins(smbIntervalMin.toLong()).msecs() > now) {
             aapsLogger.debug(
                 LTag.APS,
-                "SMB blocked by interval: requested=%.2fU lastBolusAge=%.0fs interval=%dm deliverAt=%s".format(
-                    request.smb,
-                    lastBolusAgeSec,
-                    smbIntervalMin,
-                    request.deliverAt?.let { dateUtil.dateAndTimeAndSecondsString(it) } ?: "n/a"
+                formatTemplate(
+                    "SMB blocked by interval: requested=%.2fU lastBolusAge=%.0fs interval=%dm deliverAt=%s",
+                    listOf(
+                        request.smb,
+                        lastBolusAgeSec,
+                        smbIntervalMin,
+                        request.deliverAt?.let { dateUtil.dateAndTimeAndSecondsString(it) } ?: "n/a"
+                    )
                 )
             )
             return pumpEnactResultProvider()
@@ -1113,11 +1158,14 @@ class LoopPlugin(
         }
         aapsLogger.debug(
             LTag.APS,
-            "applySMBRequest: requested=%.2fU deliverAt=%s lastBolusAge=%.0fs pumpStep=%.3fU".format(
-                request.smb,
-                request.deliverAt?.let { dateUtil.dateAndTimeAndSecondsString(it) } ?: "n/a",
-                lastBolusAgeSec,
-                pump.pumpDescription.bolusStep
+            formatTemplate(
+                "applySMBRequest: requested=%.2fU deliverAt=%s lastBolusAge=%.0fs pumpStep=%.3fU",
+                listOf(
+                    request.smb,
+                    request.deliverAt?.let { dateUtil.dateAndTimeAndSecondsString(it) } ?: "n/a",
+                    lastBolusAgeSec,
+                    pump.pumpDescription.bolusStep
+                )
             )
         )
 
@@ -1142,7 +1190,6 @@ class LoopPlugin(
      * active extended bolus) on the pump side.
      */
     private suspend fun goToZeroTemp(durationInMinutes: Int, mode: RM.Mode, action: Action, source: Sources, listValues: List<ValueWithUnit>) {
-        @SuppressLint("CheckResult")
         persistenceLayer.insertOrUpdateRunningMode(
             runningMode = RM(
                 timestamp = dateUtil.now(),
@@ -1203,8 +1250,7 @@ class LoopPlugin(
      * on the pump side.
      */
     suspend fun suspendLoop(mode: RM.Mode, autoForced: Boolean, reasons: String?, durationInMinutes: Int, action: Action, source: Sources, note: String? = null, listValues: List<ValueWithUnit> = emptyList()) {
-        assert(mode == RM.Mode.SUSPENDED_BY_PUMP || mode == RM.Mode.SUSPENDED_BY_USER || mode == RM.Mode.SUSPENDED_BY_DST)
-        @SuppressLint("CheckResult")
+        expected(mode == RM.Mode.SUSPENDED_BY_PUMP || mode == RM.Mode.SUSPENDED_BY_USER || mode == RM.Mode.SUSPENDED_BY_DST) { "$mode is not a suspend mode" }
         persistenceLayer.insertOrUpdateRunningMode(
             runningMode = RM(timestamp = dateUtil.now(), duration = T.mins(durationInMinutes.toLong()).msecs(), mode = mode, autoForced = autoForced, reasons = reasons),
             action = action,
@@ -1226,24 +1272,12 @@ class LoopPlugin(
         rxBus.send(EventRefreshOverview("suspendLoop"))
     }
 
-    var task: Runnable? = null
-
     override fun scheduleBuildAndStoreDeviceStatus(reason: String) {
-        class UpdateRunnable : Runnable {
-
-            override fun run() {
-                appScope.launch {
-                    try {
-                        buildAndStoreDeviceStatus(reason)
-                    } finally {
-                        task = null
-                    }
-                }
-            }
+        deviceStatusJob?.cancel()
+        deviceStatusJob = appScope.launch {
+            delay(5000)
+            buildAndStoreDeviceStatus(reason)
         }
-        task?.let { handler?.removeCallbacks(it) }
-        task = UpdateRunnable()
-        task?.let { handler?.postDelayed(it, 5000) }
     }
 
     suspend fun buildAndStoreDeviceStatus(reason: String) {
@@ -1299,7 +1333,7 @@ class LoopPlugin(
                 suggested = apsResult?.toString(),
                 iob = iob?.toString(),
                 enacted = enacted?.toString(),
-                device = "openaps://" + Build.MANUFACTURER + " " + Build.MODEL,
+                device = "openaps://" + config.deviceModelForUpload,
                 pump = pumpStatusProvider.generatePumpJsonStatus().toString(),
                 uploaderBattery = receiverStatusStore.batteryLevel,
                 isCharging = receiverStatusStore.isCharging,

@@ -18,15 +18,6 @@ object AimiLoopTelemetry {
     private val tickSeq = AtomicLong(0L)
 
     @Volatile
-    internal var activeTickId: Long = 0L
-        private set
-
-    /** Wall clock at current tick start; 0 when idle. */
-    @Volatile
-    internal var activeTickStartedWallMs: Long = 0L
-        private set
-
-    @Volatile
     internal var currentLoopPhase: AimiLoopPhase = AimiLoopPhase.BOOTSTRAP
         private set
 
@@ -40,9 +31,9 @@ object AimiLoopTelemetry {
      */
     internal fun enterPhase(phase: AimiLoopPhase, blackbox: AimiHormonitorStudyExporterMTR?) {
         currentLoopPhase = phase
-        val tickId = activeTickId
+        val tickId = AimiLoopTickState.activeTickId
         val wall = System.currentTimeMillis()
-        val tickStart = activeTickStartedWallMs
+        val tickStart = AimiLoopTickState.activeTickStartedWallMs()
         val msSinceTickStart = if (tickStart > 0L) wall - tickStart else null
         val prev = lastPhaseMarkWallMs
         val msSincePrevPhase = if (prev > 0L) wall - prev else null
@@ -63,13 +54,6 @@ object AimiLoopTelemetry {
         } catch (_: Throwable) {
             // Never break determine_basal on telemetry.
         }
-    }
-
-    fun isTickInProgress(): Boolean = activeTickId > 0L
-
-    fun activeTickAgeMs(): Long {
-        val started = activeTickStartedWallMs
-        return if (started > 0L) (System.currentTimeMillis() - started).coerceAtLeast(0L) else 0L
     }
 
     /**
@@ -94,9 +78,7 @@ object AimiLoopTelemetry {
         }
         try {
             val id = tickSeq.incrementAndGet()
-            val previousActive = activeTickId
-            activeTickId = id
-            activeTickStartedWallMs = wallClockMs
+            val previousActive = AimiLoopTickState.beginTick(id, wallClockMs)
             lastPhaseMarkWallMs = 0L
             appendRing("tick_start id=$id wall_ms=$wallClockMs")
             var completedNormally = false
@@ -127,8 +109,7 @@ object AimiLoopTelemetry {
                         // Never break the loop on telemetry.
                     }
                 }
-                activeTickId = previousActive
-                activeTickStartedWallMs = 0L
+                AimiLoopTickState.endTick(previousActive)
                 lastPhaseMarkWallMs = 0L
             }
         } finally {

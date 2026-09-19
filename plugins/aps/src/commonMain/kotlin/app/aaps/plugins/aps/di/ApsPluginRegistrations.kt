@@ -1,12 +1,7 @@
 package app.aaps.plugins.aps.di
 
-import app.aaps.core.interfaces.aps.MealHypothesisHistorySource
 import app.aaps.core.interfaces.plugin.PluginBase
 import app.aaps.plugins.aps.openAPSAMA.OpenAPSAMAPlugin
-import app.aaps.plugins.aps.openAPSAutoISF.OpenAPSAutoISFPlugin
-import app.aaps.plugins.aps.openAPSAIMI.OpenAPSAIMIPlugin
-import app.aaps.plugins.aps.openAPSBoost.OpenAPSBoostPlugin
-import app.aaps.plugins.aps.openAPSBoostV5.OpenAPSBoostV5Plugin
 import app.aaps.plugins.aps.openAPSSMB.OpenAPSSMBPlugin
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.BindingContainer
@@ -16,11 +11,11 @@ import dev.zacsweers.metro.IntoMap
 import dev.zacsweers.metro.Provides
 
 /**
- * Registers the three openAPS plugins.
+ * Registers the openAPS plugins that exist on every target: AMA (210) and SMB (220).
  *
- * The plugins are built from their own `@Inject` constructors in `commonMain`, so nothing about them
- * lives in `:app` any more. Only the registration stays behind in `androidMain`, because a plugin map
- * key is an Android concern and the qualifiers involved are JVM-only anyway.
+ * The fork's own APS plugins - AIMI, the Boost family and AutoISF - are Android only and are
+ * registered in `ApsForkPluginRegistrations` in `androidMain` instead. They are built on Android
+ * activities, Health Connect and file export, so they carry no iOS code to link.
  *
  * ## Unqualified, and that is deliberate
  *
@@ -34,8 +29,10 @@ import dev.zacsweers.metro.Provides
  * nothing reads a Metro map under that qualifier. Neither is visible from the annotation: the only way
  * to know is to read which bucket `MetroGraphs.allPlugins` merges, and under what condition.
  *
- * Keys 210-230, unchanged. Loop keeps 200 and Autotune 240; both also bind an interface much of the app
- * depends on, so they move separately.
+ * Keys 210 and 220 are unchanged. The fork plugins keep 225, 230, 231 and 239 in the Android file. Two
+ * more carry their own `@ContributesIntoMap` instead of an entry here, because each also binds an
+ * interface much of the app depends on and so moves for that reason: Loop (200) with the rest of
+ * commonMain, and Autotune (240), which is Android only.
  */
 @ContributesTo(AppScope::class)
 @BindingContainer
@@ -50,32 +47,4 @@ object ApsPluginRegistrations {
     @IntoMap
     @IntKey(220)
     fun openApsSmbEntry(plugin: OpenAPSSMBPlugin): PluginBase = plugin
-
-    @Provides
-    @IntoMap
-    @IntKey(230)
-    fun openApsAutoIsfEntry(plugin: OpenAPSAutoISFPlugin): PluginBase = plugin
-
-    // Fork plugins (AIMI + Boost family)
-    @Provides
-    @IntoMap
-    @IntKey(225)
-    fun openApsAimiEntry(plugin: OpenAPSAIMIPlugin): PluginBase = plugin
-
-    @Provides
-    @IntoMap
-    @IntKey(231)
-    fun openApsBoostEntry(plugin: OpenAPSBoostPlugin): PluginBase = plugin
-
-    @Provides
-    @IntoMap
-    @IntKey(239)
-    fun openApsBoostV5Entry(plugin: OpenAPSBoostV5Plugin): PluginBase = plugin
-
-    /**
-     * The meal hypothesis history lives inside the Boost V5 plugin. Callers (the overview graph)
-     * ask for the interface, so the plugin has to be reachable under it.
-     */
-    @Provides
-    fun mealHypothesisHistorySource(plugin: OpenAPSBoostV5Plugin): MealHypothesisHistorySource = plugin
 }
