@@ -2,13 +2,13 @@ package app.aaps.plugins.sync.nsclientV3
 
 import app.aaps.core.data.model.TrendArrow
 import app.aaps.core.data.time.T
+import app.aaps.core.interfaces.aps.AimiContextIntentInjector
 import app.aaps.core.interfaces.insulin.InsulinType
 import app.aaps.core.interfaces.nsclient.NSClientRepository
 import app.aaps.core.interfaces.nsclient.StoreDataForDb
 import app.aaps.core.interfaces.source.NSClientSource
 import app.aaps.core.interfaces.sync.DataSyncSelector
 import app.aaps.core.interfaces.sync.NsClient
-import app.aaps.plugins.aps.openAPSAIMI.context.ContextManager
 import app.aaps.core.keys.BooleanKey
 import app.aaps.core.keys.LongNonKey
 import app.aaps.core.nssdk.localmodel.entry.Direction
@@ -53,7 +53,7 @@ class NsIncomingDataProcessorTest : TestBaseWithProfile() {
     @Mock lateinit var nsClientSource: NSClientSource
     @Mock lateinit var storeDataForDb: StoreDataForDb
     @Mock lateinit var nsClientRepository: NSClientRepository
-    @Mock lateinit var contextManager: ContextManager
+    @Mock lateinit var aimiContextIntentInjector: AimiContextIntentInjector
     @Mock lateinit var nsClient: NsClient
     @Mock lateinit var dataSyncSelector: DataSyncSelector
     private val nsiCfg = NSICfg(insulinLabel = "Fake", insulinEndTime = 9 * 3600 * 1000, insulinPeakTime = 60 * 60 * 1000, concentration = 1.0)
@@ -81,7 +81,7 @@ class NsIncomingDataProcessorTest : TestBaseWithProfile() {
             profileStoreProvider = { profileStoreProvider() },
             notificationManager = notificationManager,
             nsClientRepository = nsClientRepository,
-            contextManager = contextManager
+            aimiContextIntentInjector = aimiContextIntentInjector
         )
     }
 

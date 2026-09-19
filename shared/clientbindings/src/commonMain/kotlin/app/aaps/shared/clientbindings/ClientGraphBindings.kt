@@ -6,8 +6,12 @@ import app.aaps.core.interfaces.db.ProcessedTbrEbData
 import app.aaps.core.interfaces.di.ApplicationScope
 import app.aaps.core.interfaces.insulin.ConcentrationHelper
 import app.aaps.core.interfaces.iob.IobCobCalculator
+import app.aaps.core.interfaces.aps.AimiContextIntentInjector
+import app.aaps.core.interfaces.aps.MealHypothesisHistorySource
+import app.aaps.core.interfaces.aps.MealHypothesisStateEntry
 import app.aaps.core.interfaces.logging.AAPSLogger
 import app.aaps.core.interfaces.logging.L
+import app.aaps.core.interfaces.logging.LTag
 import app.aaps.core.interfaces.notifications.NotificationManager
 import app.aaps.core.interfaces.notifications.SystemNotificationPlatform
 import app.aaps.core.interfaces.overview.OverviewData
@@ -62,11 +66,15 @@ import dev.zacsweers.metro.SingleIn
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 
 /**
  * The bindings iOS and desktop both need, said once.
  *
- * Every provider here is **real AAPS code, not a placeholder**. They exist because the classes
+ * Every provider here is **real AAPS code, not a placeholder** - the two under "Features only
+ * Android links" being the deliberate answer that a feature is absent on this platform, spelled out
+ * there rather than hidden. They exist because the classes
  * behind them are built by hand rather than by annotation, so each graph has to say so: the
  * calculator is deliberately built twice at different scopes, the Nightscout plugin defeats the
  * annotation processor, and the objectives plugin carries a qualifier that would leak into the
@@ -221,6 +229,38 @@ object ClientGraphBindings {
     @IntoMap
     @IntKey(10)
     fun iobCobCalculatorEntry(plugin: IobCobCalculatorPlugin): PluginBase = plugin
+
+    // ---- Features only Android links ----
+    //
+    // AIMI and BOOST are Android only - they are built on activities, Health Connect and file
+    // export - so their plugins and their services move to `androidMain` in `:plugins:aps`. Shared
+    // code still asks for these two interfaces, and the honest answer on a client is "that feature
+    // is not here": one logs and drops what it cannot store, the other reports the empty history it
+    // documents. A binding that silently pretended otherwise would be worse than the missing
+    // feature, which is also why neither one pretends to work.
+
+    /**
+     * AIMI context intents arriving from Nightscout. A client cannot store one, so it says so in the
+     * log and reports that nothing was injected.
+     */
+    @Provides
+    @SingleIn(AppScope::class)
+    fun aimiContextIntentInjector(aapsLogger: AAPSLogger): AimiContextIntentInjector =
+        AimiContextIntentInjector { contextId, _, _ ->
+            aapsLogger.debug(LTag.APS, "AIMI context intent $contextId ignored: AIMI is Android only")
+            false
+        }
+
+    /**
+     * BOOST's meal hypothesis history. BOOST never runs on a client, so the history is empty for its
+     * whole life, which is what [MealHypothesisHistorySource] documents for "BOOST was never active".
+     */
+    @Provides
+    @SingleIn(AppScope::class)
+    fun mealHypothesisHistorySource(): MealHypothesisHistorySource =
+        object : MealHypothesisHistorySource {
+            override val historyFlow: StateFlow<List<MealHypothesisStateEntry>> = MutableStateFlow(emptyList())
+        }
 
     /** The ten objectives in order, for `ObjectivesPlugin` to read. */
     @Provides

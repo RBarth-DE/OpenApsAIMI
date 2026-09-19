@@ -731,7 +731,7 @@ fun NavGraphBuilder.appNavGraph(
                 visibilityContext = visibilityContext,
                 onBackClick = { navController.safePopBackStack() },
                 onOpenLegacyXmlPreferences = onOpenLegacyXmlPreferences?.let { open ->
-                    { open(plugin.javaClass.simpleName) }
+                    { open(plugin::class.simpleName.orEmpty()) }
                 }
             )
         } else {

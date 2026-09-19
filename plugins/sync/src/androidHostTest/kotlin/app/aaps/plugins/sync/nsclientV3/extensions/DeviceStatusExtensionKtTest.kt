@@ -6,7 +6,6 @@ import app.aaps.core.interfaces.configuration.Config
 import app.aaps.core.interfaces.db.PersistenceLayer
 import app.aaps.core.interfaces.nsclient.ProcessedDeviceStatusData
 import app.aaps.core.interfaces.overview.OverviewData
-import app.aaps.core.interfaces.resources.ResourceHelper
 import app.aaps.core.interfaces.utils.DateUtil
 import app.aaps.core.interfaces.workflow.CalculationWorkflow
 import app.aaps.core.keys.interfaces.Preferences
@@ -27,7 +26,6 @@ import org.mockito.kotlin.whenever
 internal class DeviceStatusExtensionKtTest : TestBase() {
 
     @Mock lateinit var preferences: Preferences
-    @Mock lateinit var rh: ResourceHelper
     @Mock lateinit var dateUtil: DateUtil
     @Mock lateinit var config: Config
     @Mock lateinit var apsResult: APSResult
@@ -41,7 +39,7 @@ internal class DeviceStatusExtensionKtTest : TestBase() {
 
     @BeforeEach
     fun setup() {
-        processedDeviceStatusData = ProcessedDeviceStatusDataImpl(rh, dateUtil, preferences) { apsResult }
+        processedDeviceStatusData = ProcessedDeviceStatusDataImpl { apsResult }
         nsDeviceStatusHandler = NSDeviceStatusHandler(
             preferences, config, dateUtil, processedDeviceStatusData, aapsLogger,
             persistenceLayer, overviewData, calculationWorkflow, rxBus, testScope,

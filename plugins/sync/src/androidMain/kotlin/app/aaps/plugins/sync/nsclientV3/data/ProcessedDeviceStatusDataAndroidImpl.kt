@@ -18,29 +18,57 @@ import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
 import dev.zacsweers.metro.binding
 
-// Bound twice: `ProcessedDeviceStatusData` is what common code injects, `ProcessedDeviceStatusDataAndroid`
-// is the same instance seen through the status texts, which are built as HTML for the old overview screen.
-@ContributesBinding(AppScope::class, binding = binding<ProcessedDeviceStatusData>())
+/**
+ * The old overview screen's view of the device status, as HTML.
+ *
+ * This is the Android-only half of [ProcessedDeviceStatusData]. It holds no state of its own: every
+ * value is read from and written through the injected [ProcessedDeviceStatusData], which is the one
+ * object [NSDeviceStatusHandler] fills. Only the text assembly needs `ResourceHelper` and
+ * `HtmlHelper`, so only that lives here - the state holder itself is upstream's class in commonMain
+ * and builds for every target.
+ *
+ * It is an Android decorator rather than the holder itself, because two holders would mean the
+ * screen reading one object while the sync writes the other, and the status row would quietly stop
+ * moving. There is exactly one binding for [ProcessedDeviceStatusData] on every target.
+ */
 @ContributesBinding(AppScope::class, binding = binding<ProcessedDeviceStatusDataAndroid>())
 @SingleIn(AppScope::class)
 @Inject
-class ProcessedDeviceStatusDataImpl(
+class ProcessedDeviceStatusDataAndroidImpl(
+    private val delegate: ProcessedDeviceStatusData,
     private val rh: ResourceHelper,
     private val dateUtil: DateUtil,
-    private val preferences: Preferences,
-    private val apsResultProvider: () -> APSResult
+    private val preferences: Preferences
 ) : ProcessedDeviceStatusDataAndroid {
 
-    override var pumpData: ProcessedDeviceStatusData.PumpData? = null
+    override var pumpData: ProcessedDeviceStatusData.PumpData?
+        get() = delegate.pumpData
+        set(value) {
+            delegate.pumpData = value
+        }
 
-    override var device: ProcessedDeviceStatusData.Device? = null
+    override var device: ProcessedDeviceStatusData.Device?
+        get() = delegate.device
+        set(value) {
+            delegate.device = value
+        }
 
-    override val uploaderMap = HashMap<String, ProcessedDeviceStatusData.Uploader>()
+    override val uploaderMap: HashMap<String, ProcessedDeviceStatusData.Uploader>
+        get() = delegate.uploaderMap
 
-    override var openAPSData = ProcessedDeviceStatusData.OpenAPSData()
+    override var openAPSData: ProcessedDeviceStatusData.OpenAPSData
+        get() = delegate.openAPSData
+        set(value) {
+            delegate.openAPSData = value
+        }
 
     override val openApsTimestamp: Long
-        get() = if (openAPSData.clockSuggested != 0L) openAPSData.clockSuggested else -1
+        get() = delegate.openApsTimestamp
+
+    override fun getAPSResult(): APSResult? = delegate.getAPSResult()
+
+    override val uploaderStatus: String
+        get() = delegate.uploaderStatus
 
     override fun pumpStatus(nsSettingsStatus: NSSettingsStatus): Spanned = HtmlHelper.fromHtml(pumpStatusHtml(nsSettingsStatus))
 
@@ -119,18 +147,6 @@ class ProcessedDeviceStatusDataImpl(
             if (openAPSData.clockSuggested != 0L) string.append(dateUtil.minOrSecAgo(rh, openAPSData.clockSuggested)).append(" ")
             string.append("</span>")
             return string.toString()
-        }
-
-    override fun getAPSResult(): APSResult? =
-        openAPSData.suggested?.let { apsResultProvider().with(it) }
-
-    override val uploaderStatus: String
-        get() {
-            var minBattery = 100
-            for ((_, uploader) in uploaderMap) {
-                if (minBattery > uploader.battery) minBattery = uploader.battery
-            }
-            return "$minBattery%"
         }
 
     override val uploaderStatusSpanned: Spanned

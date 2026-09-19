@@ -7,6 +7,7 @@ import app.aaps.core.data.model.GV
 import app.aaps.core.data.model.ICfg
 import app.aaps.core.data.model.TE
 import app.aaps.core.data.time.T
+import app.aaps.core.interfaces.aps.AimiContextIntentInjector
 import app.aaps.core.interfaces.configuration.Config
 import app.aaps.core.interfaces.insulin.InsulinType
 import app.aaps.core.interfaces.logging.AAPSLogger
@@ -42,8 +43,6 @@ import app.aaps.core.nssdk.localmodel.treatment.NSTemporaryBasal
 import app.aaps.core.nssdk.localmodel.treatment.NSTemporaryTarget
 import app.aaps.core.nssdk.localmodel.treatment.NSTherapyEvent
 import app.aaps.core.nssdk.localmodel.treatment.NSTreatment
-import app.aaps.plugins.aps.openAPSAIMI.context.ContextIntentDeserializer
-import app.aaps.plugins.aps.openAPSAIMI.context.ContextManager
 import app.aaps.plugins.sync.nsclientV3.extensions.toBolus
 import app.aaps.plugins.sync.nsclientV3.extensions.toBolusCalculatorResult
 import app.aaps.plugins.sync.nsclientV3.extensions.toCAL
@@ -77,7 +76,7 @@ class NsIncomingDataProcessor(
     private val profileStoreProvider: () -> ProfileStore,
     private val notificationManager: NotificationManager,
     private val nsClientRepository: NSClientRepository,
-    private val contextManager: ContextManager
+    private val aimiContextIntentInjector: AimiContextIntentInjector
 ) {
 
     /**
@@ -228,10 +227,7 @@ class NsIncomingDataProcessor(
                                         if (intentId != null && intentJson != null) {
                                             aapsLogger.debug(LTag.NSCLIENT, "[NS] Parsing AIMI context: $intentId")
 
-                                            val intent = ContextIntentDeserializer.deserialize(intentJson, aapsLogger)
-
-                                            if (intent != null) {
-                                                contextManager.injectContextFromNS(intentId, intent, receivedPin)
+                                            if (aimiContextIntentInjector.injectFromNs(intentId, intentJson, receivedPin)) {
                                                 aapsLogger.info(LTag.NSCLIENT, "[NS] ✅ Injected AIMI context: $intentId")
                                             } else {
                                                 aapsLogger.warn(LTag.NSCLIENT, "[NS] Failed to deserialize AIMI context")

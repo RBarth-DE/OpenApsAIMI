@@ -7,7 +7,7 @@ import app.aaps.core.interfaces.configuration.Config
 import app.aaps.core.interfaces.logging.AAPSLogger
 import app.aaps.core.interfaces.plugin.PluginBase
 import app.aaps.core.interfaces.plugin.PluginDescription
-import app.aaps.core.interfaces.resources.ResourceHelper
+import app.aaps.core.interfaces.resources.TextResolver
 import app.aaps.plugins.sync.SyncStrings
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesIntoMap
@@ -26,7 +26,7 @@ import dev.zacsweers.metro.binding
 @SingleIn(AppScope::class)
 class RemoteControlPlugin @Inject constructor(
     aapsLogger: AAPSLogger,
-    rh: ResourceHelper,
+    rh: TextResolver,
     private val config: Config
 ) : PluginBase(
     PluginDescription()

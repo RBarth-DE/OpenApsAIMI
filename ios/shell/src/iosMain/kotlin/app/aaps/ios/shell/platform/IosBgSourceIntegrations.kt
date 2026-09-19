@@ -2,6 +2,7 @@ package app.aaps.ios.shell.platform
 
 import app.aaps.core.interfaces.logging.AAPSLogger
 import app.aaps.core.interfaces.source.DexcomBoyda
+import app.aaps.core.interfaces.source.EversenseCalibrationSource
 import app.aaps.core.interfaces.source.XDripSource
 import app.aaps.core.interfaces.sync.DataSyncSelector
 import app.aaps.core.interfaces.sync.DataSyncSelectorXdrip
@@ -100,4 +101,37 @@ class IosDexcomBoyda(
     override fun requestPermissionIfNeeded() = aapsLogger.notOnThisPlatform("DexcomBoyda.requestPermissionIfNeeded")
 
     override fun dexcomPackages(): List<String> = emptyList()
+}
+
+/**
+ * Eversense's own calibration, written straight to the transmitter over Bluetooth.
+ *
+ * Disabled here, and that is the correct answer rather than a gap: the driver is
+ * `EversensePlugin`, which lives in `:plugins:source`'s androidMain with every other native BG
+ * source, so on iOS no transmitter is connected in the first place. Reporting `false` hides the
+ * quick-launch calibration entry - `ElementAvailability` reads exactly this - and a dead button that
+ * sends a fingerstick nowhere is the outcome worth avoiding.
+ */
+@SingleIn(AppScope::class)
+@ContributesBinding(AppScope::class)
+@Inject
+class IosEversenseCalibrationSource(
+    private val aapsLogger: AAPSLogger
+) : EversenseCalibrationSource {
+
+    override fun isEnabled(): Boolean {
+        aapsLogger.notOnThisPlatform("EversenseCalibrationSource.isEnabled - the driver is Android only")
+        return false
+    }
+
+    override fun isConnected(): Boolean = false
+
+    override fun isReadyToCalibrate(): Boolean = false
+
+    override fun readinessMessage(): String = ""
+
+    override suspend fun calibrate(bgMgDl: Int): Boolean {
+        aapsLogger.notOnThisPlatform("EversenseCalibrationSource.calibrate")
+        return false
+    }
 }

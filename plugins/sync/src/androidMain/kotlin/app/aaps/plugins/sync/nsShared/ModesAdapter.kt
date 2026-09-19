@@ -10,6 +10,7 @@ import android.widget.EditText
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
+import app.aaps.core.ui.R as CoreUiR
 import app.aaps.plugins.sync.R
 
 /**
@@ -62,7 +63,10 @@ class ModesAdapter(
         private var textWatcher: TextWatcher? = null
 
         fun bind(mode: ModePreset) {
-            icon.setImageResource(mode.icon)
+            // The icon is chosen here, not in the shared model: a drawable id is an Android resource
+            // and ModePreset compiles for every target. One placeholder for all modes today - the
+            // per-mode icons that are planned are listed in ModePreset's KDoc.
+            icon.setImageResource(CoreUiR.drawable.ic_home)
             name.text = mode.displayName
             description.text = mode.description
 

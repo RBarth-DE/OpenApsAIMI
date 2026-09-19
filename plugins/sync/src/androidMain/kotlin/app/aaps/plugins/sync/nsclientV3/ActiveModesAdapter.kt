@@ -8,6 +8,7 @@ import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
+import app.aaps.core.ui.R as CoreUiR
 import app.aaps.plugins.sync.R
 
 /**
@@ -51,7 +52,7 @@ class ActiveModesAdapter : RecyclerView.Adapter<ActiveModesAdapter.ActiveModeVie
         private val progress: ProgressBar = itemView.findViewById(R.id.active_mode_progress)
 
         fun bind(item: ActiveModeItem) {
-            icon.setImageResource(item.mode.icon)
+            icon.setImageResource(CoreUiR.drawable.ic_home)
             name.text = item.mode.displayName
             
             // Format remaining time

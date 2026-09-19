@@ -61,8 +61,11 @@ object ShellInfo {
      *
      * @return one line per check, ready to print. Any failure is returned rather than thrown, so a
      *   caller sees which step broke instead of only a crash.
+     *
+     * `suspend` because the probe runs a plugin for real, and `Smoothing.smooth` is a suspend
+     * function. Swift sees it with a completion handler, so the "callable later" promise holds.
      */
-    fun checkDi(): String = try {
+    suspend fun checkDi(): String = try {
         val graph = createGraphFactory<IosProbeGraph.Factory>().create(CoreObjectsGraph, ClientGraphBindings)
         val other = createGraphFactory<IosProbeGraph.Factory>().create(CoreObjectsGraph, ClientGraphBindings)
 

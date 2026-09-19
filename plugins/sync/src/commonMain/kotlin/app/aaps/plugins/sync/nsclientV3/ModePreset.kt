@@ -3,12 +3,18 @@ package app.aaps.plugins.sync.nsShared
 /**
  * Mode preset for Remote Control.
  * Maps user-friendly names to Therapy.kt keywords.
+ *
+ * There is no icon here on purpose. A drawable id is an Android resource and this class is shared -
+ * it compiles for iOS and the JVM too - so the icon is the UI layer's decision and lives with the
+ * adapters that draw it. Every mode shows the same placeholder today; the per-mode icons that were
+ * planned, for whoever draws them: meals a restaurant, sport `directions_run`, sleep a bedtime icon,
+ * gym `fitness_center`, meditation `self_improvement`, walking `directions_walk`, and one each for
+ * stress, illness, stomach, work, school, bar, flight, fasting, low carb and stop.
  */
 data class ModePreset(
     val id: String,
     val displayName: String,
     val therapyKeyword: String,  // Keyword that Therapy.kt searches for
-    val icon: Int,
     val defaultDurationMin: Int,
     val category: ModeCategory,
     val description: String = ""
@@ -35,7 +41,6 @@ object ModePresets {
             id = "breakfast",
             displayName = "Petit-déjeuner",
             therapyKeyword = "bfast",
-            icon = app.aaps.core.ui.R.drawable.ic_home,
             defaultDurationMin = 60,
             category = ModeCategory.MEAL,
             description = "Déclenche prébolus P1 et P2"
@@ -44,7 +49,6 @@ object ModePresets {
             id = "lunch",
             displayName = "Déjeuner",
             therapyKeyword = "lunch",
-            icon = app.aaps.core.ui.R.drawable.ic_home,
             defaultDurationMin = 60,
             category = ModeCategory.MEAL,
             description = "Déclenche prébolus P1 et P2"
@@ -53,7 +57,6 @@ object ModePresets {
             id = "dinner",
             displayName = "Dîner",
             therapyKeyword = "dinner",
-            icon = app.aaps.core.ui.R.drawable.ic_home,
             defaultDurationMin = 60,
             category = ModeCategory.MEAL,
             description = "Déclenche prébolus P1 et P2"
@@ -62,7 +65,6 @@ object ModePresets {
             id = "snack",
             displayName = "Collation",
             therapyKeyword = "snack",
-            icon = app.aaps.core.ui.R.drawable.ic_home,
             defaultDurationMin = 30,
             category = ModeCategory.MEAL,
             description = "Déclenche prébolus P1 et P2"
@@ -71,7 +73,6 @@ object ModePresets {
             id = "highcarb",
             displayName = "Repas riche",
             therapyKeyword = "highcarb",
-            icon = app.aaps.core.ui.R.drawable.ic_home,
             defaultDurationMin = 90,
             category = ModeCategory.MEAL,
             description = "Déclenche prébolus P1 et P2 renforcés"
@@ -80,7 +81,6 @@ object ModePresets {
             id = "meal",
             displayName = "Repas (général)",
             therapyKeyword = "meal",
-            icon = app.aaps.core.ui.R.drawable.ic_home, // TODO: Add restaurant icon
             defaultDurationMin = 60,
             category = ModeCategory.MEAL,
             description = "Mode repas générique"
@@ -93,7 +93,6 @@ object ModePresets {
             id = "sport",
             displayName = "Sport",
             therapyKeyword = "sport",
-            icon = app.aaps.core.ui.R.drawable.ic_home, // TODO: Use ic_directions_run
             defaultDurationMin = 120,
             category = ModeCategory.ACTIVITY,
             description = "Réduit SMB pendant l'activité"
@@ -102,7 +101,6 @@ object ModePresets {
             id = "sleep",
             displayName = "Sommeil",
             therapyKeyword = "sleep",
-            icon = app.aaps.core.ui.R.drawable.ic_home, // TODO: Add sleep icon
             defaultDurationMin = 480,
             category = ModeCategory.ACTIVITY,
             description = "Mode nuit sécurisé"
@@ -115,7 +113,6 @@ object ModePresets {
             id = "cardio",
             displayName = "Cardio",
             therapyKeyword = "cardio",
-            icon = app.aaps.core.ui.R.drawable.ic_home, // TODO: ic_directions_run
             defaultDurationMin = 60,
             category = ModeCategory.CONTEXT_ONLY,
             description = "Course, vélo, natation"
@@ -124,7 +121,6 @@ object ModePresets {
             id = "strength",
             displayName = "Musculation",
             therapyKeyword = "strength",
-            icon = app.aaps.core.ui.R.drawable.ic_home, // TODO: ic_fitness_center
             defaultDurationMin = 45,
             category = ModeCategory.CONTEXT_ONLY,
             description = "Exercices de force"
@@ -133,7 +129,6 @@ object ModePresets {
             id = "yoga",
             displayName = "Yoga",
             therapyKeyword = "yoga",
-            icon = app.aaps.core.ui.R.drawable.ic_home, // TODO: ic_self_improvement
             defaultDurationMin = 60,
             category = ModeCategory.CONTEXT_ONLY,
             description = "Yoga, stretching"
@@ -142,7 +137,6 @@ object ModePresets {
             id = "walking",
             displayName = "Marche",
             therapyKeyword = "walking",
-            icon = app.aaps.core.ui.R.drawable.ic_home, // TODO: ic_directions_walk
             defaultDurationMin = 30,
             category = ModeCategory.CONTEXT_ONLY,
             description = "Marche légère"
@@ -155,7 +149,6 @@ object ModePresets {
             id = "stress",
             displayName = "Stress",
             therapyKeyword = "stress",
-            icon = app.aaps.core.ui.R.drawable.ic_home, // TODO: Add stress icon
             defaultDurationMin = 180,
             category = ModeCategory.PHYSIO,
             description = "Augmente basale (stress hormonal)"
@@ -164,7 +157,6 @@ object ModePresets {
             id = "illness",
             displayName = "Maladie",
             therapyKeyword = "illness",
-            icon = app.aaps.core.ui.R.drawable.ic_home, // TODO: Add sick icon
             defaultDurationMin = 480,
             category = ModeCategory.PHYSIO,
             description = "Résistance à l'insuline accrue"
@@ -173,7 +165,6 @@ object ModePresets {
             id = "gastro",
             displayName = "Gastro",
             therapyKeyword = "gastro",
-            icon = app.aaps.core.ui.R.drawable.ic_home, // TODO: Add gastro icon
             defaultDurationMin = 480,
             category = ModeCategory.PHYSIO,
             description = "Troubles digestifs"
@@ -182,7 +173,6 @@ object ModePresets {
             id = "work_stress",
             displayName = "Stress travail",
             therapyKeyword = "work stress",
-            icon = app.aaps.core.ui.R.drawable.ic_home, // TODO: Add work icon
             defaultDurationMin = 240,
             category = ModeCategory.PHYSIO,
             description = "Stress professionnel"
@@ -191,7 +181,6 @@ object ModePresets {
             id = "exam_stress",
             displayName = "Stress examen",
             therapyKeyword = "exam stress",
-            icon = app.aaps.core.ui.R.drawable.ic_home, // TODO: Add school icon
             defaultDurationMin = 180,
             category = ModeCategory.PHYSIO,
             description = "Stress d'examen"
@@ -200,7 +189,6 @@ object ModePresets {
             id = "alcohol",
             displayName = "Alcool",
             therapyKeyword = "alcohol",
-            icon = app.aaps.core.ui.R.drawable.ic_home, // TODO: Add bar icon
             defaultDurationMin = 360,
             category = ModeCategory.PHYSIO,
             description = "Consommation d'alcool"
@@ -209,7 +197,6 @@ object ModePresets {
             id = "travel",
             displayName = "Voyage",
             therapyKeyword = "travel",
-            icon = app.aaps.core.ui.R.drawable.ic_home, // TODO: Add flight icon
             defaultDurationMin = 720,
             category = ModeCategory.PHYSIO,
             description = "Voyage / décalage horaire"
@@ -222,7 +209,6 @@ object ModePresets {
             id = "fasting",
             displayName = "Jeûne",
             therapyKeyword = "fasting",
-            icon = app.aaps.core.ui.R.drawable.ic_home, // TODO: Add fasting icon
             defaultDurationMin = 720,
             category = ModeCategory.CONTROL,
             description = "Mode jeûne (réduit basale)"
@@ -231,7 +217,6 @@ object ModePresets {
             id = "lowcarb",
             displayName = "Low Carb",
             therapyKeyword = "lowcarb",
-            icon = app.aaps.core.ui.R.drawable.ic_home, // TODO: Add lowcarb icon
             defaultDurationMin = 180,
             category = ModeCategory.CONTROL,
             description = "Adaptation régime pauvre en glucides"
@@ -240,7 +225,6 @@ object ModePresets {
             id = "stop",
             displayName = "⛔ Annuler tout",
             therapyKeyword = "stop",
-            icon = app.aaps.core.ui.R.drawable.ic_home, // TODO: Add stop icon
             defaultDurationMin = 0,
             category = ModeCategory.CONTROL,
             description = "Annule tous les modes actifs"
