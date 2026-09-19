@@ -1,15 +1,17 @@
 package app.aaps.core.ui.views
 
-import android.graphics.Color
-import androidx.annotation.ColorInt
-
 /**
- * Pure palette logic for glucose ring UIs: [app.aaps.core.ui.views.GlucoseRingView],
+ * Pure palette logic for glucose ring UIs: the Android view `GlucoseRingView`, and
  * [app.aaps.core.ui.compose.dashboard.GlucoseHeroRing] (unit-tested, no Android View).
+ *
+ * Lives in commonMain so the Compose ring can use it on every target. Colours are plain ARGB
+ * ints, which both callers already work in, so nothing here needs a platform type.
  */
 object GlucoseRingColorComputer {
 
-    @ColorInt
+    /** Fallback for a missing BG reading. Same value as `android.graphics.Color.GRAY`. */
+    private const val GRAY = 0xFF888888.toInt()
+
     fun compute(
         bgMgdl: Int?,
         hypoMaxFromProfile: Float?,
@@ -19,12 +21,12 @@ object GlucoseRingColorComputer {
         step1MaxMgdl: Float,
         step2MaxMgdl: Float,
         step3MaxMgdl: Float,
-        @ColorInt stepColor1: Int,
-        @ColorInt stepColor2: Int,
-        @ColorInt stepColor3: Int,
-        @ColorInt stepColor4: Int,
+        stepColor1: Int,
+        stepColor2: Int,
+        stepColor3: Int,
+        stepColor4: Int,
     ): Int {
-        val v = bgMgdl ?: return Color.GRAY
+        val v = bgMgdl ?: return GRAY
         val hypoCap = (hypoMaxFromProfile ?: hypoMaxMgdlAttr).coerceAtLeast(severeHypoMaxMgdl + 1f)
         val vf = v.toFloat()
         if (!useSteppedColors) {

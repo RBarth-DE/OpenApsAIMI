@@ -10,11 +10,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.toArgb
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
-import androidx.core.content.ContextCompat
 import app.aaps.core.data.model.TrendArrow
 import app.aaps.core.interfaces.overview.graph.BgInfoData
 import app.aaps.core.interfaces.overview.graph.BgRange
@@ -51,7 +49,6 @@ fun RingHeroHomeSection(
         return
     }
 
-    val context = LocalContext.current
     val profileUtil = LocalProfileUtil.current
     val bgMgdl = profileUtil.convertToMgdlDetect(bgInfo.bgValue).roundToInt()
 
@@ -62,6 +59,15 @@ fun RingHeroHomeSection(
     }
     val subTextColorArgb = MaterialTheme.colorScheme.onSurfaceVariant.toArgb()
 
+    // Theme tokens, so the ring keeps its light/dark palette on every target. Converted to ARGB
+    // because GlucoseRingColorComputer and GlucoseHeroUiState work in plain ints. Read outside the
+    // remember block so a theme change re-runs it - as a key, not just as a value read inside.
+    val step1 = AapsTheme.generalColors.glucoseRingStep1.toArgb()
+    val step2 = AapsTheme.generalColors.glucoseRingStep2.toArgb()
+    val step3 = AapsTheme.generalColors.glucoseRingStep3.toArgb()
+    val step4 = AapsTheme.generalColors.glucoseRingStep4.toArgb()
+    val surfaceColorArgb = AapsTheme.generalColors.glucoseRingSurface.toArgb()
+
     val heroState = remember(
         bgInfo,
         timeAgoText,
@@ -69,11 +75,12 @@ fun RingHeroHomeSection(
         centerTextColorArgb,
         subTextColorArgb,
         profileUtil.units,
+        step1,
+        step2,
+        step3,
+        step4,
+        surfaceColorArgb,
     ) {
-        val step1 = ContextCompat.getColor(context, app.aaps.core.ui.R.color.glucose_ring_step1)
-        val step2 = ContextCompat.getColor(context, app.aaps.core.ui.R.color.glucose_ring_step2)
-        val step3 = ContextCompat.getColor(context, app.aaps.core.ui.R.color.glucose_ring_step3)
-        val step4 = ContextCompat.getColor(context, app.aaps.core.ui.R.color.glucose_ring_step4)
         val ringArgb = GlucoseRingColorComputer.compute(
             bgMgdl = bgMgdl,
             hypoMaxFromProfile = null,
@@ -96,7 +103,7 @@ fun RingHeroHomeSection(
             ringColorArgb = ringArgb,
             centerTextColorArgb = centerTextColorArgb,
             subTextColorArgb = subTextColorArgb,
-            surfaceColorArgb = ContextCompat.getColor(context, app.aaps.core.ui.R.color.glucose_ring_surface),
+            surfaceColorArgb = surfaceColorArgb,
             telemetryProgress = null,
             telemetryColorArgb = null,
             strokeWidthDp = 4f,

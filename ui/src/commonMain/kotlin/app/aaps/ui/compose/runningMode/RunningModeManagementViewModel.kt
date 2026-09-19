@@ -10,6 +10,7 @@ import app.aaps.core.data.pump.defs.PumpDescription
 import app.aaps.core.data.ue.Action
 import app.aaps.core.data.ue.Sources
 import app.aaps.core.interfaces.aps.Loop
+import app.aaps.core.interfaces.concurrent.aapsIoDispatcher
 import app.aaps.core.interfaces.bolus.BatchAction
 import app.aaps.core.interfaces.bolus.BatchExecutor
 import app.aaps.core.interfaces.clientcontrol.ActionProgress
@@ -40,7 +41,6 @@ import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.binding
 import dev.zacsweers.metrox.viewmodel.ViewModelKey
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -94,14 +94,14 @@ class RunningModeManagementViewModel(
     fun loadState() {
         viewModelScope.launch {
             try {
-                val runningModeRecord = withContext(Dispatchers.IO) { loop.runningModeRecord() }
-                val allowedModes = withContext(Dispatchers.IO) { loop.allowedNextModes() }
+                val runningModeRecord = withContext(aapsIoDispatcher) { loop.runningModeRecord() }
+                val allowedModes = withContext(aapsIoDispatcher) { loop.allowedNextModes() }
                 val pumpDescription: PumpDescription = activePlugin.activePump.pumpDescription
                 val currentMode = runningModeRecord.mode
                 // Whether a profile is actually set. [Loop.allowedNextModes] returns an empty list both when no
                 // profile is set AND when the pump force-suspends (SUSPENDED_BY_PUMP); only the former should
                 // surface the "no profile set" card, so check the real condition instead of the empty list.
-                val profileSet = withContext(Dispatchers.IO) { profileFunction.isProfileValid("RunningModeScreen") }
+                val profileSet = withContext(aapsIoDispatcher) { profileFunction.isProfileValid("RunningModeScreen") }
 
                 _uiState.update {
                     it.copy(

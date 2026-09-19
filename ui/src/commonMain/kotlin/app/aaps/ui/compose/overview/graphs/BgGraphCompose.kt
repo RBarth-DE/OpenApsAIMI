@@ -23,7 +23,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
@@ -46,6 +45,7 @@ import app.aaps.core.interfaces.overview.graph.EpsGraphPoint
 import app.aaps.core.interfaces.overview.graph.SeriesType
 import app.aaps.core.interfaces.overview.graph.TargetLineData
 import app.aaps.core.interfaces.overview.graph.TreatmentGraphData
+import app.aaps.core.interfaces.resources.formatTemplate
 import app.aaps.core.ui.compose.AapsTheme
 import app.aaps.core.ui.compose.LocalDateUtil
 import app.aaps.core.ui.compose.icons.IcProfile
@@ -77,9 +77,6 @@ import com.patrykandpatrick.vico.compose.common.component.ShapeComponent
 import com.patrykandpatrick.vico.compose.common.component.TextComponent
 import com.patrykandpatrick.vico.compose.common.component.rememberTextComponent
 import com.patrykandpatrick.vico.compose.common.data.ExtraStore
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
 import kotlin.concurrent.Volatile
 import kotlin.math.abs
 import kotlinx.coroutines.delay
@@ -1050,9 +1047,7 @@ fun BgGraphCompose(
 
     // SMB tap popup — anchored at top-center when selectedSmb is non-null
     selectedSmb?.let { smb ->
-        val timeStr = remember(smb.timestamp) {
-            SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date(smb.timestamp))
-        }
+        val timeStr = remember(smb.timestamp) { dateUtil.timeString(smb.timestamp) }
         Popup(
             alignment = Alignment.TopCenter,
             offset = IntOffset(0, 8),
@@ -1125,7 +1120,7 @@ private fun rememberBgValueMarker(
     val surfaceColor = MaterialTheme.colorScheme.surface
     val onSurfaceColor = MaterialTheme.colorScheme.onSurface
     val outlineColor = MaterialTheme.colorScheme.outline
-    val timeFormat = remember { SimpleDateFormat("HH:mm", Locale.getDefault()) }
+    val dateUtil = LocalDateUtil.current
     val valueTimeTemplate = stringResource(UiStrings.graph_point_value_time)
 
     val labelBackground = remember(surfaceColor, outlineColor) {
@@ -1148,8 +1143,8 @@ private fun rememberBgValueMarker(
             val epochMs = minTimestamp + (x * 60000).toLong()
             val bgMgdl = interpolateBgForDashboardMarker(epochMs, sortedBg, fallbackY = sortedBg.last().value)
             val valueText = formatChartYValue(mgdlToChartY(bgMgdl))
-            val timeText = timeFormat.format(Date(epochMs))
-            String.format(valueTimeTemplate, valueText, timeText)
+            val timeText = dateUtil.timeString(epochMs)
+            formatTemplate(valueTimeTemplate, listOf(valueText, timeText))
         }
     }
 

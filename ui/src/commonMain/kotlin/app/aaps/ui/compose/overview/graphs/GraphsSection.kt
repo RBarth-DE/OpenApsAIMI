@@ -1,6 +1,5 @@
 package app.aaps.ui.compose.overview.graphs
 
-import android.content.Intent
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -60,7 +59,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.PointerEventTimeoutCancellationException
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalViewConfiguration
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
@@ -81,9 +79,12 @@ import app.aaps.core.data.configuration.Constants
 import app.aaps.core.interfaces.overview.graph.GraphConfig
 import app.aaps.core.interfaces.overview.graph.SecondaryGraph
 import app.aaps.core.interfaces.overview.graph.SeriesType
+import app.aaps.core.interfaces.resources.formatTemplate
 import app.aaps.core.keys.interfaces.TextRef
 import app.aaps.core.ui.CoreUiStrings
 import app.aaps.core.ui.compose.AapsTheme
+import app.aaps.core.ui.compose.LocalDateUtil
+import app.aaps.core.ui.compose.LocalScreenOpener
 import app.aaps.core.ui.compose.NumberInputRow
 import app.aaps.core.ui.compose.stringResource
 import com.patrykandpatrick.vico.compose.cartesian.Scroll
@@ -378,6 +379,7 @@ fun GraphsSection(
     // Auto-scroll when new BG value arrives
     val bgInfoState by graphViewModel.bgInfoState.collectAsStateWithLifecycle()
     val predictions by graphViewModel.predictionsFlow.collectAsStateWithLifecycle()
+    val dateUtil = LocalDateUtil.current
     var lastBgTimestamp by remember { mutableLongStateOf(0L) }
 
     LaunchedEffect(bgInfoState.bgInfo?.timestamp, lifecycleOwner) {
@@ -385,7 +387,7 @@ fun GraphsSection(
         val showPredictions = SeriesType.PREDICTIONS in graphConfig.bgOverlays
         if (lastBgTimestamp != 0L && newTimestamp > lastBgTimestamp) {
             // Skip auto-reset while user is interacting with the graph
-            val sinceInteraction = System.currentTimeMillis() - graphViewModel.lastInteractionMs
+            val sinceInteraction = dateUtil.now() - graphViewModel.lastInteractionMs
             if (sinceInteraction < INTERACTION_GRACE_MS) {
                 lastBgTimestamp = newTimestamp
                 return@LaunchedEffect
@@ -394,7 +396,7 @@ fun GraphsSection(
             if (showPredictions && predictions.isNotEmpty() && timeRange != null) {
                 // Scroll so "now + 3h" is at the right edge of viewport
                 val (minTimestamp, _) = timeRange
-                val nowX = timestampToX(System.currentTimeMillis(), minTimestamp)
+                val nowX = timestampToX(dateUtil.now(), minTimestamp)
                 bgScrollState.animateScroll(Scroll.Absolute.x(nowX + PREDICTION_VIEWPORT_FUTURE_BIAS_MINUTES, bias = 1f))
             } else {
                 // No predictions - scroll to end
@@ -883,7 +885,7 @@ private fun PulsePanel(
     onLongPress: (() -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
-    val context = LocalContext.current
+    val screenOpener = LocalScreenOpener.current
     // FIX: was missing — hypoColor must be declared here
     val hypoColor = Color(0xFFD50000)
 
@@ -893,16 +895,9 @@ private fun PulsePanel(
         modifier = modifier
             .padding(bottom = 4.dp)
             .combinedClickable(
-                onClick = {
-                    try {
-                        context.startActivity(
-                            Intent().setClassName(
-                                context,
-                                "app.aaps.plugins.aps.openAPSAIMI.advisor.pulse.AimiPulseDetailActivity"
-                            )
-                        )
-                    } catch (_: Exception) {}
-                },
+                // The card keeps showing the pulse numbers on every target. Only the tap that opens
+                // the detail screen is Android-only, and on a target without it the tap does nothing.
+                onClick = { screenOpener.open("app.aaps.plugins.aps.openAPSAIMI.advisor.pulse.AimiPulseDetailActivity") },
                 onLongClick = { onLongPress?.invoke() }
             ),
         colors = CardDefaults.cardColors(containerColor = Color.Transparent),
@@ -1026,7 +1021,7 @@ private fun TirPanel(
                 }
                 Spacer(Modifier.height(2.dp))
                 Text(
-                    text = "Avg %.0f mg/dL · A1C %.1f%%".format(state.avgMgDl, state.a1c),
+                    text = formatTemplate("Avg %.0f mg/dL · A1C %.1f%%", listOf(state.avgMgDl, state.a1c)),
                     style = MaterialTheme.typography.labelSmall.copy(
                         fontSize = TextUnit(9f, TextUnitType.Sp)
                     ),
@@ -1209,7 +1204,7 @@ private fun BoostDataCard(state: BoostPanelState, modifier: Modifier) {
                         )
                         Spacer(Modifier.width(8.dp))
                         Text(
-                            "%.2f".format(state.v5Score),
+                            formatTemplate("%.2f", listOf(state.v5Score)),
                             style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
                             color = MaterialTheme.colorScheme.onSurface
                         )

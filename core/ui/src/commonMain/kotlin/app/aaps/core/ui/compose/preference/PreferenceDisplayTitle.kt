@@ -3,7 +3,6 @@ package app.aaps.core.ui.compose.preference
 import androidx.compose.runtime.Composable
 import app.aaps.core.keys.interfaces.TextRef
 import app.aaps.core.ui.compose.stringResource
-import java.util.Locale
 
 /**
  * True when a title carries no text, so there is nothing to show for it.
@@ -39,6 +38,12 @@ internal fun preferenceSummaryLine(summaryItems: List<TextRef>): String? =
         .takeIf { it.isNotEmpty() }
         ?.joinToString(", ")
 
+/**
+ * Titles from a storage key are identifier text, not user text, so the case mapping is the
+ * locale-independent one: `Char.titlecase()` takes no locale, and `java.util.Locale` cannot be named
+ * in commonMain anyway. Turkish dotless i is the only case that would read differently, and that is
+ * in a fallback label built from a key like `key_foo_bar`.
+ */
 private fun humanizeStorageKey(storageKey: String): String {
     var rest = storageKey.trim()
     if (rest.startsWith("key_")) {
@@ -48,7 +53,7 @@ private fun humanizeStorageKey(storageKey: String): String {
         .filter { it.isNotEmpty() }
         .joinToString(" ") { word ->
             word.replaceFirstChar { c ->
-                if (c.isLowerCase()) c.titlecase(Locale.getDefault()) else c.toString()
+                if (c.isLowerCase()) c.titlecase() else c.toString()
             }
         }
         .ifEmpty { storageKey }

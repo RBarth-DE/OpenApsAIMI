@@ -15,7 +15,7 @@ import app.aaps.core.interfaces.insulin.InsulinType
 import app.aaps.core.interfaces.logging.AAPSLogger
 import app.aaps.core.interfaces.logging.LTag
 import app.aaps.core.interfaces.logging.UserEntryLogger
-import app.aaps.core.interfaces.resources.ResourceHelper
+import app.aaps.core.interfaces.resources.TextResolver
 import app.aaps.core.interfaces.utils.DateUtil
 import app.aaps.core.objects.extensions.looksInhaled
 import app.aaps.core.ui.CoreUiStrings
@@ -37,7 +37,7 @@ class AfrezzaDialogViewModel @Inject constructor(
     private val persistenceLayer: PersistenceLayer,
     private val uel: UserEntryLogger,
     private val dateUtil: DateUtil,
-    private val rh: ResourceHelper,
+    private val rh: TextResolver,
     private val aapsLogger: AAPSLogger
 ) : ViewModel() {
 

@@ -1,7 +1,5 @@
 package app.aaps.ui.compose.overview
 
-import android.content.Intent
-import androidx.annotation.DrawableRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -38,9 +36,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -55,7 +51,14 @@ import app.aaps.core.ui.CoreUiStrings
 import app.aaps.core.ui.compose.AapsSpacing
 import app.aaps.core.ui.compose.AapsTheme
 import app.aaps.core.ui.compose.LocalConfig
+import app.aaps.core.ui.compose.LocalScreenOpener
 import app.aaps.core.ui.compose.TonalIcon
+import app.aaps.core.ui.compose.icons.IcAuditMonitor
+import app.aaps.core.ui.compose.icons.IcDroplet
+import app.aaps.core.ui.compose.icons.IcHeartRate
+import app.aaps.core.ui.compose.icons.IcShoe
+import app.aaps.core.ui.compose.icons.IcSyringe
+import app.aaps.core.ui.compose.icons.IcWave
 import app.aaps.core.ui.compose.navigation.NavigationRequest
 import app.aaps.core.ui.compose.navigation.color
 import app.aaps.core.ui.compose.navigation.icon
@@ -109,7 +112,7 @@ fun OverviewScreenStacked(
     val statusState by statusViewModel.uiState.collectAsStateWithLifecycle()
     val statusPanelState by graphViewModel.statusPanelFlow.collectAsStateWithLifecycle()
     val auditorState by graphViewModel.auditorStateFlow.collectAsStateWithLifecycle()
-    val context = LocalContext.current
+    val screenOpener = LocalScreenOpener.current
 
     var statusExpanded by rememberSaveable { mutableStateOf(false) }
 
@@ -149,22 +152,14 @@ fun OverviewScreenStacked(
                     )
                     SensitivityChipBlock(state = sensitivityUiState)
                 }
-                if( isAIMIActive ) {
+                if( isAIMIActive && screenOpener.isAvailable ) {
                     AuditorIconButton(
                         state = auditorState,
                         modifier = Modifier
                             .align(Alignment.TopEnd)
                             .offset(x = 8.dp, y = (-4).dp),
                     ) {
-                        try {
-                            context.startActivity(
-                                Intent().setClassName(
-                                    context,
-                                    "app.aaps.plugins.aps.openAPSAIMI.advisor.auditor.ui.AuditorVerdictActivity"
-                                )
-                            )
-                        } catch (_: Exception) {
-                        }
+                        screenOpener.open("app.aaps.plugins.aps.openAPSAIMI.advisor.auditor.ui.AuditorVerdictActivity")
                     }
                 }
             }
@@ -215,64 +210,32 @@ fun OverviewScreenStacked(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(2.dp)
             ) {
-                if ( isAutoISFActive) {
+                if ( isAutoISFActive && screenOpener.isAvailable) {
                     AimiQuickTile(
                         elementType = ElementType.PROFILE_HELPER,
                         label = stringResource( app.aaps.core.ui.CoreUiStrings.autoisf_btn_advisor),
                     ) {
-                        try {
-                            context.startActivity(
-                                Intent().setClassName(
-                                    context,
-                                    "app.aaps.plugins.aps.openAPSAutoISF.advisor.AutoIsfProfileAdvisorActivity"
-                                )
-                            )
-                        } catch (_: Exception) {
-                        }
+                        screenOpener.open("app.aaps.plugins.aps.openAPSAutoISF.advisor.AutoIsfProfileAdvisorActivity")
                     }
                 }
-                if ( isAIMIActive) {
+                if ( isAIMIActive && screenOpener.isAvailable) {
                     AimiQuickTile(
                         elementType = ElementType.PROFILE_HELPER,
                         label = stringResource(app.aaps.core.ui.CoreUiStrings.aimi_btn_advisor),
                     ) {
-                        try {
-                            context.startActivity(
-                                Intent().setClassName(
-                                    context,
-                                    "app.aaps.plugins.aps.openAPSAIMI.advisor.AimiProfileAdvisorActivity"
-                                )
-                            )
-                        } catch (_: Exception) {
-                        }
+                        screenOpener.open("app.aaps.plugins.aps.openAPSAIMI.advisor.AimiProfileAdvisorActivity")
                     }
                     AimiQuickTile(
                         elementType = ElementType.QUICK_WIZARD_MANAGEMENT,
                         label = stringResource(app.aaps.core.ui.CoreUiStrings.aimi_btn_meal),
                     ) {
-                        try {
-                            context.startActivity(
-                                Intent().setClassName(
-                                    context,
-                                    "app.aaps.plugins.aps.openAPSAIMI.advisor.meal.MealAdvisorActivity"
-                                )
-                            )
-                        } catch (_: Exception) {
-                        }
+                        screenOpener.open("app.aaps.plugins.aps.openAPSAIMI.advisor.meal.MealAdvisorActivity")
                     }
                     AimiQuickTile(
                         elementType = ElementType.USER_ENTRY,
                         label = stringResource(app.aaps.core.ui.CoreUiStrings.aimi_btn_context),
                     ) {
-                        try {
-                            context.startActivity(
-                                Intent().setClassName(
-                                    context,
-                                    "app.aaps.plugins.aps.openAPSAIMI.context.ui.ContextActivity"
-                                )
-                            )
-                        } catch (_: Exception) {
-                        }
+                        screenOpener.open("app.aaps.plugins.aps.openAPSAIMI.context.ui.ContextActivity")
                     }
                 }
             }
@@ -329,22 +292,22 @@ internal fun OverviewStatusPanel(
         verticalArrangement = Arrangement.spacedBy(2.dp)
     ) {
         StatusChip(
-            iconRes = app.aaps.core.ui.R.drawable.ic_dashboard_shoe,
+            icon = IcShoe,
             text = state.stepsText,
             chipColor = StatusChipStepsColor
         )
         StatusChip(
-            iconRes = app.aaps.core.ui.R.drawable.ic_cp_heart_rate,
+            icon = IcHeartRate,
             text = state.hrText,
             chipColor = StatusChipHrColor
         )
         StatusChip(
-            iconRes = app.aaps.core.ui.R.drawable.ic_dashboard_droplet,
+            icon = IcDroplet,
             text = "${state.lastSmbTime} · ${state.lastSmbAmount}",
             chipColor = StatusChipSmbColor
         )
         StatusChip(
-            iconRes = app.aaps.core.ui.R.drawable.ic_dashboard_wave,
+            icon = IcWave,
             text = if ( state.basalPctText == state.basalRateText )
             {
                 state.basalRateText
@@ -355,7 +318,7 @@ internal fun OverviewStatusPanel(
             chipColor = StatusChipBasalColor
         )
         StatusChip(
-            iconRes = app.aaps.core.ui.R.drawable.ic_dashboard_iob,
+            icon = IcSyringe,
             text = state.iobText,
             chipColor = StatusChipIobColor
         )
@@ -364,7 +327,7 @@ internal fun OverviewStatusPanel(
 
 @Composable
 private fun StatusChip(
-    @DrawableRes iconRes: Int,
+    icon: ImageVector,
     text: String,
     chipColor: Color,
     modifier: Modifier = Modifier
@@ -380,7 +343,7 @@ private fun StatusChip(
             modifier = Modifier.padding(horizontal = AapsSpacing.small, vertical = 0.dp)
         ) {
             Icon(
-                painter = painterResource(iconRes),
+                imageVector = icon,
                 contentDescription = null,
                 tint = chipColor,
                 modifier = Modifier.size(AapsSpacing.large)
@@ -421,7 +384,7 @@ internal fun AuditorIconButton(
         modifier = modifier.size(36.dp)
     ) {
         Icon(
-            painter = painterResource(app.aaps.core.ui.R.drawable.ic_audit_monitor),
+            imageVector = IcAuditMonitor,
             contentDescription = "Auditor",
             tint = tint,
             modifier = Modifier.size(AapsSpacing.auditorIconSize)

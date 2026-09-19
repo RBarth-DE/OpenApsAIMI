@@ -1,6 +1,5 @@
 package app.aaps.core.ui.compose.preference
 
-import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -24,6 +23,9 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.navigationevent.NavigationEventInfo
+import androidx.navigationevent.compose.NavigationBackHandler
+import androidx.navigationevent.compose.rememberNavigationEventState
 import app.aaps.core.ui.CoreUiStrings
 import app.aaps.core.ui.compose.stringResource
 import app.aaps.core.ui.compose.AapsTopAppBar
@@ -31,7 +33,6 @@ import app.aaps.core.ui.compose.ComposeScreenContent
 import app.aaps.core.ui.compose.LocalSnackbarHostState
 import app.aaps.core.ui.compose.MasterOfflineBanner
 import app.aaps.core.ui.compose.masterEditingEnabled
-import app.aaps.core.ui.R
 import kotlinx.coroutines.launch
 
 /**
@@ -68,15 +69,22 @@ fun PreferenceSubScreenHost(
 
     // Lowest priority: always intercepts back so we never fall through to the nav stack.
     // Higher-priority handlers below override this when composeScreen or drilledSub is active.
-    BackHandler(enabled = true) {
-        onBackClick()
-    }
-    BackHandler(enabled = composeScreen != null) {
-        composeScreen = null
-    }
-    BackHandler(enabled = drilledSub != null) {
-        drilledSub = null
-    }
+    // NavigationBackHandler, not the androidx.activity one: that one is Android only.
+    NavigationBackHandler(
+        state = rememberNavigationEventState(NavigationEventInfo.None),
+        isBackEnabled = true,
+        onBackCompleted = { onBackClick() }
+    )
+    NavigationBackHandler(
+        state = rememberNavigationEventState(NavigationEventInfo.None),
+        isBackEnabled = composeScreen != null,
+        onBackCompleted = { composeScreen = null }
+    )
+    NavigationBackHandler(
+        state = rememberNavigationEventState(NavigationEventInfo.None),
+        isBackEnabled = drilledSub != null,
+        onBackCompleted = { drilledSub = null }
+    )
 
     composeScreen?.let { screen ->
         screen.Content(onBack = { composeScreen = null })

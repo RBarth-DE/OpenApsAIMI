@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import app.aaps.core.data.model.RM
 import app.aaps.core.interfaces.aps.Loop
+import app.aaps.core.interfaces.concurrent.aapsIoDispatcher
 import app.aaps.core.interfaces.plugin.ActivePlugin
 import app.aaps.core.interfaces.plugin.PluginBase
 import app.aaps.core.interfaces.profile.ProfileFunction
@@ -21,7 +22,6 @@ import dev.zacsweers.metro.ContributesIntoMap
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.binding
 import dev.zacsweers.metrox.viewmodel.ViewModelKey
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -75,7 +75,7 @@ class LoopActionViewModel(
         val pump = activePlugin.activePump
         val profile = profileFunction.getProfile()
         val lastRun = loop.lastRun
-        val runningMode = withContext(Dispatchers.IO) { loop.runningMode() }
+        val runningMode = withContext(aapsIoDispatcher) { loop.runningMode() }
 
         val resultAvailable = lastRun != null &&
             (lastRun.lastOpenModeAccept == 0L || lastRun.lastOpenModeAccept < lastRun.lastAPSRun) &&

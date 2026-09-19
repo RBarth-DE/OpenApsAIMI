@@ -53,6 +53,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
@@ -121,8 +122,10 @@ import app.aaps.core.keys.interfaces.Preferences
 import app.aaps.core.keys.interfaces.VisibilityContext
 import app.aaps.core.objects.crypto.CryptoUtil
 import app.aaps.core.ui.compose.AapsTheme
+import app.aaps.core.ui.compose.AndroidScreenOpener
 import app.aaps.core.ui.compose.AppBrandIcon
 import app.aaps.core.ui.compose.LocalAppIcon
+import app.aaps.core.ui.compose.LocalScreenOpener
 import app.aaps.core.ui.compose.LocalConfig
 import app.aaps.core.ui.compose.LocalDateUtil
 import app.aaps.core.ui.compose.LocalDecimalFormatter
@@ -424,6 +427,9 @@ class ComposeMainActivity : MetroAppCompatActivity() {
             // This build's own launcher icon, so the drawer and the About dialog show what the home
             // screen shows. The client flavours each have their own owl, and IconsProvider picks it.
             LocalAppIcon provides { modifier -> AppBrandIcon(iconResId = iconsProvider.getIcon(), modifier = modifier) },
+            // Lets the shared screens open this app's activities. Other targets do not provide it,
+            // so their screens hide those buttons instead of showing one that does nothing.
+            LocalScreenOpener provides AndroidScreenOpener(LocalContext.current),
             LocalConfig provides config,
             LocalMasterReachable provides masterReachable,
             LocalMasterControlAllowed provides masterControlAllowed,

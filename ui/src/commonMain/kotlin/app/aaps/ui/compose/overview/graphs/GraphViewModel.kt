@@ -16,6 +16,7 @@ import app.aaps.core.interfaces.aps.MealHypothesisCoreState
 import app.aaps.core.interfaces.aps.MealHypothesisHistorySource
 import app.aaps.core.interfaces.aps.RT
 import app.aaps.core.interfaces.automation.Automation
+import app.aaps.core.interfaces.concurrent.aapsIoDispatcher
 import app.aaps.core.interfaces.configuration.Config
 import app.aaps.core.interfaces.constraints.ConstraintsChecker
 import app.aaps.core.interfaces.db.PersistenceLayer
@@ -39,8 +40,8 @@ import app.aaps.core.interfaces.profile.ProfileFunction
 import app.aaps.core.interfaces.profile.ProfileUtil
 import app.aaps.core.interfaces.pump.PumpInsulin
 import app.aaps.core.interfaces.pump.PumpRate
-import app.aaps.core.interfaces.resources.ResourceHelper
 import app.aaps.core.interfaces.resources.TextResolver
+import app.aaps.core.interfaces.resources.formatTemplate
 import app.aaps.core.interfaces.utils.DateUtil
 import app.aaps.core.interfaces.utils.DecimalFormatter
 import app.aaps.core.keys.BooleanNonKey
@@ -56,11 +57,7 @@ import dev.zacsweers.metro.Assisted
 import dev.zacsweers.metro.AssistedFactory
 import dev.zacsweers.metro.AssistedInject
 import dev.zacsweers.metro.Inject
-import java.time.LocalDate
-import java.time.ZoneId
-import java.util.Locale
 import kotlin.concurrent.Volatile
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -477,8 +474,8 @@ class GraphViewModel(
                     asText = rh.gs(CoreUiStrings.autosens_short, it)
                 dialogText.add(rh.gs(CoreUiStrings.autosens_long, it))
             }
-            isfFrom = String.format(Locale.getDefault(), "%1$.1f", profileUtil.fromMgdlToUnits(isfMgdl, units))
-            isfTo = String.format(Locale.getDefault(), "%1$.1f", profileUtil.fromMgdlToUnits(variableSens, units))
+            isfFrom = decimalFormatter.to1Decimal(profileUtil.fromMgdlToUnits(isfMgdl, units))
+            isfTo = decimalFormatter.to1Decimal(profileUtil.fromMgdlToUnits(variableSens, units))
             if (ratioUsed != 1.0 && ratioUsed != lastAutosensRatio)
                 dialogText.add(rh.gs(CoreUiStrings.algorithm_long, ratioUsed * 100))
             val isfForCarbs = profile.getIsfMgdlForCarbs(dateUtil.now(), "Overview", config, processedDeviceStatusData)
@@ -530,7 +527,7 @@ class GraphViewModel(
         val range = if (allTimestamps.isEmpty() || fullWindow) {
             cacheTimeRange?.let {
                 val upper = if (showPredictions) {
-                    val minFutureEnd = System.currentTimeMillis() +
+                    val minFutureEnd = dateUtil.now() +
                         T.hours(Constants.PREDICTION_GRAPH_MIN_HOURS.toLong()).msecs()
                     maxOf(it.endTime, minFutureEnd)
                 } else {
@@ -563,10 +560,10 @@ class GraphViewModel(
             // val effectiveMax = if (cacheTimeRange != null) maxOf(maxTime, cacheTimeRange.endTime) else maxTime
             // Pair(minTime, effectiveMax)
             // Force the graph to end no later than 1 hours from now
-            val oneHourFromNow = System.currentTimeMillis() + 60 * 60 * 1000L * 1
+            val oneHourFromNow = dateUtil.now() + 60 * 60 * 1000L * 1
             var effectiveMax = if (cacheUpper != null) maxOf(maxTime, cacheUpper) else maxTime
             if (showPredictions && effectivePredictions.isNotEmpty()) {
-                val minFutureEnd = System.currentTimeMillis() +
+                val minFutureEnd = dateUtil.now() +
                     T.hours(Constants.PREDICTION_GRAPH_MIN_HOURS.toLong()).msecs()
                 effectiveMax = maxOf(effectiveMax, minFutureEnd).coerceAtMost(oneHourFromNow) // This is the line that caps the future view
             }
@@ -620,7 +617,7 @@ class GraphViewModel(
     )
 
     fun runAutomationEvent(eventId: String) {
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch(aapsIoDispatcher) {
             val event = automation.events.value.firstOrNull { it.id == eventId } ?: return@launch
             automation.processEvent(event)
             aapsLogger.debug(LTag.APS, "[DashboardModes Graph] processEvent returned, invoking loop...")
@@ -709,19 +706,19 @@ class GraphViewModel(
         }
 
         // ── DynISF range: base (normal-target ISF) → adjusted (live DynISF) ──
-        val dynIsfValue = r.variableSens?.let { "%.0f".format(it) } ?: "--"
+        val dynIsfValue = r.variableSens?.let { formatTemplate("%.0f", listOf(it)) } ?: "--"
         val dynIsfLabel = run {
             val baseIsf = raw.sensNormalTarget ?: return@run ""
             val adjustedIsf = r.variableSens ?: return@run ""
             if (baseIsf <= 0.0 || adjustedIsf <= 0.0) return@run ""
-            "%.0f → %.0f %s".format(baseIsf, adjustedIsf, profileUtil.units.asText)
+            formatTemplate("%.0f → %.0f %s", listOf(baseIsf, adjustedIsf, profileUtil.units.asText))
         }
 
         return BoostPanelState(
             enabled = true,
             dynIsf = dynIsfValue,
             dynIsfLabel = dynIsfLabel,
-            tdd = raw.tdd?.let { "%.1fU".format(it) } ?: "--",
+            tdd = raw.tdd?.let { formatTemplate("%.1fU", listOf(it)) } ?: "--",
             activityLabel = activityLabel,
             activityColor = activityColor,
             status = v5State ?: tier ?: "BOOST",
@@ -740,13 +737,13 @@ class GraphViewModel(
                     append(v5State)
                     if (v5State == "IDLE" || v5State == "COMMITTED") append("  ×1.0")
                     else if (v5State == "RECOVERING") append("  ×0.4")
-                    else append("  ×%.1f".format(actionMult))
+                    else append(formatTemplate("  ×%.1f", listOf(actionMult)))
                     if (ageCycles > 0) append("  ·  ${ageCycles}c")
                 }
             } else "",
             v5Score = v5Score,
             v5DoseBudget = if (dose > 0.0 || budget > 0.0) {
-                "dose %.2fU  ·  budget %.2fU".format(dose, budget)
+                formatTemplate("dose %.2fU  ·  budget %.2fU", listOf(dose, budget))
             } else "",
             v5Brakes = gateReduction?.takeIf { it != "none" && it.isNotBlank() } ?: "",
             fastCarbProtection = raw.fastCarbProtection ?: false
@@ -767,7 +764,7 @@ class GraphViewModel(
     }
 
     private suspend fun buildTirUiState(): TirUiState {
-        val end = System.currentTimeMillis()
+        val end = dateUtil.now()
         val start = end - 24 * 60 * 60 * 1000L
         val readings = persistenceLayer.getBgReadingsDataFromTimeToTime(start, end, ascending = true)
         if (readings.isEmpty()) return TirUiState()
@@ -847,14 +844,12 @@ class GraphViewModel(
     }
 
     private suspend fun buildStatusPanelUiState(): StatusPanelUiState {
-        val now = System.currentTimeMillis()
-        val midnight = LocalDate.now()
-            .atStartOfDay(ZoneId.systemDefault())
-            .toInstant()
-            .toEpochMilli()
+        val now = dateUtil.now()
+        // Local midnight of today: the timestamp minus the time of day already elapsed.
+        val midnight = now - MidnightUtils.milliSecFromMidnight(now)
 
         // Tagesschritte direkt aus DB — gleicher Weg wie UnifiedActivityProvider
-        val todayRecords = persistenceLayer.getStepsCountFromTimeToTime(midnight, System.currentTimeMillis())
+        val todayRecords = persistenceLayer.getStepsCountFromTimeToTime(midnight, now)
 
         // Source-Priorität: Garmin > Wear > HC > Phone
         val bestSource = todayRecords.map { it.device }.firstOrNull { it == "Garmin-Watchface" }
@@ -872,8 +867,8 @@ class GraphViewModel(
         val sourceRecords = todayRecords.filter { it.device == bestSource }
         val stepsToday = maxPer5MinBucket(sourceRecords)
 
-        val recentRecords = sourceRecords.filter { it.timestamp >= System.currentTimeMillis() - 15 * 60 * 1000L }
-        val fiveMinAgo = System.currentTimeMillis() - 5 * 60 * 1000L
+        val recentRecords = sourceRecords.filter { it.timestamp >= now - 15 * 60 * 1000L }
+        val fiveMinAgo = now - 5 * 60 * 1000L
         val stepsDelta = maxPer5MinBucket(recentRecords.filter { it.timestamp >= fiveMinAgo })
 
         val stepsText = if (stepsToday > 0) "$stepsToday / +$stepsDelta" else "--"

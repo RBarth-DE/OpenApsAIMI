@@ -9,7 +9,7 @@ import app.aaps.core.data.ue.Sources
 import app.aaps.core.data.ue.ValueWithUnit
 import app.aaps.core.interfaces.logging.UserEntryLogger
 import app.aaps.core.interfaces.profile.ProfileUtil
-import app.aaps.core.interfaces.resources.ResourceHelper
+import app.aaps.core.interfaces.resources.TextResolver
 import app.aaps.core.interfaces.source.EversenseCalibrationSource
 import app.aaps.core.ui.CoreUiStrings
 import app.aaps.ui.UiStrings
@@ -30,7 +30,7 @@ class EversenseCalibrationDialogViewModel @Inject constructor(
     private val profileUtil: ProfileUtil,
     private val eversenseCalibrationSource: EversenseCalibrationSource,
     private val uel: UserEntryLogger,
-    private val rh: ResourceHelper
+    private val rh: TextResolver
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(EversenseCalibrationDialogUiState())

@@ -49,6 +49,11 @@ import androidx.compose.ui.graphics.Color
  * @property aCobPrediction Color for absorbed COB predictions (lighter orange)
  * @property uamPrediction Color for UAM (unannounced meals) predictions (yellow)
  * @property ztPrediction Color for zero-temp predictions (cyan)
+ * @property glucoseRingStep1 Color for the first (low) band of the glucose hero ring
+ * @property glucoseRingStep2 Color for the second band of the glucose hero ring
+ * @property glucoseRingStep3 Color for the third band of the glucose hero ring
+ * @property glucoseRingStep4 Color for the fourth (high) band of the glucose hero ring
+ * @property glucoseRingSurface Faint fill drawn behind the glucose hero ring's centre text
  */
 data class GeneralColors(
     val activeInsulinText: Color,
@@ -104,7 +109,15 @@ data class GeneralColors(
     val notificationAnnouncement: Color,
     val onNotification: Color,
     // Toggle colors
-    val toggleOn: Color
+    val toggleOn: Color,
+    // Glucose ring: the four BG bands of the hero ring, plus its faint centre fill.
+    // These are Compose copies of the glucose_ring_* colors in colors.xml, which stay behind for
+    // the Android views (GlucoseCircleView, GlucoseRingView) that still read them as resources.
+    val glucoseRingStep1: Color,
+    val glucoseRingStep2: Color,
+    val glucoseRingStep3: Color,
+    val glucoseRingStep4: Color,
+    val glucoseRingSurface: Color
 )
 
 /**
@@ -161,7 +174,13 @@ val LightGeneralColors = GeneralColors(
     notificationInfo = Color(0xFF009705),         // green for info notifications
     notificationAnnouncement = Color(0xFFFF8C00), // orange for announcements
     onNotification = Color(0xFFFFFFFF),            // white text on notification backgrounds
-    toggleOn = Color(0xFF4CAF50)                    // green for active/selected toggles
+    toggleOn = Color(0xFF4CAF50),                   // green for active/selected toggles
+    // Glucose ring (light): matches @color/glucose_ring_* in values/colors.xml
+    glucoseRingStep1 = Color(0xFF4CAF50),           // BG band 1
+    glucoseRingStep2 = Color(0xFFF4D700),           // BG band 2
+    glucoseRingStep3 = Color(0xFFFB8C00),           // BG band 3
+    glucoseRingStep4 = Color(0xFFFF0000),           // BG band 4
+    glucoseRingSurface = Color(0x14FFFFFF)          // faint centre fill
 )
 
 /**
@@ -218,7 +237,13 @@ val DarkGeneralColors = GeneralColors(
     notificationInfo = Color(0xFF009705),
     notificationAnnouncement = Color(0xFFFF8C00),
     onNotification = Color(0xFFFFFFFF),
-    toggleOn = Color(0xFF81C784)                    // lighter green for active/selected toggles (dark mode)
+    toggleOn = Color(0xFF81C784),                   // lighter green for active/selected toggles (dark mode)
+    // Glucose ring (dark): matches @color/glucose_ring_* in values-night/colors.xml
+    glucoseRingStep1 = Color(0xFF81C784),           // BG band 1
+    glucoseRingStep2 = Color(0xFFFFF176),           // BG band 2
+    glucoseRingStep3 = Color(0xFFFFB74D),           // BG band 3
+    glucoseRingStep4 = Color(0xFFFF0000),           // BG band 4
+    glucoseRingSurface = Color(0x14FFFFFF)          // faint centre fill
 )
 
 /**

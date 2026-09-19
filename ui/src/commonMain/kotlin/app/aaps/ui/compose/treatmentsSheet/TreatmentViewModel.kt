@@ -7,6 +7,7 @@ import app.aaps.core.data.iob.InMemoryGlucoseValue
 import app.aaps.core.data.model.RM
 import app.aaps.core.interfaces.InterfacesStrings
 import app.aaps.core.interfaces.aps.Loop
+import app.aaps.core.interfaces.concurrent.aapsIoDispatcher
 import app.aaps.core.interfaces.configuration.Config
 import app.aaps.core.interfaces.constraints.ConstraintsChecker
 import app.aaps.core.interfaces.iob.IobCobCalculator
@@ -39,7 +40,6 @@ import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.binding
 import dev.zacsweers.metrox.viewmodel.ViewModelKey
 import kotlin.math.abs
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -147,7 +147,7 @@ class TreatmentViewModel(
         val profile = profileFunction.getProfile()
         val profileName = profileFunction.getProfileName()
         val pump = activePlugin.activePump
-        val runningMode = withContext(Dispatchers.IO) { loop.runningMode() }
+        val runningMode = withContext(aapsIoDispatcher) { loop.runningMode() }
 
         return activeEntries.map { entry ->
             when (entry.mode()) {

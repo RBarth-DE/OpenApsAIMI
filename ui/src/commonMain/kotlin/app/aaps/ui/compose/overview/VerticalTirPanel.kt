@@ -20,6 +20,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.text.font.FontWeight
+import app.aaps.core.interfaces.resources.formatTemplate
 import app.aaps.ui.compose.overview.graphs.TirUiState
 import kotlin.math.roundToInt
 import androidx.compose.ui.graphics.Shadow
@@ -97,7 +98,7 @@ internal fun VerticalTirPanel(
         // Footer
         // Text("A1C", style = MaterialTheme.typography.labelSmall,
         //      color = MaterialTheme.colorScheme.onSurface)
-        Text("${"%.1f".format(state.a1c)}%",
+        Text(formatTemplate("%.1f%%", listOf(state.a1c)),
              style = MaterialTheme.typography.labelMedium,
              color = MaterialTheme.colorScheme.onSurface)
 

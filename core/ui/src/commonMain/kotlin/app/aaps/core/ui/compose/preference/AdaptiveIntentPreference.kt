@@ -16,8 +16,6 @@ import app.aaps.core.keys.interfaces.TextRef
 import app.aaps.core.keys.interfaces.VisibilityContext
 import app.aaps.core.ui.compose.ComposeScreenContent
 import app.aaps.core.ui.compose.dialogs.OkCancelDialog
-import android.content.Intent
-import androidx.compose.ui.platform.LocalContext
 import app.aaps.core.ui.compose.stringResource
 
 /**
@@ -136,41 +134,6 @@ fun AdaptiveComposeScreenPreferenceItem(
         enabled = visibility.enabled,
         onClick = if (visibility.enabled) {
             { onNavigate(composeScreen) }
-        } else null
-    )
-}
-
-/**
- * Composable dynamic activity preference for use inside card sections.
- *
- * @param title Optional title override. If null, uses intentKey.title
- * @param summary Optional summary override. If null, uses intentKey.summary
- */
-@Composable
-fun AdaptiveDynamicActivityPreferenceItem(
-    intentKey: IntentPreferenceKey,
-    title: TextRef? = null,
-    activityClass: Class<*>,
-    summary: TextRef? = null,
-    visibilityContext: VisibilityContext? = null
-) {
-    val effectiveTitle = title ?: intentKey.title
-    val effectiveSummary = summary ?: intentKey.summary
-
-    val visibility = calculateIntentPreferenceVisibility(
-        intentKey = intentKey,
-        visibilityContext = visibilityContext
-    )
-
-    if (!visibility.visible) return
-
-    val context = LocalContext.current
-    Preference(
-        title = { Text(preferenceDisplayTitle(effectiveTitle, intentKey.key)) },
-        summary = effectiveSummary?.let { { Text(stringResource(it)) } },
-        enabled = visibility.enabled,
-        onClick = if (visibility.enabled) {
-            { context.startActivity(Intent(context, activityClass)) }
         } else null
     )
 }

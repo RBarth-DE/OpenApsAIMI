@@ -43,7 +43,6 @@ import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.binding
 import dev.zacsweers.metrox.viewmodel.ViewModelKey
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -119,7 +118,7 @@ class ManageViewModel(
     fun refreshState() {
         viewModelScope.launch {
             // LoopPlugin.runningMode / runningModeRecord use runBlocking(DB) + preCheck — never invoke from Main.
-            val runningMode = withContext(Dispatchers.IO) { loop.runningMode() }
+            val runningMode = withContext(aapsIoDispatcher) { loop.runningMode() }
             val profile = profileFunction.getProfile()
             val pump = activePlugin.activePump
             val pumpDescription = pump.pumpDescription
