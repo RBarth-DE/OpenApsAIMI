@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
@@ -814,11 +815,13 @@ private fun seriesShortNameId(type: SeriesType): TextRef = when (type) {
 
 // =========================================================================
 // Custom panel composables (MODES, PULSE, TIR)
+//
+// MODES and TIR are internal rather than private: the panel height test lays
+// them out directly, at the sizes the height row offers.
 // =========================================================================
 
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun ModesPanel(
+internal fun ModesPanel(
     events: List<AutomationEventData>,
     onRunEvent: (String) -> Unit,
     onLongPress: (() -> Unit)? = null,
@@ -828,6 +831,7 @@ private fun ModesPanel(
     var pendingEvent by remember { mutableStateOf<AutomationEventData?>(null) }
 
     Column(
+        verticalArrangement = Arrangement.spacedBy(6.dp),
         modifier = modifier
             .padding(horizontal = 8.dp, vertical = 4.dp)
             // FIX: replaced detectTapGestures (Main pass, blocked by buttons)
@@ -841,28 +845,29 @@ private fun ModesPanel(
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
             )
         } else {
-            FlowRow(
-                maxItemsInEachRow = 5,
-                horizontalArrangement = Arrangement.spacedBy(6.dp),
-                verticalArrangement = Arrangement.spacedBy(6.dp),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                for (event in events.take(10)) {
-                    OutlinedButton(
-                        onClick = { pendingEvent = event },
-                        border = BorderStroke(1.5.dp, MaterialTheme.colorScheme.outline),
-                        contentPadding = PaddingValues(horizontal = 4.dp, vertical = 0.dp),
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(32.dp)
-                    ) {
-                        Text(
-                            text = event.title,
-                            style = MaterialTheme.typography.labelSmall,
-                            maxLines = 2,
-                            overflow = TextOverflow.Ellipsis,
-                            textAlign = TextAlign.Center
-                        )
+            // Rows of five share the panel height, so a taller panel gives taller buttons
+            // instead of empty space under them. The FlowRow this replaces kept every button
+            // at 32 dp, and a flow row cannot stretch its rows to fill the panel.
+            for (row in events.take(10).chunked(5)) {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    modifier = Modifier.fillMaxWidth().weight(1f)
+                ) {
+                    for (event in row) {
+                        OutlinedButton(
+                            onClick = { pendingEvent = event },
+                            border = BorderStroke(1.5.dp, MaterialTheme.colorScheme.outline),
+                            contentPadding = PaddingValues(horizontal = 4.dp, vertical = 0.dp),
+                            modifier = Modifier.weight(1f).fillMaxHeight()
+                        ) {
+                            Text(
+                                text = event.title,
+                                style = MaterialTheme.typography.labelSmall,
+                                maxLines = 2,
+                                overflow = TextOverflow.Ellipsis,
+                                textAlign = TextAlign.Center
+                            )
+                        }
                     }
                 }
             }
@@ -953,7 +958,7 @@ private fun PulsePanel(
 }
 
 @Composable
-private fun TirPanel(
+internal fun TirPanel(
     state: TirUiState,
     modifier: Modifier = Modifier
 ) {
@@ -981,62 +986,75 @@ private fun TirPanel(
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
             )
         } else {
-            // Color bar
-            Row(modifier = Modifier.fillMaxWidth().height(10.dp)) {
-                    val segments = listOf(
-                        state.veryLow  to colorVeryLow,
-                        state.low      to colorLow,
-                        state.inRange  to colorInRange,
-                        state.high     to colorHigh,
-                        state.veryHigh to colorVeryHigh
-                    )
-                    for ((fraction, color) in segments) {
-                        if (fraction > 0f) {
-                            Box(
-                                modifier = Modifier
-                                    .weight(fraction)
-                                    .height(7.dp)
-                                    .background(color)
-                            )
-                        }
-                    }
-                }
-                Spacer(Modifier.height(2.dp))
-                // Percentage labels
-                Row(modifier = Modifier.fillMaxWidth()) {
-                    val labels = listOf(
-                        state.veryLow  to colorVeryLow,
-                        state.low      to colorLow,
-                        state.inRange  to colorInRange,
-                        state.high     to colorHigh,
-                        state.veryHigh to colorVeryHigh
-                    )
-                    for ((fraction, color) in labels) {
-                        if (fraction > 0f) {
-                            Box(modifier = Modifier.weight(fraction)) {
-                                val pct = (fraction).toInt()
-                                if (fraction >= 0.05f) {
-                                    Text(
-                                        text = "$pct%",
-                                        style = MaterialTheme.typography.labelSmall.copy(
-                                            fontSize = TextUnit(9f, TextUnitType.Sp)
-                                        ),
-                                        color = color,
-                                        modifier = Modifier.align(Alignment.Center)
-                                    )
-                                }
+            val segments = listOf(
+                state.veryLow  to colorVeryLow,
+                state.low      to colorLow,
+                state.inRange  to colorInRange,
+                state.high     to colorHigh,
+                state.veryHigh to colorVeryHigh
+            )
+            // Color bar — takes the height the panel has left, so a taller panel shows a taller
+            // bar instead of empty space, and the labels stay under it.
+            TirColorBar(
+                segments = segments,
+                modifier = Modifier.fillMaxWidth().weight(1f)
+            )
+            Spacer(Modifier.height(2.dp))
+            // Percentage labels
+            Row(modifier = Modifier.fillMaxWidth()) {
+                for ((fraction, color) in segments) {
+                    if (fraction > 0f) {
+                        Box(modifier = Modifier.weight(fraction)) {
+                            val pct = (fraction).toInt()
+                            if (fraction >= 0.05f) {
+                                Text(
+                                    text = "$pct%",
+                                    style = MaterialTheme.typography.labelSmall.copy(
+                                        fontSize = TextUnit(9f, TextUnitType.Sp)
+                                    ),
+                                    color = color,
+                                    modifier = Modifier.align(Alignment.Center)
+                                )
                             }
                         }
                     }
                 }
-                Spacer(Modifier.height(2.dp))
-                Text(
-                    text = formatTemplate("Avg %.0f mg/dL · A1C %.1f%%", listOf(state.avgMgDl, state.a1c)),
-                    style = MaterialTheme.typography.labelSmall.copy(
-                        fontSize = TextUnit(9f, TextUnitType.Sp)
-                    ),
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+            }
+            Spacer(Modifier.height(2.dp))
+            Text(
+                text = formatTemplate("Avg %.0f mg/dL · A1C %.1f%%", listOf(state.avgMgDl, state.a1c)),
+                style = MaterialTheme.typography.labelSmall.copy(
+                    fontSize = TextUnit(9f, TextUnitType.Sp)
+                ),
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+            )
+        }
+    }
+}
+
+/**
+ * The coloured TIR bar.
+ *
+ * It draws at the height it is given, so the caller decides how tall the bar is - the panel hands
+ * it the height no other row needs. Each segment is as wide as its share of the readings.
+ *
+ * @param segments each range with its share of the readings (0..100) and its colour
+ */
+@Composable
+internal fun TirColorBar(
+    segments: List<Pair<Float, Color>>,
+    modifier: Modifier = Modifier
+) {
+    Row(modifier = modifier) {
+        for ((fraction, color) in segments) {
+            if (fraction > 0f) {
+                Box(
+                    modifier = Modifier
+                        .weight(fraction)
+                        .fillMaxHeight()
+                        .background(color)
                 )
+            }
         }
     }
 }
