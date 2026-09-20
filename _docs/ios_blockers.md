@@ -52,6 +52,67 @@ The two packages are a claim about the code, not a folder preference: `missing/`
 yet" and logs at error, `platform/` means "this is what an iOS client is" and logs at debug. If you
 add one, pick by which sentence is true, not by which file is nearest.
 
+## Tests moved to `commonTest`: `:plugins:aps`, `:core:objects`, `:core:interfaces` (2026-09-20, Windows/Linux side)
+
+With the module frontier cleared, the next thing worth doing is the one in **Hint: most common code
+still has no iOS test coverage** below: tests of `commonMain` classes that live in `androidHostTest`
+and therefore never run on iOS. Three modules were worked through.
+
+| module | tests moved | files now in `commonTest` |
+|---|---|---|
+| `:plugins:aps` | 75 | 11 (7 test files, 4 fakes) |
+| `:core:objects` | 32 | 9 (was 1) |
+| `:core:interfaces` | 71 | 18 (was 4) |
+
+`:core:interfaces` moved `TempTargetPresetExtensionsTest` (7), `SafeParseTest` (6), `PumpInsulinTest`
+(9), `PumpRateTest` (10), `DetailedBolusInfoCopyTest` (3), `ConcentrationTypeTest` (5),
+`LanguageTagTest` (7), `LoopStatusDataTest` (4), `ChunkedOnQuietPeriodTest` (4), `EventDataTest` (3),
+`ResilientCollectStartTest` (3), `AapsLockTest` (4) and `PluginBaseLifecycleTest` (6). Each count was
+checked against `git show HEAD:<path> | grep -c '@Test'`, so nothing was dropped on the way.
+
+New fakes: `RecordingAAPSLogger` in `:core:interfaces` `commonTest`. `AapsLockTest`'s concurrency test
+was the one rewrite - `Executors` and `CountDownLatch` became `Dispatchers.Default`, which is a real
+thread pool on every target, so the lock is still entered from several threads at once.
+
+`plugins/aps`: `DurationRoundingTest` (18), `ReconcilerDecisionTest` (22), `DeltaCalculatorTest` (15),
+`DetermineBasalSMBTest` (5), `GlucoseStatusExtensionSMBTest` (15). `core/objects`: `FlowExtensionKtTest`
+(8), `InhaledInsulinExtensionTest` (6), `BlockExtensionKtTest` (4), `TTest` (3), `IobTest` (2),
+`MealDataTest` (1), `PluginDescriptionTest` (7), `PumpDescriptionTest` (1).
+
+Reusable fakes written along the way, all in `plugins/aps/src/commonTest/kotlin/app/aaps/plugins/aps/`:
+`RecordingAAPSLogger`, `FakeProfileUtil`, `FakeFabricPrivacy`, `FakeDecimalFormatter`. They are small
+and hand written, which is the intended shape - Mockito is JVM only.
+
+### The one behavioural difference these moves found
+
+An assertion changed, and it is worth knowing why. `GlucoseStatusExtensionSMBTest` expected `-9` where
+the real formatter now gives `-8`: the old test mocked a `String.format("%.0f", -8.5)` (half away from
+zero) while the shipped `DecimalFormatterImpl` uses `NumberFormat` (half to even). The JVM test had
+been asserting the mock's behaviour, not the product's. That is the class of fault a move like this
+finds - the mock was standing in for the answer.
+
+### Needs a rewrite before it can move
+
+Not every test in those modules could go. These are held back by something JVM-only, and each one
+needs a small change to the test or to the code before it can follow:
+
+| test | what blocks it |
+|---|---|
+| the seven autotune tests (`DiaDeviationTest`, `PeakDeviationTest`, `BGDatumTest`, `CRDatumTest`, `PreppedGlucoseTest`, `AutotuneCoreTest`, `AutotunePrepTest`) | they assert through `JsonTestBridge.kt`, a JVM-only bridge to `org.json`; `PreppedGlucoseTest` also reads `File("src/androidHostTest/res/autotune/...")` |
+| `RoundTest` | `java.math.BigDecimal` |
+| `MidnightTimeTest` | `java.util.Calendar` |
+| `IobTotalTest` | Android `Context` and `TestBase` |
+| `LoopPluginTest` | Mockito and Robolectric |
+| `:core:interfaces` `RtIsoStringParityTest` | compares `kotlinx.datetime` with `java.text.SimpleDateFormat`; the JVM formatter **is** the thing it checks against, so it belongs where that exists |
+| `:core:interfaces` `BolusProgressDataTest` | needs a `ResourceHelper` fake, and `ResourceHelper` is an androidMain type, so its fake cannot live in `commonTest` |
+| `:core:interfaces` `ClockSkewCompensationTest` | needs `DateUtil` (66 members) and `Config` (40) fakes |
+| `:core:utils` `JsonHelperTest`, `DateTimeUtilUTest` | the classes they cover (`JsonHelper`, `DateTimeUtil`) are themselves androidMain, so the tests belong next to them |
+| `:core:utils` `MidnightUtilsTest` | `java.time`; a candidate to rewrite on `kotlinx.datetime`, and `MidnightTimeParityTest` in `:core:objects` already pins part of that behaviour |
+
+`plugins/aps` still has 325 files in `androidHostTest`; most of them are plugin-level and cannot move
+at all (they are androidMain classes). `:database:persistence` turned out to be **already done** - it
+has 16 files in `commonTest` and no `androidHostTest` at all, so the survey row below is out of date.
+
 ## How to find the next one
 
 Do not guess. Ask Metro:
@@ -97,14 +158,14 @@ so it is worth working through.
 
 | module | commonMain files | commonTest | test files that never run on iOS |
 |---|---|---|---|
-| `plugins/aps` | 32 | 2 files | 33 |
-| `core/objects` | 26 | none | 27 |
-| `database/persistence` | 32 | none | 16 |
-| `core/interfaces` | 255 | none | 13 |
+| `plugins/aps` | 32 | 7 files (was 2) | 28 (was 33) |
+| `core/objects` | 26 | 9 files (was 1) | 20 (was 27) |
+| `database/persistence` | 32 | 16 files (already done since this table was made) | 0 |
+| `core/interfaces` | 255 | 18 files (was 4) | 3 (was 13) |
 | `plugins/sensitivity`, `smoothing`, `calibration` | 22 | none | 9 |
-| `core/utils` | 6 | none | 5 |
+| `core/utils` | 6 | 3 files | 3 - all three blocked, see below |
 
-Only `core/data`, `shared/impl`, `implementation` and now `plugins/aps` have a `commonTest` at all.
+Only `core/data`, `shared/impl`, `implementation`, `plugins/aps`, `core/objects`, `core/interfaces`, `core/utils` and `database/persistence` have a `commonTest` at all.
 Everything else tests `commonMain` classes from `androidHostTest`, which runs on the JVM only - so
 code that ships to iOS is verified only on Android. `plugins/aps` is the dosing algorithm and
 `database/persistence` is what writes user data, so those two are worth the most.

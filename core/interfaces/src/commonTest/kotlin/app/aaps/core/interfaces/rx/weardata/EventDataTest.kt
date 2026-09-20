@@ -1,0 +1,272 @@
+package app.aaps.core.interfaces.rx.weardata
+
+import kotlinx.serialization.ExperimentalSerializationApi
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+
+@ExperimentalSerializationApi
+class EventDataTest {
+
+    @Test
+    fun serializationTest() {
+        EventData.ActionPong(1, 2).let {
+            assertEquals(it, EventData.deserializeByte(it.serializeByte()))
+            assertEquals(it, EventData.deserialize(it.serialize()))
+        }
+        EventData.WearException(1, byteArrayOf(0xAA.toByte()), "board", "fingerprint", "sdk", "model", "manufacturer", "product").let {
+            assertEquals(it, EventData.deserializeByte(it.serializeByte()))
+            assertEquals(it, EventData.deserialize(it.serialize()))
+        }
+        EventData.Error(1).let {
+            assertEquals(it, EventData.deserializeByte(it.serializeByte()))
+            assertEquals(it, EventData.deserialize(it.serialize()))
+        }
+        EventData.CancelBolus(1).let {
+            assertEquals(it, EventData.deserializeByte(it.serializeByte()))
+            assertEquals(it, EventData.deserialize(it.serialize()))
+        }
+        EventData.ActionResendData("data").let {
+            assertEquals(it, EventData.deserializeByte(it.serializeByte()))
+            assertEquals(it, EventData.deserialize(it.serialize()))
+        }
+        EventData.ActionPumpStatus(1).let {
+            assertEquals(it, EventData.deserializeByte(it.serializeByte()))
+            assertEquals(it, EventData.deserialize(it.serialize()))
+        }
+        EventData.ActionLoopStatus(1).let {
+            assertEquals(it, EventData.deserializeByte(it.serializeByte()))
+            assertEquals(it, EventData.deserialize(it.serialize()))
+        }
+        EventData.ActionTddStatus(1).let {
+            assertEquals(it, EventData.deserializeByte(it.serializeByte()))
+            assertEquals(it, EventData.deserialize(it.serialize()))
+        }
+        EventData.ActionECarbsPreCheck(1, 2, 3).let {
+            assertEquals(it, EventData.deserializeByte(it.serializeByte()))
+            assertEquals(it, EventData.deserialize(it.serialize()))
+        }
+        EventData.ActionBolusPreCheck(1.0, 2).let {
+            assertEquals(it, EventData.deserializeByte(it.serializeByte()))
+            assertEquals(it, EventData.deserialize(it.serialize()))
+        }
+        EventData.ActionFillPreCheck(1.0).let {
+            assertEquals(it, EventData.deserializeByte(it.serializeByte()))
+            assertEquals(it, EventData.deserialize(it.serialize()))
+        }
+        EventData.ActionFillPresetPreCheck(1).let {
+            assertEquals(it, EventData.deserializeByte(it.serializeByte()))
+            assertEquals(it, EventData.deserialize(it.serialize()))
+        }
+        EventData.ActionProfileSwitchSendInitialData(1).let {
+            assertEquals(it, EventData.deserializeByte(it.serializeByte()))
+            assertEquals(it, EventData.deserialize(it.serialize()))
+        }
+        EventData.ActionProfileSwitchPreCheck(1, 2, 3).let {
+            assertEquals(it, EventData.deserializeByte(it.serializeByte()))
+            assertEquals(it, EventData.deserialize(it.serialize()))
+        }
+        EventData.ActionWizardPreCheck(1, 2).let {
+            assertEquals(it, EventData.deserializeByte(it.serializeByte()))
+            assertEquals(it, EventData.deserialize(it.serialize()))
+        }
+        EventData.ActionQuickWizardPreCheck("guid").let {
+            assertEquals(it, EventData.deserializeByte(it.serializeByte()))
+            assertEquals(it, EventData.deserialize(it.serialize()))
+        }
+        EventData.ActionHeartRate(1, 2, 3.0, "device").let {
+            assertEquals(it, EventData.deserializeByte(it.serializeByte()))
+            assertEquals(it, EventData.deserialize(it.serialize()))
+        }
+        EventData.ActionTempTargetPreCheck(EventData.ActionTempTargetPreCheck.TempTargetCommand.CANCEL).let {
+            assertEquals(it, EventData.deserializeByte(it.serializeByte()))
+            assertEquals(it, EventData.deserialize(it.serialize()))
+        }
+        EventData.ActionWizardConfirmed(1).let {
+            assertEquals(it, EventData.deserializeByte(it.serializeByte()))
+            assertEquals(it, EventData.deserialize(it.serialize()))
+        }
+        EventData.ActionTempTargetConfirmed(1L).let {
+            assertEquals(it, EventData.deserializeByte(it.serializeByte()))
+            assertEquals(it, EventData.deserialize(it.serialize()))
+        }
+        EventData.ActionBolusConfirmed(1L).let {
+            assertEquals(it, EventData.deserializeByte(it.serializeByte()))
+            assertEquals(it, EventData.deserialize(it.serialize()))
+        }
+        EventData.ActionECarbsConfirmed(2L).let {
+            assertEquals(it, EventData.deserializeByte(it.serializeByte()))
+            assertEquals(it, EventData.deserialize(it.serialize()))
+        }
+        EventData.ActionFillConfirmed(1.0).let {
+            assertEquals(it, EventData.deserializeByte(it.serializeByte()))
+            assertEquals(it, EventData.deserialize(it.serialize()))
+        }
+        EventData.ActionProfileSwitchConfirmed(99L).let {
+            assertEquals(it, EventData.deserializeByte(it.serializeByte()))
+            assertEquals(it, EventData.deserialize(it.serialize()))
+        }
+        EventData.OpenLoopRequestConfirmed(1).let {
+            assertEquals(it, EventData.deserializeByte(it.serializeByte()))
+            assertEquals(it, EventData.deserialize(it.serialize()))
+        }
+        EventData.CancelNotification(1).let {
+            assertEquals(it, EventData.deserializeByte(it.serializeByte()))
+            assertEquals(it, EventData.deserialize(it.serialize()))
+        }
+        // EventData.ActionGetCustomWatchface(EventData.ActionSetCustomWatchface(CwfData())).let {
+        //     assertEquals(it,  EventData.deserializeByte(it.serializeByte()))
+        //     assertEquals(it,  EventData.deserialize(it.serialize()))
+        // }
+        EventData.ActionPing(1).let {
+            assertEquals(it, EventData.deserializeByte(it.serializeByte()))
+            assertEquals(it, EventData.deserialize(it.serialize()))
+        }
+        EventData.OpenSettings(1).let {
+            assertEquals(it, EventData.deserializeByte(it.serializeByte()))
+            assertEquals(it, EventData.deserialize(it.serialize()))
+        }
+        EventData.BolusProgress(1, "status").let {
+            assertEquals(it, EventData.deserializeByte(it.serializeByte()))
+            assertEquals(it, EventData.deserialize(it.serialize()))
+        }
+        EventData.SingleBg(dataset = 0, 1, sgv = 2.0, high = 3.0, low = 4.0).let {
+            assertEquals(it, EventData.deserializeByte(it.serializeByte()))
+            assertEquals(it, EventData.deserialize(it.serialize()))
+        }
+        EventData.GraphData(arrayListOf(EventData.SingleBg(dataset = 0, 1, sgv = 2.0, high = 3.0, low = 4.0))).let {
+            assertEquals(it, EventData.deserializeByte(it.serializeByte()))
+            assertEquals(it, EventData.deserialize(it.serialize()))
+        }
+        EventData.TreatmentData(
+            arrayListOf(EventData.TreatmentData.TempBasal(1, 2.0, 3, 4.0, 5.0)),
+            arrayListOf(EventData.TreatmentData.Basal(1, 2, 3.0)),
+            arrayListOf(EventData.TreatmentData.Treatment(1, 2.0, 3.0, true, isValid = true)),
+            arrayListOf(EventData.SingleBg(dataset = 0, 1, sgv = 2.0, high = 3.0, low = 4.0))
+        ).let {
+            assertEquals(it, EventData.deserializeByte(it.serializeByte()))
+            assertEquals(it, EventData.deserialize(it.serialize()))
+        }
+        EventData.Preferences(1, wearControl = true, true, 2, 3, 4.0, 5.0, 6.0, 7, 8).let {
+            assertEquals(it, EventData.deserializeByte(it.serializeByte()))
+            assertEquals(it, EventData.deserialize(it.serialize()))
+        }
+        EventData.WatchFacePushStatus(supported = true, installedFace = "wfs").let {
+            assertEquals(it, EventData.deserializeByte(it.serializeByte()))
+            assertEquals(it, EventData.deserialize(it.serialize()))
+        }
+        EventData.Status(
+            dataset = 0, externalStatus = "st", iobSum = "1", iobDetail = "2", cob = "3", currentBasal = "4",
+            battery = "5", rigBattery = "6", openApsStatus = 7L, bgi = "8", batteryLevel = 9, patientName = "p",
+            tempTarget = "t", tempTargetLevel = 1, tempTargetDuration = 10L, reservoirString = "r",
+            reservoir = 11.0, reservoirLevel = 0, cobValue = 12.0, loopMode = LoopStatusData.LoopMode.SUSPENDED,
+            modeEndTime = 13L
+        ).let {
+            assertEquals(it, EventData.deserializeByte(it.serializeByte()))
+            assertEquals(it, EventData.deserialize(it.serialize()))
+        }
+        EventData.QuickWizard(arrayListOf(EventData.QuickWizard.QuickWizardEntry("1", "2", 3, 4, 5))).let {
+            assertEquals(it, EventData.deserializeByte(it.serializeByte()))
+            assertEquals(it, EventData.deserialize(it.serialize()))
+        }
+        // EventData.ActionSetCustomWatchface().let {
+        //     assertEquals(it,  EventData.deserializeByte(it.serializeByte()))
+        //     assertEquals(it,  EventData.deserialize(it.serialize()))
+        // }
+        EventData.ActionrequestCustomWatchface(true).let {
+            assertEquals(it, EventData.deserializeByte(it.serializeByte()))
+            assertEquals(it, EventData.deserialize(it.serialize()))
+        }
+        EventData.ActionrequestSetDefaultWatchface(1).let {
+            assertEquals(it, EventData.deserializeByte(it.serializeByte()))
+            assertEquals(it, EventData.deserialize(it.serialize()))
+        }
+        EventData.ActionProfileSwitchOpenActivity(1, 2, 3).let {
+            assertEquals(it, EventData.deserializeByte(it.serializeByte()))
+            assertEquals(it, EventData.deserialize(it.serialize()))
+        }
+        EventData.OpenLoopRequest("1", "2", null).let {
+            assertEquals(it, EventData.deserializeByte(it.serializeByte()))
+            assertEquals(it, EventData.deserialize(it.serialize()))
+        }
+        EventData.ConfirmAction("1", "2", null).let {
+            assertEquals(it, EventData.deserializeByte(it.serializeByte()))
+            assertEquals(it, EventData.deserialize(it.serialize()))
+        }
+        EventData.ConfirmAction(
+            "1", "2", null,
+            lines = listOf(EventData.ConfirmActionLine("BOLUS", "Bolus: 1.5 U"), EventData.ConfirmActionLine("CARBS", "Carbs: 30 g"))
+        ).let {
+            assertEquals(it, EventData.deserializeByte(it.serializeByte()))
+            assertEquals(it, EventData.deserialize(it.serialize()))
+        }
+        EventData.SnoozeAlert(1).let {
+            assertEquals(it, EventData.deserializeByte(it.serializeByte()))
+            assertEquals(it, EventData.deserialize(it.serialize()))
+        }
+        // Running mode now rides the generic confirm path: Selected/Confirmed + the master-authored lines.
+        EventData.RunningModeSelected(1, 2, 60).let {
+            assertEquals(it, EventData.deserializeByte(it.serializeByte()))
+            assertEquals(it, EventData.deserialize(it.serialize()))
+        }
+        EventData.RunningModeConfirmed(1234567890L).let {
+            assertEquals(it, EventData.deserializeByte(it.serializeByte()))
+            assertEquals(it, EventData.deserialize(it.serialize()))
+        }
+        EventData.ConfirmAction(
+            "Running mode", "", EventData.RunningModeConfirmed(42L),
+            lines = listOf(EventData.ConfirmActionLine("PRIMARY", "Running mode: Closed Loop"), EventData.ConfirmActionLine("NORMAL", "Duration: 60 min"))
+        ).let {
+            assertEquals(it, EventData.deserializeByte(it.serializeByte()))
+            assertEquals(it, EventData.deserialize(it.serialize()))
+        }
+        // Watch-on-client insulin relay feedback: the spinner trigger, the commit-success terminal, and a deferred confirm.
+        EventData.ContactingMaster.let {
+            assertEquals(it, EventData.deserializeByte(it.serializeByte()))
+            assertEquals(it, EventData.deserialize(it.serialize()))
+        }
+        EventData.RemoteDelivered.let {
+            assertEquals(it, EventData.deserializeByte(it.serializeByte()))
+            assertEquals(it, EventData.deserialize(it.serialize()))
+        }
+        EventData.ConfirmAction(
+            "Bolus", "", EventData.ActionBolusConfirmed(7L),
+            lines = listOf(EventData.ConfirmActionLine("BOLUS", "Bolus: 1.5 U")), deferConfirm = true
+        ).let {
+            assertEquals(it, EventData.deserializeByte(it.serializeByte()))
+            assertEquals(it, EventData.deserialize(it.serialize()))
+        }
+    }
+
+    @Test
+    fun deserializeToleratesUnknownKeysFromNewerPeer() {
+        // A newer peer may add fields this build doesn't know (phone and wear are not always
+        // updated together) — decoding must not fall back to Error, or screens waiting for the
+        // event spin forever
+        val event = EventData.LoopStatusResponse(
+            timeStamp = 1L,
+            data = LoopStatusData(0L, LoopStatusData.LoopMode.DISCONNECTED, null, null, null, null, null, TargetRange("a", "b", "c", "u"), null)
+        )
+        val topLevelUnknown = event.serialize().replaceFirst("\"timeStamp\"", "\"futureField\":42,\"timeStamp\"")
+        assertEquals(event, EventData.deserialize(topLevelUnknown))
+
+        val nestedUnknown = event.serialize().replaceFirst("\"loopMode\"", "\"futureField\":42,\"loopMode\"")
+        assertEquals(event, EventData.deserialize(nestedUnknown))
+    }
+
+    @Test
+    fun statusFromOlderPeerDefaultsLoopModeToUnknown() {
+        // A phone older than the loopMode field sends Status without it — the watch must default
+        // to UNKNOWN instead of failing to decode
+        val status = EventData.Status(
+            dataset = 0, externalStatus = "st", iobSum = "1", iobDetail = "2", cob = "3", currentBasal = "4",
+            battery = "5", rigBattery = "6", openApsStatus = 7L, bgi = "8", batteryLevel = 9, patientName = "p",
+            tempTarget = "t", tempTargetLevel = 1, tempTargetDuration = 10L, reservoirString = "r",
+            reservoir = 11.0, reservoirLevel = 0, cobValue = 12.0, loopMode = LoopStatusData.LoopMode.CLOSED
+        )
+        val legacyJson = status.serialize().replaceFirst(",\"loopMode\":\"CLOSED\"", "")
+        assertFalse(legacyJson.contains("loopMode"), legacyJson)
+        val restored = EventData.deserialize(legacyJson) as EventData.Status
+        assertEquals(LoopStatusData.LoopMode.UNKNOWN, restored.loopMode)
+    }
+}
