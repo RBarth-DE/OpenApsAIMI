@@ -12,7 +12,7 @@ import app.aaps.core.interfaces.profile.Profile
 import app.aaps.core.interfaces.profile.ProfileStore
 import app.aaps.core.interfaces.profile.ProfileUtil
 import app.aaps.core.interfaces.profile.PureProfile
-import app.aaps.core.interfaces.resources.ResourceHelper
+import app.aaps.core.interfaces.resources.TextResolver
 import app.aaps.core.interfaces.utils.DateUtil
 import app.aaps.core.interfaces.utils.Round
 import app.aaps.core.keys.DoubleKey
@@ -22,19 +22,15 @@ import app.aaps.core.objects.extensions.pureProfileFromJson
 import app.aaps.core.objects.extensions.with
 import app.aaps.core.objects.profile.ProfileSealed
 import app.aaps.core.utils.MidnightUtils
-import app.aaps.plugins.aps.R
+import app.aaps.plugins.aps.ApsStrings
 import dev.zacsweers.metro.Inject
-import dev.zacsweers.metro.SingleIn
+import kotlinx.datetime.TimeZone
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.put
-import org.json.JSONArray
-import org.json.JSONException
-import org.json.JSONObject
-import java.util.TimeZone
 
 import kotlin.math.min
 
@@ -43,7 +39,7 @@ class ATProfile(
     private val preferences: Preferences,
     private val profileUtil: ProfileUtil,
     private val dateUtil: DateUtil,
-    private val rh: ResourceHelper,
+    private val rh: TextResolver,
     private val profileStoreProvider: () -> ProfileStore,
     private val aapsLogger: AAPSLogger
 ) {
@@ -133,56 +129,68 @@ class ATProfile(
     //Export json string with oref0 format used for autotune
     // Include min_5m_carbimpact, insulin type, single value for carb_ratio and isf
     fun profileToOrefJSON(): String {
-        var jsonString = ""
-        val json = JSONObject()
         val insulinType = InsulinType.fromPeak(iCfg.peak * 60000L)
-        try {
-            json.put("name", profileName)
-            json.put("min_5m_carbimpact", preferences.get(DoubleKey.ApsAmaMin5MinCarbsImpact))
-            json.put("dia", dia)
-            if (insulinType == InsulinType.OREF_ULTRA_RAPID_ACTING)
-                json.put("curve", "ultra-rapid")
-            else if (insulinType == InsulinType.OREF_RAPID_ACTING)
-                json.put("curve", "rapid-acting")
-            else {
-                val peakTime: Int = iCfg.peak
-                json.put("curve", if (peakTime > 50) "rapid-acting" else "ultra-rapid")
-                json.put("useCustomPeakTime", true)
-                json.put("insulinPeakTime", peakTime)
+        val json = buildJsonObject {
+            put("name", profileName)
+            put("min_5m_carbimpact", preferences.get(DoubleKey.ApsAmaMin5MinCarbsImpact))
+            put("dia", dia)
+            when (insulinType) {
+                InsulinType.OREF_ULTRA_RAPID_ACTING -> put("curve", "ultra-rapid")
+                InsulinType.OREF_RAPID_ACTING      -> put("curve", "rapid-acting")
+                else                               -> {
+                    val peakTime: Int = iCfg.peak
+                    put("curve", if (peakTime > 50) "rapid-acting" else "ultra-rapid")
+                    put("useCustomPeakTime", true)
+                    put("insulinPeakTime", peakTime)
+                }
             }
-            val basals = JSONArray()
-            for (h in 0..23) {
-                val secondFromMidnight = h * 60 * 60
-                val time: String = NumberFormat.INTEGER_2_DIGITS.format(h) + ":00:00"
-                basals.put(
-                    JSONObject()
-                        .put("start", time)
-                        .put("minutes", h * 60)
-                        .put(
-                            "rate", profile.getBasalTimeFromMidnight(secondFromMidnight)
+            put(
+                "basalprofile",
+                buildJsonArray {
+                    for (h in 0..23) {
+                        val secondFromMidnight = h * 60 * 60
+                        val time: String = NumberFormat.INTEGER_2_DIGITS.format(h) + ":00:00"
+                        add(
+                            buildJsonObject {
+                                put("start", time)
+                                put("minutes", h * 60)
+                                put("rate", profile.getBasalTimeFromMidnight(secondFromMidnight))
+                            }
                         )
-                )
-            }
-            json.put("basalprofile", basals)
-            val isfValue = Round.roundTo(avgISF, 0.001)
-            json.put(
-                "isfProfile",
-                JSONObject().put(
-                    "sensitivities",
-                    JSONArray().put(JSONObject().put("i", 0).put("start", "00:00:00").put("sensitivity", isfValue).put("offset", 0).put("x", 0).put("endoffset", 1440))
-                )
+                    }
+                }
             )
-            json.put("carb_ratio", avgIC)
-            json.put("autosens_max", preferences.get(DoubleKey.AutosensMax))
-            json.put("autosens_min", preferences.get(DoubleKey.AutosensMin))
-            json.put("units", GlucoseUnit.MGDL.asText)
-            json.put("timezone", TimeZone.getDefault().id)
-            jsonString = json.toString(2).replace("\\/", "/")
-        } catch (e: JSONException) {
-            aapsLogger.error(LTag.CORE, e.stackTraceToString())
+            val isfValue = Round.roundTo(avgISF, 0.001)
+            put(
+                "isfProfile",
+                buildJsonObject {
+                    put(
+                        "sensitivities",
+                        buildJsonArray {
+                            add(
+                                buildJsonObject {
+                                    put("i", 0)
+                                    put("start", "00:00:00")
+                                    put("sensitivity", isfValue)
+                                    put("offset", 0)
+                                    put("x", 0)
+                                    put("endoffset", 1440)
+                                }
+                            )
+                        }
+                    )
+                }
+            )
+            put("carb_ratio", avgIC)
+            put("autosens_max", preferences.get(DoubleKey.AutosensMax))
+            put("autosens_min", preferences.get(DoubleKey.AutosensMin))
+            put("units", GlucoseUnit.MGDL.asText)
+            put("timezone", TimeZone.currentSystemDefault().id)
         }
-
-        return jsonString
+        // Two differences from the `org.json` writer this replaced, both harmless to the readers
+        // (oref0 and people): a `/` is written plain rather than escaped and then unescaped again,
+        // and a whole numbered Double keeps its fraction (`7` is written `7.0`).
+        return Json { prettyPrint = true; prettyPrintIndent = "  " }.encodeToString(JsonObject.serializer(), json)
     }
 
     /**
@@ -215,30 +223,28 @@ class ATProfile(
         return pureProfileFromJson(json, dateUtil, profile.units.asText)
     }
 
+    /**
+     * The store document the tuned profile is written into.
+     *
+     * The `try`/`catch` around the old `org.json` writer is gone with it: nothing here throws,
+     * because the document is built rather than written into.
+     */
     fun profileStore(circadian: Boolean = false): ProfileStore? {
-        var profileStore: ProfileStore? = null
-        val json = JSONObject()
-        val store = JSONObject()
         val tunedProfile = if (circadian) circadianProfile else profile
         if (profileName.isEmpty())
-            profileName = rh.gs(R.string.autotune_tunedprofile_name)
-        try {
-            store.put(profileName, JSONObject(tunedProfile.toPureNsJson(dateUtil).toString()))
-            json.put("defaultProfile", profileName)
-            json.put("store", store)
-            json.put("startDate", dateUtil.toISOAsUTC(dateUtil.now()))
-            profileStore = profileStoreProvider().with(Json.parseToJsonElement(json.toString()).jsonObject)
-        } catch (e: JSONException) {
-            aapsLogger.error(LTag.CORE, e.stackTraceToString())
+            profileName = rh.gs(ApsStrings.autotune_tunedprofile_name)
+        val json = buildJsonObject {
+            put("defaultProfile", profileName)
+            put("store", buildJsonObject { put(profileName, tunedProfile.toPureNsJson(dateUtil)) })
+            put("startDate", dateUtil.toISOAsUTC(dateUtil.now()))
         }
-        return profileStore
+        return profileStoreProvider().with(json)
     }
 
     /*
-     * The schedules are built on kotlinx and converted to org.json only for the public accessors,
-     * which still hand a JSONArray to callers. Reparsing through the text is what keeps the emitted
-     * bytes identical: org.json renders a whole numbered Double as a bare integer and kotlinx renders
-     * it with the fraction, and autotune's output files are read by people and by oref0.
+     * The schedule builders. They answer kotlinx documents now; the accessors used to render them to
+     * text and parse them back as `org.json`, and that round trip is gone. With it goes the bare
+     * integer for a whole numbered value: a `1.0` is written `1.0`.
      */
 
     private fun jsonArrayOf(values: DoubleArray): JsonArray =

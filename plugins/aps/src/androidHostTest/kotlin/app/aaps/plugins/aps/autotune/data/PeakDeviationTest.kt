@@ -1,8 +1,10 @@
 package app.aaps.plugins.aps.autotune.data
 
+import app.aaps.plugins.aps.autotune.asOrgJson
 import app.aaps.shared.tests.TestBase
 import com.google.common.truth.Truth.assertThat
-import org.json.JSONObject
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 import org.junit.jupiter.api.Test
 
 class PeakDeviationTest : TestBase() {
@@ -34,7 +36,7 @@ class PeakDeviationTest : TestBase() {
 
     @Test
     fun `constructor from JSON parses all fields`() {
-        val json = JSONObject().apply {
+        val json = buildJsonObject {
             put("peak", 75)
             put("meanDeviation", 5.5)
             put("SMRDeviation", 3.2)
@@ -51,7 +53,7 @@ class PeakDeviationTest : TestBase() {
 
     @Test
     fun `constructor from JSON handles missing fields`() {
-        val json = JSONObject().apply {
+        val json = buildJsonObject {
             put("peak", 75)
             put("meanDeviation", 5.5)
         }
@@ -66,7 +68,7 @@ class PeakDeviationTest : TestBase() {
 
     @Test
     fun `constructor from JSON handles empty JSON`() {
-        val json = JSONObject()
+        val json = buildJsonObject { }
 
         val peakDeviation = PeakDeviation(json)
 
@@ -85,7 +87,7 @@ class PeakDeviationTest : TestBase() {
             rmsDeviation = 4.8
         )
 
-        val json = peakDeviation.toJSON()
+        val json = peakDeviation.toJSON().asOrgJson()
 
         assertThat(json.getInt("peak")).isEqualTo(75)
         assertThat(json.getInt("meanDeviation")).isEqualTo(5)
@@ -97,7 +99,7 @@ class PeakDeviationTest : TestBase() {
     fun `toJSON converts meanDeviation to integer`() {
         val peakDeviation = PeakDeviation(meanDeviation = 5.7)
 
-        val json = peakDeviation.toJSON()
+        val json = peakDeviation.toJSON().asOrgJson()
 
         assertThat(json.getInt("meanDeviation")).isEqualTo(5)
     }
@@ -106,7 +108,7 @@ class PeakDeviationTest : TestBase() {
     fun `toJSON converts rmsDeviation to integer`() {
         val peakDeviation = PeakDeviation(rmsDeviation = 4.9)
 
-        val json = peakDeviation.toJSON()
+        val json = peakDeviation.toJSON().asOrgJson()
 
         assertThat(json.getInt("RMSDeviation")).isEqualTo(4)
     }
@@ -115,7 +117,7 @@ class PeakDeviationTest : TestBase() {
     fun `toJSON keeps smrDeviation as double`() {
         val peakDeviation = PeakDeviation(smrDeviation = 3.256)
 
-        val json = peakDeviation.toJSON()
+        val json = peakDeviation.toJSON().asOrgJson()
 
         assertThat(json.getDouble("SMRDeviation")).isEqualTo(3.256)
     }
@@ -129,7 +131,7 @@ class PeakDeviationTest : TestBase() {
             rmsDeviation = 0.0
         )
 
-        val json = peakDeviation.toJSON()
+        val json = peakDeviation.toJSON().asOrgJson()
 
         assertThat(json.getInt("peak")).isEqualTo(0)
         assertThat(json.getInt("meanDeviation")).isEqualTo(0)
@@ -146,7 +148,7 @@ class PeakDeviationTest : TestBase() {
             rmsDeviation = -3.7
         )
 
-        val json = peakDeviation.toJSON()
+        val json = peakDeviation.toJSON().asOrgJson()
 
         assertThat(json.getInt("peak")).isEqualTo(-1)
         assertThat(json.getInt("meanDeviation")).isEqualTo(-2)
@@ -163,7 +165,7 @@ class PeakDeviationTest : TestBase() {
             rmsDeviation = 75.0
         )
 
-        val json = peakDeviation.toJSON()
+        val json = peakDeviation.toJSON().asOrgJson()
 
         assertThat(json.getInt("peak")).isEqualTo(200)
         assertThat(json.getInt("meanDeviation")).isEqualTo(100)
@@ -177,14 +179,14 @@ class PeakDeviationTest : TestBase() {
 
         peaks.forEach { peakTime ->
             val peakDeviation = PeakDeviation(peak = peakTime)
-            val json = peakDeviation.toJSON()
+            val json = peakDeviation.toJSON().asOrgJson()
             assertThat(json.getInt("peak")).isEqualTo(peakTime)
         }
     }
 
     @Test
     fun `roundtrip from JSON to object to JSON preserves data`() {
-        val originalJson = JSONObject().apply {
+        val originalJson = buildJsonObject {
             put("peak", 75)
             put("meanDeviation", 5.8)
             put("SMRDeviation", 3.4)
@@ -192,7 +194,7 @@ class PeakDeviationTest : TestBase() {
         }
 
         val peakDeviation = PeakDeviation(originalJson)
-        val newJson = peakDeviation.toJSON()
+        val newJson = peakDeviation.toJSON().asOrgJson()
 
         assertThat(newJson.getInt("peak")).isEqualTo(75)
         // meanDeviation gets truncated to int
@@ -206,7 +208,7 @@ class PeakDeviationTest : TestBase() {
     fun `handles ultra-rapid insulin peaks`() {
         val peakDeviation = PeakDeviation(peak = 45)
 
-        val json = peakDeviation.toJSON()
+        val json = peakDeviation.toJSON().asOrgJson()
 
         assertThat(json.getInt("peak")).isEqualTo(45)
     }
@@ -215,7 +217,7 @@ class PeakDeviationTest : TestBase() {
     fun `handles rapid-acting insulin peaks`() {
         val peakDeviation = PeakDeviation(peak = 75)
 
-        val json = peakDeviation.toJSON()
+        val json = peakDeviation.toJSON().asOrgJson()
 
         assertThat(json.getInt("peak")).isEqualTo(75)
     }

@@ -768,6 +768,45 @@ in a map: a compile per target catches it, an Android-only build does not.
 discouraged. Prefer the function syntax form `() -> T`."* Write `() -> T` in new code. Call sites are
 identical - `provider()` either way - so only the type and the import change.
 
+### An `org.json` class that moves: `kotlinx.serialization`, and what to do with its tests
+
+A class holding an `org.json` document converts in a few mechanical steps, but three of them are
+decisions rather than edits.
+
+**Reading.** `lenientInt` / `lenientLong` / `lenientDouble` / `lenientStringOrNull` in
+`app.aaps.core.utils` copy `org.json`'s coercion, so a document that carries a number as a string
+(`"deviation":"5.43"`, which Nightscout data does) still reads. `json.has("k")` disappears into the
+default argument: pass the field's current value, `x = json.lenientDouble("k", x)`, and an absent key
+leaves the field alone exactly as the old guard did. `lenientStringOrNull` is the one that answers
+`null` rather than a default, which is what a `?.let` in the old code wanted.
+
+**Writing.** Three things come out differently, and each one needs a sentence in the code saying
+which was chosen:
+
+- a null value - `org.json.put(k, null)` **deletes the key**, kotlinx writes a literal `null`, so a
+  nullable field becomes `x?.let { put("k", it) }` if the file is read back;
+- a whole-numbered `Double` - `org.json` wrote `100`, kotlinx writes `100.0`;
+- `/` - `org.json` escaped it as `\/` and the old code undid that with a `replace`.
+
+`JsonObjectBuilder` has no `putAll`: copy the entries with `forEach { (k, v) -> put(k, v) }`.
+
+**The tests are the real work, and they do not have to be rewritten.** A suite written against
+`JSONObject` gets a two-line bridge in its own source set - the fixture inputs parsed into kotlinx
+documents, and the results handed back to the Android getters:
+
+    fun jsonObjectOf(text: String): JsonObject = Json.parseToJsonElement(text).jsonObject
+    fun JsonObject.asOrgJson(): JSONObject = JSONObject(toString())
+
+...then `JSONObject(prepJson)` becomes `jsonObjectOf(prepJson)`, `datum.toJSON()` becomes
+`datum.toJSON().asOrgJson()`, and a test that builds its input turns `JSONObject().apply { put(...) }`
+into `buildJsonObject { put(...) }` with no other change. Reading a result back through its text is
+also what the app does with the file it writes, so nothing is hidden by the hop. `:plugins:aps`
+autotune kept **all 89 of its tests green** this way in about 80 changed lines; rewriting them into
+kotlinx by hand would have been a 1800-line edit with no new coverage.
+
+That is also why those tests stay in `androidHostTest`: a suite built on `org.json` and Mockito is a
+rewrite, not a move. Only move tests to `commonTest` when they are already platform-free.
+
 ### Lift the platform call out, keep the rule
 
 When a class is blocked by one platform call, put that call behind an interface in commonMain and

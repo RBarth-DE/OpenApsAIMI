@@ -1,8 +1,10 @@
 package app.aaps.plugins.aps.autotune.data
 
+import app.aaps.plugins.aps.autotune.asOrgJson
 import app.aaps.shared.tests.TestBase
 import com.google.common.truth.Truth.assertThat
-import org.json.JSONObject
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 import org.junit.jupiter.api.Test
 
 class DiaDeviationTest : TestBase() {
@@ -34,7 +36,7 @@ class DiaDeviationTest : TestBase() {
 
     @Test
     fun `constructor from JSON parses all fields`() {
-        val json = JSONObject().apply {
+        val json = buildJsonObject {
             put("dia", 6.0)
             put("meanDeviation", 5.5)
             put("SMRDeviation", 3.2)
@@ -51,7 +53,7 @@ class DiaDeviationTest : TestBase() {
 
     @Test
     fun `constructor from JSON handles missing fields`() {
-        val json = JSONObject().apply {
+        val json = buildJsonObject {
             put("dia", 6.0)
             put("meanDeviation", 5.5)
         }
@@ -66,7 +68,7 @@ class DiaDeviationTest : TestBase() {
 
     @Test
     fun `constructor from JSON handles empty JSON`() {
-        val json = JSONObject()
+        val json = buildJsonObject { }
 
         val diaDeviation = DiaDeviation(json)
 
@@ -85,7 +87,7 @@ class DiaDeviationTest : TestBase() {
             rmsDeviation = 4.8
         )
 
-        val json = diaDeviation.toJSON()
+        val json = diaDeviation.toJSON().asOrgJson()
 
         assertThat(json.getDouble("dia")).isEqualTo(6.0)
         assertThat(json.getInt("meanDeviation")).isEqualTo(5)
@@ -97,7 +99,7 @@ class DiaDeviationTest : TestBase() {
     fun `toJSON converts meanDeviation to integer`() {
         val diaDeviation = DiaDeviation(meanDeviation = 5.7)
 
-        val json = diaDeviation.toJSON()
+        val json = diaDeviation.toJSON().asOrgJson()
 
         assertThat(json.getInt("meanDeviation")).isEqualTo(5)
     }
@@ -106,7 +108,7 @@ class DiaDeviationTest : TestBase() {
     fun `toJSON converts rmsDeviation to integer`() {
         val diaDeviation = DiaDeviation(rmsDeviation = 4.9)
 
-        val json = diaDeviation.toJSON()
+        val json = diaDeviation.toJSON().asOrgJson()
 
         assertThat(json.getInt("RMSDeviation")).isEqualTo(4)
     }
@@ -115,7 +117,7 @@ class DiaDeviationTest : TestBase() {
     fun `toJSON keeps smrDeviation as double`() {
         val diaDeviation = DiaDeviation(smrDeviation = 3.256)
 
-        val json = diaDeviation.toJSON()
+        val json = diaDeviation.toJSON().asOrgJson()
 
         assertThat(json.getDouble("SMRDeviation")).isEqualTo(3.256)
     }
@@ -129,7 +131,7 @@ class DiaDeviationTest : TestBase() {
             rmsDeviation = 0.0
         )
 
-        val json = diaDeviation.toJSON()
+        val json = diaDeviation.toJSON().asOrgJson()
 
         assertThat(json.getDouble("dia")).isEqualTo(0.0)
         assertThat(json.getInt("meanDeviation")).isEqualTo(0)
@@ -146,7 +148,7 @@ class DiaDeviationTest : TestBase() {
             rmsDeviation = -3.7
         )
 
-        val json = diaDeviation.toJSON()
+        val json = diaDeviation.toJSON().asOrgJson()
 
         assertThat(json.getDouble("dia")).isEqualTo(5.0)
         assertThat(json.getInt("meanDeviation")).isEqualTo(-2)
@@ -163,7 +165,7 @@ class DiaDeviationTest : TestBase() {
             rmsDeviation = 75.0
         )
 
-        val json = diaDeviation.toJSON()
+        val json = diaDeviation.toJSON().asOrgJson()
 
         assertThat(json.getDouble("dia")).isEqualTo(10.0)
         assertThat(json.getInt("meanDeviation")).isEqualTo(100)
@@ -175,14 +177,14 @@ class DiaDeviationTest : TestBase() {
     fun `handles fractional dia values`() {
         val diaDeviation = DiaDeviation(dia = 6.123)
 
-        val json = diaDeviation.toJSON()
+        val json = diaDeviation.toJSON().asOrgJson()
 
         assertThat(json.getDouble("dia")).isEqualTo(6.123)
     }
 
     @Test
     fun `roundtrip from JSON to object to JSON preserves data`() {
-        val originalJson = JSONObject().apply {
+        val originalJson = buildJsonObject {
             put("dia", 6.5)
             put("meanDeviation", 5.8)
             put("SMRDeviation", 3.4)
@@ -190,7 +192,7 @@ class DiaDeviationTest : TestBase() {
         }
 
         val diaDeviation = DiaDeviation(originalJson)
-        val newJson = diaDeviation.toJSON()
+        val newJson = diaDeviation.toJSON().asOrgJson()
 
         assertThat(newJson.getDouble("dia")).isEqualTo(6.5)
         // meanDeviation gets truncated to int

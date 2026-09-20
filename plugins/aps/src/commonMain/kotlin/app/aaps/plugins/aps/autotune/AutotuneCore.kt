@@ -7,7 +7,9 @@ import app.aaps.core.keys.interfaces.Preferences
 import app.aaps.core.utils.Percentile
 import app.aaps.plugins.aps.autotune.data.ATProfile
 import app.aaps.plugins.aps.autotune.data.PreppedGlucose
-import java.util.Calendar
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
+import kotlin.time.Instant
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
@@ -17,7 +19,7 @@ import kotlin.math.max
 @Inject
 class AutotuneCore(
     private val preferences: Preferences,
-    private val autotuneFS: AutotuneFS
+    private val autotuneLog: AutotuneLog
 ) {
 
     fun tuneAllTheThings(preppedGlucose: PreppedGlucose, previousAutotune: ATProfile, pumpProfile: ATProfile): ATProfile {
@@ -175,16 +177,11 @@ class AutotuneCore(
         for (hour in 0..23) {
             var deviations = 0.0
             for (i in basalGlucose.indices) {
-                val bgTime = Calendar.getInstance()
-                //var BGTime: Date? = null
-                if (basalGlucose[i].date != 0L) {
-                    bgTime.timeInMillis = basalGlucose[i].date
-                    //BGTime = Date(basalGlucose[i].date)
-                } else {
-                    log("Could not determine last BG time")
-                }
-                val myHour = bgTime.get(Calendar.HOUR_OF_DAY)
-                //val myHour = BGTime!!.hours
+                if (basalGlucose[i].date == 0L) log("Could not determine last BG time")
+                // The `Calendar` this replaced read the current hour when the date was missing. A
+                // datum without a date carries no deviation either, so it added nothing then and
+                // adds nothing now, and the hour of the epoch is not worth a second code path.
+                val myHour = Instant.fromEpochMilliseconds(basalGlucose[i].date).toLocalDateTime(TimeZone.currentSystemDefault()).hour
                 if (hour == myHour) {
                     //log.debug(basalGlucose[i].deviation);
                     deviations += basalGlucose[i].deviation
@@ -497,6 +494,6 @@ class AutotuneCore(
     }
 
     private fun log(message: String) {
-        autotuneFS.atLog("[Core] $message")
+        autotuneLog.atLog("[Core] $message")
     }
 }

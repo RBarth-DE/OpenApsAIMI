@@ -7,7 +7,6 @@ import app.aaps.plugins.aps.autotune.data.ATProfile
 import app.aaps.plugins.aps.autotune.data.PreppedGlucose
 import dev.zacsweers.metro.Inject
 import org.json.JSONException
-import org.slf4j.LoggerFactory
 import java.io.BufferedInputStream
 import java.io.BufferedOutputStream
 import java.io.File
@@ -27,7 +26,8 @@ import dev.zacsweers.metro.SingleIn
 @Inject
 class AutotuneFS(
     private val rh: ResourceHelper,
-    private val loggerUtils: LoggerUtils
+    private val loggerUtils: LoggerUtils,
+    private val autotuneLog: AutotuneLog
 ) {
 
     val AUTOTUNEFOLDER = "autotune"
@@ -44,9 +44,7 @@ class AutotuneFS(
     val ZIPPREF = "autotune_"
     lateinit var autotunePath: File
     lateinit var autotuneSettings: File
-    private var logString = ""
     val BUFFER_SIZE = 2048
-    private val log = LoggerFactory.getLogger(AutotunePlugin::class.java)
 
     /*****************************************************************************
      * Create autotune folder for all files created during an autotune session
@@ -127,16 +125,17 @@ class AutotuneFS(
 
     fun exportLog(lastRun: Long, index: Int = 0) {
         val suffix = if (index == 0) "" else "_" + index
+        // The "Create ... file" line is logged first on purpose: it is part of the text written out.
         log("Create " + LOGPREF + formatDate(lastRun) + suffix + ".log" + " file in " + AUTOTUNEFOLDER + " folder")
-        createAutotunefile(LOGPREF + formatDate(lastRun) + suffix + ".log", logString)
-        logString = ""
+        createAutotunefile(LOGPREF + formatDate(lastRun) + suffix + ".log", autotuneLog.text)
+        autotuneLog.clear()
     }
 
     fun exportLogAndZip(lastRun: Long) {
         log("Create " + LOGPREF + formatDate(lastRun) + ".log" + " file in " + AUTOTUNEFOLDER + " folder")
-        createAutotunefile(LOGPREF + formatDate(lastRun) + ".log", logString)
+        createAutotunefile(LOGPREF + formatDate(lastRun) + ".log", autotuneLog.text)
         zipAutotune(lastRun)
-        logString = ""
+        autotuneLog.clear()
     }
 
     private fun createAutotunefile(fileName: String, stringFile: String, isSettingFile: Boolean = false) {
@@ -177,9 +176,9 @@ class AutotuneFS(
         atLog("[FS] $message")
     }
 
+    /** The session log is shared with the algorithm classes - see [AutotuneLog]. */
     fun atLog(message: String) {
-        logString += "$message\n"
-        log.debug(message)
+        autotuneLog.atLog(message)
     }
 
     private fun zipDirectory(folder: File, parentFolder: String, out: ZipOutputStream) {

@@ -19,7 +19,6 @@ import org.json.JSONArray
 import org.json.JSONObject
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.mockito.Mock
 import org.mockito.kotlin.whenever
 import java.io.File
 import java.util.TimeZone
@@ -28,7 +27,7 @@ import kotlinx.datetime.TimeZone as KtTimeZone
 
 class AutotuneCoreTest : TestBaseWithProfile() {
 
-    @Mock lateinit var autotuneFS: AutotuneFS
+    private lateinit var autotuneLog: AutotuneLog
     private lateinit var autotuneCore: AutotuneCore
     private var min5mCarbImpact = 0.0
     private var autotuneMin = 0.0
@@ -36,7 +35,8 @@ class AutotuneCoreTest : TestBaseWithProfile() {
 
     @BeforeEach
     fun initData() {
-        autotuneCore = AutotuneCore(preferences, autotuneFS)
+        autotuneLog = AutotuneLog(aapsLogger)
+        autotuneCore = AutotuneCore(preferences, autotuneLog)
         TimeZone.setDefault(TimeZone.getTimeZone("GMT+2"))
     }
 
@@ -46,7 +46,7 @@ class AutotuneCoreTest : TestBaseWithProfile() {
         val prepJson = File("src/androidHostTest/res/autotune/test1/autotune.2022-05-21.json").readText()
         val inputProfileJson = File("src/androidHostTest/res/autotune/test1/profile.pump.json").readText()
         val inputProfile = atProfileFromOapsJson(JSONObject(inputProfileJson), dateUtil)!!
-        val prep = PreppedGlucose(JSONObject(prepJson), dateUtil)
+        val prep = PreppedGlucose(jsonObjectOf(prepJson), dateUtil)
 
         whenever(preferences.get(DoubleKey.AutosensMax)).thenReturn(autotuneMax)
         whenever(preferences.get(DoubleKey.AutosensMin)).thenReturn(autotuneMin)
@@ -69,7 +69,7 @@ class AutotuneCoreTest : TestBaseWithProfile() {
         val inputProfile = atProfileFromOapsJson(JSONObject(inputProfileJson), dateUtil)!!
         val pumpProfileJson = File("src/androidHostTest/res/autotune/test4/profile.pump.json").readText()
         val pumpProfile = atProfileFromOapsJson(JSONObject(pumpProfileJson), dateUtil)!!
-        val prep = PreppedGlucose(JSONObject(prepJson), dateUtil)
+        val prep = PreppedGlucose(jsonObjectOf(prepJson), dateUtil)
         whenever(preferences.get(DoubleKey.AutosensMax)).thenReturn(autotuneMax)
         whenever(preferences.get(DoubleKey.AutosensMin)).thenReturn(autotuneMin)
         whenever(preferences.get(DoubleKey.ApsSmbMin5MinCarbsImpact)).thenReturn(min5mCarbImpact)

@@ -13,6 +13,8 @@ import app.aaps.core.data.model.TE
 import app.aaps.core.data.model.durationInMinutes
 import app.aaps.core.data.time.T
 import app.aaps.core.interfaces.aps.IobTotal
+import app.aaps.core.interfaces.concurrent.AapsLock
+import app.aaps.core.interfaces.concurrent.withLock
 import app.aaps.core.interfaces.db.PersistenceLayer
 import app.aaps.core.interfaces.logging.AAPSLogger
 import app.aaps.core.interfaces.logging.LTag
@@ -24,14 +26,19 @@ import app.aaps.core.keys.BooleanKey
 import app.aaps.core.keys.interfaces.Preferences
 import app.aaps.core.objects.extensions.convertedToAbsolute
 import app.aaps.core.objects.extensions.round
-import app.aaps.core.objects.extensions.toJson
+import app.aaps.core.objects.extensions.toJsonObject
 import app.aaps.core.objects.extensions.toTemporaryBasal
 import app.aaps.core.utils.MidnightUtils
 import app.aaps.plugins.aps.autotune.data.ATProfile
 import dev.zacsweers.metro.Inject
 import kotlinx.coroutines.runBlocking
-import org.json.JSONArray
-import org.json.JSONObject
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonNull
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.SingleIn
 import kotlin.math.ceil
@@ -44,7 +51,7 @@ open class AutotuneIob(
     private val profileFunction: ProfileFunction,
     private val preferences: Preferences,
     private val dateUtil: DateUtil,
-    private val autotuneFS: AutotuneFS
+    private val autotuneLog: AutotuneLog
 ) {
 
     private var nsTreatments = ArrayList<NsTreatment>()
@@ -55,6 +62,13 @@ open class AutotuneIob(
     private lateinit var tempBasals: ArrayList<TB>
     var startBG: Long = 0
     private var endBG: Long = 0
+
+    /**
+     * Guards the lists above. The six methods below used `@Synchronized`, which is JVM only; this is
+     * the same reentrant blocking lock - see [AapsLock].
+     */
+    private val lock = AapsLock()
+
     private fun range(): Long = (60 * 60 * 1000L * dia + T.hours(2).msecs()).toLong()
 
     suspend fun initializeData(from: Long, to: Long, tunedProfile: ATProfile) {
@@ -78,18 +92,15 @@ open class AutotuneIob(
         aapsLogger.debug(LTag.AUTOTUNE, "Nb Treatments: " + nsTreatments.size + " Nb meals: " + meals.size)
     }
 
-    @Synchronized
-    private fun sortTempBasal() {
+    private fun sortTempBasal() = lock.withLock {
         tempBasals = ArrayList(tempBasals.toList().sortedWith { o1: TB, o2: TB -> if (o2.timestamp > o1.timestamp) 1 else -1 })
     }
 
-    @Synchronized
-    private fun sortNsTreatments() {
+    private fun sortNsTreatments() = lock.withLock {
         nsTreatments = ArrayList(nsTreatments.toList().sortedWith { o1: NsTreatment, o2: NsTreatment -> if (o2.date > o1.date) 1 else -1 })
     }
 
-    @Synchronized
-    private fun sortBoluses() {
+    private fun sortBoluses() = lock.withLock {
         boluses = ArrayList(boluses.toList().sortedWith { o1: BS, o2: BS -> if (o2.timestamp > o1.timestamp) 1 else -1 })
     }
 
@@ -327,46 +338,31 @@ open class AutotuneIob(
         return result
     }
 
-    fun BS.toJson(isAdd: Boolean, dateUtil: DateUtil): JSONObject =
-        JSONObject()
-            .put("eventType", if (type == BS.Type.SMB) TE.Type.CORRECTION_BOLUS.text else TE.Type.MEAL_BOLUS.text)
-            .put("insulin", amount)
-            .put("created_at", dateUtil.toISOString(timestamp))
-            .put("date", timestamp)
-            .put("type", type.name)
-            .put("notes", notes)
-            .put("isValid", isValid)
-            .put("isSMB", type == BS.Type.SMB).also {
-                if (ids.pumpId != null) it.put("pumpId", ids.pumpId)
-                if (ids.pumpType != null) it.put("pumpType", ids.pumpType!!.name)
-                if (ids.pumpSerial != null) it.put("pumpSerial", ids.pumpSerial)
-                if (isAdd && ids.nightscoutId != null) it.put("_id", ids.nightscoutId)
-            }
-
-    @Synchronized
-    fun glucoseToJSON(): String {
-        val glucoseJson = JSONArray()
-        for (bgReading in glucose)
-            glucoseJson.put(bgReading.toJson(true, dateUtil))
-        return glucoseJson.toString(2)
-    }
-
-    @Synchronized
-    fun bolusesToJSON(): String {
-        val bolusesJson = JSONArray()
-        for (bolus in boluses)
-            bolusesJson.put(bolus.toJson(true, dateUtil))
-        return bolusesJson.toString(2)
-    }
-
-    @Synchronized
-    fun nsHistoryToJSON(): String {
-        val json = JSONArray()
-        for (t in nsTreatments) {
-            json.put(t.toJson())
+    fun BS.toJson(isAdd: Boolean, dateUtil: DateUtil): JsonObject =
+        buildJsonObject {
+            put("eventType", if (type == BS.Type.SMB) TE.Type.CORRECTION_BOLUS.text else TE.Type.MEAL_BOLUS.text)
+            put("insulin", amount)
+            put("created_at", dateUtil.toISOString(timestamp))
+            put("date", timestamp)
+            put("type", type.name)
+            // Written only when there is one: `org.json` dropped a key whose value was null, so a
+            // bolus without a note produced no `notes` key at all.
+            notes?.let { put("notes", it) }
+            put("isValid", isValid)
+            put("isSMB", type == BS.Type.SMB)
+            if (ids.pumpId != null) put("pumpId", ids.pumpId)
+            if (ids.pumpType != null) put("pumpType", ids.pumpType!!.name)
+            if (ids.pumpSerial != null) put("pumpSerial", ids.pumpSerial)
+            if (isAdd && ids.nightscoutId != null) put("_id", ids.nightscoutId)
         }
-        return json.toString(2).replace("\\/", "/")
-    }
+
+    fun glucoseToJSON(): String = lock.withLock { prettyJson(glucose.map { it.toJsonObject(true, dateUtil) }) }
+
+    fun bolusesToJSON(): String = lock.withLock { prettyJson(boluses.map { it.toJson(true, dateUtil) }) }
+
+    // A treatment whose profile could not be read answered null, and `org.json` wrote that as a
+    // literal `null` in the array. Kept, so the exported file does not change shape.
+    fun nsHistoryToJSON(): String = lock.withLock { prettyJson(nsTreatments.map { it.toJson() ?: JsonNull }) }
 
     //I add this internal class to be able to export easily ns-treatment files with same contain and format than NS query used by oref0-autotune
     private inner class NsTreatment {
@@ -402,72 +398,70 @@ open class AutotuneIob(
             eventType = TE.Type.COMBO_BOLUS
         }
 
-        fun TB.toJson(isAdd: Boolean, profile: Profile, dateUtil: DateUtil): JSONObject =
-            JSONObject()
-                .put("created_at", dateUtil.toISOString(timestamp))
-                .put("enteredBy", "openaps://" + "AndroidAPS")
-                .put("eventType", TE.Type.TEMPORARY_BASAL.text)
-                .put("isValid", isValid)
-                .put("duration", T.msecs(duration).mins())
-                .put("durationInMilliseconds", duration) // rounded duration leads to different basal IOB
-                .put("type", type.name)
-                .put("rate", convertedToAbsolute(timestamp, profile)) // generated by OpenAPS, for compatibility
-                .also {
-                    if (isAbsolute) it.put("absolute", rate)
-                    else it.put("percent", rate - 100)
-                    if (ids.pumpId != null) it.put("pumpId", ids.pumpId)
-                    if (ids.endId != null) it.put("endId", ids.endId)
-                    if (ids.pumpType != null) it.put("pumpType", ids.pumpType!!.name)
-                    if (ids.pumpSerial != null) it.put("pumpSerial", ids.pumpSerial)
-                    if (isAdd && ids.nightscoutId != null) it.put("_id", ids.nightscoutId)
-                }
+        fun TB.toJson(isAdd: Boolean, profile: Profile, dateUtil: DateUtil): JsonObject =
+            buildJsonObject {
+                put("created_at", dateUtil.toISOString(timestamp))
+                put("enteredBy", "openaps://" + "AndroidAPS")
+                put("eventType", TE.Type.TEMPORARY_BASAL.text)
+                put("isValid", isValid)
+                put("duration", T.msecs(duration).mins())
+                put("durationInMilliseconds", duration) // rounded duration leads to different basal IOB
+                put("type", type.name)
+                put("rate", convertedToAbsolute(timestamp, profile)) // generated by OpenAPS, for compatibility
+                if (isAbsolute) put("absolute", rate)
+                else put("percent", rate - 100)
+                if (ids.pumpId != null) put("pumpId", ids.pumpId)
+                if (ids.endId != null) put("endId", ids.endId)
+                if (ids.pumpType != null) put("pumpType", ids.pumpType!!.name)
+                if (ids.pumpSerial != null) put("pumpSerial", ids.pumpSerial)
+                if (isAdd && ids.nightscoutId != null) put("_id", ids.nightscoutId)
+            }
 
-        fun EB.toJson(isAdd: Boolean, profile: Profile, dateUtil: DateUtil): JSONObject =
-            if (isEmulatingTempBasal)
-                toTemporaryBasal(profile)
-                    .toJson(isAdd, profile, dateUtil)
-                    .put("extendedEmulated", toRealJson(isAdd, dateUtil))
-            else toRealJson(isAdd, dateUtil)
+        fun EB.toJson(isAdd: Boolean, profile: Profile, dateUtil: DateUtil): JsonObject =
+            if (isEmulatingTempBasal) buildJsonObject {
+                // The emulated form is the temp basal document with the extended one nested inside it.
+                toTemporaryBasal(profile).toJson(isAdd, profile, dateUtil).forEach { (key, value) -> put(key, value) }
+                put("extendedEmulated", toRealJson(isAdd, dateUtil))
+            } else toRealJson(isAdd, dateUtil)
 
-        fun EB.toRealJson(isAdd: Boolean, dateUtil: DateUtil): JSONObject =
-            JSONObject()
-                .put("created_at", dateUtil.toISOString(timestamp))
-                .put("enteredBy", "openaps://" + "AndroidAPS")
-                .put("eventType", TE.Type.COMBO_BOLUS.text)
-                .put("duration", T.msecs(duration).mins())
-                .put("durationInMilliseconds", duration)
-                .put("splitNow", 0)
-                .put("splitExt", 100)
-                .put("enteredinsulin", amount)
-                .put("relative", rate)
-                .put("isValid", isValid)
-                .put("isEmulatingTempBasal", isEmulatingTempBasal)
-                .also {
-                    if (ids.pumpId != null) it.put("pumpId", ids.pumpId)
-                    if (ids.endId != null) it.put("endId", ids.endId)
-                    if (ids.pumpType != null) it.put("pumpType", ids.pumpType!!.name)
-                    if (ids.pumpSerial != null) it.put("pumpSerial", ids.pumpSerial)
-                    if (isAdd && ids.nightscoutId != null) it.put("_id", ids.nightscoutId)
-                }
+        fun EB.toRealJson(isAdd: Boolean, dateUtil: DateUtil): JsonObject =
+            buildJsonObject {
+                put("created_at", dateUtil.toISOString(timestamp))
+                put("enteredBy", "openaps://" + "AndroidAPS")
+                put("eventType", TE.Type.COMBO_BOLUS.text)
+                put("duration", T.msecs(duration).mins())
+                put("durationInMilliseconds", duration)
+                put("splitNow", 0)
+                put("splitExt", 100)
+                put("enteredinsulin", amount)
+                put("relative", rate)
+                put("isValid", isValid)
+                put("isEmulatingTempBasal", isEmulatingTempBasal)
+                if (ids.pumpId != null) put("pumpId", ids.pumpId)
+                if (ids.endId != null) put("endId", ids.endId)
+                if (ids.pumpType != null) put("pumpType", ids.pumpType!!.name)
+                if (ids.pumpSerial != null) put("pumpSerial", ids.pumpSerial)
+                if (isAdd && ids.nightscoutId != null) put("_id", ids.nightscoutId)
+            }
 
-        fun CA.toJson(isAdd: Boolean, dateUtil: DateUtil): JSONObject =
-            JSONObject()
-                .put("eventType", if (amount < 12) TE.Type.CARBS_CORRECTION.text else TE.Type.MEAL_BOLUS.text)
-                .put("carbs", amount)
-                .put("notes", notes)
-                .put("created_at", dateUtil.toISOString(timestamp))
-                .put("isValid", isValid)
-                .put("date", timestamp).also {
-                    if (duration != 0L) it.put("duration", duration)
-                    if (ids.pumpId != null) it.put("pumpId", ids.pumpId)
-                    if (ids.pumpType != null) it.put("pumpType", ids.pumpType!!.name)
-                    if (ids.pumpSerial != null) it.put("pumpSerial", ids.pumpSerial)
-                    if (isAdd && ids.nightscoutId != null) it.put("_id", ids.nightscoutId)
-                }
+        fun CA.toJson(isAdd: Boolean, dateUtil: DateUtil): JsonObject =
+            buildJsonObject {
+                put("eventType", if (amount < 12) TE.Type.CARBS_CORRECTION.text else TE.Type.MEAL_BOLUS.text)
+                put("carbs", amount)
+                // Written only when there is one - see the note on `BS.toJson`.
+                notes?.let { put("notes", it) }
+                put("created_at", dateUtil.toISOString(timestamp))
+                put("isValid", isValid)
+                put("date", timestamp)
+                if (duration != 0L) put("duration", duration)
+                if (ids.pumpId != null) put("pumpId", ids.pumpId)
+                if (ids.pumpType != null) put("pumpType", ids.pumpType!!.name)
+                if (ids.pumpSerial != null) put("pumpSerial", ids.pumpSerial)
+                if (isAdd && ids.nightscoutId != null) put("_id", ids.nightscoutId)
+            }
 
-        fun toJson(): JSONObject? {
-            val cpJson = JSONObject()
-            return when (eventType) {
+        fun toJson(): JsonObject? =
+            when (eventType) {
                 TE.Type.TEMPORARY_BASAL  ->
                     temporaryBasal?.let { tbr ->
                         val profile = runBlocking { profileFunction.getProfile(tbr.timestamp) }
@@ -486,12 +480,23 @@ open class AutotuneIob(
 
                 TE.Type.CORRECTION_BOLUS -> bolusTreatment?.toJson(true, dateUtil)
                 TE.Type.CARBS_CORRECTION -> carbsTreatment?.toJson(true, dateUtil)
-                else                     -> cpJson
+                // The old code answered an empty `org.json` document here, which is an empty object.
+                else                     -> buildJsonObject { }
             }
-        }
     }
 
+    /**
+     * The text of a whole document, indented as `org.json`'s `toString(2)` indented it.
+     *
+     * One difference from that writer, and it applies to every number in every file autotune
+     * exports: a whole numbered Double keeps its fraction, so `100` is written `100.0`. `org.json`
+     * dropped the fraction. oref0 reads these files with a JSON parser, where the two are the same
+     * number, so only a person looking at the file can tell.
+     */
+    private fun prettyJson(items: List<JsonElement>): String =
+        Json { prettyPrint = true; prettyPrintIndent = "  " }.encodeToString(JsonArray.serializer(), JsonArray(items))
+
     private fun log(message: String) {
-        autotuneFS.atLog("[iob] $message")
+        autotuneLog.atLog("[iob] $message")
     }
 }

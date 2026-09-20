@@ -30,7 +30,7 @@ import kotlin.math.roundToInt
 class AutotunePrep(
     private val preferences: Preferences,
     private val dateUtil: DateUtil,
-    private val autotuneFS: AutotuneFS,
+    private val autotuneLog: AutotuneLog,
     private val autotuneIob: AutotuneIob
 ) {
 
@@ -562,6 +562,6 @@ class AutotunePrep(
     }
 
     private fun log(message: String) {
-        autotuneFS.atLog("[Prep] $message")
+        autotuneLog.atLog("[Prep] $message")
     }
 }
