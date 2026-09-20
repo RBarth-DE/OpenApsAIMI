@@ -88,10 +88,10 @@ data class GraphConfig(
         /** Maximum number of secondary graphs allowed */
         const val MAX_SECONDARY_GRAPHS = 5
 
-        /** Maximum graph height in dp (2.5x default) */
+        /** Smallest graph height the user can pick, in dp (half the default) */
         const val MIN_GRAPH_HEIGHT_DP = 50
 
-        /** Default graph height in dp (minimum value — user-adjustable up to [MAX_GRAPH_HEIGHT_DP]) */
+        /** Graph height a new graph starts with, in dp. The user can change it between [MIN_GRAPH_HEIGHT_DP] and [MAX_GRAPH_HEIGHT_DP] */
         const val DEFAULT_GRAPH_HEIGHT_DP = 100
 
         /** Maximum graph height in dp (2.5x default) */

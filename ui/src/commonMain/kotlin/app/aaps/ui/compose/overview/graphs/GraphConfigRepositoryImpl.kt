@@ -164,10 +164,15 @@ class GraphConfigRepositoryImpl(
         /** The named array, or null when it is absent or is something other than an array. */
         private fun JsonObject.array(key: String): JsonArray? = this[key] as? JsonArray
 
-        /** A stored height, defaulted when absent and always brought inside the allowed range. */
+        /**
+         * A stored height, defaulted when absent and always brought inside the range the height row
+         * offers. The lower bound is [GraphConfig.MIN_GRAPH_HEIGHT_DP] and not the default: this
+         * reads back what that row wrote, so clamping to the default would silently raise a smaller
+         * height the user picked (the panel jumped back to 100 dp on every change).
+         */
         private fun JsonObject.height(key: String): Int =
             ((this[key] as? JsonPrimitive)?.let { runCatching { it.int }.getOrNull() } ?: GraphConfig.DEFAULT_GRAPH_HEIGHT_DP)
-                .coerceIn(GraphConfig.DEFAULT_GRAPH_HEIGHT_DP, GraphConfig.MAX_GRAPH_HEIGHT_DP)
+                .coerceIn(GraphConfig.MIN_GRAPH_HEIGHT_DP, GraphConfig.MAX_GRAPH_HEIGHT_DP)
 
         /** A stored flag, defaulted when it is absent or is not a boolean. */
         private fun JsonObject.boolean(key: String, default: Boolean): Boolean =

@@ -94,8 +94,21 @@ class GraphConfigRepositoryImplTest {
     fun `heights are clamped to the allowed range`() {
         val restored = GraphConfigRepositoryImpl.fromJson("""{"bgHeight":10,"iobHeight":100000}""")
 
-        assertThat(restored.bgHeight).isEqualTo(GraphConfig.DEFAULT_GRAPH_HEIGHT_DP)
+        assertThat(restored.bgHeight).isEqualTo(GraphConfig.MIN_GRAPH_HEIGHT_DP)
         assertThat(restored.iobHeight).isEqualTo(GraphConfig.MAX_GRAPH_HEIGHT_DP)
+    }
+
+    @Test
+    fun `a height below the default is kept, not raised to the default`() {
+        // The height row offers MIN..MAX, so a shorter panel is a legal choice. Raised to the
+        // default on the read back, the panel jumped to 100 dp again on every change.
+        val restored = GraphConfigRepositoryImpl.fromJson(
+            """{"bgHeight":60,"iobHeight":60,"secondaryGraphs":[{"series":["MODES"],"height":60}]}"""
+        )
+
+        assertThat(restored.bgHeight).isEqualTo(60)
+        assertThat(restored.iobHeight).isEqualTo(60)
+        assertThat(restored.secondaryGraphs.single().height).isEqualTo(60)
     }
 
     @Test
