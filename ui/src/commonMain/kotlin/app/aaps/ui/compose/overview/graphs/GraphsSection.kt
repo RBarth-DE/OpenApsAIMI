@@ -159,15 +159,25 @@ private val BASE_CONFIGURABLE_SERIES = SeriesType.entries.filter {
 // Initial pass fires BEFORE children. We eavesdrop:
 //   finger down + timeout → long press → invoke callback
 //   finger up before timeout → normal tap → do nothing, children handle it
+//
+// The gesture is NOT keyed on the callback. pointerInput throws its coroutine
+// away whenever a key changes, and a lambda written at the call site is a new
+// object on every recomposition — keyed on it, a recomposition in the middle of
+// a press restarted the gesture and the long press never fired. The timeout is
+// a plain Long and holds still, and the callback is read through a state, so the
+// running gesture always calls the newest one.
+//
+// internal rather than private so a test can drive the gesture directly.
 // =========================================================================
 @Composable
-private fun Modifier.interceptLongPress(
+internal fun Modifier.interceptLongPress(
     enabled: Boolean,
     onLongPress: () -> Unit
 ): Modifier {
+    val currentOnLongPress by rememberUpdatedState(onLongPress)
     if (!enabled) return this
     val longPressTimeout = LocalViewConfiguration.current.longPressTimeoutMillis
-    return this.pointerInput(onLongPress, longPressTimeout) {
+    return this.pointerInput(longPressTimeout) {
         awaitEachGesture {
             awaitFirstDown(pass = PointerEventPass.Initial)
             val isLongPress = try {
@@ -179,7 +189,7 @@ private fun Modifier.interceptLongPress(
                 true
             }
             if (isLongPress) {
-                onLongPress()
+                currentOnLongPress()
                 // Consume finger-up so button onClick doesn't fire afterwards
                 var event = awaitPointerEvent(PointerEventPass.Main)
                 event.changes.forEach { it.consume() }
