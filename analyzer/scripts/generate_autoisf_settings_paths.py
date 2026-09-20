@@ -8,7 +8,7 @@ from pathlib import Path
 _SCRIPT_DIR = Path(__file__).resolve().parent
 _AUTO_ROOT = _SCRIPT_DIR.parent.parent
 PROJECT_ROOT = _AUTO_ROOT if (_AUTO_ROOT / "plugins" / "aps").exists() else _SCRIPT_DIR
-PLUGIN_FILE = PROJECT_ROOT / "plugins/aps/src/commonMain/kotlin/app/aaps/plugins/aps/openAPSAutoISF/OpenAPSAutoISFPlugin.kt"
+PLUGIN_FILE = PROJECT_ROOT / "plugins/aps/src/androidMain/kotlin/app/aaps/plugins/aps/openAPSAutoISF/OpenAPSAutoISFPlugin.kt"
 STRINGS_XML_PATHS = [
     PROJECT_ROOT / "plugins/aps/src/androidMain/res/values",
     PROJECT_ROOT / "core/keys/src/androidMain/res/values",

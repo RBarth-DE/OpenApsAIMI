@@ -6,7 +6,6 @@ by reading source code usage of each parameter.
 import json, re, os, subprocess
 
 REPO = '/home/happy/StudioProjects/OpenApsAIMI_V4'
-MAIN_KT = f'{REPO}/plugins/aps/src/commonMain/kotlin/app/aaps/plugins/aps/openAPSAIMI/DetermineBasalAIMI2.kt'
 PARAMS_FILE = f'{REPO}/analyzer/data/aimi_parameters.json'
 CONTEXT_FILE = f'{REPO}/analyzer/data/aimi_context_for_ai.json'
 

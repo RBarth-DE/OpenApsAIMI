@@ -22,7 +22,9 @@ _AUTO_ROOT = _SCRIPT_DIR.parent.parent
 DEFAULT_SOURCE_ROOT = str(_AUTO_ROOT) if (_AUTO_ROOT / "plugins" / "aps").exists() else None
 DATA_DIR = _SCRIPT_DIR.parent / "data"
 
-AUTOISF_SRC = "plugins/aps/src/commonMain/kotlin/app/aaps/plugins/aps/openAPSAutoISF"
+# AutoISF is Android-only by decision, so the plugin lives in androidMain. Pointing this at
+# commonMain finds no directory and writes empty data, with no error.
+AUTOISF_SRC = "plugins/aps/src/androidMain/kotlin/app/aaps/plugins/aps/openAPSAutoISF"
 
 KEY_FILES = [
     "core/keys/src/commonMain/kotlin/app/aaps/core/keys/DoubleKey.kt",

@@ -1,7 +1,7 @@
 {
   "version": "3.0",
-  "source_commit": "a9d66da6140ce72f0f00141157606c25d28c7d94",
-  "generated_at": "2026-09-18T08:17:01.833658+00:00",
+  "source_commit": "9509b44cac00966f3304d524c80d38719a1d3fa1",
+  "generated_at": "2026-09-20T14:24:41.905803+00:00",
   "total": 312,
   "active": 263,
   "orphaned": 49,
@@ -3669,7 +3669,7 @@
         },
         {
           "file": "DetermineBasalAIMI2.kt",
-          "function": "refineRbtMergeAfterDoseSnapshot"
+          "function": "fclDeclaredThisTick"
         },
         {
           "file": "BasalChannelSafetyGuards.kt",
@@ -3792,12 +3792,12 @@
           "function": "unknown"
         },
         {
-          "file": "ContextViewModel.kt",
-          "function": "refreshSettings"
-        },
-        {
           "file": "ContextActivity.kt",
           "function": "setupUI"
+        },
+        {
+          "file": "ContextViewModel.kt",
+          "function": "refreshSettings"
         }
       ],
       "orphaned": false,
@@ -3830,12 +3830,12 @@
           "function": "validate"
         },
         {
-          "file": "ContextViewModel.kt",
-          "function": "refreshSettings"
-        },
-        {
           "file": "ContextActivity.kt",
           "function": "setupUI"
+        },
+        {
+          "file": "ContextViewModel.kt",
+          "function": "refreshSettings"
         }
       ],
       "orphaned": false,

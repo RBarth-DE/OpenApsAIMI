@@ -3030,7 +3030,7 @@
       },
       {
         "file": "DetermineBasalAIMI2.kt",
-        "function": "refineRbtMergeAfterDoseSnapshot"
+        "function": "fclDeclaredThisTick"
       },
       {
         "file": "BasalChannelSafetyGuards.kt",

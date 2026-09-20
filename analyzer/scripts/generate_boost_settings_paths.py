@@ -31,8 +31,8 @@ if not (PROJECT_ROOT / "plugins" / "aps").exists():
     print(f"   Tried: {PROJECT_ROOT}")
     sys.exit(1)
 
-PLUGIN_FILE = PROJECT_ROOT / "plugins/aps/src/commonMain/kotlin/app/aaps/plugins/aps/openAPSBoost/OpenAPSBoostPlugin.kt"
-PLUGIN_FILE_V5 = PROJECT_ROOT / "plugins/aps/src/commonMain/kotlin/app/aaps/plugins/aps/openAPSBoostV5/OpenAPSBoostV5Plugin.kt"
+PLUGIN_FILE = PROJECT_ROOT / "plugins/aps/src/androidMain/kotlin/app/aaps/plugins/aps/openAPSBoost/OpenAPSBoostPlugin.kt"
+PLUGIN_FILE_V5 = PROJECT_ROOT / "plugins/aps/src/androidMain/kotlin/app/aaps/plugins/aps/openAPSBoostV5/OpenAPSBoostV5Plugin.kt"
 STRINGS_XML_PATHS = [
     PROJECT_ROOT / "plugins/aps/src/androidMain/res/values",
     PROJECT_ROOT / "core/keys/src/androidMain/res/values",

@@ -32,12 +32,12 @@ DEFAULT_SOURCE_ROOT = str(_AUTO_ROOT) if (_AUTO_ROOT / "plugins" / "aps").exists
 
 DATA_DIR = Path(__file__).resolve().parent.parent / "data"
 
-# AIMI source directories (relative to source root). The plugin moved to commonMain in the
-# multiplatform split. Three Android-only files (the context UI) stayed in androidMain, and
-# reading only commonMain would make every key they touch look unused.
+# AIMI source directories (relative to source root). The plugin is Android-only by decision
+# and lives in androidMain; two loop-orchestration files stayed in commonMain. Both are read,
+# because a key used in only one of them would otherwise look unused.
 AIMI_SRC = [
-    "plugins/aps/src/commonMain/kotlin/app/aaps/plugins/aps/openAPSAIMI",
     "plugins/aps/src/androidMain/kotlin/app/aaps/plugins/aps/openAPSAIMI",
+    "plugins/aps/src/commonMain/kotlin/app/aaps/plugins/aps/openAPSAIMI",
 ]
 
 # Key definition files (relative to source root)

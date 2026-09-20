@@ -34,7 +34,9 @@ DATA_DIR = _SCRIPT_DIR.parent / "data"
 # openAPSBoostV5, a SIBLING of openAPSBoost — scanning only openAPSBoost silently drops
 # all V5/V6 logic context (state machine, composed floor, primer, caps). Scan the parent
 # and pick the openAPSBoost* siblings explicitly so unrelated aps packages don't leak in.
-BOOST_SRC = "plugins/aps/src/commonMain/kotlin/app/aaps/plugins/aps"
+# The whole family is Android-only by decision, so it lives in androidMain. Pointing this
+# at commonMain finds no openAPSBoost* directory at all and writes empty data, with no error.
+BOOST_SRC = "plugins/aps/src/androidMain/kotlin/app/aaps/plugins/aps"
 BOOST_SRC_DIRS = [
     "openAPSBoost",
     "openAPSBoostV5",

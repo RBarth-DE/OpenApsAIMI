@@ -114,6 +114,33 @@ def get_plugin_data(plugin: str = "aimi") -> dict:
     """Get plugin data, falling back to aimi if requested plugin not available."""
     return PLUGIN_DATA.get(plugin, PLUGIN_DATA.get("aimi", {}))
 
+
+_FOREIGN_CACHE: dict[str, set] = {}
+
+
+def foreign_keys(plugin: str) -> set:
+    """Keys that belong to another plugin and not to this one.
+
+    A settings import carries every preference on the phone, so without this an AIMI
+    analysis shows Boost and AutoISF settings as if they were its own, and the model then
+    proposes changing them. Derived from the parameter files, so it follows the plugins.
+
+    A key that two of the other plugins both list is left alone. That is how the shared
+    AAPS-core preferences look - enableSMB_always, carbsReqThreshold and friends - and AIMI
+    honours those even though its own file does not list them: dropping them would hide
+    settings that really do change AIMI's behaviour.
+    """
+    if plugin not in _FOREIGN_CACHE:
+        mine = set(get_plugin_data(plugin).get("params_by_key", {}))
+        others = [set(pd.get("params_by_key", {}))
+                  for pid, pd in PLUGIN_DATA.items() if pid != plugin]
+        if others:
+            shared = set.intersection(*others) if len(others) > 1 else set()
+            _FOREIGN_CACHE[plugin] = set.union(*others) - mine - shared
+        else:
+            _FOREIGN_CACHE[plugin] = set()
+    return _FOREIGN_CACHE[plugin]
+
 # ─── Models ───────────────────────────────────────────────────────────────────
 class AnalysisRequest(BaseModel):
     nightscout_url: str
@@ -951,6 +978,7 @@ async def ai_analysis(req: AIAnalysisRequest):
     plugin_lookup = pd.get("param_lookup", {})
     plugin_fg = pd.get("feature_groups", {})
     plugin_params = pd.get("params_by_key", {})
+    foreign = foreign_keys(plugin)
 
     cgm, trt = req.cgm_metrics, req.treatment_metrics
     has_cgm    = bool(cgm and cgm.get("tir_pct") is not None)
@@ -1075,23 +1103,23 @@ async def ai_analysis(req: AIAnalysisRequest):
         if p.get("is_default") is False and not p.get("is_sensitive")
         and not p.get("orphaned") and gate_ok(p) and not neg_gate_suppressed(p)
         and p.get("key","") not in AAPS_NOT_AIMI          # exclude non-AIMI AAPS params
-        and p.get("name","") not in AAPS_NOT_AIMI]        # also check by name
+        and p.get("name","") not in AAPS_NOT_AIMI         # also check by name
+        and p.get("key","") not in foreign]               # exclude another plugin's keys
 
-    # Filter to only show params belonging to the selected plugin
+    # A plugin other than AIMI also shows only the keys its own data file defines. AIMI keeps
+    # the unknown keys, because it drives upstream AAPS settings that its own file may not list.
     if plugin != "aimi":
         active_non_default = [p for p in active_non_default
             if p.get("key","") in plugin_params]
-        # Re-split critical/high after filtering
-        critical_high = [p for p in active_non_default if p.get("impact") in ("critical","high")]
-        other = [p for p in active_non_default if p.get("impact") not in ("critical","high")]
-    else:
-        critical_high = [p for p in active_non_default if p.get("impact") in ("critical","high")]
-        other = [p for p in active_non_default if p.get("impact") not in ("critical","high")]
+
+    critical_high = [p for p in active_non_default if p.get("impact") in ("critical","high")]
+    other = [p for p in active_non_default if p.get("impact") not in ("critical","high")]
 
     # Parameters that exist in settings but are suppressed by active mode
     suppressed = [p for p in req.current_params
         if p.get("is_default") is False and not p.get("is_sensitive")
-        and not p.get("orphaned") and gate_ok(p) and neg_gate_suppressed(p)]
+        and not p.get("orphaned") and gate_ok(p) and neg_gate_suppressed(p)
+        and p.get("key","") not in foreign]
     suppressed_note = ""
     if suppressed:
         names = ", ".join(p.get("name", p.get("key","")) for p in suppressed[:8])
@@ -1127,6 +1155,7 @@ async def ai_analysis(req: AIAnalysisRequest):
     diff_block = "\n".join(
         f"  [{p['impact'].upper()}] {p['name']}: {p['value_a']} → {p['value_b']} ({p['direction']})"
         for p in req.diff[:30] if not p.get("is_sensitive") and not p.get("orphaned")
+        and p.get("key","") not in foreign
     ) or "No diff available"
 
     # AI history: last runs of this plugin with automatic diffs.
@@ -1147,7 +1176,8 @@ async def ai_analysis(req: AIAnalysisRequest):
                 cut = analysis[:HISTORY_ANALYSIS_TRIM] + ("…" if len(analysis) > HISTORY_ANALYSIS_TRIM else "")
                 lines.append("  Previous proposal: " + cut)
             next_params = history_entries[i + 1].get("params", {}) if i + 1 < len(history_entries) else params_snapshot
-            changes = params_diff(h.get("params", {}), next_params, plugin_params)
+            changes = [c for c in params_diff(h.get("params", {}), next_params, plugin_params)
+                       if c["key"] not in foreign]   # older entries were stored before the filter
             if changes:
                 lines.append("  Changes applied after this run: " + "; ".join(
                     f"{c['name']} (`{c['key']}`) {c['from']} → {c['to']}" for c in changes))
@@ -1214,13 +1244,16 @@ async def ai_analysis(req: AIAnalysisRequest):
     }
 
     l = LABELS
+    # Named per plugin, and given to every plugin including AIMI: a Boost parameter is no
+    # more usable in an AIMI run than an AIMI one is in a Boost run.
+    other_labels = ", ".join(cfg["label"] for pid, cfg in PLUGIN_CONFIG.items() if pid != plugin)
     plugin_note = (
         f"\n⚠️ IMPORTANT: You are analyzing the **{plugin_label}** plugin ONLY. "
         f"The parameters listed below are exclusively {plugin_label}-specific settings. "
-        f"Do NOT recommend changes to parameters from other plugins (AIMI, AutoISF, standard OpenAPS SMB) "
+        f"Do NOT recommend changes to parameters from other plugins ({other_labels}, standard OpenAPS SMB) "
         f"unless they appear in the list below. Only use parameter keys and settings paths "
         f"that are explicitly provided in this prompt.\n"
-    ) if plugin != "aimi" else ""
+    )
 
     prompt = f"""You are an expert on AndroidAPS and the {plugin_label} plugin (branch dev_OAPSAIMI_RB).
 {plugin_note}

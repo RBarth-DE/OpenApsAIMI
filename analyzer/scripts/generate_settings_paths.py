@@ -38,7 +38,7 @@ if not (PROJECT_ROOT / "plugins" / "aps").exists():
     print(f"   Tried: {PROJECT_ROOT}")
     print("   Run this script from inside the repo or place it at <repo>/analyzer/")
     sys.exit(1)
-PLUGIN_FILE = PROJECT_ROOT / "plugins/aps/src/commonMain/kotlin/app/aaps/plugins/aps/openAPSAIMI/OpenAPSAIMIPlugin.kt"
+PLUGIN_FILE = PROJECT_ROOT / "plugins/aps/src/androidMain/kotlin/app/aaps/plugins/aps/openAPSAIMI/OpenAPSAIMIPlugin.kt"
 STRINGS_XML_PATHS = [
     PROJECT_ROOT / "plugins/aps/src/androidMain/res/values",
     PROJECT_ROOT / "core/keys/src/androidMain/res/values",
@@ -50,7 +50,7 @@ KEY_FILES = {
     "IntKey": PROJECT_ROOT / "core/keys/src/commonMain/kotlin/app/aaps/core/keys/IntKey.kt",
     "StringKey": PROJECT_ROOT / "core/keys/src/commonMain/kotlin/app/aaps/core/keys/StringKey.kt",
     "UnitDoubleKey": PROJECT_ROOT / "core/keys/src/commonMain/kotlin/app/aaps/core/keys/UnitDoubleKey.kt",
-    "AimiStringKey": PROJECT_ROOT / "plugins/aps/src/commonMain/kotlin/app/aaps/plugins/aps/openAPSAIMI/keys/AimiStringKey.kt",
+    "AimiStringKey": PROJECT_ROOT / "plugins/aps/src/androidMain/kotlin/app/aaps/plugins/aps/openAPSAIMI/keys/AimiStringKey.kt",
     "ApsIntentKey": PROJECT_ROOT / "plugins/aps/src/commonMain/kotlin/app/aaps/plugins/aps/keys/ApsIntentKey.kt",
 }
 OUTPUT_FILE = _SCRIPT_DIR.parent / "data" / "aimi_settings_paths.json"

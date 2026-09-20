@@ -312,6 +312,53 @@ destination path would silently overwrite):
 Check for `expect`/`actual` inside the trees first (they must not be split), and check `commonTest`
 too - a test of a moved class has to move with it.
 
+### Moving files between source sets breaks tools that point at paths
+
+A path is not a compile-time dependency, so nothing tells you when a move invalidates one. The
+`analyzer/` tool is the one in this repo: its Python scripts hard-code the source directories they
+scan, and after the AIMI/Boost/AutoISF move to androidMain six of them still pointed there - plus a
+stale comment in `generate_data.py` and a constant in `enrich_params.py` that was already dead.
+
+Two of the three failure modes are quiet, which is what makes this worth checking:
+
+- `FileNotFoundError` before writing anything - the three `generate_*_settings_paths.py` scripts.
+- **A scan that finds nothing and still exits 0** - `generate_boost_data.py` and
+  `generate_autoisf_data.py` walk `BOOST_SRC`/`AUTOISF_SRC`, find no directory, write empty JSON and
+  report success. `update.sh` runs each generator as `run_gen ... || echo "⚠️ failed"`, so `set -e`
+  does not stop it and the script still prints "✅ Done" at the end. Running it in that state
+  replaces `boost_parameters.json` and `autoisf_parameters.json` with empty data.
+
+So after a move, grep the scripts for the old source-set name and check every hit resolves:
+
+    grep -rn "src/commonMain" analyzer/scripts/*.py
+    python - <<'EOF'   # every literal source path in the scripts must exist
+    import re, pathlib
+    repo = pathlib.Path(".")
+    for py in sorted((repo / "analyzer/scripts").glob("*.py")):
+        for line in py.read_text().splitlines():
+            for m in re.finditer(r'["\']((?:plugins|core|shared|implementation|database|ui)/[^"\']*?src/[^"\']*)["\']', line):
+                if not (repo / m.group(1)).exists():
+                    print("MISSING", py.name, m.group(1))
+    EOF
+
+Directory-joining constants (`BOOST_SRC` + `BOOST_SRC_DIRS`) are not literal paths, so check those by
+counting the `.kt` files each root now finds. A root that resolves to 0 files is the silent case above.
+
+The generated JSON under `analyzer/data/` holds UI navigation paths and a `source_commit`, not source
+paths, so it does not need editing by hand. It is checked in, though: run the generators once the
+scripts are correct and commit the result with them, or leave it alone - do not hand-edit it.
+
+Two more traps in the same tool, one about the backend and one about the data it works from.
+`analyzer/backend/app.py` is **baked into the Docker image** - compose mounts only `data/`,
+`frontend/` and `history/`, so a backend edit changes nothing until the image is rebuilt
+(`docker compose up -d --build`, or `analyzer/deploy.sh`). And the settings it analyzes are
+**phone-wide**: `/api/decrypt-export` returns every preference on the device, so a per-plugin view
+has to filter by key itself. The backend derives that set from the parameter files (`foreign_keys`)
+and leaves a key alone when two other plugins both list it - those are the shared AAPS-core
+preferences such as `enableSMB_always` and `carbsReqThreshold` that AIMI reads without listing them,
+so dropping them would hide settings that really do change its behaviour. Check any such filter
+against the plugin's Kotlin source, not only against its data file.
+
 ### When one Android-only signature drags a shared read-surface down
 
 The hard case: the file that must stay in commonMain is *almost* free of platform types, but it reads
