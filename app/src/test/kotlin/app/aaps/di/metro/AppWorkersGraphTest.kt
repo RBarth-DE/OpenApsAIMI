@@ -4,6 +4,7 @@ import app.aaps.implementation.maintenance.ImportExportPrefsImpl
 import app.aaps.implementation.receivers.KeepAliveWorker
 import app.aaps.implementation.scenes.SceneExpiryWorker
 import app.aaps.plugins.aps.loop.runningMode.RunningModeExpiryWorker
+import app.aaps.plugins.aps.openAPSAIMI.retention.AimiRetentionWorker
 import app.aaps.plugins.sync.nsclientV3.workers.DataSyncWorker
 import app.aaps.plugins.sync.nsclientV3.workers.LoadBgWorker
 import app.aaps.plugins.sync.nsclientV3.workers.LoadDeviceStatusWorker
@@ -52,7 +53,9 @@ class AppWorkersGraphTest {
             LoadStatusWorker::class,
             LoadTreatmentsWorker::class,
             XdripDataSyncWorker::class,
-            SmsCommunicatorPlugin.SmsCommunicatorWorker::class
+            SmsCommunicatorPlugin.SmsCommunicatorWorker::class,
+            // :plugins:aps - AIMI telemetry retention, scheduled once a day by AimiMlTrainingScheduler.
+            AimiRetentionWorker::class
         )
     }
 }

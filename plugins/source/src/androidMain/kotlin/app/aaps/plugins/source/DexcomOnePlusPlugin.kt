@@ -27,6 +27,7 @@ import app.aaps.core.interfaces.source.CgmStagingEvidence
 import app.aaps.core.interfaces.source.CgmWarmupStatus
 import app.aaps.core.interfaces.source.PromotionRejectReason
 import app.aaps.core.interfaces.source.PromotionResult
+import app.aaps.core.interfaces.source.SensorCalibrationResult
 import app.aaps.core.interfaces.source.SensorSlot
 import app.aaps.core.interfaces.source.StagingState
 import app.aaps.core.keys.BooleanKey
@@ -78,7 +79,10 @@ import dev.zacsweers.metro.Inject
 @IntKey(446)
 @SingleIn(AppScope::class)
 class DexcomOnePlusPlugin @Inject constructor(
-    rh: ResourceHelper,
+    // calibrateSensor() is a member function and calls rh.gs(R.string.x), which is the Android
+    // resolver method. PluginBase declares `rh` as TextResolver, so this class overrides it and
+    // keeps the Android type - the same reason EversensePlugin does it.
+    override val rh: ResourceHelper,
     aapsLogger: AAPSLogger,
     preferences: Preferences,
     config: Config,
@@ -232,6 +236,25 @@ class DexcomOnePlusPlugin @Inject constructor(
      */
     override fun specialShowInListCondition(): Boolean = availabilityProvider.isAvailable()
 
+    /**
+     * A fingerstick goes to the sensor only while the engineering switch is on.
+     *
+     * See [DexcomOnePlusBooleanKey.SendCalibrationToSensor] for why this is not on by default. When
+     * it is true the app stores no calibration entry for this sensor at all, so the software fit
+     * has nothing to fit and cannot correct the same readings a second time.
+     */
+    override fun calibratesInSensor(): Boolean =
+        preferences.get(DexcomOnePlusBooleanKey.SendCalibrationToSensor)
+
+    override fun calibrateSensor(glucoseMgdl: Int, bloodAtMs: Long): SensorCalibrationResult {
+        if (!calibratesInSensor()) return SensorCalibrationResult.NotSupported
+        // Only the production driver: a pre-soak sensor is not the one feeding the loop, and a
+        // calibration it accepted would stay in it for the whole of its own life.
+        val queued = driver.offerCalibration(glucoseMgdl, bloodAtMs)
+        return if (queued) SensorCalibrationResult.Queued
+        else SensorCalibrationResult.Refused(rh.gs(R.string.dexcom_oneplus_calibration_not_sent))
+    }
+
     override fun getPreferenceScreenContent() = PreferenceSubScreenDef(
         key = "dexcom_oneplus_settings",
         titleResId = R.string.dexcom_oneplus_native,
@@ -249,6 +272,7 @@ class DexcomOnePlusPlugin @Inject constructor(
                 context.startActivity(Intent(context, DexcomOnePlusWarmupActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
             },
             DexcomOnePlusBooleanKey.UseRealSkeleton,
+            DexcomOnePlusBooleanKey.SendCalibrationToSensor,
             // Sensor age on the dashboard comes from the SENSOR_CHANGE therapy event this writes.
             BooleanKey.BgSourceCreateSensorChange,
         ),

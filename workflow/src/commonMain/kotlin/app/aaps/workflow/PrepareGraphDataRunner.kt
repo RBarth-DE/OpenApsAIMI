@@ -54,6 +54,7 @@ import app.aaps.core.interfaces.profiling.Profiler
 import app.aaps.core.interfaces.rx.bus.RxBus
 import app.aaps.core.interfaces.rx.events.EventAutosensCalculationFinished
 import app.aaps.core.interfaces.rx.events.EventBucketedDataCreated
+import app.aaps.core.interfaces.source.NSClientSource
 import app.aaps.core.interfaces.utils.DateUtil
 import app.aaps.core.interfaces.utils.DecimalFormatter
 import app.aaps.core.interfaces.workflow.AppInitCalculationPolicy
@@ -177,7 +178,20 @@ class PrepareGraphDataRunner(
         val workingCopy = dataLock.withLock {
             bucketedData?.map { it.copy(smoothed = null, calibrated = null) }?.toMutableList()
         } ?: return
-        val calibrated = activePlugin.activeCalibration.calibrate(workingCopy, CalibrationContext.NONE)
+        // Never calibrate glucose that arrived from Nightscout. A follower does not own the sensor, and
+        // the master already sends the corrected value, so fitting again here would correct it twice.
+        //
+        // Same reason for a sensor that holds its own calibration: the fingerstick went to the sensor,
+        // its algorithm re-based itself, and the readings arriving here are already corrected. This is
+        // the "never both" rule, and it has to live here rather than only at the point where an entry
+        // is stored — entries made BEFORE the user switched sending on are still in the database, and
+        // they would otherwise keep correcting readings the sensor has already corrected.
+        //
+        // Smoothing still runs in both cases: it is a local filter, not a per sensor correction.
+        val source = activePlugin.activeBgSource
+        val calibrated =
+            if (source is NSClientSource || source.calibratesInSensor()) workingCopy
+            else activePlugin.activeCalibration.calibrate(workingCopy, CalibrationContext.NONE)
         val smoothed = activePlugin.activeSmoothing.smooth(calibrated)
         dataLock.withLock {
             bucketedData = smoothed
