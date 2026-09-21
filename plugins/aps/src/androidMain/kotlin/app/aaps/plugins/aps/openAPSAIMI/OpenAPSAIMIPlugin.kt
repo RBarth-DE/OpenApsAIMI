@@ -37,6 +37,7 @@ import app.aaps.core.interfaces.iob.GlucoseStatusProvider
 import app.aaps.core.interfaces.iob.IobCobCalculator
 import app.aaps.core.interfaces.logging.AAPSLogger
 import app.aaps.core.interfaces.logging.LTag
+import app.aaps.core.interfaces.notifications.NotificationManager
 import app.aaps.core.interfaces.plugin.ActivePlugin
 import app.aaps.core.interfaces.insulin.ConcentrationHelper
 import app.aaps.core.interfaces.plugin.PluginBaseWithPreferences
@@ -233,6 +234,7 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
     private val basalLearner: app.aaps.plugins.aps.openAPSAIMI.learning.BasalLearner,
     private val onlineLearner: OnlineLearner,
     private val fabricPrivacy: FabricPrivacy,
+    notificationManager: NotificationManager,
 ) : PluginBaseWithPreferences(
     PluginDescription()
         .mainType(PluginType.APS)
@@ -253,7 +255,7 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
         .description(ApsStrings.description_openapsaimi)
         .setDefault(),
     ownPreferences = emptyList(),
-    aapsLogger, rh, preferences
+    aapsLogger, rh, preferences, notificationManager
 ), APS, PluginConstraints {
 
     /** Background work for plugin startup (avoids blocking the thread that calls [onStart]). */

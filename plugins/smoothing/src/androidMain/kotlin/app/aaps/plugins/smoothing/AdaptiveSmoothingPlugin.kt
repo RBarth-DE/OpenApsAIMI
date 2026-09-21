@@ -10,6 +10,7 @@ import app.aaps.core.interfaces.db.PersistenceLayer
 import app.aaps.core.interfaces.db.observeChanges
 import app.aaps.core.interfaces.logging.AAPSLogger
 import app.aaps.core.interfaces.logging.LTag
+import app.aaps.core.interfaces.notifications.NotificationManager
 import app.aaps.core.interfaces.configuration.Config
 import app.aaps.core.interfaces.configuration.awaitInitialized
 import app.aaps.core.interfaces.plugin.PluginBase
@@ -68,7 +69,8 @@ class AdaptiveSmoothingPlugin @Inject constructor(
     private val persistenceLayer: PersistenceLayer,
     private val preferences: Preferences,
     private val iobCobCalculator: IobCobCalculator,
-    private val profileFunction: ProfileFunction
+    private val profileFunction: ProfileFunction,
+    notificationManager: NotificationManager
 ) : PluginBase(
     PluginDescription()
         .mainType(PluginType.SMOOTHING)
@@ -76,7 +78,7 @@ class AdaptiveSmoothingPlugin @Inject constructor(
         .pluginName(SmoothingStrings.adaptive_smoothing_name)
         .shortName(SmoothingStrings.smoothing_shortname)
         .description(SmoothingStrings.description_adaptive_smoothing),
-    aapsLogger, rh
+    aapsLogger, rh, notificationManager
 ), Smoothing {
 
     override fun preferDashboardGlucoseFromGlucoseStatus(): Boolean = true

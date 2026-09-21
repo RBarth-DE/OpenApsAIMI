@@ -61,7 +61,7 @@ class DexcomOnePlusPluginVisibilityTest : TestBase() {
         // The provider takes a plain provider lambda now, so no dagger.Lazy wrapper is needed.
         val availabilityProvider =
             DexcomOnePlusAvailabilityProvider(aapsLogger, { fileListProvider }, preferences, notificationManager, dateUtil)
-        plugin = DexcomOnePlusPlugin(rh, aapsLogger, preferences, config, context, persistenceLayer, warmupBasalGuard, availabilityProvider, bleRadioPriority, activePlugin, rxBus)
+        plugin = DexcomOnePlusPlugin(rh, aapsLogger, preferences, config, context, persistenceLayer, warmupBasalGuard, availabilityProvider, bleRadioPriority, activePlugin, rxBus, notificationManager)
     }
 
     @Test

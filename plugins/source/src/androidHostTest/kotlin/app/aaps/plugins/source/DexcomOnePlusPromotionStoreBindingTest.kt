@@ -80,7 +80,7 @@ class DexcomOnePlusPromotionStoreBindingTest : TestBase() {
             .thenReturn(PersistenceLayer.TransactionResult())
         whenever(persistenceLayer.getTherapyEventDataIncludingInvalidFromTime(any(), any())).thenReturn(emptyList())
         plugin = DexcomOnePlusPlugin(
-            rh, aapsLogger, preferences, config, context, persistenceLayer, warmupBasalGuard, availabilityProvider, bleRadioPriority, activePlugin, rxBus,
+            rh, aapsLogger, preferences, config, context, persistenceLayer, warmupBasalGuard, availabilityProvider, bleRadioPriority, activePlugin, rxBus, mock(),
         )
     }
 

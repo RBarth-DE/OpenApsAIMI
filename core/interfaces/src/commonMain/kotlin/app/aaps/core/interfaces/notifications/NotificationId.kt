@@ -56,6 +56,11 @@ enum class NotificationId(
     // A user/remote (non-SMB) bolus failed to deliver — surfaced once, here, from the executor (the entry
     // dialog is gone by the time the async result arrives). SMB failures stay silent (the loop self-corrects).
     BOLUS_DELIVERY_FAILED(URGENT, PUMP),
+
+    // The same bolus never reached the pump, but because the queue was cleared on purpose (a settings import) —
+    // nothing failed on the pump, so this is NOT the alarm tier. It still has to be said: the user pressed bolus,
+    // no insulin was given, and nobody re-sends it (unlike a temp basal, which the loop re-issues next cycle).
+    BOLUS_CANCELLED(IMPORTANT, PUMP),
     WRONG_SERIAL_NUMBER(NORMAL, PUMP),
     WRONG_BASAL_STEP(NORMAL, PUMP),
     WRONG_DRIVER(NORMAL, PUMP),
@@ -220,15 +225,15 @@ enum class NotificationId(
     /**
      * The AAPS directory can no longer be reached, so the Dexcom ONE+ engineering marker file
      * cannot be checked. Distinct from a merely absent marker file, which stays silent. Appended
-     * last on purpose — the system notification id is the ordinal, so inserting mid-enum would
-     * renumber every entry after it.
+     * late on purpose — the system notification id is the ordinal, so inserting before it would
+     * renumber it and every entry after it.
      */
     DEXCOM_ONEPLUS_DIR_ACCESS_LOST(NORMAL, SYSTEM),
 
     /**
      * Same case as [DEXCOM_ONEPLUS_DIR_ACCESS_LOST] but for the Libre 3 engineering marker
      * file. It has its own id so the two plugins never clear each other's notification.
-     * Appended last on purpose, because the system notification id is the ordinal.
+     * Appended late on purpose, because the system notification id is the ordinal.
      */
     LIBRE3_DIR_ACCESS_LOST(NORMAL, SYSTEM),
 
@@ -236,9 +241,20 @@ enum class NotificationId(
      * The active calibration plugin needs attention: not enough entries yet, the fit was rejected
      * as unsafe, entries are too clustered to fit a slope, or the last accepted entry is old. Only
      * one of these reasons is shown at a time (see `LinearCalibrationPlugin`'s health check) and it
-     * is dismissed once the situation resolves. Appended last on purpose, see the comment above.
+     * is dismissed once the situation resolves. Appended late on purpose, see the comment above.
      */
-    CALIBRATION_HEALTH(NORMAL, CGM);
+    CALIBRATION_HEALTH(NORMAL, CGM),
+
+    // A plugin's onStart threw. It stays ENABLED on purpose - disabling a failed pump driver makes
+    // ActivePlugin.activePumpInternal throw "No pump selected" - so this alarm is how the user finds out
+    // that a plugin is running only half built. Appended at the END: [fromOrdinal] maps a stored ordinal
+    // back to an id, so inserting in the middle would renumber every id after it.
+    //
+    // allowMultiple, because one id is shared by every plugin. Without it a second failing plugin would
+    // replace the first one's card, and one plugin starting cleanly would dismiss the card of another that
+    // is still broken - leaving a blocked pump with no alarm to explain it. Same reason EQUIL_LOW_BATTERY
+    // keeps its own id above. [app.aaps.core.interfaces.plugin.PluginBase] dismisses by handle, not by id.
+    PLUGIN_START_FAILED(URGENT, SYSTEM, allowMultiple = true);
 
     companion object {
 

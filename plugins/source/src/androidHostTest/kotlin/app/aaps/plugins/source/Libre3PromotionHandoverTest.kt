@@ -88,7 +88,7 @@ class Libre3PromotionHandoverTest : TestBase() {
         Libre3MacArbiter.reset()
         Libre3CgmDrivers.releaseStagingInstance()?.let { runCatching { it.shutdown() } }
         plugin = Libre3NativePlugin(
-            rh, aapsLogger, preferences, config, context, persistenceLayer, availabilityProvider, bleRadioPriority, activePlugin,
+            rh, aapsLogger, preferences, config, context, persistenceLayer, availabilityProvider, bleRadioPriority, activePlugin, mock(),
         )
     }
 

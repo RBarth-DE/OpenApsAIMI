@@ -1,6 +1,7 @@
 package app.aaps.plugins.aps.openAPSAMA
 
 import app.aaps.core.interfaces.aps.Loop
+import org.mockito.kotlin.mock
 import app.aaps.core.interfaces.constraints.ConstraintsChecker
 import app.aaps.core.interfaces.db.PersistenceLayer
 import app.aaps.core.interfaces.iob.GlucoseStatusProvider
@@ -24,7 +25,7 @@ class OpenAPSAMAPluginTest : TestBaseWithProfile() {
         openAPSAMAPlugin = OpenAPSAMAPlugin(
             aapsLogger, rxBus, constraintChecker, rh, config, profileFunction, activePlugin,
             iobCobCalculator, processedTbrEbData, hardLimits, dateUtil, persistenceLayer, glucoseStatusProvider, preferences, determineBasalAMA,
-            GlucoseStatusCalculatorSMB(aapsLogger, iobCobCalculator, dateUtil, decimalFormatter, deltaCalculator), { apsResultProvider() }, ch, { loop }, fabricPrivacy
+            GlucoseStatusCalculatorSMB(aapsLogger, iobCobCalculator, dateUtil, decimalFormatter, deltaCalculator), { apsResultProvider() }, ch, { loop }, fabricPrivacy, mock()
         )
     }
 

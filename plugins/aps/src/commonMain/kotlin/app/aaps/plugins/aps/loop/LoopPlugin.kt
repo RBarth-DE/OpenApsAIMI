@@ -132,7 +132,7 @@ class LoopPlugin(
     private val uel: UserEntryLogger,
     private val persistenceLayer: PersistenceLayer,
     private val uiInteraction: UiInteraction,
-    private val notificationManager: NotificationManager,
+    notificationManager: NotificationManager,
     private val loopNotifier: LoopNotifier,
     private val pumpEnactResultProvider: () -> PumpEnactResult,
     private val processedDeviceStatusData: ProcessedDeviceStatusData,
@@ -159,7 +159,7 @@ class LoopPlugin(
         .shortName(ApsStrings.loop_shortname)
         .alwaysEnabled(config.APS)
         .description(ApsStrings.description_loop),
-    aapsLogger, rh
+    aapsLogger, rh, notificationManager
 ), Loop, PluginConstraints {
 
     // Volatile: this is now the only gate against a second automatic loop run for the same BG. It is
@@ -188,6 +188,11 @@ class LoopPlugin(
     // The delayed device-status rebuild. Cancelled and re-scheduled on every request, which is what
     // the Handler's removeCallbacks/postDelayed pair did.
     private var deviceStatusJob: Job? = null
+
+    // The collectors onStart puts on the application scope. That scope outlives the plugin, so onStop
+    // has to cancel them by hand or they keep running - and a later onStart stacks a second pair on top,
+    // so one temp-target change would then invoke the loop twice.
+    private val collectors = mutableListOf<Job>()
 
     // Monotonic clock for measuring waits. `SystemClock.elapsedRealtime()` before, and only ever used
     // for differences, so a process-relative mark gives the same numbers.
@@ -223,7 +228,7 @@ class LoopPlugin(
                     aapsLogger.error(LTag.APS, "invoke on TempTarget change failed", e)
                 }
             }
-            .launchIn(appScope)
+            .launchIn(appScope).also(collectors::add)
         // Pump-state changes (suspend/resume, typically detected on a status read): reconcile the running
         // mode promptly instead of waiting for the next loop/keepalive tick (~5 min). EventPumpStatusChanged
         // is fired centrally by the command queue after every command, so it is pump-agnostic and arrives
@@ -241,7 +246,7 @@ class LoopPlugin(
                     aapsLogger.error(LTag.APS, "runningModePreCheck on pump status change failed", e)
                 }
             }
-            .launchIn(appScope)
+            .launchIn(appScope).also(collectors::add)
         // The fork's periodic autodrive ticker. This call was the last line of onStart() until an
         // earlier merge dropped it; the function and the state it reads stayed behind, so this is the
         // whole restoration.
@@ -295,6 +300,8 @@ class LoopPlugin(
         periodicLoopJob?.cancel()
         periodicLoopJob = null
         deviceStatusJob?.cancel()
+        collectors.forEach { it.cancel() }
+        collectors.clear()
         super.onStop()
     }
 

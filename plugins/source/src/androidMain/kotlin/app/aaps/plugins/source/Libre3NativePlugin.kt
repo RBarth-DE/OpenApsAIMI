@@ -10,6 +10,7 @@ import app.aaps.core.interfaces.configuration.Config
 import app.aaps.core.interfaces.db.PersistenceLayer
 import app.aaps.core.interfaces.logging.AAPSLogger
 import app.aaps.core.interfaces.logging.LTag
+import app.aaps.core.interfaces.notifications.NotificationManager
 import app.aaps.core.interfaces.plugin.ActivePlugin
 import app.aaps.core.interfaces.plugin.PluginBase
 import app.aaps.core.interfaces.plugin.PluginDescription
@@ -90,6 +91,7 @@ class Libre3NativePlugin @Inject constructor(
     private val availabilityProvider: Libre3AvailabilityProvider,
     private val bleRadioPriority: BleRadioPriority,
     private val activePlugin: ActivePlugin,
+    notificationManager: NotificationManager,
 ) : AbstractBgSourcePlugin(
     pluginDescription = PluginDescription()
         .mainType(PluginType.BGSOURCE)
@@ -108,6 +110,7 @@ class Libre3NativePlugin @Inject constructor(
     rh,
     preferences,
     config,
+    notificationManager,
 ), BgSource, Libre3GlucoseWatcher, CgmSensorStatusProvider {
 
     /**

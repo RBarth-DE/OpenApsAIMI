@@ -7,6 +7,7 @@ import app.aaps.core.data.plugin.PluginType
 import app.aaps.core.interfaces.configuration.Config
 
 import app.aaps.core.interfaces.logging.AAPSLogger
+import app.aaps.core.interfaces.notifications.NotificationManager
 
 import app.aaps.core.interfaces.plugin.PluginBase
 import app.aaps.core.interfaces.plugin.PluginDescription
@@ -45,6 +46,8 @@ class OttaiPlugin @Inject constructor(
 
     config: Config,
 
+    notificationManager: NotificationManager,
+
 ) : AbstractBgSourcePlugin(
 
     PluginDescription()
@@ -71,7 +74,7 @@ class OttaiPlugin @Inject constructor(
 
     ownPreferences = emptyList(),
 
-    aapsLogger, rh, preferences, config
+    aapsLogger, rh, preferences, config, notificationManager
 
 ), BgSource
 

@@ -91,7 +91,8 @@ class EversensePlugin @Inject constructor(
     aapsLogger: AAPSLogger,
     preferences: Preferences,
     config: Config,
-    private val notificationManager: NotificationManager
+    // AbstractBgSourcePlugin keeps this as a property and hands it to PluginBase.
+    notificationManager: NotificationManager
 ) : AbstractBgSourcePlugin(
     PluginDescription()
         .mainType(PluginType.BGSOURCE)
@@ -105,7 +106,7 @@ class EversensePlugin @Inject constructor(
         .preferencesVisibleInSimpleMode(false)
         .description(TextRef.AndroidRes(R.string.description_source_eversense)),
     ownPreferences = emptyList(),
-    aapsLogger, rh, preferences, config
+    aapsLogger, rh, preferences, config, notificationManager
 ), BgSource, EversenseWatcher, EversenseCalibrationSource {
 
     @Inject lateinit var persistenceLayer: PersistenceLayer

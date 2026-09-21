@@ -4,7 +4,7 @@ Purpose: enforce repeatable quality gates to prevent freezes and functional regr
 
 Use this file for every merge from `dev` and every release candidate.
 
-**Latest merge log:** [MERGE_DEV_2026-09-18_CWF.md](MERGE_DEV_2026-09-18_CWF.md) (`dev` @ `025c4163b7` → `dev_OAPSAIMI_RB`; the finished Wear CWF / Watch Face Format work, 25 conflicted files). Previous: [MERGE_DEV_2026-09-18.md](MERGE_DEV_2026-09-18.md) (`dev` @ `aaa069fab385`; CareLevo pump, pump modules into folders, 10 conflicted files), [MERGE_DEV_2026-09-14.md](MERGE_DEV_2026-09-14.md) (`dev` @ `343f9f7673`; KMP layout + Hilt→Metro, 1115 conflicted files), [MERGE_DEV_2026-09-06.md](MERGE_DEV_2026-09-06.md) (`dev` @ `283a184f60`), [MERGE_DEV_2026-08-08.md](MERGE_DEV_2026-08-08.md) (`dev` @ `7fc8205e9a`), [MERGE_DEV_2026-08-03.md](MERGE_DEV_2026-08-03.md).
+**Latest merge log:** [MERGE_DEV_2026-09-21.md](MERGE_DEV_2026-09-21.md) (`dev` @ `73ce4b30d7` → `dev_OAPSAIMI_RB`; plugin start-failure handling and the `onStop` work scan, 16 conflicted files). Previous: [MERGE_DEV_2026-09-18_CWF.md](MERGE_DEV_2026-09-18_CWF.md) (`dev` @ `025c4163b7`; the finished Wear CWF / Watch Face Format work, 25 conflicted files), [MERGE_DEV_2026-09-18.md](MERGE_DEV_2026-09-18.md) (`dev` @ `aaa069fab385`; CareLevo pump, pump modules into folders, 10 conflicted files), [MERGE_DEV_2026-09-14.md](MERGE_DEV_2026-09-14.md) (`dev` @ `343f9f7673`; KMP layout + Hilt→Metro, 1115 conflicted files), [MERGE_DEV_2026-09-06.md](MERGE_DEV_2026-09-06.md) (`dev` @ `283a184f60`), [MERGE_DEV_2026-08-08.md](MERGE_DEV_2026-08-08.md) (`dev` @ `7fc8205e9a`), [MERGE_DEV_2026-08-03.md](MERGE_DEV_2026-08-03.md).
 
 ---
 
@@ -61,7 +61,9 @@ Use this file for every merge from `dev` and every release candidate.
       app cannot start). Found once already: the 2026-09-14 merge dropped `injectMetroMembers(this)` from
       `WearApp.onCreate`. Sweep the upstream side for such a call per file touched this way:
       ```bash
-      git grep -l "injectMetroMembers" upstream/dev -- '*.kt' | while read -r p; do
+      # `git grep -l <rev>` prints "<rev>:<path>", so the rev has to come off first - otherwise
+      # every path fails the `[ -f ]` test and the sweep silently reports nothing.
+      git grep -l "injectMetroMembers" upstream/dev -- '*.kt' | sed 's|^upstream/dev:||' | while read -r p; do
         [ -f "$p" ] && { grep -q injectMetroMembers "$p" || echo "LOST: $p"; }
       done
       ```

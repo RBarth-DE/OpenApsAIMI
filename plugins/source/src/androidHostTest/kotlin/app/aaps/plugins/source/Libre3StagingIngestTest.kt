@@ -100,7 +100,7 @@ class Libre3StagingIngestTest : TestBase() {
         }
         Libre3Ingest.reset()
         plugin = Libre3NativePlugin(
-            rh, aapsLogger, preferences, config, context, persistenceLayer, availabilityProvider, bleRadioPriority, activePlugin,
+            rh, aapsLogger, preferences, config, context, persistenceLayer, availabilityProvider, bleRadioPriority, activePlugin, mock(),
         )
     }
 

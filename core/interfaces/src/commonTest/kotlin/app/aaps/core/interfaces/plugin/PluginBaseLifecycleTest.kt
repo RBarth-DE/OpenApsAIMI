@@ -3,11 +3,20 @@ package app.aaps.core.interfaces.plugin
 import app.aaps.core.data.plugin.PluginType
 import app.aaps.core.interfaces.logging.AAPSLogger
 import app.aaps.core.interfaces.logging.RecordingAAPSLogger
+import app.aaps.core.interfaces.notifications.AapsNotification
+import app.aaps.core.interfaces.notifications.AlarmSound
+import app.aaps.core.interfaces.notifications.NotificationAction
+import app.aaps.core.interfaces.notifications.NotificationHandle
+import app.aaps.core.interfaces.notifications.NotificationId
+import app.aaps.core.interfaces.notifications.NotificationLevel
+import app.aaps.core.interfaces.notifications.NotificationManager
 import app.aaps.core.interfaces.resources.TextResolver
 import app.aaps.core.keys.interfaces.TextRef
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
 import kotlin.test.Test
@@ -33,8 +42,9 @@ class PluginBaseLifecycleTest {
 
     private class TestPlugin(
         aapsLogger: AAPSLogger,
-        rh: TextResolver
-    ) : PluginBase(PluginDescription().mainType(PluginType.GENERAL), aapsLogger, rh) {
+        rh: TextResolver,
+        notificationManager: NotificationManager
+    ) : PluginBase(PluginDescription().mainType(PluginType.GENERAL), aapsLogger, rh, notificationManager) {
 
         // Held open until a test lets the phase through, so "scheduled" and "finished" can be told apart.
         val startGate = CompletableDeferred<Unit>()
@@ -70,7 +80,56 @@ class PluginBaseLifecycleTest {
         }
     }
 
-    private fun plugin() = TestPlugin(RecordingAAPSLogger(), FakeTextResolver())
+    /**
+     * Only ever passed to the constructor - this test never posts - so every call is inert. A hand
+     * written fake rather than `mock()` because this file is in `commonTest` and mockito is JVM only.
+     */
+    private class FakeNotifications : NotificationManager {
+        override val notifications: StateFlow<List<AapsNotification>> = MutableStateFlow(emptyList())
+
+        override fun cleanUp() {}
+
+        override fun post(
+            id: NotificationId,
+            text: String,
+            level: NotificationLevel,
+            validMinutes: Int,
+            sound: AlarmSound?,
+            actions: List<NotificationAction>,
+            validityCheck: (() -> Boolean)?
+        ): NotificationHandle = NotificationHandle(0)
+
+        override fun post(
+            id: NotificationId,
+            text: String,
+            level: NotificationLevel,
+            date: Long,
+            validTo: Long,
+            sound: AlarmSound?,
+            actions: List<NotificationAction>,
+            validityCheck: (() -> Boolean)?
+        ): NotificationHandle = NotificationHandle(0)
+
+        override fun post(
+            id: NotificationId,
+            textRef: TextRef,
+            level: NotificationLevel,
+            validMinutes: Int,
+            date: Long,
+            validTo: Long,
+            sound: AlarmSound?,
+            actions: List<NotificationAction>,
+            validityCheck: (() -> Boolean)?
+        ): NotificationHandle = NotificationHandle(0)
+
+        override fun dismiss(id: NotificationId) {}
+
+        override fun dismiss(handle: NotificationHandle) {}
+
+        override fun muteAllAlarms() {}
+    }
+
+    private fun plugin() = TestPlugin(RecordingAAPSLogger(), FakeTextResolver(), FakeNotifications())
 
     /** Enables the plugin and waits for it, so a test can start from a genuinely started plugin. */
     private suspend fun TestPlugin.enableAndAwait() {

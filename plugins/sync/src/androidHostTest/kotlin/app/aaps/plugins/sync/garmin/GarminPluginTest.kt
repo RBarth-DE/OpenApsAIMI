@@ -58,7 +58,7 @@ class GarminPluginTest : TestBaseWithProfile() {
         // The fourth argument is the shared preferences store the plugin uses for the steps
         // baseline. The tests here feed steps through `receiveSteps`, which does not read it, so a
         // bare mock is enough.
-        gp = GarminPlugin(aapsLogger, rh, preferences, mock<SP>(), context, loopHub, persistenceLayer)
+        gp = GarminPlugin(aapsLogger, rh, preferences, mock<SP>(), context, loopHub, persistenceLayer, mock())
         gp.clock = clock
         whenever(loopHub.currentProfileName).thenReturn("Default")
         whenever(preferences.get(GarminIntKey.LocalHttpPort)).thenReturn(28890)

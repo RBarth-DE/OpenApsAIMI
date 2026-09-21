@@ -56,7 +56,8 @@ class AdaptiveSmoothingPluginTest : TestBaseWithProfile() {
             persistenceLayer = persistenceLayer,
             preferences = preferences,
             iobCobCalculator = iobCobCalculator,
-            profileFunction = profileFunction
+            profileFunction = profileFunction,
+            notificationManager = mock()
         )
     }
 

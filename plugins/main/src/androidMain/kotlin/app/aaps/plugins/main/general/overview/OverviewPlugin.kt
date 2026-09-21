@@ -78,7 +78,8 @@ class OverviewPlugin @Inject constructor(
     private val config: Config,
     private val activePlugin: ActivePlugin,
     private val uel: UserEntryLogger,
-    private val notificationManager: NotificationManager,
+    // PluginBase holds this as a property for us, so it is only passed on here.
+    notificationManager: NotificationManager,
 ) : PluginBaseWithPreferences(
     pluginDescription = PluginDescription()
         .mainType(PluginType.GENERAL)
@@ -91,7 +92,7 @@ class OverviewPlugin @Inject constructor(
         .shortName(TextRef.AndroidRes(R.string.overview_shortname))
         .description(TextRef.AndroidRes(R.string.description_overview)),
     ownPreferences = OverviewStringKey.entries,
-    aapsLogger, rh, preferences
+    aapsLogger, rh, preferences, notificationManager
 ), OverviewAndroid {
 
     /** Runs the bus subscriptions. [onStop] cancels them, [onStart] can subscribe again. */

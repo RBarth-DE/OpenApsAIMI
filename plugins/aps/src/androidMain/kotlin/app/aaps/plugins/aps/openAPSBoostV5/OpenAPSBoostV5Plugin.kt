@@ -21,6 +21,7 @@ import app.aaps.core.interfaces.constraints.Constraint
 import app.aaps.core.interfaces.constraints.PluginConstraints
 import app.aaps.core.interfaces.logging.AAPSLogger
 import app.aaps.core.interfaces.logging.LTag
+import app.aaps.core.interfaces.notifications.NotificationManager
 import app.aaps.core.interfaces.plugin.PluginBase
 import app.aaps.core.interfaces.plugin.PluginDescription
 import app.aaps.core.interfaces.resources.ResourceHelper
@@ -105,6 +106,7 @@ open class OpenAPSBoostV5Plugin @Inject constructor(
     // the projected-IOB re-score for Phase-3 postActionRiskCheck. (2026-07-02)
     private val boostRiskModel: BoostRiskModel,
     private val loopProvider: () -> app.aaps.core.interfaces.aps.Loop,
+    notificationManager: NotificationManager,
 ) : PluginBase(
     PluginDescription()
         .mainType(PluginType.APS)
@@ -120,7 +122,7 @@ open class OpenAPSBoostV5Plugin @Inject constructor(
         // Exactly one APS plugin may carry .setDefault(); PluginStore force-enables it when nothing
         // else is selected and disables every other APS plugin (single-engine invariant).
         .setDefault(),
-    aapsLogger, rh
+    aapsLogger, rh, notificationManager
 ), APS, PluginConstraints, MealHypothesisHistorySource {
 
     override val algorithm = APSResult.Algorithm.BOOST

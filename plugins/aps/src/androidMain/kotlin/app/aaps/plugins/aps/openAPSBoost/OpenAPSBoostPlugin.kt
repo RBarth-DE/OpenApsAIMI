@@ -35,6 +35,7 @@ import app.aaps.plugins.aps.openAPSSMB.GlucoseStatusCalculatorSMB
 import app.aaps.core.interfaces.iob.IobCobCalculator
 import app.aaps.core.interfaces.logging.AAPSLogger
 import app.aaps.core.interfaces.logging.LTag
+import app.aaps.core.interfaces.notifications.NotificationManager
 import app.aaps.core.interfaces.plugin.ActivePlugin
 import app.aaps.core.interfaces.plugin.PluginBase
 import app.aaps.core.interfaces.plugin.PluginDescription
@@ -135,7 +136,8 @@ open class OpenAPSBoostPlugin @Inject constructor(
     private val healthConnectHrIngest: HealthConnectHrIngest,
     // Activity-load SHADOW (2026-06-16) — HC steps → single-source daily totals for the step baseline.
     private val healthConnectStepsIngest: HealthConnectStepsIngest,
-    private val loopProvider: () -> app.aaps.core.interfaces.aps.Loop
+    private val loopProvider: () -> app.aaps.core.interfaces.aps.Loop,
+    notificationManager: NotificationManager
 ) : PluginBase(
     PluginDescription()
         .mainType(PluginType.APS)
@@ -145,7 +147,7 @@ open class OpenAPSBoostPlugin @Inject constructor(
         .preferencesVisibleInSimpleMode(false)
         .showInList { config.APS }
         .description(ApsStrings.description_boost),
-    aapsLogger, rh
+    aapsLogger, rh, notificationManager
 ), APS, PluginConstraints {
 
     /** The volume-weighted dose shadow, held on preferences as the other shadows are. It logs

@@ -5,6 +5,7 @@ import androidx.compose.material.icons.filled.Home
 import app.aaps.core.data.plugin.PluginType
 import app.aaps.core.interfaces.configuration.Config
 import app.aaps.core.interfaces.logging.AAPSLogger
+import app.aaps.core.interfaces.notifications.NotificationManager
 import app.aaps.core.interfaces.plugin.PluginBase
 import app.aaps.core.interfaces.plugin.PluginDescription
 import app.aaps.core.interfaces.resources.TextResolver
@@ -27,7 +28,8 @@ import dev.zacsweers.metro.binding
 class RemoteControlPlugin @Inject constructor(
     aapsLogger: AAPSLogger,
     rh: TextResolver,
-    private val config: Config
+    private val config: Config,
+    notificationManager: NotificationManager
 ) : PluginBase(
     PluginDescription()
         .mainType(PluginType.GENERAL)
@@ -41,5 +43,5 @@ class RemoteControlPlugin @Inject constructor(
         .showInList { config.AAPSCLIENT }  // Only show in AAPSClient
         .alwaysEnabled(config.AAPSCLIENT)  // Only enable in AAPSClient
         .description(SyncStrings.remote_control_description),
-    aapsLogger, rh
+    aapsLogger, rh, notificationManager
 )

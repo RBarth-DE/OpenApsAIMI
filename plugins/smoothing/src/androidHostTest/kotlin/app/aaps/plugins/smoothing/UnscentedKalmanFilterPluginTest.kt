@@ -38,7 +38,7 @@ internal class UnscentedKalmanFilterPluginTest {
      * The tests that are about the gate pass their own values.
      */
     private fun plugin(iobCobCalculator: () -> IobCobCalculator = iobProvider(bolusIob = 99.0)) =
-        UnscentedKalmanFilterPlugin(aapsLogger, rh, preferences, persistenceLayer, iobCobCalculator)
+        UnscentedKalmanFilterPlugin(aapsLogger, rh, preferences, persistenceLayer, iobCobCalculator, mock())
 
     // Fork: Smoothing.smooth is a suspend function (SmoothingContext param) — bridge like AdaptiveSmoothingPluginTest.
     private fun smoothed(data: MutableList<InMemoryGlucoseValue>) = runBlocking { plugin().smooth(data, SmoothingContext.NONE) }

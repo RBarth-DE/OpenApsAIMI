@@ -60,7 +60,7 @@ class Libre3NativePluginVisibilityTest : TestBase() {
         // The provider takes a plain provider lambda now, so no dagger.Lazy wrapper is needed.
         val availabilityProvider =
             Libre3AvailabilityProvider(aapsLogger, { fileListProvider }, preferences, notificationManager, dateUtil)
-        plugin = Libre3NativePlugin(rh, aapsLogger, preferences, config, context, persistenceLayer, availabilityProvider, bleRadioPriority, activePlugin)
+        plugin = Libre3NativePlugin(rh, aapsLogger, preferences, config, context, persistenceLayer, availabilityProvider, bleRadioPriority, activePlugin, notificationManager)
     }
 
     @Test
