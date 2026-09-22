@@ -1,8 +1,12 @@
 package app.aaps.plugins.aps.openAPSAIMI.basal
 
+import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.Test
+import java.io.File
+
 /**
  * Standalone numeric replay of the support-package episodes.
- * Run via: ./gradlew :plugins:aps:testFullDebugUnitTest --tests "*T3cCfrdSimulationReport*"
+ * Run via: ./gradlew :plugins:aps:testAndroidHostTest --tests "*T3cCfrdSimulationReport*"
  *
  * Prints before/after basal rates so the simulation is human-readable in the test log.
  */
@@ -95,7 +99,7 @@ class T3cCfrdSimulationReportTest {
         return pi to floored
     }
 
-    @org.junit.jupiter.api.Test
+    @Test
     fun `print support-package before after simulation report`() {
         val out = StringBuilder()
         out.appendLine("=== T3C/CFRD SIMULATION REPORT (support package 1785422390332) ===")
@@ -141,14 +145,16 @@ class T3cCfrdSimulationReportTest {
         out.appendLine("=== END REPORT ===")
 
         // Always fail-soft print via assertion message so Gradle shows the report
-        org.junit.jupiter.api.Assertions.assertTrue(true, out.toString())
+        assertTrue(true, out.toString())
         println(out.toString())
         System.err.println(out.toString())
-        val reportFile = java.io.File("build/t3c_cfrd_simulation_report.txt")
+        val reportFile = File("build/t3c_cfrd_simulation_report.txt")
         reportFile.parentFile?.mkdirs()
         reportFile.writeText(out.toString())
-        // Also write under repo-visible reports path used by Gradle module
-        val moduleReport = java.io.File("plugins/aps/build/reports/t3c_cfrd_simulation_report.txt")
+        // Also write next to Gradle's own HTML test reports. Paths here are relative to the test
+        // working directory, which is the module directory (plugins/aps), so "plugins/aps/" must
+        // NOT be repeated - doing that wrote to plugins/aps/plugins/aps/build/reports/.
+        val moduleReport = File("build/reports/t3c_cfrd_simulation_report.txt")
         moduleReport.parentFile?.mkdirs()
         moduleReport.writeText(out.toString())
     }
