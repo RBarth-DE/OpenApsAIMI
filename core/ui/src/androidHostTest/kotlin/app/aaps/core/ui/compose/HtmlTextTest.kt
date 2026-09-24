@@ -1,5 +1,6 @@
 package app.aaps.core.ui.compose
 
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import com.google.common.truth.Truth.assertThat
 import org.junit.jupiter.api.Test
@@ -63,6 +64,28 @@ internal class HtmlTextTest {
     @Test fun `the real pump enact result shape renders`() {
         val result = "<b>Success</b>: false<br><b>Enacted</b>: true".htmlToAnnotatedString()
         assertThat(result.text).isEqualTo("Success: false\nEnacted: true")
+        assertThat(result.spanStyles).hasSize(2)
+    }
+
+    /** Regression: recursing on the full `<font>` match re-finds the same tag and overflows the stack. */
+    @Test fun `font color spans render without infinite recursion`() {
+        val result = "a<font color='#FF0000'>red</font>b".htmlToAnnotatedString()
+        assertThat(result.text).isEqualTo("aredb")
+        val colorSpan = result.spanStyles.single { it.item.color != Color.Unspecified }
+        assertThat(colorSpan.start).isEqualTo(1)
+        assertThat(colorSpan.end).isEqualTo(4)
+        assertThat(colorSpan.item.color).isEqualTo(Color(0xFFFF0000))
+    }
+
+    @Test fun `font color keeps nested bold and a following bold tag`() {
+        val result = "<font color='#00FF00'><b>on</b></font> then <b>off</b>".htmlToAnnotatedString()
+        assertThat(result.text).isEqualTo("on then off")
+        assertThat(result.spanStyles).hasSize(3)
+    }
+
+    @Test fun `two font colors in one string both apply`() {
+        val result = "<font color='#FF0000'>R</font>/<font color='#0000FF'>B</font>".htmlToAnnotatedString()
+        assertThat(result.text).isEqualTo("R/B")
         assertThat(result.spanStyles).hasSize(2)
     }
 }

@@ -1,12 +1,24 @@
 package app.aaps.core.ui.compose
 
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.font.FontWeight
 
 
-private data class FontSpan(val start: Int, val end: Int, val color: androidx.compose.ui.graphics.Color)
+/**
+ * One `<font color='…'>…</font>` match. [start]..[end] is the full tag including both markers;
+ * [contentStart]..[contentEnd] is only the inner text. Recursion must use the inner range - the
+ * outer range still contains the font tag, so parsing it again finds the same match forever.
+ */
+private data class FontSpan(
+    val start: Int,
+    val end: Int,
+    val contentStart: Int,
+    val contentEnd: Int,
+    val color: Color,
+)
 
 private val fontTagRegex = Regex("""<font color='#([0-9A-Fa-f]{6,8})'>(.*?)</font>""")
 
@@ -14,9 +26,10 @@ private fun parseFontColorSpans(text: String): List<FontSpan> =
     fontTagRegex.findAll(text).map { m ->
         val hex = m.groupValues[1]
         val argb = hex.toLongOrNull(16) ?: return@map null
-        val color = if (hex.length == 6) androidx.compose.ui.graphics.Color(0xFF000000 or argb)
-        else androidx.compose.ui.graphics.Color(argb)
-        FontSpan(m.range.first, m.range.last + 1, color)
+        val color = if (hex.length == 6) Color(0xFF000000 or argb)
+        else Color(argb)
+        val contentStart = m.range.first + m.value.indexOf('>') + 1
+        FontSpan(m.range.first, m.range.last + 1, contentStart, contentStart + m.groupValues[2].length, color)
     }.filterNotNull().toList()
 
 private val BoldStyle = SpanStyle(fontWeight = FontWeight.Bold)
@@ -39,10 +52,10 @@ fun String.htmlToAnnotatedString(): AnnotatedString {
     if (fontColors.isNotEmpty()) {
         return buildAnnotatedString {
             var idx = 0
-            for ((start, end, color) in fontColors) {
+            for ((start, end, contentStart, contentEnd, color) in fontColors) {
                 append(this@htmlToAnnotatedString.substring(idx, start).htmlToAnnotatedString())
                 pushStyle(SpanStyle(color = color))
-                append(this@htmlToAnnotatedString.substring(start, end).htmlToAnnotatedString())
+                append(this@htmlToAnnotatedString.substring(contentStart, contentEnd).htmlToAnnotatedString())
                 pop()
                 idx = end
             }
