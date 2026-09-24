@@ -201,7 +201,8 @@ class PreferencesImpl(
     override fun put(key: StringNonPreferenceKey, value: String) {
         sp.putString(key.key, value)
         // Ensure StateFlow exists so observers (e.g. graph unit switch) always get updates.
-        stringFlows.getOrCreate(key.key) { MutableStateFlow(value) }.value = value
+        // The reader must return the value, not a flow: FlowCache wraps it.
+        stringFlows.getOrCreate(key.key) { value }.value = value
         // Unit doubles (high/low marks, LGS, …) are read via [valueInCurrentUnitsDetect]. When only
         // General → Units changes, SP raw doubles are unchanged but display values must refresh so
         // Vico Y-range ([ChartConfig]) and other observers stay aligned with BG series in mmol/L.

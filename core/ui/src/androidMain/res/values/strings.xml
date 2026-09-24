@@ -947,8 +947,6 @@
     <string name="export_result_message_disabled">Warning (automation): Settings export not enabled!</string>
 
    <!-- NumberPicker -->
-    <string name="a11y_min_button_description">decrement %1$s by %2$s</string>
-    <string name="a11y_plus_button_description">increment %1$s by %2$s</string>
     <string name="you_are_on_allowed_limit">Allowed limit reached</string>
     <string name="format_hour_minute" comment="%1$d=hours, %2$d=minutes. Example: 1 h 23 min">%1$d h %2$d min</string>
     <string name="format_hours_only" comment="%1$d=hours, when minutes are zero. Example: 4 h">%1$d h</string>

@@ -92,9 +92,14 @@ class RawPreferenceStoreScanTest {
     )
 
     /**
-     * Known debt, and the only part of this list that is allowed to exist. Each entry is a pump driver
-     * keeping real state in unregistered keys, which is exactly what 4.1 decision 4's removal rule
-     * would delete. **This map may only ever get shorter.**
+     * Known debt, and the only part of this list that is allowed to exist. Each entry is code keeping
+     * real state in unregistered keys, which is exactly what 4.1 decision 4's removal rule would
+     * delete. **This map may only ever get shorter.**
+     *
+     * The first block is upstream pump-driver debt. The second block is fork-owned code (AIMI,
+     * AutoISF, Eversense, Dexcom ONE+, Libre 3, Garmin step mirror, NSClient PIN, export aimi flag)
+     * that predates this scan. Those files have to migrate to `Preferences` registered keys the same
+     * way; they are listed so the debt is visible instead of the whole test being turned off.
      */
     private val toDo: Map<String, String> = mapOf(
         "pump/combov2/src/main/kotlin/info/nightscout/pump/combov2/AAPSPumpStateStore.kt" to
@@ -103,6 +108,50 @@ class RawPreferenceStoreScanTest {
         "pump/combov2/src/main/kotlin/info/nightscout/pump/combov2/Delegates.kt" to "ComboV2, same migration",
         "pump/insight/src/main/kotlin/app/aaps/pump/insight/utils/PairingDataStorage.kt" to
             "Insight pump pairing. Open question 6.2: moving it into registered keys would make 'restore pump configuration' work after a reinstall, but it would also put a pump secret in the export file. Needs an answer before it moves.",
+
+        // --- Fork debt (openAPSAIMI_RB): migrate to registered keys ---
+        "implementation/src/commonMain/kotlin/app/aaps/implementation/maintenance/cloud/CloudDirectoryManagerImpl.kt" to
+            "Writes ExportPrefKeys.PREF_AIMI_CLOUD_ENABLED through KeyValueStore; should be a registered key.",
+        "plugins/aps/src/androidMain/kotlin/app/aaps/plugins/aps/advisor/AdvisorCooldown.kt" to
+            "Advisor cooldown is stored in a caller-supplied SharedPreferences file, not a registered key.",
+        "plugins/aps/src/androidMain/kotlin/app/aaps/plugins/aps/openAPSAIMI/OpenAPSAIMIPlugin.kt" to
+            "Migrates one legacy AIMI boolean through raw SP; should go via registered keys.",
+        "plugins/aps/src/androidMain/kotlin/app/aaps/plugins/aps/openAPSAIMI/advisor/AimiModeSettingsActivity.kt" to "AIMI advisor UI reads raw cooldown/settings SP.",
+        "plugins/aps/src/androidMain/kotlin/app/aaps/plugins/aps/openAPSAIMI/advisor/AimiProfileAdvisorActivity.kt" to "AIMI advisor UI reads raw cooldown SP.",
+        "plugins/aps/src/androidMain/kotlin/app/aaps/plugins/aps/openAPSAIMI/advisor/data/AdvisorHistoryRepository.kt" to "AIMI advisor history in unregistered keys.",
+        "plugins/aps/src/androidMain/kotlin/app/aaps/plugins/aps/openAPSAIMI/advisor/diag/AimiDiagnosticsManager.kt" to "AIMI advisor diagnostics in unregistered keys.",
+        "plugins/aps/src/androidMain/kotlin/app/aaps/plugins/aps/openAPSAIMI/context/ContextLLMClient.kt" to "AIMI context LLM settings in unregistered keys.",
+        "plugins/aps/src/androidMain/kotlin/app/aaps/plugins/aps/openAPSAIMI/context/ContextManager.kt" to "AIMI context store in unregistered keys.",
+        "plugins/aps/src/androidMain/kotlin/app/aaps/plugins/aps/openAPSAIMI/context/ui/ContextActivity.kt" to "AIMI context UI touches raw SP.",
+        "plugins/aps/src/androidMain/kotlin/app/aaps/plugins/aps/openAPSAIMI/context/ui/ContextViewModel.kt" to "AIMI context UI model touches raw SP.",
+        "plugins/aps/src/androidMain/kotlin/app/aaps/plugins/aps/openAPSAIMI/llm/gemini/GeminiModelResolver.kt" to "AIMI Gemini model cache in unregistered keys.",
+        "plugins/aps/src/androidMain/kotlin/app/aaps/plugins/aps/openAPSAIMI/physio/AIMILLMPhysioAnalyzerMTR.kt" to "AIMI physio analyzer state in unregistered keys.",
+        "plugins/aps/src/androidMain/kotlin/app/aaps/plugins/aps/openAPSAIMI/physio/AIMIPhysioManagerMTR.kt" to "AIMI physio manager state in unregistered keys.",
+        "plugins/aps/src/androidMain/kotlin/app/aaps/plugins/aps/openAPSAIMI/physio/AIMIPhysioPipelineWatchdogMTR.kt" to "AIMI physio watchdog state in unregistered keys.",
+        "plugins/aps/src/androidMain/kotlin/app/aaps/plugins/aps/openAPSAIMI/sos/EmergencySosManager.kt" to "AIMI SOS manager state in unregistered keys.",
+        "plugins/aps/src/androidMain/kotlin/app/aaps/plugins/aps/openAPSAIMI/steps/AIMIHealthConnectSyncServiceMTR.kt" to "AIMI Health Connect sync state in unregistered keys.",
+        "plugins/aps/src/androidMain/kotlin/app/aaps/plugins/aps/openAPSAIMI/steps/AIMIPhoneStepsSyncServiceMTR.kt" to "AIMI phone steps sync state in unregistered keys.",
+        "plugins/aps/src/androidMain/kotlin/app/aaps/plugins/aps/openAPSAIMI/steps/UnifiedActivityProviderMTR.kt" to "AIMI activity provider state in unregistered keys.",
+        "plugins/aps/src/androidMain/kotlin/app/aaps/plugins/aps/openAPSAIMI/tpo/TpoLlmValidator.kt" to "AIMI TPO validator state in unregistered keys.",
+        "plugins/aps/src/androidMain/kotlin/app/aaps/plugins/aps/openAPSAIMI/tpo/TpoOrchestrator.kt" to "AIMI TPO orchestrator state in unregistered keys.",
+        "plugins/aps/src/androidMain/kotlin/app/aaps/plugins/aps/openAPSAutoISF/advisor/AutoIsfProfileAdvisorActivity.kt" to "AutoISF advisor UI reads raw cooldown SP.",
+        "plugins/dexcom_oneplus/src/main/kotlin/app/aaps/plugins/dexcomoneplus/identity/OnePlusSensorStore.kt" to
+            "Dexcom ONE+ sensor identity/PIN in a private non-exportable SP file by design; needs a decision before it moves.",
+        "plugins/libre3/src/main/kotlin/app/aaps/plugins/libre3/identity/Libre3SensorStore.kt" to
+            "Libre 3 sensor identity/PIN in a private non-exportable SP file by design; needs a decision before it moves.",
+        "plugins/eversense/src/main/kotlin/app/aaps/plugins/eversense/EversenseCGMPlugin.kt" to "Eversense plugin private SP file (CAPTCG).",
+        "plugins/eversense/src/main/kotlin/app/aaps/plugins/eversense/EversenseGattCallback.kt" to "Eversense GATT state in private SP.",
+        "plugins/eversense/src/main/kotlin/app/aaps/plugins/eversense/packets/Eversense365Communicator.kt" to "Eversense 365 packet state in private SP.",
+        "plugins/eversense/src/main/kotlin/app/aaps/plugins/eversense/packets/EversenseE3Communicator.kt" to "Eversense E3 packet state in private SP.",
+        "plugins/eversense/src/main/kotlin/app/aaps/plugins/eversense/util/EversenseCrypto365Util.kt" to "Eversense crypto material in private SP.",
+        "plugins/eversense/src/main/kotlin/app/aaps/plugins/eversense/util/EversenseHttp365Util.kt" to "Eversense HTTP session state in private SP.",
+        "plugins/eversense/src/main/kotlin/app/aaps/plugins/eversense/util/EversenseHttpE3Util.kt" to "Eversense HTTP session state in private SP.",
+        "plugins/source/src/androidMain/kotlin/app/aaps/plugins/source/EversensePlugin.kt" to "Eversense source plugin private SP.",
+        "plugins/source/src/androidMain/kotlin/app/aaps/plugins/source/activities/EversenseStatusActivity.kt" to "Eversense status UI private SP.",
+        "plugins/sync/src/androidMain/kotlin/app/aaps/plugins/sync/garmin/GarminPlugin.kt" to
+            "Garmin step-mirror counters (PREF_GARMIN_LAST_STEPS/TS) in unregistered keys.",
+        "plugins/sync/src/androidMain/kotlin/app/aaps/plugins/sync/nsclientV3/NSClientPinManager.kt" to
+            "NSClient v3 PIN in a private SP file; putting it in a registered key would export the secret.",
     )
 
     @Test
@@ -129,9 +178,15 @@ class RawPreferenceStoreScanTest {
         assertThat(stale).isEmpty()
     }
 
-    /** Production Kotlin, excluding tests, build output, and `wear` - which has its own store. */
+    /**
+     * Production Kotlin of the AAPS apps, excluding tests, build output, `wear` (its own store),
+     * `docs` (reference snippets that are never compiled), and `tools` (standalone sample apps).
+     */
     private fun scan(): List<String> {
-        val skip = listOf("/build/", "/src/test", "/src/androidTest", "/src/androidHostTest", "/src/commonTest", "/src/iosTest", "/wear/")
+        val skip = listOf(
+            "/build/", "/src/test", "/src/androidTest", "/src/androidHostTest", "/src/commonTest", "/src/iosTest",
+            "/wear/", "/docs/", "/tools/",
+        )
         val root = repoRoot()
         val files = root.walkTopDown()
             .filter { it.isFile && it.extension == "kt" }

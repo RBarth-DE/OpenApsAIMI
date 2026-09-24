@@ -299,7 +299,6 @@ enum class StringKey(
     OApsAIMIWCycleThyroid( "key_oaps_aimi_wcycle_thyroid", "EUTHYROID", title = TextRef.Literal(""), preferenceType = PreferenceType.LIST),
     OApsAIMIWCycleContraceptive( "key_oaps_aimi_wcycle_contraceptive", "NONE", title = TextRef.Literal(""), preferenceType = PreferenceType.LIST),
     OApsAIMIWCycleTrackingMode( "key_oaps_aimi_wcycle_tracking_mode", "FIXED_28", title = TextRef.Literal(""), preferenceType = PreferenceType.LIST),
-    GarminRequestKey( key = "garmin_aaps_key", defaultValue = "", title = TextRef.Literal("")),
     PumpCommonTbrStorage( "pump_sync_storage_tbr", "", title = TextRef.Literal("")),
     PumpCommonBolusStorage( "pump_sync_storage_bolus", "", title = TextRef.Literal("")),
 

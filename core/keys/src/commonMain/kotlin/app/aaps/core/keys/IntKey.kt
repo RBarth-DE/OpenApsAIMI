@@ -470,7 +470,6 @@ enum class IntKey(
     OApsAIMILunchinterval( "key_oaps_aimi_lunch_interval", 3, 1, 20, title = TextRef.Literal(""), defaultedBySM = true),
     OApsAIMImealinterval( "key_oaps_aimi_meal_interval", 3, 1, 20, title = TextRef.Literal(""), defaultedBySM = true),
     OApsAIMIHighBGinterval( "key_oaps_aimi_highBG_interval", 3, 1, 20, title = TextRef.Literal(""), defaultedBySM = true),
-    GarminLocalHttpPort( "communication_http_port", 28891, 1001, 65535, title = TextRef.Literal(""), defaultedBySM = true),
     ;
 
     override val entries: Map<Int, TextRef> = entriesRefs

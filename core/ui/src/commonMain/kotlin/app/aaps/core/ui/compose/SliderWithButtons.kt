@@ -174,8 +174,7 @@ fun SliderWithButtons(
     val stepText = formatSliderDisplayValue(
         value = step,
         unitLabel = unitLabel,
-        valueFormatRef = valueFormatRef,
-        formatAsInt = formatAsInt,
+        unitFormat = unitFormat,
         valueFormat = valueFormat,
         asDuration = asDuration
     )
