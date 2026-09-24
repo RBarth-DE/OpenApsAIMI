@@ -449,11 +449,6 @@ open class OpenAPSBoostV5Plugin @Inject constructor(
         }
     }
 
-    // Enable/show under the same condition as plain Boost (temp-basal-capable pump) — delegate to
-    // the engine so the two plugins stay in lock-step.
-    override fun specialEnableCondition(): Boolean = openAPSBoostEngine().specialEnableCondition()
-    override fun specialShowInListCondition(): Boolean = openAPSBoostEngine().specialShowInListCondition()
-
     /**
      * V5 decision runner. Called by the live V1 engine (`OpenAPSBoostPlugin.runEngine`) with the
      * inputs and result the engine just produced — V5 sees exactly what V1 saw, no duplication of

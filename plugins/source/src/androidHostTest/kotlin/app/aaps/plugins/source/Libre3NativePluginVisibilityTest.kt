@@ -2,7 +2,6 @@ package app.aaps.plugins.source
 
 import android.content.Context
 import androidx.documentfile.provider.DocumentFile
-import app.aaps.core.data.plugin.PluginType
 import app.aaps.core.interfaces.ble.BleRadioPriority
 import app.aaps.core.interfaces.calibration.Calibration
 import app.aaps.core.interfaces.configuration.Config
@@ -65,35 +64,35 @@ class Libre3NativePluginVisibilityTest : TestBase() {
 
     @Test
     fun `1 - Libre 3 native is visible when the exact marker file exists`() {
-        assertThat(plugin.showInList(PluginType.BGSOURCE)).isTrue()
+        assertThat(plugin.showInList()).isTrue()
     }
 
     @Test
     fun `2 - Libre 3 native is hidden when the marker file is absent`() {
         whenever(extraDir.findFile(LIBRE3_ACCESS_FILE_NAME)).thenReturn(null)
 
-        assertThat(plugin.showInList(PluginType.BGSOURCE)).isFalse()
+        assertThat(plugin.showInList()).isFalse()
     }
 
     @Test
     fun `3 - Libre 3 native is hidden when the folder grant is gone`() {
         whenever(fileListProvider.isDirectoryAccessGranted()).thenReturn(false)
 
-        assertThat(plugin.showInList(PluginType.BGSOURCE)).isFalse()
+        assertThat(plugin.showInList()).isFalse()
     }
 
     @Test
     fun `4 - Libre 3 native is hidden when the directory throws while being read`() {
         whenever(fileListProvider.ensureExtraDirExists()).thenThrow(SecurityException("grant revoked"))
 
-        assertThat(plugin.showInList(PluginType.BGSOURCE)).isFalse()
+        assertThat(plugin.showInList()).isFalse()
     }
 
     @Test
     fun `5 - Libre 3 native is hidden when no AAPS directory is selected`() {
         whenever(preferences.getIfExists(StringKey.AapsDirectoryUri)).thenReturn(null)
 
-        assertThat(plugin.showInList(PluginType.BGSOURCE)).isFalse()
+        assertThat(plugin.showInList()).isFalse()
     }
 
     @Test
@@ -101,21 +100,21 @@ class Libre3NativePluginVisibilityTest : TestBase() {
         val aidex = AidexPlugin(rh, aapsLogger, preferences, config, notificationManager)
         whenever(extraDir.findFile(LIBRE3_ACCESS_FILE_NAME)).thenReturn(null)
 
-        assertThat(plugin.showInList(PluginType.BGSOURCE)).isFalse()
-        assertThat(aidex.showInList(PluginType.BGSOURCE)).isTrue()
-        assertThat(aidex.specialEnableCondition()).isTrue()
+        assertThat(plugin.showInList()).isFalse()
+        assertThat(aidex.showInList()).isTrue()
+        assertThat(aidex.enforcedState()).isNull()
     }
 
     @Test
     fun `7 - the gate does not touch the enable path, so a running sensor is unaffected`() {
-        // Hiding the plugin never disables an instance that is already selected, and never starts a
-        // BG source fallback.
-        assertThat(plugin.specialEnableCondition()).isTrue()
+        // No enforcement is declared: hiding the plugin never disables an instance that is already
+        // selected, and never starts a BG source fallback.
+        assertThat(plugin.enforcedState()).isNull()
 
         whenever(extraDir.findFile(LIBRE3_ACCESS_FILE_NAME)).thenReturn(null)
-        assertThat(plugin.specialEnableCondition()).isTrue()
+        assertThat(plugin.enforcedState()).isNull()
 
         whenever(preferences.getIfExists(StringKey.AapsDirectoryUri)).thenReturn(null)
-        assertThat(plugin.specialEnableCondition()).isTrue()
+        assertThat(plugin.enforcedState()).isNull()
     }
 }

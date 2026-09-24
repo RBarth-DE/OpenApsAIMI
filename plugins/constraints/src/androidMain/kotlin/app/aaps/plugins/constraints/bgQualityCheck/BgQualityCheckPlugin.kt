@@ -1,7 +1,5 @@
 package app.aaps.plugins.constraints.bgQualityCheck
 
-import app.aaps.core.interfaces.notifications.NotificationManager
-import app.aaps.plugins.constraints.ConstraintsStrings
 import app.aaps.core.data.plugin.PluginType
 import app.aaps.core.data.time.T
 import app.aaps.core.interfaces.bgQualityCheck.BgQualityCheck
@@ -11,6 +9,8 @@ import app.aaps.core.interfaces.constraints.PluginConstraints
 import app.aaps.core.interfaces.iob.IobCobCalculator
 import app.aaps.core.interfaces.logging.AAPSLogger
 import app.aaps.core.interfaces.logging.LTag
+import app.aaps.core.interfaces.notifications.NotificationManager
+import app.aaps.core.interfaces.plugin.EnforcedState
 import app.aaps.core.interfaces.plugin.PluginBase
 import app.aaps.core.interfaces.plugin.PluginDescription
 import app.aaps.core.interfaces.resources.ResourceHelper
@@ -18,12 +18,9 @@ import app.aaps.core.interfaces.rx.bus.RxBus
 import app.aaps.core.interfaces.rx.collectResilient
 import app.aaps.core.interfaces.rx.events.EventBucketedDataCreated
 import app.aaps.core.interfaces.utils.DateUtil
-import app.aaps.core.interfaces.utils.fabric.FabricPrivacy
 import androidx.annotation.DrawableRes
+import app.aaps.plugins.constraints.ConstraintsStrings
 import app.aaps.plugins.constraints.R
-import io.reactivex.rxjava3.disposables.CompositeDisposable
-import io.reactivex.rxjava3.kotlin.plusAssign
-import app.aaps.core.keys.interfaces.TextRef
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesIntoMap
 import dev.zacsweers.metro.Inject
@@ -56,7 +53,7 @@ class BgQualityCheckPlugin(
 ) : PluginBase(
     PluginDescription()
         .mainType(PluginType.CONSTRAINTS)
-        .alwaysEnabled(true)
+        .enforce(EnforcedState.Enabled)
         .showInList { false }
         .pluginName(ConstraintsStrings.bg_quality),
     aapsLogger, rh, notificationManager

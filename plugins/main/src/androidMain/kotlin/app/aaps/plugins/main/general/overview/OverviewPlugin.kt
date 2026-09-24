@@ -16,6 +16,7 @@ import app.aaps.core.interfaces.nsclient.NSSettingsStatus
 import app.aaps.core.interfaces.overview.OverviewAndroid
 import app.aaps.core.interfaces.overview.OverviewMenus
 import app.aaps.core.interfaces.plugin.ActivePlugin
+import app.aaps.core.interfaces.plugin.EnforcedState
 import app.aaps.core.interfaces.plugin.PluginBase
 import app.aaps.core.interfaces.plugin.PluginBaseWithPreferences
 import app.aaps.core.interfaces.plugin.PluginDescription
@@ -85,7 +86,7 @@ class OverviewPlugin @Inject constructor(
         .mainType(PluginType.GENERAL)
         .fragmentClass(OverviewEntryFragment::class.qualifiedName)
         .alwaysVisible(true)
-        .alwaysEnabled(true)
+        .enforce(EnforcedState.Enabled)
         .simpleModePosition(PluginDescription.Position.TAB)
         .icon(IcPluginOverview)
         .pluginName(TextRef.AndroidRes(app.aaps.core.ui.R.string.overview))

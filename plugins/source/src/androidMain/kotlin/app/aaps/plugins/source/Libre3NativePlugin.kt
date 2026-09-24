@@ -104,6 +104,11 @@ class Libre3NativePlugin @Inject constructor(
         .pluginName(TextRef.AndroidRes(R.string.libre3_native))
         .shortName(TextRef.AndroidRes(R.string.libre3_short))
         .preferencesVisibleInSimpleMode(false)
+        // Libre 3 native is only offered when the engineering marker file is present - see
+        // Libre3AvailabilityProvider. Hiding here removes the plugin from Config Builder, the
+        // Setup Wizard, search and Quick Launch. An already-selected plugin is NOT disabled by
+        // this: hiding only stops a new selection.
+        .showInList { availabilityProvider.isAvailable() }
         .description(TextRef.AndroidRes(R.string.description_source_libre3_native)),
     ownPreferences = Libre3IntentKey.entries + Libre3BooleanKey.entries,
     aapsLogger,
@@ -317,20 +322,6 @@ class Libre3NativePlugin @Inject constructor(
             aapsLogger.error(LTag.BGSOURCE, "${Libre3LogMarkers.PRESOAK}: fatal=$fatal $message")
         }
     }
-
-    /**
-     * Libre 3 native is only offered when the engineering marker file is present in the AAPS
-     * `extra` directory. See [Libre3AvailabilityProvider], the only place that decides this.
-     *
-     * `showInList` is the project's own availability mechanism: it is what
-     * [app.aaps.core.interfaces.plugin.ActivePlugin.getSpecificPluginsVisibleInList] filters on, so
-     * hiding here removes the plugin from Config Builder, the Setup Wizard, search and Quick Launch
-     * at the same time.
-     *
-     * On purpose this is **not** wired into `specialEnableCondition`: a plugin that is already
-     * selected must keep feeding glucose exactly as before.
-     */
-    override fun specialShowInListCondition(): Boolean = availabilityProvider.isAvailable()
 
     override fun getPreferenceScreenContent() = PreferenceSubScreenDef(
         key = "libre3_settings",

@@ -66,3 +66,7 @@ ios/app/Version.xcconfig
 # Python byte code, written by the analyzer when it runs. Never commit it.
 __pycache__/
 *.pyc
+
+# Office owner/lock files (~$foo.xlsx). They are transient, machine-local and must never
+# reach history - one was staged for commit alongside _docs/import.xlsx.
+~$*

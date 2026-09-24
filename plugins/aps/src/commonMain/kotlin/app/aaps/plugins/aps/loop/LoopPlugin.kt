@@ -106,6 +106,7 @@ import dev.zacsweers.metro.SingleIn
 import dev.zacsweers.metro.binding
 import kotlin.concurrent.Volatile
 import kotlin.math.abs
+import kotlin.time.Duration.Companion.seconds
 import kotlin.time.TimeSource
 
 @ContributesIntoMap(AppScope::class, binding = binding<PluginBase>())
@@ -157,7 +158,11 @@ class LoopPlugin(
         .icon(IcLoopClosed)
         .pluginName(CoreUiStrings.loop)
         .shortName(ApsStrings.loop_shortname)
-        .alwaysEnabled(config.APS)
+        // Only a build with an APS of its own may run the loop, and it is not the user's to switch off
+        // where there is one. Both directions matter: without the forced-off half, a client that imports a
+        // master's settings gets ConfigBuilder_Enabled_LOOP_* = true and runs the algorithm on synced data.
+        // See #5145.
+        .enforceEnabledOnlyWhen { config.APS }
         .description(ApsStrings.description_loop),
     aapsLogger, rh, notificationManager
 ), Loop, PluginConstraints {
@@ -189,6 +194,24 @@ class LoopPlugin(
     // the Handler's removeCallbacks/postDelayed pair did.
     private var deviceStatusJob: Job? = null
 
+    /**
+     * The deferred loop re-run scheduled when an SMB fails, held so [onStop] can take it back.
+     *
+     * It used to be a bare `appScope.launch`, which nothing owned: the plugin could be stopped and its
+     * pump driver torn down, and a second later this would still wake up and run a loop that queues
+     * commands against the driver being dismantled. A settings import does exactly that - stop, apply,
+     * start - so the one-second delay lands squarely in the window.
+     *
+     * Replaced rather than stacked, the same way [scheduleBuildAndStoreDeviceStatus] debounces. Two
+     * failures inside a second would otherwise schedule two re-runs, and `invokeMutex` would then run
+     * them back to back for no benefit. Holding only the latest job also means there is never an older
+     * one left that nothing can cancel.
+     */
+    // internal, not private, so the test can see it was really cancelled. The scan test only checks
+    // that this site is DECLARED, not that the job is owned, so without this there is nothing pinning
+    // the fix - a later edit could go back to a bare launch and the scan would still pass.
+    internal var smbFallbackJob: Job? = null
+
     // The collectors onStart puts on the application scope. That scope outlives the plugin, so onStop
     // has to cancel them by hand or they keep running - and a later onStart stacks a second pair on top,
     // so one temp-target change would then invoke the loop twice.
@@ -218,7 +241,7 @@ class LoopPlugin(
         // TempTarget changes
         persistenceLayer.observeChanges(TT::class)
             // Skip db change of ending previous TT
-            .debounce(10_000L)
+            .debounce(10.seconds)
             // try/catch keeps this app-lifetime subscription alive: an uncaught throw in onEach would
             // permanently cancel the collection (invoke() is try/finally, not try/catch, so it propagates).
             .onEach {
@@ -238,7 +261,7 @@ class LoopPlugin(
         // never EventPumpStatusChanged — so there is no feedback loop, and the debounce collapses
         // connection chatter.
         rxBus.toFlow(EventPumpStatusChanged::class)
-            .debounce(1000L)
+            .debounce(1.seconds)
             .onEach {
                 try {
                     runningModePreCheck()
@@ -300,19 +323,13 @@ class LoopPlugin(
         periodicLoopJob?.cancel()
         periodicLoopJob = null
         deviceStatusJob?.cancel()
+        // The deferred SMB fallback re-runs the loop a second later, so without this it fires into the
+        // restart window and queues commands against a driver being torn down.
+        smbFallbackJob?.cancel()
+        smbFallbackJob = null
         collectors.forEach { it.cancel() }
         collectors.clear()
         super.onStop()
-    }
-
-    override fun specialEnableCondition(): Boolean {
-        return try {
-            val pump = activePlugin.activePump
-            pump.pumpDescription.isTempBasalCapable
-        } catch (_: Exception) {
-            // may fail during initialization
-            true
-        }
     }
 
     override suspend fun minutesToEndOfSuspend(): Int =
@@ -650,7 +667,7 @@ class LoopPlugin(
         val start = dateUtil.now()
         while (start + T.mins(maxMinutes).msecs() > dateUtil.now()) {
             if (commandQueue.size() == 0 && commandQueue.performing() == null) return true
-            delay(1000)
+            delay(1.seconds)
         }
         return false
     }
@@ -886,8 +903,18 @@ class LoopPlugin(
                             }
                         }
                     }
+                    // `isHeld()` is the settings-import hold. Do NOT start an enactment under it: the
+                    // executor will not pick the commands up, so the temp basal and the SMB would sit in
+                    // the queue and both land after the hold ends - against pump drivers that were just
+                    // stopped and restarted. Waiting for a running enactment instead was tried and
+                    // refuted: `withHold` raises the flag BEFORE it waits, so the loop's second queue
+                    // call is never picked up and the import always times out.
+                    //
+                    // Skipping a loop run is cheap - the next one is five minutes away and re-decides
+                    // from fresh data. Enacting into a driver being torn down is not.
                     if (resultAfterConstraints.isChangeRequested()
                         && !commandQueue.bolusInQueue()
+                        && !commandQueue.isHeld()
                     ) {
                         val waiting = pumpEnactResultProvider()
                         waiting.queued = true
@@ -949,10 +976,7 @@ class LoopPlugin(
                                         lastRun.lastSMBEnact = dateUtil.now()
                                         scheduleBuildAndStoreDeviceStatus("applySMBRequest")
                                     } else {
-                                        appScope.launch {
-                                            delay(1000)
-                                            invoke("tempBasalFallback", allowNotification, true)
-                                        }
+                                        scheduleSmbFallback(allowNotification)
                                     }
                                 } else {
                                     aapsLogger.debug(LTag.APS, "No SMB requested")
@@ -1023,6 +1047,13 @@ class LoopPlugin(
 
     override suspend fun acceptChangeRequest() {
         val profile = profileFunction.getProfile() ?: return
+        // Same hold as in `invoke`, and this path needs its own check: it enacts OUTSIDE `invokeMutex`
+        // and is reachable from the phone and the watch, so nothing `invoke` does protects it. The user
+        // pressed a button, so say why nothing happened rather than failing silently.
+        if (commandQueue.isHeld()) {
+            aapsLogger.debug(LTag.APS, "acceptChangeRequest: queue is held (settings being applied), not enacting")
+            return
+        }
         lastRun?.let { lastRun ->
             lastRun.constraintsProcessed?.let { constraintsProcessed ->
                 // Protected for the same reason as the enactment in `invoke`, and it matters more
@@ -1279,10 +1310,24 @@ class LoopPlugin(
         rxBus.send(EventRefreshOverview("suspendLoop"))
     }
 
+    /**
+     * Re-run the loop shortly after an SMB that was not enacted, so the temp basal still gets a chance.
+     *
+     * A named function rather than a launch buried in [invoke], so the cancellation can be tested
+     * without driving a whole loop run to its SMB branch. See [smbFallbackJob] for why the job is held.
+     */
+    internal fun scheduleSmbFallback(allowNotification: Boolean) {
+        smbFallbackJob?.cancel()
+        smbFallbackJob = appScope.launch {
+            delay(1.seconds)
+            invoke("tempBasalFallback", allowNotification, true)
+        }
+    }
+
     override fun scheduleBuildAndStoreDeviceStatus(reason: String) {
         deviceStatusJob?.cancel()
         deviceStatusJob = appScope.launch {
-            delay(5000)
+            delay(5.seconds)
             buildAndStoreDeviceStatus(reason)
         }
     }

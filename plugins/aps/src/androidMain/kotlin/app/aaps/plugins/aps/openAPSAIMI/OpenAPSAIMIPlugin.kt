@@ -701,20 +701,6 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
         )
     }
 
-    override fun specialEnableCondition(): Boolean {
-        return try {
-            activePlugin.activePump.pumpDescription.isTempBasalCapable
-        } catch (ignored: Exception) {
-            // may fail during initialization
-            true
-        }
-    }
-
-    override fun specialShowInListCondition(): Boolean {
-        val pump = activePlugin.activePump
-        return pump.pumpDescription.isTempBasalCapable
-    }
-
     private val dynIsfCache = DynIsfCache()
 
     /** Time of the last background refresh that was started, used by [dynIsfRefreshDue]. */

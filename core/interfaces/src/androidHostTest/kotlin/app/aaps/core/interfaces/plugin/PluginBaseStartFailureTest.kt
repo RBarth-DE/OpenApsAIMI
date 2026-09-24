@@ -13,7 +13,10 @@ import app.aaps.core.interfaces.resources.TextResolver
 import app.aaps.core.keys.interfaces.TextRef
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -23,6 +26,8 @@ import kotlinx.coroutines.withTimeout
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.mockito.kotlin.mock
+import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicInteger
 import kotlin.time.Duration.Companion.seconds
 
 /**
@@ -141,20 +146,26 @@ class PluginBaseStartFailureTest {
         /** Set to hold [onStart] open, so "scheduled" and "finished" can be told apart. */
         var startGate: CompletableDeferred<Unit>? = null
 
+        /** Called at the top of both phases, so a test can detect two of them running at once. */
+        var onPhaseEnter: (() -> Unit)? = null
+
         val events = mutableListOf<String>()
 
         override suspend fun onStart() {
+            onPhaseEnter?.invoke()
             startGate?.await()
             events += "start"
             if (failStart) throw IllegalStateException("onStart boom")
         }
 
         override suspend fun onStop() {
+            onPhaseEnter?.invoke()
             events += "stop"
             if (failStop) throw IllegalStateException("onStop boom")
         }
 
-        /** [pluginScope] is protected, and this is what the drivers do with it. */
+        /** [pluginScope] is protected, and this is what the drivers do with it. No handler here on purpose:
+         * the one on [pluginScope] is what is being tested. */
         fun launchOwnWork(block: suspend () -> Unit): Job = pluginScope.launch { block() }
     }
 
@@ -328,9 +339,6 @@ class PluginBaseStartFailureTest {
      * The other half of the same problem, and the reason [PluginBase.pluginScope] carries a supervisor job:
      * with a plain job the first failing child cancelled the scope for good, and every later `launch` on it
      * was a no-op that said nothing. The drivers launch their polling and their queue work there.
-     *
-     * The failing child prints a stack trace to stderr - that is the default handler doing its job, not the
-     * test failing.
      */
     @Test
     fun `work the plugin launched that fails does not kill the plugin scope`() = runBlocking {
@@ -341,6 +349,70 @@ class PluginBaseStartFailureTest {
         withTimeout(5.seconds) { sut.launchOwnWork { ran = true }.join() }
 
         assertThat(ran).isTrue()
+    }
+
+    /**
+     * The other half: the scope surviving is not enough if the failure is silent.
+     *
+     * Without a handler on [PluginBase.pluginScope] the throw reaches the thread's default handler, which
+     * on Android ends the process - and in a test JVM it is collected by kotlinx-coroutines-test and
+     * reported against an unrelated `runTest` somewhere else in the module, which is how this file first
+     * broke `ChunkedOnQuietPeriodTest` on CI.
+     */
+    @Test
+    fun `work the plugin launched that fails is reported, not lost`() = runBlocking {
+        val sut = plugin("Pump driver")
+
+        withTimeout(5.seconds) { sut.launchOwnWork { throw IllegalStateException("child boom") }.join() }
+
+        val card = notifications.live.single()
+        assertThat(card.id).isEqualTo(NotificationId.PLUGIN_WORK_FAILED)
+        assertThat(card.text).isEqualTo("failed: Pump driver")
+        assertThat(card.level).isEqualTo(NotificationLevel.URGENT)
+        assertThat(card.sound).isEqualTo(AlarmSound.ALARM)
+        // It did NOT start badly - that is a different state, and the pump gate must not be tripped by this.
+        assertThat(sut.lastStartFailed).isFalse()
+    }
+
+    /** Repeated failures replace this plugin's own card rather than piling up. */
+    @Test
+    fun `repeated launched-work failures leave one card`() = runBlocking {
+        val sut = plugin()
+
+        withTimeout(5.seconds) { sut.launchOwnWork { throw IllegalStateException("one") }.join() }
+        withTimeout(5.seconds) { sut.launchOwnWork { throw IllegalStateException("two") }.join() }
+
+        assertThat(notifications.live).hasSize(1)
+    }
+
+    /**
+     * Two threads flipping the same plugin must not produce two transitions that overlap.
+     *
+     * `schedule` reads the previous transition and then writes its own, and a `@Volatile` alone makes each
+     * half visible without making the pair atomic: both callers read the same predecessor, both queue
+     * behind it, and both run at once - which is the single thing the queueing exists to prevent.
+     * `ConfigBuilderImpl` disables several plugins and enables one in the same pass, so it is reachable.
+     */
+    @Test
+    fun `concurrent enable and disable do not overlap`() = runBlocking {
+        repeat(40) {
+            val sut = plugin()
+            val inPhase = AtomicInteger(0)
+            val overlapped = AtomicBoolean(false)
+            sut.onPhaseEnter = {
+                if (inPhase.incrementAndGet() > 1) overlapped.set(true)
+                Thread.sleep(1)          // widen the window a real phase would occupy
+                inPhase.decrementAndGet()
+            }
+
+            val jobs = listOf(
+                async(Dispatchers.Default) { sut.setPluginEnabled(PluginType.GENERAL, true) },
+                async(Dispatchers.Default) { sut.setPluginEnabled(PluginType.GENERAL, false) }
+            ).awaitAll()
+
+            withTimeout(5.seconds) { jobs.filterNotNull().forEach { it.join() } }
+            assertThat(overlapped.get()).isFalse()
+        }
     }
 
     /**

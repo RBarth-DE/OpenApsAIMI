@@ -2,12 +2,15 @@ package app.aaps.core.interfaces.plugin
 
 import app.aaps.core.data.plugin.PluginType
 import app.aaps.core.interfaces.InterfacesStrings
+import app.aaps.core.interfaces.concurrent.AapsLock
+import app.aaps.core.interfaces.concurrent.withLock
 import app.aaps.core.interfaces.logging.AAPSLogger
 import app.aaps.core.interfaces.logging.LTag
 import app.aaps.core.interfaces.notifications.AlarmSound
 import app.aaps.core.interfaces.notifications.NotificationHandle
 import app.aaps.core.interfaces.notifications.NotificationId
 import app.aaps.core.interfaces.notifications.NotificationManager
+import app.aaps.core.interfaces.plugin.PluginBase.Companion.TRANSITION_WAIT
 import app.aaps.core.interfaces.resources.TextResolver
 import app.aaps.core.keys.interfaces.PreferenceItem
 import kotlinx.coroutines.CancellationException
@@ -33,14 +36,35 @@ abstract class PluginBase(
 ) {
 
     /**
-     * Work the plugin starts. Unchanged for now, and still never cancelled - making it per-enable
-     * changes what 14 existing `pluginScope.launch` calls mean, with no compile error, and several of
-     * them queue pump commands. That is its own change with its own review.
+     * Work the plugin starts. Process-lifetime, and never cancelled. That is a settled decision, not a
+     * gap waiting to be closed.
+     *
+     * Making it per-enable was proposed and rejected once the 14 `pluginScope.launch` calls were written
+     * down one by one - see `PluginLifetimeWorkScanTest.pluginScopeLaunches`, which fails the build on a
+     * new one. The reason it was rejected: cancelling this scope does NOT withdraw a queued command.
+     * `CommandQueueImplementation.readStatus` is `add` then `notifyAboutNewCommand` then
+     * `deferred.await()`, so cancelling the caller at the await leaves the command in the queue and still
+     * running - it only throws away the answer. Twelve of the fourteen sites are status reads whose result
+     * can be abandoned safely; `PumpPluginBase.onStart` already cancels its own job explicitly, which is
+     * the only place cancelling really prevents anything; and `OmnipodDashPumpPlugin.handleCommandConfirmation`
+     * must NOT be cancelled at all, because it delivers a basal correction the pod asked for and the result
+     * is the only record that it worked.
+     *
+     * If a stopping driver must stop being driven, the command has to leave the QUEUE. That is a queue
+     * change, and this scope is the wrong lever for it.
      *
      * [SupervisorJob], though, because a plain `Job` made one failing child kill the scope for good and
      * every later launch on it a silent no-op.
+     *
+     * And a handler, because without one a throw here reaches the thread's default handler, which on
+     * Android ends the process. The supervisor job only saved the scope; the app still died. Roughly fifteen
+     * `pluginScope.launch` calls across the pump drivers queue pump commands, so this is reachable from a
+     * failing pump.
      */
-    protected val pluginScope = CoroutineScope(Dispatchers.Default + SupervisorJob())
+    protected val pluginScope = CoroutineScope(
+        Dispatchers.Default + SupervisorJob() +
+            CoroutineExceptionHandler { _, e -> onLaunchedWorkFailed(e) }
+    )
 
     /**
      * Runs [onStart] / [onStop], and nothing else.
@@ -79,8 +103,45 @@ abstract class PluginBase(
     @Volatile
     private var startFailureCard: NotificationHandle? = null
 
-    /** The previous transition. Start and stop of one plugin must not run at the same time. */
+    /** Same idea for [pluginScope], so one plugin failing over and over leaves one card, not a pile. */
+    @Volatile
+    private var workFailureCard: NotificationHandle? = null
+
+    /**
+     * Work this plugin launched on [pluginScope] ended with an error.
+     *
+     * Nothing can be undone from here - the coroutine is gone and only the plugin knows what it was doing -
+     * so the job is to make sure it is not lost. Not routed through [lastStartFailed]: the plugin did start,
+     * and a pump that started and then lost a polling loop is a different state from one that never came up.
+     */
+    private fun onLaunchedWorkFailed(e: Throwable) {
+        // The throwable goes to the log only. It is developer text, untranslated, and can be a page long.
+        aapsLogger.error(LTag.CORE, "Work launched by $name failed", e)
+        workFailureCard?.let { notificationManager.dismiss(it) }
+        workFailureCard = notificationManager.post(
+            NotificationId.PLUGIN_WORK_FAILED,
+            rh.gs(InterfacesStrings.plugin_work_failed, name),
+            validMinutes = 0,
+            sound = AlarmSound.ALARM
+        )
+    }
+
+    /**
+     * The previous transition. Start and stop of one plugin must not run at the same time.
+     *
+     * Guarded by [transitionLock] rather than only [Volatile]: [schedule] reads this and then writes it,
+     * and volatile alone makes each half visible without making the pair atomic - two callers arriving
+     * together would both read the same predecessor and queue behind it, running concurrently. That is
+     * the one thing the queueing exists to prevent, and it is reachable: `ConfigBuilderImpl` disables
+     * several plugins and enables one in the same pass.
+     */
     private var lastTransition: Job? = null
+
+    /**
+     * Guards the read-then-write of [lastTransition]. Its own object, never reassigned - locking on
+     * something that gets replaced lets a second thread lock the new one and walk straight in.
+     */
+    private val transitionLock = AapsLock()
 
     enum class State {
         NOT_INITIALIZED, ENABLED, DISABLED
@@ -118,10 +179,32 @@ abstract class PluginBase(
 
     open fun isEnabled() = isEnabled(pluginDescription.mainType)
 
+    /**
+     * What this build forces, or `null` when the user's stored choice decides. See [Enforcement].
+     *
+     * A CONSTRAINTS plugin is enabled by virtue of being registered: which constraint plugins exist is a
+     * property of the build, and one that is present must always be consulted. That is why the rule lives
+     * here rather than being declared on each of them - a new constraint plugin cannot forget it.
+     *
+     * Disabled wins a disagreement, so a wrong declaration fails closed.
+     */
+    fun enforcedState(): EnforcedState? {
+        if (pluginDescription.mainType == PluginType.CONSTRAINTS) return EnforcedState.Enabled
+        val applying = pluginDescription.enforcements.filter { it.applies() }
+        return when {
+            applying.any { it.state == EnforcedState.Disabled } -> EnforcedState.Disabled
+            applying.any { it.state == EnforcedState.Enabled }  -> EnforcedState.Enabled
+            else                                               -> null
+        }
+    }
+
     fun isEnabled(type: PluginType): Boolean {
-        if (pluginDescription.alwaysEnabled && type == pluginDescription.mainType) return true
         if (pluginDescription.mainType == PluginType.CONSTRAINTS && type == PluginType.CONSTRAINTS) return true
-        if (type == pluginDescription.mainType) return state == State.ENABLED && specialEnableCondition()
+        if (type == pluginDescription.mainType) return when (enforcedState()) {
+            EnforcedState.Enabled  -> true
+            EnforcedState.Disabled -> false
+            null                   -> state == State.ENABLED
+        }
         if (type == PluginType.CONSTRAINTS && pluginDescription.mainType == PluginType.PUMP && isEnabled(PluginType.PUMP)) return true
         return type == PluginType.CONSTRAINTS && pluginDescription.mainType == PluginType.APS && isEnabled(PluginType.APS)
     }
@@ -191,7 +274,7 @@ abstract class PluginBase(
      * otherwise wedge this plugin's lifecycle for the rest of the process. After [TRANSITION_WAIT] the new
      * transition goes ahead anyway and says so in the log: overlapping is bad, never starting again is worse.
      */
-    private fun schedule(starting: Boolean): Job {
+    private fun schedule(starting: Boolean): Job = transitionLock.withLock {
         val previous = lastTransition
         val job = lifecycleScope.launch {
             if (previous != null && previous.isActive) {
@@ -201,7 +284,7 @@ abstract class PluginBase(
             runPhase(starting)
         }
         lastTransition = job
-        return job
+        job
     }
 
     /**
@@ -247,9 +330,16 @@ abstract class PluginBase(
     /**
      * [setPluginEnabled], but returns only once [onStart] / [onStop] has actually finished.
      *
-     * Applying imported settings needs this: it stops and starts pump drivers, and the whole point of
-     * waiting for an idle pump first is lost if the teardown is still queued on [pluginScope] when the
-     * caller moves on and lets commands flow again.
+     * **Used by tests, not by production code, and that is correct rather than a gap.** It was written
+     * for the settings import, on the reasoning that stopping and starting pump drivers is pointless if
+     * the teardown is still queued when the caller lets commands flow again. The import does need that
+     * guarantee - it just gets it one level up instead: `ConfigBuilderImpl.applyConfiguration` collects
+     * the jobs from every `setPluginEnabled` it calls and waits for the whole set at once, bounded by
+     * `PLUGIN_SETTLE_WAIT`. Waiting plugin-by-plugin here would serialise what that deliberately runs
+     * in parallel.
+     *
+     * Kept because roughly twenty tests use it to await a transition deterministically; the alternative
+     * is `setPluginEnabled(type, state)?.join()` written out at each of them.
      */
     suspend fun setPluginEnabledAwaiting(type: PluginType, newState: Boolean) {
         setPluginEnabled(type, newState)?.join()
@@ -282,17 +372,25 @@ abstract class PluginBase(
         }
     }
 
-    fun showInList(type: PluginType): Boolean {
-        if (pluginDescription.mainType == type) return pluginDescription.showInList.invoke() && specialShowInListCondition()
-        return false
-    }
-
-    open fun specialEnableCondition(): Boolean {
-        return true
-    }
-
-    open fun specialShowInListCondition(): Boolean {
-        return true
+    /**
+     * Whether this plugin is offered in the Config Builder list.
+     *
+     * A plugin this build forces OFF is hidden without having to say so twice. Forced off means it cannot be
+     * used here at all, so there is nothing to offer and a switch locked in the off position tells the user
+     * nothing they can act on. `AutotunePlugin` and `OpenAPSAutoISFPlugin` used to repeat their enforcement
+     * condition here, and `LoopPlugin` and `RandomBgPlugin` forgot to - which is how the loop stayed listed
+     * on a client that could never run it.
+     *
+     * Forced ON is deliberately NOT derived. Those plugins differ: the framework ones say
+     * `showInList { false }` because they have no UI at all, while `ObjectivesPlugin` has a real screen and
+     * `NSClientSourcePlugin` has to stay selectable on a master, where it is not enforced.
+     *
+     * It took a [PluginType] until every caller turned out to pass `pluginDescription.mainType` - the other
+     * branch could only ever return false.
+     */
+    fun showInList(): Boolean {
+        if (enforcedState() == EnforcedState.Disabled) return false
+        return pluginDescription.showInList.invoke()
     }
 
     open suspend fun onStart() {}

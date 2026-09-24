@@ -350,22 +350,6 @@ open class OpenAPSBoostPlugin @Inject constructor(
 
     // ---- Lifecycle ----
 
-    override fun specialEnableCondition(): Boolean {
-        return try {
-            activePlugin.activePump.pumpDescription.isTempBasalCapable
-        } catch (_: Exception) {
-            true
-        }
-    }
-
-    override fun specialShowInListCondition(): Boolean {
-        return try {
-            activePlugin.activePump.pumpDescription.isTempBasalCapable
-        } catch (_: Exception) {
-            true
-        }
-    }
-
     /**
      * True when THIS engine should run/constrain: either plain "Boost" (V1) is the selected APS,
      * OR the selectable "Boost V5" plugin is (it delegates to [runEngine]). Without this, when V5

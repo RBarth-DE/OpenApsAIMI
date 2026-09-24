@@ -6,6 +6,7 @@ import app.aaps.core.data.plugin.PluginType
 import app.aaps.core.interfaces.configuration.Config
 import app.aaps.core.interfaces.logging.AAPSLogger
 import app.aaps.core.interfaces.notifications.NotificationManager
+import app.aaps.core.interfaces.plugin.EnforcedState
 import app.aaps.core.interfaces.plugin.PluginBase
 import app.aaps.core.interfaces.plugin.PluginDescription
 import app.aaps.core.interfaces.resources.TextResolver
@@ -39,9 +40,8 @@ class RemoteControlPlugin @Inject constructor(
         .icon(Icons.Default.Home)
         .pluginName(SyncStrings.remote_control_title)
         .shortName(SyncStrings.remote_control_title)
-        .neverVisible(false)
         .showInList { config.AAPSCLIENT }  // Only show in AAPSClient
-        .alwaysEnabled(config.AAPSCLIENT)  // Only enable in AAPSClient
+        .enforceEnabledOnlyWhen { config.AAPSCLIENT }  // Only enable in AAPSClient
         .description(SyncStrings.remote_control_description),
     aapsLogger, rh, notificationManager
 )

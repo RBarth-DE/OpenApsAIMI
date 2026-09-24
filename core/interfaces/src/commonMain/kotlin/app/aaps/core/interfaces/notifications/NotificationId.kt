@@ -195,6 +195,18 @@ enum class NotificationId(
     IDENTIFICATION_NOT_SET(NORMAL, SYSTEM),
     MASTER_PASSWORD_NOT_SET(IMPORTANT, SYSTEM),
     AAPS_DIR_NOT_SELECTED(NORMAL, SYSTEM),
+
+    // The AAPS directory IS selected, but the permission behind it is gone - Android drops a
+    // persisted SAF grant on reinstall and on "clear storage". Separate from the id above because
+    // the two need different words and different weight: that one is "you have not set this up
+    // yet", this one is "something that was working has stopped and nothing said so". While it is
+    // true, local settings export is silently off - the button just goes grey - so a user with no
+    // cloud configured has no backup at all and no sign of it. Found on a real phone in September
+    // 2026 where the last local backup was four months old.
+    //
+    // IMPORTANT, not URGENT: the backups have stopped, which has to be said plainly and has to
+    // persist, but it is not the alarm tier - that is reserved for insulin delivery and BG.
+    AAPS_DIR_ACCESS_LOST(IMPORTANT, SYSTEM),
     GOOGLE_DRIVE_ERROR(IMPORTANT, SYSTEM),
     SETTINGS_EXPORT_RESULT(INFO, SYSTEM),
     SNACKBAR_FALLBACK(NORMAL, SYSTEM, allowMultiple = true),
@@ -254,7 +266,12 @@ enum class NotificationId(
     // replace the first one's card, and one plugin starting cleanly would dismiss the card of another that
     // is still broken - leaving a blocked pump with no alarm to explain it. Same reason EQUIL_LOW_BATTERY
     // keeps its own id above. [app.aaps.core.interfaces.plugin.PluginBase] dismisses by handle, not by id.
-    PLUGIN_START_FAILED(URGENT, SYSTEM, allowMultiple = true);
+    PLUGIN_START_FAILED(URGENT, SYSTEM, allowMultiple = true),
+
+    // Work the plugin launched itself ended with an error. Separate from PLUGIN_START_FAILED because the
+    // plugin did start - it is a polling loop or a queued command that died, so the text has to say
+    // something else. Same reasons for allowMultiple.
+    PLUGIN_WORK_FAILED(URGENT, SYSTEM, allowMultiple = true);
 
     companion object {
 
