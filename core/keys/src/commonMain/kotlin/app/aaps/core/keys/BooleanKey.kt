@@ -440,6 +440,27 @@ enum class BooleanKey(
         summary = KeysStrings.pref_summary_aimi_straight_line_tube),
     OApsAIMITrajectoryGuardEnabled( "key_aimi_trajectory_guard_enabled", false, title = TextRef.Literal("")),
     AimiAuditorEnabled( "aimi_auditor_enabled", false, title = KeysStrings.aimi_auditor_enabled_title),
+
+    /**
+     * Opt-in: let the AI auditor move the ISF and the glucose target by at most 15 %, up or down.
+     *
+     * The factor comes from a separate LLM request made after each external audit. Kotlin checks
+     * every number the LLM quotes against the last 30 minutes, refuses more insulin in any
+     * low-glucose context, keeps the ISF above its profile floor, and caps ISF + target together at
+     * the effect of a single 15 % change. A factor for more insulin lives 15 minutes, a factor for
+     * less insulin 30 minutes. All dose limits still apply after it.
+     *
+     * With this key off nothing changes: the auditor gets the fields it has always been sent, and
+     * the ISF and target levels of every tick are written to AIMI_Decisions.jsonl
+     * (`adjustments.auditor_profile_factors`) for study only.
+     */
+    OApsAIMIAuditorProfileFactors(
+        key = "key_aimi_auditor_profile_factors",
+        defaultValue = false,
+        title = KeysStrings.pref_title_aimi_auditor_profile_factors,
+        summary = KeysStrings.pref_summary_aimi_auditor_profile_factors,
+        dependency = AimiAuditorEnabled,
+    ),
     OApsAIMIUnifiedReactivityEnabled( "key_use_unified_reactivity", true, title = TextRef.Literal("")),
     OApsAIMIDynIsfTrajectoryTuningEnabled(
         key = "aimi_dyn_isf_trajectory_tuning_enabled",
