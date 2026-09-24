@@ -7,6 +7,7 @@ import app.aaps.core.interfaces.db.PersistenceLayer
 import app.aaps.core.interfaces.db.ProcessedTbrEbData
 import app.aaps.core.interfaces.iob.GlucoseStatusProvider
 import app.aaps.core.interfaces.iob.IobCobCalculator
+import app.aaps.core.interfaces.insulin.ConcentrationHelper
 import app.aaps.core.interfaces.logging.AAPSLogger
 import app.aaps.core.interfaces.overview.LastBgData
 import app.aaps.core.interfaces.overview.Overview
@@ -89,6 +90,7 @@ object OverviewModule {
         trajectoryGuard: TrajectoryGuard,
         autodriveEngine: AutodriveEngine,
         aimiPhysioDataRepository: AIMIPhysioDataRepositoryMTR,
+        ch: ConcentrationHelper,
     ): OverviewViewModel.Factory = OverviewViewModel.Factory(
         context,
         lastBgData,
@@ -112,6 +114,7 @@ object OverviewModule {
         trajectoryGuard,
         autodriveEngine,
         aimiPhysioDataRepository,
+        ch,
     )
 
     @Provides

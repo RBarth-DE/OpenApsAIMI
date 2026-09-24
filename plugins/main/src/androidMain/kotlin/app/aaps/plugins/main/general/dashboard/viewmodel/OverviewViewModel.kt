@@ -109,7 +109,6 @@ import kotlin.reflect.KClass
 import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.sqrt
-import dev.zacsweers.metro.Inject
 
 class OverviewViewModel(
     private val context: Context,
@@ -133,10 +132,10 @@ class OverviewViewModel(
     private val overviewData: OverviewData,
     private val trajectoryGuard: TrajectoryGuard, // 🌀 Trajectory Injection
     private val autodriveEngine: AutodriveEngine, // 🧠 Engine Injection
-    private val aimiPhysioDataRepository: AIMIPhysioDataRepositoryMTR
+    private val aimiPhysioDataRepository: AIMIPhysioDataRepositoryMTR,
+    private val ch: ConcentrationHelper
 ) : ViewModel() {
 
-    @Inject lateinit var ch: ConcentrationHelper
     private var started = false
     /** Cancelled in [stop]; event + DB observation for dashboard updates run here (same pattern as OverviewFragment flows). */
     private var updateScope: CoroutineScope? = null
@@ -1437,7 +1436,8 @@ class OverviewViewModel(
         private val overviewData: OverviewData,
         private val trajectoryGuard: TrajectoryGuard, // 🌀 Add to Factory
         private val autodriveEngine: AutodriveEngine, // 🧠 Add to Factory
-        private val aimiPhysioDataRepository: AIMIPhysioDataRepositoryMTR
+        private val aimiPhysioDataRepository: AIMIPhysioDataRepositoryMTR,
+        private val ch: ConcentrationHelper
     ) : ViewModelProvider.Factory {
 
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
@@ -1465,7 +1465,8 @@ class OverviewViewModel(
                     overviewData,
                     trajectoryGuard,
                     autodriveEngine,
-                    aimiPhysioDataRepository
+                    aimiPhysioDataRepository,
+                    ch
                 ) as T
             }
             throw IllegalArgumentException("Unknown ViewModel class $modelClass")
