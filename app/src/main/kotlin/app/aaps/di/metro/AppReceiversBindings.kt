@@ -1,6 +1,7 @@
 package app.aaps.di.metro
 
 import app.aaps.implementation.androidNotification.AlarmMuteReceiver
+import app.aaps.implementation.androidNotification.HypoTreatedReceiver
 import app.aaps.implementation.receivers.BTReceiver
 import app.aaps.implementation.receivers.ChargingStateReceiver
 import app.aaps.implementation.receivers.NetworkChangeReceiver
@@ -98,4 +99,12 @@ object AppReceiversBindings {
     fun bindTimeDateOrTZChangeReceiver(
         injector: MembersInjector<TimeDateOrTZChangeReceiver>
     ): MembersInjector<*> = injector
+
+    // Same pattern as AlarmMuteReceiver: Android builds this from the "Hypo treated" notification
+    // action, and without an entry here tapping it dies with "No Metro binding for HypoTreatedReceiver".
+    @Provides
+    @FeatureMemberInjectors
+    @IntoMap
+    @ClassKey(HypoTreatedReceiver::class)
+    fun bindHypoTreatedReceiver(injector: MembersInjector<HypoTreatedReceiver>): MembersInjector<*> = injector
 }

@@ -1,10 +1,12 @@
 package app.aaps.plugins.main.general.dashboard
 
+import android.content.Context
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.viewModels
+import app.aaps.core.interfaces.di.injectMetroMembers
 import app.aaps.plugins.main.general.dashboard.viewmodel.OverviewViewModel
 import androidx.fragment.app.Fragment
 import dev.zacsweers.metro.Inject
@@ -20,6 +22,13 @@ class DashboardFragment : Fragment() {
     private lateinit var shellController: DashboardShellController
 
     private val viewModel: OverviewViewModel by viewModels { dashboardShellDeps.overviewViewModelFactory }
+
+    // Fill dashboardShellDeps before any lifecycle method reads it. ClassKey alone is not enough -
+    // something has to call injectMembers, and no parent does that for this fragment.
+    override fun onAttach(context: Context) {
+        super.onAttach(context)
+        context.injectMetroMembers(this)
+    }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = DashboardShellBinding.inflate(inflater, container)

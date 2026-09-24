@@ -15,8 +15,8 @@ import app.aaps.core.interfaces.alerts.LocalAlertUtils
  * The action lives on the Android notification because that is the only surface the user sees during
  * a real hypo — the phone is usually locked and the app is not open.
  *
- * Reaches [LocalAlertUtils] through a Hilt entry point since a manifest [BroadcastReceiver] is not
- * itself injected (same pattern as [AlarmMuteReceiver]).
+ * Fills its own fields with `injectMetroMembers` because a manifest [BroadcastReceiver] is not
+ * constructed by a base class that injects (same pattern as [AlarmMuteReceiver]).
  */
 class HypoTreatedReceiver : BroadcastReceiver() {
 

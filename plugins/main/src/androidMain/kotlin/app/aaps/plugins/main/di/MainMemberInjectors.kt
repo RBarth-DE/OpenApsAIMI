@@ -3,6 +3,8 @@ package app.aaps.plugins.main.di
 import app.aaps.core.interfaces.di.FeatureMemberInjectors
 import app.aaps.plugins.main.general.dashboard.AdjustmentDetailsActivity
 import app.aaps.plugins.main.general.dashboard.AimiAdaptationStatusActivity
+import app.aaps.plugins.main.general.dashboard.AimiDashboardComposeRootView
+import app.aaps.plugins.main.general.dashboard.DashboardFragment
 import app.aaps.plugins.main.general.dashboard.LoopStateActivity
 import app.aaps.plugins.main.general.overview.boost.widget.BoostWidget
 import app.aaps.plugins.main.general.overview.boost.widget.BoostWidgetConfigureActivity
@@ -57,4 +59,19 @@ object MainMemberInjectors {
     @IntoMap
     @ClassKey(DismissNotificationReceiver::class)
     fun bindDismissNotificationReceiver(injector: MembersInjector<DismissNotificationReceiver>): MembersInjector<*> = injector
+
+    // The GLASS / DASHBOARD_V1 root view injects itself in onAttachedToWindow. Without this entry
+    // the first attach throws "No Metro binding for AimiDashboardComposeRootView".
+    @Provides
+    @FeatureMemberInjectors
+    @IntoMap
+    @ClassKey(AimiDashboardComposeRootView::class)
+    fun bindAimiDashboardComposeRootView(injector: MembersInjector<AimiDashboardComposeRootView>): MembersInjector<*> = injector
+
+    // DashboardFragment has @Inject fields but no parent that fills them - same as the view above.
+    @Provides
+    @FeatureMemberInjectors
+    @IntoMap
+    @ClassKey(DashboardFragment::class)
+    fun bindDashboardFragment(injector: MembersInjector<DashboardFragment>): MembersInjector<*> = injector
 }
