@@ -14,9 +14,12 @@ import app.aaps.core.interfaces.logging.AAPSLogger
 import app.aaps.core.interfaces.logging.LTag
 import app.aaps.core.interfaces.resources.ResourceHelper
 import app.aaps.core.interfaces.sharedPreferences.SP
+import app.aaps.core.ui.CoreUiStrings
 import app.aaps.core.ui.activities.TranslatedDaggerAppCompatActivity
+import app.aaps.core.ui.compose.formatMinutesAsDuration
 import app.aaps.core.ui.extensions.applySystemBarPadding
 import app.aaps.plugins.aps.R
+import app.aaps.plugins.aps.openAPSAIMI.context.ContextIntent
 import app.aaps.plugins.aps.openAPSAIMI.context.ContextManager
 import app.aaps.plugins.aps.openAPSAIMI.context.ContextPreset
 import app.aaps.plugins.aps.openAPSAIMI.patient.PatientStatePresentationBuilder
@@ -120,32 +123,19 @@ class ContextActivity : TranslatedDaggerAppCompatActivity() {
                         
                         if (ids.isNotEmpty()) {
                             binding.editChatInput.text?.clear()
-                            Toast.makeText(this@ContextActivity, "${ids.size} context(s) added", Toast.LENGTH_SHORT).show()
+                            val addedMsg = if (ids.size == 1) rh.gs(R.string.context_added_one)
+                            else rh.gs(R.string.context_added_many, ids.size)
+                            Toast.makeText(this@ContextActivity, addedMsg, Toast.LENGTH_SHORT).show()
                         } else {
                             // Feedback detailed on failure
                             val isLLMEnabled = sp.getBoolean(app.aaps.core.keys.BooleanKey.OApsAIMIContextLLMEnabled.key, false)
                             val provider = sp.getString(app.aaps.core.keys.StringKey.AimiAdvisorProvider.key, "OPENAI")
                             
-                            val msg = if (isLLMEnabled) {
-                                "No context detected via AI (\$provider).\n" +
-                                    "\n" +
-                                    "Possible causes:\n" +
-                                    "1. Missing or invalid API key (AIMI Preferences > Advisor)\n" +
-                                    "2. Network timeout\n" +
-                                    "3. Description too vague\n" +
-                                    "\n" +
-                                    "Fallback: Try simple keywords (e.g., ‘Sports 1h’, ‘Sick’)."
-                            } else {
-                                "No context detected based on keywords.\n" +
-                                    "Try some simple commands:\n" +
-                                    "- ‘1-hour cardio’\n" +
-                                    "- ‘Sick’\n" +
-                                    "- ‘Stress’\n" +
-                                    "- 'Surprise meal'"
-                            }
+                            val msg = if (isLLMEnabled) rh.gs(R.string.context_parse_empty_llm, provider)
+                            else rh.gs(R.string.context_parse_empty_keywords)
                             
                             MaterialAlertDialogBuilder(this@ContextActivity)
-                                .setTitle("Analysis failed")
+                                .setTitle(rh.gs(R.string.context_parse_empty_title))
                                 .setMessage(msg)
                                 .setPositiveButton(android.R.string.ok, null)
                                 .show()
@@ -153,7 +143,9 @@ class ContextActivity : TranslatedDaggerAppCompatActivity() {
                         
                         refreshUI()
                     } catch (e: Exception) {
-                        Toast.makeText(this@ContextActivity, "Error: ${e.message}", Toast.LENGTH_LONG).show()
+                        // The exception text is for the log only: it is technical and not translated.
+                        aapsLogger.error(LTag.APS, "Context parse failed", e)
+                        Toast.makeText(this@ContextActivity, rh.gs(R.string.context_add_failed), Toast.LENGTH_LONG).show()
                     } finally {
                         binding.progressParsing.visibility = View.GONE
                         binding.btnSendChat.isEnabled = true
@@ -170,12 +162,12 @@ class ContextActivity : TranslatedDaggerAppCompatActivity() {
         // Clear all button
         binding.btnClearAll.setOnClickListener {
             MaterialAlertDialogBuilder(this)
-                .setTitle("Delete all contexts?")
-                .setPositiveButton("Delete") { _, _ ->
+                .setTitle(rh.gs(R.string.context_confirm_clear_all_title))
+                .setPositiveButton(rh.gs(CoreUiStrings.delete)) { _, _ ->
                     contextManager.clearAll()
                     refreshUI()
                 }
-                .setNegativeButton("Cancel", null)
+                .setNegativeButton(rh.gs(CoreUiStrings.cancel), null)
                 .show()
         }
         
@@ -291,60 +283,57 @@ class ContextActivity : TranslatedDaggerAppCompatActivity() {
         activityScope.launch {
             try {
                 contextManager.addPreset(preset)
-                Toast.makeText(this@ContextActivity, "Context added", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this@ContextActivity, rh.gs(R.string.context_added_one), Toast.LENGTH_SHORT).show()
                 refreshUI()
             } catch (e: Exception) {
-                Toast.makeText(this@ContextActivity, "Error: ${e.message}", Toast.LENGTH_LONG).show()
+                // The exception text is for the log only: it is technical and not translated.
+                aapsLogger.error(LTag.APS, "Adding preset failed", e)
+                Toast.makeText(this@ContextActivity, rh.gs(R.string.context_add_failed), Toast.LENGTH_LONG).show()
             }
         }
     }
     
     private fun showExtendDialog(intentId: String) {
-        val options = arrayOf("15 min", "30 min", "1 hour", "2 hours")
         val durations = arrayOf(15, 30, 60, 120)
-        
+        val options = Array<CharSequence>(durations.size) { formatMinutesAsDuration(durations[it], rh) }
+
         MaterialAlertDialogBuilder(this)
-            .setTitle("Expand the context")
+            .setTitle(rh.gs(R.string.context_intent_extend_title))
             .setItems(options) { _, which ->
                 contextManager.extendDuration(intentId, durations[which].minutes)
                 refreshUI()
             }
-            .setNegativeButton("Cancel", null)
+            .setNegativeButton(rh.gs(CoreUiStrings.cancel), null)
             .show()
     }
     
-    private fun getTimeRemaining(intent: app.aaps.plugins.aps.openAPSAIMI.context.ContextIntent): String {
-        val now = System.currentTimeMillis()
-        val remaining = (intent.endTimeMs - now) / 1000 / 60 // minutes
-        
-        return when {
-            remaining <= 0 -> "Expired"
-            remaining < 60 -> "${remaining}minutes remaining"
-            else -> "${remaining / 60}h ${remaining % 60}min"
-        }
+    private fun getTimeRemaining(intent: ContextIntent): String {
+        val minutes = ((intent.endTimeMs - System.currentTimeMillis()) / 1000 / 60).toInt()
+        return if (minutes <= 0) rh.gs(R.string.context_intent_expired)
+        else rh.gs(CoreUiStrings.scene_time_remaining, formatMinutesAsDuration(minutes, rh))
     }
-    
-    private fun getDisplayString(intent: app.aaps.plugins.aps.openAPSAIMI.context.ContextIntent): String {
+
+    private fun getDisplayString(intent: ContextIntent): String {
         return when (intent) {
-            is app.aaps.plugins.aps.openAPSAIMI.context.ContextIntent.Activity -> 
+            is ContextIntent.Activity ->
                 "🏃 Activity: ${intent.activityType.name} ${intent.intensity.name}"
-            is app.aaps.plugins.aps.openAPSAIMI.context.ContextIntent.Illness -> 
+            is ContextIntent.Illness ->
                 "🤒 Illness: ${intent.symptomType.name} ${intent.intensity.name}"
-            is app.aaps.plugins.aps.openAPSAIMI.context.ContextIntent.Stress -> 
+            is ContextIntent.Stress ->
                 "😰 Stress: ${intent.stressType.name} ${intent.intensity.name}"
-            is app.aaps.plugins.aps.openAPSAIMI.context.ContextIntent.UnannouncedMealRisk -> 
+            is ContextIntent.UnannouncedMealRisk ->
                 "🍕 Meal Risk: ${intent.intensity.name}"
-            is app.aaps.plugins.aps.openAPSAIMI.context.ContextIntent.Alcohol -> 
+            is ContextIntent.Alcohol ->
                 "🍷 Alcohol: ${intent.units}U ${intent.intensity.name}"
-            is app.aaps.plugins.aps.openAPSAIMI.context.ContextIntent.Travel -> 
+            is ContextIntent.Travel ->
                 "✈️ Travel: ${intent.intensity.name}"
-            is app.aaps.plugins.aps.openAPSAIMI.context.ContextIntent.MenstrualCycle ->
+            is ContextIntent.MenstrualCycle ->
                 "🔄 Cycle: ${intent.phase.name}"
-            is app.aaps.plugins.aps.openAPSAIMI.context.ContextIntent.SlowCarbMeal ->
-                "🍕 Repas lent: ${intent.intensity.name}"
-            is app.aaps.plugins.aps.openAPSAIMI.context.ContextIntent.HypoRecovery ->
-                "🍬 Hypo récup: ${intent.intensity.name}"
-            is app.aaps.plugins.aps.openAPSAIMI.context.ContextIntent.Custom ->
+            is ContextIntent.SlowCarbMeal ->
+                rh.gs(R.string.context_intent_title_slow_carb, intent.intensity.name)
+            is ContextIntent.HypoRecovery ->
+                rh.gs(R.string.context_intent_title_hypo_recovery, intent.intensity.name)
+            is ContextIntent.Custom ->
                 "📝 ${intent.description}"
         }
     }

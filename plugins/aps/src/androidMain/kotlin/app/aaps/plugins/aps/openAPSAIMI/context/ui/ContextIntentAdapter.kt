@@ -61,9 +61,9 @@ class ContextIntentAdapter(
 
             // Confidence (if available)
             val confidenceText = when {
-                intent.confidence >= 0.90 -> "✓ Haute confiance"
-                intent.confidence >= 0.70 -> "~ Moyenne confiance"
-                intent.confidence >= 0.50 -> "? Faible confiance"
+                intent.confidence >= 0.90 -> textConfidence.context.getString(R.string.context_intent_confidence_high)
+                intent.confidence >= 0.70 -> textConfidence.context.getString(R.string.context_intent_confidence_medium)
+                intent.confidence >= 0.50 -> textConfidence.context.getString(R.string.context_intent_confidence_low)
                 else -> ""
             }
             textConfidence.text = confidenceText

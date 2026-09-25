@@ -4,74 +4,94 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginVertical="4dp"
-    app:cardElevation="2dp"
-    app:cardCornerRadius="8dp">
+    android:layout_marginVertical="2dp"
+    app:cardElevation="1dp"
+    app:cardCornerRadius="12dp">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="12dp">
+        android:padding="10dp">
 
-        <TextView
-            android:id="@+id/textIntentType"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:textAppearance="?attr/textAppearanceBodyLarge"
-            android:textStyle="bold"
-            tools:text="🏃 Activity: CARDIO HIGH"/>
-
+        <!-- Title and time remaining share the first line so the card stays short. -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:layout_marginTop="4dp"
             android:gravity="center_vertical">
 
             <TextView
-                android:id="@+id/textTimeRemaining"
+                android:id="@+id/textIntentType"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:textAppearance="?attr/textAppearanceBodyMedium"
-                android:textColor="?android:attr/textColorSecondary"
-                tools:text="45min left"/>
+                android:maxLines="1"
+                android:ellipsize="end"
+                style="@style/ContextPatientStateSectionTitle"
+                tools:text="🏃 Activity: CARDIO HIGH"/>
 
             <TextView
-                android:id="@+id/textConfidence"
+                android:id="@+id/textTimeRemaining"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textAppearance="?attr/textAppearanceBodySmall"
-                android:textColor="?android:attr/textColorSecondary"
-                tools:text="✓ High confidence"/>
+                android:layout_marginStart="8dp"
+                android:maxLines="1"
+                style="@style/ContextIntentTime"
+                tools:text="59 min remaining"/>
         </LinearLayout>
 
+        <!-- Confidence on the left, the two actions on the right. The actions are compact
+             text buttons: a full Material button is 40dp tall and would put the empty band
+             back under this line. -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:layout_marginTop="8dp">
+            android:layout_marginTop="2dp"
+            android:gravity="center_vertical">
 
-            <Button
-                android:id="@+id/btnExtend"
-                style="@style/Widget.Material3.Button.OutlinedButton"
+            <TextView
+                android:id="@+id/textConfidence"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Extend"
-                android:textSize="12sp"/>
+                android:maxLines="1"
+                android:ellipsize="end"
+                style="@style/ContextIntentMeta"
+                tools:text="✓ High confidence"/>
 
-            <Space
-                android:layout_width="8dp"
-                android:layout_height="1dp"/>
+            <Button
+                android:id="@+id/btnExtend"
+                style="@style/Widget.Material3.Button.TextButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:insetTop="0dp"
+                android:insetBottom="0dp"
+                android:minHeight="30dp"
+                android:minWidth="0dp"
+                android:paddingLeft="8dp"
+                android:paddingRight="8dp"
+                android:paddingTop="2dp"
+                android:paddingBottom="2dp"
+                android:text="@string/context_btn_extend"
+                android:textSize="12sp"/>
 
             <Button
                 android:id="@+id/btnRemove"
                 style="@style/Widget.Material3.Button.TextButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Remove"
+                android:layout_marginStart="4dp"
+                android:insetTop="0dp"
+                android:insetBottom="0dp"
+                android:minHeight="30dp"
+                android:minWidth="0dp"
+                android:paddingLeft="8dp"
+                android:paddingRight="8dp"
+                android:paddingTop="2dp"
+                android:paddingBottom="2dp"
+                android:text="@string/context_btn_remove"
                 android:textSize="12sp"
                 android:textColor="?attr/colorError"/>
         </LinearLayout>

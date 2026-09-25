@@ -123,7 +123,6 @@ class RawPreferenceStoreScanTest {
         "plugins/aps/src/androidMain/kotlin/app/aaps/plugins/aps/openAPSAIMI/context/ContextLLMClient.kt" to "AIMI context LLM settings in unregistered keys.",
         "plugins/aps/src/androidMain/kotlin/app/aaps/plugins/aps/openAPSAIMI/context/ContextManager.kt" to "AIMI context store in unregistered keys.",
         "plugins/aps/src/androidMain/kotlin/app/aaps/plugins/aps/openAPSAIMI/context/ui/ContextActivity.kt" to "AIMI context UI touches raw SP.",
-        "plugins/aps/src/androidMain/kotlin/app/aaps/plugins/aps/openAPSAIMI/context/ui/ContextViewModel.kt" to "AIMI context UI model touches raw SP.",
         "plugins/aps/src/androidMain/kotlin/app/aaps/plugins/aps/openAPSAIMI/llm/gemini/GeminiModelResolver.kt" to "AIMI Gemini model cache in unregistered keys.",
         "plugins/aps/src/androidMain/kotlin/app/aaps/plugins/aps/openAPSAIMI/physio/AIMILLMPhysioAnalyzerMTR.kt" to "AIMI physio analyzer state in unregistered keys.",
         "plugins/aps/src/androidMain/kotlin/app/aaps/plugins/aps/openAPSAIMI/physio/AIMIPhysioManagerMTR.kt" to "AIMI physio manager state in unregistered keys.",

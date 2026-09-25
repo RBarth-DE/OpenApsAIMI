@@ -1044,6 +1044,22 @@
     <string name="context_settings_title">Settings</string>
     <string name="context_module_enabled">Enable Context Module</string>
     <string name="context_llm_enabled">Enable AI Parsing (LLM)</string>
+    <string name="context_btn_extend">Extend</string>
+    <string name="context_btn_remove">Remove</string>
+    <string name="context_intent_extend_title">Extend the context</string>
+    <string name="context_intent_expired">Expired</string>
+    <string name="context_confirm_clear_all_title">Delete all contexts?</string>
+    <string name="context_add_failed">Could not add the context. Please try again.</string>
+    <string name="context_added_one">1 context added</string>
+    <string name="context_added_many" comment="%1$d=number of contexts added. Example: 3 contexts added">%1$d contexts added</string>
+    <string name="context_parse_empty_title">Analysis failed</string>
+    <string name="context_parse_empty_llm" comment="%1$s=AI provider name (e.g. OPENAI). Keep %1$s and the \n line breaks.">No context detected via AI (%1$s).\n\nPossible causes:\n1. Missing or invalid API key (AIMI Preferences &gt; Advisor)\n2. Network timeout\n3. Description too vague\n\nFallback: Try simple keywords (e.g. ‘Sports 1h’, ‘Sick’).</string>
+    <string name="context_parse_empty_keywords">No context detected based on keywords.\nTry some simple commands:\n- ‘1-hour cardio’\n- ‘Sick’\n- ‘Stress’\n- ‘Surprise meal’</string>
+    <string name="context_intent_confidence_high" comment="The leading ✓ is a status glyph, not punctuation. Keep it.">✓ High confidence</string>
+    <string name="context_intent_confidence_medium" comment="The leading ~ is a status glyph for medium confidence, not punctuation. Keep it.">~ Medium confidence</string>
+    <string name="context_intent_confidence_low" comment="The leading glyph is a status sign, not punctuation. Keep it and keep the backslash: a bare leading ? is read as a theme attribute and breaks the build. Example: \? Low confidence">\? Low confidence</string>
+    <string name="context_intent_title_slow_carb" comment="%1$s=intensity name (enum value). Example: 🍕 Slow carb meal: HIGH">🍕 Slow carb meal: %1$s</string>
+    <string name="context_intent_title_hypo_recovery" comment="%1$s=intensity name (enum value). Example: 🍊 Hypo recovery: MODERATE">🍬 Hypo recovery: %1$s</string>
     <string name="aimi_physio_title">🏥 Physiological Assistant</string>
     <string name="aimi_physio_enable_title">Enable Assistant</string>
     <string name="aimi_physio_enable_summary">Adjusts insulin using Health Connect vitals and a 28-pattern physiological catalogue (dawn, meals, stress, recovery). Does not enable or disable the physiological tree or Harmonia — those always run. Active patterns export to AIMI_Decisions.jsonl and feed RBT leaves and HTR caps.</string>
