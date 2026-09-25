@@ -37,6 +37,16 @@ fun isGlassDarkMode(): Boolean {
 }
 
 /**
+ * The vertical gradient brush every Glass screen uses as its background. Shared so screens that
+ * already handle their own insets (like the overview) can paint it without [GlassScreenBackground]'s
+ * `safeDrawingPadding`.
+ */
+fun glassScreenBackgroundBrush(isDark: Boolean): Brush =
+    Brush.verticalGradient(
+        listOf(GlassColors.screenBgTop(isDark), GlassColors.screenBgBottom(isDark), GlassColors.screenBgTop(isDark))
+    )
+
+/**
  * The vertical gradient background every Glass screen uses, wrapping the screen's scrollable content.
  */
 @Composable
@@ -48,11 +58,7 @@ fun GlassScreenBackground(
     Box(
         modifier = modifier
             .fillMaxSize()
-            .background(
-                Brush.verticalGradient(
-                    listOf(GlassColors.screenBgTop(isDark), GlassColors.screenBgBottom(isDark), GlassColors.screenBgTop(isDark))
-                )
-            )
+            .background(glassScreenBackgroundBrush(isDark))
     ) {
         Box(
             modifier = Modifier

@@ -33,6 +33,8 @@ import app.aaps.core.ui.compose.navigation.label
 import app.aaps.core.ui.compose.stringResourceOrNull
 import app.aaps.core.ui.compose.ttReasonColor
 import app.aaps.ui.compose.main.TempTargetChipState
+import app.aaps.ui.compose.overview.LocalOverviewGlass
+import app.aaps.ui.compose.overview.OverviewGlassChipFrame
 import androidx.compose.foundation.layout.fillMaxHeight
 
 /**
@@ -63,17 +65,7 @@ fun TempTargetChip(
     }
     val haptic = LocalHapticFeedback.current
 
-    Surface(
-        onClick = { haptic.performHapticFeedback(HapticFeedbackType.LongPress); onClick() },
-        enabled = enabled,
-        shape = RoundedCornerShape(AapsSpacing.chipCornerRadius),
-        color = containerColor,
-        shadowElevation = 0.dp,
-        tonalElevation = 0.dp,
-        modifier = modifier
-            .fillMaxWidth()
-            .height(AapsSpacing.chipHeight)
-    ) {
+    val content: @Composable () -> Unit = {
         Column (
             modifier = Modifier.fillMaxHeight()
         ){
@@ -117,6 +109,28 @@ fun TempTargetChip(
                 }
             }
         }
+    }
+    val glass = LocalOverviewGlass.current
+    if (glass.enabled) {
+        OverviewGlassChipFrame(
+            modifier = modifier
+                .fillMaxWidth()
+                .height(AapsSpacing.chipHeight),
+            onClick = { haptic.performHapticFeedback(HapticFeedbackType.LongPress); onClick() },
+            enabled = enabled
+        ) { content() }
+    } else {
+        Surface(
+            onClick = { haptic.performHapticFeedback(HapticFeedbackType.LongPress); onClick() },
+            enabled = enabled,
+            shape = RoundedCornerShape(AapsSpacing.chipCornerRadius),
+            color = containerColor,
+            shadowElevation = 0.dp,
+            tonalElevation = 0.dp,
+            modifier = modifier
+                .fillMaxWidth()
+                .height(AapsSpacing.chipHeight)
+        ) { content() }
     }
 }
 

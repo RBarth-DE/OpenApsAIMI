@@ -27,6 +27,8 @@ import app.aaps.core.ui.compose.AapsSpacing
 import app.aaps.core.ui.compose.navigation.color
 import app.aaps.core.ui.compose.navigation.icon
 import app.aaps.core.ui.compose.stringResource
+import app.aaps.ui.compose.overview.LocalOverviewGlass
+import app.aaps.ui.compose.overview.OverviewGlassChipFrame
 
 /**
  * @see IobChipPreview
@@ -55,14 +57,7 @@ internal fun IobChip(
         // Measured in ChipAnnouncementTest: the merged node keeps ContentDescription and Text side
         // by side, giving "IOB" then "1.20 U".
         val chipDescription = stringResource(CoreUiStrings.iob)
-        Surface(
-            onClick = { haptic.performHapticFeedback(HapticFeedbackType.LongPress); onClick() },
-            shape = RoundedCornerShape(AapsSpacing.chipCornerRadius),
-            color = if (hasValue) ElementType.INSULIN.color().copy(alpha = 0.2f) else Color.Transparent,
-            modifier = modifier
-                .heightIn(min = AapsSpacing.chipHeight)
-                .semantics { contentDescription = chipDescription }
-        ) {
+        val content: @Composable () -> Unit = {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.padding(horizontal = AapsSpacing.medium, vertical = AapsSpacing.small)
@@ -83,6 +78,23 @@ internal fun IobChip(
                     modifier = Modifier.padding(start = if (showIcon) AapsSpacing.medium else 0.dp)
                 )
             }
+        }
+        val chipModifier = modifier
+            .heightIn(min = AapsSpacing.chipHeight)
+            .semantics { contentDescription = chipDescription }
+        val glass = LocalOverviewGlass.current
+        if (glass.enabled) {
+            OverviewGlassChipFrame(
+                modifier = chipModifier,
+                onClick = { haptic.performHapticFeedback(HapticFeedbackType.LongPress); onClick() }
+            ) { content() }
+        } else {
+            Surface(
+                onClick = { haptic.performHapticFeedback(HapticFeedbackType.LongPress); onClick() },
+                shape = RoundedCornerShape(AapsSpacing.chipCornerRadius),
+                color = if (hasValue) ElementType.INSULIN.color().copy(alpha = 0.2f) else Color.Transparent,
+                modifier = chipModifier
+            ) { content() }
         }
     }
 }

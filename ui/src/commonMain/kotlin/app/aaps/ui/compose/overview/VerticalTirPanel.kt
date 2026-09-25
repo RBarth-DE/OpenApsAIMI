@@ -38,8 +38,9 @@ internal fun VerticalTirPanel(
     state: TirUiState,
     modifier: Modifier = Modifier
 ) {
+    OverviewGlassPanel(modifier = modifier) { frameModifier ->
     Column(
-        modifier = modifier.widthIn(min = 20.dp, max = 56.dp),
+        modifier = frameModifier.widthIn(min = 20.dp, max = 56.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(1.dp)
     ) {
@@ -65,7 +66,7 @@ internal fun VerticalTirPanel(
         Column(
             modifier = Modifier
                 .width(20.dp) //bar width
-                .height(126.dp)  // ~5 Buttons à 26dp + spacing
+                .height(117.dp)  // ~5 Buttons à 26dp + spacing
                 .clip(RoundedCornerShape(3.dp))
         ) {
             segments.forEach { (pct, color) ->
@@ -98,10 +99,14 @@ internal fun VerticalTirPanel(
         // Footer
         // Text("A1C", style = MaterialTheme.typography.labelSmall,
         //      color = MaterialTheme.colorScheme.onSurface)
-        Text(formatTemplate("%.1f%%", listOf(state.a1c)),
-             style = MaterialTheme.typography.labelMedium,
-             color = MaterialTheme.colorScheme.onSurface)
+        Text(
+            text = formatTemplate("%.1f%%", listOf(state.a1c)),
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSurface,
+            maxLines = 1
+        )
 
+    }
     }
 }
 

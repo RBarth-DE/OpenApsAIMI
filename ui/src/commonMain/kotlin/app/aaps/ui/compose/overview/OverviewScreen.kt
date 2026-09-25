@@ -16,6 +16,7 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -34,6 +35,8 @@ import app.aaps.core.interfaces.notifications.AapsNotification
 import app.aaps.core.interfaces.pump.BolusProgressState
 import app.aaps.core.keys.BooleanKey
 import app.aaps.core.ui.compose.LocalPreferences
+import app.aaps.core.ui.compose.glass.glassScreenBackgroundBrush
+import app.aaps.core.ui.compose.glass.isGlassDarkMode
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import app.aaps.core.ui.compose.isLandscape
@@ -141,7 +144,15 @@ fun OverviewScreen(
     // BOOST V5 state chip — appears automatically when BOOST is active APS
     val boostChip by chipsViewModel.boostChipState.collectAsStateWithLifecycle()
 
-    Box(modifier = modifier.fillMaxSize()) {
+    val glassLook by LocalPreferences.current.observe(BooleanKey.OverviewGlassLook).collectAsStateWithLifecycle()
+    val glass = OverviewGlassChrome(enabled = glassLook, isDark = isGlassDarkMode())
+
+    CompositionLocalProvider(LocalOverviewGlass provides glass) {
+    Box(
+        modifier = modifier
+            .fillMaxSize()
+            .then(if (glass.enabled) Modifier.background(glassScreenBackgroundBrush(glass.isDark)) else Modifier)
+    ) {
         if (isTablet) {
             OverviewScreenTablet(
                 tempTargetText = tempTargetText,
@@ -308,5 +319,6 @@ fun OverviewScreen(
             onDismissNotification = onDismissNotification,
             onNotificationActionClick = onNotificationActionClick
         )
+    }
     }
 }

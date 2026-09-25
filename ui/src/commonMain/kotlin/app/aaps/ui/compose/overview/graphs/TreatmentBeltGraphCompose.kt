@@ -36,6 +36,7 @@ import app.aaps.core.ui.compose.icons.IcClinicalNotes
 import app.aaps.core.ui.compose.icons.IcNote
 import app.aaps.core.ui.compose.stringResource
 import app.aaps.ui.UiStrings
+import com.patrykandpatrick.vico.compose.cartesian.axis.BaseAxis
 import com.patrykandpatrick.vico.compose.cartesian.CartesianChartHost
 import com.patrykandpatrick.vico.compose.cartesian.VicoScrollState
 import com.patrykandpatrick.vico.compose.cartesian.VicoZoomState
@@ -55,6 +56,7 @@ import com.patrykandpatrick.vico.compose.common.DrawingContext
 import com.patrykandpatrick.vico.compose.common.Fill
 import com.patrykandpatrick.vico.compose.common.Insets
 import com.patrykandpatrick.vico.compose.common.component.Component
+import com.patrykandpatrick.vico.compose.common.component.LineComponent
 import com.patrykandpatrick.vico.compose.common.component.ShapeComponent
 import com.patrykandpatrick.vico.compose.common.component.TextComponent
 import com.patrykandpatrick.vico.compose.common.component.rememberTextComponent
@@ -97,6 +99,12 @@ fun TreatmentBeltGraphCompose(
     zoomState: VicoZoomState,
     derivedTimeRange: Pair<Long, Long>?,
     nowTimestamp: Long,
+    // Classic keeps its invisible axis gutters: the bottom axis reserves a band under the strip
+    // (the BG chart is pulled up 16.dp over it) and the start-axis labels reserve height above it.
+    // The glass look has no stitch and shows the card edge, so both are dropped and the colored
+    // strip fills the whole chart box. The 30.dp left gutter stays so the time axis still lines
+    // up with the BG chart.
+    compactFill: Boolean = false,
     modifier: Modifier = Modifier
 ) {
     val dateUtil = LocalDateUtil.current
@@ -467,6 +475,51 @@ fun TreatmentBeltGraphCompose(
     // Time formatter and axis config — same as other graphs for alignment
     val timeFormatter = rememberTimeFormatter(minTimestamp)
     val bottomAxisItemPlacer = rememberBottomAxisItemPlacer(minTimestamp)
+    // Classic keeps both invisible axis gutters: the bottom axis reserves a band under the strip
+    // (the BG chart is pulled up 16.dp over it) and the start axis reserves label height above it.
+    // compactFill drops the bottom band (the glass stitch reclaims that height) but keeps the start
+    // axis gutter — a fixed 30.dp padding would not match the BG chart's Y-label gutter (label
+    // width + tick), and the grid would drift a few minutes against the BG chart.
+    val guidelineColor =
+        if (compactFill) MaterialTheme.colorScheme.outline.copy(alpha = 0.55f)
+        else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+    val bottomAxis = if (compactFill) {
+        HorizontalAxis.rememberBottom(
+            itemPlacer = bottomAxisItemPlacer,
+            label = null,
+            tick = null,
+            line = null,
+            guideline = LineComponent(fill = Fill(guidelineColor)),
+            size = BaseAxis.Size.Fixed(0.dp)
+        )
+    } else {
+        HorizontalAxis.rememberBottom(
+            valueFormatter = timeFormatter,
+            itemPlacer = bottomAxisItemPlacer,
+            label = null,
+            tick = null
+        )
+    }
+    val startAxis = if (compactFill) {
+        VerticalAxis.rememberStart(
+            label = rememberTextComponent(
+                style = TextStyle(color = Color.Transparent),
+                minWidth = TextComponent.MinWidth.fixed(30.dp)
+            ),
+            tick = rememberAxisTickComponent(fill = Fill(Color.Transparent)),
+            guideline = LineComponent(fill = Fill(guidelineColor)),
+            itemPlacer = remember { VerticalAxis.ItemPlacer.count({ 2 }) }
+        )
+    } else {
+        VerticalAxis.rememberStart(
+            label = rememberTextComponent(
+                style = TextStyle(color = Color.Transparent),
+                minWidth = TextComponent.MinWidth.fixed(30.dp)
+            ),
+            tick = rememberAxisTickComponent(fill = Fill(Color.Transparent)),
+            itemPlacer = remember { VerticalAxis.ItemPlacer.count({ 2 }) }
+        )
+    }
 
     // =========================================================================
     // Tap marker (tooltip on tap)
@@ -491,20 +544,8 @@ fun TreatmentBeltGraphCompose(
             marker = beltMarker,
             markerController = CartesianMarkerController.rememberToggleOnTap(),
             decorations = beltDecorations,
-            startAxis = VerticalAxis.rememberStart(
-                label = rememberTextComponent(
-                    style = TextStyle(color = Color.Transparent),
-                    minWidth = TextComponent.MinWidth.fixed(30.dp)
-                ),
-                tick = rememberAxisTickComponent(fill = Fill(Color.Transparent)),
-                itemPlacer = remember { VerticalAxis.ItemPlacer.count({ 2 }) }
-            ),
-            bottomAxis = HorizontalAxis.rememberBottom(
-                valueFormatter = timeFormatter,
-                itemPlacer = bottomAxisItemPlacer,
-                label = null,
-                tick = null
-            ),
+            startAxis = startAxis,
+            bottomAxis = bottomAxis,
             getXStep = { _, _, _ -> 1.0 }
         ),
         modelProducer = modelProducer,

@@ -25,6 +25,8 @@ import app.aaps.core.ui.compose.icons.IcTbrHigh
 import app.aaps.core.ui.compose.icons.IcTbrLow
 import app.aaps.core.ui.compose.navigation.label
 import app.aaps.core.ui.compose.stringResourceOrNull
+import app.aaps.ui.compose.overview.LocalOverviewGlass
+import app.aaps.ui.compose.overview.OverviewGlassChipFrame
 
 /**
  * @see TbrChipHighPreview
@@ -45,12 +47,7 @@ fun TbrChip(
     // isn't padded to 48dp and centered, which would inset it from the row's right edge
     // (same guard IobChip uses).
     CompositionLocalProvider(LocalMinimumInteractiveComponentSize provides Dp.Unspecified) {
-        Surface(
-            onClick = { haptic.performHapticFeedback(HapticFeedbackType.LongPress); onClick() },
-            shape = RoundedCornerShape(AapsSpacing.chipCornerRadius),
-            color = containerColor,
-            modifier = modifier.height(AapsSpacing.chipHeight)
-        ) {
+        val content: @Composable () -> Unit = {
             Box(
                 contentAlignment = Alignment.Center,
                 modifier = Modifier.padding(horizontal = AapsSpacing.medium)
@@ -62,6 +59,20 @@ fun TbrChip(
                     modifier = Modifier.size(AapsSpacing.chipIconSize)
                 )
             }
+        }
+        val glass = LocalOverviewGlass.current
+        if (glass.enabled) {
+            OverviewGlassChipFrame(
+                modifier = modifier.height(AapsSpacing.chipHeight),
+                onClick = { haptic.performHapticFeedback(HapticFeedbackType.LongPress); onClick() }
+            ) { content() }
+        } else {
+            Surface(
+                onClick = { haptic.performHapticFeedback(HapticFeedbackType.LongPress); onClick() },
+                shape = RoundedCornerShape(AapsSpacing.chipCornerRadius),
+                color = containerColor,
+                modifier = modifier.height(AapsSpacing.chipHeight)
+            ) { content() }
         }
     }
 }

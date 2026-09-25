@@ -51,6 +51,7 @@ import app.aaps.core.ui.compose.LocalDateUtil
 import app.aaps.core.ui.compose.icons.IcProfile
 import app.aaps.core.ui.compose.stringResource
 import app.aaps.ui.UiStrings
+import app.aaps.ui.compose.overview.LocalOverviewGlass
 import com.patrykandpatrick.vico.compose.cartesian.CartesianChartHost
 import com.patrykandpatrick.vico.compose.cartesian.VicoScrollState
 import com.patrykandpatrick.vico.compose.cartesian.VicoZoomState
@@ -213,6 +214,12 @@ fun BgGraphCompose(
     val chartConfig by viewModel.chartConfigFlow.collectAsStateWithLifecycle()
     val generalUnits by viewModel.generalUnits.collectAsStateWithLifecycle()
     val vicoChartLook by viewModel.vicoChartLookFlow.collectAsStateWithLifecycle()
+    val glass = LocalOverviewGlass.current
+    // Glass draws the chart over a translucent gradient. The classic guideline color is too faint
+    // there, so use the stronger outline color to keep the grid visible.
+    val guidelineColor =
+        if (glass.enabled) MaterialTheme.colorScheme.outline.copy(alpha = 0.55f)
+        else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
 
     // Y-axis matches legacy GraphView: display units (mg/dL or mmol/L per General → Units).
     // [BgDataPoint.value] / target line / DB remain mg/dL; convert at Vico series build.
@@ -1024,7 +1031,7 @@ fun BgGraphCompose(
                     style = TextStyle(color = MaterialTheme.colorScheme.onSurface),
                     minWidth = TextComponent.MinWidth.fixed(30.dp)
                 ),
-                guideline = LineComponent(fill = Fill(MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)))
+                guideline = LineComponent(fill = Fill(guidelineColor))
             ),
             bottomAxis = HorizontalAxis.rememberBottom(
                 valueFormatter = timeFormatter,
@@ -1032,7 +1039,7 @@ fun BgGraphCompose(
                 label = rememberTextComponent(
                     style = TextStyle(color = MaterialTheme.colorScheme.onSurface)
                 ),
-                guideline = LineComponent(fill = Fill(MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)))
+                guideline = LineComponent(fill = Fill(guidelineColor))
             ),
             decorations = decorations,
             marker = if (dashboardSmbTapController != null) dashboardSmbTapMarker else null,

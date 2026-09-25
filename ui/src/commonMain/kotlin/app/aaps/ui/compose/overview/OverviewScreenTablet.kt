@@ -1,6 +1,7 @@
 package app.aaps.ui.compose.overview
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -118,11 +119,18 @@ fun OverviewScreenTablet(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        BgInfoSection(
-                            bgInfo = bgInfoState.bgInfo,
-                            timeAgoText = bgInfoState.timeAgoText,
-                            showTimeAgo = false
-                        )
+                        OverviewGlassPanel(
+                            modifier = Modifier,
+                            contentPadding = PaddingValues(AapsSpacing.extraSmall)
+                        ) { panelModifier ->
+                            Box(modifier = panelModifier) {
+                                BgInfoSection(
+                                    bgInfo = bgInfoState.bgInfo,
+                                    timeAgoText = bgInfoState.timeAgoText,
+                                    showTimeAgo = false
+                                )
+                            }
+                        }
                     }
 
                     Column(

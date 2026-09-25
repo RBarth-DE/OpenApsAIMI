@@ -36,6 +36,7 @@ import app.aaps.core.ui.compose.LocalDateUtil
 import app.aaps.core.ui.compose.LocalDecimalFormatter
 import app.aaps.core.ui.compose.stringResource
 import app.aaps.ui.UiStrings
+import app.aaps.ui.compose.overview.LocalOverviewGlass
 import com.patrykandpatrick.vico.compose.cartesian.CartesianChartHost
 import com.patrykandpatrick.vico.compose.cartesian.CartesianDrawingContext
 import com.patrykandpatrick.vico.compose.cartesian.CartesianMeasuringContext
@@ -777,6 +778,12 @@ fun SecondaryGraphCompose(
     val nowLineColor = MaterialTheme.colorScheme.onSurface
     val nowLine = rememberNowLine(minTimestamp, nowTimestamp, nowLineColor)
     val decorations = remember(nowLine, visibleRangeReporter) { listOf(nowLine, visibleRangeReporter) }
+    val glass = LocalOverviewGlass.current
+    // Glass draws the chart over a translucent gradient. The classic guideline color is too faint
+    // there, so use the stronger outline color to keep the grid visible.
+    val guidelineColor =
+        if (glass.enabled) MaterialTheme.colorScheme.outline.copy(alpha = 0.55f)
+        else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
 
     // Union of Y values across all primary-layer series (IOB, COB, simple series, DevSlope-min,
     // deviation lines), windowed to the visible scroll/zoom range — computed once here since the
@@ -1031,7 +1038,7 @@ fun SecondaryGraphCompose(
             style = TextStyle(color = MaterialTheme.colorScheme.onSurface),
             minWidth = TextComponent.MinWidth.fixed(30.dp)
         ),
-        guideline = LineComponent(fill = Fill(MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))),
+        guideline = LineComponent(fill = Fill(guidelineColor)),
         valueFormatter = if (primaryType == SeriesType.MHS) MHB_AXIS_VALUE_FORMATTER else remember { CartesianValueFormatter.decimal() }
     )
     val bottomAxis = HorizontalAxis.rememberBottom(
@@ -1040,7 +1047,7 @@ fun SecondaryGraphCompose(
         label = rememberTextComponent(
             style = TextStyle(color = MaterialTheme.colorScheme.onSurface)
         ),
-        guideline = LineComponent(fill = Fill(MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)))
+        guideline = LineComponent(fill = Fill(guidelineColor))
     )
 
     if (hasBasalLayer) {

@@ -1,18 +1,15 @@
 package app.aaps.ui.compose.overview
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -113,6 +110,7 @@ fun OverviewScreenStacked(
     val statusPanelState by graphViewModel.statusPanelFlow.collectAsStateWithLifecycle()
     val auditorState by graphViewModel.auditorStateFlow.collectAsStateWithLifecycle()
     val screenOpener = LocalScreenOpener.current
+    val glass = LocalOverviewGlass.current
 
     var statusExpanded by rememberSaveable { mutableStateOf(false) }
 
@@ -136,30 +134,47 @@ fun OverviewScreenStacked(
         val isAIMIActive by graphViewModel.isAIMIActiveFlow.collectAsStateWithLifecycle()
         val isAutoISFActive by graphViewModel.isAutoIsfActiveFlow.collectAsStateWithLifecycle()
 
+        // With the glass look the top block and the cards below share one side inset, and the
+        // four items in this row sit 4.dp apart. Classic keeps its old mixed spacing.
+        val topSide = if (glass.enabled) OverviewGlassSideInset else 8.dp
+        val cardSide = if (glass.enabled) OverviewGlassSideInset else 4.dp
+        val midGap = if (glass.enabled) AapsSpacing.small else 8.dp
+        val tirGap = if (glass.enabled) 0.dp else 2.dp
+        // Glass shrinks the side blocks so the pills keep enough width for readable text.
+        val bgMax = if (glass.enabled) 145.dp else 154.dp
+        val tirWidth = if (glass.enabled) 32.dp else 36.dp
+        val tilesWidth = if (glass.enabled) 48.dp else 52.dp
+
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 8.dp, vertical = 8.dp),
+                .padding(horizontal = topSide, vertical = 8.dp),
             verticalAlignment = Alignment.Top
         ) {
-            Box (modifier = Modifier.widthIn(max = 154.dp)) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    BgInfoSection(
-                        bgInfo = bgInfoState.bgInfo,
-                        timeAgoText = bgInfoState.timeAgoText
-                    )
-                    SensitivityChipBlock(state = sensitivityUiState)
-                }
-                if( isAIMIActive && screenOpener.isAvailable ) {
-                    AuditorIconButton(
-                        state = auditorState,
-                        modifier = Modifier
-                            .align(Alignment.TopEnd)
-                            .offset(x = 8.dp, y = (-4).dp),
-                    ) {
-                        screenOpener.open("app.aaps.plugins.aps.openAPSAIMI.advisor.auditor.ui.AuditorVerdictActivity")
+            Box (modifier = Modifier.widthIn(max = bgMax)) {
+                // One glass card around ring + autosense values
+                OverviewGlassPanel(
+                    modifier = Modifier,
+                    contentPadding = PaddingValues(AapsSpacing.extraSmall)
+                ) { panelModifier ->
+                    Box(modifier = panelModifier) {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            BgInfoSection(
+                                bgInfo = bgInfoState.bgInfo,
+                                timeAgoText = bgInfoState.timeAgoText
+                            )
+                            SensitivityChipBlock(state = sensitivityUiState)
+                        }
+                        if (isAIMIActive && screenOpener.isAvailable) {
+                            AuditorIconButton(
+                                state = auditorState,
+                                modifier = Modifier.align(Alignment.TopEnd)
+                            ) {
+                                screenOpener.open("app.aaps.plugins.aps.openAPSAIMI.advisor.auditor.ui.AuditorVerdictActivity")
+                            }
+                        }
                     }
                 }
             }
@@ -168,10 +183,9 @@ fun OverviewScreenStacked(
             Column(
                 modifier = Modifier
                     .weight(1f)
-                    .padding(horizontal = 8.dp),
+                    .padding(horizontal = midGap),
                 verticalArrangement = Arrangement.spacedBy(2.dp)
             ) {
-                // runnning mode + temp target
                 OverviewChipsColumn(
                     runningMode = runningMode,
                     runningModeText = runningModeText,
@@ -198,15 +212,15 @@ fun OverviewScreenStacked(
             VerticalTirPanel(
                 state = tirState,
                 modifier = Modifier
-                    .padding(horizontal = 2.dp)
-                    .width(30.dp)
+                    .padding(horizontal = tirGap)
+                    .width(tirWidth)
                     .heightIn(min = 100.dp, max = 200.dp)
             )
             // Right: AIMI quick action tiles
             Column(
                 modifier = Modifier
                     .padding(start = 4.dp)
-                    .width(40.dp),
+                    .width(tilesWidth),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(2.dp)
             ) {
@@ -252,7 +266,8 @@ fun OverviewScreenStacked(
             onNavigate = onNavigate,
             statusLightsDef = statusLightsDef,
             expanded = statusExpanded,
-            onExpandedChange = { statusExpanded = it }
+            onExpandedChange = { statusExpanded = it },
+            sidePadding = cardSide
         )
 
         if (config.AAPSCLIENT) {
@@ -264,7 +279,8 @@ fun OverviewScreenStacked(
             }
             AapsClientStatusCard(
                 statusData = nsClientStatus,
-                flavorTint = flavorTint
+                flavorTint = flavorTint,
+                sidePadding = cardSide
             )
         }
 
@@ -332,12 +348,9 @@ private fun StatusChip(
     chipColor: Color,
     modifier: Modifier = Modifier
 ) {
-    Surface(
-        shape = RoundedCornerShape(AapsSpacing.chipCornerRadius),
-        modifier = modifier
-            .fillMaxWidth()
-            .height(AapsSpacing.chipHeight)
-    ) {
+    val glass = LocalOverviewGlass.current
+    val shape = RoundedCornerShape(AapsSpacing.chipCornerRadius)
+    val content: @Composable () -> Unit = {
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.padding(horizontal = AapsSpacing.small, vertical = 0.dp)
@@ -362,6 +375,25 @@ private fun StatusChip(
                     .padding(start = AapsSpacing.small)
                     .weight(1f)
             )
+        }
+    }
+    if (glass.enabled) {
+        OverviewGlassChipFrame(
+            modifier = modifier
+                .fillMaxWidth()
+                .height(AapsSpacing.chipHeight),
+            shape = shape
+        ) {
+            content()
+        }
+    } else {
+        Surface(
+            shape = shape,
+            modifier = modifier
+                .fillMaxWidth()
+                .height(AapsSpacing.chipHeight)
+        ) {
+            content()
         }
     }
 }
@@ -400,26 +432,42 @@ internal fun AimiQuickTile(
     onClick: () -> Unit,
 ) {
     val accent = elementType.color()
-    Column(
-        modifier = modifier.clickable(onClick = onClick),
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        TonalIcon(
-            icon = elementType.icon(),
-            color = accent,
-            modifier = Modifier.size(36.dp),
-        )
-        Text(
-            text = label,
-            style = MaterialTheme.typography.labelSmall.copy(
-                fontSize = MaterialTheme.typography.labelSmall.fontSize * 0.8
-            ),
-            color = accent,
-            textAlign = TextAlign.Center,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.padding(start = 2.dp, end = 2.dp),
-        )
+    val content: @Composable () -> Unit = {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.padding(horizontal = 4.dp)
+        ) {
+            TonalIcon(
+                icon = elementType.icon(),
+                color = accent,
+                modifier = Modifier.size(36.dp),
+            )
+            Text(
+                text = label,
+                style = MaterialTheme.typography.labelSmall.copy(
+                    fontSize = MaterialTheme.typography.labelSmall.fontSize * 0.8
+                ),
+                color = accent,
+                textAlign = TextAlign.Center,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
+    }
+    val glass = LocalOverviewGlass.current
+    if (glass.enabled) {
+        OverviewGlassChipFrame(
+            modifier = modifier,
+            shape = RoundedCornerShape(13.dp),
+            onClick = onClick
+        ) { content() }
+    } else {
+        Column(
+            modifier = modifier.clickable(onClick = onClick),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            content()
+        }
     }
 }
 

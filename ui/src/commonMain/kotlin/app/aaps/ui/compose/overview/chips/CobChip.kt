@@ -30,6 +30,8 @@ import app.aaps.core.ui.compose.AapsSpacing
 import app.aaps.core.ui.compose.navigation.color
 import app.aaps.core.ui.compose.navigation.icon
 import app.aaps.core.ui.compose.stringResource
+import app.aaps.ui.compose.overview.LocalOverviewGlass
+import app.aaps.ui.compose.overview.OverviewGlassChipFrame
 
 /**
  * @see CobChipPreview
@@ -70,14 +72,7 @@ internal fun CobChip(
     // beside the children rather than replacing them, so repeating the value says it twice.
     // See ChipAnnouncementTest.
     val chipDescription = stringResource(CoreUiStrings.cob)
-    Surface(
-        shape = RoundedCornerShape(AapsSpacing.chipCornerRadius),
-        color = if (hasValue) ElementType.COB.color().copy(alpha = 0.2f) else Color.Transparent,
-        modifier = modifier
-            .heightIn(min = AapsSpacing.chipHeight)
-            // This chip has no onClick, so unlike its siblings it does not merge on its own.
-            .semantics(mergeDescendants = true) { contentDescription = chipDescription }
-    ) {
+    val content: @Composable () -> Unit = {
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.padding(horizontal = AapsSpacing.medium, vertical = AapsSpacing.small)
@@ -103,5 +98,19 @@ internal fun CobChip(
                     .basicMarquee()
             )
         }
+    }
+    val chipModifier = modifier
+        .heightIn(min = AapsSpacing.chipHeight)
+        // This chip has no onClick, so unlike its siblings it does not merge on its own.
+        .semantics(mergeDescendants = true) { contentDescription = chipDescription }
+    val glass = LocalOverviewGlass.current
+    if (glass.enabled) {
+        OverviewGlassChipFrame(modifier = chipModifier) { content() }
+    } else {
+        Surface(
+            shape = RoundedCornerShape(AapsSpacing.chipCornerRadius),
+            color = if (hasValue) ElementType.COB.color().copy(alpha = 0.2f) else Color.Transparent,
+            modifier = chipModifier
+        ) { content() }
     }
 }

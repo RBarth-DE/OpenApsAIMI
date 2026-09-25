@@ -21,8 +21,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -42,6 +40,7 @@ import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import app.aaps.core.interfaces.navigation.ElementType
 import app.aaps.core.ui.CoreUiStrings
@@ -74,27 +73,35 @@ fun OverviewStatusSection(
     statusLightsDef: PreferenceSubScreenDef,
     expanded: Boolean,
     onExpandedChange: (Boolean) -> Unit,
+    sidePadding: Dp = 4.dp,
     modifier: Modifier = Modifier
 ) {
     val items = listOfNotNull(cannulaStatus, insulinStatus, sensorStatus, batteryStatus)
     if (items.isEmpty()) return
     val compactItems = items.filter { it.compactAge || (it.compactLevel && it.level != null) }
+    val glass = LocalOverviewGlass.current
+    // A spacedBy gap still sits under the zero-height expanded block when the card is collapsed,
+    // so the content is not centred. Glass moves that gap inside the expanded block, where it only
+    // exists while the card is open. Classic keeps its old arrangement.
+    val bodyGap = if (glass.enabled) Modifier.padding(top = 8.dp) else Modifier
+    val columnArrangement = if (glass.enabled) Arrangement.Top else Arrangement.spacedBy(8.dp)
 
     var showSettingsSheet by rememberSaveable { mutableStateOf(false) }
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
-    ElevatedCard(
+    OverviewGlassCard(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 4.dp),
-        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 1.dp),
-        colors = CardDefaults.elevatedCardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainerLow
-        )
+            .padding(horizontal = sidePadding)
     ) {
         Column(
-            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            modifier = Modifier.padding(
+                horizontal = 8.dp,
+                // Glass tightens the row so the collapsed card is only a little taller than its
+                // content. Classic keeps its old padding.
+                vertical = if (glass.enabled) 2.dp else 4.dp
+            ),
+            verticalArrangement = columnArrangement
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -143,7 +150,10 @@ fun OverviewStatusSection(
                         imageVector = Icons.Filled.ExpandMore,
                         contentDescription = stringResource(CoreUiStrings.expand),
                         tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.clickable { onExpandedChange(true) }
+                        // Glass matches the 20.dp status icons so the chevron does not set the row height.
+                        modifier = Modifier
+                            .then(if (glass.enabled) Modifier.size(20.dp) else Modifier)
+                            .clickable { onExpandedChange(true) }
                     )
                 }
             }
@@ -153,7 +163,10 @@ fun OverviewStatusSection(
                 enter = fadeIn() + expandVertically(),
                 exit = fadeOut() + shrinkVertically()
             ) {
-                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Column(
+                    modifier = bodyGap,
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
                     StatusSectionContent(
                         sensorStatus = sensorStatus,
                         insulinStatus = insulinStatus,

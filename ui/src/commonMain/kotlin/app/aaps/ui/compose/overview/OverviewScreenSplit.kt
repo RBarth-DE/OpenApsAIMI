@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
@@ -30,6 +29,7 @@ import app.aaps.core.data.model.RM
 import app.aaps.core.data.model.TT
 import app.aaps.core.interfaces.navigation.ElementType
 import app.aaps.core.ui.CoreUiStrings
+import app.aaps.core.ui.compose.AapsSpacing
 import app.aaps.core.ui.compose.AapsTheme
 import app.aaps.core.ui.compose.LocalConfig
 import app.aaps.core.ui.compose.LocalScreenOpener
@@ -83,6 +83,7 @@ fun OverviewScreenSplit(
     val statusPanelState by graphViewModel.statusPanelFlow.collectAsStateWithLifecycle()
     val auditorState by graphViewModel.auditorStateFlow.collectAsStateWithLifecycle()
     val screenOpener = LocalScreenOpener.current
+    val glass = LocalOverviewGlass.current
 
     var statusExpanded by rememberSaveable { mutableStateOf(true) }
 
@@ -118,6 +119,15 @@ fun OverviewScreenSplit(
                     .padding(end = 4.dp),
                 verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
+                // Same top-block spacing as the stacked layout: 4.dp between the four items
+                // when the glass look is on, classic keeps its old mixed spacing.
+                val midGap = if (glass.enabled) AapsSpacing.small else 8.dp
+                val tirGap = if (glass.enabled) 0.dp else 2.dp
+                // Glass shrinks the side blocks so the pills keep enough width for readable text.
+                val bgMax = if (glass.enabled) 145.dp else 154.dp
+                val tirWidth = if (glass.enabled) 32.dp else 36.dp
+                val tilesWidth = if (glass.enabled) 48.dp else 52.dp
+
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -125,22 +135,27 @@ fun OverviewScreenSplit(
                     verticalAlignment = Alignment.Top
                 ) {
                     // Left: BG Info + sensitivity chip
-                    Box (modifier = Modifier.widthIn(max = 154.dp)) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            BgInfoSection(
-                                bgInfo = bgInfoState.bgInfo,
-                                timeAgoText = bgInfoState.timeAgoText
-                            )
-                            SensitivityChipBlock(state = sensitivityUiState)
-                        }
-                        if( isAIMIActive && screenOpener.isAvailable ) {
-                            AuditorIconButton(
-                                state = auditorState,
-                                modifier = Modifier
-                                    .align(Alignment.TopEnd)
-                                    .offset(x = 8.dp, y = (-4).dp),
-                            ) {
-                                screenOpener.open("app.aaps.plugins.aps.openAPSAIMI.advisor.auditor.ui.AuditorVerdictActivity")
+                    Box (modifier = Modifier.widthIn(max = bgMax)) {
+                        OverviewGlassPanel(
+                            modifier = Modifier,
+                            contentPadding = PaddingValues(AapsSpacing.extraSmall)
+                        ) { panelModifier ->
+                            Box(modifier = panelModifier) {
+                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                    BgInfoSection(
+                                        bgInfo = bgInfoState.bgInfo,
+                                        timeAgoText = bgInfoState.timeAgoText
+                                    )
+                                    SensitivityChipBlock(state = sensitivityUiState)
+                                }
+                                if (isAIMIActive && screenOpener.isAvailable) {
+                                    AuditorIconButton(
+                                        state = auditorState,
+                                        modifier = Modifier.align(Alignment.TopEnd)
+                                    ) {
+                                        screenOpener.open("app.aaps.plugins.aps.openAPSAIMI.advisor.auditor.ui.AuditorVerdictActivity")
+                                    }
+                                }
                             }
                         }
                     }
@@ -149,7 +164,7 @@ fun OverviewScreenSplit(
                     Column(
                         modifier = Modifier
                             .weight(1f)
-                            .padding(horizontal = 8.dp),
+                            .padding(horizontal = midGap),
                         verticalArrangement = Arrangement.spacedBy(2.dp)
                     ) {
                         OverviewChipsColumn(
@@ -186,8 +201,8 @@ fun OverviewScreenSplit(
                     VerticalTirPanel(
                         state = tirState,
                         modifier = Modifier
-                            .padding(horizontal = 2.dp)
-                            .width(30.dp)
+                            .padding(horizontal = tirGap)
+                            .width(tirWidth)
                             .heightIn(min = 100.dp, max = 200.dp)
                     )
 
@@ -196,7 +211,7 @@ fun OverviewScreenSplit(
                         Column(
                             modifier = Modifier
                                 .padding(start = 4.dp)
-                                .width(40.dp),
+                                .width(tilesWidth),
                             horizontalAlignment = Alignment.CenterHorizontally,
                             verticalArrangement = Arrangement.spacedBy(2.dp)
                         ) {

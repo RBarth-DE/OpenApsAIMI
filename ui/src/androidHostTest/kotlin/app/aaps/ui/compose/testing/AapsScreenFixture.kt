@@ -9,6 +9,7 @@ import app.aaps.core.interfaces.resources.ResourceHelper
 import app.aaps.core.interfaces.resources.TextRefIdRegistry
 import app.aaps.core.interfaces.utils.DateUtil
 import app.aaps.core.interfaces.utils.DecimalFormatter
+import app.aaps.core.keys.BooleanKey
 import app.aaps.core.keys.StringKey
 import app.aaps.core.keys.interfaces.Preferences
 import app.aaps.core.ui.compose.AapsTheme
@@ -62,6 +63,7 @@ class AapsScreenFixture(
     init {
         TextRefIdRegistry.register("ui") { name -> UiStringIds.idOf(name) }
         whenever(preferences.observe(StringKey.GeneralDarkMode)).thenReturn(MutableStateFlow("light"))
+        whenever(preferences.observe(BooleanKey.OverviewGlassLook)).thenReturn(MutableStateFlow(false))
         whenever(config.AAPSCLIENT).thenReturn(false)
         // Graph axis labels go through this, and a mock's null lands as an NPE inside the chart.
         whenever(decimalFormatter.to0Decimal(any())).thenAnswer { fixed(it.arguments[0] as Double, 0) }

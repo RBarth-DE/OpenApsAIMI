@@ -7,6 +7,8 @@
 
     <string name="pref_title_keep_screen_on">Keep screen on</string>
     <string name="pref_summary_keep_screen_on">Prevent Android to turn screen off. It will consume lot of energy when not plugged to power outlet.</string>
+    <string name="pref_title_overview_glass_look">Glass look for overview dashboard</string>
+    <string name="pref_summary_overview_glass_look">Show the overview home with glass cards and a gradient background. Does not change the glass dashboard skin.</string>
     <string name="pref_title_overview_use_dashboard_layout">Use dashboard as home</string>
     <string name="pref_summary_overview_use_dashboard_layout">Use the AIMI hybrid dashboard as the main home content. In the modern (Compose) UI, search, Manage and the bottom bar stay available; in classic UI this switches the Home tab between dashboard and legacy overview.</string>
     <string name="pref_title_overview_show_hybrid_aimi_pulse">Show last AIMI run on dashboard</string>

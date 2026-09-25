@@ -1,6 +1,7 @@
 package app.aaps.ui.compose.overview.chips
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.heightIn
@@ -33,6 +34,7 @@ import app.aaps.core.ui.compose.icons.IcAsX
 import app.aaps.core.ui.compose.navigation.color
 import app.aaps.core.ui.compose.navigation.label
 import app.aaps.core.ui.compose.stringResourceOrNull
+import app.aaps.ui.compose.overview.LocalOverviewGlass
 
 /**
  * @see SensitivityChipAbovePreview
@@ -47,13 +49,7 @@ internal fun SensitivityChip(
 ) {
     val icon = selectSensIcon(ratio = state.ratio, isEnabled = state.isEnabled)
     val textColor = MaterialTheme.colorScheme.onSurfaceVariant
-    Surface(
-        shape = RoundedCornerShape(AapsSpacing.chipCornerRadius),
-        color = ElementType.SENSITIVITY.color().copy(alpha = 0.2f),
-        modifier = modifier
-            .heightIn(min = AapsSpacing.chipHeight)
-            .clickable(onClick = onClick)
-    ) {
+    val content: @Composable () -> Unit = {
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.padding(horizontal = AapsSpacing.medium, vertical = AapsSpacing.small)
@@ -94,6 +90,20 @@ internal fun SensitivityChip(
                 )
             }
         }
+    }
+    val chipModifier = modifier
+        .heightIn(min = AapsSpacing.chipHeight)
+        .clickable(onClick = onClick)
+    val glass = LocalOverviewGlass.current
+    if (glass.enabled) {
+        // No own frame: the ring + autosense glass panel already wraps this chip.
+        Box(modifier = chipModifier) { content() }
+    } else {
+        Surface(
+            shape = RoundedCornerShape(AapsSpacing.chipCornerRadius),
+            color = ElementType.SENSITIVITY.color().copy(alpha = 0.2f),
+            modifier = chipModifier
+        ) { content() }
     }
 }
 

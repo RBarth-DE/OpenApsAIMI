@@ -67,6 +67,11 @@ enum class BooleanKey(
         KeysStrings.pref_title_overview_use_dashboard_layout,
         KeysStrings.pref_summary_overview_use_dashboard_layout
     ),
+    OverviewGlassLook(
+        key = "overview_glass_look", defaultValue = false,
+        title = KeysStrings.pref_title_overview_glass_look,
+        summary = KeysStrings.pref_summary_overview_glass_look
+    ),
     OverviewShowCalibrationButton(
         key = "show_calibration_button",
         defaultValue = false,

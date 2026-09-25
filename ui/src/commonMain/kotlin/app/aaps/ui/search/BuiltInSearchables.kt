@@ -106,6 +106,7 @@ class BuiltInSearchables(
                     className to TextRef.AndroidRes(labelResId)
                 }
             ),
+            BooleanKey.OverviewGlassLook,
 
             // Range settings subscreen
             PreferenceSubScreenDef(

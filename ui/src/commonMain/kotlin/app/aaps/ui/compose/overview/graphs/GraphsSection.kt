@@ -60,6 +60,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.PointerEventTimeoutCancellationException
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalViewConfiguration
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
@@ -68,6 +69,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.TextUnitType
 import androidx.compose.ui.unit.dp
@@ -83,11 +85,15 @@ import app.aaps.core.interfaces.overview.graph.SeriesType
 import app.aaps.core.interfaces.resources.formatTemplate
 import app.aaps.core.keys.interfaces.TextRef
 import app.aaps.core.ui.CoreUiStrings
+import app.aaps.core.ui.compose.AapsSpacing
 import app.aaps.core.ui.compose.AapsTheme
 import app.aaps.core.ui.compose.LocalDateUtil
 import app.aaps.core.ui.compose.LocalScreenOpener
 import app.aaps.core.ui.compose.NumberInputRow
 import app.aaps.core.ui.compose.stringResource
+import app.aaps.ui.compose.overview.LocalOverviewGlass
+import app.aaps.ui.compose.overview.OverviewGlassPanel
+import app.aaps.ui.compose.overview.OverviewGlassSideInset
 import com.patrykandpatrick.vico.compose.cartesian.Scroll
 import com.patrykandpatrick.vico.compose.cartesian.Zoom
 import com.patrykandpatrick.vico.compose.cartesian.rememberVicoScrollState
@@ -202,6 +208,25 @@ internal fun Modifier.interceptLongPress(
         }
     }
 }
+
+/**
+ * Moves the content up and shrinks its layout height by the same amount.
+ *
+ * Classic stitches the BG chart to the treatment belt with `Modifier.offset`, which moves the
+ * drawing but keeps the layout size. That is fine when the graphs touch — the leftover layout
+ * space is covered by the next strip. The glass look shows the card edge, so that leftover space
+ * reads as empty glass under the chart. This modifier does the same move and also reclaims the
+ * height, so the chart's top inset (the room for its topmost Y label) sits over the belt and the
+ * card ends at the chart's bottom.
+ */
+private fun Modifier.pullUpOverPrevious(pullUp: Dp): Modifier =
+    layout { measurable, constraints ->
+        val px = pullUp.roundToPx()
+        val placeable = measurable.measure(constraints)
+        layout(placeable.width, (placeable.height - px).coerceAtLeast(0)) {
+            placeable.place(0, -px)
+        }
+    }
 
 @OptIn(FlowPreview::class, ExperimentalFoundationApi::class)
 @Composable
@@ -463,43 +488,85 @@ fun GraphsSection(
     }
 
 
+    // With the glass look the main graph (belt + BG chart) is one glass card and each extra
+    // strip below it gets its own. Without it the graphs keep today's stitched layout.
+    val glass = LocalOverviewGlass.current
+    // Classic pulls the BG chart up 16.dp over the belt so the belt's invisible axis band is
+    // covered and the charts share one time axis. Glass shows the card edge, so the same move
+    // has to reclaim the height as well — a bare offset would leave empty glass under the chart.
+    val stitchBg = if (glass.enabled) {
+        Modifier.pullUpOverPrevious(16.dp)
+    } else {
+        Modifier.offset(y = (-16).dp)
+    }
+    val stitchStrip = if (glass.enabled) Modifier else Modifier.offset(y = (-8).dp)
+
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp)
+            .padding(
+                start = OverviewGlassSideInset,
+                end = OverviewGlassSideInset,
+                // Glass keeps a small gap above the main graph so its border does not touch the
+                // status cards. Classic keeps the old 8.dp on both sides.
+                top = if (glass.enabled) AapsSpacing.small else 8.dp,
+                bottom = 8.dp
+            ),
+        verticalArrangement = if (glass.enabled) Arrangement.spacedBy(AapsSpacing.medium) else Arrangement.Top
     ) {
-        // Treatment Belt Graph - running mode background + therapy events
-        TreatmentBeltGraphCompose(
-            viewModel = graphViewModel,
-            scrollState = beltScrollState,
-            zoomState = beltZoomState,
-            derivedTimeRange = derivedTimeRange,
-            nowTimestamp = nowTimestamp,
-            modifier = Modifier.fillMaxWidth()
-        )
-        // BG Graph - primary interactive graph
+        // Main graph card: treatment belt + BG chart share the time axis and stay one unit.
+        // When the glass look is on the card edge is visible, so the belt gets no extra top
+        // padding and its axis gutters shrink — the colored strip starts right under the edge.
         var editingBgOverlays by remember { mutableStateOf(false) }
-        Box(
-            modifier = Modifier
-                .offset(y = (-16).dp)
-                .then(
-                    if (!isSimpleMode) Modifier.combinedClickable(
-                        onClick = {},
-                        onLongClick = { editingBgOverlays = true }
-                    ) else Modifier
+        OverviewGlassPanel(
+            modifier = Modifier.fillMaxWidth(),
+            contentPadding = if (glass.enabled) {
+                PaddingValues(start = AapsSpacing.small, end = AapsSpacing.small, top = 0.dp, bottom = AapsSpacing.small)
+            } else {
+                PaddingValues(AapsSpacing.small)
+            }
+        ) { panelModifier ->
+            Column(modifier = panelModifier.fillMaxWidth()) {
+                TreatmentBeltGraphCompose(
+                    viewModel = graphViewModel,
+                    scrollState = beltScrollState,
+                    zoomState = beltZoomState,
+                    derivedTimeRange = derivedTimeRange,
+                    nowTimestamp = nowTimestamp,
+                    compactFill = glass.enabled,
+                    modifier = Modifier.fillMaxWidth()
                 )
-        ) {
-            BgGraphCompose(
-                viewModel = graphViewModel,
-                bgOverlays = graphConfig.bgOverlays,
-                scrollState = bgScrollState,
-                zoomState = bgZoomState,
-                derivedTimeRange = derivedTimeRange,
-                nowTimestamp = nowTimestamp,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(graphConfig.bgHeight.dp)
-            )
+                // Outer box carries the stitch (offset or pull-up). The clickable sits on an
+                // inner box so its hit area follows the chart when the pull-up places it higher.
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .then(stitchBg)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .then(
+                                if (!isSimpleMode) Modifier.combinedClickable(
+                                    onClick = {},
+                                    onLongClick = { editingBgOverlays = true }
+                                ) else Modifier
+                            )
+                    ) {
+                        BgGraphCompose(
+                            viewModel = graphViewModel,
+                            bgOverlays = graphConfig.bgOverlays,
+                            scrollState = bgScrollState,
+                            zoomState = bgZoomState,
+                            derivedTimeRange = derivedTimeRange,
+                            nowTimestamp = nowTimestamp,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(graphConfig.bgHeight.dp)
+                        )
+                    }
+                }
+            }
         }
         if (editingBgOverlays) {
             GraphSeriesBottomSheet(
@@ -521,9 +588,10 @@ fun GraphsSection(
         // Fixed IOB graph (Graph 1) with optional Activity overlay
         var editingIobOverlays by remember { mutableStateOf(false) }
         if (graphConfig.showIobGraph) {
+            OverviewGlassPanel(modifier = Modifier.fillMaxWidth().then(stitchStrip)) { panelModifier ->
             Box(
-                modifier = Modifier
-                    .offset(y = (-8).dp)
+                modifier = panelModifier
+                    .fillMaxWidth()
                     .then(
                         if (!isSimpleMode) Modifier.combinedClickable(
                             onClick = {},
@@ -561,6 +629,7 @@ fun GraphsSection(
                        .padding(start = 36.dp, top = 2.dp)
                 )
             }
+            }
             if (editingIobOverlays) {
                 GraphSeriesBottomSheet(
                     title = stringResource(CoreUiStrings.iob) + " / " + stringResource(CoreUiStrings.basal_shortname),
@@ -590,7 +659,14 @@ fun GraphsSection(
             val customType = secondary.series.firstOrNull {
                 it in AIMI_SERIES || it == SeriesType.PULSE || it == SeriesType.BOOST
             }
-            Box(modifier = Modifier.offset(y = (-8).dp)) {
+            // MHS and BOOST render nothing when BOOST is not the active algorithm.
+            // Skip the glass frame too, so an empty slot never paints an empty card.
+            val isEmptySlot =
+                (customType == null && secondary.series == listOf(SeriesType.MHS) && !isBoostActive) ||
+                    (customType == SeriesType.BOOST && !isBoostActive)
+            if (isEmptySlot) continue
+            OverviewGlassPanel(modifier = Modifier.fillMaxWidth().then(stitchStrip)) { panelModifier ->
+            Box(modifier = panelModifier.fillMaxWidth()) {
                 when (customType) {
                     SeriesType.MODES -> {
                         // FIX: pass onLongPress → interceptLongPress uses Initial pass
@@ -644,11 +720,7 @@ fun GraphsSection(
                     }
 
                     else             -> {
-                        // MHB renders nothing when BOOST is not the active algorithm (like the BOOST panel)
-                        if (secondary.series == listOf(SeriesType.MHS) && !isBoostActive) {
-                            // empty slot
-                        } else {
-                            SecondaryGraphCompose(
+                        SecondaryGraphCompose(
                                 viewModel = graphViewModel,
                                 seriesTypes = secondary.series,
                                 scrollState = secScrollStates[i],
@@ -677,9 +749,9 @@ fun GraphsSection(
                                     .align(Alignment.TopStart)
                                     .padding(start = 36.dp, top = 2.dp)
                             )
-                        }
                     }
                 }
+            }
             }
         }
         if (editingGraphIndex >= 0 && editingGraphIndex < activeCount) {

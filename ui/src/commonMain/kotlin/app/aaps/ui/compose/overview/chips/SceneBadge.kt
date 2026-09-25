@@ -16,6 +16,8 @@ import app.aaps.core.ui.compose.AapsSpacing
 import app.aaps.core.ui.compose.navigation.color
 import app.aaps.core.ui.compose.navigation.icon
 import app.aaps.core.ui.compose.stringResource
+import app.aaps.ui.compose.overview.LocalOverviewGlass
+import app.aaps.ui.compose.overview.OverviewGlassChipFrame
 
 /**
  * Small badge indicating that a setting is managed by an active scene.
@@ -29,12 +31,7 @@ import app.aaps.core.ui.compose.stringResource
 @Composable
 internal fun SceneBadge(modifier: Modifier = Modifier) {
     val sceneColor = ElementType.SCENE.color()
-    Box(
-        modifier = modifier
-            .size(18.dp)
-            .background(sceneColor.copy(alpha = 0.2f), CircleShape),
-        contentAlignment = Alignment.Center
-    ) {
+    val content: @Composable () -> Unit = {
         Icon(
             imageVector = ElementType.SCENE.icon(),
             contentDescription = stringResource(CoreUiStrings.scene),
@@ -43,5 +40,21 @@ internal fun SceneBadge(modifier: Modifier = Modifier) {
                 .padding(AapsSpacing.extraSmall)
                 .size(12.dp)
         )
+    }
+    val glass = LocalOverviewGlass.current
+    if (glass.enabled) {
+        OverviewGlassChipFrame(
+            modifier = modifier.size(18.dp),
+            shape = CircleShape
+        ) { content() }
+    } else {
+        Box(
+            modifier = modifier
+                .size(18.dp)
+                .background(sceneColor.copy(alpha = 0.2f), CircleShape),
+            contentAlignment = Alignment.Center
+        ) {
+            content()
+        }
     }
 }

@@ -3,11 +3,8 @@ package app.aaps.plugins.main.general.dashboard.glass
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -16,7 +13,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
@@ -25,73 +21,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.material3.Text
-
-@Composable
-internal fun GlassContainer(
-    isDark: Boolean,
-    modifier: Modifier = Modifier,
-    content: @Composable BoxScope.() -> Unit
-) {
-    val shape = RoundedCornerShape(26.dp)
-    val backgroundBrush = if (isDark) {
-        Brush.linearGradient(
-            colors = listOf(Color(0xEC1C2640), Color(0xF5080E18)),
-            start = Offset(0f, 0f),
-            end = Offset(Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY)
-        )
-    } else {
-        Brush.linearGradient(
-            colors = listOf(Color(0xFFFFFFFF), Color(0xF0E8EEF6)),
-            start = Offset(0f, 0f),
-            end = Offset(Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY)
-        )
-    }
-    val borderColor = if (isDark) Color(0x40FFFFFF) else Color(0xE0FFFFFF)
-
-    Box(
-        modifier = modifier
-            .shadow(
-                elevation = if (isDark) 26.dp else 16.dp,
-                shape = shape,
-                spotColor = if (isDark) Color.Black.copy(alpha = 0.65f) else Color(0x660F172A),
-                ambientColor = if (isDark) Color.Black.copy(alpha = 0.50f) else Color(0x400F172A)
-            )
-            .clip(shape)
-            .background(backgroundBrush)
-            .border(1.5.dp, borderColor, shape)
-    ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth(0.85f)
-                .height(1.5.dp)
-                .align(Alignment.TopCenter)
-                .background(
-                    Brush.horizontalGradient(
-                        listOf(
-                            Color.Transparent,
-                            if (isDark) Color.White.copy(alpha = 0.60f) else Color.White.copy(alpha = 1.0f),
-                            Color.Transparent
-                        )
-                    )
-                )
-        )
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(40.dp)
-                .align(Alignment.TopCenter)
-                .background(
-                    Brush.verticalGradient(
-                        listOf(
-                            if (isDark) Color.White.copy(alpha = 0.10f) else Color.White.copy(alpha = 0.65f),
-                            Color.Transparent
-                        )
-                    )
-                )
-        )
-        content()
-    }
-}
 
 @Composable
 internal fun GlassPill(

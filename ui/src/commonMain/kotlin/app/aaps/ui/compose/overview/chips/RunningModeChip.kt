@@ -41,6 +41,8 @@ import app.aaps.core.ui.compose.icons.IcLoopPausedDst
 import app.aaps.core.ui.compose.icons.IcLoopPausedPump
 import app.aaps.core.ui.compose.icons.IcLoopSuperbolus
 import app.aaps.core.ui.compose.loopColor
+import app.aaps.ui.compose.overview.LocalOverviewGlass
+import app.aaps.ui.compose.overview.OverviewGlassChipFrame
 import app.aaps.ui.compose.overview.graphs.TriangleShape
 
 /**
@@ -70,14 +72,7 @@ fun RunningModeChip(
     // isn't padded to 48dp and centered, which would inset it ~6dp from the column's left edge
     // (same guard IobChip uses).
     CompositionLocalProvider(LocalMinimumInteractiveComponentSize provides Dp.Unspecified) {
-        Surface(
-            onClick = { haptic.performHapticFeedback(HapticFeedbackType.LongPress); onClick() },
-            enabled = enabled,
-            shape = RoundedCornerShape(AapsSpacing.chipCornerRadius),
-            color = containerColor,
-            modifier = modifier
-                .height(AapsSpacing.chipHeight)
-        ) {
+        val content: @Composable () -> Unit = {
             Box(
                 modifier = Modifier
                     .width(IntrinsicSize.Max)
@@ -144,6 +139,23 @@ fun RunningModeChip(
                     }
                 }
             }
+        }
+        val glass = LocalOverviewGlass.current
+        if (glass.enabled) {
+            OverviewGlassChipFrame(
+                modifier = modifier.height(AapsSpacing.chipHeight),
+                onClick = { haptic.performHapticFeedback(HapticFeedbackType.LongPress); onClick() },
+                enabled = enabled
+            ) { content() }
+        } else {
+            Surface(
+                onClick = { haptic.performHapticFeedback(HapticFeedbackType.LongPress); onClick() },
+                enabled = enabled,
+                shape = RoundedCornerShape(AapsSpacing.chipCornerRadius),
+                color = containerColor,
+                modifier = modifier
+                    .height(AapsSpacing.chipHeight)
+            ) { content() }
         }
     }
 }
