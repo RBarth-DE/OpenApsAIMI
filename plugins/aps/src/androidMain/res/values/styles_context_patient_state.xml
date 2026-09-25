@@ -1,32 +1,61 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- AIMI Context — patient state card: explicit sizes for readability on dark theme -->
-    <style name="ContextPatientStateSectionTitle">
-        <item name="android:textSize">20sp</item>
-        <item name="android:textStyle">bold</item>
-        <item name="android:textColor">?android:attr/textColorPrimary</item>
-    </style>
+    <!-- AIMI Context type ladder, shared with the AIMI Advisor presentation:
+         13sp uppercase eyebrow labels, 18sp / 16sp titles, 14sp muted body, 12sp labels.
+         Sizes stay explicit so the card reads the same on the dark theme. -->
 
-    <style name="ContextPatientStateMeta">
-        <item name="android:textSize">16sp</item>
+    <!-- Eyebrow label above a group of cards. -->
+    <style name="ContextSectionHeader">
+        <item name="android:textSize">13sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textAllCaps">true</item>
         <item name="android:textColor">?android:attr/textColorSecondary</item>
     </style>
 
+    <!-- Title inside the patient state card. -->
+    <style name="ContextPatientStateSectionTitle">
+        <item name="android:textSize">16sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">?android:attr/textColorPrimary</item>
+    </style>
+
+    <!-- Main value or headline line inside the card. -->
     <style name="ContextPatientStateHeadline">
-        <item name="android:textSize">22sp</item>
-        <item name="android:textStyle">bold</item>
-        <item name="android:textColor">?android:attr/textColorPrimary</item>
-    </style>
-
-    <style name="ContextPatientStateBody">
         <item name="android:textSize">18sp</item>
-        <item name="android:lineSpacingMultiplier">1.2</item>
+        <item name="android:textStyle">bold</item>
         <item name="android:textColor">?android:attr/textColorPrimary</item>
     </style>
 
+    <!-- Body text. Muted so it reads as supporting text, like the Advisor body. -->
+    <style name="ContextPatientStateBody">
+        <item name="android:textSize">14sp</item>
+        <item name="android:lineSpacingMultiplier">1.2</item>
+        <item name="android:textColor">?android:attr/textColorSecondary</item>
+    </style>
+
+    <!-- Field label in front of a body value. -->
     <style name="ContextPatientStateLabel">
-        <item name="android:textSize">17sp</item>
+        <item name="android:textSize">12sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textAllCaps">true</item>
+        <item name="android:textColor">?android:attr/textColorSecondary</item>
+    </style>
+
+    <style name="ContextPatientStateMeta">
+        <item name="android:textSize">12sp</item>
+        <item name="android:textColor">?android:attr/textColorSecondary</item>
+    </style>
+
+    <!-- Active intent card: time remaining, on the right of the title line. -->
+    <style name="ContextIntentTime">
+        <item name="android:textSize">14sp</item>
         <item name="android:textStyle">bold</item>
         <item name="android:textColor">?android:attr/textColorPrimary</item>
+    </style>
+
+    <!-- Active intent card: confidence note under the title. -->
+    <style name="ContextIntentMeta">
+        <item name="android:textSize">13sp</item>
+        <item name="android:textColor">?android:attr/textColorSecondary</item>
     </style>
 </resources>
