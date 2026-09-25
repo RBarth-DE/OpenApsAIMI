@@ -2084,7 +2084,10 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
                     add(IntKey.AimiEmergencySosStaleThreshold)
                     add(
                         ApsIntentKey.AimiSosPermissions.withClick {
-                            context.startActivity(Intent(context, AIMIEmergencySosPermissionActivityMTR::class.java))
+                            context.startActivity(
+                                Intent(context, AIMIEmergencySosPermissionActivityMTR::class.java)
+                                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                            )
                         },
                     )
                 },
@@ -2113,7 +2116,10 @@ open class OpenAPSAIMIPlugin  @Inject constructor(
                     )
                     add(
                         ApsIntentKey.AimiHealthConnectPermissions.withClick {
-                            context.startActivity(Intent(context, AIMIHealthConnectPermissionActivityMTR::class.java))
+                            context.startActivity(
+                                Intent(context, AIMIHealthConnectPermissionActivityMTR::class.java)
+                                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                            )
                         },
                     )
                     add(AimiStringKey.ActivitySourceMode)
